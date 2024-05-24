@@ -93,3 +93,33 @@ queries:
       query_func: "k.ListPoolsByDenom"
     cli:
       cmd: "ListPoolsByDenom"
+  AllTakerFeeShareAgreementsRequest:
+    proto_wrapper:
+      query_func: "k.GetAllTakerFeeShareAgreements"
+    cli:
+      cmd: "AllTakerFeeShareAgreements"
+  TakerFeeShareAgreementFromDenomRequest:
+    proto_wrapper:
+      query_func: "k.GetTakerFeeShareAgreementFromDenom"
+    cli:
+      cmd: "TakerFeeShareAgreementFromDenom"
+  TakerFeeShareDenomsToAccruedValueRequest:
+    proto_wrapper:
+      query_func: "k.GetTakerFeeShareDenomsToAccruedValue"
+    cli:
+      cmd: "TakerFeeShareDenomsToAccruedValue"
+  AllTakerFeeShareAccumulatorsRequest:
+    proto_wrapper:
+      query_func: "k.GetAllTakerFeeShareAccumulators"
+    cli:
+      cmd: "AllTakerFeeShareAccumulators"
+  RegisteredAlloyedPoolFromDenomRequest:
+    proto_wrapper:
+      query_func: "k.GetRegisteredAlloyedPoolFromDenom"
+    cli:
+      cmd: "RegisteredAlloyedPoolFromDenom"
+  AllRegisteredAlloyedPoolsRequest:
+    proto_wrapper:
+      query_func: "k.GetAllRegisteredAlloyedPools"
+    cli:
+      cmd: "AllRegisteredAlloyedPools"

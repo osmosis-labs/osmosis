@@ -49,10 +49,10 @@ func (k Keeper) trackChangedPool(ctx sdk.Context, poolId uint64) {
 	store.Set(poolIdBz, sentinelExistsValue)
 }
 
-// getChangedPools returns all poolIDs that changed this block.
+// GetChangedPools returns all poolIDs that changed this block.
 // This is to be guaranteed by trackChangedPool being called on every
 // price-affecting pool action.
-func (k Keeper) getChangedPools(ctx sdk.Context) []uint64 {
+func (k Keeper) GetChangedPools(ctx sdk.Context) []uint64 {
 	store := ctx.TransientStore(k.transientKey)
 	iter := store.Iterator(nil, nil)
 	defer iter.Close()

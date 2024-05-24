@@ -357,7 +357,7 @@ func (q Querier) EstimateTradeBasedOnPriceImpact(
 
 	poolI, poolErr := swapModule.GetPool(ctx, req.PoolId)
 	if poolErr != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Error(codes.Internal, poolErr.Error())
 	}
 
 	spotPriceBigDec, err := swapModule.CalculateSpotPrice(ctx, req.PoolId, req.FromCoin.Denom, req.ToCoinDenom)
@@ -402,4 +402,62 @@ func (q Querier) EstimateTradeBasedOnPriceImpact(
 	default:
 		return nil, status.Error(codes.Internal, "pool type not supported")
 	}
+}
+
+func (q Querier) AllTakerFeeShareAgreements(ctx sdk.Context, req queryproto.AllTakerFeeShareAgreementsRequest) (*queryproto.AllTakerFeeShareAgreementsResponse, error) {
+	takerFeeShareAgreements := q.K.GetAllTakerFeesShareAgreements(ctx)
+	return &queryproto.AllTakerFeeShareAgreementsResponse{
+		TakerFeeShareAgreements: takerFeeShareAgreements,
+	}, nil
+}
+
+func (q Querier) TakerFeeShareAgreementFromDenom(ctx sdk.Context, req queryproto.TakerFeeShareAgreementFromDenomRequest) (*queryproto.TakerFeeShareAgreementFromDenomResponse, error) {
+	takerFeeShareAgreement, found := q.K.GetTakerFeeShareAgreementFromDenom(ctx, req.Denom)
+	if !found {
+		return nil, status.Error(codes.NotFound, "taker fee share agreement not found")
+	}
+	return &queryproto.TakerFeeShareAgreementFromDenomResponse{
+		TakerFeeShareAgreement: takerFeeShareAgreement,
+	}, nil
+}
+
+func (q Querier) TakerFeeShareDenomsToAccruedValue(ctx sdk.Context, req queryproto.TakerFeeShareDenomsToAccruedValueRequest) (*queryproto.TakerFeeShareDenomsToAccruedValueResponse, error) {
+	accruedValue, err := q.K.GetTakerFeeShareDenomsToAccruedValue(ctx, req.Denom, req.TakerFeeDenom)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &queryproto.TakerFeeShareDenomsToAccruedValueResponse{
+		Amount: accruedValue,
+	}, nil
+}
+
+func (q Querier) AllTakerFeeShareAccumulators(ctx sdk.Context, req queryproto.AllTakerFeeShareAccumulatorsRequest) (*queryproto.AllTakerFeeShareAccumulatorsResponse, error) {
+	takerFeeSkimAccumulators := q.K.GetAllTakerFeeShareAccumulators(ctx)
+
+	return &queryproto.AllTakerFeeShareAccumulatorsResponse{
+		TakerFeeSkimAccumulators: takerFeeSkimAccumulators,
+	}, nil
+}
+
+func (q Querier) RegisteredAlloyedPoolFromDenom(ctx sdk.Context, req queryproto.RegisteredAlloyedPoolFromDenomRequest) (*queryproto.RegisteredAlloyedPoolFromDenomResponse, error) {
+	contractState, found := q.K.GetRegisteredAlloyedPoolFromDenom(ctx, req.Denom)
+	if !found {
+		return nil, status.Error(codes.NotFound, "pool not found")
+	}
+
+	return &queryproto.RegisteredAlloyedPoolFromDenomResponse{
+		ContractState: contractState,
+	}, nil
+}
+
+func (q Querier) AllRegisteredAlloyedPools(ctx sdk.Context, req queryproto.AllRegisteredAlloyedPoolsRequest) (*queryproto.AllRegisteredAlloyedPoolsResponse, error) {
+	contractStates, err := q.K.GetAllRegisteredAlloyedPools(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &queryproto.AllRegisteredAlloyedPoolsResponse{
+		ContractStates: contractStates,
+	}, nil
 }

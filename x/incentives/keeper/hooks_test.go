@@ -502,7 +502,7 @@ func (s *KeeperTestSuite) increaseVolumeBySwap(poolID uint64, tokeInCoin sdk.Coi
 
 	originalVoume := s.App.PoolManagerKeeper.GetOsmoVolumeForPool(s.Ctx, poolID)
 
-	_, err := s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], poolID, tokeInCoin, denomOut, osmomath.ZeroInt())
+	_, _, err := s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], poolID, tokeInCoin, denomOut, osmomath.ZeroInt())
 	s.Require().NoError(err)
 
 	finalVolume := s.App.PoolManagerKeeper.GetOsmoVolumeForPool(s.Ctx, poolID)

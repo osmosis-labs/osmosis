@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
@@ -105,4 +106,46 @@ func (server msgServer) SetDenomPairTakerFee(goCtx context.Context, msg *types.M
 	// Set denom pair taker fee event is handled in each iteration of the loop above
 
 	return &types.MsgSetDenomPairTakerFeeResponse{Success: true}, nil
+}
+
+func (server msgServer) SetTakerFeeShareAgreementForDenom(goCtx context.Context, msg *types.MsgSetTakerFeeShareAgreementForDenom) (*types.MsgSetTakerFeeShareAgreementForDenomResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	govAddr := server.keeper.accountKeeper.GetModuleAccount(ctx, govtypes.ModuleName)
+	if msg.Sender != govAddr.String() {
+		return nil, types.ErrUnauthorizedGov
+	}
+
+	takerFeeShareAgreement := types.TakerFeeShareAgreement{
+		Denom:       msg.Denom,
+		SkimPercent: msg.SkimPercent,
+		SkimAddress: msg.SkimAddress,
+	}
+
+	err := server.keeper.SetTakerFeeShareAgreementForDenom(ctx, msg.Denom, takerFeeShareAgreement)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set taker fee share agreement for denom event is handled in the keeper
+
+	return &types.MsgSetTakerFeeShareAgreementForDenomResponse{}, nil
+}
+
+func (server msgServer) SetRegisteredAlloyedPool(goCtx context.Context, msg *types.MsgSetRegisteredAlloyedPool) (*types.MsgSetRegisteredAlloyedPoolResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	govAddr := server.keeper.accountKeeper.GetModuleAccount(ctx, govtypes.ModuleName)
+	if msg.Sender != govAddr.String() {
+		return nil, types.ErrUnauthorizedGov
+	}
+
+	err := server.keeper.SetRegisteredAlloyedPool(ctx, msg.PoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set registered alloyed pool event is handled in the keeper
+
+	return &types.MsgSetRegisteredAlloyedPoolResponse{}, nil
 }

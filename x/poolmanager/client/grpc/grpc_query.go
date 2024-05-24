@@ -191,3 +191,62 @@ func (q Querier) AllPools(grpcCtx context.Context,
 	return q.Q.AllPools(ctx, *req)
 }
 
+func (q Querier) AllTakerFeeShareAgreements(grpcCtx context.Context,
+	req *queryproto.AllTakerFeeShareAgreementsRequest,
+) (*queryproto.AllTakerFeeShareAgreementsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.AllTakerFeeShareAgreements(ctx, *req)
+}
+
+func (q Querier) TakerFeeShareAgreementFromDenom(grpcCtx context.Context,
+	req *queryproto.TakerFeeShareAgreementFromDenomRequest,
+) (*queryproto.TakerFeeShareAgreementFromDenomResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.TakerFeeShareAgreementFromDenom(ctx, *req)
+}
+
+func (q Querier) TakerFeeShareDenomsToAccruedValue(grpcCtx context.Context,
+	req *queryproto.TakerFeeShareDenomsToAccruedValueRequest,
+) (*queryproto.TakerFeeShareDenomsToAccruedValueResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.TakerFeeShareDenomsToAccruedValue(ctx, *req)
+}
+
+func (q Querier) AllTakerFeeShareAccumulators(grpcCtx context.Context,
+	req *queryproto.AllTakerFeeShareAccumulatorsRequest,
+) (*queryproto.AllTakerFeeShareAccumulatorsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.AllTakerFeeShareAccumulators(ctx, *req)
+}
+
+func (q Querier) RegisteredAlloyedPoolFromDenom(grpcCtx context.Context,
+	req *queryproto.RegisteredAlloyedPoolFromDenomRequest,
+) (*queryproto.RegisteredAlloyedPoolFromDenomResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.RegisteredAlloyedPoolFromDenom(ctx, *req)
+}
+
+func (q Querier) AllRegisteredAlloyedPools(grpcCtx context.Context,
+	req *queryproto.AllRegisteredAlloyedPoolsRequest,
+) (*queryproto.AllRegisteredAlloyedPoolsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.AllRegisteredAlloyedPools(ctx, *req)
+}

@@ -1529,6 +1529,523 @@ func (m *EstimateTradeBasedOnPriceImpactResponse) GetOutputCoin() types2.Coin {
 	return types2.Coin{}
 }
 
+type AllTakerFeeShareAgreementsRequest struct {
+}
+
+func (m *AllTakerFeeShareAgreementsRequest) Reset()         { *m = AllTakerFeeShareAgreementsRequest{} }
+func (m *AllTakerFeeShareAgreementsRequest) String() string { return proto.CompactTextString(m) }
+func (*AllTakerFeeShareAgreementsRequest) ProtoMessage()    {}
+func (*AllTakerFeeShareAgreementsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6256a4106f701b7d, []int{30}
+}
+func (m *AllTakerFeeShareAgreementsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AllTakerFeeShareAgreementsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AllTakerFeeShareAgreementsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AllTakerFeeShareAgreementsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AllTakerFeeShareAgreementsRequest.Merge(m, src)
+}
+func (m *AllTakerFeeShareAgreementsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *AllTakerFeeShareAgreementsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AllTakerFeeShareAgreementsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AllTakerFeeShareAgreementsRequest proto.InternalMessageInfo
+
+type AllTakerFeeShareAgreementsResponse struct {
+	TakerFeeShareAgreements []types.TakerFeeShareAgreement `protobuf:"bytes,1,rep,name=taker_fee_share_agreements,json=takerFeeShareAgreements,proto3" json:"taker_fee_share_agreements"`
+}
+
+func (m *AllTakerFeeShareAgreementsResponse) Reset()         { *m = AllTakerFeeShareAgreementsResponse{} }
+func (m *AllTakerFeeShareAgreementsResponse) String() string { return proto.CompactTextString(m) }
+func (*AllTakerFeeShareAgreementsResponse) ProtoMessage()    {}
+func (*AllTakerFeeShareAgreementsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6256a4106f701b7d, []int{31}
+}
+func (m *AllTakerFeeShareAgreementsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AllTakerFeeShareAgreementsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AllTakerFeeShareAgreementsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AllTakerFeeShareAgreementsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AllTakerFeeShareAgreementsResponse.Merge(m, src)
+}
+func (m *AllTakerFeeShareAgreementsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *AllTakerFeeShareAgreementsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_AllTakerFeeShareAgreementsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AllTakerFeeShareAgreementsResponse proto.InternalMessageInfo
+
+func (m *AllTakerFeeShareAgreementsResponse) GetTakerFeeShareAgreements() []types.TakerFeeShareAgreement {
+	if m != nil {
+		return m.TakerFeeShareAgreements
+	}
+	return nil
+}
+
+type TakerFeeShareAgreementFromDenomRequest struct {
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+}
+
+func (m *TakerFeeShareAgreementFromDenomRequest) Reset() {
+	*m = TakerFeeShareAgreementFromDenomRequest{}
+}
+func (m *TakerFeeShareAgreementFromDenomRequest) String() string { return proto.CompactTextString(m) }
+func (*TakerFeeShareAgreementFromDenomRequest) ProtoMessage()    {}
+func (*TakerFeeShareAgreementFromDenomRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6256a4106f701b7d, []int{32}
+}
+func (m *TakerFeeShareAgreementFromDenomRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TakerFeeShareAgreementFromDenomRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TakerFeeShareAgreementFromDenomRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TakerFeeShareAgreementFromDenomRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TakerFeeShareAgreementFromDenomRequest.Merge(m, src)
+}
+func (m *TakerFeeShareAgreementFromDenomRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *TakerFeeShareAgreementFromDenomRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_TakerFeeShareAgreementFromDenomRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TakerFeeShareAgreementFromDenomRequest proto.InternalMessageInfo
+
+func (m *TakerFeeShareAgreementFromDenomRequest) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+type TakerFeeShareAgreementFromDenomResponse struct {
+	TakerFeeShareAgreement types.TakerFeeShareAgreement `protobuf:"bytes,1,opt,name=taker_fee_share_agreement,json=takerFeeShareAgreement,proto3" json:"taker_fee_share_agreement"`
+}
+
+func (m *TakerFeeShareAgreementFromDenomResponse) Reset() {
+	*m = TakerFeeShareAgreementFromDenomResponse{}
+}
+func (m *TakerFeeShareAgreementFromDenomResponse) String() string { return proto.CompactTextString(m) }
+func (*TakerFeeShareAgreementFromDenomResponse) ProtoMessage()    {}
+func (*TakerFeeShareAgreementFromDenomResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6256a4106f701b7d, []int{33}
+}
+func (m *TakerFeeShareAgreementFromDenomResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TakerFeeShareAgreementFromDenomResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TakerFeeShareAgreementFromDenomResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TakerFeeShareAgreementFromDenomResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TakerFeeShareAgreementFromDenomResponse.Merge(m, src)
+}
+func (m *TakerFeeShareAgreementFromDenomResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *TakerFeeShareAgreementFromDenomResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_TakerFeeShareAgreementFromDenomResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TakerFeeShareAgreementFromDenomResponse proto.InternalMessageInfo
+
+func (m *TakerFeeShareAgreementFromDenomResponse) GetTakerFeeShareAgreement() types.TakerFeeShareAgreement {
+	if m != nil {
+		return m.TakerFeeShareAgreement
+	}
+	return types.TakerFeeShareAgreement{}
+}
+
+type TakerFeeShareDenomsToAccruedValueRequest struct {
+	Denom         string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	TakerFeeDenom string `protobuf:"bytes,2,opt,name=takerFeeDenom,proto3" json:"takerFeeDenom,omitempty"`
+}
+
+func (m *TakerFeeShareDenomsToAccruedValueRequest) Reset() {
+	*m = TakerFeeShareDenomsToAccruedValueRequest{}
+}
+func (m *TakerFeeShareDenomsToAccruedValueRequest) String() string { return proto.CompactTextString(m) }
+func (*TakerFeeShareDenomsToAccruedValueRequest) ProtoMessage()    {}
+func (*TakerFeeShareDenomsToAccruedValueRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6256a4106f701b7d, []int{34}
+}
+func (m *TakerFeeShareDenomsToAccruedValueRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TakerFeeShareDenomsToAccruedValueRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TakerFeeShareDenomsToAccruedValueRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TakerFeeShareDenomsToAccruedValueRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TakerFeeShareDenomsToAccruedValueRequest.Merge(m, src)
+}
+func (m *TakerFeeShareDenomsToAccruedValueRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *TakerFeeShareDenomsToAccruedValueRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_TakerFeeShareDenomsToAccruedValueRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TakerFeeShareDenomsToAccruedValueRequest proto.InternalMessageInfo
+
+func (m *TakerFeeShareDenomsToAccruedValueRequest) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *TakerFeeShareDenomsToAccruedValueRequest) GetTakerFeeDenom() string {
+	if m != nil {
+		return m.TakerFeeDenom
+	}
+	return ""
+}
+
+type TakerFeeShareDenomsToAccruedValueResponse struct {
+	Amount cosmossdk_io_math.Int `protobuf:"bytes,1,opt,name=amount,proto3,customtype=cosmossdk.io/math.Int" json:"amount" yaml:"amount"`
+}
+
+func (m *TakerFeeShareDenomsToAccruedValueResponse) Reset() {
+	*m = TakerFeeShareDenomsToAccruedValueResponse{}
+}
+func (m *TakerFeeShareDenomsToAccruedValueResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*TakerFeeShareDenomsToAccruedValueResponse) ProtoMessage() {}
+func (*TakerFeeShareDenomsToAccruedValueResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6256a4106f701b7d, []int{35}
+}
+func (m *TakerFeeShareDenomsToAccruedValueResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TakerFeeShareDenomsToAccruedValueResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TakerFeeShareDenomsToAccruedValueResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TakerFeeShareDenomsToAccruedValueResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TakerFeeShareDenomsToAccruedValueResponse.Merge(m, src)
+}
+func (m *TakerFeeShareDenomsToAccruedValueResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *TakerFeeShareDenomsToAccruedValueResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_TakerFeeShareDenomsToAccruedValueResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TakerFeeShareDenomsToAccruedValueResponse proto.InternalMessageInfo
+
+type AllTakerFeeShareAccumulatorsRequest struct {
+}
+
+func (m *AllTakerFeeShareAccumulatorsRequest) Reset()         { *m = AllTakerFeeShareAccumulatorsRequest{} }
+func (m *AllTakerFeeShareAccumulatorsRequest) String() string { return proto.CompactTextString(m) }
+func (*AllTakerFeeShareAccumulatorsRequest) ProtoMessage()    {}
+func (*AllTakerFeeShareAccumulatorsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6256a4106f701b7d, []int{36}
+}
+func (m *AllTakerFeeShareAccumulatorsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AllTakerFeeShareAccumulatorsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AllTakerFeeShareAccumulatorsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AllTakerFeeShareAccumulatorsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AllTakerFeeShareAccumulatorsRequest.Merge(m, src)
+}
+func (m *AllTakerFeeShareAccumulatorsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *AllTakerFeeShareAccumulatorsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AllTakerFeeShareAccumulatorsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AllTakerFeeShareAccumulatorsRequest proto.InternalMessageInfo
+
+type AllTakerFeeShareAccumulatorsResponse struct {
+	TakerFeeSkimAccumulators []types.TakerFeeSkimAccumulator `protobuf:"bytes,1,rep,name=taker_fee_skim_accumulators,json=takerFeeSkimAccumulators,proto3" json:"taker_fee_skim_accumulators"`
+}
+
+func (m *AllTakerFeeShareAccumulatorsResponse) Reset()         { *m = AllTakerFeeShareAccumulatorsResponse{} }
+func (m *AllTakerFeeShareAccumulatorsResponse) String() string { return proto.CompactTextString(m) }
+func (*AllTakerFeeShareAccumulatorsResponse) ProtoMessage()    {}
+func (*AllTakerFeeShareAccumulatorsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6256a4106f701b7d, []int{37}
+}
+func (m *AllTakerFeeShareAccumulatorsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AllTakerFeeShareAccumulatorsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AllTakerFeeShareAccumulatorsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AllTakerFeeShareAccumulatorsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AllTakerFeeShareAccumulatorsResponse.Merge(m, src)
+}
+func (m *AllTakerFeeShareAccumulatorsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *AllTakerFeeShareAccumulatorsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_AllTakerFeeShareAccumulatorsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AllTakerFeeShareAccumulatorsResponse proto.InternalMessageInfo
+
+func (m *AllTakerFeeShareAccumulatorsResponse) GetTakerFeeSkimAccumulators() []types.TakerFeeSkimAccumulator {
+	if m != nil {
+		return m.TakerFeeSkimAccumulators
+	}
+	return nil
+}
+
+type RegisteredAlloyedPoolFromDenomRequest struct {
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+}
+
+func (m *RegisteredAlloyedPoolFromDenomRequest) Reset()         { *m = RegisteredAlloyedPoolFromDenomRequest{} }
+func (m *RegisteredAlloyedPoolFromDenomRequest) String() string { return proto.CompactTextString(m) }
+func (*RegisteredAlloyedPoolFromDenomRequest) ProtoMessage()    {}
+func (*RegisteredAlloyedPoolFromDenomRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6256a4106f701b7d, []int{38}
+}
+func (m *RegisteredAlloyedPoolFromDenomRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RegisteredAlloyedPoolFromDenomRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RegisteredAlloyedPoolFromDenomRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RegisteredAlloyedPoolFromDenomRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RegisteredAlloyedPoolFromDenomRequest.Merge(m, src)
+}
+func (m *RegisteredAlloyedPoolFromDenomRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *RegisteredAlloyedPoolFromDenomRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_RegisteredAlloyedPoolFromDenomRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RegisteredAlloyedPoolFromDenomRequest proto.InternalMessageInfo
+
+func (m *RegisteredAlloyedPoolFromDenomRequest) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+type RegisteredAlloyedPoolFromDenomResponse struct {
+	ContractState types.AlloyContractTakerFeeShareState `protobuf:"bytes,1,opt,name=contract_state,json=contractState,proto3" json:"contract_state"`
+}
+
+func (m *RegisteredAlloyedPoolFromDenomResponse) Reset() {
+	*m = RegisteredAlloyedPoolFromDenomResponse{}
+}
+func (m *RegisteredAlloyedPoolFromDenomResponse) String() string { return proto.CompactTextString(m) }
+func (*RegisteredAlloyedPoolFromDenomResponse) ProtoMessage()    {}
+func (*RegisteredAlloyedPoolFromDenomResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6256a4106f701b7d, []int{39}
+}
+func (m *RegisteredAlloyedPoolFromDenomResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RegisteredAlloyedPoolFromDenomResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RegisteredAlloyedPoolFromDenomResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RegisteredAlloyedPoolFromDenomResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RegisteredAlloyedPoolFromDenomResponse.Merge(m, src)
+}
+func (m *RegisteredAlloyedPoolFromDenomResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *RegisteredAlloyedPoolFromDenomResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_RegisteredAlloyedPoolFromDenomResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RegisteredAlloyedPoolFromDenomResponse proto.InternalMessageInfo
+
+func (m *RegisteredAlloyedPoolFromDenomResponse) GetContractState() types.AlloyContractTakerFeeShareState {
+	if m != nil {
+		return m.ContractState
+	}
+	return types.AlloyContractTakerFeeShareState{}
+}
+
+type AllRegisteredAlloyedPoolsRequest struct {
+}
+
+func (m *AllRegisteredAlloyedPoolsRequest) Reset()         { *m = AllRegisteredAlloyedPoolsRequest{} }
+func (m *AllRegisteredAlloyedPoolsRequest) String() string { return proto.CompactTextString(m) }
+func (*AllRegisteredAlloyedPoolsRequest) ProtoMessage()    {}
+func (*AllRegisteredAlloyedPoolsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6256a4106f701b7d, []int{40}
+}
+func (m *AllRegisteredAlloyedPoolsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AllRegisteredAlloyedPoolsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AllRegisteredAlloyedPoolsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AllRegisteredAlloyedPoolsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AllRegisteredAlloyedPoolsRequest.Merge(m, src)
+}
+func (m *AllRegisteredAlloyedPoolsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *AllRegisteredAlloyedPoolsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AllRegisteredAlloyedPoolsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AllRegisteredAlloyedPoolsRequest proto.InternalMessageInfo
+
+type AllRegisteredAlloyedPoolsResponse struct {
+	ContractStates []types.AlloyContractTakerFeeShareState `protobuf:"bytes,1,rep,name=contract_states,json=contractStates,proto3" json:"contract_states"`
+}
+
+func (m *AllRegisteredAlloyedPoolsResponse) Reset()         { *m = AllRegisteredAlloyedPoolsResponse{} }
+func (m *AllRegisteredAlloyedPoolsResponse) String() string { return proto.CompactTextString(m) }
+func (*AllRegisteredAlloyedPoolsResponse) ProtoMessage()    {}
+func (*AllRegisteredAlloyedPoolsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6256a4106f701b7d, []int{41}
+}
+func (m *AllRegisteredAlloyedPoolsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AllRegisteredAlloyedPoolsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AllRegisteredAlloyedPoolsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AllRegisteredAlloyedPoolsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AllRegisteredAlloyedPoolsResponse.Merge(m, src)
+}
+func (m *AllRegisteredAlloyedPoolsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *AllRegisteredAlloyedPoolsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_AllRegisteredAlloyedPoolsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AllRegisteredAlloyedPoolsResponse proto.InternalMessageInfo
+
+func (m *AllRegisteredAlloyedPoolsResponse) GetContractStates() []types.AlloyContractTakerFeeShareState {
+	if m != nil {
+		return m.ContractStates
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*ParamsRequest)(nil), "osmosis.poolmanager.v1beta1.ParamsRequest")
 	proto.RegisterType((*ParamsResponse)(nil), "osmosis.poolmanager.v1beta1.ParamsResponse")
@@ -1560,6 +2077,18 @@ func init() {
 	proto.RegisterType((*TradingPairTakerFeeResponse)(nil), "osmosis.poolmanager.v1beta1.TradingPairTakerFeeResponse")
 	proto.RegisterType((*EstimateTradeBasedOnPriceImpactRequest)(nil), "osmosis.poolmanager.v1beta1.EstimateTradeBasedOnPriceImpactRequest")
 	proto.RegisterType((*EstimateTradeBasedOnPriceImpactResponse)(nil), "osmosis.poolmanager.v1beta1.EstimateTradeBasedOnPriceImpactResponse")
+	proto.RegisterType((*AllTakerFeeShareAgreementsRequest)(nil), "osmosis.poolmanager.v1beta1.AllTakerFeeShareAgreementsRequest")
+	proto.RegisterType((*AllTakerFeeShareAgreementsResponse)(nil), "osmosis.poolmanager.v1beta1.AllTakerFeeShareAgreementsResponse")
+	proto.RegisterType((*TakerFeeShareAgreementFromDenomRequest)(nil), "osmosis.poolmanager.v1beta1.TakerFeeShareAgreementFromDenomRequest")
+	proto.RegisterType((*TakerFeeShareAgreementFromDenomResponse)(nil), "osmosis.poolmanager.v1beta1.TakerFeeShareAgreementFromDenomResponse")
+	proto.RegisterType((*TakerFeeShareDenomsToAccruedValueRequest)(nil), "osmosis.poolmanager.v1beta1.TakerFeeShareDenomsToAccruedValueRequest")
+	proto.RegisterType((*TakerFeeShareDenomsToAccruedValueResponse)(nil), "osmosis.poolmanager.v1beta1.TakerFeeShareDenomsToAccruedValueResponse")
+	proto.RegisterType((*AllTakerFeeShareAccumulatorsRequest)(nil), "osmosis.poolmanager.v1beta1.AllTakerFeeShareAccumulatorsRequest")
+	proto.RegisterType((*AllTakerFeeShareAccumulatorsResponse)(nil), "osmosis.poolmanager.v1beta1.AllTakerFeeShareAccumulatorsResponse")
+	proto.RegisterType((*RegisteredAlloyedPoolFromDenomRequest)(nil), "osmosis.poolmanager.v1beta1.RegisteredAlloyedPoolFromDenomRequest")
+	proto.RegisterType((*RegisteredAlloyedPoolFromDenomResponse)(nil), "osmosis.poolmanager.v1beta1.RegisteredAlloyedPoolFromDenomResponse")
+	proto.RegisterType((*AllRegisteredAlloyedPoolsRequest)(nil), "osmosis.poolmanager.v1beta1.AllRegisteredAlloyedPoolsRequest")
+	proto.RegisterType((*AllRegisteredAlloyedPoolsResponse)(nil), "osmosis.poolmanager.v1beta1.AllRegisteredAlloyedPoolsResponse")
 }
 
 func init() {
@@ -1567,135 +2096,168 @@ func init() {
 }
 
 var fileDescriptor_6256a4106f701b7d = []byte{
-	// 2041 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x59, 0xcf, 0x73, 0x1b, 0x49,
-	0xf5, 0xcf, 0xc8, 0x3f, 0xd6, 0x7a, 0x8e, 0x65, 0xa5, 0x13, 0x27, 0xb6, 0x92, 0xaf, 0xe5, 0xed,
-	0xec, 0x37, 0xeb, 0x8d, 0xa3, 0x51, 0x6c, 0x27, 0x24, 0x04, 0x76, 0x83, 0x64, 0x3b, 0x1b, 0x41,
-	0x20, 0xde, 0x89, 0xf7, 0x07, 0x0b, 0x61, 0x6a, 0x6c, 0x75, 0x94, 0x21, 0x9a, 0x19, 0x45, 0xd3,
-	0xe3, 0x58, 0x45, 0xed, 0x85, 0x2a, 0x6a, 0x39, 0x51, 0x0b, 0x1c, 0xf6, 0xc0, 0x81, 0xe2, 0xc0,
-	0x85, 0x1f, 0xc5, 0x85, 0x0b, 0x77, 0x0e, 0x29, 0xaa, 0xa0, 0x52, 0x05, 0x07, 0x8a, 0x83, 0xa0,
-	0x12, 0x0e, 0x54, 0x41, 0x71, 0x10, 0xff, 0x00, 0xd5, 0x3f, 0x66, 0x24, 0x8d, 0xa5, 0xd1, 0x48,
-	0xce, 0x81, 0x53, 0xe4, 0xee, 0xf7, 0x5e, 0x7f, 0x3e, 0xaf, 0xdf, 0xa7, 0xbb, 0xdf, 0x04, 0x5e,
-	0x77, 0x5c, 0xcb, 0x71, 0x4d, 0x37, 0x5f, 0x73, 0x9c, 0xaa, 0x65, 0xd8, 0x46, 0x85, 0xd4, 0xf3,
-	0xfb, 0xab, 0xbb, 0x84, 0x1a, 0xab, 0xf9, 0xc7, 0x1e, 0xa9, 0x37, 0xd4, 0x5a, 0xdd, 0xa1, 0x0e,
-	0x3a, 0x2b, 0x0d, 0xd5, 0x0e, 0x43, 0x55, 0x1a, 0x66, 0x4e, 0x55, 0x9c, 0x8a, 0xc3, 0xed, 0xf2,
-	0xec, 0x97, 0x70, 0xc9, 0xbc, 0x11, 0x15, 0xbb, 0x42, 0x6c, 0xc2, 0xc3, 0x71, 0xd3, 0xd7, 0xa2,
-	0x4c, 0xe9, 0x81, 0xb4, 0xba, 0x14, 0x65, 0xe5, 0x3e, 0x31, 0x6a, 0x7a, 0xdd, 0xf1, 0x28, 0x91,
-	0xd6, 0x8b, 0x7b, 0xdc, 0x3c, 0xbf, 0x6b, 0xb8, 0x24, 0xb0, 0xda, 0x73, 0x4c, 0x5b, 0xce, 0x5f,
-	0xec, 0x9c, 0xe7, 0x54, 0x03, 0xab, 0x9a, 0x51, 0x31, 0x6d, 0x83, 0x9a, 0x8e, 0x6f, 0x7b, 0xae,
-	0xe2, 0x38, 0x95, 0x2a, 0xc9, 0x1b, 0x35, 0x33, 0x6f, 0xd8, 0xb6, 0x43, 0xf9, 0xa4, 0x8f, 0x7e,
-	0x41, 0xce, 0xf2, 0xbf, 0x76, 0xbd, 0x07, 0x79, 0xc3, 0x6e, 0xf8, 0x53, 0x62, 0x11, 0x5d, 0x24,
-	0x47, 0xfc, 0x21, 0xa7, 0xb2, 0x61, 0x2f, 0x6a, 0x5a, 0xc4, 0xa5, 0x86, 0x55, 0x13, 0x06, 0x78,
-	0x16, 0x66, 0xb6, 0x8d, 0xba, 0x61, 0xb9, 0x1a, 0x79, 0xec, 0x11, 0x97, 0xe2, 0x7b, 0x90, 0xf2,
-	0x07, 0xdc, 0x9a, 0x63, 0xbb, 0x04, 0x15, 0x60, 0xb2, 0xc6, 0x47, 0xe6, 0x95, 0x25, 0x65, 0x79,
-	0x7a, 0xed, 0xbc, 0x1a, 0xb1, 0x4d, 0xaa, 0x70, 0x2e, 0x8e, 0x3f, 0x6d, 0x66, 0x8f, 0x69, 0xd2,
-	0x11, 0xff, 0x5b, 0x81, 0xa5, 0x2d, 0x97, 0x9a, 0x96, 0x41, 0xc9, 0xbd, 0x27, 0x46, 0x6d, 0xeb,
-	0xc0, 0xd8, 0xa3, 0x05, 0xcb, 0xf1, 0x6c, 0x5a, 0xb2, 0xe5, 0xca, 0x28, 0x07, 0xaf, 0xb0, 0x80,
-	0xba, 0x59, 0x9e, 0x4f, 0x2c, 0x29, 0xcb, 0xe3, 0xc5, 0x53, 0xad, 0x66, 0x36, 0xd5, 0x30, 0xac,
-	0xea, 0x0d, 0x2c, 0x27, 0xf0, 0xbc, 0xa2, 0x4d, 0xb2, 0xdf, 0xa5, 0x32, 0x52, 0x61, 0x8a, 0x3a,
-	0x8f, 0x88, 0xad, 0x9b, 0xf6, 0xfc, 0xd8, 0x92, 0xb2, 0x9c, 0x2c, 0x9e, 0x6c, 0x35, 0xb3, 0xb3,
-	0xc2, 0xde, 0x9f, 0xc1, 0xda, 0x2b, 0xfc, 0x67, 0xc9, 0x46, 0xf7, 0x61, 0x92, 0xef, 0x9c, 0x3b,
-	0x3f, 0xbe, 0x34, 0xb6, 0x3c, 0xbd, 0xa6, 0x46, 0xd2, 0x60, 0x28, 0x03, 0x80, 0xcc, 0xad, 0x38,
-	0xc7, 0x18, 0xb5, 0x9a, 0xd9, 0x19, 0xb1, 0x82, 0x88, 0x85, 0x35, 0x19, 0xf4, 0x8b, 0xe3, 0x53,
-	0x4a, 0x3a, 0xa1, 0x4d, 0xba, 0xc4, 0x2e, 0x93, 0x3a, 0xfe, 0x45, 0x02, 0xd6, 0xfa, 0x12, 0x7e,
-	0xdf, 0xa4, 0x0f, 0xb7, 0xeb, 0xa6, 0x65, 0x52, 0x73, 0x9f, 0xec, 0x34, 0x6a, 0xc4, 0xed, 0x91,
-	0x02, 0x65, 0xc8, 0x14, 0x24, 0x62, 0xa4, 0xe0, 0x26, 0xa4, 0x04, 0x5a, 0xdd, 0x5f, 0x65, 0x6c,
-	0x69, 0x6c, 0x79, 0xbc, 0xb8, 0xd0, 0x6a, 0x66, 0xe7, 0x3a, 0x69, 0xf9, 0xf3, 0x58, 0x3b, 0x2e,
-	0x06, 0xb6, 0xc5, 0x82, 0xef, 0xc1, 0x69, 0x69, 0x20, 0xa2, 0x3b, 0x1e, 0xd5, 0xcb, 0xc4, 0x76,
-	0x2c, 0x9e, 0xd3, 0x64, 0xf1, 0xd5, 0x56, 0x33, 0xfb, 0x7f, 0x5d, 0x81, 0x42, 0x76, 0x58, 0x3b,
-	0x29, 0x26, 0x76, 0xd8, 0xf8, 0x5d, 0x8f, 0x6e, 0xf2, 0xd1, 0xdf, 0x2b, 0x70, 0x31, 0x48, 0x97,
-	0x69, 0x57, 0xaa, 0x84, 0x2d, 0xd8, 0xb7, 0x52, 0x56, 0xc2, 0x69, 0x42, 0x87, 0xd3, 0x34, 0x72,
-	0x92, 0x8a, 0x30, 0x1b, 0x26, 0x27, 0xca, 0x2b, 0xd3, 0x6a, 0x66, 0x4f, 0x77, 0xba, 0x75, 0xb0,
-	0x9a, 0xa1, 0x5d, 0x7c, 0x3e, 0x56, 0xe0, 0xd5, 0x88, 0x7a, 0x97, 0xc2, 0xda, 0x85, 0x74, 0x3b,
-	0x90, 0xc1, 0x67, 0x39, 0x9f, 0x64, 0xf1, 0x3a, 0xab, 0xb5, 0xbf, 0x34, 0xb3, 0x73, 0x42, 0xcc,
-	0x6e, 0xf9, 0x91, 0x6a, 0x3a, 0x79, 0xcb, 0xa0, 0x0f, 0xd5, 0x92, 0x4d, 0x5b, 0xcd, 0xec, 0x99,
-	0x30, 0x0e, 0xe1, 0x8e, 0xb5, 0x94, 0x0f, 0x44, 0xac, 0x86, 0xff, 0xd3, 0x1f, 0xc9, 0x5d, 0x8f,
-	0x8e, 0x28, 0xbd, 0x6f, 0x04, 0x52, 0x1a, 0xe3, 0x52, 0xca, 0xc7, 0x94, 0x12, 0x5b, 0x31, 0x86,
-	0x96, 0xd0, 0x2a, 0x24, 0x03, 0x66, 0xf3, 0xe3, 0x3c, 0x23, 0x0c, 0x50, 0x3a, 0x44, 0x1a, 0x6b,
-	0x53, 0x3e, 0xdb, 0x90, 0xfc, 0x7e, 0x99, 0x80, 0xf5, 0xfe, 0xac, 0x5f, 0x9a, 0xfe, 0x0e, 0xeb,
-	0x29, 0x31, 0x9c, 0x9e, 0xee, 0xc1, 0x5c, 0x97, 0x4e, 0x4c, 0x3b, 0xa8, 0x38, 0x26, 0xa7, 0xa5,
-	0x56, 0x33, 0x7b, 0xae, 0x87, 0x9c, 0x7c, 0x33, 0xac, 0xa1, 0x0e, 0x35, 0x95, 0x6c, 0x5e, 0x7c,
-	0x23, 0x64, 0x0f, 0xff, 0x41, 0x81, 0x95, 0x81, 0xfa, 0xeb, 0xa8, 0x97, 0xa1, 0x04, 0x78, 0x13,
-	0x52, 0x21, 0x76, 0x42, 0x86, 0x1d, 0x59, 0x0a, 0xd3, 0x3a, 0x4e, 0xfb, 0x12, 0x1a, 0x8b, 0x45,
-	0xe8, 0x3b, 0x0a, 0xe0, 0xa8, 0xb2, 0x97, 0x0a, 0xd4, 0x7d, 0xad, 0x9b, 0x76, 0xb7, 0x00, 0xaf,
-	0x0d, 0x12, 0xe0, 0xe9, 0x10, 0x70, 0x5f, 0x7f, 0x33, 0x12, 0xb9, 0x94, 0xdf, 0x09, 0x98, 0xfd,
-	0x8a, 0x67, 0xb1, 0x64, 0x06, 0x17, 0xec, 0x16, 0xa4, 0xdb, 0x43, 0x12, 0xc7, 0x2a, 0x24, 0x6d,
-	0xcf, 0xe2, 0x55, 0xe2, 0x76, 0x54, 0x9e, 0x64, 0x18, 0x4c, 0x61, 0x6d, 0xca, 0x96, 0xae, 0xf8,
-	0x06, 0x4c, 0xb3, 0x1f, 0xa3, 0xec, 0x08, 0xde, 0x80, 0xe3, 0xc2, 0x57, 0x2e, 0xbf, 0x0e, 0xe3,
-	0x6c, 0x46, 0xde, 0xef, 0xa7, 0x54, 0xf1, 0x68, 0x50, 0xfd, 0x47, 0x83, 0x5a, 0xb0, 0x1b, 0xc5,
-	0xe4, 0xef, 0x7e, 0x9d, 0x9b, 0xe0, 0x65, 0xab, 0x71, 0x63, 0x46, 0xad, 0x50, 0xad, 0x76, 0x51,
-	0x2b, 0x41, 0xba, 0x3d, 0x24, 0x63, 0x5f, 0x85, 0x09, 0x9f, 0xd6, 0x58, 0x9c, 0xe0, 0xc2, 0x1a,
-	0x17, 0xe0, 0xcc, 0x1d, 0xd3, 0xa5, 0x3c, 0x56, 0xb1, 0xc1, 0xeb, 0xc0, 0xa7, 0x7a, 0x01, 0x26,
-	0x44, 0x19, 0x89, 0xad, 0x4a, 0xb7, 0x9a, 0xd9, 0xe3, 0x82, 0xa8, 0xac, 0x1e, 0x31, 0x8d, 0xdf,
-	0x81, 0xf9, 0xc3, 0x21, 0x8e, 0x86, 0xea, 0x99, 0x02, 0xe9, 0x7b, 0x35, 0x87, 0x6e, 0xd7, 0xcd,
-	0x3d, 0x32, 0x92, 0x18, 0xb6, 0x20, 0xcd, 0xde, 0x82, 0xba, 0xe1, 0xba, 0x84, 0x76, 0xc9, 0xe1,
-	0x6c, 0xfb, 0x58, 0x0f, 0x5b, 0x60, 0x2d, 0xc5, 0x86, 0x0a, 0x6c, 0x44, 0x48, 0xe2, 0x36, 0x9c,
-	0x78, 0xec, 0x39, 0xb4, 0x3b, 0x8e, 0x90, 0xc6, 0xb9, 0x56, 0x33, 0x3b, 0x2f, 0xe2, 0x1c, 0x32,
-	0xc1, 0xda, 0x2c, 0x1f, 0x6b, 0x47, 0xc2, 0x25, 0x38, 0xd1, 0xc1, 0x48, 0xa6, 0xe7, 0x0a, 0x80,
-	0x5b, 0x73, 0xa8, 0x5e, 0x63, 0xa3, 0x32, 0xcf, 0x73, 0xad, 0x66, 0xf6, 0x84, 0x88, 0xdb, 0x9e,
-	0xc3, 0x5a, 0xd2, 0xf5, 0xbd, 0xf1, 0x6d, 0x58, 0xd8, 0x71, 0xa8, 0xc1, 0x0b, 0xe0, 0x8e, 0xf9,
-	0xd8, 0x33, 0xcb, 0x26, 0x6d, 0x8c, 0x54, 0xa0, 0x3f, 0x52, 0x20, 0xd3, 0x2b, 0x94, 0x84, 0xf7,
-	0x11, 0x24, 0xab, 0xfe, 0xa0, 0xdc, 0xc1, 0x05, 0x55, 0xbe, 0x7b, 0x59, 0xa2, 0x82, 0xab, 0x67,
-	0xc3, 0x31, 0xed, 0xe2, 0xa6, 0xbc, 0x6c, 0xa4, 0x9a, 0x02, 0x4f, 0xfc, 0xb3, 0xbf, 0x66, 0x97,
-	0x2b, 0x26, 0x7d, 0xe8, 0xed, 0xaa, 0x7b, 0x8e, 0x25, 0x1f, 0xce, 0xf2, 0x9f, 0x9c, 0x5b, 0x7e,
-	0x94, 0xa7, 0xec, 0x6e, 0xe0, 0x41, 0x5c, 0xad, 0xbd, 0x22, 0x3e, 0x03, 0x73, 0x1c, 0x5c, 0x98,
-	0x23, 0xfe, 0x54, 0x81, 0xd3, 0xe1, 0x99, 0xff, 0x0d, 0xc8, 0xfe, 0xd6, 0xbc, 0xe7, 0x54, 0x3d,
-	0x8b, 0xdc, 0x72, 0xea, 0x23, 0x9f, 0x1d, 0x3f, 0xf0, 0xb7, 0x26, 0x14, 0x4a, 0xf2, 0xa4, 0x30,
-	0xb9, 0xcf, 0x27, 0x06, 0x93, 0x2c, 0x74, 0x3f, 0x02, 0x84, 0xdb, 0x70, 0x0c, 0xe5, 0x5a, 0x78,
-	0x1f, 0x32, 0x3b, 0x75, 0xa3, 0x6c, 0xda, 0x95, 0x6d, 0xc3, 0xac, 0xef, 0x18, 0x8f, 0x48, 0xfd,
-	0x16, 0xe9, 0x14, 0x28, 0xaf, 0x7e, 0xfd, 0xb2, 0x2c, 0xe5, 0x0e, 0x7e, 0x72, 0x02, 0x6b, 0x93,
-	0xfc, 0xd7, 0xe5, 0xb6, 0xf1, 0xaa, 0xd4, 0xe5, 0x21, 0xe3, 0x55, 0xdf, 0x78, 0x15, 0x7f, 0x13,
-	0xce, 0xf6, 0x5c, 0x57, 0x26, 0xe3, 0x4b, 0x90, 0xa4, 0x6c, 0x4c, 0x7f, 0x40, 0x7c, 0x15, 0xa9,
-	0xf2, 0x62, 0xb9, 0x10, 0x83, 0xe3, 0x26, 0xd9, 0xd3, 0xa6, 0xa8, 0x0c, 0x8a, 0xff, 0x94, 0x80,
-	0x0b, 0xfe, 0x95, 0xc6, 0x16, 0x25, 0x45, 0xc3, 0x25, 0xe5, 0xbb, 0x36, 0xd7, 0x5e, 0xc9, 0xaa,
-	0x19, 0x7b, 0xc1, 0xf5, 0xfc, 0x79, 0x48, 0x3e, 0xa8, 0x3b, 0x96, 0xce, 0x1a, 0x51, 0x79, 0xa8,
-	0x47, 0xec, 0x83, 0x68, 0xd5, 0xa6, 0x98, 0x07, 0xfb, 0x1b, 0x61, 0x98, 0xa1, 0x0e, 0xf7, 0xed,
-	0x3c, 0x9f, 0xb4, 0x69, 0xea, 0xb0, 0x69, 0x71, 0xfe, 0x9c, 0x69, 0x97, 0x0c, 0x3b, 0x75, 0xc6,
-	0x83, 0xf3, 0xed, 0x03, 0x48, 0x5b, 0xc6, 0x81, 0x38, 0x1c, 0x74, 0x93, 0xa3, 0x92, 0x6f, 0x90,
-	0x61, 0x99, 0xa7, 0x2c, 0xe3, 0xa0, 0x83, 0x1b, 0x7a, 0x17, 0x52, 0xe4, 0x80, 0x92, 0xba, 0x6d,
-	0x54, 0xe5, 0xb9, 0x34, 0x31, 0x52, 0xdc, 0x19, 0x3f, 0x8a, 0x38, 0xb4, 0x7e, 0xae, 0xc0, 0xeb,
-	0x03, 0xd3, 0x2a, 0xf7, 0xf3, 0x2d, 0x00, 0xd3, 0xae, 0x79, 0x74, 0xa8, 0xc4, 0x26, 0xb9, 0x0b,
-	0xcf, 0xec, 0x17, 0x60, 0xda, 0xf1, 0x68, 0x10, 0x20, 0x11, 0x2f, 0x00, 0x08, 0x1f, 0x36, 0xb2,
-	0xf6, 0xf1, 0x39, 0x98, 0x78, 0xc7, 0x23, 0xf5, 0x06, 0xfa, 0x9e, 0x02, 0x93, 0xa2, 0xd7, 0x46,
-	0x17, 0x63, 0x34, 0xe4, 0xb2, 0x34, 0x32, 0x2b, 0xb1, 0x6c, 0x05, 0x5f, 0xbc, 0xf2, 0xed, 0x3f,
-	0xfe, 0xfd, 0x87, 0x89, 0xff, 0x47, 0xe7, 0xf3, 0x51, 0x1f, 0x45, 0x24, 0x8a, 0x7f, 0x28, 0xb0,
-	0xd0, 0xb7, 0xe7, 0x41, 0x6f, 0x46, 0xae, 0x3b, 0xe8, 0xdb, 0x40, 0xe6, 0xad, 0x51, 0xdd, 0x25,
-	0x93, 0x3b, 0x9c, 0xc9, 0x2d, 0xb4, 0x19, 0xc9, 0xe4, 0x5b, 0xb2, 0xa6, 0x3f, 0xca, 0x13, 0x19,
-	0x51, 0x7c, 0xf1, 0x21, 0x2c, 0xa6, 0x7c, 0xe2, 0xe9, 0xa6, 0x8d, 0x7e, 0x92, 0xe8, 0x78, 0x2e,
-	0x0f, 0xee, 0xee, 0xd1, 0xdd, 0xd1, 0xd0, 0xf7, 0xed, 0x53, 0x8e, 0x9c, 0x0e, 0x83, 0xa7, 0xe3,
-	0x6b, 0xe8, 0xab, 0x2f, 0x23, 0x1d, 0xfa, 0x13, 0x93, 0x3e, 0x64, 0x92, 0x14, 0x40, 0x75, 0x2e,
-	0x35, 0xf4, 0xdd, 0x04, 0x9c, 0x8f, 0xd1, 0xd2, 0xa3, 0xb7, 0xe3, 0x51, 0x19, 0xf8, 0x51, 0xe0,
-	0xc8, 0x39, 0xf9, 0x80, 0xe7, 0x44, 0x43, 0xdb, 0x43, 0xe7, 0x84, 0x63, 0x13, 0x2d, 0x5e, 0xcf,
-	0x72, 0xf9, 0x97, 0x02, 0x99, 0xfe, 0xcd, 0x08, 0x1a, 0x09, 0x78, 0xbb, 0x19, 0xcb, 0xdc, 0x1c,
-	0xd9, 0x5f, 0x32, 0xff, 0x32, 0x67, 0xfe, 0x36, 0xda, 0x3a, 0x7a, 0x35, 0x38, 0x1e, 0x45, 0x3f,
-	0x4d, 0xc0, 0xa5, 0x61, 0x9a, 0x6f, 0xb4, 0x3d, 0x22, 0x81, 0xfe, 0xfa, 0x38, 0x72, 0x4a, 0x76,
-	0x79, 0x4a, 0xbe, 0x8e, 0x3e, 0x7c, 0x29, 0x29, 0xe9, 0xad, 0x90, 0x4f, 0x12, 0xf0, 0x5a, 0x9c,
-	0xa6, 0x1b, 0xdd, 0x3e, 0x9a, 0x44, 0x5e, 0x66, 0xa9, 0xdc, 0xe7, 0x79, 0x79, 0x1f, 0xbd, 0x3b,
-	0x64, 0x5e, 0x58, 0x16, 0x06, 0x08, 0x85, 0x95, 0xce, 0xa7, 0x0a, 0x4c, 0xf9, 0xcd, 0x31, 0xba,
-	0x14, 0x09, 0x36, 0xd4, 0x56, 0x67, 0x72, 0x31, 0xad, 0x25, 0x11, 0x95, 0x13, 0x59, 0x46, 0x17,
-	0x22, 0x89, 0x04, 0x9d, 0x37, 0xfa, 0xbe, 0x02, 0xe3, 0x2c, 0x02, 0x5a, 0x8e, 0xbe, 0x40, 0xdb,
-	0xcf, 0xea, 0xcc, 0x1b, 0x31, 0x2c, 0x25, 0x9a, 0x2b, 0x1c, 0x8d, 0x8a, 0x2e, 0x45, 0xa2, 0xe1,
-	0x48, 0xda, 0xc9, 0xe5, 0xd9, 0xf2, 0xfb, 0xed, 0x01, 0xd9, 0x0a, 0x75, 0xea, 0x03, 0xb2, 0x15,
-	0x6e, 0xe2, 0x63, 0x66, 0xcb, 0xa8, 0x56, 0x73, 0x22, 0x5b, 0xbf, 0x51, 0x20, 0x1d, 0xee, 0xbd,
-	0xd1, 0x95, 0xc8, 0x35, 0xfb, 0x74, 0xfb, 0x99, 0xab, 0x43, 0x7a, 0x49, 0xc4, 0xd7, 0x39, 0xe2,
-	0x35, 0x74, 0x39, 0x12, 0x71, 0xd5, 0x74, 0xa9, 0x80, 0x9c, 0xdb, 0x6d, 0xe4, 0xf8, 0x6b, 0x17,
-	0xfd, 0x58, 0x81, 0x64, 0xd0, 0x11, 0xa3, 0xe8, 0x44, 0x85, 0xbf, 0x05, 0x64, 0xd4, 0xb8, 0xe6,
-	0x12, 0xe6, 0x3a, 0x87, 0x99, 0x43, 0x2b, 0x3d, 0x61, 0x86, 0x36, 0x3c, 0xcf, 0x9f, 0xbd, 0x2e,
-	0x7a, 0xa6, 0x00, 0x3a, 0xdc, 0x1d, 0xa3, 0xcf, 0x44, 0xae, 0xdd, 0xb7, 0x33, 0xcf, 0x5c, 0x1b,
-	0xda, 0x4f, 0x82, 0x2f, 0x71, 0xf0, 0x1b, 0xa8, 0x30, 0x4c, 0xd5, 0xe6, 0x29, 0x0b, 0x28, 0x0e,
-	0x81, 0xa0, 0x3f, 0x45, 0xbf, 0x52, 0x20, 0xd5, 0xdd, 0x39, 0xa3, 0xb5, 0xc1, 0xb0, 0x0e, 0x51,
-	0x59, 0x1f, 0xca, 0x67, 0x28, 0xf1, 0x09, 0xd8, 0x6d, 0xc4, 0x4f, 0xfd, 0x4d, 0xe8, 0xea, 0x83,
-	0xe3, 0x6c, 0x42, 0xaf, 0x1e, 0x3c, 0xce, 0x26, 0xf4, 0x6c, 0xb8, 0x71, 0x81, 0xa3, 0xff, 0x1c,
-	0xfa, 0xec, 0x08, 0x9b, 0x20, 0xba, 0x67, 0xf4, 0x5b, 0x05, 0x4e, 0xf6, 0x68, 0x63, 0xd1, 0x00,
-	0x4c, 0x7d, 0x1b, 0xee, 0xcc, 0xf5, 0xe1, 0x1d, 0x25, 0x9b, 0x1b, 0x9c, 0xcd, 0x15, 0xb4, 0x16,
-	0xbd, 0x17, 0x22, 0x82, 0x5e, 0x33, 0xcc, 0xba, 0xce, 0x1b, 0xe4, 0x07, 0x84, 0xa0, 0x7f, 0x2a,
-	0x90, 0x1d, 0xd0, 0xc9, 0xa1, 0x8d, 0x58, 0x17, 0x60, 0x74, 0x7b, 0x9d, 0xd9, 0x3c, 0x5a, 0x10,
-	0x49, 0xf5, 0x4d, 0x4e, 0xf5, 0x1a, 0xba, 0x3a, 0xec, 0x55, 0x4a, 0x79, 0xe0, 0xfb, 0x4f, 0x9f,
-	0x2f, 0x2a, 0xcf, 0x9e, 0x2f, 0x2a, 0x7f, 0x7b, 0xbe, 0xa8, 0x7c, 0xf2, 0x62, 0xf1, 0xd8, 0xb3,
-	0x17, 0x8b, 0xc7, 0xfe, 0xfc, 0x62, 0xf1, 0xd8, 0x87, 0x1b, 0x1d, 0x8d, 0xb0, 0x0c, 0x9d, 0xab,
-	0x1a, 0xbb, 0x6e, 0xb0, 0xce, 0xfe, 0xda, 0xd5, 0xfc, 0x41, 0xd7, 0x6a, 0x7b, 0x55, 0x93, 0xd8,
-	0x54, 0xfc, 0x07, 0xb5, 0xf8, 0x04, 0x3a, 0xc9, 0xff, 0x59, 0xff, 0x6f, 0x00, 0x00, 0x00, 0xff,
-	0xff, 0x2a, 0xf2, 0xdb, 0xa7, 0xbc, 0x1f, 0x00, 0x00,
+	// 2563 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x5a, 0x4d, 0x6c, 0x1c, 0x49,
+	0xf5, 0x4f, 0x8f, 0x1d, 0xaf, 0xe7, 0x25, 0xfe, 0x48, 0x25, 0x4e, 0xec, 0x49, 0xfe, 0x1e, 0xa7,
+	0x92, 0x38, 0xce, 0x87, 0x67, 0x62, 0x3b, 0xf9, 0x27, 0x64, 0x37, 0xc9, 0xce, 0xf8, 0x23, 0x31,
+	0x1b, 0x88, 0x33, 0xf6, 0x66, 0x97, 0x65, 0xb3, 0xad, 0xf6, 0x4c, 0x65, 0xdc, 0xb8, 0x3f, 0x26,
+	0xdd, 0xd5, 0x8e, 0x2d, 0x94, 0x0b, 0x12, 0x82, 0x13, 0x0a, 0xec, 0x61, 0x91, 0x40, 0x5a, 0xed,
+	0x81, 0x0b, 0x1f, 0xe2, 0xc2, 0x85, 0x3b, 0x87, 0x08, 0x09, 0x14, 0x69, 0x39, 0x20, 0x24, 0x06,
+	0x94, 0x70, 0x40, 0x80, 0x38, 0x98, 0x1b, 0x17, 0x50, 0x57, 0x55, 0xf7, 0xf4, 0x8c, 0x67, 0xba,
+	0x7b, 0x66, 0x72, 0xe0, 0xb4, 0xe3, 0xaa, 0xf7, 0x5e, 0xfd, 0x7e, 0xaf, 0xde, 0xab, 0xaa, 0xfe,
+	0x65, 0xe1, 0xac, 0x69, 0xeb, 0xa6, 0xad, 0xda, 0xd9, 0x8a, 0x69, 0x6a, 0xba, 0x62, 0x28, 0x65,
+	0x62, 0x65, 0xb7, 0x66, 0xd6, 0x09, 0x55, 0x66, 0xb2, 0x8f, 0x1d, 0x62, 0xed, 0x64, 0x2a, 0x96,
+	0x49, 0x4d, 0x74, 0x5c, 0x18, 0x66, 0x02, 0x86, 0x19, 0x61, 0x98, 0x3a, 0x52, 0x36, 0xcb, 0x26,
+	0xb3, 0xcb, 0xba, 0xbf, 0xb8, 0x4b, 0xea, 0x5c, 0x58, 0xec, 0x32, 0x31, 0x08, 0x0b, 0xc7, 0x4c,
+	0x4f, 0x87, 0x99, 0xd2, 0x6d, 0x61, 0x75, 0x31, 0xcc, 0xca, 0x7e, 0xa2, 0x54, 0x64, 0xcb, 0x74,
+	0x28, 0x11, 0xd6, 0x33, 0xa1, 0x31, 0x95, 0x4d, 0x62, 0xc9, 0x8f, 0x08, 0x91, 0xed, 0x0d, 0xc5,
+	0xf2, 0x5c, 0xc6, 0x8b, 0xcc, 0x27, 0xbb, 0xae, 0xd8, 0xc4, 0x37, 0x2d, 0x9a, 0xaa, 0x21, 0xe6,
+	0xcf, 0x07, 0xe7, 0x59, 0x76, 0x7c, 0xab, 0x8a, 0x52, 0x56, 0x0d, 0x85, 0xaa, 0xa6, 0x67, 0x7b,
+	0xa2, 0x6c, 0x9a, 0x65, 0x8d, 0x64, 0x95, 0x8a, 0x9a, 0x55, 0x0c, 0xc3, 0xa4, 0x6c, 0xd2, 0x23,
+	0x3c, 0x26, 0x66, 0xd9, 0x5f, 0xeb, 0xce, 0xa3, 0xac, 0x62, 0xec, 0x78, 0x53, 0x7c, 0x11, 0x99,
+	0xe7, 0x93, 0xff, 0x21, 0xa6, 0xd2, 0x8d, 0x5e, 0x54, 0xd5, 0x89, 0x4d, 0x15, 0xbd, 0xc2, 0x0d,
+	0xf0, 0x10, 0x0c, 0xac, 0x28, 0x96, 0xa2, 0xdb, 0x05, 0xf2, 0xd8, 0x21, 0x36, 0xc5, 0xab, 0x30,
+	0xe8, 0x0d, 0xd8, 0x15, 0xd3, 0xb0, 0x09, 0xca, 0x41, 0x5f, 0x85, 0x8d, 0x8c, 0x4a, 0x13, 0xd2,
+	0xd4, 0x81, 0xd9, 0x53, 0x99, 0x90, 0x9d, 0xcd, 0x70, 0xe7, 0x7c, 0xef, 0xf3, 0x6a, 0x7a, 0x5f,
+	0x41, 0x38, 0xe2, 0x7f, 0x4a, 0x30, 0xb1, 0x68, 0x53, 0x55, 0x57, 0x28, 0x59, 0x7d, 0xa2, 0x54,
+	0x16, 0xb7, 0x95, 0x22, 0xcd, 0xe9, 0xa6, 0x63, 0xd0, 0x65, 0x43, 0xac, 0x8c, 0xa6, 0xe1, 0x0d,
+	0x37, 0xa0, 0xac, 0x96, 0x46, 0x13, 0x13, 0xd2, 0x54, 0x6f, 0xfe, 0xc8, 0x6e, 0x35, 0x3d, 0xb8,
+	0xa3, 0xe8, 0xda, 0x75, 0x2c, 0x26, 0xf0, 0xa8, 0x54, 0xe8, 0x73, 0x7f, 0x2f, 0x97, 0x50, 0x06,
+	0xfa, 0xa9, 0xb9, 0x49, 0x0c, 0x59, 0x35, 0x46, 0x7b, 0x26, 0xa4, 0xa9, 0x64, 0xfe, 0xf0, 0x6e,
+	0x35, 0x3d, 0xc4, 0xed, 0xbd, 0x19, 0x5c, 0x78, 0x83, 0xfd, 0x5c, 0x36, 0xd0, 0x43, 0xe8, 0x63,
+	0x9b, 0x6d, 0x8f, 0xf6, 0x4e, 0xf4, 0x4c, 0x1d, 0x98, 0xcd, 0x84, 0xd2, 0x70, 0x51, 0xfa, 0x00,
+	0x5d, 0xb7, 0xfc, 0x88, 0xcb, 0x68, 0xb7, 0x9a, 0x1e, 0xe0, 0x2b, 0xf0, 0x58, 0xb8, 0x20, 0x82,
+	0x7e, 0xb1, 0xb7, 0x5f, 0x1a, 0x4e, 0x14, 0xfa, 0x6c, 0x62, 0x94, 0x88, 0x85, 0x7f, 0x9a, 0x80,
+	0xd9, 0x96, 0x84, 0xdf, 0x53, 0xe9, 0xc6, 0x8a, 0xa5, 0xea, 0x2a, 0x55, 0xb7, 0xc8, 0xda, 0x4e,
+	0x85, 0xd8, 0x4d, 0x52, 0x20, 0xb5, 0x99, 0x82, 0x44, 0x8c, 0x14, 0xdc, 0x82, 0x41, 0x8e, 0x56,
+	0xf6, 0x56, 0xe9, 0x99, 0xe8, 0x99, 0xea, 0xcd, 0x8f, 0xed, 0x56, 0xd3, 0x23, 0x41, 0x5a, 0xde,
+	0x3c, 0x2e, 0x1c, 0xe4, 0x03, 0x2b, 0x7c, 0xc1, 0x07, 0x70, 0x54, 0x18, 0xf0, 0xe8, 0xa6, 0x43,
+	0xe5, 0x12, 0x31, 0x4c, 0x9d, 0xe5, 0x34, 0x99, 0x3f, 0xb9, 0x5b, 0x4d, 0xff, 0x5f, 0x5d, 0xa0,
+	0x06, 0x3b, 0x5c, 0x38, 0xcc, 0x27, 0xd6, 0xdc, 0xf1, 0x7b, 0x0e, 0x5d, 0x60, 0xa3, 0xbf, 0x91,
+	0xe0, 0xbc, 0x9f, 0x2e, 0xd5, 0x28, 0x6b, 0xc4, 0x5d, 0xb0, 0x65, 0xa5, 0x5c, 0x68, 0x4c, 0x13,
+	0xda, 0x9b, 0xa6, 0x8e, 0x93, 0x94, 0x87, 0xa1, 0x46, 0x72, 0xbc, 0xbc, 0x52, 0xbb, 0xd5, 0xf4,
+	0xd1, 0xa0, 0x5b, 0x80, 0xd5, 0x00, 0xad, 0xe3, 0xf3, 0x2d, 0x09, 0x4e, 0x86, 0xd4, 0xbb, 0x68,
+	0xac, 0x75, 0x18, 0xae, 0x05, 0x52, 0xd8, 0x2c, 0xe3, 0x93, 0xcc, 0x5f, 0x73, 0x6b, 0xed, 0x0f,
+	0xd5, 0xf4, 0x08, 0x6f, 0x66, 0xbb, 0xb4, 0x99, 0x51, 0xcd, 0xac, 0xae, 0xd0, 0x8d, 0xcc, 0xb2,
+	0x41, 0x77, 0xab, 0xe9, 0x63, 0x8d, 0x38, 0xb8, 0x3b, 0x2e, 0x0c, 0x7a, 0x40, 0xf8, 0x6a, 0xf8,
+	0x5f, 0xad, 0x91, 0xdc, 0x73, 0x68, 0x87, 0xad, 0xf7, 0x91, 0xdf, 0x4a, 0x3d, 0xac, 0x95, 0xb2,
+	0x31, 0x5b, 0xc9, 0x5d, 0x31, 0x46, 0x2f, 0xa1, 0x19, 0x48, 0xfa, 0xcc, 0x46, 0x7b, 0x59, 0x46,
+	0x5c, 0x40, 0xc3, 0x0d, 0xa4, 0x71, 0xa1, 0xdf, 0x63, 0xdb, 0xd0, 0x7e, 0x3f, 0x4b, 0xc0, 0x5c,
+	0x6b, 0xd6, 0xaf, 0xad, 0xff, 0xf6, 0xf6, 0x53, 0xa2, 0xbd, 0x7e, 0x5a, 0x85, 0x91, 0xba, 0x3e,
+	0x51, 0x0d, 0xbf, 0xe2, 0xdc, 0x76, 0x9a, 0xd8, 0xad, 0xa6, 0x4f, 0x34, 0x69, 0x27, 0xcf, 0x0c,
+	0x17, 0x50, 0xa0, 0x9b, 0x96, 0x0d, 0x56, 0x7c, 0x1d, 0x64, 0x0f, 0xff, 0x56, 0x82, 0x0b, 0x91,
+	0xfd, 0x17, 0xa8, 0x97, 0xb6, 0x1a, 0xf0, 0x16, 0x0c, 0x36, 0xb0, 0xe3, 0x6d, 0x18, 0xc8, 0x52,
+	0x23, 0xad, 0x83, 0xb4, 0x25, 0xa1, 0x9e, 0x58, 0x84, 0xbe, 0x29, 0x01, 0x0e, 0x2b, 0x7b, 0xd1,
+	0x81, 0xb2, 0xd7, 0xeb, 0xaa, 0x51, 0xdf, 0x80, 0x57, 0xa3, 0x1a, 0xf0, 0x68, 0x03, 0x70, 0xaf,
+	0xff, 0x06, 0x04, 0x72, 0xd1, 0x7e, 0x87, 0x60, 0xe8, 0xcb, 0x8e, 0xee, 0x26, 0xd3, 0xbf, 0x60,
+	0x17, 0x61, 0xb8, 0x36, 0x24, 0x70, 0xcc, 0x40, 0xd2, 0x70, 0x74, 0x56, 0x25, 0x76, 0xa0, 0xf2,
+	0x04, 0x43, 0x7f, 0x0a, 0x17, 0xfa, 0x0d, 0xe1, 0x8a, 0xaf, 0xc3, 0x01, 0xf7, 0x47, 0x27, 0x3b,
+	0x82, 0xe7, 0xe1, 0x20, 0xf7, 0x15, 0xcb, 0xcf, 0x41, 0xaf, 0x3b, 0x23, 0xee, 0xf7, 0x23, 0x19,
+	0xfe, 0x68, 0xc8, 0x78, 0x8f, 0x86, 0x4c, 0xce, 0xd8, 0xc9, 0x27, 0x7f, 0xfd, 0x8b, 0xe9, 0xfd,
+	0xac, 0x6c, 0x0b, 0xcc, 0xd8, 0xa5, 0x96, 0xd3, 0xb4, 0x3a, 0x6a, 0xcb, 0x30, 0x5c, 0x1b, 0x12,
+	0xb1, 0xaf, 0xc0, 0x7e, 0x8f, 0x56, 0x4f, 0x9c, 0xe0, 0xdc, 0x1a, 0xe7, 0xe0, 0xd8, 0x5d, 0xd5,
+	0xa6, 0x2c, 0x56, 0x7e, 0x87, 0xd5, 0x81, 0x47, 0x75, 0x12, 0xf6, 0xf3, 0x32, 0xe2, 0x5b, 0x35,
+	0xbc, 0x5b, 0x4d, 0x1f, 0xe4, 0x44, 0x45, 0xf5, 0xf0, 0x69, 0x7c, 0x1f, 0x46, 0xf7, 0x86, 0xe8,
+	0x0e, 0xd5, 0x0b, 0x09, 0x86, 0x57, 0x2b, 0x26, 0x5d, 0xb1, 0xd4, 0x22, 0xe9, 0xa8, 0x19, 0x16,
+	0x61, 0xd8, 0x7d, 0x0b, 0xca, 0x8a, 0x6d, 0x13, 0x5a, 0xd7, 0x0e, 0xc7, 0x6b, 0xc7, 0x7a, 0xa3,
+	0x05, 0x2e, 0x0c, 0xba, 0x43, 0x39, 0x77, 0x84, 0xb7, 0xc4, 0x1d, 0x38, 0xf4, 0xd8, 0x31, 0x69,
+	0x7d, 0x1c, 0xde, 0x1a, 0x27, 0x76, 0xab, 0xe9, 0x51, 0x1e, 0x67, 0x8f, 0x09, 0x2e, 0x0c, 0xb1,
+	0xb1, 0x5a, 0x24, 0xbc, 0x0c, 0x87, 0x02, 0x8c, 0x44, 0x7a, 0x2e, 0x03, 0xd8, 0x15, 0x93, 0xca,
+	0x15, 0x77, 0x54, 0xe4, 0x79, 0x64, 0xb7, 0x9a, 0x3e, 0xc4, 0xe3, 0xd6, 0xe6, 0x70, 0x21, 0x69,
+	0x7b, 0xde, 0xf8, 0x0e, 0x8c, 0xad, 0x99, 0x54, 0x61, 0x05, 0x70, 0x57, 0x7d, 0xec, 0xa8, 0x25,
+	0x95, 0xee, 0x74, 0x54, 0xa0, 0x3f, 0x90, 0x20, 0xd5, 0x2c, 0x94, 0x80, 0xf7, 0x14, 0x92, 0x9a,
+	0x37, 0x28, 0x76, 0x70, 0x2c, 0x23, 0xde, 0xbd, 0x6e, 0xa2, 0xfc, 0xab, 0x67, 0xde, 0x54, 0x8d,
+	0xfc, 0x82, 0xb8, 0x6c, 0x44, 0x37, 0xf9, 0x9e, 0xf8, 0xc7, 0x7f, 0x4a, 0x4f, 0x95, 0x55, 0xba,
+	0xe1, 0xac, 0x67, 0x8a, 0xa6, 0x2e, 0x1e, 0xce, 0xe2, 0x3f, 0xd3, 0x76, 0x69, 0x33, 0x4b, 0xdd,
+	0xbb, 0x81, 0x05, 0xb1, 0x0b, 0xb5, 0x15, 0xf1, 0x31, 0x18, 0x61, 0xe0, 0x1a, 0x39, 0xe2, 0x4f,
+	0x24, 0x38, 0xda, 0x38, 0xf3, 0xbf, 0x01, 0xd9, 0xdb, 0x9a, 0x07, 0xa6, 0xe6, 0xe8, 0x64, 0xc9,
+	0xb4, 0x3a, 0x3e, 0x3b, 0xbe, 0xe7, 0x6d, 0x4d, 0x43, 0x28, 0xc1, 0x93, 0x42, 0xdf, 0x16, 0x9b,
+	0x88, 0x26, 0x99, 0xab, 0x7f, 0x04, 0x70, 0xb7, 0xf6, 0x18, 0x8a, 0xb5, 0xf0, 0x16, 0xa4, 0xd6,
+	0x2c, 0xa5, 0xa4, 0x1a, 0xe5, 0x15, 0x45, 0xb5, 0xd6, 0xdc, 0x4f, 0xb5, 0x25, 0x12, 0x6c, 0x50,
+	0x56, 0xfd, 0xf2, 0x25, 0x51, 0xca, 0x01, 0x7e, 0x62, 0x02, 0x17, 0xfa, 0xd8, 0xaf, 0x4b, 0x35,
+	0xe3, 0x19, 0xd1, 0x97, 0x7b, 0x8c, 0x67, 0x3c, 0xe3, 0x19, 0xfc, 0x35, 0x38, 0xde, 0x74, 0x5d,
+	0x91, 0x8c, 0x77, 0x20, 0xe9, 0x7f, 0x36, 0x8a, 0xa5, 0x33, 0xe2, 0x62, 0x99, 0x8c, 0xc1, 0x71,
+	0x81, 0x14, 0x0b, 0xfd, 0x54, 0x04, 0xc5, 0xbf, 0x4b, 0xc0, 0xa4, 0x77, 0xa5, 0xb9, 0x8b, 0x92,
+	0xbc, 0x62, 0x93, 0xd2, 0x3d, 0x83, 0xf5, 0xde, 0xb2, 0x5e, 0x51, 0x8a, 0xfe, 0xf5, 0xfc, 0x16,
+	0x24, 0x1f, 0x59, 0xa6, 0x2e, 0xbb, 0x1f, 0xa2, 0xe2, 0x50, 0x0f, 0xd9, 0x07, 0xfe, 0xa9, 0xd6,
+	0xef, 0x7a, 0xb8, 0x7f, 0x23, 0x0c, 0x03, 0xd4, 0x64, 0xbe, 0xc1, 0xf3, 0xa9, 0x70, 0x80, 0x9a,
+	0xee, 0x34, 0x3f, 0x7f, 0x8e, 0xd5, 0x4a, 0xc6, 0x3d, 0x75, 0x7a, 0xfd, 0xf3, 0xed, 0x7d, 0x18,
+	0xd6, 0x95, 0x6d, 0x7e, 0x38, 0xc8, 0x2a, 0x43, 0x25, 0xde, 0x20, 0xed, 0x32, 0x1f, 0xd4, 0x95,
+	0xed, 0x00, 0x37, 0xf4, 0x2e, 0x0c, 0x92, 0x6d, 0x4a, 0x2c, 0x43, 0xd1, 0xc4, 0xb9, 0xb4, 0xbf,
+	0xa3, 0xb8, 0x03, 0x5e, 0x14, 0x7e, 0x68, 0xfd, 0x44, 0x82, 0xb3, 0x91, 0x69, 0x15, 0xfb, 0x79,
+	0x13, 0x40, 0x35, 0x2a, 0x0e, 0x6d, 0x2b, 0xb1, 0x49, 0xe6, 0xc2, 0x32, 0xfb, 0x36, 0x1c, 0x30,
+	0x1d, 0xea, 0x07, 0x48, 0xc4, 0x0b, 0x00, 0xdc, 0xc7, 0x1d, 0xc1, 0xa7, 0xe0, 0x64, 0x4e, 0xd3,
+	0xbc, 0x42, 0x5b, 0xdd, 0x50, 0x2c, 0x92, 0x2b, 0x5b, 0x84, 0xe8, 0xc4, 0xa0, 0xfe, 0x35, 0xfc,
+	0x43, 0x09, 0x70, 0x98, 0x95, 0x60, 0xb3, 0x05, 0xa9, 0x06, 0x51, 0x43, 0x56, 0x7c, 0x2b, 0xd1,
+	0xbe, 0x73, 0xa1, 0x2f, 0xfb, 0xe6, 0x2b, 0x08, 0xd8, 0xc7, 0x68, 0xf3, 0xf5, 0xf1, 0x4d, 0x98,
+	0x6c, 0xee, 0xb8, 0x64, 0x99, 0x7a, 0xdd, 0x4d, 0x7f, 0xa4, 0xee, 0xa6, 0xf7, 0xee, 0xf5, 0x4f,
+	0x25, 0x38, 0x1b, 0x19, 0xc0, 0x3f, 0x8e, 0xc6, 0x5a, 0x72, 0x14, 0x1b, 0xd8, 0x05, 0xc5, 0xa3,
+	0xcd, 0x29, 0xe2, 0x47, 0x30, 0x55, 0xe7, 0xc7, 0x30, 0xd9, 0x6b, 0x66, 0xae, 0x58, 0xb4, 0x1c,
+	0x52, 0x7a, 0xa0, 0x68, 0x0e, 0x09, 0xe5, 0x88, 0x4e, 0xc3, 0x80, 0x17, 0x7b, 0x21, 0xd0, 0x83,
+	0xf5, 0x83, 0xd8, 0x86, 0x73, 0x31, 0xd6, 0x11, 0xa9, 0x58, 0x82, 0xbe, 0xba, 0x27, 0x6e, 0x26,
+	0xea, 0x89, 0x2b, 0xce, 0x65, 0xef, 0x65, 0x2b, 0xbc, 0xf1, 0x19, 0x38, 0xb5, 0xa7, 0xb8, 0x8a,
+	0x45, 0x47, 0x77, 0x34, 0x85, 0x9a, 0x96, 0x5f, 0x84, 0x9f, 0x49, 0x70, 0x3a, 0xdc, 0x4e, 0xe0,
+	0xda, 0x81, 0xe3, 0x81, 0x2d, 0xda, 0x54, 0x75, 0x59, 0x09, 0x98, 0x89, 0x3a, 0xbc, 0x1c, 0x6f,
+	0x93, 0x36, 0x55, 0x3d, 0xb0, 0x86, 0xd8, 0xa5, 0x51, 0xda, 0x7c, 0xda, 0xc6, 0x37, 0xe0, 0x4c,
+	0x81, 0x94, 0x55, 0x9b, 0x12, 0x8b, 0x94, 0x72, 0x9a, 0x66, 0xee, 0x90, 0x92, 0x7b, 0x9b, 0xc5,
+	0x2c, 0xc4, 0x8f, 0x25, 0x98, 0x8c, 0xf2, 0x17, 0x24, 0x55, 0x18, 0x2c, 0x9a, 0x06, 0xb5, 0x94,
+	0x22, 0x95, 0x6d, 0xaa, 0x50, 0x22, 0x8a, 0xef, 0xad, 0x50, 0x5e, 0x2c, 0xe4, 0xbc, 0xf0, 0xab,
+	0xcb, 0xe4, 0xaa, 0x1b, 0x43, 0xf0, 0x1b, 0xf0, 0x22, 0xb3, 0x41, 0x8c, 0x61, 0x22, 0xa7, 0x69,
+	0x4d, 0x71, 0xf9, 0x9b, 0xf3, 0x4c, 0x62, 0xe7, 0x48, 0x2b, 0x23, 0x01, 0x7a, 0x13, 0x86, 0xea,
+	0x41, 0x7b, 0xbb, 0xf1, 0x3a, 0x50, 0x0f, 0xd6, 0xa1, 0xb6, 0x67, 0x3f, 0x3f, 0x0b, 0xfb, 0xef,
+	0x3b, 0xc4, 0xda, 0x41, 0xdf, 0x91, 0xa0, 0x8f, 0xab, 0x88, 0xe8, 0x7c, 0x0c, 0xa9, 0x51, 0x70,
+	0x4a, 0x5d, 0x88, 0x65, 0xcb, 0xa9, 0xe1, 0x0b, 0xdf, 0xf8, 0xfc, 0x2f, 0x1f, 0x27, 0xce, 0xa0,
+	0x53, 0xd9, 0x30, 0xcd, 0x57, 0xa0, 0xf8, 0xab, 0x04, 0x63, 0x2d, 0xd5, 0x1c, 0x74, 0x23, 0x74,
+	0xdd, 0x28, 0xd5, 0x33, 0x75, 0xb3, 0x53, 0x77, 0xc1, 0xe4, 0x2e, 0x63, 0xb2, 0x84, 0x16, 0x42,
+	0x99, 0x7c, 0x5d, 0xdc, 0xd6, 0x4f, 0xb3, 0x44, 0x44, 0xe4, 0xf2, 0x37, 0x71, 0x63, 0x8a, 0x8f,
+	0x57, 0x59, 0x35, 0xd0, 0x67, 0x89, 0x80, 0x10, 0x10, 0xad, 0x5b, 0xa2, 0x7b, 0x9d, 0xa1, 0x6f,
+	0xa9, 0xc0, 0x74, 0x9d, 0x0e, 0x85, 0xa5, 0xe3, 0xab, 0xe8, 0x2b, 0xaf, 0x23, 0x1d, 0xf2, 0x13,
+	0x95, 0x6e, 0xb8, 0x8f, 0x0d, 0x0e, 0x54, 0x66, 0x8f, 0x08, 0xf4, 0xed, 0x04, 0x9c, 0x8a, 0x21,
+	0x56, 0xa2, 0xdb, 0xf1, 0xa8, 0x44, 0xca, 0x9d, 0x5d, 0xe7, 0xe4, 0x7d, 0x96, 0x93, 0x02, 0x5a,
+	0x69, 0x3b, 0x27, 0x0c, 0x1b, 0x17, 0xaf, 0x9a, 0x96, 0xcb, 0x3f, 0x24, 0x48, 0xb5, 0x96, 0x59,
+	0x50, 0x47, 0xc0, 0x6b, 0x32, 0x53, 0xea, 0x56, 0xc7, 0xfe, 0x82, 0xf9, 0x97, 0x18, 0xf3, 0xdb,
+	0x68, 0xb1, 0xfb, 0x6a, 0x30, 0x1d, 0x8a, 0x7e, 0x94, 0x80, 0x8b, 0xed, 0xc8, 0x8a, 0x68, 0xa5,
+	0x43, 0x02, 0xad, 0xfb, 0xa3, 0xeb, 0x94, 0xac, 0xb3, 0x94, 0x7c, 0x88, 0x3e, 0x78, 0x2d, 0x29,
+	0x69, 0xde, 0x21, 0xcf, 0x12, 0x70, 0x3a, 0x8e, 0x9c, 0x88, 0xee, 0x74, 0xd7, 0x22, 0xaf, 0xb3,
+	0x54, 0x1e, 0xb2, 0xbc, 0xbc, 0x87, 0xde, 0x6d, 0x33, 0x2f, 0x6e, 0x16, 0x22, 0x1a, 0xc5, 0x2d,
+	0x9d, 0x4f, 0x24, 0xe8, 0xf7, 0x64, 0x3f, 0x74, 0x31, 0x14, 0x6c, 0x83, 0x60, 0x98, 0x9a, 0x8e,
+	0x69, 0x2d, 0x88, 0x64, 0x18, 0x91, 0x29, 0x34, 0x19, 0x4a, 0xc4, 0xd7, 0x14, 0xd1, 0x77, 0x25,
+	0xe8, 0x75, 0x23, 0xa0, 0xa9, 0xf0, 0x0b, 0xb4, 0x26, 0x18, 0xa4, 0xce, 0xc5, 0xb0, 0x14, 0x68,
+	0x2e, 0x33, 0x34, 0x19, 0x74, 0x31, 0x14, 0x0d, 0x43, 0x52, 0x4b, 0x2e, 0xcb, 0x96, 0xa7, 0x24,
+	0x46, 0x64, 0xab, 0x41, 0x83, 0x8c, 0xc8, 0x56, 0xa3, 0x3c, 0x19, 0x33, 0x5b, 0x8a, 0xa6, 0x4d,
+	0xf3, 0x6c, 0xfd, 0x52, 0x82, 0xe1, 0x46, 0x55, 0x11, 0x85, 0xbf, 0x4e, 0x5b, 0xe8, 0x98, 0xa9,
+	0x2b, 0x6d, 0x7a, 0x09, 0xc4, 0xd7, 0x18, 0xe2, 0x59, 0x74, 0x29, 0x14, 0xb1, 0xa6, 0xda, 0x94,
+	0x43, 0x9e, 0x5e, 0xdf, 0x99, 0xe6, 0x1f, 0x15, 0x9f, 0x4a, 0x90, 0xf4, 0xb5, 0x3e, 0x14, 0x9e,
+	0xa8, 0x46, 0x95, 0x33, 0x95, 0x89, 0x6b, 0x2e, 0x60, 0xce, 0x31, 0x98, 0xd3, 0xe8, 0x42, 0x53,
+	0x98, 0x0d, 0x1b, 0x9e, 0x65, 0x1f, 0xf4, 0x36, 0x7a, 0x21, 0x01, 0xda, 0xab, 0xfb, 0xa1, 0xff,
+	0x0f, 0x7f, 0xfd, 0xb7, 0xd2, 0x1c, 0x53, 0x57, 0xdb, 0xf6, 0x13, 0xe0, 0x97, 0x19, 0xf8, 0x79,
+	0x94, 0x6b, 0xa7, 0x6a, 0xb3, 0xd4, 0x0d, 0xc8, 0x0f, 0x01, 0x5f, 0x79, 0x43, 0x3f, 0x97, 0x60,
+	0xb0, 0x5e, 0x13, 0x44, 0xb3, 0xd1, 0xb0, 0xf6, 0x50, 0x99, 0x6b, 0xcb, 0xa7, 0xad, 0xe6, 0xe3,
+	0xb0, 0x6b, 0x88, 0x9f, 0x7b, 0x9b, 0x50, 0xa7, 0xf0, 0xc5, 0xd9, 0x84, 0x66, 0xea, 0x62, 0x9c,
+	0x4d, 0x68, 0x2a, 0x25, 0xe2, 0x1c, 0x43, 0xff, 0x26, 0xfa, 0x42, 0x07, 0x9b, 0xc0, 0x75, 0x41,
+	0xf4, 0x2b, 0x09, 0x0e, 0x37, 0x11, 0xe8, 0x50, 0x04, 0xa6, 0x96, 0x52, 0x62, 0xea, 0x5a, 0xfb,
+	0x8e, 0x82, 0xcd, 0x75, 0xc6, 0xe6, 0x32, 0x9a, 0x0d, 0xdf, 0x0b, 0x1e, 0x41, 0xae, 0x28, 0xaa,
+	0x25, 0xb3, 0xef, 0xd6, 0x47, 0x84, 0xa0, 0xbf, 0x4b, 0x90, 0x8e, 0xd0, 0xa8, 0xd0, 0x7c, 0xac,
+	0x0b, 0x30, 0x5c, 0x38, 0x4c, 0x2d, 0x74, 0x17, 0x44, 0x50, 0xbd, 0xc1, 0xa8, 0x5e, 0x45, 0x57,
+	0xda, 0xbd, 0x4a, 0x5d, 0xf6, 0x04, 0xbd, 0x94, 0x20, 0xd5, 0x5a, 0xbe, 0x8a, 0x78, 0x54, 0x46,
+	0xaa, 0x63, 0x11, 0x2f, 0x85, 0x68, 0xdd, 0x0c, 0xcf, 0x33, 0x7a, 0x37, 0xd0, 0x9b, 0x51, 0x57,
+	0x86, 0xdc, 0x5a, 0x5e, 0x43, 0xff, 0x91, 0x20, 0x1d, 0x21, 0x62, 0x45, 0x6c, 0x69, 0x3c, 0x0d,
+	0x2d, 0x62, 0x4b, 0x63, 0xea, 0x68, 0xf8, 0x3e, 0xe3, 0xfc, 0x0e, 0x5a, 0x0e, 0xdf, 0x52, 0x76,
+	0xcf, 0x3c, 0xcd, 0xb6, 0xe4, 0x2d, 0x33, 0x59, 0x9a, 0xdf, 0x46, 0xdf, 0x4f, 0xc0, 0xc9, 0x48,
+	0xf5, 0x0a, 0x2d, 0xc6, 0x87, 0x1f, 0xa2, 0xb2, 0xa5, 0x96, 0xba, 0x0d, 0x23, 0xf2, 0x50, 0x62,
+	0x79, 0xf8, 0x08, 0x7d, 0x18, 0x9e, 0x87, 0x3a, 0x99, 0xee, 0x69, 0xcb, 0xbc, 0xb0, 0x61, 0x5b,
+	0xa6, 0xa6, 0xac, 0xf0, 0xc5, 0xe4, 0x2d, 0x46, 0xfa, 0x6f, 0x12, 0x9c, 0x08, 0xd3, 0xce, 0xd0,
+	0xdb, 0xed, 0xd5, 0xf0, 0x5e, 0x79, 0x2e, 0x95, 0xeb, 0x22, 0x82, 0xc8, 0xc5, 0x22, 0xcb, 0xc5,
+	0x2d, 0x74, 0xa3, 0xfd, 0x3e, 0x08, 0x72, 0xf9, 0xb7, 0x04, 0xe3, 0xe1, 0x2a, 0x1a, 0xca, 0x87,
+	0x82, 0x8d, 0x25, 0xe1, 0xa5, 0xe6, 0xbb, 0x8a, 0x21, 0x28, 0xdf, 0x63, 0x94, 0x97, 0xd1, 0xed,
+	0x58, 0x6d, 0x60, 0xf9, 0x41, 0x65, 0x85, 0x47, 0xe5, 0x8f, 0x83, 0x40, 0x13, 0xfc, 0x51, 0x82,
+	0xb1, 0x96, 0x42, 0x5c, 0x84, 0xb4, 0x14, 0xa5, 0xf2, 0xa5, 0x6e, 0x76, 0xea, 0xde, 0xd6, 0x05,
+	0xec, 0x6e, 0x70, 0x0b, 0xa6, 0x76, 0xfe, 0xe1, 0xf3, 0x97, 0xe3, 0xd2, 0x8b, 0x97, 0xe3, 0xd2,
+	0x9f, 0x5f, 0x8e, 0x4b, 0xcf, 0x5e, 0x8d, 0xef, 0x7b, 0xf1, 0x6a, 0x7c, 0xdf, 0xef, 0x5f, 0x8d,
+	0xef, 0xfb, 0x60, 0x3e, 0xf0, 0xcf, 0x35, 0x22, 0xfc, 0xb4, 0xa6, 0xac, 0xdb, 0xfe, 0x5a, 0x5b,
+	0xb3, 0x57, 0xb2, 0xdb, 0x75, 0x2b, 0x16, 0x35, 0x95, 0x18, 0x94, 0xff, 0x6f, 0x94, 0xfc, 0x1f,
+	0xea, 0xfb, 0xd8, 0x7f, 0xe6, 0xfe, 0x1b, 0x00, 0x00, 0xff, 0xff, 0xbd, 0x00, 0x2a, 0x62, 0x95,
+	0x2a, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1753,6 +2315,33 @@ type QueryClient interface {
 	// impact, if a trade cannot be estimated a 0 input and 0 output would be
 	// returned.
 	EstimateTradeBasedOnPriceImpact(ctx context.Context, in *EstimateTradeBasedOnPriceImpactRequest, opts ...grpc.CallOption) (*EstimateTradeBasedOnPriceImpactResponse, error)
+	// AllTakerFeeShareAgreements returns all taker fee share agreements.
+	// A taker fee share agreement includes the denom of the denom getting the
+	// taker fees, the percent of the taker fees that the denom gets, and the
+	// address that the taker fees are sent to.
+	AllTakerFeeShareAgreements(ctx context.Context, in *AllTakerFeeShareAgreementsRequest, opts ...grpc.CallOption) (*AllTakerFeeShareAgreementsResponse, error)
+	// TakerFeeShareAgreementFromDenom returns the taker fee share agreement for a
+	// given denom. A taker fee share agreement includes the denom of the denom
+	// getting the taker fees, the percent of the taker fees that the denom gets,
+	// and the address that the taker fees are sent to.
+	TakerFeeShareAgreementFromDenom(ctx context.Context, in *TakerFeeShareAgreementFromDenomRequest, opts ...grpc.CallOption) (*TakerFeeShareAgreementFromDenomResponse, error)
+	// TakerFeeShareDenomsToAccruedValue returns the accrued value (as an Int) of
+	// the given taker fee denom for the given fee share denom
+	TakerFeeShareDenomsToAccruedValue(ctx context.Context, in *TakerFeeShareDenomsToAccruedValueRequest, opts ...grpc.CallOption) (*TakerFeeShareDenomsToAccruedValueResponse, error)
+	// AllTakerFeeShareAccumulators returns all taker fee share accumulators. A
+	// taker fee share accumulator includes the denom of the denom getting the
+	// taker feess, and an accumulated value of coins that the denom has accrued.
+	AllTakerFeeShareAccumulators(ctx context.Context, in *AllTakerFeeShareAccumulatorsRequest, opts ...grpc.CallOption) (*AllTakerFeeShareAccumulatorsResponse, error)
+	// RegisteredAlloyedPoolFromDenom returns the registered alloyed pool state
+	// from the given denom. The registered alloyed pool contains the pool's
+	// contract address, along with the current distribution composition of rev
+	// share denoms within the alloyed pool.
+	RegisteredAlloyedPoolFromDenom(ctx context.Context, in *RegisteredAlloyedPoolFromDenomRequest, opts ...grpc.CallOption) (*RegisteredAlloyedPoolFromDenomResponse, error)
+	// AllRegisteredAlloyedPools returns all registered alloyed pools. The
+	// registered alloyed pool contains the pool's contract address, along with
+	// the current distribution composition of rev share denoms within the alloyed
+	// pool.
+	AllRegisteredAlloyedPools(ctx context.Context, in *AllRegisteredAlloyedPoolsRequest, opts ...grpc.CallOption) (*AllRegisteredAlloyedPoolsResponse, error)
 }
 
 type queryClient struct {
@@ -1916,6 +2505,60 @@ func (c *queryClient) EstimateTradeBasedOnPriceImpact(ctx context.Context, in *E
 	return out, nil
 }
 
+func (c *queryClient) AllTakerFeeShareAgreements(ctx context.Context, in *AllTakerFeeShareAgreementsRequest, opts ...grpc.CallOption) (*AllTakerFeeShareAgreementsResponse, error) {
+	out := new(AllTakerFeeShareAgreementsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.poolmanager.v1beta1.Query/AllTakerFeeShareAgreements", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) TakerFeeShareAgreementFromDenom(ctx context.Context, in *TakerFeeShareAgreementFromDenomRequest, opts ...grpc.CallOption) (*TakerFeeShareAgreementFromDenomResponse, error) {
+	out := new(TakerFeeShareAgreementFromDenomResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.poolmanager.v1beta1.Query/TakerFeeShareAgreementFromDenom", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) TakerFeeShareDenomsToAccruedValue(ctx context.Context, in *TakerFeeShareDenomsToAccruedValueRequest, opts ...grpc.CallOption) (*TakerFeeShareDenomsToAccruedValueResponse, error) {
+	out := new(TakerFeeShareDenomsToAccruedValueResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.poolmanager.v1beta1.Query/TakerFeeShareDenomsToAccruedValue", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AllTakerFeeShareAccumulators(ctx context.Context, in *AllTakerFeeShareAccumulatorsRequest, opts ...grpc.CallOption) (*AllTakerFeeShareAccumulatorsResponse, error) {
+	out := new(AllTakerFeeShareAccumulatorsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.poolmanager.v1beta1.Query/AllTakerFeeShareAccumulators", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) RegisteredAlloyedPoolFromDenom(ctx context.Context, in *RegisteredAlloyedPoolFromDenomRequest, opts ...grpc.CallOption) (*RegisteredAlloyedPoolFromDenomResponse, error) {
+	out := new(RegisteredAlloyedPoolFromDenomResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.poolmanager.v1beta1.Query/RegisteredAlloyedPoolFromDenom", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AllRegisteredAlloyedPools(ctx context.Context, in *AllRegisteredAlloyedPoolsRequest, opts ...grpc.CallOption) (*AllRegisteredAlloyedPoolsResponse, error) {
+	out := new(AllRegisteredAlloyedPoolsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.poolmanager.v1beta1.Query/AllRegisteredAlloyedPools", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	Params(context.Context, *ParamsRequest) (*ParamsResponse, error)
@@ -1961,6 +2604,33 @@ type QueryServer interface {
 	// impact, if a trade cannot be estimated a 0 input and 0 output would be
 	// returned.
 	EstimateTradeBasedOnPriceImpact(context.Context, *EstimateTradeBasedOnPriceImpactRequest) (*EstimateTradeBasedOnPriceImpactResponse, error)
+	// AllTakerFeeShareAgreements returns all taker fee share agreements.
+	// A taker fee share agreement includes the denom of the denom getting the
+	// taker fees, the percent of the taker fees that the denom gets, and the
+	// address that the taker fees are sent to.
+	AllTakerFeeShareAgreements(context.Context, *AllTakerFeeShareAgreementsRequest) (*AllTakerFeeShareAgreementsResponse, error)
+	// TakerFeeShareAgreementFromDenom returns the taker fee share agreement for a
+	// given denom. A taker fee share agreement includes the denom of the denom
+	// getting the taker fees, the percent of the taker fees that the denom gets,
+	// and the address that the taker fees are sent to.
+	TakerFeeShareAgreementFromDenom(context.Context, *TakerFeeShareAgreementFromDenomRequest) (*TakerFeeShareAgreementFromDenomResponse, error)
+	// TakerFeeShareDenomsToAccruedValue returns the accrued value (as an Int) of
+	// the given taker fee denom for the given fee share denom
+	TakerFeeShareDenomsToAccruedValue(context.Context, *TakerFeeShareDenomsToAccruedValueRequest) (*TakerFeeShareDenomsToAccruedValueResponse, error)
+	// AllTakerFeeShareAccumulators returns all taker fee share accumulators. A
+	// taker fee share accumulator includes the denom of the denom getting the
+	// taker feess, and an accumulated value of coins that the denom has accrued.
+	AllTakerFeeShareAccumulators(context.Context, *AllTakerFeeShareAccumulatorsRequest) (*AllTakerFeeShareAccumulatorsResponse, error)
+	// RegisteredAlloyedPoolFromDenom returns the registered alloyed pool state
+	// from the given denom. The registered alloyed pool contains the pool's
+	// contract address, along with the current distribution composition of rev
+	// share denoms within the alloyed pool.
+	RegisteredAlloyedPoolFromDenom(context.Context, *RegisteredAlloyedPoolFromDenomRequest) (*RegisteredAlloyedPoolFromDenomResponse, error)
+	// AllRegisteredAlloyedPools returns all registered alloyed pools. The
+	// registered alloyed pool contains the pool's contract address, along with
+	// the current distribution composition of rev share denoms within the alloyed
+	// pool.
+	AllRegisteredAlloyedPools(context.Context, *AllRegisteredAlloyedPoolsRequest) (*AllRegisteredAlloyedPoolsResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -2017,6 +2687,24 @@ func (*UnimplementedQueryServer) TradingPairTakerFee(ctx context.Context, req *T
 }
 func (*UnimplementedQueryServer) EstimateTradeBasedOnPriceImpact(ctx context.Context, req *EstimateTradeBasedOnPriceImpactRequest) (*EstimateTradeBasedOnPriceImpactResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EstimateTradeBasedOnPriceImpact not implemented")
+}
+func (*UnimplementedQueryServer) AllTakerFeeShareAgreements(ctx context.Context, req *AllTakerFeeShareAgreementsRequest) (*AllTakerFeeShareAgreementsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllTakerFeeShareAgreements not implemented")
+}
+func (*UnimplementedQueryServer) TakerFeeShareAgreementFromDenom(ctx context.Context, req *TakerFeeShareAgreementFromDenomRequest) (*TakerFeeShareAgreementFromDenomResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TakerFeeShareAgreementFromDenom not implemented")
+}
+func (*UnimplementedQueryServer) TakerFeeShareDenomsToAccruedValue(ctx context.Context, req *TakerFeeShareDenomsToAccruedValueRequest) (*TakerFeeShareDenomsToAccruedValueResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TakerFeeShareDenomsToAccruedValue not implemented")
+}
+func (*UnimplementedQueryServer) AllTakerFeeShareAccumulators(ctx context.Context, req *AllTakerFeeShareAccumulatorsRequest) (*AllTakerFeeShareAccumulatorsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllTakerFeeShareAccumulators not implemented")
+}
+func (*UnimplementedQueryServer) RegisteredAlloyedPoolFromDenom(ctx context.Context, req *RegisteredAlloyedPoolFromDenomRequest) (*RegisteredAlloyedPoolFromDenomResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegisteredAlloyedPoolFromDenom not implemented")
+}
+func (*UnimplementedQueryServer) AllRegisteredAlloyedPools(ctx context.Context, req *AllRegisteredAlloyedPoolsRequest) (*AllRegisteredAlloyedPoolsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllRegisteredAlloyedPools not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -2329,6 +3017,114 @@ func _Query_EstimateTradeBasedOnPriceImpact_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_AllTakerFeeShareAgreements_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AllTakerFeeShareAgreementsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllTakerFeeShareAgreements(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.poolmanager.v1beta1.Query/AllTakerFeeShareAgreements",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllTakerFeeShareAgreements(ctx, req.(*AllTakerFeeShareAgreementsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_TakerFeeShareAgreementFromDenom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TakerFeeShareAgreementFromDenomRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TakerFeeShareAgreementFromDenom(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.poolmanager.v1beta1.Query/TakerFeeShareAgreementFromDenom",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TakerFeeShareAgreementFromDenom(ctx, req.(*TakerFeeShareAgreementFromDenomRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_TakerFeeShareDenomsToAccruedValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TakerFeeShareDenomsToAccruedValueRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TakerFeeShareDenomsToAccruedValue(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.poolmanager.v1beta1.Query/TakerFeeShareDenomsToAccruedValue",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TakerFeeShareDenomsToAccruedValue(ctx, req.(*TakerFeeShareDenomsToAccruedValueRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_AllTakerFeeShareAccumulators_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AllTakerFeeShareAccumulatorsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllTakerFeeShareAccumulators(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.poolmanager.v1beta1.Query/AllTakerFeeShareAccumulators",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllTakerFeeShareAccumulators(ctx, req.(*AllTakerFeeShareAccumulatorsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_RegisteredAlloyedPoolFromDenom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegisteredAlloyedPoolFromDenomRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).RegisteredAlloyedPoolFromDenom(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.poolmanager.v1beta1.Query/RegisteredAlloyedPoolFromDenom",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).RegisteredAlloyedPoolFromDenom(ctx, req.(*RegisteredAlloyedPoolFromDenomRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_AllRegisteredAlloyedPools_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AllRegisteredAlloyedPoolsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllRegisteredAlloyedPools(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.poolmanager.v1beta1.Query/AllRegisteredAlloyedPools",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllRegisteredAlloyedPools(ctx, req.(*AllRegisteredAlloyedPoolsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.poolmanager.v1beta1.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -2400,6 +3196,30 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "EstimateTradeBasedOnPriceImpact",
 			Handler:    _Query_EstimateTradeBasedOnPriceImpact_Handler,
+		},
+		{
+			MethodName: "AllTakerFeeShareAgreements",
+			Handler:    _Query_AllTakerFeeShareAgreements_Handler,
+		},
+		{
+			MethodName: "TakerFeeShareAgreementFromDenom",
+			Handler:    _Query_TakerFeeShareAgreementFromDenom_Handler,
+		},
+		{
+			MethodName: "TakerFeeShareDenomsToAccruedValue",
+			Handler:    _Query_TakerFeeShareDenomsToAccruedValue_Handler,
+		},
+		{
+			MethodName: "AllTakerFeeShareAccumulators",
+			Handler:    _Query_AllTakerFeeShareAccumulators_Handler,
+		},
+		{
+			MethodName: "RegisteredAlloyedPoolFromDenom",
+			Handler:    _Query_RegisteredAlloyedPoolFromDenom_Handler,
+		},
+		{
+			MethodName: "AllRegisteredAlloyedPools",
+			Handler:    _Query_AllRegisteredAlloyedPools_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -3515,6 +4335,382 @@ func (m *EstimateTradeBasedOnPriceImpactResponse) MarshalToSizedBuffer(dAtA []by
 	return len(dAtA) - i, nil
 }
 
+func (m *AllTakerFeeShareAgreementsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AllTakerFeeShareAgreementsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AllTakerFeeShareAgreementsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *AllTakerFeeShareAgreementsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AllTakerFeeShareAgreementsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AllTakerFeeShareAgreementsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.TakerFeeShareAgreements) > 0 {
+		for iNdEx := len(m.TakerFeeShareAgreements) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.TakerFeeShareAgreements[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TakerFeeShareAgreementFromDenomRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TakerFeeShareAgreementFromDenomRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TakerFeeShareAgreementFromDenomRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TakerFeeShareAgreementFromDenomResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TakerFeeShareAgreementFromDenomResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TakerFeeShareAgreementFromDenomResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.TakerFeeShareAgreement.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *TakerFeeShareDenomsToAccruedValueRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TakerFeeShareDenomsToAccruedValueRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TakerFeeShareDenomsToAccruedValueRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.TakerFeeDenom) > 0 {
+		i -= len(m.TakerFeeDenom)
+		copy(dAtA[i:], m.TakerFeeDenom)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.TakerFeeDenom)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TakerFeeShareDenomsToAccruedValueResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TakerFeeShareDenomsToAccruedValueResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TakerFeeShareDenomsToAccruedValueResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.Amount.Size()
+		i -= size
+		if _, err := m.Amount.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *AllTakerFeeShareAccumulatorsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AllTakerFeeShareAccumulatorsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AllTakerFeeShareAccumulatorsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *AllTakerFeeShareAccumulatorsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AllTakerFeeShareAccumulatorsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AllTakerFeeShareAccumulatorsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.TakerFeeSkimAccumulators) > 0 {
+		for iNdEx := len(m.TakerFeeSkimAccumulators) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.TakerFeeSkimAccumulators[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *RegisteredAlloyedPoolFromDenomRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RegisteredAlloyedPoolFromDenomRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RegisteredAlloyedPoolFromDenomRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *RegisteredAlloyedPoolFromDenomResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RegisteredAlloyedPoolFromDenomResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RegisteredAlloyedPoolFromDenomResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.ContractState.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *AllRegisteredAlloyedPoolsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AllRegisteredAlloyedPoolsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AllRegisteredAlloyedPoolsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *AllRegisteredAlloyedPoolsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AllRegisteredAlloyedPoolsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AllRegisteredAlloyedPoolsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ContractStates) > 0 {
+		for iNdEx := len(m.ContractStates) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.ContractStates[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -3979,6 +5175,154 @@ func (m *EstimateTradeBasedOnPriceImpactResponse) Size() (n int) {
 	n += 1 + l + sovQuery(uint64(l))
 	l = m.OutputCoin.Size()
 	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *AllTakerFeeShareAgreementsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *AllTakerFeeShareAgreementsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.TakerFeeShareAgreements) > 0 {
+		for _, e := range m.TakerFeeShareAgreements {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *TakerFeeShareAgreementFromDenomRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *TakerFeeShareAgreementFromDenomResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.TakerFeeShareAgreement.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *TakerFeeShareDenomsToAccruedValueRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.TakerFeeDenom)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *TakerFeeShareDenomsToAccruedValueResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Amount.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *AllTakerFeeShareAccumulatorsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *AllTakerFeeShareAccumulatorsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.TakerFeeSkimAccumulators) > 0 {
+		for _, e := range m.TakerFeeSkimAccumulators {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *RegisteredAlloyedPoolFromDenomRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *RegisteredAlloyedPoolFromDenomResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.ContractState.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *AllRegisteredAlloyedPoolsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *AllRegisteredAlloyedPoolsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.ContractStates) > 0 {
+		for _, e := range m.ContractStates {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -6964,6 +8308,936 @@ func (m *EstimateTradeBasedOnPriceImpactResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.OutputCoin.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AllTakerFeeShareAgreementsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AllTakerFeeShareAgreementsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AllTakerFeeShareAgreementsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AllTakerFeeShareAgreementsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AllTakerFeeShareAgreementsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AllTakerFeeShareAgreementsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TakerFeeShareAgreements", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TakerFeeShareAgreements = append(m.TakerFeeShareAgreements, types.TakerFeeShareAgreement{})
+			if err := m.TakerFeeShareAgreements[len(m.TakerFeeShareAgreements)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TakerFeeShareAgreementFromDenomRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TakerFeeShareAgreementFromDenomRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TakerFeeShareAgreementFromDenomRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TakerFeeShareAgreementFromDenomResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TakerFeeShareAgreementFromDenomResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TakerFeeShareAgreementFromDenomResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TakerFeeShareAgreement", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TakerFeeShareAgreement.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TakerFeeShareDenomsToAccruedValueRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TakerFeeShareDenomsToAccruedValueRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TakerFeeShareDenomsToAccruedValueRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TakerFeeDenom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TakerFeeDenom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TakerFeeShareDenomsToAccruedValueResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TakerFeeShareDenomsToAccruedValueResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TakerFeeShareDenomsToAccruedValueResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AllTakerFeeShareAccumulatorsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AllTakerFeeShareAccumulatorsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AllTakerFeeShareAccumulatorsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AllTakerFeeShareAccumulatorsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AllTakerFeeShareAccumulatorsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AllTakerFeeShareAccumulatorsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TakerFeeSkimAccumulators", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TakerFeeSkimAccumulators = append(m.TakerFeeSkimAccumulators, types.TakerFeeSkimAccumulator{})
+			if err := m.TakerFeeSkimAccumulators[len(m.TakerFeeSkimAccumulators)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RegisteredAlloyedPoolFromDenomRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RegisteredAlloyedPoolFromDenomRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RegisteredAlloyedPoolFromDenomRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RegisteredAlloyedPoolFromDenomResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RegisteredAlloyedPoolFromDenomResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RegisteredAlloyedPoolFromDenomResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ContractState", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ContractState.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AllRegisteredAlloyedPoolsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AllRegisteredAlloyedPoolsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AllRegisteredAlloyedPoolsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AllRegisteredAlloyedPoolsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AllRegisteredAlloyedPoolsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AllRegisteredAlloyedPoolsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ContractStates", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ContractStates = append(m.ContractStates, types.AlloyContractTakerFeeShareState{})
+			if err := m.ContractStates[len(m.ContractStates)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

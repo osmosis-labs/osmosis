@@ -1567,7 +1567,7 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 				// If applicable, set taker fee. Note that denoms are reordered lexicographically before being stored.
 				poolmanagerKeeper.SetDenomPairTakerFee(s.Ctx, tc.poolCoins[0].Denom, tc.poolCoins[1].Denom, tc.takerFee)
 
-				multihopTokenOutAmount, err = poolmanagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], tc.poolId, tc.tokenIn, tc.tokenOutDenom, tc.tokenOutMinAmount)
+				multihopTokenOutAmount, _, err = poolmanagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], tc.poolId, tc.tokenIn, tc.tokenOutDenom, tc.tokenOutMinAmount)
 			} else {
 				multihopTokenOutAmount, err = poolmanagerKeeper.SwapExactAmountInNoTakerFee(s.Ctx, s.TestAccs[0], tc.poolId, tc.tokenIn, tc.tokenOutDenom, tc.tokenOutMinAmount)
 			}
@@ -3817,7 +3817,7 @@ func (s *KeeperTestSuite) testSwapExactAmpountInVolumeTracked(noTakerFeeVariant 
 		_, err := s.App.PoolManagerKeeper.SwapExactAmountInNoTakerFee(s.Ctx, s.TestAccs[0], concentratedPool.GetId(), tokenIn, FOO, sdk.ZeroInt())
 		s.Require().NoError(err)
 	} else {
-		_, err := s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], concentratedPool.GetId(), tokenIn, FOO, sdk.ZeroInt())
+		_, _, err := s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], concentratedPool.GetId(), tokenIn, FOO, sdk.ZeroInt())
 		s.Require().NoError(err)
 	}
 

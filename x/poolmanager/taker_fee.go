@@ -123,7 +123,7 @@ func (k Keeper) GetAllTradingPairTakerFees(ctx sdk.Context) ([]types.DenomPairTa
 // If the sender is in the taker fee reduced whitelisted, it returns the tokenIn without extracting the taker fee.
 // In the future, we might charge a lower taker fee as opposed to no fee at all.
 // TODO: Gas optimize this function, its expensive in both gas and CPU.
-func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, sender sdk.AccAddress, exactIn bool) (sdk.Coin, error) {
+func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, sender sdk.AccAddress, exactIn bool) (sdk.Coin, sdk.Coin, error) {
 	takerFeeModuleAccountName := txfeestypes.TakerFeeCollectorName
 
 	reducedFeeWhitelist := []string{}
@@ -131,12 +131,12 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 
 	// Determine if eligible to bypass taker fee.
 	if osmoutils.Contains(reducedFeeWhitelist, sender.String()) {
-		return tokenIn, nil
+		return tokenIn, sdk.Coin{}, nil
 	}
 
 	takerFee, err := k.GetTradingPairTakerFee(ctx, tokenIn.Denom, tokenOutDenom)
 	if err != nil {
-		return sdk.Coin{}, err
+		return sdk.Coin{}, sdk.Coin{}, err
 	}
 
 	var tokenInAfterTakerFee sdk.Coin
@@ -149,9 +149,9 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, takerFeeModuleAccountName, sdk.NewCoins(takerFeeCoin))
 	if err != nil {
-		return sdk.Coin{}, err
+		return sdk.Coin{}, sdk.Coin{}, err
 	}
-	return tokenInAfterTakerFee, nil
+	return tokenInAfterTakerFee, takerFeeCoin, nil
 }
 
 // Returns remaining amount in to swap, and takerFeeCoins.
@@ -172,4 +172,144 @@ func CalcTakerFeeExactOut(tokenIn sdk.Coin, takerFee osmomath.Dec) (sdk.Coin, sd
 	takerFeeCoin := sdk.Coin{Denom: tokenIn.Denom, Amount: tokenInAfterAddTakerFee.Amount.Sub(tokenIn.Amount)}
 
 	return tokenInAfterAddTakerFee, takerFeeCoin
+}
+
+// TakerFeeSkim calculates the taker fee share for each denomination involved in a route and increases the accumulator for the respective denomination pair.
+// The function first sorts the denominations lexicographically and then checks for tier 1 and tier 2 denominations.
+// Tier 1 denominations represent a bridge provider that has a taker fee share agreement, while tier 2 denominations represent the alloyed assets themselves.
+// If there are one or more tier 1 share agreements, the function calculates the percentage of the taker fees that should be skimmed off and increases the accumulator for the tier 1 denomination / taker fee denomination pair.
+// If there were no tier 1 denominations and there are tier 2 denominations, the function calculates the taker fee share for the alloyed asset for each underlying asset that has a taker fee share agreement.
+// The function returns an error if the total taker fee share percentage is greater than 1.
+//
+// Parameters:
+// - ctx: The context of the function call.
+// - denomsInvolvedInRoute: A slice of strings representing the denominations involved in the route.
+// - totalTakerFees: The total taker fees from the swap represented as sdk.Coins.
+//
+// Returns:
+// - An error if the total taker fee share percentage is greater than 1, or if there's an error in increasing the accumulator for the denomination pair.
+func (k Keeper) TakerFeeSkim(ctx sdk.Context, denomsInvolvedInRoute []string, totalTakerFees sdk.Coins) error {
+	// Sort the denoms involved in the route lexicographically.
+	osmoutils.SortSlice(denomsInvolvedInRoute)
+
+	// Check for tier 1 and tier 2 denoms,
+	// Tier 1 denoms are denoms that represent a bridge provider that has a taker fee share agreement.
+	// Tier 2 denoms are denoms that represent the alloyed assets themselves.
+	tier1ShareAgreements := []types.TakerFeeShareAgreement{}
+	tier2ShareAgreements := []types.TakerFeeShareAgreement{}
+	for _, denom := range denomsInvolvedInRoute {
+		// We first check if this denom has a taker fee share agreement with a bridge provider (tier 1).
+		takerFeeShareAgreement, found := k.GetTakerFeeShareAgreementFromDenom(ctx, denom)
+
+		if found {
+			// If the denom is a tier 1 denom, add it to the tier 1 share agreements slice.
+			tier1ShareAgreements = append(tier1ShareAgreements, takerFeeShareAgreement)
+		} else if len(tier1ShareAgreements) == 0 {
+			// If there are no tier 1 share agreements in the tier 1 share agreements slice, continue to filter this denom to determine if it is a tier 2 denom.
+			// If there are 1 or more tier 1 share agreements in the tier 1 share agreements slice, we don't need to check for tier 2 denoms anymore, since the taker fee share
+			// only goes to tier 2 denoms IFF there are no tier 1 denoms in the route.
+			// Check if denom is tier 2
+			// If it is, add it to the tier 2 share agreements slice.
+			cachedAlloyContractState, found := k.GetRegisteredAlloyedPoolFromDenom(ctx, denom)
+			if found {
+				tier2ShareAgreements = append(tier2ShareAgreements, cachedAlloyContractState.TakerFeeShareAgreements...)
+			}
+		}
+	}
+
+	// Filtering complete
+
+	// If there are 1 or more tier 1 share agreements, add up the percentage of the taker fees that should be skimmed off.
+	// If the total of taker fee share is greater than 1, return an error.
+	// Then, for each taker fee coin, calculate the amount to skim off and increase the accumulator for the tier 1 denom / taker fee denom pair.
+	if len(tier1ShareAgreements) > 1 {
+		percentageOfTakerFeeToSkim := osmomath.ZeroDec()
+		for _, takerFeeShareAgreement := range tier1ShareAgreements {
+			// Add up the percentage of the taker fee that should be skimmed off.
+			percentageOfTakerFeeToSkim = percentageOfTakerFeeToSkim.Add(takerFeeShareAgreement.SkimPercent)
+		}
+		if percentageOfTakerFeeToSkim.GT(osmomath.OneDec()) {
+			return fmt.Errorf("total taker fee share percentage is greater than 1")
+		}
+		for _, takerFeeCoin := range totalTakerFees {
+			for _, takerFeeShareAgreement := range tier1ShareAgreements {
+				amountToSkim := osmomath.NewDecFromInt(takerFeeCoin.Amount).Mul(takerFeeShareAgreement.SkimPercent).TruncateInt()
+
+				// Increase the accumulator for the tier 1 denom / taker fee denom pair.
+				err := k.IncreaseTakerFeeShareDenomsToAccruedValue(ctx, takerFeeShareAgreement.Denom, takerFeeCoin.Denom, amountToSkim)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+
+	// IFF there were no tier 1 denoms and there are tier 2 denoms, we calculate the taker fee share for the alloyed asset for each underlying asset that has a taker fee share agreement.
+	if len(tier1ShareAgreements) == 0 && len(tier2ShareAgreements) > 0 {
+		percentageOfTakerFeeToSkim := osmomath.ZeroDec()
+		for _, takerFeeShareAgreement := range tier2ShareAgreements {
+			// Add up the percentage of the taker fee that should be skimmed off.
+			percentageOfTakerFeeToSkim = percentageOfTakerFeeToSkim.Add(takerFeeShareAgreement.SkimPercent)
+		}
+		if percentageOfTakerFeeToSkim.GT(osmomath.OneDec()) {
+			return fmt.Errorf("total taker fee share percentage is greater than 1")
+		}
+		for _, takerFeeCoin := range totalTakerFees {
+			for _, takerFeeShareAgreement := range tier2ShareAgreements {
+				amountToSkim := osmomath.NewDecFromInt(takerFeeCoin.Amount).Mul(takerFeeShareAgreement.SkimPercent).TruncateInt()
+
+				// Increase the accumulator for the underlying tier 1 denom / taker fee denom pair.
+				// TODO
+				err := k.IncreaseTakerFeeShareDenomsToAccruedValue(ctx, takerFeeShareAgreement.Denom, takerFeeCoin.Denom, amountToSkim)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+
+	return nil
+}
+
+func (k Keeper) BeginBlock(ctx sdk.Context) {
+	// Set the caches if they are empty
+	if len(k.cachedTakerFeeShareAgreement) == 0 {
+		err := k.SetTakerFeeShareAgreementsMapCached(ctx)
+		if err != nil {
+			ctx.Logger().Error(fmt.Errorf("error in setting taker fee share agreements map cached: %w", err).Error())
+		}
+	}
+	if len(k.cachedRegisteredAlloyPoolToState) == 0 {
+		err := k.SetAllRegisteredAlloyedPoolsCached(ctx)
+		if err != nil {
+			ctx.Logger().Error(fmt.Errorf("error in setting all registered alloyed pools cached: %w", err).Error())
+		}
+	}
+	if len(k.cachedRegisteredAlloyedPoolId) == 0 {
+		err := k.SetAllRegisteredAlloyedPoolsIdCached(ctx)
+		if err != nil {
+			ctx.Logger().Error(fmt.Errorf("error in setting all registered alloyed pools id cached: %w", err).Error())
+		}
+	}
+}
+
+func (k Keeper) EndBlock(ctx sdk.Context) {
+	// get changed pools grabs all altered pool ids from the twap transient store.
+	// 'altered pool ids' gets automatically cleared on commit by being a transient store
+	changedPoolIds := k.twapKeeper.GetChangedPools(ctx)
+
+	for _, id := range changedPoolIds {
+		_, found := k.cachedRegisteredAlloyedPoolId[id]
+
+		if found {
+			err := k.recalculateAndSetTakerFeeShareAlloyComposition(ctx, id)
+			if err != nil {
+				ctx.Logger().Error(fmt.Errorf(
+					"error in setting registered alloyed pool for pool id %d: %w", id, err,
+				).Error())
+			}
+		}
+	}
 }

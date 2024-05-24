@@ -17,6 +17,7 @@ var (
 	ErrTooFewPoolAssets          = errors.New("pool should have at least 2 assets, as they must be swapping between at least two assets")
 	ErrTooManyPoolAssets         = errors.New("pool has too many assets (currently capped at 8 assets per pool)")
 	ErrDuplicateRoutesNotAllowed = errors.New("duplicate multihop routes are not allowed")
+	ErrUnauthorizedGov           = errors.New("only the governance module is allowed to execute this message")
 )
 
 type nonPositiveAmountError struct {

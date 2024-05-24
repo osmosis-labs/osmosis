@@ -25,6 +25,8 @@ type Keeper struct {
 	communityPoolKeeper  types.CommunityPoolI
 	stakingKeeper        types.StakingKeeper
 	protorevKeeper       types.ProtorevKeeper
+	wasmKeeper           types.WasmKeeper
+	twapKeeper           types.TwapKeeper
 
 	// routes is a map to get the pool module by id.
 	routes map[types.PoolType]types.PoolModuleI
@@ -44,9 +46,13 @@ type Keeper struct {
 
 	defaultTakerFeeBz  []byte
 	defaultTakerFeeVal sdk.Dec
+
+	cachedTakerFeeShareAgreement     map[string]types.TakerFeeShareAgreement
+	cachedRegisteredAlloyPoolToState map[string]types.AlloyContractTakerFeeShareState
+	cachedRegisteredAlloyedPoolId    map[uint64]bool
 }
 
-func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI, stakingKeeper types.StakingKeeper, protorevKeeper types.ProtorevKeeper) *Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI, stakingKeeper types.StakingKeeper, protorevKeeper types.ProtorevKeeper, wasmKeeper types.WasmKeeper, twapKeeper types.TwapKeeper) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -64,21 +70,29 @@ func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gam
 	}
 
 	cachedPoolModules := &sync.Map{}
+	cachedTakerFeeShareAgreement := make(map[string]types.TakerFeeShareAgreement)
+	cachedRegisteredAlloyPool := make(map[string]types.AlloyContractTakerFeeShareState)
+	cachedRegistedAlloyedPoolId := make(map[uint64]bool)
 
 	return &Keeper{
-		storeKey:            storeKey,
-		paramSpace:          paramSpace,
-		gammKeeper:          gammKeeper,
-		concentratedKeeper:  concentratedKeeper,
-		cosmwasmpoolKeeper:  cosmwasmpoolKeeper,
-		bankKeeper:          bankKeeper,
-		accountKeeper:       accountKeeper,
-		communityPoolKeeper: communityPoolKeeper,
-		routes:              routesMap,
-		poolModules:         routesList,
-		stakingKeeper:       stakingKeeper,
-		protorevKeeper:      protorevKeeper,
-		cachedPoolModules:   cachedPoolModules,
+		storeKey:                         storeKey,
+		paramSpace:                       paramSpace,
+		gammKeeper:                       gammKeeper,
+		concentratedKeeper:               concentratedKeeper,
+		cosmwasmpoolKeeper:               cosmwasmpoolKeeper,
+		bankKeeper:                       bankKeeper,
+		accountKeeper:                    accountKeeper,
+		communityPoolKeeper:              communityPoolKeeper,
+		routes:                           routesMap,
+		poolModules:                      routesList,
+		stakingKeeper:                    stakingKeeper,
+		protorevKeeper:                   protorevKeeper,
+		wasmKeeper:                       wasmKeeper,
+		twapKeeper:                       twapKeeper,
+		cachedPoolModules:                cachedPoolModules,
+		cachedTakerFeeShareAgreement:     cachedTakerFeeShareAgreement,
+		cachedRegisteredAlloyPoolToState: cachedRegisteredAlloyPool,
+		cachedRegisteredAlloyedPoolId:    cachedRegistedAlloyedPoolId,
 	}
 }
 
@@ -206,4 +220,14 @@ func (k *Keeper) SetStakingKeeper(stakingKeeper types.StakingKeeper) {
 // SetProtorevKeeper sets protorev keeper
 func (k *Keeper) SetProtorevKeeper(protorevKeeper types.ProtorevKeeper) {
 	k.protorevKeeper = protorevKeeper
+}
+
+// SetWasmKeeper sets wasm keeper
+func (k *Keeper) SetWasmKeeper(wasmKeeper types.WasmKeeper) {
+	k.wasmKeeper = wasmKeeper
+}
+
+// SetTwapKeeper sets twap keeper
+func (k *Keeper) SetTwapKeeper(twapKeeper types.TwapKeeper) {
+	k.twapKeeper = twapKeeper
 }

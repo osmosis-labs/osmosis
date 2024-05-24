@@ -48,6 +48,12 @@ var (
 
 	// KeyTakerFeeCommunityPoolProtoRevArray defines key to store the taker fee for community pool tracker coin array.
 	KeyTakerFeeCommunityPoolProtoRevArray = []byte{0x09}
+
+	TakerFeeSkimAccrualPrefix = []byte{0x0A}
+
+	KeyTakerFeeShare = []byte{0x0B}
+
+	KeyRegisteredAlloyPool = []byte{0x0C}
 )
 
 // ModuleRouteToBytes serializes moduleRoute to bytes.
@@ -111,4 +117,30 @@ func ParseDenomTradePairKey(key []byte) (denom0, denom1 string, err error) {
 	}
 
 	return denom0, denom1, nil
+}
+
+// KeyTakerFeeShareTier1DenomAccrualForSingleDenom generates a key for a specific taker fee denomination and tier 1 denomination.
+// he key is used to store and retrieve the accrued value of the taker fee denomination for the given tier 1 denomination.
+func KeyTakerFeeShareTier1DenomAccrualForSingleDenom(tier1Denom string, takerFeeDenom string) []byte {
+	return []byte(fmt.Sprintf("%s%s%s%s%s", TakerFeeSkimAccrualPrefix, KeySeparator, tier1Denom, KeySeparator, takerFeeDenom))
+}
+
+// KeyTakerFeeShareTier1DenomAccrualForAllDenoms generates a key for a specific tier 1 denomination.
+// The key is used to store and retrieve the accrued value for all taker fee denominations for the given tier 1 denomination.
+func KeyTakerFeeShareTier1DenomAccrualForAllDenoms(tier1Denom string) []byte {
+	return []byte(fmt.Sprintf("%s%s%s", TakerFeeSkimAccrualPrefix, KeySeparator, tier1Denom))
+}
+
+// FormatTakerFeeShareAgreementKey generates a key for a specific denomination.
+// The key is used to store and retrieve the TakerFeeShareAgreement for the given denomination.
+func FormatTakerFeeShareAgreementKey(denom string) []byte {
+	return []byte(fmt.Sprintf("%s%s%s", KeyTakerFeeShare, KeySeparator, denom))
+}
+
+func FormatRegisteredAlloyPoolKey(poolId uint64, alloyedDenom string) []byte {
+	return []byte(fmt.Sprintf("%s%s%d%s%s", KeyRegisteredAlloyPool, KeySeparator, poolId, KeySeparator, alloyedDenom))
+}
+
+func FormatRegisteredAlloyPoolKeyPoolIdOnly(poolId uint64) []byte {
+	return []byte(fmt.Sprintf("%s%s%d", KeyRegisteredAlloyPool, KeySeparator, poolId))
 }

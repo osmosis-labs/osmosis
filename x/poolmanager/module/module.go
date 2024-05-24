@@ -121,11 +121,14 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 	return cdc.MustMarshalJSON(genState)
 }
 
-// BeginBlock performs a no-op.
-func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
+// BeginBlock performs cache initialization for the poolmanager module.
+func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
+	am.k.BeginBlock(ctx)
+}
 
-// EndBlock performs a no-op.
+// EndBlock performs alloy pool state updates for the poolmanager module.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	am.k.EndBlock(ctx)
 	return []abci.ValidatorUpdate{}
 }
 

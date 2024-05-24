@@ -53,6 +53,6 @@ func (k Keeper) TrackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.
 	k.trackVolume(ctx, poolId, volumeGenerated)
 }
 
-func (k Keeper) ChargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, sender sdk.AccAddress, exactIn bool) (sdk.Coin, error) {
+func (k Keeper) ChargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, sender sdk.AccAddress, exactIn bool) (sdk.Coin, sdk.Coin, error) {
 	return k.chargeTakerFee(ctx, tokenIn, tokenOutDenom, sender, exactIn)
 }

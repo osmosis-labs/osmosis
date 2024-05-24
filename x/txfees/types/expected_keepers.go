@@ -32,7 +32,7 @@ type PoolManager interface {
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
 		tokenOutMinAmount osmomath.Int,
-	) (osmomath.Int, error)
+	) (osmomath.Int, sdk.Coin, error)
 
 	SwapExactAmountInNoTakerFee(
 		ctx sdk.Context,
@@ -53,6 +53,9 @@ type PoolManager interface {
 	) (price osmomath.BigDec, err error)
 	UpdateTakerFeeTrackerForCommunityPoolByDenom(ctx sdk.Context, denom string, increasedAmt osmomath.Int) error
 	UpdateTakerFeeTrackerForStakersByDenom(ctx sdk.Context, denom string, increasedAmt osmomath.Int) error
+	GetAllTakerFeeShareAccumulators(ctx sdk.Context) []poolmanagertypes.TakerFeeSkimAccumulator
+	GetTakerFeeShareAgreementFromDenom(ctx sdk.Context, denom string) (poolmanagertypes.TakerFeeShareAgreement, bool)
+	DeleteAllTakerFeeShareAccumulatorsForTierDenom(ctx sdk.Context, tierDenom string)
 }
 
 // AccountKeeper defines the contract needed for AccountKeeper related APIs.
@@ -75,6 +78,7 @@ type BankKeeper interface {
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
 	SendCoins(ctx sdk.Context, from, to sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 }
 
 // TxFeesKeeper defines the expected transaction fee keeper
