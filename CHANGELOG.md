@@ -48,6 +48,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
+## v25.0.2
+
+### Osmosis
+
+* [#8308](https://github.com/osmosis-labs/osmosis/pull/8308) Remove IBC rate limit and wasm hook times from mempool checkTx's
+
 ## v25.0.1
 
 ### Osmosis
@@ -64,6 +70,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#62](https://github.com/osmosis-labs/cometbft/pull/62) perf(consensus/blockstore): Remove validate basic call from LoadBlock
 * [#69](https://github.com/osmosis-labs/cometbft/pull/69) perf: Make mempool update async from block.Commit (#3008)
 * [#67](https://github.com/osmosis-labs/cometbft/pull/67) fix: TimeoutTicker returns wrong value/timeout pair when timeouts are…
+
+### IBC-go
+
+* Upgrade to v7.4.1 which fixes the significant mempool overhead caused by RedundantRelayDecorator
 
 ## v25.0.0
 
