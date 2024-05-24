@@ -63,6 +63,16 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 			// Note: this does not error since CL errors are surrounded in `ApplyFuncIfNoError`
 			expectedZeroMultipler: true,
 		},
+		{
+			name:               "update native token Osmo equivalent successfully",
+			asset:              types.SuperfluidAsset{Denom: "foo", AssetType: types.SuperfluidAssetTypeNative, PricePoolId: 1},
+			expectedMultiplier: osmomath.MustNewDecFromStr("2.0"),
+		},
+		{
+			name:          "update native token Osmo equivalent successfully - no pool",
+			asset:         types.SuperfluidAsset{Denom: "foo", AssetType: types.SuperfluidAssetTypeNative},
+			expectedError: errors.New("failed to get twap price"),
+		},
 	}
 
 	for _, tc := range testCases {
@@ -77,7 +87,7 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 			if tc.removeStakingAsset {
 				stakeDenom = "bar"
 			}
-			poolCoins := sdk.NewCoins(sdk.NewCoin(stakeDenom, osmomath.NewInt(1000000000000000000)), sdk.NewCoin("foo", osmomath.NewInt(1000000000000000000)))
+			poolCoins := sdk.NewCoins(sdk.NewCoin(stakeDenom, osmomath.NewInt(1000000000000000000)), sdk.NewCoin("foo", osmomath.NewInt(500000000000000000)))
 
 			// Ensure that the multiplier is zero before the test
 			multiplier := superfluidKeeper.GetOsmoEquivalentMultiplier(ctx, tc.asset.Denom)
@@ -85,8 +95,10 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 
 			// Create the respective pool if the test case requires it
 			if !tc.poolDoesNotExist {
-				if tc.asset.AssetType == types.SuperfluidAssetTypeLPShare {
+				if tc.asset.AssetType == types.SuperfluidAssetTypeLPShare || tc.asset.AssetType == types.SuperfluidAssetTypeNative {
+					s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute * -6))
 					s.PrepareBalancerPoolWithCoins(poolCoins...)
+					s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute * 7))
 				} else if tc.asset.AssetType == types.SuperfluidAssetTypeConcentratedShare {
 					s.PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition(stakeDenom, "foo")
 				}
@@ -114,6 +126,9 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 
 				if !tc.expectedZeroMultipler {
 					s.Require().NotEqual(multiplier, osmomath.ZeroDec())
+					if !tc.expectedMultiplier.IsNil() {
+						s.Require().Equal(tc.expectedMultiplier, multiplier)
+					}
 				} else {
 					// Zero on success is expected on CL errors since those are surrounded with `ApplyFuncIfNoError`
 					s.Require().Equal(multiplier, osmomath.ZeroDec())

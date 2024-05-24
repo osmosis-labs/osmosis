@@ -29,6 +29,9 @@ message SuperfluidAsset {
   // AssetType indicates whether the superfluid asset is a native token or an lp
   // share
   SuperfluidAssetType asset_type = 2;
+  // For non-osmo native assets, we need a pool_id osmo/asset to determine the
+  // twap of the asset
+  uint64 price_pool_id = 3;
 }
 
 // SuperfluidIntermediaryAccount takes the role of intermediary between LP token
@@ -96,4 +99,17 @@ message ConcentratedPoolUserPositionRecord {
   ];
   cosmos.base.v1beta1.Coin equivalent_staked_amount = 6
       [ (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin" ];
+}
+
+// The DenomRiskFactor stores the risk factor of a superfluid asset
+message DenomRiskFactor {
+  // superfluid asset denom, can be LP token or native token
+  string denom = 1;
+  // risk_factor is to be cut on OSMO equivalent value of the denom tokens
+  // for superfluid staking. It defaults to params.minimum_risk_factor
+  string risk_factor = 2 [
+    (gogoproto.moretags) = "yaml:\"risk_factor\"",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
 }

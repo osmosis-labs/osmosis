@@ -1,6 +1,6 @@
 module github.com/osmosis-labs/osmosis/v25
 
-go 1.21.9
+go 1.21.8
 
 require (
 	cosmossdk.io/api v0.3.1
