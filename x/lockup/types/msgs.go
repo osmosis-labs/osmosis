@@ -54,10 +54,6 @@ func (m MsgLockTokens) ValidateBasic() error {
 	return nil
 }
 
-func (m MsgLockTokens) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
-}
-
 func (m MsgLockTokens) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
 	return []sdk.AccAddress{owner}
@@ -80,10 +76,6 @@ func (m MsgBeginUnlockingAll) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
 	}
 	return nil
-}
-
-func (m MsgBeginUnlockingAll) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 func (m MsgBeginUnlockingAll) GetSigners() []sdk.AccAddress {
@@ -126,10 +118,6 @@ func (m MsgBeginUnlocking) ValidateBasic() error {
 	return nil
 }
 
-func (m MsgBeginUnlocking) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
-}
-
 func (m MsgBeginUnlocking) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
 	return []sdk.AccAddress{owner}
@@ -158,10 +146,6 @@ func (m MsgExtendLockup) ValidateBasic() error {
 		return fmt.Errorf("duration should be positive: %d < 0", m.Duration)
 	}
 	return nil
-}
-
-func (m MsgExtendLockup) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON((&m)))
 }
 
 func (m MsgExtendLockup) GetSigners() []sdk.AccAddress {
@@ -198,10 +182,6 @@ func (m MsgForceUnlock) ValidateBasic() error {
 	return nil
 }
 
-func (m MsgForceUnlock) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
-}
-
 func (m MsgForceUnlock) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
 	return []sdk.AccAddress{owner}
@@ -232,10 +212,6 @@ func (m MsgSetRewardReceiverAddress) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "lock id should be larger than zero, was (%s)", err)
 	}
 	return nil
-}
-
-func (m MsgSetRewardReceiverAddress) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 func (m MsgSetRewardReceiverAddress) GetSigners() []sdk.AccAddress {

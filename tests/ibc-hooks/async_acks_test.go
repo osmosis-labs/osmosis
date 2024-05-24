@@ -7,8 +7,8 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
-	ibctesting "github.com/cosmos/ibc-go/v7/testing"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 	"github.com/tidwall/gjson"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -103,7 +103,7 @@ func (suite *HooksTestSuite) TestWasmHooksAsyncAcks() {
 		_, err = suite.forceContractToEmitAckForPacket(osmosisApp, ctx, contractAddr, packet, tc.success)
 		totalExpectedAcks++
 		suite.Require().NoError(err)
-		writtenAck, err := ibctesting.ParseAckFromEvents(ctx.EventManager().Events())
+		writtenAck, err := ibctesting.ParseAckFromEvents(ctx.EventManager().Events().ToABCIEvents())
 		suite.Require().NoError(err)
 
 		allAcks = osmosisApp.IBCKeeper.ChannelKeeper.GetAllPacketAcks(suite.chainA.GetContext())

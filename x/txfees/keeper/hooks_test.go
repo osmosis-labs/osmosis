@@ -102,7 +102,7 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 
 				// Deposit some fee amount (non-native-denom) to the fee module account
 				_, _, addr0 := testdata.KeyTestPubAddr()
-				err = testutil.FundAccount(s.App.BankKeeper, s.Ctx, addr0, sdk.Coins{coin})
+				err = testutil.FundAccount(s.Ctx, s.App.BankKeeper, addr0, sdk.Coins{coin})
 				s.NoError(err)
 				err = s.App.BankKeeper.SendCoinsFromAccountToModule(s.Ctx, addr0, types.NonNativeTxFeeCollectorName, sdk.Coins{coin})
 				s.NoError(err)

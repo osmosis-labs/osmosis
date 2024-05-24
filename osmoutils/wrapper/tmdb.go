@@ -1,7 +1,7 @@
 package wrapper
 
 import (
-	tdbm "github.com/cometbft/cometbft-db"
+	tdbm "github.com/cosmos/cosmos-db"
 	iavldb "github.com/cosmos/iavl/db"
 )
 

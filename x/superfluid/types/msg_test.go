@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v25/x/superfluid"
 	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
 
 	"github.com/cometbft/cometbft/crypto/ed25519"
@@ -72,7 +73,7 @@ func TestAuthzMsg(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			apptesting.TestMessageAuthzSerialization(t, tc.msg)
+			apptesting.TestMessageAuthzSerialization(t, tc.msg, superfluid.AppModuleBasic{})
 		})
 	}
 }
@@ -142,7 +143,9 @@ func TestUnbondConvertAndStakeMsg(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.msg.ValidateBasic()
+			msgWithValBasic, ok := tc.msg.(sdk.HasValidateBasic)
+			require.True(t, ok)
+			err := msgWithValBasic.ValidateBasic()
 			if tc.expectedError {
 				require.Error(t, err)
 			} else {

@@ -4773,7 +4773,7 @@ paths:
                     conditions around the
 
                     duration for which a given denom is locked.
-                title: Active gagues only
+                title: Active gauges only
               pagination:
                 title: Pagination defines pagination for the response
                 type: object
@@ -5051,7 +5051,7 @@ paths:
                     conditions around the
 
                     duration for which a given denom is locked.
-                title: Active gagues that match denom in query
+                title: Active gauges that match denom in query
               pagination:
                 title: Pagination defines pagination for the response
                 type: object
@@ -5105,7 +5105,7 @@ paths:
                       format: byte
       parameters:
         - name: denom
-          description: Desired denom when querying active gagues.
+          description: Desired denom when querying active gauges.
           in: query
           required: false
           type: string
@@ -5962,7 +5962,7 @@ paths:
                   conditions around the
 
                   duration for which a given denom is locked.
-                title: Gauge that corresponds to provided gague ID
+                title: Gauge that corresponds to provided gauge ID
         default:
           description: An unexpected error response.
           schema:
@@ -5987,7 +5987,7 @@ paths:
                       format: byte
       parameters:
         - name: id
-          description: Gague ID being queried
+          description: Gauge ID being queried
           in: path
           required: true
           type: string
@@ -7020,7 +7020,7 @@ paths:
                     conditions around the
 
                     duration for which a given denom is locked.
-                title: Upcoming gagues that match denom in query
+                title: Upcoming gauges that match denom in query
               pagination:
                 title: Pagination defines pagination for the response
                 type: object
@@ -7074,7 +7074,7 @@ paths:
                       format: byte
       parameters:
         - name: denom
-          description: Filter for upcoming gagues that match specific denom.
+          description: Filter for upcoming gauges that match specific denom.
           in: query
           required: false
           type: string
@@ -43341,7 +43341,7 @@ definitions:
             around the
 
             duration for which a given denom is locked.
-        title: Active gagues that match denom in query
+        title: Active gauges that match denom in query
       pagination:
         title: Pagination defines pagination for the response
         type: object
@@ -43518,7 +43518,7 @@ definitions:
             around the
 
             duration for which a given denom is locked.
-        title: Active gagues only
+        title: Active gauges only
       pagination:
         title: Pagination defines pagination for the response
         type: object
@@ -43821,7 +43821,7 @@ definitions:
           the
 
           duration for which a given denom is locked.
-        title: Gauge that corresponds to provided gague ID
+        title: Gauge that corresponds to provided gauge ID
   osmosis.incentives.GaugeWeight:
     type: object
     properties:
@@ -45144,7 +45144,7 @@ definitions:
             around the
 
             duration for which a given denom is locked.
-        title: Upcoming gagues that match denom in query
+        title: Upcoming gauges that match denom in query
       pagination:
         title: Pagination defines pagination for the response
         type: object

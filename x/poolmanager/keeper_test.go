@@ -46,19 +46,19 @@ var (
 	}
 
 	testTakerFeesTracker = types.TakerFeesTracker{
-		TakerFeesToStakers:         sdk.Coins{sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(1000))},
-		TakerFeesToCommunityPool:   sdk.Coins{sdk.NewCoin("uusdc", sdk.NewInt(1000))},
+		TakerFeesToStakers:         sdk.Coins{sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1000))},
+		TakerFeesToCommunityPool:   sdk.Coins{sdk.NewCoin("uusdc", osmomath.NewInt(1000))},
 		HeightAccountingStartsFrom: 100,
 	}
 
 	testPoolVolumes = []*types.PoolVolume{
 		{
 			PoolId:     1,
-			PoolVolume: sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(10000000))),
+			PoolVolume: sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000000))),
 		},
 		{
 			PoolId:     2,
-			PoolVolume: sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(20000000))),
+			PoolVolume: sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(20000000))),
 		},
 	}
 
@@ -84,7 +84,8 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.Setup()
 
 	// Set the bond denom to be uosmo to make volume tracking tests more readable.
-	skParams := s.App.StakingKeeper.GetParams(s.Ctx)
+	skParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	s.Require().NoError(err)
 	skParams.BondDenom = appparams.BaseCoinUnit
 	s.App.StakingKeeper.SetParams(s.Ctx, skParams)
 	s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, appparams.BaseCoinUnit)

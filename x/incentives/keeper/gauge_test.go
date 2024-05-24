@@ -875,7 +875,7 @@ func (s *KeeperTestSuite) validateGauge(expectedGauge types.Gauge) {
 }
 
 // test helper to create a gauge bypassing all checks and restrictions
-// It is useful in edge case tests that rely on invalid gagues written to store (e.g. in Distribute())
+// It is useful in edge case tests that rely on invalid gauges written to store (e.g. in Distribute())
 func (s *KeeperTestSuite) createGaugeNoRestrictions(isPerpetual bool, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64, poolID uint64) types.Gauge {
 	// Fund incentives module account to simulate transfer from owner to module account
 	s.FundModuleAcc(types.ModuleName, coins)
@@ -917,9 +917,9 @@ func (s *KeeperTestSuite) validateNoGaugeIDInSlice(slice []types.Gauge, gaugeID 
 func (s *KeeperTestSuite) TestCheckIfDenomsAreDistributable() {
 	s.SetupTest()
 
-	coinWithRouteA := sdk.NewCoin("denom1", sdk.NewInt(100))
-	coinWithRouteB := sdk.NewCoin("denom2", sdk.NewInt(100))
-	coinWithoutRouteC := sdk.NewCoin("denom3", sdk.NewInt(100))
+	coinWithRouteA := sdk.NewCoin("denom1", osmomath.NewInt(100))
+	coinWithRouteB := sdk.NewCoin("denom2", osmomath.NewInt(100))
+	coinWithoutRouteC := sdk.NewCoin("denom3", osmomath.NewInt(100))
 
 	for _, coin := range []sdk.Coin{coinWithRouteA, coinWithRouteB} {
 		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)

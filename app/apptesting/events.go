@@ -1,6 +1,7 @@
 package apptesting
 
 import (
+	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"golang.org/x/exp/slices"
 )
@@ -19,15 +20,15 @@ func (s *KeeperTestHelper) AssertEventEmitted(ctx sdk.Context, eventTypeExpected
 	s.Require().Equal(numEventsExpected, len(actualEvents))
 }
 
-func (s *KeeperTestHelper) FindEvent(events []sdk.Event, name string) sdk.Event {
-	index := slices.IndexFunc(events, func(e sdk.Event) bool { return e.Type == name })
+func (s *KeeperTestHelper) FindEvent(events []abci.Event, name string) abci.Event {
+	index := slices.IndexFunc(events, func(e abci.Event) bool { return e.Type == name })
 	if index == -1 {
-		return sdk.Event{}
+		return abci.Event{}
 	}
 	return events[index]
 }
 
-func (s *KeeperTestHelper) ExtractAttributes(event sdk.Event) map[string]string {
+func (s *KeeperTestHelper) ExtractAttributes(event abci.Event) map[string]string {
 	attrs := make(map[string]string)
 	if event.Attributes == nil {
 		return attrs

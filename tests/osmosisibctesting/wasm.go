@@ -12,7 +12,7 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v25/x/ibc-rate-limit/types"
@@ -83,11 +83,11 @@ func (chain *TestChain) QueryContractJson(suite *suite.Suite, contract sdk.AccAd
 
 func (chain *TestChain) RegisterRateLimitingContract(addr []byte) {
 	addrStr, err := sdk.Bech32ifyAddressBytes("osmo", addr)
-	require.NoError(chain.T, err)
+	require.NoError(chain.TB, err)
 	params, err := types.NewParams(addrStr)
-	require.NoError(chain.T, err)
+	require.NoError(chain.TB, err)
 	osmosisApp := chain.GetOsmosisApp()
 	paramSpace, ok := osmosisApp.AppKeepers.ParamsKeeper.GetSubspace(types.ModuleName)
-	require.True(chain.T, ok)
+	require.True(chain.TB, ok)
 	paramSpace.SetParamSet(chain.GetContext(), &params)
 }

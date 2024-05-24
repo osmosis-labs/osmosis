@@ -3,7 +3,7 @@ package writelistener
 import (
 	"bytes"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -14,13 +14,13 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
-var _ storetypes.WriteListener = (*cosmwasmPoolWriteListener)(nil)
+var _ domain.WriteListener = (*cosmwasmPoolWriteListener)(nil)
 
 type cosmwasmPoolWriteListener struct {
 	poolTracker domain.BlockPoolUpdateTracker
 }
 
-func NewCosmwasmPool(poolTracker domain.BlockPoolUpdateTracker) storetypes.WriteListener {
+func NewCosmwasmPool(poolTracker domain.BlockPoolUpdateTracker) *cosmwasmPoolWriteListener {
 	return &cosmwasmPoolWriteListener{
 		poolTracker: poolTracker,
 	}
@@ -51,7 +51,7 @@ type cosmwasmPoolBalanceWriteListener struct {
 	poolTracker domain.BlockPoolUpdateTracker
 }
 
-func NewCosmwasmPoolBalance(poolTracker domain.BlockPoolUpdateTracker) storetypes.WriteListener {
+func NewCosmwasmPoolBalance(poolTracker domain.BlockPoolUpdateTracker) *cosmwasmPoolBalanceWriteListener {
 	return &cosmwasmPoolBalanceWriteListener{
 		poolTracker: poolTracker,
 	}

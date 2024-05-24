@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v25/x/gamm"
 	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
 
@@ -970,7 +971,7 @@ func TestAuthzMsg(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			apptesting.TestMessageAuthzSerialization(t, tc.gammMsg)
+			apptesting.TestMessageAuthzSerialization(t, tc.gammMsg, gamm.AppModuleBasic{})
 		})
 	}
 }

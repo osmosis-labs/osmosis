@@ -13,10 +13,10 @@ import (
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types/address"
 
-	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	"github.com/iancoleman/orderedmap"
 
-	packetforwardingtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/types"
+	packetforwardingtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
@@ -466,7 +466,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 	receiver := chainBNode.GetWallet(initialization.ValidatorWalletName)
 
 	// If the RL param is already set. Remember it to set it back at the end
-	param := chainANode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+	param := chainANode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress), false)
 	fmt.Println("param", param)
 
 	osmoSupply, err := chainANode.QuerySupplyOf(appparams.BaseCoinUnit)
@@ -483,12 +483,12 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 	fmt.Println("Sending >1%")
 	chainANode.SendIBC(chainA, chainB, receiver, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
 
-	contract, err := chainANode.SetupRateLimiting(paths, chainANode.PublicAddress, chainA, true)
+	contract, err := chainANode.SetupRateLimiting(paths, chainANode.PublicAddress, chainA, true, false)
 	s.Require().NoError(err)
 
 	s.Eventually(
 		func() bool {
-			val := chainANode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+			val := chainANode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress), false)
 			return strings.Contains(val, contract)
 		},
 		govPropTimeout,
@@ -516,7 +516,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 		)
 		s.Require().NoError(err)
 		s.Eventually(func() bool {
-			val := chainANode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+			val := chainANode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress), false)
 			return strings.Contains(val, param)
 		}, time.Second*30, 10*time.Millisecond)
 	}
@@ -864,7 +864,7 @@ func (s *IntegrationTestSuite) ExpeditedProposals() {
 	chainAB, chainABNode := s.getChainCfgs()
 
 	sender := chainABNode.GetWallet(initialization.ValidatorWalletName)
-	govModuleAccount := chainABNode.QueryGovModuleAccount()
+	govModuleAccount := chainABNode.QueryGovModuleAccount(false)
 	propMetadata := []byte{42}
 	validProp := fmt.Sprintf(`
 {
@@ -1026,7 +1026,7 @@ func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainA() {
 	chainA, chainANode := s.getChainACfgs()
 
 	sender := chainANode.GetWallet(initialization.ValidatorWalletName)
-	govModuleAccount := chainANode.QueryGovModuleAccount()
+	govModuleAccount := chainANode.QueryGovModuleAccount(false)
 	propMetadata := []byte{42}
 	validProp := fmt.Sprintf(`
 {
@@ -1035,29 +1035,32 @@ func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainA() {
 			"@type": "/cosmos.gov.v1.MsgUpdateParams",
 			"authority": "%s",
 			"params": {
-				"min_deposit": [
+				"burn_proposal_deposit_prevote": false,
+				"burn_vote_quorum": false,
+				"burn_vote_veto": true,
+				"expedited_min_deposit": [
 					{
-					"denom": "uosmo",
-					"amount": "10000000"
+						"amount": "50000000",
+						"denom": "uosmo"
 					}
 				],
+				"expedited_threshold": "0.667000000000000000",
+				"expedited_voting_period": "7s",
 				"max_deposit_period": "172800s",
-				"voting_period": "11s",
+				"min_deposit": [
+					{
+						"amount": "10000000",
+						"denom": "uosmo"
+					}
+				],
+				"min_deposit_ratio": "0.010000000000000000",
+				"min_initial_deposit_ratio": "0.000000000000000000",
+				"proposal_cancel_dest": "",
+				"proposal_cancel_ratio": "0.500000000000000000",
 				"quorum": "0.334000000000000000",
 				"threshold": "0.500000000000000000",
 				"veto_threshold": "0.334000000000000000",
-				"min_initial_deposit_ratio": "0.000000000000000000",
-				"expedited_voting_period": "7s",
-				"expedited_threshold": "0.667000000000000000",
-				"expedited_min_deposit": [
-				{
-					"denom": "uosmo",
-					"amount": "50000000"
-				}
-				],
-				"burn_vote_quorum": false,
-				"burn_proposal_deposit_prevote": false,
-				"burn_vote_veto": true
+				"voting_period": "11s"
 			}
 		}
 	],
@@ -1085,7 +1088,7 @@ func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainB() {
 	chainB, chainBNode := s.getChainBCfgs()
 
 	sender := chainBNode.GetWallet(initialization.ValidatorWalletName)
-	govModuleAccount := chainBNode.QueryGovModuleAccount()
+	govModuleAccount := chainBNode.QueryGovModuleAccount(false)
 	propMetadata := []byte{42}
 	validProp := fmt.Sprintf(`
 {
@@ -1094,29 +1097,32 @@ func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainB() {
 			"@type": "/cosmos.gov.v1.MsgUpdateParams",
 			"authority": "%s",
 			"params": {
-				"min_deposit": [
+				"burn_proposal_deposit_prevote": false,
+				"burn_vote_quorum": false,
+				"burn_vote_veto": true,
+				"expedited_min_deposit": [
 					{
-					"denom": "uosmo",
-					"amount": "10000000"
+						"amount": "50000000",
+						"denom": "uosmo"
 					}
 				],
+				"expedited_threshold": "0.667000000000000000",
+				"expedited_voting_period": "7s",
 				"max_deposit_period": "172800s",
-				"voting_period": "11s",
+				"min_deposit": [
+					{
+						"amount": "10000000",
+						"denom": "uosmo"
+					}
+				],
+				"min_deposit_ratio": "0.010000000000000000",
+				"min_initial_deposit_ratio": "0.000000000000000000",
+				"proposal_cancel_dest": "",
+				"proposal_cancel_ratio": "0.500000000000000000",
 				"quorum": "0.334000000000000000",
 				"threshold": "0.500000000000000000",
 				"veto_threshold": "0.334000000000000000",
-				"min_initial_deposit_ratio": "0.000000000000000000",
-				"expedited_voting_period": "7s",
-				"expedited_threshold": "0.667000000000000000",
-				"expedited_min_deposit": [
-				{
-					"denom": "uosmo",
-					"amount": "50000000"
-				}
-				],
-				"burn_vote_quorum": false,
-				"burn_proposal_deposit_prevote": false,
-				"burn_vote_veto": true
+				"voting_period": "11s"
 			}
 		}
 	],

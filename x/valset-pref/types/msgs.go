@@ -68,10 +68,6 @@ func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 	return nil
 }
 
-func (m MsgSetValidatorSetPreference) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
-}
-
 // GetSigners takes a create validator-set message and returns the delegator in a byte array.
 func (m MsgSetValidatorSetPreference) GetSigners() []sdk.AccAddress {
 	delegator, _ := sdk.AccAddressFromBech32(m.Delegator)
@@ -106,10 +102,6 @@ func (m MsgDelegateToValidatorSet) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-func (m MsgDelegateToValidatorSet) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 func (m MsgDelegateToValidatorSet) GetSigners() []sdk.AccAddress {
@@ -147,10 +139,6 @@ func (m MsgUndelegateFromValidatorSet) ValidateBasic() error {
 	return nil
 }
 
-func (m MsgUndelegateFromValidatorSet) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
-}
-
 func (m MsgUndelegateFromValidatorSet) GetSigners() []sdk.AccAddress {
 	delegator, _ := sdk.AccAddressFromBech32(m.Delegator)
 	return []sdk.AccAddress{delegator}
@@ -186,10 +174,6 @@ func (m MsgUndelegateFromRebalancedValidatorSet) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-func (m MsgUndelegateFromRebalancedValidatorSet) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 func (m MsgUndelegateFromRebalancedValidatorSet) GetSigners() []sdk.AccAddress {
@@ -249,10 +233,6 @@ func (m MsgRedelegateValidatorSet) ValidateBasic() error {
 	return nil
 }
 
-func (m MsgRedelegateValidatorSet) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
-}
-
 func (m MsgRedelegateValidatorSet) GetSigners() []sdk.AccAddress {
 	delegator, _ := sdk.AccAddressFromBech32(m.Delegator)
 	return []sdk.AccAddress{delegator}
@@ -281,10 +261,6 @@ func (m MsgWithdrawDelegationRewards) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-func (m MsgWithdrawDelegationRewards) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 func (m MsgWithdrawDelegationRewards) GetSigners() []sdk.AccAddress {
@@ -319,10 +295,6 @@ func (m MsgDelegateBondedTokens) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-func (m MsgDelegateBondedTokens) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 func (m MsgDelegateBondedTokens) GetSigners() []sdk.AccAddress {

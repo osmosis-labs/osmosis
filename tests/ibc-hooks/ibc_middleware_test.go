@@ -7,9 +7,7 @@ import (
 	"testing"
 	"time"
 
-	abcitypes "github.com/cometbft/cometbft/abci/types"
-	"golang.org/x/exp/slices"
-
+	abci "github.com/cometbft/cometbft/abci/types"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 
 	"github.com/tidwall/gjson"
@@ -33,10 +31,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
-	ibctesting "github.com/cosmos/ibc-go/v7/testing"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 
 	"github.com/osmosis-labs/osmosis/v25/tests/osmosisibctesting"
 
@@ -554,7 +552,7 @@ func NewMsgTransfer(token sdk.Coin, sender, receiver, channel, memo string) *tra
 	}
 }
 
-func (suite *HooksTestSuite) RelayPacket(packet channeltypes.Packet, direction Direction) (*sdk.Result, []byte) {
+func (suite *HooksTestSuite) RelayPacket(packet channeltypes.Packet, direction Direction) (*abci.ExecTxResult, []byte) {
 	sender, receiver := suite.GetEndpoints(direction)
 
 	err := receiver.UpdateClient()
@@ -585,7 +583,7 @@ func (suite *HooksTestSuite) RelayPacket(packet channeltypes.Packet, direction D
 	return receiveResult, ack
 }
 
-func (suite *HooksTestSuite) RelayPacketNoAck(packet channeltypes.Packet, direction Direction) *sdk.Result {
+func (suite *HooksTestSuite) RelayPacketNoAck(packet channeltypes.Packet, direction Direction) *abci.ExecTxResult {
 	sender, receiver := suite.GetEndpoints(direction)
 
 	err := receiver.UpdateClient()
@@ -603,7 +601,7 @@ func (suite *HooksTestSuite) RelayPacketNoAck(packet channeltypes.Packet, direct
 	return receiveResult
 }
 
-func (suite *HooksTestSuite) FullSend(msg sdk.Msg, direction Direction) (*sdk.Result, *sdk.Result, string, error) {
+func (suite *HooksTestSuite) FullSend(msg sdk.Msg, direction Direction) (*abci.ExecTxResult, *abci.ExecTxResult, string, error) {
 	var sender *osmosisibctesting.TestChain
 	switch direction {
 	case AtoB:
@@ -708,7 +706,8 @@ func (suite *HooksTestSuite) TestSendWithoutMemo() {
 func (suite *HooksTestSuite) SetupPools(chainName Chain, multipliers []osmomath.Dec) []gammtypes.CFMMPoolI {
 	chain := suite.GetChain(chainName)
 	acc1 := chain.SenderAccount.GetAddress()
-	bondDenom := chain.GetOsmosisApp().StakingKeeper.BondDenom(chain.GetContext())
+	bondDenom, err := chain.GetOsmosisApp().StakingKeeper.BondDenom(chain.GetContext())
+	suite.Require().NoError(err)
 
 	pools := []gammtypes.CFMMPoolI{}
 	for index, multiplier := range multipliers {
@@ -1218,9 +1217,9 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 	packet, err := ibctesting.ParsePacketFromEvents(receiveResult.GetEvents())
 	suite.Require().NoError(err)
 	receiveResult, ack2 := suite.RelayPacket(packet, AtoB)
-	index := slices.IndexFunc(receiveResult.Events, func(e abcitypes.Event) bool { return e.Type == "ibccallbackerror-ibc-acknowledgement-error" })
-	suite.Require().Contains(receiveResult.Events[index].Attributes[1].Value, "wasm metadata is not a valid JSON map object")
-	fmt.Println(string(ack2))
+
+	attrs := suite.ExtractAttributes(suite.FindEvent(receiveResult.GetEvents(), "ibccallbackerror-ibc-acknowledgement-error"))
+	suite.Require().Contains(attrs["ibccallbackerror-error-context"], "wasm metadata is not a valid JSON map object")
 
 	balanceToken0After := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), initializer, token0IBC)
 	suite.Require().Equal(int64(1000), balanceToken0.Amount.Sub(balanceToken0After.Amount).Int64())
@@ -1405,7 +1404,8 @@ func (suite *HooksTestSuite) CreateIBCPoolOnChain(chainName Chain, denom1, denom
 
 func (suite *HooksTestSuite) CreateIBCNativePoolOnChain(chainName Chain, denom string) uint64 {
 	chain := suite.GetChain(chainName)
-	bondDenom := chain.GetOsmosisApp().StakingKeeper.BondDenom(chain.GetContext())
+	bondDenom, err := chain.GetOsmosisApp().StakingKeeper.BondDenom(chain.GetContext())
+	suite.Require().NoError(err)
 
 	multiplier := osmomath.NewDec(20)
 
@@ -1902,7 +1902,7 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 
 // This sends a packet (setup to use PFM) through a path and ensures acks are returned to the sender
 func (suite *HooksTestSuite) SendAndAckPacketThroughPath(packetPath []Direction, initialPacket channeltypes.Packet) {
-	var res *sdk.Result
+	var res *abci.ExecTxResult
 	var err error
 
 	packetStack := make([]channeltypes.Packet, 0)
@@ -2054,7 +2054,7 @@ func (suite *HooksTestSuite) ExecuteOutpostSwap(initializer, receiverAddr sdk.Ac
 	suite.Require().NoError(err)
 
 	// "Relay the packet" by executing the receive on chain A
-	packet, err := ibctesting.ParsePacketFromEvents(ctxB.EventManager().Events())
+	packet, err := ibctesting.ParsePacketFromEvents(ctxB.EventManager().Events().ToABCIEvents())
 	suite.Require().NoError(err)
 	receiveResult, _ := suite.RelayPacket(packet, BtoA)
 

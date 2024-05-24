@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"cosmossdk.io/log"
-	dbm "github.com/cometbft/cometbft-db"
-	"github.com/cosmos/cosmos-sdk/store"
-	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
+	"cosmossdk.io/store"
+	iavlstore "cosmossdk.io/store/iavl"
+	dbm "github.com/cosmos/cosmos-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/cosmos/iavl"

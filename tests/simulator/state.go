@@ -136,7 +136,7 @@ func AppStateRandomizedFn(
 
 	// generate a random amount of initial stake coins and a random initial
 	// number of bonded accounts
-	initialStake := sdk.NewInt(r.Int63n(1e12))
+	initialStake := osmomath.NewInt(r.Int63n(1e12))
 	// Don't allow 0 validators to start off with
 	numInitiallyBonded := int64(r.Intn(299)) + 1
 

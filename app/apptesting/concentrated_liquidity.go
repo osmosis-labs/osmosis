@@ -896,7 +896,7 @@ func (s *KeeperTestHelper) CreateFullRangePosition(pool types.ConcentratedPoolEx
 func (s *KeeperTestHelper) WithdrawFullRangePosition(pool types.ConcentratedPoolExtension, positionId uint64, liquidityToRemove osmomath.Dec) {
 	clMsgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
 
-	_, err := clMsgServer.WithdrawPosition(sdk.WrapSDKContext(s.Ctx), &types.MsgWithdrawPosition{
+	_, err := clMsgServer.WithdrawPosition(s.Ctx, &types.MsgWithdrawPosition{
 		PositionId:      positionId,
 		LiquidityAmount: liquidityToRemove,
 		Sender:          s.TestAccs[0].String(),

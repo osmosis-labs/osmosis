@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
@@ -16,12 +17,13 @@ import (
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
+	storetypes "cosmossdk.io/store/types"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/noapptest"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // We need to setup a test suite with account keeper
@@ -31,7 +33,7 @@ type TestSuite struct {
 	suite.Suite
 
 	ctx   sdk.Context
-	store sdk.KVStore
+	store storetypes.KVStore
 
 	authStoreKey  storetypes.StoreKey
 	accountKeeper authkeeper.AccountKeeperI
@@ -40,13 +42,15 @@ type TestSuite struct {
 func (suite *TestSuite) SetupTest() {
 	// For the test suite, we manually wire a custom store "customStoreKey"
 	// Auth module (for module_account_test.go) which requires params module as well.
-	customStoreKey := sdk.NewKVStoreKey("osmoutil_store_test")
-	suite.authStoreKey = sdk.NewKVStoreKey(authtypes.StoreKey)
+	customStoreKey := storetypes.NewKVStoreKey("osmoutil_store_test")
+	authStoreKey := storetypes.NewKVStoreKey(authtypes.StoreKey)
+	suite.authStoreKey = authStoreKey
 	// setup ctx + stores
-	paramsKey := sdk.NewKVStoreKey(paramstypes.StoreKey)
-	paramsTKey := sdk.NewKVStoreKey(paramstypes.TStoreKey)
+	paramsKey := storetypes.NewKVStoreKey(paramstypes.StoreKey)
+	paramsTKey := storetypes.NewKVStoreKey(paramstypes.TStoreKey)
 	suite.ctx = noapptest.DefaultCtxWithStoreKeys(
 		[]storetypes.StoreKey{customStoreKey, suite.authStoreKey, paramsKey, paramsTKey})
+
 	suite.store = suite.ctx.KVStore(customStoreKey)
 	// setup params (needed for auth)
 	encConfig := noapptest.MakeTestEncodingConfig(auth.AppModuleBasic{}, params.AppModuleBasic{})
@@ -60,9 +64,10 @@ func (suite *TestSuite) SetupTest() {
 	}
 	suite.accountKeeper = authkeeper.NewAccountKeeper(
 		encConfig.Codec,
-		suite.authStoreKey,
+		runtime.NewKVStoreService(authStoreKey),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
+		addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		"osmo",
 		authtypes.NewModuleAddress(authtypes.ModuleName).String())
 }
@@ -633,14 +638,14 @@ func (s *TestSuite) TestGatherValuesFromIterator() {
 	for name, tc := range testcases {
 		s.Run(name, func() {
 			s.SetupTest()
-			var iterator sdk.Iterator
+			var iterator storetypes.Iterator
 
 			for i, key := range tc.preSetKeys {
 				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
 			}
 
 			if tc.prefix != "" {
-				iterator = sdk.KVStorePrefixIterator(s.store, []byte(tc.prefix))
+				iterator = storetypes.KVStorePrefixIterator(s.store, []byte(tc.prefix))
 			} else {
 				var startValue, endValue []byte
 				if tc.startValue != "" {
@@ -1206,7 +1211,7 @@ func (s *TestSuite) TestHasAnyAtPrefix() {
 		"prefix lexicogrpahically above existing - does not find correctly": {
 			preSetKeys: twoAB,
 
-			prefix: string(sdk.PrefixEndBytes([]byte(prefixTwo))),
+			prefix: string(storetypes.PrefixEndBytes([]byte(prefixTwo))),
 
 			expectedValue: false,
 		},

@@ -36,7 +36,13 @@ func Prop12(ctx sdk.Context, bank bankkeeper.Keeper, distr *distrkeeper.Keeper) 
 	}
 
 	// deduct from the feePool tracker
-	feePool := distr.GetFeePool(ctx)
+	feePool, err := distr.FeePool.Get(ctx)
+	if err != nil {
+		panic(err)
+	}
 	feePool.CommunityPool = feePool.CommunityPool.Sub(sdk.NewDecCoins(sdk.NewInt64DecCoin(appparams.BaseCoinUnit, total)))
-	distr.SetFeePool(ctx, feePool)
+	err = distr.FeePool.Set(ctx, feePool)
+	if err != nil {
+		panic(err)
+	}
 }

@@ -8,10 +8,14 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/x/upgrade"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/suite"
+
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
@@ -27,10 +31,12 @@ import (
 
 type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
+	preModule appmodule.HasPreBlocker
 }
 
 func (s *UpgradeTestSuite) SetupTest() {
 	s.Setup()
+	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
 }
 
 type ByLinkedClassicPool []v17.AssetPair
@@ -52,10 +58,10 @@ func dummyUpgrade(s *UpgradeTestSuite) {
 	plan := upgradetypes.Plan{Name: "v17", Height: dummyUpgradeHeight}
 	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
 	s.Require().NoError(err)
-	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
-	s.Require().True(exists)
+	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+	s.Require().NoError(err)
 
-	s.Ctx = s.Ctx.WithBlockHeight(dummyUpgradeHeight)
+	s.Ctx = s.Ctx.WithHeaderInfo(header.Info{Height: dummyUpgradeHeight, Time: s.Ctx.BlockTime().Add(time.Second)}).WithBlockHeight(dummyUpgradeHeight)
 }
 
 func dummyTwapRecord(poolId uint64, t time.Time, asset0 string, asset1 string, sp0, accum0, accum1, geomAccum osmomath.Dec) types.TwapRecord { //nolint:unparam // asset1 always receives "usomo"
@@ -198,7 +204,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 			func(keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
 				lastPoolIdMinusOne := lastPoolID - 1
 				lastPoolIdMinusTwo := lastPoolID - 2
-				stakingParams := s.App.StakingKeeper.GetParams(s.Ctx)
+				stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
 				stakingParams.BondDenom = appparams.BaseCoinUnit
 				s.App.StakingKeeper.SetParams(s.Ctx, stakingParams)
 
@@ -222,7 +228,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 				// Run upgrade handler.
 				dummyUpgrade(s)
 				s.Require().NotPanics(func() {
-					s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
+					_, err := s.preModule.PreBlock(s.Ctx)
+					s.Require().NoError(err)
 				})
 
 				clPool1TwapRecordPostUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(s.Ctx, lastPoolIdMinusTwo)
@@ -258,7 +265,9 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 				// Retrieve the community pool balance (and the feePool balance) after the upgrade
 				communityPoolBalancePost := s.App.BankKeeper.GetAllBalances(s.Ctx, communityPoolAddress)
-				feePoolCommunityPoolPost := s.App.DistrKeeper.GetFeePool(s.Ctx).CommunityPool
+				feePool, err := s.App.DistrKeeper.FeePool.Get(s.Ctx)
+				s.Require().NoError(err)
+				feePoolCommunityPoolPost := feePool.CommunityPool
 
 				assetPairs, err := v17.InitializeAssetPairs(s.Ctx, keepers)
 				s.Require().NoError(err)
@@ -376,7 +385,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 			},
 			func(keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
 				// Set the bond denom to uosmo
-				stakingParams := s.App.StakingKeeper.GetParams(s.Ctx)
+				stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+				s.Require().NoError(err)
 				stakingParams.BondDenom = appparams.BaseCoinUnit
 				s.App.StakingKeeper.SetParams(s.Ctx, stakingParams)
 
@@ -392,12 +402,15 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 				// Run upgrade handler.
 				dummyUpgrade(s)
 				s.Require().NotPanics(func() {
-					s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
+					_, err := s.preModule.PreBlock(s.Ctx)
+					s.Require().NoError(err)
 				})
 
 				// Retrieve the community pool balance (and the feePool balance) after the upgrade
 				communityPoolBalancePost := s.App.BankKeeper.GetAllBalances(s.Ctx, communityPoolAddress)
-				feePoolCommunityPoolPost := s.App.DistrKeeper.GetFeePool(s.Ctx).CommunityPool
+				feePool, err := s.App.DistrKeeper.FeePool.Get(s.Ctx)
+				s.Require().NoError(err)
+				feePoolCommunityPoolPost := feePool.CommunityPool
 
 				indexOffset := int(0)
 				assetListIndex := int(0)
@@ -500,8 +513,9 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 			},
 			func(keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
 				dummyUpgrade(s)
-				s.Require().Panics(func() {
-					s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
+				s.Require().NotPanics(func() {
+					_, err := s.preModule.PreBlock(s.Ctx)
+					s.Require().NoError(err)
 				})
 			},
 		},

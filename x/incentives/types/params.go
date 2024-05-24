@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
@@ -24,7 +25,7 @@ var (
 	KeyMinValueForDistr     = []byte("MinValueForDistr")
 
 	// 100 OSMO
-	DefaultGroupCreationFee = sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(100_000_000)))
+	DefaultGroupCreationFee = sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100_000_000)))
 )
 
 // ParamKeyTable returns the key table for the incentive module's parameters.

@@ -119,7 +119,7 @@ func NewPoolTransformer(assetListGetter domain.AssetListGetter, keepers domain.S
 
 // processPoolState processes the pool state. an
 func (pi *poolTransformer) Transform(ctx sdk.Context, blockPools domain.BlockPools) ([]sqsdomain.PoolI, sqsdomain.TakerFeeMap, error) {
-	goCtx := sdk.WrapSDKContext(ctx)
+	goCtx := ctx
 
 	// TODO: can be cached
 	tokenPrecisionMap, err := pi.assetListGetter.GetDenomPrecisions(goCtx)

@@ -245,6 +245,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 		s.Run(tc.Description, func() {
 			// Generate a transaction based on the test cases
 			tx, _ := GenTx(
+				s.Ctx,
 				s.EncodingConfig.TxConfig,
 				tc.TestData.Msgs,
 				feeCoins,
@@ -263,7 +264,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 
 			if tc.TestData.ShouldSucceedGettingData {
 				// request for the first message
-				request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, addr, addr, nil, sdk.NewCoins(), tc.TestData.Msgs[0], tx, 0, false, authenticator.SequenceMatch)
+				request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, s.OsmosisApp.AppCodec(), ak, sigModeHandler, addr, addr, nil, sdk.NewCoins(), tc.TestData.Msgs[0], tx, 0, false, authenticator.SequenceMatch)
 				s.Require().NoError(err)
 
 				// Test Authenticate method
@@ -277,7 +278,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 					s.Require().Error(err)
 				}
 			} else {
-				_, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, addr, addr, nil, sdk.NewCoins(), tc.TestData.Msgs[0], tx, 0, false, authenticator.SequenceMatch)
+				_, err := authenticator.GenerateAuthenticationRequest(s.Ctx, s.OsmosisApp.AppCodec(), ak, sigModeHandler, addr, addr, nil, sdk.NewCoins(), tc.TestData.Msgs[0], tx, 0, false, authenticator.SequenceMatch)
 				s.Require().Error(err)
 			}
 		})
@@ -378,7 +379,8 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 //	s.Require().True(authentication.IsAuthenticated())
 //}
 
-func MakeTxBuilder(gen client.TxConfig,
+func MakeTxBuilder(ctx sdk.Context,
+	gen client.TxConfig,
 	msgs []sdk.Msg,
 	feeAmt sdk.Coins,
 	gas uint64,
@@ -393,7 +395,10 @@ func MakeTxBuilder(gen client.TxConfig,
 	// create a random length memo
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
-	signMode := gen.SignModeHandler().DefaultMode()
+	signMode, err := authsigning.APISignModeToInternal(gen.SignModeHandler().DefaultMode())
+	if err != nil {
+		return nil, err
+	}
 
 	// 1st round: set SignatureV2 with empty signatures, to set correct
 	// signer infos.
@@ -408,7 +413,7 @@ func MakeTxBuilder(gen client.TxConfig,
 	}
 
 	tx := gen.NewTxBuilder()
-	err := tx.SetMsgs(msgs...)
+	err = tx.SetMsgs(msgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -428,7 +433,8 @@ func MakeTxBuilder(gen client.TxConfig,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
 		}
-		signBytes, err := gen.SignModeHandler().GetSignBytes(signMode, signerData, tx.GetTx())
+		signBytes, err := authsigning.GetSignBytesAdapter(
+			ctx, gen.SignModeHandler(), signMode, signerData, tx.GetTx())
 		if err != nil {
 			panic(err)
 		}
@@ -448,6 +454,7 @@ func MakeTxBuilder(gen client.TxConfig,
 
 // GenTx generates a signed mock transaction.
 func GenTx(
+	ctx sdk.Context,
 	gen client.TxConfig,
 	msgs []sdk.Msg,
 	feeAmt sdk.Coins,
@@ -458,7 +465,7 @@ func GenTx(
 	signers []cryptotypes.PrivKey,
 	signatures []cryptotypes.PrivKey,
 ) (sdk.Tx, error) {
-	tx, err := MakeTxBuilder(gen, msgs, feeAmt, gas, chainID, accNums, accSeqs, signers, signatures)
+	tx, err := MakeTxBuilder(ctx, gen, msgs, feeAmt, gas, chainID, accNums, accSeqs, signers, signatures)
 	if err != nil {
 		return nil, err
 	}

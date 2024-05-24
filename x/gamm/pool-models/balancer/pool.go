@@ -754,7 +754,7 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, spreadFac
 	// safely ends the calculation if all input tokens are successfully LP'd
 	if tokensJoined.IsAnyGT(tokensIn) {
 		return osmomath.ZeroInt(), sdk.NewCoins(), errors.New("an error has occurred, more coins joined than tokens passed in")
-	} else if tokensJoined.IsEqual(tokensIn) {
+	} else if tokensJoined.Equal(tokensIn) {
 		return numShares, tokensJoined, nil
 	}
 

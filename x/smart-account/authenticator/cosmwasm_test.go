@@ -9,16 +9,18 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
+	"cosmossdk.io/store/prefix"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/suite"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/osmosis-labs/osmosis/v25/app"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
@@ -42,8 +44,8 @@ func TestCosmwasmAuthenticatorTest(t *testing.T) {
 
 func (s *CosmwasmAuthenticatorTest) SetupTest() {
 	s.OsmosisApp = app.Setup(false)
-	s.Ctx = s.OsmosisApp.NewContext(false, tmproto.Header{})
-	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(10_000_000))
+	s.Ctx = s.OsmosisApp.NewContextLegacy(false, tmproto.Header{})
+	s.Ctx = s.Ctx.WithGasMeter(storetypes.NewGasMeter(10_000_000))
 	s.EncodingConfig = app.MakeEncodingConfig()
 
 	s.CosmwasmAuth = authenticator.NewCosmwasmAuthenticator(s.OsmosisApp.ContractKeeper, s.OsmosisApp.AccountKeeper, s.OsmosisApp.AppCodec())
@@ -291,6 +293,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 	s.Require().NoError(err, "Initialize should succeed")
 
 	tx, _ := GenTx(
+		s.Ctx,
 		encodingConfig.TxConfig,
 		msgs,
 		feeCoins,
@@ -304,7 +307,7 @@ func (s *CosmwasmAuthenticatorTest) TestGeneral() {
 
 	ak := s.OsmosisApp.AccountKeeper
 	sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
-	request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, accounts[0], accounts[0], nil, feeCoins, testMsg, tx, 0, false, authenticator.SequenceMatch)
+	request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, s.OsmosisApp.AppCodec(), ak, sigModeHandler, accounts[0], accounts[0], nil, feeCoins, testMsg, tx, 0, false, authenticator.SequenceMatch)
 	s.Require().NoError(err)
 	request.AuthenticatorId = "0"
 
@@ -419,6 +422,7 @@ func (s *CosmwasmAuthenticatorTest) TestCosignerContract() {
 	s.Require().NoError(err, "Should succeed")
 
 	tx, _ := GenTx(
+		s.Ctx,
 		encodingConfig.TxConfig,
 		msgs,
 		feeCoins,
@@ -435,7 +439,7 @@ func (s *CosmwasmAuthenticatorTest) TestCosignerContract() {
 	s.T().Skip("TODO: this currently fails as signatures are stripped from the tx. Should we add them or maybe do a better cosigner implementation later?")
 	ak := s.OsmosisApp.AccountKeeper
 	sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
-	request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, accounts[0], accounts[0], nil, sdk.NewCoins(), testMsg, tx, 0, false, authenticator.SequenceMatch)
+	request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, s.OsmosisApp.AppCodec(), ak, sigModeHandler, accounts[0], accounts[0], nil, sdk.NewCoins(), testMsg, tx, 0, false, authenticator.SequenceMatch)
 	s.Require().NoError(err)
 
 	status := auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), request)

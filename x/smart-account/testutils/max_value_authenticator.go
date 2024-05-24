@@ -6,8 +6,8 @@ import (
 
 	proto "github.com/cosmos/gogoproto/proto"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -47,7 +47,7 @@ func (m MaxAmountAuthenticator) Authenticate(ctx sdk.Context, request authentica
 	if err != nil {
 		return err
 	}
-	if m.GetAmount(ctx).Add(send.Amount[0].Amount).GTE(sdk.NewInt(3_000)) {
+	if m.GetAmount(ctx).Add(send.Amount[0].Amount).GTE(osmomath.NewInt(3_000)) {
 		return fmt.Errorf("total amount sent is greater than 3_000")
 	}
 	return nil
@@ -94,7 +94,7 @@ func (m MaxAmountAuthenticator) GetAmount(ctx sdk.Context) osmomath.Int {
 	err := json.Unmarshal(bz, &amountData)
 	// if we can't unmarshal, we just assume it's 0
 	if err != nil {
-		return sdk.NewInt(0)
+		return osmomath.NewInt(0)
 	}
 	return amountData.Amount
 }

@@ -5,17 +5,18 @@ import (
 	"sync"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-	"github.com/cosmos/cosmos-sdk/codec"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	gammv2types "github.com/osmosis-labs/osmosis/v25/x/gamm/v2types"
+
+	"github.com/cosmos/gogoproto/proto"
 
 	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/client/queryproto"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/client/queryproto"
@@ -203,21 +204,21 @@ func IsWhitelistedQuery(queryPath string) error {
 // getWhitelistedQuery returns the whitelisted query at the provided path.
 // If the query does not exist, or it was setup wrong by the chain, this returns an error.
 // CONTRACT: must call returnStargateResponseToPool in order to avoid pointless allocs.
-func getWhitelistedQuery(queryPath string) (codec.ProtoMarshaler, error) {
+func getWhitelistedQuery(queryPath string) (proto.Message, error) {
 	protoResponseAny, isWhitelisted := stargateResponsePools[queryPath]
 	if !isWhitelisted {
 		return nil, wasmvmtypes.UnsupportedRequest{Kind: fmt.Sprintf("'%s' path is not allowed from the contract", queryPath)}
 	}
-	protoMarshaler, ok := protoResponseAny.Get().(codec.ProtoMarshaler)
+	protoMarshaler, ok := protoResponseAny.Get().(proto.Message)
 	if !ok {
-		return nil, fmt.Errorf("failed to assert type to codec.ProtoMarshaler")
+		return nil, fmt.Errorf("failed to assert type to proto.Messager")
 	}
 	return protoMarshaler, nil
 }
 
 type protoTypeG[T any] interface {
 	*T
-	codec.ProtoMarshaler
+	proto.Message
 }
 
 // setWhitelistedQuery sets the whitelisted query at the provided path.
@@ -233,7 +234,7 @@ func setWhitelistedQuery[T any, PT protoTypeG[T]](queryPath string, _ PT) {
 }
 
 // returnStargateResponseToPool returns the provided protoMarshaler to the appropriate pool based on it's query path.
-func returnStargateResponseToPool(queryPath string, pb codec.ProtoMarshaler) {
+func returnStargateResponseToPool(queryPath string, pb proto.Message) {
 	stargateResponsePools[queryPath].Put(pb)
 }
 
