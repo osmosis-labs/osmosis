@@ -45,9 +45,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/x/incentives"
 	incentivesclient "github.com/osmosis-labs/osmosis/v23/x/incentives/client"
 	"github.com/osmosis-labs/osmosis/v23/x/lockup"
-	"github.com/osmosis-labs/osmosis/v23/x/market"
 	"github.com/osmosis-labs/osmosis/v23/x/mint"
-	"github.com/osmosis-labs/osmosis/v23/x/oracle"
 	poolincentives "github.com/osmosis-labs/osmosis/v23/x/pool-incentives"
 	poolincentivesclient "github.com/osmosis-labs/osmosis/v23/x/pool-incentives/client"
 	poolmanagerclient "github.com/osmosis-labs/osmosis/v23/x/poolmanager/client"
@@ -111,8 +109,8 @@ var AppModuleBasics = []module.AppModuleBasic{
 	vesting.AppModuleBasic{},
 	gamm.AppModuleBasic{},
 	poolmanager.AppModuleBasic{},
-	oracle.AppModuleBasic{},
-	market.AppModuleBasic{},
+	//oracle.AppModuleBasic{}, TODO: yurii: enable oracle
+	// market.AppModuleBasic{}, TODO: yurii: enable swaps
 	twapmodule.AppModuleBasic{},
 	concentratedliquidity.AppModuleBasic{},
 	protorev.AppModuleBasic{},
