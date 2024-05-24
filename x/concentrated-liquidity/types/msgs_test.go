@@ -46,9 +46,7 @@ func runValidateBasicTest(t *testing.T, name string, msg extMsg, expectPass bool
 		require.Equal(t, msg.Type(), expType)
 		encCfg := osmosisapp.GetEncodingConfig().Marshaler
 		signers, _, err := encCfg.GetMsgV1Signers(msg)
-		if err != nil {
-			require.NoError(t, err)
-		}
+		require.NoError(t, err)
 		require.Equal(t, len(signers), 1)
 		require.Equal(t, sdk.AccAddress(signers[0]).String(), addr1)
 	} else {
