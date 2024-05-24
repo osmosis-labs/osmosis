@@ -2,18 +2,20 @@ package ibc_rate_limit_test
 
 import (
 	"fmt"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
-	ibctesting "github.com/cosmos/ibc-go/v7/testing"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -140,26 +142,7 @@ func CalculateChannelValue(ctx sdk.Context, denom string, bankKeeper bankkeeper.
 	//return balance
 }
 
-// Tests that a receiver address longer than 4096 is not accepted
-func (suite *MiddlewareTestSuite) TestInvalidReceiver() {
-	msg := transfertypes.NewMsgTransfer(
-		suite.path.EndpointB.ChannelConfig.PortID,
-		suite.path.EndpointB.ChannelID,
-		sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(1)),
-		suite.chainB.SenderAccount.GetAddress().String(),
-		strings.Repeat("x", 4097),
-		clienttypes.NewHeight(10, 100),
-		uint64(time.Now().UnixNano()),
-		"",
-	)
-	_, ack, _ := suite.FullSendBToA(msg)
-	suite.Require().Contains(ack, "error",
-		"acknowledgment is not an error")
-	suite.Require().Contains(ack, fmt.Sprintf("ABCI code: %d", types.ErrBadMessage.ABCICode()),
-		"acknowledgment error is not of the right type")
-}
-
-func (suite *MiddlewareTestSuite) FullSendBToA(msg sdk.Msg) (*sdk.Result, string, error) {
+func (suite *MiddlewareTestSuite) FullSendBToA(msg sdk.Msg) (*abci.ExecTxResult, string, error) {
 	sendResult, err := suite.chainB.SendMsgsNoCheck(msg)
 	suite.Require().NoError(err)
 
@@ -183,7 +166,7 @@ func (suite *MiddlewareTestSuite) FullSendBToA(msg sdk.Msg) (*sdk.Result, string
 	return sendResult, string(ack), err
 }
 
-func (suite *MiddlewareTestSuite) FullSendAToB(msg sdk.Msg) (*sdk.Result, string, error) {
+func (suite *MiddlewareTestSuite) FullSendAToB(msg sdk.Msg) (*abci.ExecTxResult, string, error) {
 	sendResult, err := suite.chainA.SendMsgsNoCheck(msg)
 	if err != nil {
 		return nil, "", err
@@ -236,7 +219,7 @@ func (suite *MiddlewareTestSuite) AssertReceive(success bool, msg sdk.Msg) (stri
 	return ack, err
 }
 
-func (suite *MiddlewareTestSuite) AssertSend(success bool, msg sdk.Msg) (*sdk.Result, error) {
+func (suite *MiddlewareTestSuite) AssertSend(success bool, msg sdk.Msg) (*abci.ExecTxResult, error) {
 	r, _, err := suite.FullSendAToB(msg)
 	if success {
 		suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
@@ -512,11 +495,11 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	suite.Require().NoError(err)
 
 	// recv in chain b
-	res, err = suite.path.EndpointB.RecvPacketWithResult(packet)
+	newRes, err := suite.path.EndpointB.RecvPacketWithResult(packet)
 	suite.Require().NoError(err)
 
 	// get the ack from the chain b's response
-	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
+	ack, err := ibctesting.ParseAckFromEvents(newRes.GetEvents())
 	suite.Require().NoError(err)
 
 	// manually relay it to chain a

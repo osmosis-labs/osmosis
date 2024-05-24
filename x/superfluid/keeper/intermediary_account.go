@@ -1,23 +1,27 @@
 package keeper
 
 import (
+	"context"
+
 	"github.com/cosmos/gogoproto/proto"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-func (k Keeper) GetAllIntermediaryAccounts(ctx sdk.Context) []types.SuperfluidIntermediaryAccount {
+func (k Keeper) GetAllIntermediaryAccounts(context context.Context) []types.SuperfluidIntermediaryAccount {
+	ctx := sdk.UnwrapSDKContext(context)
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixIntermediaryAccount)
 
 	accounts := []types.SuperfluidIntermediaryAccount{}
 
-	iterator := sdk.KVStorePrefixIterator(prefixStore, nil)
+	iterator := storetypes.KVStorePrefixIterator(prefixStore, nil)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -73,11 +77,16 @@ func (k Keeper) GetOrCreateIntermediaryAccount(ctx sdk.Context, denom, valAddr s
 	}
 	// Otherwise we create the intermediary account.
 	// first step, we create the gaugeID
+	stakingParams, err := k.sk.GetParams(ctx)
+	if err != nil {
+		k.Logger(ctx).Error(err.Error())
+		return types.SuperfluidIntermediaryAccount{}, err
+	}
 	gaugeID, err := k.ik.CreateGauge(ctx, true, accountAddr, sdk.Coins{}, lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		// move this synthetic denom creation to a dedicated function
 		Denom:    stakingSyntheticDenom(denom, valAddr),
-		Duration: k.sk.GetParams(ctx).UnbondingTime,
+		Duration: stakingParams.UnbondingTime,
 	}, ctx.BlockTime(), 1, 0)
 	if err != nil {
 		k.Logger(ctx).Error(err.Error())
@@ -91,7 +100,10 @@ func (k Keeper) GetOrCreateIntermediaryAccount(ctx sdk.Context, denom, valAddr s
 	// create a new account. We use base accounts, as this is what's done for cosmwasm smart contract accounts.
 	// and in the off-chance someone manages to find a bug that forces the account's creation.
 	if !k.ak.HasAccount(ctx, intermediaryAcct.GetAccAddress()) {
-		k.ak.SetAccount(ctx, authtypes.NewBaseAccount(intermediaryAcct.GetAccAddress(), nil, 0, 0))
+		// UNFORKING v2 TODO: I now need to set NextAccountNumber with k.ak.NextAccountNumber(ctx) instead of using zero, due to new invariant checks.
+		// Verify that this is correct. If it is, make sure every call the NewBaseAccount does this.
+		// k.ak.SetAccount(ctx, authtypes.NewBaseAccount(intermediaryAcct.GetAccAddress(), nil, 0, 0))
+		k.ak.SetAccount(ctx, authtypes.NewBaseAccount(intermediaryAcct.GetAccAddress(), nil, k.ak.NextAccountNumber(ctx), 0))
 	}
 
 	return intermediaryAcct, nil

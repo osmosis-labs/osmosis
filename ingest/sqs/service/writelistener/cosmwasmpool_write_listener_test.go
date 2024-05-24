@@ -2,6 +2,7 @@ package writelistener_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankmigv2 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v2"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
@@ -121,13 +122,13 @@ func (s *WriteListenerTestSuite) TestWriteListener_CosmWasmBalance() {
 		{
 			name: "balance write unrelated to cosmwasm pool, no-op",
 
-			key:   banktypes.CreateAccountBalancesPrefix(s.TestAccs[0]),
+			key:   bankmigv2.CreateAccountBalancesPrefix(s.TestAccs[0]),
 			value: someValue, // value is not used for balance changes
 		},
 		{
 			name: "balance write to cosmwasm pool",
 
-			key:   banktypes.CreateAccountBalancesPrefix(sdk.MustAccAddressFromBech32(cosmWasmPoolModel.ContractAddress)),
+			key:   bankmigv2.CreateAccountBalancesPrefix(sdk.MustAccAddressFromBech32(cosmWasmPoolModel.ContractAddress)),
 			value: someValue, // value is not used for balance changes
 
 			expectedPoolUpdate: true,

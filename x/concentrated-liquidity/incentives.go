@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	sdkprefix "github.com/cosmos/cosmos-sdk/store/prefix"
+	sdkprefix "cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -879,7 +879,7 @@ func (k Keeper) redepositForfeitedIncentives(ctx sdk.Context, poolId uint64, sen
 	activeLiquidity := pool.GetLiquidity()
 
 	// If no active liquidity, give the forfeited incentives to the sender.
-	if activeLiquidity.LT(sdk.OneDec()) {
+	if activeLiquidity.LT(osmomath.OneDec()) {
 		err := k.bankKeeper.SendCoins(ctx, pool.GetIncentivesAddress(), sender, totalForefeitedIncentives)
 		if err != nil {
 			return err

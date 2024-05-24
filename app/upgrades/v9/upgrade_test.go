@@ -2,9 +2,10 @@ package v9_test
 
 import (
 	"fmt"
+	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"cosmossdk.io/core/header"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 const dummyUpgradeHeight = 5
@@ -30,13 +31,13 @@ func (s *UpgradeTestSuite) TestUpgradePayments() {
 				plan := upgradetypes.Plan{Name: "v9", Height: dummyUpgradeHeight}
 				err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
 				s.Require().NoError(err)
-				_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
-				s.Require().True(exists)
+				_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+				s.Require().NoError(err)
 
-				s.Ctx = s.Ctx.WithBlockHeight(dummyUpgradeHeight)
+				s.Ctx = s.Ctx.WithHeaderInfo(header.Info{Height: dummyUpgradeHeight, Time: s.Ctx.BlockTime().Add(time.Second)}).WithBlockHeight(dummyUpgradeHeight)
 				s.Require().NotPanics(func() {
-					beginBlockRequest := abci.RequestBeginBlock{}
-					s.App.BeginBlocker(s.Ctx, beginBlockRequest)
+					_, err := s.preModule.PreBlock(s.Ctx)
+					s.Require().NoError(err)
 				})
 			},
 			func() {

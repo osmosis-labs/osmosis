@@ -127,8 +127,8 @@ func instantiateReflectContract(t *testing.T, ctx sdk.Context, osmosis *app.Osmo
 func fundAccount(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sdk.AccAddress, coins sdk.Coins) {
 	t.Helper()
 	err := testutil.FundAccount(
-		osmosis.BankKeeper,
 		ctx,
+		osmosis.BankKeeper,
 		addr,
 		coins,
 	)

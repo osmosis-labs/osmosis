@@ -4,9 +4,10 @@ import (
 	"strconv"
 	"testing"
 
+	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/x/epochs/types"
@@ -22,7 +23,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	s.Ctx = testutil.DefaultContext(sdk.NewKVStoreKey(types.StoreKey), sdk.NewTransientStoreKey("transient_test"))
+	s.Ctx = testutil.DefaultContext(storetypes.NewKVStoreKey(types.StoreKey), storetypes.NewTransientStoreKey("transient_test"))
 }
 
 func dummyAfterEpochEndEvent(epochIdentifier string, epochNumber int64) sdk.Event {
@@ -41,7 +42,7 @@ func dummyBeforeEpochStartEvent(epochIdentifier string, epochNumber int64) sdk.E
 	)
 }
 
-var dummyErr = errors.New("9", 9, "dummyError")
+var dummyErr = errorsmod.New("9", 9, "dummyError")
 
 // dummyEpochHook is a struct satisfying the epoch hook interface,
 // that maintains a counter for how many times its been successfully called,

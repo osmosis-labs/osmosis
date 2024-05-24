@@ -89,7 +89,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			ctx := s.Ctx
 
 			poolManagerParams := s.App.PoolManagerKeeper.GetParams(ctx)
-			poolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.MustNewDecFromStr("0.01")
+			poolManagerParams.TakerFeeParams.DefaultTakerFee = osmomath.MustNewDecFromStr("0.01")
 			s.App.PoolManagerKeeper.SetParams(ctx, poolManagerParams)
 
 			s.PrepareBalancerPool()
@@ -101,7 +101,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
 			s.Equal(0, len(ctx.EventManager().Events()))
 
-			response, err := msgServer.SwapExactAmountIn(sdk.WrapSDKContext(ctx), &types.MsgSwapExactAmountIn{
+			response, err := msgServer.SwapExactAmountIn(ctx, &types.MsgSwapExactAmountIn{
 				Sender:            s.TestAccs[0].String(),
 				Routes:            tc.routes,
 				TokenIn:           tc.tokenIn,
@@ -192,7 +192,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 			ctx := s.Ctx
 
 			poolManagerParams := s.App.PoolManagerKeeper.GetParams(ctx)
-			poolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.MustNewDecFromStr("0.01")
+			poolManagerParams.TakerFeeParams.DefaultTakerFee = osmomath.MustNewDecFromStr("0.01")
 			s.App.PoolManagerKeeper.SetParams(ctx, poolManagerParams)
 
 			s.PrepareBalancerPool()
@@ -204,7 +204,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
 			s.Equal(0, len(ctx.EventManager().Events()))
 
-			response, err := msgServer.SwapExactAmountOut(sdk.WrapSDKContext(ctx), &types.MsgSwapExactAmountOut{
+			response, err := msgServer.SwapExactAmountOut(ctx, &types.MsgSwapExactAmountOut{
 				Sender:           s.TestAccs[0].String(),
 				Routes:           tc.routes,
 				TokenOut:         tc.tokenOut,
@@ -271,7 +271,7 @@ func (s *KeeperTestSuite) TestJoinPool_Events() {
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
 			s.Require().Equal(0, len(ctx.EventManager().Events()))
 
-			response, err := msgServer.JoinPool(sdk.WrapSDKContext(ctx), &types.MsgJoinPool{
+			response, err := msgServer.JoinPool(ctx, &types.MsgJoinPool{
 				Sender:         s.TestAccs[0].String(),
 				PoolId:         tc.poolId,
 				ShareOutAmount: tc.shareOutAmount,
@@ -331,7 +331,7 @@ func (s *KeeperTestSuite) TestExitPool_Events() {
 			sender := s.TestAccs[0].String()
 
 			// Pre-join pool to be able to ExitPool.
-			joinPoolResponse, err := msgServer.JoinPool(sdk.WrapSDKContext(ctx), &types.MsgJoinPool{
+			joinPoolResponse, err := msgServer.JoinPool(ctx, &types.MsgJoinPool{
 				Sender:         sender,
 				PoolId:         tc.poolId,
 				ShareOutAmount: osmomath.NewInt(shareIn),
@@ -349,7 +349,7 @@ func (s *KeeperTestSuite) TestExitPool_Events() {
 			s.Require().Equal(0, len(ctx.EventManager().Events()))
 
 			// System under test.
-			response, err := msgServer.ExitPool(sdk.WrapSDKContext(ctx), &types.MsgExitPool{
+			response, err := msgServer.ExitPool(ctx, &types.MsgExitPool{
 				Sender:        sender,
 				PoolId:        tc.poolId,
 				ShareInAmount: joinPoolResponse.ShareOutAmount,

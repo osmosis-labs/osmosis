@@ -3,6 +3,8 @@ package authenticator
 import (
 	"fmt"
 
+	txsigning "cosmossdk.io/x/tx/signing"
+
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -11,6 +13,7 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	errorsmod "cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -68,7 +71,15 @@ func GetSignerAndSignatures(tx sdk.Tx) (signers []sdk.AccAddress, signatures []s
 	}
 
 	// Retrieve messages from the transaction.
-	signers = sigTx.GetSigners()
+	// UNFORKING v2 TODO: I dont know if ranging over the address bytes and assigning to AccAddress is correct
+	signerBytes, err := sigTx.GetSigners()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	for _, signer := range signerBytes {
+		signers = append(signers, sdk.AccAddress(signer))
+	}
 
 	// check that signer length and signature length are the same
 	if len(signatures) != len(signers) {
@@ -80,7 +91,30 @@ func GetSignerAndSignatures(tx sdk.Tx) (signers []sdk.AccAddress, signatures []s
 }
 
 // getSignerData returns the signer data for a given account. This is part of the data that needs to be signed.
-func getSignerData(ctx sdk.Context, ak authante.AccountKeeper, account sdk.AccAddress) authsigning.SignerData {
+func getSignerData(ctx sdk.Context, ak authante.AccountKeeper, account sdk.AccAddress) txsigning.SignerData {
+	// Retrieve and build the signer data struct
+	baseAccount := ak.GetAccount(ctx, account)
+	genesis := ctx.BlockHeight() == 0
+	chainID := ctx.ChainID()
+	var accNum uint64
+	if !genesis {
+		accNum = baseAccount.GetAccountNumber()
+	}
+	var sequence uint64
+	if baseAccount != nil {
+		sequence = baseAccount.GetSequence()
+	}
+
+	return txsigning.SignerData{
+		ChainID:       chainID,
+		AccountNumber: accNum,
+		Sequence:      sequence,
+	}
+}
+
+// getSignerData returns the signer data for a given account. This is part of the data that needs to be signed.
+// UNFORKING v2 TODO: Maybe we can just type cast txsigning.SignerData to authsigning.SignerData instead of using whole new method.
+func getSignerDataOld(ctx sdk.Context, ak authante.AccountKeeper, account sdk.AccAddress) authsigning.SignerData {
 	// Retrieve and build the signer data struct
 	baseAccount := ak.GetAccount(ctx, account)
 	genesis := ctx.BlockHeight() == 0
@@ -103,7 +137,7 @@ func getSignerData(ctx sdk.Context, ak authante.AccountKeeper, account sdk.AccAd
 
 // extractExplicitTxData makes the transaction data concrete for the authentication request. This is necessary to
 // pass the parsed data to the cosmwasm authenticator.
-func extractExplicitTxData(tx sdk.Tx, signerData authsigning.SignerData) (ExplicitTxData, error) {
+func extractExplicitTxData(tx sdk.Tx, signerData txsigning.SignerData) (ExplicitTxData, error) {
 	timeoutTx, ok := tx.(sdk.TxWithTimeoutHeight)
 	if !ok {
 		return ExplicitTxData{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithTimeoutHeight")
@@ -167,8 +201,9 @@ func extractSignatures(txSigners []sdk.AccAddress, txSignatures []signing.Signat
 // GenerateAuthenticationRequest creates an AuthenticationRequest for the transaction.
 func GenerateAuthenticationRequest(
 	ctx sdk.Context,
+	cdc codec.Codec,
 	ak authante.AccountKeeper,
-	sigModeHandler authsigning.SignModeHandler,
+	sigModeHandler *txsigning.HandlerMap,
 	account sdk.AccAddress,
 	feePayer sdk.AccAddress,
 	feeGranter sdk.AccAddress,
@@ -180,7 +215,11 @@ func GenerateAuthenticationRequest(
 	replayProtection ReplayProtection,
 ) (AuthenticationRequest, error) {
 	// Only supporting one signer per message. This will be enforced in sdk v0.50
-	signer := msg.GetSigners()[0]
+	signers, _, err := cdc.GetMsgV1Signers(msg)
+	if err != nil {
+		return AuthenticationRequest{}, err
+	}
+	signer := sdk.AccAddress(signers[0])
 	if !signer.Equals(account) {
 		return AuthenticationRequest{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid signer")
 	}
@@ -195,10 +234,13 @@ func GenerateAuthenticationRequest(
 	}
 
 	// Get the signer data for the account. This is needed in the SignDoc
+	// UNFORKING v2 TODO: Use a single method and maybe type case as needed, instead of using a whole new getSignerDataOld method
 	signerData := getSignerData(ctx, ak, account)
+	signerDataOld := getSignerDataOld(ctx, ak, account)
 
 	// Get the sign bytes for the transaction
-	signBytes, err := sigModeHandler.GetSignBytes(signing.SignMode_SIGN_MODE_DIRECT, signerData, tx)
+	// UNFORKING v2 TODO: I don't know if using the adapter here is correct, we just dont have access to the TxData but have the sdk.Tx
+	signBytes, err := authsigning.GetSignBytesAdapter(ctx, sigModeHandler, signing.SignMode_SIGN_MODE_DIRECT, signerDataOld, tx)
 	if err != nil {
 		return AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signBytes")
 	}

@@ -13,7 +13,7 @@ import (
 
 // TestParams tests the query for params
 func (s *KeeperTestSuite) TestParams() {
-	ctx := sdk.WrapSDKContext(s.Ctx)
+	ctx := s.Ctx
 	expectedParams := s.App.ProtoRevKeeper.GetParams(s.Ctx)
 
 	res, err := s.queryClient.Params(ctx, &types.QueryParamsRequest{})
@@ -25,7 +25,7 @@ func (s *KeeperTestSuite) TestParams() {
 func (s *KeeperTestSuite) TestGetProtoRevNumberOfTrades() {
 	s.SetupPoolsTest()
 	// Initially should throw an error
-	_, err := s.queryClient.GetProtoRevNumberOfTrades(sdk.WrapSDKContext(s.Ctx), &types.QueryGetProtoRevNumberOfTradesRequest{})
+	_, err := s.queryClient.GetProtoRevNumberOfTrades(s.Ctx, &types.QueryGetProtoRevNumberOfTradesRequest{})
 	s.Require().Error(err)
 
 	// Pseudo execute a trade
@@ -33,7 +33,7 @@ func (s *KeeperTestSuite) TestGetProtoRevNumberOfTrades() {
 	s.Require().NoError(err)
 
 	// Check the updated result
-	res, err := s.queryClient.GetProtoRevNumberOfTrades(sdk.WrapSDKContext(s.Ctx), &types.QueryGetProtoRevNumberOfTradesRequest{})
+	res, err := s.queryClient.GetProtoRevNumberOfTrades(s.Ctx, &types.QueryGetProtoRevNumberOfTradesRequest{})
 	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewInt(1), res.NumberOfTrades)
 
@@ -47,7 +47,7 @@ func (s *KeeperTestSuite) TestGetProtoRevNumberOfTrades() {
 	err = s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, types.OsmosisDenomination, osmomath.NewInt(10000))
 	s.Require().NoError(err)
 
-	res, err = s.queryClient.GetProtoRevNumberOfTrades(sdk.WrapSDKContext(s.Ctx), &types.QueryGetProtoRevNumberOfTradesRequest{})
+	res, err = s.queryClient.GetProtoRevNumberOfTrades(s.Ctx, &types.QueryGetProtoRevNumberOfTradesRequest{})
 	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewInt(4).Uint64(), res.NumberOfTrades.Uint64())
 }
@@ -58,7 +58,7 @@ func (s *KeeperTestSuite) TestGetProtoRevProfitsByDenom() {
 	req := &types.QueryGetProtoRevProfitsByDenomRequest{
 		Denom: types.OsmosisDenomination,
 	}
-	_, err := s.queryClient.GetProtoRevProfitsByDenom(sdk.WrapSDKContext(s.Ctx), req)
+	_, err := s.queryClient.GetProtoRevProfitsByDenom(s.Ctx, req)
 	s.Require().Error(err)
 
 	// Pseudo execute a trade
@@ -67,7 +67,7 @@ func (s *KeeperTestSuite) TestGetProtoRevProfitsByDenom() {
 	s.Require().NoError(err)
 	s.Commit()
 
-	res, err := s.queryClient.GetProtoRevProfitsByDenom(sdk.WrapSDKContext(s.Ctx), req)
+	res, err := s.queryClient.GetProtoRevProfitsByDenom(s.Ctx, req)
 	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewInt(10000), res.Profit.Amount)
 
@@ -77,12 +77,12 @@ func (s *KeeperTestSuite) TestGetProtoRevProfitsByDenom() {
 	s.Require().NoError(err)
 	s.Commit()
 
-	_, err = s.queryClient.GetProtoRevProfitsByDenom(sdk.WrapSDKContext(s.Ctx), req)
+	_, err = s.queryClient.GetProtoRevProfitsByDenom(s.Ctx, req)
 	s.Require().NoError(err)
 	req = &types.QueryGetProtoRevProfitsByDenomRequest{
 		Denom: "Atom",
 	}
-	res, err = s.queryClient.GetProtoRevProfitsByDenom(sdk.WrapSDKContext(s.Ctx), req)
+	res, err = s.queryClient.GetProtoRevProfitsByDenom(s.Ctx, req)
 	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewInt(10000), res.Profit.Amount)
 	s.Require().Equal("Atom", res.Profit.Denom)
@@ -92,7 +92,7 @@ func (s *KeeperTestSuite) TestGetProtoRevProfitsByDenom() {
 func (s *KeeperTestSuite) TestGetProtoRevAllProfits() {
 	s.SetupPoolsTest()
 	req := &types.QueryGetProtoRevAllProfitsRequest{}
-	res, err := s.queryClient.GetProtoRevAllProfits(sdk.WrapSDKContext(s.Ctx), req)
+	res, err := s.queryClient.GetProtoRevAllProfits(s.Ctx, req)
 	s.Require().NoError(err)
 	s.Require().Equal(0, len(res.Profits))
 
@@ -102,7 +102,7 @@ func (s *KeeperTestSuite) TestGetProtoRevAllProfits() {
 	err = s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, "Atom", osmomath.NewInt(3000))
 	s.Require().NoError(err)
 
-	res, err = s.queryClient.GetProtoRevAllProfits(sdk.WrapSDKContext(s.Ctx), req)
+	res, err = s.queryClient.GetProtoRevAllProfits(s.Ctx, req)
 	s.Require().NoError(err)
 	atom := sdk.NewCoin("Atom", osmomath.NewInt(3000))
 	osmo := sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(9000))
@@ -115,7 +115,7 @@ func (s *KeeperTestSuite) TestGetProtoRevAllProfits() {
 	err = s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, "Atom", osmomath.NewInt(10000))
 	s.Require().NoError(err)
 
-	res, err = s.queryClient.GetProtoRevAllProfits(sdk.WrapSDKContext(s.Ctx), req)
+	res, err = s.queryClient.GetProtoRevAllProfits(s.Ctx, req)
 	s.Require().NoError(err)
 	atom = sdk.NewCoin("Atom", osmomath.NewInt(13000))
 	osmo = sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(19000))
@@ -131,7 +131,7 @@ func (s *KeeperTestSuite) TestGetProtoRevStatisticsByRoute() {
 		Route: []uint64{1, 2, 3},
 	}
 
-	res, err := s.queryClient.GetProtoRevStatisticsByRoute(sdk.WrapSDKContext(s.Ctx), req)
+	res, err := s.queryClient.GetProtoRevStatisticsByRoute(s.Ctx, req)
 	s.Require().Error(err)
 	s.Require().Nil(res)
 
@@ -140,7 +140,7 @@ func (s *KeeperTestSuite) TestGetProtoRevStatisticsByRoute() {
 	s.Require().NoError(err)
 
 	// Verify statistics
-	res, err = s.queryClient.GetProtoRevStatisticsByRoute(sdk.WrapSDKContext(s.Ctx), req)
+	res, err = s.queryClient.GetProtoRevStatisticsByRoute(s.Ctx, req)
 	s.Require().NoError(err)
 	s.Require().Equal([]uint64{1, 2, 3}, res.Statistics.Route)
 	s.Require().Equal(osmomath.OneInt(), res.Statistics.NumberOfTrades)
@@ -152,7 +152,7 @@ func (s *KeeperTestSuite) TestGetProtoRevStatisticsByRoute() {
 	s.Require().NoError(err)
 
 	// Verify statistics
-	res, err = s.queryClient.GetProtoRevStatisticsByRoute(sdk.WrapSDKContext(s.Ctx), req)
+	res, err = s.queryClient.GetProtoRevStatisticsByRoute(s.Ctx, req)
 	s.Require().NoError(err)
 	s.Require().Equal([]uint64{1, 2, 3}, res.Statistics.Route)
 	s.Require().Equal(osmomath.NewInt(2), res.Statistics.NumberOfTrades)
@@ -164,7 +164,7 @@ func (s *KeeperTestSuite) TestGetProtoRevStatisticsByRoute() {
 	s.Require().NoError(err)
 
 	// Verify statistics
-	res, err = s.queryClient.GetProtoRevStatisticsByRoute(sdk.WrapSDKContext(s.Ctx), req)
+	res, err = s.queryClient.GetProtoRevStatisticsByRoute(s.Ctx, req)
 	s.Require().NoError(err)
 	s.Require().Equal([]uint64{1, 2, 3}, res.Statistics.Route)
 	s.Require().Equal(osmomath.NewInt(3), res.Statistics.NumberOfTrades)
@@ -179,7 +179,7 @@ func (s *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
 	s.SetupPoolsTest()
 	req := &types.QueryGetProtoRevAllRouteStatisticsRequest{}
 
-	res, err := s.queryClient.GetProtoRevAllRouteStatistics(sdk.WrapSDKContext(s.Ctx), req)
+	res, err := s.queryClient.GetProtoRevAllRouteStatistics(s.Ctx, req)
 	s.Require().Error(err)
 	s.Require().Nil(res)
 
@@ -188,7 +188,7 @@ func (s *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
 	s.Require().NoError(err)
 
 	// Verify statistics
-	res, err = s.queryClient.GetProtoRevAllRouteStatistics(sdk.WrapSDKContext(s.Ctx), req)
+	res, err = s.queryClient.GetProtoRevAllRouteStatistics(s.Ctx, req)
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(res.Statistics))
 	s.Require().Equal([]uint64{1, 2, 3}, res.Statistics[0].Route)
@@ -201,7 +201,7 @@ func (s *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
 	s.Require().NoError(err)
 
 	// Verify statistics
-	res, err = s.queryClient.GetProtoRevAllRouteStatistics(sdk.WrapSDKContext(s.Ctx), req)
+	res, err = s.queryClient.GetProtoRevAllRouteStatistics(s.Ctx, req)
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(res.Statistics))
 	s.Require().Equal([]uint64{1, 2, 3}, res.Statistics[0].Route)
@@ -214,7 +214,7 @@ func (s *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
 	s.Require().NoError(err)
 
 	// Verify statistics
-	res, err = s.queryClient.GetProtoRevAllRouteStatistics(sdk.WrapSDKContext(s.Ctx), req)
+	res, err = s.queryClient.GetProtoRevAllRouteStatistics(s.Ctx, req)
 	s.Require().NoError(err)
 	s.Require().Equal(2, len(res.Statistics))
 	s.Require().Equal([]uint64{1, 2, 3}, res.Statistics[0].Route)
@@ -231,7 +231,7 @@ func (s *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
 	s.Require().NoError(err)
 
 	// Verify statistics
-	res, err = s.queryClient.GetProtoRevAllRouteStatistics(sdk.WrapSDKContext(s.Ctx), req)
+	res, err = s.queryClient.GetProtoRevAllRouteStatistics(s.Ctx, req)
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(res.Statistics))
 	s.Require().Equal([]uint64{1, 2, 3}, res.Statistics[0].Route)
@@ -254,7 +254,7 @@ func (s *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
 func (s *KeeperTestSuite) TestGetProtoRevTokenPairArbRoutes() {
 	s.SetupPoolsTest()
 	req := &types.QueryGetProtoRevTokenPairArbRoutesRequest{}
-	res, err := s.queryClient.GetProtoRevTokenPairArbRoutes(sdk.WrapSDKContext(s.Ctx), req)
+	res, err := s.queryClient.GetProtoRevTokenPairArbRoutes(s.Ctx, req)
 	s.Require().NoError(err)
 	s.Require().Equal(len(s.tokenPairArbRoutes), len(res.Routes))
 
@@ -266,7 +266,7 @@ func (s *KeeperTestSuite) TestGetProtoRevTokenPairArbRoutes() {
 // TestGetProtoRevAdminAccount tests the query to retrieve the admin account
 func (s *KeeperTestSuite) TestGetProtoRevAdminAccount() {
 	req := &types.QueryGetProtoRevAdminAccountRequest{}
-	res, err := s.queryClient.GetProtoRevAdminAccount(sdk.WrapSDKContext(s.Ctx), req)
+	res, err := s.queryClient.GetProtoRevAdminAccount(s.Ctx, req)
 	s.Require().NoError(err)
 	s.Require().Equal(s.adminAccount.String(), res.AdminAccount)
 }
@@ -275,7 +275,7 @@ func (s *KeeperTestSuite) TestGetProtoRevAdminAccount() {
 func (s *KeeperTestSuite) TestGetProtoRevDeveloperAccount() {
 	// By default it should be empty
 	req := &types.QueryGetProtoRevDeveloperAccountRequest{}
-	res, err := s.queryClient.GetProtoRevDeveloperAccount(sdk.WrapSDKContext(s.Ctx), req)
+	res, err := s.queryClient.GetProtoRevDeveloperAccount(s.Ctx, req)
 	s.Require().Error(err)
 	s.Require().Nil(res)
 
@@ -284,7 +284,7 @@ func (s *KeeperTestSuite) TestGetProtoRevDeveloperAccount() {
 	s.App.AppKeepers.ProtoRevKeeper.SetDeveloperAccount(s.Ctx, developerAccount)
 
 	// Verify the developer account
-	res, err = s.queryClient.GetProtoRevDeveloperAccount(sdk.WrapSDKContext(s.Ctx), req)
+	res, err = s.queryClient.GetProtoRevDeveloperAccount(s.Ctx, req)
 	s.Require().NoError(err)
 	s.Require().Equal(developerAccount.String(), res.DeveloperAccount)
 }
@@ -303,7 +303,7 @@ func (s *KeeperTestSuite) TestGetProtoRevInfoByPoolType() {
 	s.App.AppKeepers.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, poolInfo)
 
 	req := &types.QueryGetProtoRevInfoByPoolTypeRequest{}
-	res, err := s.queryClient.GetProtoRevInfoByPoolType(sdk.WrapSDKContext(s.Ctx), req)
+	res, err := s.queryClient.GetProtoRevInfoByPoolType(s.Ctx, req)
 	s.Require().NoError(err)
 	s.Require().Equal(poolInfo, res.InfoByPoolType)
 }
@@ -316,7 +316,7 @@ func (s *KeeperTestSuite) TestGetProtoRevMaxPoolPointsPerTx() {
 	s.Require().NoError(err)
 
 	req := &types.QueryGetProtoRevMaxPoolPointsPerTxRequest{}
-	res, err := s.queryClient.GetProtoRevMaxPoolPointsPerTx(sdk.WrapSDKContext(s.Ctx), req)
+	res, err := s.queryClient.GetProtoRevMaxPoolPointsPerTx(s.Ctx, req)
 	s.Require().NoError(err)
 	s.Require().Equal(maxPoolPointsPerTx, res.MaxPoolPointsPerTx)
 }
@@ -329,7 +329,7 @@ func (s *KeeperTestSuite) TestGetProtoRevMaxPoolPointsPerBlock() {
 	s.Require().NoError(err)
 
 	req := &types.QueryGetProtoRevMaxPoolPointsPerBlockRequest{}
-	res, err := s.queryClient.GetProtoRevMaxPoolPointsPerBlock(sdk.WrapSDKContext(s.Ctx), req)
+	res, err := s.queryClient.GetProtoRevMaxPoolPointsPerBlock(s.Ctx, req)
 	s.Require().NoError(err)
 	s.Require().Equal(maxPoolPointsPerBlock, res.MaxPoolPointsPerBlock)
 }
@@ -341,7 +341,7 @@ func (s *KeeperTestSuite) TestGetProtoRevBaseDenoms() {
 	s.Require().NoError(err)
 
 	req := &types.QueryGetProtoRevBaseDenomsRequest{}
-	res, err := s.queryClient.GetProtoRevBaseDenoms(sdk.WrapSDKContext(s.Ctx), req)
+	res, err := s.queryClient.GetProtoRevBaseDenoms(s.Ctx, req)
 	s.Require().NoError(err)
 	s.Require().Equal(baseDenoms, res.BaseDenoms)
 }
@@ -353,7 +353,7 @@ func (s *KeeperTestSuite) TestGetProtoRevEnabledQuery() {
 	s.App.AppKeepers.ProtoRevKeeper.SetProtoRevEnabled(s.Ctx, enabled)
 
 	req := &types.QueryGetProtoRevEnabledRequest{}
-	res, err := s.queryClient.GetProtoRevEnabled(sdk.WrapSDKContext(s.Ctx), req)
+	res, err := s.queryClient.GetProtoRevEnabled(s.Ctx, req)
 	s.Require().NoError(err)
 	s.Require().Equal(enabled, res.Enabled)
 
@@ -361,7 +361,7 @@ func (s *KeeperTestSuite) TestGetProtoRevEnabledQuery() {
 	enabled = true
 	s.App.AppKeepers.ProtoRevKeeper.SetProtoRevEnabled(s.Ctx, enabled)
 
-	res, err = s.queryClient.GetProtoRevEnabled(sdk.WrapSDKContext(s.Ctx), req)
+	res, err = s.queryClient.GetProtoRevEnabled(s.Ctx, req)
 	s.Require().NoError(err)
 	s.Require().Equal(enabled, res.Enabled)
 }
@@ -374,7 +374,7 @@ func (s *KeeperTestSuite) TestGetProtoRevPool() {
 		BaseDenom:  appparams.BaseCoinUnit,
 		OtherDenom: "atom",
 	}
-	res, err := s.queryClient.GetProtoRevPool(sdk.WrapSDKContext(s.Ctx), req)
+	res, err := s.queryClient.GetProtoRevPool(s.Ctx, req)
 	s.Require().Error(err)
 	s.Require().Nil(res)
 
@@ -384,7 +384,7 @@ func (s *KeeperTestSuite) TestGetProtoRevPool() {
 		BaseDenom:  "Atom",
 		OtherDenom: "akash",
 	}
-	res, err = s.queryClient.GetProtoRevPool(sdk.WrapSDKContext(s.Ctx), req)
+	res, err = s.queryClient.GetProtoRevPool(s.Ctx, req)
 	s.Require().NoError(err)
 	s.Require().Equal(res.PoolId, uint64(1))
 }
@@ -398,12 +398,12 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenueGRPCQuery() {
 	ion := "uion"
 
 	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
-	poolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.MustNewDecFromStr("0.02")
+	poolManagerParams.TakerFeeParams.DefaultTakerFee = osmomath.MustNewDecFromStr("0.02")
 	poolManagerParams.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo = communityPoolDenom
 	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
 
 	req := &types.QueryGetAllProtocolRevenueRequest{}
-	res, err := s.queryClient.GetAllProtocolRevenue(sdk.WrapSDKContext(s.Ctx), req)
+	res, err := s.queryClient.GetAllProtocolRevenue(s.Ctx, req)
 	s.Require().NoError(err)
 	s.Require().Empty(res.AllProtocolRevenue)
 
@@ -416,7 +416,7 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenueGRPCQuery() {
 	// Store cache context prior to swap so we can use it to calculate how much outToken we should expect after the epoch hook is called and taker fees are swapped.
 	cacheCtx, _ := s.Ctx.CacheContext()
 
-	_, _, err = s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], atomCommPoolID, swapInCoin, communityPoolDenom, sdk.ZeroInt())
+	_, _, err = s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], atomCommPoolID, swapInCoin, communityPoolDenom, osmomath.ZeroInt())
 	s.Require().NoError(err)
 	expectedTakerFeeFromInput := swapInCoin.Amount.ToLegacyDec().Mul(poolManagerParams.TakerFeeParams.DefaultTakerFee)
 	expectedTakerFeeToCommunityPoolAmt := expectedTakerFeeFromInput.Mul(poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.CommunityPool).TruncateInt()
@@ -425,12 +425,12 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenueGRPCQuery() {
 	expectedTakerFeeToCommunityPool := sdk.NewCoins(sdk.NewCoin(atom, expectedTakerFeeToCommunityPoolAmt))
 
 	// We swap taker fees to stakers to the base denom
-	baseDenomAmt, err := s.App.PoolManagerKeeper.SwapExactAmountInNoTakerFee(cacheCtx, s.TestAccs[0], atomBaseDenomPool.GetId(), expectedTakerFeeToStakers[0], baseDenom, sdk.ZeroInt())
+	baseDenomAmt, err := s.App.PoolManagerKeeper.SwapExactAmountInNoTakerFee(cacheCtx, s.TestAccs[0], atomBaseDenomPool.GetId(), expectedTakerFeeToStakers[0], baseDenom, osmomath.ZeroInt())
 	s.Require().NoError(err)
 	expectedTakerFeeToStakers = sdk.NewCoins(sdk.NewCoin(baseDenom, baseDenomAmt))
 
 	// We swap taker fees to community pool that are not whitelisted to the CommunityPoolDenomToSwapNonWhitelistedAssetsTo
-	communityPoolDenomAmt, err := s.App.PoolManagerKeeper.SwapExactAmountInNoTakerFee(cacheCtx, s.TestAccs[0], atomCommPoolID, expectedTakerFeeToCommunityPool[0], communityPoolDenom, sdk.ZeroInt())
+	communityPoolDenomAmt, err := s.App.PoolManagerKeeper.SwapExactAmountInNoTakerFee(cacheCtx, s.TestAccs[0], atomCommPoolID, expectedTakerFeeToCommunityPool[0], communityPoolDenom, osmomath.ZeroInt())
 	s.Require().NoError(err)
 	expectedTakerFeeToCommunityPool = sdk.NewCoins(sdk.NewCoin(communityPoolDenom, communityPoolDenomAmt))
 
@@ -451,7 +451,7 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenueGRPCQuery() {
 	s.Require().NoError(err)
 
 	// Check protocol revenue
-	res, err = s.queryClient.GetAllProtocolRevenue(sdk.WrapSDKContext(s.Ctx), req)
+	res, err = s.queryClient.GetAllProtocolRevenue(s.Ctx, req)
 	s.Require().NoError(err)
 	s.Require().Equal([]sdk.Coin(cyclicArbProfits), res.AllProtocolRevenue.CyclicArbTracker.CyclicArb)
 	s.Require().Equal([]sdk.Coin(expectedTakerFeeToStakers), res.AllProtocolRevenue.TakerFeesTracker.TakerFeesToStakers)
@@ -460,7 +460,7 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenueGRPCQuery() {
 	// A second round of the same thing
 	// Swap on a pool to charge taker fee
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(atom, osmomath.NewInt(10000))))
-	_, _, err = s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], atomCommPoolID, swapInCoin, communityPoolDenom, sdk.ZeroInt())
+	_, _, err = s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], atomCommPoolID, swapInCoin, communityPoolDenom, osmomath.ZeroInt())
 	s.Require().NoError(err)
 
 	// Charge txfee of 1000 uion
@@ -477,7 +477,7 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenueGRPCQuery() {
 	s.Require().NoError(err)
 
 	// Check protocol revenue
-	res, err = s.queryClient.GetAllProtocolRevenue(sdk.WrapSDKContext(s.Ctx), req)
+	res, err = s.queryClient.GetAllProtocolRevenue(s.Ctx, req)
 	s.Require().NoError(err)
 	s.Require().Equal([]sdk.Coin(cyclicArbProfits.Add(cyclicArbProfits...)), res.AllProtocolRevenue.CyclicArbTracker.CyclicArb)
 	s.Require().Equal([]sdk.Coin(expectedTakerFeeToStakers.Add(expectedTakerFeeToStakers...)), res.AllProtocolRevenue.TakerFeesTracker.TakerFeesToStakers)

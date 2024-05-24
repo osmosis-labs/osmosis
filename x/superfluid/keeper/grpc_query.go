@@ -18,8 +18,10 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/types/query"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
@@ -106,7 +108,7 @@ func (q Querier) AllIntermediaryAccounts(goCtx context.Context, req *types.AllIn
 	sdkCtx := sdk.UnwrapSDKContext(goCtx)
 	store := sdkCtx.KVStore(q.Keeper.storeKey)
 	accStore := prefix.NewStore(store, types.KeyPrefixIntermediaryAccount)
-	iterator := sdk.KVStorePrefixIterator(accStore, nil)
+	iterator := storetypes.KVStorePrefixIterator(accStore, nil)
 	defer iterator.Close()
 
 	accInfos := []types.SuperfluidIntermediaryAccountInfo{}
@@ -481,14 +483,14 @@ func (q Querier) EstimateSuperfluidDelegatedAmountByValidatorDenom(goCtx context
 		return nil, err
 	}
 
-	val, found := q.Keeper.sk.GetValidator(ctx, valAddr)
-	if !found {
+	val, err := q.Keeper.sk.GetValidator(ctx, valAddr)
+	if err != nil {
 		return nil, stakingtypes.ErrNoValidatorFound
 	}
 
-	delegation, found := q.Keeper.sk.GetDelegation(ctx, intermediaryAcc.GetAccAddress(), valAddr)
-	if !found {
-		return nil, stakingtypes.ErrNoDelegation
+	delegation, err := q.Keeper.sk.GetDelegation(ctx, intermediaryAcc.GetAccAddress(), valAddr)
+	if err != nil {
+		return nil, err
 	}
 
 	syntheticOsmoAmt := delegation.Shares.Quo(val.DelegatorShares).MulInt(val.Tokens)
@@ -555,13 +557,13 @@ func (q Querier) TotalSuperfluidDelegations(goCtx context.Context, _ *types.Tota
 			return nil, err
 		}
 
-		val, found := q.Keeper.sk.GetValidator(ctx, valAddr)
-		if !found {
+		val, err := q.Keeper.sk.GetValidator(ctx, valAddr)
+		if err != nil {
 			return nil, stakingtypes.ErrNoValidatorFound
 		}
 
-		delegation, found := q.Keeper.sk.GetDelegation(ctx, intermediaryAccount.GetAccAddress(), valAddr)
-		if !found {
+		delegation, err := q.Keeper.sk.GetDelegation(ctx, intermediaryAccount.GetAccAddress(), valAddr)
+		if err != nil {
 			continue
 		}
 
@@ -604,9 +606,13 @@ func (q Querier) TotalDelegationByDelegator(goCtx context.Context, req *types.Qu
 	}
 
 	// this is for getting normal staking
-	q.sk.IterateDelegations(ctx, delAddr, func(_ int64, del stakingtypes.DelegationI) bool {
-		val, found := q.sk.GetValidator(ctx, del.GetValidatorAddr())
-		if !found {
+	err = q.sk.IterateDelegations(ctx, delAddr, func(_ int64, del stakingtypes.DelegationI) bool {
+		valAddr, err := sdk.ValAddressFromBech32(del.GetValidatorAddr())
+		if err != nil {
+			return true
+		}
+		val, err := q.sk.GetValidator(ctx, valAddr)
+		if err != nil {
 			return true
 		}
 
@@ -615,8 +621,8 @@ func (q Querier) TotalDelegationByDelegator(goCtx context.Context, req *types.Qu
 		res.DelegationResponse = append(res.DelegationResponse,
 			stakingtypes.DelegationResponse{
 				Delegation: stakingtypes.Delegation{
-					DelegatorAddress: del.GetDelegatorAddr().String(),
-					ValidatorAddress: del.GetValidatorAddr().String(),
+					DelegatorAddress: del.GetDelegatorAddr(),
+					ValidatorAddress: del.GetValidatorAddr(),
 					Shares:           del.GetShares(),
 				},
 				Balance: lockedCoins,
@@ -628,6 +634,9 @@ func (q Querier) TotalDelegationByDelegator(goCtx context.Context, req *types.Qu
 
 		return false
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	return &res, nil
 }

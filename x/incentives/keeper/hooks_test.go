@@ -433,14 +433,15 @@ func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_CreateGroupsBetween() {
 // Validate that the distribution is correct.
 func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_SwapAndDistribute() {
 	// Setup UOSMO as bond denom
-	stakingParams := s.App.StakingKeeper.GetParams(s.Ctx)
+	stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	s.Require().NoError(err)
 	stakingParams.BondDenom = UOSMO
 	s.App.StakingKeeper.SetParams(s.Ctx, stakingParams)
 
 	// Create UOSMO / USDC pool
 	s.PrepareCustomBalancerPool([]balancer.PoolAsset{
-		{Token: sdk.NewCoin(UOSMO, defaultAmount), Weight: sdk.OneInt()},
-		{Token: sdk.NewCoin(USDC, defaultAmount), Weight: sdk.OneInt()},
+		{Token: sdk.NewCoin(UOSMO, defaultAmount), Weight: osmomath.OneInt()},
+		{Token: sdk.NewCoin(USDC, defaultAmount), Weight: osmomath.OneInt()},
 	}, balancer.PoolParams{
 		SwapFee: osmomath.ZeroDec(),
 		ExitFee: osmomath.ZeroDec(),
@@ -448,8 +449,8 @@ func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_SwapAndDistribute() {
 
 	// Create UOSMO / BAR pool
 	s.PrepareCustomBalancerPool([]balancer.PoolAsset{
-		{Token: sdk.NewCoin(UOSMO, defaultAmount), Weight: sdk.OneInt()},
-		{Token: sdk.NewCoin(BAR, defaultAmount), Weight: sdk.OneInt()},
+		{Token: sdk.NewCoin(UOSMO, defaultAmount), Weight: osmomath.OneInt()},
+		{Token: sdk.NewCoin(BAR, defaultAmount), Weight: osmomath.OneInt()},
 	}, balancer.PoolParams{
 		SwapFee: osmomath.ZeroDec(),
 		ExitFee: osmomath.ZeroDec(),
@@ -473,7 +474,7 @@ func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_SwapAndDistribute() {
 	s.increaseVolumeBySwap(fooBARPoolID, barCoinIn, defaultAmount, FOO)
 
 	// Create a perpetual group.
-	_, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], []uint64{ethUSDCPoolID, fooBARPoolID})
+	_, err = s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], []uint64{ethUSDCPoolID, fooBARPoolID})
 	s.Require().NoError(err)
 
 	distrEpochIdentifier := s.App.IncentivesKeeper.GetParams(s.Ctx).DistrEpochIdentifier

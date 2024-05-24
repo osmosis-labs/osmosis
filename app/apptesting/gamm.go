@@ -216,7 +216,7 @@ func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice osmoma
 		}
 
 		gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)
-		_, err = gammMsgServer.SwapExactAmountIn(sdk.WrapSDKContext(s.Ctx), &msg)
+		_, err = gammMsgServer.SwapExactAmountIn(s.Ctx, &msg)
 		s.Require().NoError(err)
 	} else {
 		swapOut := sdk.NewCoins(sdk.NewCoin(quoteDenom, osmomath.NewInt(amountTrade.RoundInt64()).Abs()))
@@ -232,7 +232,7 @@ func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice osmoma
 		}
 
 		gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)
-		_, err = gammMsgServer.SwapExactAmountOut(sdk.WrapSDKContext(s.Ctx), &msg)
+		_, err = gammMsgServer.SwapExactAmountOut(s.Ctx, &msg)
 		s.Require().NoError(err)
 	}
 }
@@ -249,7 +249,7 @@ func (s *KeeperTestHelper) RunBasicExit(poolId uint64) {
 	}
 
 	gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)
-	_, err := gammMsgServer.ExitPool(sdk.WrapSDKContext(s.Ctx), &msg)
+	_, err := gammMsgServer.ExitPool(s.Ctx, &msg)
 	s.Require().NoError(err)
 }
 
@@ -274,7 +274,7 @@ func (s *KeeperTestHelper) RunBasicJoin(poolId uint64) {
 	}
 
 	gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)
-	_, err = gammMsgServer.JoinPool(sdk.WrapSDKContext(s.Ctx), &msg)
+	_, err = gammMsgServer.JoinPool(s.Ctx, &msg)
 	s.Require().NoError(err)
 }
 

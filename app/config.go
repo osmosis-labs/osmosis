@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	dbm "github.com/cometbft/cometbft-db"
+	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -12,10 +12,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
 
+	pruningtypes "cosmossdk.io/store/pruning/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	keepers "github.com/osmosis-labs/osmosis/v25/app/keepers"
 )
 
 // DefaultConfig returns a default configuration suitable for nearly all
@@ -30,7 +32,7 @@ func DefaultConfig() network.Config {
 		InterfaceRegistry: encCfg.InterfaceRegistry,
 		AccountRetriever:  authtypes.AccountRetriever{},
 		AppConstructor:    NewAppConstructor("osmosis-code-test"),
-		GenesisState:      ModuleBasics.DefaultGenesis(encCfg.Marshaler),
+		GenesisState:      keepers.AppModuleBasics.DefaultGenesis(encCfg.Marshaler),
 		TimeoutCommit:     1 * time.Second / 2,
 		ChainID:           "osmosis-code-test",
 		NumValidators:     1,

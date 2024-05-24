@@ -5,14 +5,14 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	types "github.com/cosmos/cosmos-sdk/types"
-	types0 "github.com/cosmos/cosmos-sdk/x/auth/types"
-	types1 "github.com/cosmos/cosmos-sdk/x/bank/types"
+	types0 "github.com/cosmos/cosmos-sdk/x/bank/types"
 	gomock "github.com/golang/mock/gomock"
 	osmomath "github.com/osmosis-labs/osmosis/osmomath"
-	types2 "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	types1 "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
 // MockAccountI is a mock of AccountI interface.
@@ -39,10 +39,10 @@ func (m *MockAccountI) EXPECT() *MockAccountIMockRecorder {
 }
 
 // GetAccount mocks base method.
-func (m *MockAccountI) GetAccount(ctx types.Context, addr types.AccAddress) types0.AccountI {
+func (m *MockAccountI) GetAccount(ctx context.Context, addr types.AccAddress) types.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccount", ctx, addr)
-	ret0, _ := ret[0].(types0.AccountI)
+	ret0, _ := ret[0].(types.AccountI)
 	return ret0
 }
 
@@ -53,10 +53,10 @@ func (mr *MockAccountIMockRecorder) GetAccount(ctx, addr interface{}) *gomock.Ca
 }
 
 // GetModuleAccount mocks base method.
-func (m *MockAccountI) GetModuleAccount(ctx types.Context, moduleName string) types0.ModuleAccountI {
+func (m *MockAccountI) GetModuleAccount(ctx context.Context, moduleName string) types.ModuleAccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetModuleAccount", ctx, moduleName)
-	ret0, _ := ret[0].(types0.ModuleAccountI)
+	ret0, _ := ret[0].(types.ModuleAccountI)
 	return ret0
 }
 
@@ -67,10 +67,10 @@ func (mr *MockAccountIMockRecorder) GetModuleAccount(ctx, moduleName interface{}
 }
 
 // NewAccount mocks base method.
-func (m *MockAccountI) NewAccount(arg0 types.Context, arg1 types0.AccountI) types0.AccountI {
+func (m *MockAccountI) NewAccount(arg0 context.Context, arg1 types.AccountI) types.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewAccount", arg0, arg1)
-	ret0, _ := ret[0].(types0.AccountI)
+	ret0, _ := ret[0].(types.AccountI)
 	return ret0
 }
 
@@ -81,7 +81,7 @@ func (mr *MockAccountIMockRecorder) NewAccount(arg0, arg1 interface{}) *gomock.C
 }
 
 // SetAccount mocks base method.
-func (m *MockAccountI) SetAccount(ctx types.Context, acc types0.AccountI) {
+func (m *MockAccountI) SetAccount(ctx context.Context, acc types.AccountI) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetAccount", ctx, acc)
 }
@@ -116,7 +116,7 @@ func (m *MockBankI) EXPECT() *MockBankIMockRecorder {
 }
 
 // GetAllBalances mocks base method.
-func (m *MockBankI) GetAllBalances(ctx types.Context, addr types.AccAddress) types.Coins {
+func (m *MockBankI) GetAllBalances(ctx context.Context, addr types.AccAddress) types.Coins {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllBalances", ctx, addr)
 	ret0, _ := ret[0].(types.Coins)
@@ -130,7 +130,7 @@ func (mr *MockBankIMockRecorder) GetAllBalances(ctx, addr interface{}) *gomock.C
 }
 
 // SendCoins mocks base method.
-func (m *MockBankI) SendCoins(ctx types.Context, fromAddr, toAddr types.AccAddress, amt types.Coins) error {
+func (m *MockBankI) SendCoins(ctx context.Context, fromAddr, toAddr types.AccAddress, amt types.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendCoins", ctx, fromAddr, toAddr, amt)
 	ret0, _ := ret[0].(error)
@@ -144,7 +144,7 @@ func (mr *MockBankIMockRecorder) SendCoins(ctx, fromAddr, toAddr, amt interface{
 }
 
 // SendCoinsFromAccountToModule mocks base method.
-func (m *MockBankI) SendCoinsFromAccountToModule(ctx types.Context, senderAddr types.AccAddress, recipientModule string, amt types.Coins) error {
+func (m *MockBankI) SendCoinsFromAccountToModule(ctx context.Context, senderAddr types.AccAddress, recipientModule string, amt types.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendCoinsFromAccountToModule", ctx, senderAddr, recipientModule, amt)
 	ret0, _ := ret[0].(error)
@@ -158,7 +158,7 @@ func (mr *MockBankIMockRecorder) SendCoinsFromAccountToModule(ctx, senderAddr, r
 }
 
 // SetDenomMetaData mocks base method.
-func (m *MockBankI) SetDenomMetaData(ctx types.Context, denomMetaData types1.Metadata) {
+func (m *MockBankI) SetDenomMetaData(ctx context.Context, denomMetaData types0.Metadata) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetDenomMetaData", ctx, denomMetaData)
 }
@@ -193,7 +193,7 @@ func (m *MockCommunityPoolI) EXPECT() *MockCommunityPoolIMockRecorder {
 }
 
 // FundCommunityPool mocks base method.
-func (m *MockCommunityPoolI) FundCommunityPool(ctx types.Context, amount types.Coins, sender types.AccAddress) error {
+func (m *MockCommunityPoolI) FundCommunityPool(ctx context.Context, amount types.Coins, sender types.AccAddress) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FundCommunityPool", ctx, amount, sender)
 	ret0, _ := ret[0].(error)
@@ -230,7 +230,7 @@ func (m *MockPoolModuleI) EXPECT() *MockPoolModuleIMockRecorder {
 }
 
 // CalcInAmtGivenOut mocks base method.
-func (m *MockPoolModuleI) CalcInAmtGivenOut(ctx types.Context, poolI types2.PoolI, tokenOut types.Coin, tokenInDenom string, spreadFactor osmomath.Dec) (types.Coin, error) {
+func (m *MockPoolModuleI) CalcInAmtGivenOut(ctx types.Context, poolI types1.PoolI, tokenOut types.Coin, tokenInDenom string, spreadFactor osmomath.Dec) (types.Coin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CalcInAmtGivenOut", ctx, poolI, tokenOut, tokenInDenom, spreadFactor)
 	ret0, _ := ret[0].(types.Coin)
@@ -245,7 +245,7 @@ func (mr *MockPoolModuleIMockRecorder) CalcInAmtGivenOut(ctx, poolI, tokenOut, t
 }
 
 // CalcOutAmtGivenIn mocks base method.
-func (m *MockPoolModuleI) CalcOutAmtGivenIn(ctx types.Context, poolI types2.PoolI, tokenIn types.Coin, tokenOutDenom string, spreadFactor osmomath.Dec) (types.Coin, error) {
+func (m *MockPoolModuleI) CalcOutAmtGivenIn(ctx types.Context, poolI types1.PoolI, tokenIn types.Coin, tokenOutDenom string, spreadFactor osmomath.Dec) (types.Coin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CalcOutAmtGivenIn", ctx, poolI, tokenIn, tokenOutDenom, spreadFactor)
 	ret0, _ := ret[0].(types.Coin)
@@ -275,10 +275,10 @@ func (mr *MockPoolModuleIMockRecorder) CalculateSpotPrice(ctx, poolId, quoteAsse
 }
 
 // GetPool mocks base method.
-func (m *MockPoolModuleI) GetPool(ctx types.Context, poolId uint64) (types2.PoolI, error) {
+func (m *MockPoolModuleI) GetPool(ctx types.Context, poolId uint64) (types1.PoolI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPool", ctx, poolId)
-	ret0, _ := ret[0].(types2.PoolI)
+	ret0, _ := ret[0].(types1.PoolI)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -305,10 +305,10 @@ func (mr *MockPoolModuleIMockRecorder) GetPoolDenoms(ctx, poolId interface{}) *g
 }
 
 // GetPools mocks base method.
-func (m *MockPoolModuleI) GetPools(ctx types.Context) ([]types2.PoolI, error) {
+func (m *MockPoolModuleI) GetPools(ctx types.Context) ([]types1.PoolI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPools", ctx)
-	ret0, _ := ret[0].([]types2.PoolI)
+	ret0, _ := ret[0].([]types1.PoolI)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -350,7 +350,7 @@ func (mr *MockPoolModuleIMockRecorder) GetTotalPoolLiquidity(ctx, poolId interfa
 }
 
 // InitializePool mocks base method.
-func (m *MockPoolModuleI) InitializePool(ctx types.Context, pool types2.PoolI, creatorAddress types.AccAddress) error {
+func (m *MockPoolModuleI) InitializePool(ctx types.Context, pool types1.PoolI, creatorAddress types.AccAddress) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InitializePool", ctx, pool, creatorAddress)
 	ret0, _ := ret[0].(error)
@@ -364,7 +364,7 @@ func (mr *MockPoolModuleIMockRecorder) InitializePool(ctx, pool, creatorAddress 
 }
 
 // SwapExactAmountIn mocks base method.
-func (m *MockPoolModuleI) SwapExactAmountIn(ctx types.Context, sender types.AccAddress, pool types2.PoolI, tokenIn types.Coin, tokenOutDenom string, tokenOutMinAmount osmomath.Int, spreadFactor osmomath.Dec) (osmomath.Int, error) {
+func (m *MockPoolModuleI) SwapExactAmountIn(ctx types.Context, sender types.AccAddress, pool types1.PoolI, tokenIn types.Coin, tokenOutDenom string, tokenOutMinAmount osmomath.Int, spreadFactor osmomath.Dec) (osmomath.Int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SwapExactAmountIn", ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, spreadFactor)
 	ret0, _ := ret[0].(osmomath.Int)
@@ -379,7 +379,7 @@ func (mr *MockPoolModuleIMockRecorder) SwapExactAmountIn(ctx, sender, pool, toke
 }
 
 // SwapExactAmountOut mocks base method.
-func (m *MockPoolModuleI) SwapExactAmountOut(ctx types.Context, sender types.AccAddress, pool types2.PoolI, tokenInDenom string, tokenInMaxAmount osmomath.Int, tokenOut types.Coin, spreadFactor osmomath.Dec) (osmomath.Int, error) {
+func (m *MockPoolModuleI) SwapExactAmountOut(ctx types.Context, sender types.AccAddress, pool types1.PoolI, tokenInDenom string, tokenInMaxAmount osmomath.Int, tokenOut types.Coin, spreadFactor osmomath.Dec) (osmomath.Int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SwapExactAmountOut", ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, spreadFactor)
 	ret0, _ := ret[0].(osmomath.Int)
@@ -520,11 +520,12 @@ func (m *MockStakingKeeper) EXPECT() *MockStakingKeeperMockRecorder {
 }
 
 // BondDenom mocks base method.
-func (m *MockStakingKeeper) BondDenom(ctx types.Context) string {
+func (m *MockStakingKeeper) BondDenom(ctx context.Context) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BondDenom", ctx)
 	ret0, _ := ret[0].(string)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // BondDenom indicates an expected call of BondDenom.

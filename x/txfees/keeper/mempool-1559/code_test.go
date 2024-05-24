@@ -3,11 +3,12 @@ package mempool1559
 import (
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"gotest.tools/assert"
 
+	osmomath "github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/noapptest"
 )
 
@@ -56,12 +57,12 @@ func TestUpdateBaseFee(t *testing.T) {
 }
 
 // calculateBaseFee is the same as in is defined on the eip1559 code
-func calculateBaseFee(totalGasWantedThisBlock int64, eipStateCurBaseFee sdk.Dec) (expectedBaseFee sdk.Dec) {
+func calculateBaseFee(totalGasWantedThisBlock int64, eipStateCurBaseFee osmomath.Dec) (expectedBaseFee osmomath.Dec) {
 	gasUsed := totalGasWantedThisBlock
 	gasDiff := gasUsed - TargetGas
 
-	baseFeeIncrement := sdk.NewDec(gasDiff).Quo(sdk.NewDec(TargetGas)).Mul(MaxBlockChangeRate)
-	expectedBaseFeeMultiplier := sdk.NewDec(1).Add(baseFeeIncrement)
+	baseFeeIncrement := osmomath.NewDec(gasDiff).Quo(osmomath.NewDec(TargetGas)).Mul(MaxBlockChangeRate)
+	expectedBaseFeeMultiplier := osmomath.NewDec(1).Add(baseFeeIncrement)
 	expectedBaseFee = eipStateCurBaseFee.MulMut(expectedBaseFeeMultiplier)
 
 	if expectedBaseFee.LT(MinBaseFee) {

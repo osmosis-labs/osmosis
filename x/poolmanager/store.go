@@ -9,6 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
@@ -29,7 +31,7 @@ type TotalPoolLiquidityResponse struct {
 // Used for creating the map used for the take fee share agreements cache.
 func (k Keeper) GetAllTakerFeeShareAgreementsMap(ctx sdk.Context) (map[string]types.TakerFeeShareAgreement, error) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyTakerFeeShare)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyTakerFeeShare)
 	defer iterator.Close()
 
 	takerFeeShareAgreementsMap := make(map[string]types.TakerFeeShareAgreement)
@@ -45,7 +47,7 @@ func (k Keeper) GetAllTakerFeeShareAgreementsMap(ctx sdk.Context) (map[string]ty
 // Used in the AllTakerFeeShareAgreementsRequest gRPC query.
 func (k Keeper) GetAllTakerFeesShareAgreements(ctx sdk.Context) []types.TakerFeeShareAgreement {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyTakerFeeShare)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyTakerFeeShare)
 	defer iterator.Close()
 
 	var takerFeeShareAgreements []types.TakerFeeShareAgreement
@@ -141,7 +143,7 @@ func (k Keeper) IncreaseTakerFeeShareDenomsToAccruedValue(ctx sdk.Context, tierD
 // Used in the AllTakerFeeShareAccumulatorsRequest gRPC query.
 func (k Keeper) GetAllTakerFeeShareAccumulators(ctx sdk.Context) []types.TakerFeeSkimAccumulator {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.TakerFeeSkimAccrualPrefix)
+	iterator := storetypes.KVStorePrefixIterator(store, types.TakerFeeSkimAccrualPrefix)
 	defer iterator.Close()
 
 	takerFeeAgreementDenomToCoins := make(map[string]sdk.Coins)
@@ -177,7 +179,7 @@ func (k Keeper) GetAllTakerFeeShareAccumulators(ctx sdk.Context) []types.TakerFe
 // Used to clear the TakerFeeShareAccumulator records for a specific tier 1 denomination, specifically after the distributions have been completed after epoch.
 func (k Keeper) DeleteAllTakerFeeShareAccumulatorsForTierDenom(ctx sdk.Context, tierDenom string) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyTakerFeeShareTier1DenomAccrualForAllDenoms(tierDenom))
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyTakerFeeShareTier1DenomAccrualForAllDenoms(tierDenom))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -247,7 +249,7 @@ func (k Keeper) GetRegisteredAlloyedPoolFromDenom(ctx sdk.Context, alloyedDenom 
 func (k Keeper) GetRegisteredAlloyedPoolFromPoolId(ctx sdk.Context, poolId uint64) (string, types.AlloyContractTakerFeeShareState, error) {
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.FormatRegisteredAlloyPoolKeyPoolIdOnly(poolId)
-	iterator := sdk.KVStorePrefixIterator(store, prefix)
+	iterator := storetypes.KVStorePrefixIterator(store, prefix)
 	defer iterator.Close()
 
 	if !iterator.Valid() {
@@ -270,7 +272,7 @@ func (k Keeper) GetRegisteredAlloyedPoolFromPoolId(ctx sdk.Context, poolId uint6
 // Used in the AllRegisteredAlloyedPoolsRequest gRPC query.
 func (k Keeper) GetAllRegisteredAlloyedPools(ctx sdk.Context) ([]types.AlloyContractTakerFeeShareState, error) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyRegisteredAlloyPool)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyRegisteredAlloyPool)
 	defer iterator.Close()
 
 	var registeredAlloyedPools []types.AlloyContractTakerFeeShareState
@@ -290,7 +292,7 @@ func (k Keeper) GetAllRegisteredAlloyedPools(ctx sdk.Context) ([]types.AlloyCont
 // Used for creating the map used for the registered alloyed pools cache.
 func (k Keeper) GetAllRegisteredAlloyedPoolsMap(ctx sdk.Context) (map[string]types.AlloyContractTakerFeeShareState, error) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyRegisteredAlloyPool)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyRegisteredAlloyPool)
 	defer iterator.Close()
 
 	registeredAlloyedPoolsMap := make(map[string]types.AlloyContractTakerFeeShareState)
@@ -327,7 +329,7 @@ func (k Keeper) SetAllRegisteredAlloyedPoolsCached(ctx sdk.Context) error {
 // Used for creating the map used for the registered alloyed pools id cache.
 func (k Keeper) GetAllRegisteredAlloyedPoolsIdMap(ctx sdk.Context) (map[uint64]bool, error) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyRegisteredAlloyPool)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyRegisteredAlloyPool)
 	defer iterator.Close()
 
 	registeredAlloyedPoolsIdMap := make(map[uint64]bool)

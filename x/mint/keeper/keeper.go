@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -12,7 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/x/mint/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -307,7 +307,12 @@ func (k Keeper) createDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.
 
 	moduleAcc := authtypes.NewEmptyModuleAccount(
 		types.DeveloperVestingModuleAcctName, authtypes.Minter)
-	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
+	maccI, ok := (k.accountKeeper.NewAccount(ctx, moduleAcc)).(sdk.ModuleAccountI) // this sets the account number
+	if !ok {
+		return fmt.Errorf("account of type %T doesn't implement sdk.ModuleAccountI", moduleAcc)
+	}
+
+	k.accountKeeper.SetModuleAccount(ctx, maccI)
 
 	err := k.bankKeeper.MintCoins(ctx, types.DeveloperVestingModuleAcctName, sdk.NewCoins(amount))
 	if err != nil {

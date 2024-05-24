@@ -9,6 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -64,7 +65,10 @@ func (k Keeper) AfterEpochStartBeginBlock(ctx sdk.Context) {
 }
 
 func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context, accs []types.SuperfluidIntermediaryAccount) {
-	bondDenom := k.sk.GetParams(ctx).BondDenom
+	bondDenom, err := k.sk.BondDenom(ctx)
+	if err != nil {
+		panic(err)
+	}
 	for _, acc := range accs {
 		addr := acc.GetAccAddress()
 		valAddr, err := sdk.ValAddressFromBech32(acc.ValAddr)
@@ -128,7 +132,10 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		}
 
 		// get OSMO amount
-		bondDenom := k.sk.GetParams(ctx).BondDenom
+		bondDenom, err := k.sk.BondDenom(ctx)
+		if err != nil {
+			return err
+		}
 		osmoPoolAsset := pool.GetTotalPoolLiquidity(ctx).AmountOf(bondDenom)
 		if osmoPoolAsset.IsZero() {
 			err := fmt.Errorf("pool %d has zero OSMO amount", poolId)
@@ -146,7 +153,10 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 			return k.updateConcentratedOsmoEquivalentMultiplier(cacheCtx, asset, newEpochNumber)
 		})
 	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
-		bondDenom := k.sk.GetParams(ctx).BondDenom
+		bondDenom, err := k.sk.BondDenom(ctx)
+		if err != nil {
+			return err
+		}
 		if asset.Denom == bondDenom {
 			// The bond denom should be locked via x/lockup and not superfluid
 			return errors.New("osmo should not be a superfluid asset. It can be staked natively")
@@ -200,7 +210,10 @@ func (k Keeper) updateConcentratedOsmoEquivalentMultiplier(ctx sdk.Context, asse
 	assets := sdk.NewCoins(asset0, asset1)
 
 	// get OSMO amount from underlying assets
-	bondDenom := k.sk.GetParams(ctx).BondDenom
+	bondDenom, err := k.sk.BondDenom(ctx)
+	if err != nil {
+		return err
+	}
 	osmoPoolAsset := assets.AmountOf(bondDenom)
 	if osmoPoolAsset.IsZero() {
 		// Pool has unexpectedly removed OSMO from its assets.

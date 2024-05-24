@@ -48,10 +48,6 @@ func (msg MsgSwapExactAmountIn) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgSwapExactAmountIn) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 func (msg MsgSwapExactAmountIn) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -84,10 +80,6 @@ func (msg MsgSwapExactAmountOut) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-func (msg MsgSwapExactAmountOut) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgSwapExactAmountOut) GetSigners() []sdk.AccAddress {
@@ -124,10 +116,6 @@ func (msg MsgSplitRouteSwapExactAmountIn) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgSplitRouteSwapExactAmountIn) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 func (msg MsgSplitRouteSwapExactAmountIn) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -162,10 +150,6 @@ func (msg MsgSplitRouteSwapExactAmountOut) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgSplitRouteSwapExactAmountOut) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 func (msg MsgSplitRouteSwapExactAmountOut) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -186,10 +170,6 @@ func (msg MsgSetDenomPairTakerFee) ValidateBasic() error {
 	}
 
 	return validateDenomPairTakerFees(msg.DenomPairTakerFee)
-}
-
-func (msg MsgSetDenomPairTakerFee) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgSetDenomPairTakerFee) GetSigners() []sdk.AccAddress {
@@ -229,10 +209,6 @@ func (msg MsgSetTakerFeeShareAgreementForDenom) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgSetTakerFeeShareAgreementForDenom) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 func (msg MsgSetTakerFeeShareAgreementForDenom) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -255,10 +231,6 @@ func (msg MsgSetRegisteredAlloyedPool) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-func (msg MsgSetRegisteredAlloyedPool) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgSetRegisteredAlloyedPool) GetSigners() []sdk.AccAddress {

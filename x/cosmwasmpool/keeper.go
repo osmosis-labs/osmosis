@@ -9,7 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 

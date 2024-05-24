@@ -3,29 +3,30 @@ package app
 import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	ibcante "github.com/cosmos/ibc-go/v7/modules/core/ante"
-	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+	ibcante "github.com/cosmos/ibc-go/v8/modules/core/ante"
+	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 
+	txsigning "cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	osmoante "github.com/osmosis-labs/osmosis/v25/ante"
 	v9 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v9"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	corestoretypes "cosmossdk.io/core/store"
 
 	smartaccountante "github.com/osmosis-labs/osmosis/v25/x/smart-account/ante"
 	smartaccountkeeper "github.com/osmosis-labs/osmosis/v25/x/smart-account/keeper"
 
-	auctionkeeper "github.com/skip-mev/block-sdk/x/auction/keeper"
+	auctionkeeper "github.com/skip-mev/block-sdk/v2/x/auction/keeper"
 
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v25/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v25/x/txfees/types"
 
-	auctionante "github.com/skip-mev/block-sdk/x/auction/ante"
+	auctionante "github.com/skip-mev/block-sdk/v2/x/auction/ante"
 )
 
 // BlockSDKAnteHandlerParams are the parameters necessary to configure the block-sdk antehandlers
@@ -43,21 +44,22 @@ type BlockSDKAnteHandlerParams struct {
 func NewAnteHandler(
 	appOpts servertypes.AppOptions,
 	wasmConfig wasmtypes.WasmConfig,
-	txCounterStoreKey storetypes.StoreKey,
+	txCounterStoreKey corestoretypes.KVStoreService,
 	accountKeeper ante.AccountKeeper,
 	smartAccountKeeper *smartaccountkeeper.Keeper,
 	bankKeeper txfeestypes.BankKeeper,
 	txFeesKeeper *txfeeskeeper.Keeper,
 	spotPriceCalculator txfeestypes.SpotPriceCalculator,
 	sigGasConsumer ante.SignatureVerificationGasConsumer,
-	signModeHandler signing.SignModeHandler,
+	signModeHandler *txsigning.HandlerMap,
 	channelKeeper *ibckeeper.Keeper,
 	blockSDKParams BlockSDKAnteHandlerParams,
+	appCodec codec.Codec,
 ) sdk.AnteHandler {
 	mempoolFeeOptions := txfeestypes.NewMempoolFeeOptions(appOpts)
 	mempoolFeeDecorator := txfeeskeeper.NewMempoolFeeDecorator(*txFeesKeeper, mempoolFeeOptions)
 	sendblockOptions := osmoante.NewSendBlockOptions(appOpts)
-	sendblockDecorator := osmoante.NewSendBlockDecorator(sendblockOptions)
+	sendblockDecorator := osmoante.NewSendBlockDecorator(sendblockOptions, appCodec)
 	deductFeeDecorator := txfeeskeeper.NewDeductFeeDecorator(*txFeesKeeper, accountKeeper, bankKeeper, nil)
 
 	// classicSignatureVerificationDecorator is the old flow to enable a circuit breaker
@@ -86,7 +88,7 @@ func NewAnteHandler(
 		ante.NewValidateSigCountDecorator(accountKeeper), // we can probably remove this as multisigs are not supported here
 		// Both the signature verification, fee deduction, and gas consumption functionality
 		// is embedded in the authenticator decorator
-		smartaccountante.NewAuthenticatorDecorator(smartAccountKeeper, accountKeeper, signModeHandler, deductFeeDecorator),
+		smartaccountante.NewAuthenticatorDecorator(appCodec, smartAccountKeeper, accountKeeper, signModeHandler, deductFeeDecorator),
 		ante.NewIncrementSequenceDecorator(accountKeeper),
 		// auction module antehandler
 		auctionante.NewAuctionDecorator(

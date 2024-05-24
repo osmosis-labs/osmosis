@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/poolmanager/v1beta1/swap_route.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types";
 
@@ -28,6 +29,7 @@ service Msg {
 // ===================== MsgSwapExactAmountIn
 message MsgSwapExactAmountIn {
   option (amino.name) = "osmosis/poolmanager/swap-exact-amount-in";
+  option (cosmos.msg.v1.signer) = "sender";
 
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   repeated SwapAmountInRoute routes = 2 [ (gogoproto.nullable) = false ];
@@ -55,6 +57,7 @@ message MsgSwapExactAmountInResponse {
 // ===================== MsgSplitRouteSwapExactAmountIn
 message MsgSplitRouteSwapExactAmountIn {
   option (amino.name) = "osmosis/poolmanager/split-amount-in";
+  option (cosmos.msg.v1.signer) = "sender";
 
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   repeated SwapAmountInSplitRoute routes = 2 [ (gogoproto.nullable) = false ];
@@ -80,6 +83,7 @@ message MsgSplitRouteSwapExactAmountInResponse {
 // ===================== MsgSwapExactAmountOut
 message MsgSwapExactAmountOut {
   option (amino.name) = "osmosis/poolmanager/swap-exact-amount-out";
+  option (cosmos.msg.v1.signer) = "sender";
 
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   repeated SwapAmountOutRoute routes = 2 [ (gogoproto.nullable) = false ];
@@ -107,6 +111,7 @@ message MsgSwapExactAmountOutResponse {
 // ===================== MsgSplitRouteSwapExactAmountOut
 message MsgSplitRouteSwapExactAmountOut {
   option (amino.name) = "osmosis/poolmanager/split-amount-out";
+  option (cosmos.msg.v1.signer) = "sender";
 
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   repeated SwapAmountOutSplitRoute routes = 2 [ (gogoproto.nullable) = false ];
@@ -132,6 +137,7 @@ message MsgSplitRouteSwapExactAmountOutResponse {
 // ===================== MsgSetDenomPairTakerFee
 message MsgSetDenomPairTakerFee {
   option (amino.name) = "osmosis/poolmanager/set-denom-pair-taker-fee";
+  option (cosmos.msg.v1.signer) = "sender";
 
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   repeated DenomPairTakerFee denom_pair_taker_fee = 2 [

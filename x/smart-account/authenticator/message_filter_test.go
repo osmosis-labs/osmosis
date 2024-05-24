@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app"
 	"github.com/osmosis-labs/osmosis/v25/app/params"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
@@ -145,8 +146,8 @@ func (s *MessageFilterTest) TestBankSend() {
 			fmt.Sprintf(`{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%s","to_address":"to", "amount": []}`, fromAddr),
 			&poolmanagertypes.MsgSwapExactAmountIn{
 				Sender:            fromAddr,
-				TokenIn:           sdk.NewCoin("inputDenom", sdk.NewInt(500)),
-				TokenOutMinAmount: sdk.NewInt(100),
+				TokenIn:           sdk.NewCoin("inputDenom", osmomath.NewInt(500)),
+				TokenOutMinAmount: osmomath.NewInt(100),
 			},
 			true,
 			false,
@@ -169,7 +170,7 @@ func (s *MessageFilterTest) TestBankSend() {
 			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
 			tx, err := s.GenSimpleTx([]sdk.Msg{tt.msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
 			s.Require().NoError(err)
-			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), tt.msg, tx, 0, false, authenticator.SequenceMatch)
+			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, s.OsmosisApp.AppCodec(), ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), tt.msg, tx, 0, false, authenticator.SequenceMatch)
 			s.Require().NoError(err)
 
 			err = filter.Authenticate(s.Ctx, request)
@@ -196,8 +197,8 @@ func (s *MessageFilterTest) TestPoolManagerSwapExactAmountIn() {
 			fmt.Sprintf(`{"@type":"/osmosis.poolmanager.v1beta1.MsgSwapExactAmountIn","sender":"%s","token_in":{"denom":"inputDenom", "amount":"500"}, "token_out_min_amount": "100"}`, fromAddr),
 			&poolmanagertypes.MsgSwapExactAmountIn{
 				Sender:            fromAddr,
-				TokenIn:           sdk.NewCoin("inputDenom", sdk.NewInt(500)),
-				TokenOutMinAmount: sdk.NewInt(100),
+				TokenIn:           sdk.NewCoin("inputDenom", osmomath.NewInt(500)),
+				TokenOutMinAmount: osmomath.NewInt(100),
 			},
 			true,
 		},
@@ -206,8 +207,8 @@ func (s *MessageFilterTest) TestPoolManagerSwapExactAmountIn() {
 			fmt.Sprintf(`{"@type":"/osmosis.poolmanager.v1beta1.MsgSwapExactAmountIn","sender":"%s"}`, fromAddr),
 			&poolmanagertypes.MsgSwapExactAmountIn{
 				Sender:            fromAddr,
-				TokenIn:           sdk.NewCoin("inputDenom", sdk.NewInt(500)),
-				TokenOutMinAmount: sdk.NewInt(100),
+				TokenIn:           sdk.NewCoin("inputDenom", osmomath.NewInt(500)),
+				TokenOutMinAmount: osmomath.NewInt(100),
 			},
 			true,
 		},
@@ -216,8 +217,8 @@ func (s *MessageFilterTest) TestPoolManagerSwapExactAmountIn() {
 			fmt.Sprintf(`{"@type":"/osmosis.poolmanager.v1beta1.MsgSwapExactAmountIn","sender":"%s", "token_in":{"denom":"inputDenom"}}`, fromAddr),
 			&poolmanagertypes.MsgSwapExactAmountIn{
 				Sender:            fromAddr,
-				TokenIn:           sdk.NewCoin("inputDenom", sdk.NewInt(500)),
-				TokenOutMinAmount: sdk.NewInt(100),
+				TokenIn:           sdk.NewCoin("inputDenom", osmomath.NewInt(500)),
+				TokenOutMinAmount: osmomath.NewInt(100),
 			},
 			true,
 		},
@@ -226,8 +227,8 @@ func (s *MessageFilterTest) TestPoolManagerSwapExactAmountIn() {
 			fmt.Sprintf(`{"@type":"/osmosis.poolmanager.v1beta1.MsgSwapExactAmountIn","sender":"%s", "token_in":{"denom":"inputDenom"}}`, fromAddr),
 			&poolmanagertypes.MsgSwapExactAmountIn{
 				Sender:            fromAddr,
-				TokenIn:           sdk.NewCoin("inputDenom", sdk.NewInt(500)),
-				TokenOutMinAmount: sdk.NewInt(100),
+				TokenIn:           sdk.NewCoin("inputDenom", osmomath.NewInt(500)),
+				TokenOutMinAmount: osmomath.NewInt(100),
 			},
 			true,
 		},
@@ -236,8 +237,8 @@ func (s *MessageFilterTest) TestPoolManagerSwapExactAmountIn() {
 			fmt.Sprintf(`{"@type":"/osmosis.poolmanager.v1beta1.MsgSwapExactAmountIn","sender":"%s", "token_in":{"denom":"wrongDenom"}}`, fromAddr),
 			&poolmanagertypes.MsgSwapExactAmountIn{
 				Sender:            fromAddr,
-				TokenIn:           sdk.NewCoin("inputDenom", sdk.NewInt(500)),
-				TokenOutMinAmount: sdk.NewInt(100),
+				TokenIn:           sdk.NewCoin("inputDenom", osmomath.NewInt(500)),
+				TokenOutMinAmount: osmomath.NewInt(100),
 			},
 			false,
 		},
@@ -246,8 +247,8 @@ func (s *MessageFilterTest) TestPoolManagerSwapExactAmountIn() {
 			fmt.Sprintf(`{"@type":"/osmosis.poolmanager.v1beta1.MsgSwapExactAmountIn","sender":"%s", "token_out_min_amount":"100"}`, fromAddr),
 			&poolmanagertypes.MsgSwapExactAmountIn{
 				Sender:            fromAddr,
-				TokenIn:           sdk.NewCoin("inputDenom", sdk.NewInt(500)),
-				TokenOutMinAmount: sdk.NewInt(100),
+				TokenIn:           sdk.NewCoin("inputDenom", osmomath.NewInt(500)),
+				TokenOutMinAmount: osmomath.NewInt(100),
 			},
 			true,
 		},
@@ -256,8 +257,8 @@ func (s *MessageFilterTest) TestPoolManagerSwapExactAmountIn() {
 			fmt.Sprintf(`{"@type":"/osmosis.poolmanager.v1beta1.MsgSwapExactAmountIn","sender":"%s", "token_out_min_amount":"200"}`, fromAddr),
 			&poolmanagertypes.MsgSwapExactAmountIn{
 				Sender:            fromAddr,
-				TokenIn:           sdk.NewCoin("inputDenom", sdk.NewInt(500)),
-				TokenOutMinAmount: sdk.NewInt(100),
+				TokenIn:           sdk.NewCoin("inputDenom", osmomath.NewInt(500)),
+				TokenOutMinAmount: osmomath.NewInt(100),
 			},
 			false,
 		},
@@ -272,7 +273,7 @@ func (s *MessageFilterTest) TestPoolManagerSwapExactAmountIn() {
 			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
 			tx, err := s.GenSimpleTx([]sdk.Msg{tt.msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
 			s.Require().NoError(err)
-			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), tt.msg, tx, 0, false, authenticator.SequenceMatch)
+			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, s.OsmosisApp.AppCodec(), ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), tt.msg, tx, 0, false, authenticator.SequenceMatch)
 			s.Require().NoError(err)
 
 			err = filter.Authenticate(s.Ctx, request)

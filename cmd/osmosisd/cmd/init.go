@@ -19,7 +19,6 @@ import (
 	"github.com/cometbft/cometbft/libs/cli"
 	tmos "github.com/cometbft/cometbft/libs/os"
 	tmrand "github.com/cometbft/cometbft/libs/rand"
-	"github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -28,6 +27,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
 	"github.com/osmosis-labs/osmosis/v25/app"
 )
@@ -182,7 +182,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			// If this is not a mainnet node, or the genesis file download failed, generate a new genesis file
 			if genesisFileDownloadFailed || !isMainnet {
 				// If the chainID is not blank or genesis file download failed, generate a new genesis file
-				var genDoc types.GenesisDoc
+				var genDoc genutiltypes.AppGenesis
 
 				appState, err := json.MarshalIndent(mbm.DefaultGenesis(cdc), "", " ")
 				if err != nil {
@@ -194,15 +194,15 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 						return err
 					}
 				} else {
-					genDocFromFile, err := types.GenesisDocFromFile(genFilePath)
+					_, genDocFromFile, err := genutiltypes.GenesisStateFromGenFile(genFilePath)
 					if err != nil {
-						return errors.Wrap(err, "Failed to read genesis doc from file")
+						return fmt.Errorf("failed to unmarshal genesis state: %w", err)
 					}
 					genDoc = *genDocFromFile
 				}
 
 				genDoc.ChainID = chainID
-				genDoc.Validators = nil
+				genDoc.Consensus.Validators = nil
 				genDoc.AppState = appState
 				if err = genutil.ExportGenesisFile(&genDoc, genFilePath); err != nil {
 					return errors.Wrap(err, "Failed to export genesis file")
