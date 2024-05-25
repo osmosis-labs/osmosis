@@ -211,7 +211,7 @@ func (s *KeeperTestSuite) TestMsgSetHotRoutes() {
 			}
 
 			server := keeper.NewMsgServer(*s.App.AppKeepers.ProtoRevKeeper)
-			wrappedCtx := sdk.WrapSDKContext(s.Ctx)
+			wrappedCtx := s.Ctx
 			response, err := server.SetHotRoutes(wrappedCtx, msg)
 			if tc.pass {
 				s.Require().NoError(err)
@@ -279,7 +279,7 @@ func (s *KeeperTestSuite) TestMsgSetDeveloperAccount() {
 			}
 
 			server := keeper.NewMsgServer(*s.App.AppKeepers.ProtoRevKeeper)
-			wrappedCtx := sdk.WrapSDKContext(s.Ctx)
+			wrappedCtx := s.Ctx
 			response, err := server.SetDeveloperAccount(wrappedCtx, msg)
 			if testCase.pass {
 				s.Require().NoError(err)
@@ -361,7 +361,7 @@ func (s *KeeperTestSuite) TestMsgSetMaxPoolPointsPerTx() {
 			}
 
 			server := keeper.NewMsgServer(*s.App.AppKeepers.ProtoRevKeeper)
-			wrappedCtx := sdk.WrapSDKContext(s.Ctx)
+			wrappedCtx := s.Ctx
 			response, err := server.SetMaxPoolPointsPerTx(wrappedCtx, msg)
 			if testCase.pass {
 				s.Require().NoError(err)
@@ -450,7 +450,7 @@ func (s *KeeperTestSuite) TestMsgSetMaxPoolPointsPerBlock() {
 			}
 
 			server := keeper.NewMsgServer(*s.App.AppKeepers.ProtoRevKeeper)
-			wrappedCtx := sdk.WrapSDKContext(s.Ctx)
+			wrappedCtx := s.Ctx
 			response, err := server.SetMaxPoolPointsPerBlock(wrappedCtx, msg)
 			if testCase.pass {
 				s.Require().NoError(err)
@@ -549,7 +549,7 @@ func (s *KeeperTestSuite) TestMsgSetPoolTypeInfo() {
 			}
 
 			server := keeper.NewMsgServer(*s.App.AppKeepers.ProtoRevKeeper)
-			wrappedCtx := sdk.WrapSDKContext(s.Ctx)
+			wrappedCtx := s.Ctx
 			response, err := server.SetInfoByPoolType(wrappedCtx, msg)
 			if testCase.pass {
 				s.Require().NoError(err)
@@ -649,7 +649,7 @@ func (s *KeeperTestSuite) TestMsgSetBaseDenoms() {
 			}
 
 			server := keeper.NewMsgServer(*s.App.AppKeepers.ProtoRevKeeper)
-			wrappedCtx := sdk.WrapSDKContext(s.Ctx)
+			wrappedCtx := s.Ctx
 			response, err := server.SetBaseDenoms(wrappedCtx, msg)
 			if testCase.pass {
 				s.Require().NoError(err)

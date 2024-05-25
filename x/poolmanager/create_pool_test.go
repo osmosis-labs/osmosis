@@ -77,7 +77,9 @@ func (s *KeeperTestSuite) TestPoolCreationFee() {
 		s.FundAcc(sender, apptesting.DefaultAcctFunds)
 
 		// note starting balances for community fee pool and pool creator account
-		feePoolBalBeforeNewPool := distributionKeeper.GetFeePoolCommunityCoins(s.Ctx)
+		feePoolBalBeforeNewPoolStruct, err := distributionKeeper.FeePool.Get(s.Ctx)
+		s.Require().NoError(err, "test: %v", test.name)
+		feePoolBalBeforeNewPool := feePoolBalBeforeNewPoolStruct.CommunityPool
 		senderBalBeforeNewPool := bankKeeper.GetAllBalances(s.Ctx, sender)
 
 		// attempt to create a pool with the given NewMsgCreateBalancerPool message
@@ -94,7 +96,9 @@ func (s *KeeperTestSuite) TestPoolCreationFee() {
 			)
 
 			// make sure pool creation fee is correctly sent to community pool
-			feePool := distributionKeeper.GetFeePoolCommunityCoins(s.Ctx)
+			feePoolStruct, err := distributionKeeper.FeePool.Get(s.Ctx)
+			s.Require().NoError(err, "test: %v", test.name)
+			feePool := feePoolStruct.CommunityPool
 			s.Require().Equal(feePool, feePoolBalBeforeNewPool.Add(sdk.NewDecCoinsFromCoins(test.poolCreationFee...)...))
 			// get expected tokens in new pool and corresponding pool shares
 			expectedPoolTokens := sdk.Coins{}

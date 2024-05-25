@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"strings"
 
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/cometbft/cometbft/crypto/tmhash"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/types/address"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
@@ -20,7 +20,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 )
 
 type (
@@ -92,12 +92,12 @@ func GetPacketAckKey(channel string, packetSequence uint64) []byte {
 
 func GeneratePacketAckValue(packet channeltypes.Packet, contract string) ([]byte, error) {
 	if _, err := sdk.AccAddressFromBech32(contract); err != nil {
-		return nil, sdkerrors.Wrap(types.ErrInvalidContractAddr, contract)
+		return nil, errorsmod.Wrap(types.ErrInvalidContractAddr, contract)
 	}
 
 	packetHash, err := hashPacket(packet)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "could not hash packet")
+		return nil, errorsmod.Wrap(err, "could not hash packet")
 	}
 
 	return []byte(fmt.Sprintf("%s::%s", contract, packetHash)), nil
@@ -199,14 +199,14 @@ func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequen
 	// Write the acknowledgement
 	_, cap, err := k.channelKeeper.LookupModuleByChannel(ctx, "transfer", channel)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
+		return nil, errorsmod.Wrap(err, "could not retrieve module from port-id")
 	}
 
 	// Calling the contract. This could be made generic by using an interface if we want
 	// to support other types of AckActors, but keeping it here for now for simplicity.
 	contractAddr, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "could not parse contract address")
+		return nil, errorsmod.Wrap(err, "could not parse contract address")
 	}
 
 	msg := types.IBCAsync{
@@ -217,17 +217,16 @@ func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequen
 	}
 	msgBytes, err := json.Marshal(msg)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "could not marshal message")
+		return nil, errorsmod.Wrap(err, "could not marshal message")
 	}
 	bz, err := k.ContractKeeper.Sudo(ctx, contractAddr, msgBytes)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "could not execute contract")
+		return nil, errorsmod.Wrap(err, "could not execute contract")
 	}
 
 	ack, err := types.UnmarshalIBCAck(bz)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "could not unmarshal into IBCAckResponse or IBCAckError")
-
+		return nil, errorsmod.Wrap(err, "could not unmarshal into IBCAckResponse or IBCAckError")
 	}
 	var newAck channeltypes.Acknowledgement
 	var packet channeltypes.Packet
@@ -236,7 +235,7 @@ func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequen
 	case "ack_response":
 		jsonAck, err := json.Marshal(ack.AckResponse.ContractAck)
 		if err != nil {
-			return nil, sdkerrors.Wrap(err, "could not marshal acknowledgement")
+			return nil, errorsmod.Wrap(err, "could not marshal acknowledgement")
 		}
 		packet = ack.AckResponse.Packet
 		newAck = channeltypes.NewResultAcknowledgement(jsonAck)
@@ -244,27 +243,27 @@ func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequen
 		packet = ack.AckError.Packet
 		newAck = osmoutils.NewSuccessAckRepresentingAnError(ctx, types.ErrAckFromContract, []byte(ack.AckError.ErrorResponse), ack.AckError.ErrorDescription)
 	default:
-		return nil, sdkerrors.Wrap(err, "could not unmarshal into IBCAckResponse or IBCAckError")
+		return nil, errorsmod.Wrap(err, "could not unmarshal into IBCAckResponse or IBCAckError")
 	}
 
 	// Validate that the packet returned by the contract matches the one we stored when sending
 	receivedPacketHash, err := hashPacket(packet)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "could not hash packet")
+		return nil, errorsmod.Wrap(err, "could not hash packet")
 	}
 	if receivedPacketHash != packetHash {
-		return nil, sdkerrors.Wrap(types.ErrAckPacketMismatch, fmt.Sprintf("packet hash mismatch. Expected %s, got %s", packetHash, receivedPacketHash))
+		return nil, errorsmod.Wrap(types.ErrAckPacketMismatch, fmt.Sprintf("packet hash mismatch. Expected %s, got %s", packetHash, receivedPacketHash))
 	}
 
 	// Now we can write the acknowledgement
 	err = k.channelKeeper.WriteAcknowledgement(ctx, cap, packet, newAck)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "could not write acknowledgement")
+		return nil, errorsmod.Wrap(err, "could not write acknowledgement")
 	}
 
 	response, err := json.Marshal(newAck)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "could not marshal acknowledgement")
+		return nil, errorsmod.Wrap(err, "could not marshal acknowledgement")
 	}
 	return response, nil
 }
@@ -274,7 +273,7 @@ func hashPacket(packet channeltypes.Packet) (string, error) {
 	packet.Data = nil
 	bz, err := json.Marshal(packet)
 	if err != nil {
-		return "", sdkerrors.Wrap(err, "could not marshal packet")
+		return "", errorsmod.Wrap(err, "could not marshal packet")
 	}
 	packetHash := tmhash.Sum(bz)
 	return hex.EncodeToString(packetHash), nil

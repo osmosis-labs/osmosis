@@ -85,7 +85,7 @@ def create_version_info(version, height):
     cosmos_sdk_version = get_package_version(go_mod, "github.com/cosmos/cosmos-sdk")
     cosmwasm_version = get_package_version(go_mod, "github.com/CosmWasm/wasmd")
     tendermint_version = get_package_version(go_mod, "github.com/cometbft/cometbft")
-    ibc_go_version = get_package_version(go_mod, "github.com/cosmos/ibc-go/v7")
+    ibc_go_version = get_package_version(go_mod, "github.com/cosmos/ibc-go/v8")
 
     if DEBUG:
         print(f"Cosmos SDK version  {cosmos_sdk_version}")

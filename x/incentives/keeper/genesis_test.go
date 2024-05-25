@@ -91,7 +91,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	// export genesis using default configurations
 	// ensure resulting genesis params match default params
 	app := osmoapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	genesis := app.IncentivesKeeper.ExportGenesis(ctx)
 	require.Equal(t, genesis.Params.DistrEpochIdentifier, "week")
 	require.Len(t, genesis.Gauges, 0)
@@ -99,7 +99,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	// create an address and fund with coins
 	addr := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 20000), sdk.NewInt64Coin(appparams.BaseCoinUnit, 10000000000)}
-	err := testutil.FundAccount(app.BankKeeper, ctx, addr, coins)
+	err := testutil.FundAccount(ctx, app.BankKeeper, addr, coins)
 	require.NoError(t, err)
 
 	// allow pool creation
@@ -123,7 +123,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	// mints LP tokens and send to address created earlier
 	// this ensures the supply exists on chain
 	mintLPtokens := sdk.Coins{sdk.NewInt64Coin(distrToByDuration.Denom, 200)}
-	err = testutil.FundAccount(app.BankKeeper, ctx, addr, mintLPtokens)
+	err = testutil.FundAccount(ctx, app.BankKeeper, addr, mintLPtokens)
 	require.NoError(t, err)
 
 	// create a gauge of every type (byDuration, noLock, byGroup)
@@ -172,7 +172,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 // TestIncentivesInitGenesis takes a genesis state and tests initializing that genesis for the incentives module.
 func TestIncentivesInitGenesis(t *testing.T) {
 	app := osmoapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 
 	// checks that the default genesis parameters pass validation
 	validateGenesis := types.DefaultGenesis().Params.Validate()
@@ -245,7 +245,9 @@ func createAllGaugeTypes(t *testing.T, app *osmoapp.OsmosisApp, ctx sdk.Context,
 	// create a group which in turn creates a byGroup gauge
 	// we must set volume for each of the pools in the group
 	// so that the group gauge can be created.
-	bondDenom := app.StakingKeeper.GetParams(ctx).BondDenom
+	stakingParams, err := app.StakingKeeper.GetParams(ctx)
+	require.NoError(t, err)
+	bondDenom := stakingParams.BondDenom
 	volumeCoins := sdk.NewCoins(sdk.NewInt64Coin(bondDenom, 100000000000))
 	groupPoolIDs := []uint64{1, 2}
 	for _, poolID := range groupPoolIDs {

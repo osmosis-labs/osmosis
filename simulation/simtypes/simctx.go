@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	ibctestingtypes "github.com/cosmos/ibc-go/v7/testing/types"
+	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
 )
 
 // TODO: Contemplate name better

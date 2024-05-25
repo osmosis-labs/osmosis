@@ -3,11 +3,11 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 
 	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -19,17 +19,18 @@ type Keeper struct {
 	storeKey   storetypes.StoreKey
 	paramSpace paramtypes.Subspace
 
-	ak   authkeeper.AccountKeeper
-	bk   types.BankKeeper
-	sk   types.StakingKeeper
-	ck   types.CommunityPoolKeeper
-	ek   types.EpochKeeper
-	lk   types.LockupKeeper
-	gk   types.GammKeeper
-	ik   types.IncentivesKeeper
-	clk  types.ConcentratedKeeper
-	pmk  types.PoolManagerKeeper
-	vspk types.ValSetPreferenceKeeper
+	ak    authkeeper.AccountKeeper
+	bk    types.BankKeeper
+	sk    types.StakingKeeper
+	ck    types.CommunityPoolKeeper
+	ek    types.EpochKeeper
+	lk    types.LockupKeeper
+	gk    types.GammKeeper
+	ik    types.IncentivesKeeper
+	clk   types.ConcentratedKeeper
+	pmk   types.PoolManagerKeeper
+	vspk  types.ValSetPreferenceKeeper
+	twapk types.TwapKeeper
 
 	lms types.LockupMsgServer
 }
@@ -37,7 +38,7 @@ type Keeper struct {
 var _ govtypes.StakingKeeper = (*Keeper)(nil)
 
 // NewKeeper returns an instance of Keeper.
-func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, ak authkeeper.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, dk types.CommunityPoolKeeper, ek types.EpochKeeper, lk types.LockupKeeper, gk types.GammKeeper, ik types.IncentivesKeeper, lms types.LockupMsgServer, clk types.ConcentratedKeeper, pmk types.PoolManagerKeeper, vspk types.ValSetPreferenceKeeper) *Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, ak authkeeper.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, dk types.CommunityPoolKeeper, ek types.EpochKeeper, lk types.LockupKeeper, gk types.GammKeeper, ik types.IncentivesKeeper, lms types.LockupMsgServer, clk types.ConcentratedKeeper, pmk types.PoolManagerKeeper, vspk types.ValSetPreferenceKeeper, twapk types.TwapKeeper) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -57,6 +58,7 @@ func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, ak 
 		clk:        clk,
 		pmk:        pmk,
 		vspk:       vspk,
+		twapk:      twapk,
 
 		lms: lms,
 	}

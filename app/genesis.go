@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+
+	"github.com/osmosis-labs/osmosis/v25/app/keepers"
 )
 
 // The genesis state of the blockchain is represented here as a map of raw json
@@ -39,7 +41,7 @@ func NewDefaultGenesisState() GenesisState {
 		return cloneGenesisState(defaultGenesisState)
 	}
 	encCfg := MakeEncodingConfig()
-	gen := ModuleBasics.DefaultGenesis(encCfg.Marshaler)
+	gen := keepers.AppModuleBasics.DefaultGenesis(encCfg.Marshaler)
 
 	// here we override wasm config to make it permissioned by default
 	wasmGen := wasmtypes.GenesisState{

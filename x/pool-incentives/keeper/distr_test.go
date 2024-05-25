@@ -112,10 +112,10 @@ func (s *KeeperTestSuite) TestAllocateAsset() {
 				s.Equal(duration, types.DefaultGenesisState().GetLockableDurations()[i])
 			}
 
-			feePoolOrigin := s.App.DistrKeeper.GetFeePool(s.Ctx)
+			feePoolOrigin, err := s.App.DistrKeeper.FeePool.Get(s.Ctx)
 
 			// Create record
-			err := keeper.ReplaceDistrRecords(s.Ctx, test.testingDistrRecord...)
+			err = keeper.ReplaceDistrRecords(s.Ctx, test.testingDistrRecord...)
 			s.Require().NoError(err)
 
 			err = keeper.AllocateAsset(s.Ctx)
@@ -130,7 +130,7 @@ func (s *KeeperTestSuite) TestAllocateAsset() {
 				s.Require().Equal(test.expectedGaugesBalances[i], gauge.Coins)
 			}
 
-			feePoolNew := s.App.DistrKeeper.GetFeePool(s.Ctx)
+			feePoolNew, err := s.App.DistrKeeper.FeePool.Get(s.Ctx)
 			s.Require().Equal(feePoolOrigin.CommunityPool.Add(test.expectedCommunityPool), feePoolNew.CommunityPool)
 		})
 	}

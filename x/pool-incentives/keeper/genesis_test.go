@@ -65,7 +65,7 @@ var (
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 
 	encodingConfig := simapp.MakeEncodingConfig()
@@ -79,7 +79,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	genesisExported := am.ExportGenesis(ctx, appCodec)
 	assert.NotPanics(t, func() {
 		app := simapp.Setup(false)
-		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+		ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 		ctx = ctx.WithBlockTime(now.Add(time.Second))
 		am := pool_incentives.NewAppModule(*app.PoolIncentivesKeeper)
 		am.InitGenesis(ctx, appCodec, genesisExported)
@@ -88,7 +88,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 func TestInitGenesis(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
 	app.PoolIncentivesKeeper.InitGenesis(ctx, &genesis)
@@ -104,7 +104,7 @@ func TestInitGenesis(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) TestExportGenesis() {
-	ctx := s.App.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := s.App.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
 	s.App.PoolIncentivesKeeper.InitGenesis(ctx, &genesis)

@@ -26,6 +26,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/testutils"
 	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
 
+	storetypes "cosmossdk.io/store/types"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -55,8 +56,7 @@ func (s *AuthenticatorPostSuite) SetupTest() {
 
 	s.OsmosisApp = app.Setup(false)
 
-	ak := s.OsmosisApp.AccountKeeper
-	s.Ctx = s.OsmosisApp.NewContext(false, tmproto.Header{})
+	s.Ctx = s.OsmosisApp.NewContextLegacy(false, tmproto.Header{})
 
 	// Set up test accounts
 	for _, key := range TestKeys {
@@ -67,25 +67,25 @@ func (s *AuthenticatorPostSuite) SetupTest() {
 		s.TestPrivKeys = append(s.TestPrivKeys, priv)
 
 		accAddress := sdk.AccAddress(priv.PubKey().Address())
-		account := authtypes.NewBaseAccount(accAddress, priv.PubKey(), 0, 0)
-		ak.SetAccount(s.Ctx, account)
+		authtypes.NewBaseAccount(accAddress, priv.PubKey(), 0, 0)
 
 		// add the test accounts to array for later use
 		s.TestAccAddress = append(s.TestAccAddress, accAddress)
 	}
 
 	s.AuthenticatorPostDecorator = post.NewAuthenticatorPostDecorator(
+		s.OsmosisApp.AppCodec(),
 		s.OsmosisApp.SmartAccountKeeper,
 		s.OsmosisApp.AccountKeeper,
 		s.EncodingConfig.TxConfig.SignModeHandler(),
 		// Add an empty handler here to enable a circuit breaker pattern
-		sdk.ChainPostDecorators(sdk.Terminator{}),
+		sdk.ChainPostDecorators(sdk.Terminator{}), //nolint
 	)
-	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
+	s.Ctx = s.Ctx.WithGasMeter(storetypes.NewGasMeter(1_000_000))
 }
 
 // TestAutenticatorPostHandlerSuccess tests that the post handler can succeed with the default authenticator
-func (s *AuthenticatorPostSuite) TestAutenticatorPostHandlerSuccess() {
+func (s *AuthenticatorPostSuite) TestAuthenticatorPostHandlerSuccess() {
 	osmoToken := "osmo"
 	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
@@ -121,7 +121,7 @@ func (s *AuthenticatorPostSuite) TestAutenticatorPostHandlerSuccess() {
 	s.Require().NoError(err)
 	s.Require().Equal(id, uint64(2), "Adding authenticator returning incorrect id")
 
-	tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
+	tx, _ := GenTx(s.Ctx, s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
 		testMsg2,
 	}, feeCoins, 300000, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{
@@ -140,7 +140,7 @@ func (s *AuthenticatorPostSuite) TestAutenticatorPostHandlerSuccess() {
 
 // TestAutenticatorPostHandlerReturnEarly tests that the post handler fails early on IsCircuitBreakActive
 // the transaction should pass through the normal flow.
-func (s *AuthenticatorPostSuite) TestAutenticatorPostHandlerReturnEarly() {
+func (s *AuthenticatorPostSuite) TestAuthenticatorPostHandlerReturnEarly() {
 	osmoToken := "osmo"
 	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
@@ -153,7 +153,7 @@ func (s *AuthenticatorPostSuite) TestAutenticatorPostHandlerReturnEarly() {
 	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
 	// Generate a transaction that is signed incorrectly
-	tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
+	tx, _ := GenTx(s.Ctx, s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
 	}, feeCoins, 300000, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[1],
@@ -168,7 +168,7 @@ func (s *AuthenticatorPostSuite) TestAutenticatorPostHandlerReturnEarly() {
 }
 
 // TestAuthenticatorPostHandlerFailConfirmExecution tests how the post handler behaves when ConfirmExecution fails.
-func (s *AuthenticatorPostSuite) TestAutenticatorPostHandlerFailConfirmExecution() {
+func (s *AuthenticatorPostSuite) TestAuthenticatorPostHandlerFailConfirmExecution() {
 	osmoToken := "osmo"
 	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 	approveAndBlock := testutils.TestingAuthenticator{
@@ -189,7 +189,7 @@ func (s *AuthenticatorPostSuite) TestAutenticatorPostHandlerFailConfirmExecution
 	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
 	// Generate a transaction that is signed correctly
-	tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
+	tx, _ := GenTx(s.Ctx, s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
 	}, feeCoins, 300000, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[0],
@@ -205,6 +205,7 @@ func (s *AuthenticatorPostSuite) TestAutenticatorPostHandlerFailConfirmExecution
 
 // GenTx generates a signed mock transaction.
 func GenTx(
+	ctx sdk.Context,
 	gen client.TxConfig,
 	msgs []sdk.Msg,
 	feeAmt sdk.Coins,
@@ -219,7 +220,10 @@ func GenTx(
 	// create a random length memo
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
-	signMode := gen.SignModeHandler().DefaultMode()
+	signMode, err := authsigning.APISignModeToInternal(gen.SignModeHandler().DefaultMode())
+	if err != nil {
+		return nil, err
+	}
 
 	// 1st round: set SignatureV2 with empty signatures, to set correct
 	// signer infos.
@@ -249,7 +253,7 @@ func GenTx(
 		txBuilder.SetNonCriticalExtensionOptions(value)
 	}
 
-	err := txBuilder.SetMsgs(msgs...)
+	err = txBuilder.SetMsgs(msgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -269,7 +273,8 @@ func GenTx(
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
 		}
-		signBytes, err := gen.SignModeHandler().GetSignBytes(signMode, signerData, txBuilder.GetTx())
+		signBytes, err := authsigning.GetSignBytesAdapter(
+			ctx, gen.SignModeHandler(), signMode, signerData, txBuilder.GetTx())
 		if err != nil {
 			panic(err)
 		}

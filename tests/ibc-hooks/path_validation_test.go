@@ -5,7 +5,7 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ibctesting "github.com/cosmos/ibc-go/v7/testing"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
@@ -54,7 +54,7 @@ func (suite *HooksTestSuite) SetupAndTestPFM(chainBId Chain, chainBName string, 
 	suite.Require().NoError(err)
 
 	events := ctx.EventManager().Events()
-	packet0, err := ibctesting.ParsePacketFromEvents(events)
+	packet0, err := ibctesting.ParsePacketFromEvents(events.ToABCIEvents())
 	suite.Require().NoError(err)
 	result := suite.RelayPacketNoAck(packet0, direction) // No ack because it's a forward
 

@@ -1,7 +1,7 @@
 package config
 
 import (
-	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 const (
@@ -23,12 +23,10 @@ const (
 
 var (
 	// Minimum deposit value for a proposal to enter a voting period.
-	MinDepositValue = govtypesv1.DefaultMinDepositTokens.Int64()
+	MinDepositValue = v1.DefaultMinDepositTokens.Int64()
 	// Minimum expedited deposit value for a proposal to enter a voting period.
-	// UNFORKINGTODO N: Change this to DefaultMinExpeditedDepositTokens when implemented
-	MinExpeditedDepositValue = govtypesv1.DefaultMinDepositTokens.Int64()
+	MinExpeditedDepositValue = v1.DefaultMinExpeditedDepositTokens.Int64()
 	// Minimum deposit value for proposal to be submitted.
-	// UNFORKINGNOTE: This used to be divided by 4 for both, but this makes sense to me that it should be the same.
 	InitialMinDeposit = MinDepositValue
 	// Minimum expedited deposit value for proposal to be submitted.
 	InitialMinExpeditedDeposit = MinExpeditedDepositValue

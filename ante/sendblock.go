@@ -3,6 +3,7 @@ package ante
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/spf13/cast"
@@ -32,12 +33,14 @@ func parsePermittedOnlySendTo(opts servertypes.AppOptions) map[string]string {
 
 type SendBlockDecorator struct {
 	Options SendBlockOptions
+	cdc     codec.Codec
 }
 
 // NewSendBlockDecorator are a part of auth module AnteDecorators that are recursively chained together into a single AntiHandler.
-func NewSendBlockDecorator(options SendBlockOptions) *SendBlockDecorator {
+func NewSendBlockDecorator(options SendBlockOptions, cdc codec.Codec) *SendBlockDecorator {
 	return &SendBlockDecorator{
 		Options: options, // TODO: hydrate from configuration
+		cdc:     cdc,
 	}
 }
 
@@ -70,9 +73,14 @@ func (decorator *SendBlockDecorator) CheckIfBlocked(msgs []sdk.Msg) error {
 		return nil
 	}
 	for _, msg := range msgs {
-		signers := msg.GetSigners()
+		// UNFORKING v2 TODO: GetSigners is no longer available
+		// This is the workaround for I did for all calls, verify it is correct.
+		signers, _, err := decorator.cdc.GetMsgV1Signers(msg)
+		if err != nil {
+			return err
+		}
 		for _, signer := range signers {
-			if permittedTo, ok := decorator.Options.PermittedOnlySendTo[signer.String()]; ok {
+			if permittedTo, ok := decorator.Options.PermittedOnlySendTo[sdk.AccAddress(signer).String()]; ok {
 				sendmsg, ok := msg.(*bank.MsgSend)
 				if !ok {
 					return fmt.Errorf("signer is not allowed to send transactions: %s", signer)

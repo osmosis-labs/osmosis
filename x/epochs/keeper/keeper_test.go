@@ -4,12 +4,15 @@ import (
 	"testing"
 	"time"
 
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
 	"github.com/stretchr/testify/suite"
+
+	cdcutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 
 	epochskeeper "github.com/osmosis-labs/osmosis/x/epochs/keeper"
 	"github.com/osmosis-labs/osmosis/x/epochs/types"
@@ -29,13 +32,14 @@ func (s *KeeperTestSuite) SetupTest() {
 	queryRouter := baseapp.NewGRPCQueryRouter()
 	cfg := module.NewConfigurator(nil, nil, queryRouter)
 	types.RegisterQueryServer(cfg.QueryServer(), epochskeeper.NewQuerier(*s.EpochsKeeper))
-	// grpcQueryService := &baseapp.QueryServiceTestHelper{
-	// 	GRPCQueryRouter: queryRouter,
-	// 	Ctx:             s.Ctx,
-	// }
-	// encCfg := app.MakeEncodingConfig()
-	// grpcQueryService.SetInterfaceRegistry(encCfg.InterfaceRegistry)
-	// s.queryClient = types.NewQueryClient(grpcQueryService)
+	grpcQueryService := &baseapp.QueryServiceTestHelper{
+		GRPCQueryRouter: queryRouter,
+		Ctx:             s.Ctx,
+	}
+	interfaceRegistry := cdcutil.CodecOptions{AccAddressPrefix: "osmo", ValAddressPrefix: "osmovaloper"}.NewInterfaceRegistry()
+	grpcQueryService.SetInterfaceRegistry(interfaceRegistry)
+	s.queryClient = types.NewQueryClient(grpcQueryService)
+
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -43,8 +47,8 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func Setup() (sdk.Context, *epochskeeper.Keeper) {
-	epochsStoreKey := sdk.NewKVStoreKey(types.StoreKey)
-	ctx := testutil.DefaultContext(epochsStoreKey, sdk.NewTransientStoreKey("transient_test"))
+	epochsStoreKey := storetypes.NewKVStoreKey(types.StoreKey)
+	ctx := testutil.DefaultContext(epochsStoreKey, storetypes.NewTransientStoreKey("transient_test"))
 	epochsKeeper := epochskeeper.NewKeeper(epochsStoreKey)
 	epochsKeeper = epochsKeeper.SetHooks(types.NewMultiEpochHooks())
 	ctx.WithBlockHeight(1).WithChainID("osmosis-1").WithBlockTime(time.Now().UTC())

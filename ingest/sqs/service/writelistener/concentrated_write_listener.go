@@ -3,7 +3,7 @@ package writelistener
 import (
 	"bytes"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
@@ -11,13 +11,13 @@ import (
 	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 )
 
-var _ storetypes.WriteListener = (*concentratedPoolWriteListener)(nil)
+var _ domain.WriteListener = (*concentratedPoolWriteListener)(nil)
 
 type concentratedPoolWriteListener struct {
 	poolTracker domain.BlockPoolUpdateTracker
 }
 
-func NewConcentrated(poolTracker domain.BlockPoolUpdateTracker) storetypes.WriteListener {
+func NewConcentrated(poolTracker domain.BlockPoolUpdateTracker) *concentratedPoolWriteListener {
 	return &concentratedPoolWriteListener{
 		poolTracker: poolTracker,
 	}

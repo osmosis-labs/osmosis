@@ -7,11 +7,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 	valPref "github.com/osmosis-labs/osmosis/v25/x/valset-pref"
 	"github.com/osmosis-labs/osmosis/v25/x/valset-pref/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v25/x/valset-pref/types"
-	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 type QueryTestSuite struct {
@@ -43,7 +43,7 @@ func (s *QueryTestSuite) SetupSuite() {
 
 	// setup message server
 	msgServer := valPref.NewMsgServerImpl(s.App.ValidatorSetPreferenceKeeper)
-	c := sdk.WrapSDKContext(s.Ctx)
+	c := s.Ctx
 
 	// call the create validator set preference
 	_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(delegator, preferences))

@@ -16,7 +16,7 @@ func NewAuthenticatorManager() *AuthenticatorManager {
 	}
 }
 
-// ResetAuthenticators resets all registered authenticators.g
+// ResetAuthenticators resets all registered authenticators.
 func (am *AuthenticatorManager) ResetAuthenticators() {
 	am.registeredAuthenticators = make(map[string]Authenticator)
 	am.orderedKeys = []string{}

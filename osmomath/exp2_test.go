@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 )
 
 var (
@@ -163,7 +162,7 @@ func TestExp2ChebyshevRationalApprox(t *testing.T) {
 				resultExp2 := osmomath.Exp2(tc.exponent)
 				require.Equal(t, result, resultExp2)
 
-				osmoassert.Equal(t, tc.errTolerance, tc.expectedResult, result)
+				osmomath.Equal(t, tc.errTolerance, tc.expectedResult, result)
 			})
 		})
 	}
@@ -293,7 +292,7 @@ func TestExp2(t *testing.T) {
 				// System under test.
 				result := osmomath.Exp2(tc.exponent)
 
-				osmoassert.Equal(t, tc.errTolerance, tc.expectedResult, result)
+				osmomath.Equal(t, tc.errTolerance, tc.expectedResult, result)
 			})
 		})
 	}

@@ -1,7 +1,7 @@
 package v13
 
 import (
-	store "github.com/cosmos/cosmos-sdk/store/types"
+	store "cosmossdk.io/store/types"
 
 	"github.com/osmosis-labs/osmosis/v25/app/upgrades"
 )

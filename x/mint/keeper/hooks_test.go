@@ -366,7 +366,7 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 			}
 
 			app := osmoapp.Setup(false)
-			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+			ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 
 			mintKeeper := app.MintKeeper
 			distrKeeper := app.DistrKeeper
@@ -437,7 +437,7 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 // Ref: https://github.com/osmosis-labs/osmosis/issues/1917
 func (s *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParameters() {
 	app := osmoapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	mintKeeper := app.MintKeeper
 	accountKeeper := app.AccountKeeper
 

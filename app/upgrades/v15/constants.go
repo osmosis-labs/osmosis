@@ -1,9 +1,9 @@
 package v15
 
 import (
-	store "github.com/cosmos/cosmos-sdk/store/types"
-	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/types"
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
+	store "cosmossdk.io/store/types"
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward/types"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 
 	"github.com/osmosis-labs/osmosis/v25/app/upgrades"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"

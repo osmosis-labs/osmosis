@@ -49,10 +49,6 @@ func (msg MsgCreateCosmWasmPool) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgCreateCosmWasmPool) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 func (msg MsgCreateCosmWasmPool) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
