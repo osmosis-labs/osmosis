@@ -107,11 +107,11 @@ message ModuleToDistributeCoinsResponse {
 }
 
 message GaugeByIDRequest {
-  // gague ID being queried
+  // gauge ID being queried
   uint64 id = 1;
 }
 message GaugeByIDResponse {
-  // Gauge that corresponds to provided gague ID
+  // Gauge that corresponds to provided gauge ID
   Gauge gauge = 1;
 }
 

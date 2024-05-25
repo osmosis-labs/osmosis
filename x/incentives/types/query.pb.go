@@ -120,7 +120,7 @@ func (m *ModuleToDistributeCoinsResponse) GetCoins() github_com_cosmos_cosmos_sd
 }
 
 type GaugeByIDRequest struct {
-	// gague ID being queried
+	// gauge ID being queried
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
@@ -165,7 +165,7 @@ func (m *GaugeByIDRequest) GetId() uint64 {
 }
 
 type GaugeByIDResponse struct {
-	// Gauge that corresponds to provided gague ID
+	// Gauge that corresponds to provided gauge ID
 	Gauge *Gauge `protobuf:"bytes,1,opt,name=gauge,proto3" json:"gauge,omitempty"`
 }
 

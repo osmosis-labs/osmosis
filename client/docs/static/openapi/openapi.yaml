@@ -5296,7 +5296,7 @@ paths:
                       satisfy certain conditions. Currently gauges support conditions around the
 
                       duration for which a given denom is locked.
-                    title: Gauge that corresponds to provided gague ID
+                    title: Gauge that corresponds to provided gauge ID
         default:
           description: An unexpected error response.
           content:
@@ -5323,7 +5323,7 @@ paths:
                           format: byte
       parameters:
         - name: id
-          description: gague ID being queried
+          description: gauge ID being queried
           in: path
           required: true
           schema:
@@ -33808,7 +33808,7 @@ components:
             satisfy certain conditions. Currently gauges support conditions around the
 
             duration for which a given denom is locked.
-          title: Gauge that corresponds to provided gague ID
+          title: Gauge that corresponds to provided gauge ID
     osmosis.incentives.GaugesResponse:
       type: object
       properties:
