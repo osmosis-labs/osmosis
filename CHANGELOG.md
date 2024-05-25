@@ -44,12 +44,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
-<<<<<<< HEAD
 * [#8169](https://github.com/osmosis-labs/osmosis/pull/8169) Support non-pool assets in superfluid staking.
-=======
 * [#8169](https://github.com/osmosis-labs/osmosis/pull/8169) Support non-pool assets in superfluid staking
 * [#8274](https://github.com/osmosis-labs/osmosis/pull/8274) SDK v50 and Comet v0.38 upgrade
->>>>>>> a213fd7f (chore: overwrite `flush_throttle_timeout` and `peer_gossip_sleep_duration` to 10ms and 50ms respectively (#8312))
 
 ### State Compatible
 
