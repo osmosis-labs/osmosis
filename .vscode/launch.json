@@ -333,16 +333,16 @@
             ],
         },
         {
-            "name": "ingest/sqs/pools/ingester",
+            "name": "ingest/sqs/pools/transformer",
             "type": "go",
             "request": "launch",
             "mode": "test",
-            "program": "${workspaceFolder}/ingest/sqs/pools/ingester",
+            "program": "${workspaceFolder}/ingest/sqs/pools/transformer",
             "args": [
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestIngesterTestSuite/TestProcessBlock",
+                "TestPoolTransformerTestSuite/TestProcessBlock",
                 "-test.v"
             ],
         },

@@ -22,6 +22,11 @@ type Config struct {
 
 const (
 	groupOptName = "osmosis-sqs"
+
+	// This is the pool ID that is used for converting between UOSMO and USDC
+	// for liquidity pricing.
+	// https://app.osmosis.zone/pool/1263
+	defaultUSDCUOSMOPool = 1263
 )
 
 // DefaultConfig defines the default config for the sidecar query server.
@@ -59,7 +64,7 @@ func NewConfigFromOptions(opts servertypes.AppOptions) Config {
 // Initialize initializes the sidecar query server and returns the ingester.
 func (c Config) Initialize(appCodec codec.Codec, keepers domain.SQSIngestKeepers) (domain.Ingester, error) {
 	// Create pools ingester
-	poolsIngester := poolstransformer.NewPoolTransformer(domain.NewAssetListGetter(), keepers)
+	poolsIngester := poolstransformer.NewPoolTransformer(keepers, defaultUSDCUOSMOPool)
 
 	// Create sqs grpc client
 	sqsGRPCClient := service.NewGRPCCLient(c.GRPCIngestAddress, c.GRPCIngestMaxCallSizeBytes, appCodec)
