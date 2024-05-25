@@ -123,6 +123,11 @@ var (
 
 	recommendedConfigTomlValues = []SectionKeyValue{
 		{
+			Section: "p2p",
+			Key:     "flush_throttle_timeout",
+			Value:   "10ms",
+		},
+		{
 			Section: "consensus",
 			Key:     "timeout_commit",
 			Value:   "1s",
@@ -131,6 +136,11 @@ var (
 			Section: "consensus",
 			Key:     "timeout_propose",
 			Value:   "2s",
+		},
+		{
+			Section: "consensus",
+			Key:     "peer_gossip_sleep_duration",
+			Value:   "50ms",
 		},
 	}
 )

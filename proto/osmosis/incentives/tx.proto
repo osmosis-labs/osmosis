@@ -16,7 +16,7 @@ service Msg {
   rpc CreateGroup(MsgCreateGroup) returns (MsgCreateGroupResponse);
 }
 
-// MsgCreateGauge creates a gague to distribute rewards to users
+// MsgCreateGauge creates a gauge to distribute rewards to users
 message MsgCreateGauge {
   option (amino.name) = "osmosis/incentives/create-gauge";
 
