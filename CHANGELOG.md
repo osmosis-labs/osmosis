@@ -637,7 +637,7 @@ Fixes mainnet bugs w/ incorrect accumulation sumtrees, and CL handling for a bal
 
 * [#5831](https://github.com/osmosis-labs/osmosis/pull/5831) Fix superfluid_delegations query
 * [#5835](https://github.com/osmosis-labs/osmosis/pull/5835) Fix println's for "amountZeroInRemainingBigDec before fee" making it into production
-* [#5841](https://github.com/osmosis-labs/osmosis/pull/5841) Fix protorev's out of gas erroring of the user's transcation.
+* [#5841](https://github.com/osmosis-labs/osmosis/pull/5841) Fix protorev's out of gas erroring of the user's transaction.
 * [#5930](https://github.com/osmosis-labs/osmosis/pull/5930) Updating Protorev Binary Search Range Logic with CL Pools
 * [#5950](https://github.com/osmosis-labs/osmosis/pull/5950) fix: spot price for cosmwasm pool types
 

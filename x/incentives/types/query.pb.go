@@ -120,7 +120,7 @@ func (m *ModuleToDistributeCoinsResponse) GetCoins() github_com_cosmos_cosmos_sd
 }
 
 type GaugeByIDRequest struct {
-	// Gague ID being queried
+	// gague ID being queried
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
@@ -354,7 +354,7 @@ func (m *ActiveGaugesRequest) GetPagination() *query.PageRequest {
 }
 
 type ActiveGaugesResponse struct {
-	// Active gagues only
+	// Active gauges only
 	Data []Gauge `protobuf:"bytes,1,rep,name=data,proto3" json:"data"`
 	// Pagination defines pagination for the response
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -408,7 +408,7 @@ func (m *ActiveGaugesResponse) GetPagination() *query.PageResponse {
 }
 
 type ActiveGaugesPerDenomRequest struct {
-	// Desired denom when querying active gagues
+	// Desired denom when querying active gauges
 	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 	// Pagination defines pagination for the request
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -462,7 +462,7 @@ func (m *ActiveGaugesPerDenomRequest) GetPagination() *query.PageRequest {
 }
 
 type ActiveGaugesPerDenomResponse struct {
-	// Active gagues that match denom in query
+	// Active gauges that match denom in query
 	Data []Gauge `protobuf:"bytes,1,rep,name=data,proto3" json:"data"`
 	// Pagination defines pagination for the response
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -615,7 +615,7 @@ func (m *UpcomingGaugesResponse) GetPagination() *query.PageResponse {
 }
 
 type UpcomingGaugesPerDenomRequest struct {
-	// Filter for upcoming gagues that match specific denom
+	// Filter for upcoming gauges that match specific denom
 	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 	// Pagination defines pagination for the request
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -669,7 +669,7 @@ func (m *UpcomingGaugesPerDenomRequest) GetPagination() *query.PageRequest {
 }
 
 type UpcomingGaugesPerDenomResponse struct {
-	// Upcoming gagues that match denom in query
+	// Upcoming gauges that match denom in query
 	UpcomingGauges []Gauge `protobuf:"bytes,1,rep,name=upcoming_gauges,json=upcomingGauges,proto3" json:"upcoming_gauges"`
 	// Pagination defines pagination for the response
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
