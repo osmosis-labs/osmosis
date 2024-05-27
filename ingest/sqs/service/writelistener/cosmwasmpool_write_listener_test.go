@@ -78,7 +78,7 @@ func (s *WriteListenerTestSuite) TestWriteListener_CosmWasm() {
 				cosmWasmPools := poolTracker.GetCosmWasmPools()
 				s.Require().Len(cosmWasmPools, 1)
 
-				s.Require().Equal(&cosmWasmPoolModel.CosmWasmPool, cosmWasmPools[0])
+				s.Require().Equal(&cosmWasmPoolModel.CosmWasmPool, cosmWasmPools[0].AsSerializablePool())
 			} else {
 				cosmWasmPools := poolTracker.GetCosmWasmPools()
 				s.Require().Len(cosmWasmPools, 0)
@@ -152,7 +152,7 @@ func (s *WriteListenerTestSuite) TestWriteListener_CosmWasmBalance() {
 				cosmWasmPools := poolTracker.GetCosmWasmPools()
 				s.Require().Len(cosmWasmPools, 1)
 
-				s.Require().Equal(&cosmWasmPoolModel.CosmWasmPool, cosmWasmPools[0])
+				s.Require().Equal(&cosmWasmPoolModel.CosmWasmPool, cosmWasmPools[0].AsSerializablePool())
 			} else {
 				cosmWasmPools := poolTracker.GetCosmWasmPools()
 				s.Require().Len(cosmWasmPools, 0)
