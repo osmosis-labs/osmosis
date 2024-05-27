@@ -207,6 +207,23 @@ func (pi *poolTransformer) convertPool(
 	}()
 
 	balances := pi.bankKeeper.GetAllBalances(ctx, pool.GetAddress())
+	poolDenoms := pool.GetPoolDenoms(ctx)
+	poolDenomsMap := map[string]struct{}{}
+
+	// Convert pool denoms to map
+	for _, poolDenom := range poolDenoms {
+		poolDenomsMap[poolDenom] = struct{}{}
+	}
+
+	spreadFactor := pool.GetSpreadFactor(ctx)
+
+	// Get pool denoms. Although these can be inferred from balances, this is safer.
+	// If we used balances, for pools with no liquidity, we would not be able to get the denoms.
+	denoms, err := pi.poolManagerKeeper.RouteGetPoolDenoms(ctx, pool.GetId())
+	if err != nil {
+		return nil, err
+	}
+
 	var cwPoolModel *sqsdomain.CWPoolModel
 	if pool.GetType() == poolmanagertypes.CosmWasm {
 		cwPool, ok := pool.(cosmwasmpooltypes.CosmWasmExtension)
@@ -222,8 +239,8 @@ func (pi *poolTransformer) convertPool(
 			panic("wasmKeeper is nil")
 		}
 
-		bz := pi.wasmKeeper.QueryRaw(ctx, cwPool.GetAddress(), []byte("contractinfo"))
-		if bz == nil || len(bz) == 0 {
+		bz := pi.wasmKeeper.QueryRaw(ctx, cwPool.GetAddress(), []byte("contract_info"))
+		if len(bz) == 0 {
 			// only log since cw pool contracts are not required to conform cw2
 			ctx.Logger().Info(
 				"contract_info not found for CosmWasm pool",
@@ -246,7 +263,10 @@ func (pi *poolTransformer) convertPool(
 				cwPoolModel.ContractInfo = *contractInfo
 
 				// special transformation based on different cw pool
-				err = pi.updateTrasmuterAlloyedInfo(ctx, pool, cwPool, cwPoolModel)
+				if cwPoolModel.IsAlloyTransmuter() {
+					err = pi.updateAlloyTrasmuterInfo(ctx, pool, cwPool, cwPoolModel, &denoms)
+				}
+
 				if err != nil {
 					return nil, err
 				}
@@ -255,16 +275,6 @@ func (pi *poolTransformer) convertPool(
 	}
 
 	osmoPoolTVL := osmomath.ZeroInt()
-
-	poolDenoms := pool.GetPoolDenoms(ctx)
-	poolDenomsMap := map[string]struct{}{}
-
-	// Convert pool denoms to map
-	for _, poolDenom := range poolDenoms {
-		poolDenomsMap[poolDenom] = struct{}{}
-	}
-
-	spreadFactor := pool.GetSpreadFactor(ctx)
 
 	// Note that this must follow the call to GetPoolDenoms() and GetSpreadFactor.
 	// Otherwise, the CosmWasmPool model panics.
@@ -389,13 +399,6 @@ func (pi *poolTransformer) convertPool(
 		osmoPoolTVL = osmoPoolTVL.Add(tvlAddition)
 	}
 
-	// Get pool denoms. Although these can be inferred from balances, this is safer.
-	// If we used balances, for pools with no liquidity, we would not be able to get the denoms.
-	denoms, err := pi.poolManagerKeeper.RouteGetPoolDenoms(ctx, pool.GetId())
-	if err != nil {
-		return nil, err
-	}
-
 	// Sort denoms for consistent ordering.
 	sort.Strings(denoms)
 
@@ -445,54 +448,56 @@ func (pi *poolTransformer) convertPool(
 	}, nil
 }
 
-func (pi *poolTransformer) updateTrasmuterAlloyedInfo(
+func (pi *poolTransformer) updateAlloyTrasmuterInfo(
 	ctx sdk.Context,
 	pool poolmanagertypes.PoolI,
 	cwPool cosmwasmpooltypes.CosmWasmExtension,
 	cwPoolModel *sqsdomain.CWPoolModel,
+	denoms *[]string,
 ) error {
-	if cwPoolModel.IsAlloyTransmuter() {
-		bz, err := pi.wasmKeeper.QuerySmart(ctx, cwPool.GetAddress(), []byte(`{"list_asset_configs":{}}`))
-		if err != nil {
-			return fmt.Errorf(
-				"error querying list_asset_configs for pool (%d) contrat_address (%s): %w",
-				pool.GetId(), pool.GetAddress(), err,
-			)
-		}
-		var assetConfigsResponse struct {
-			AssetConfigs []sqsdomain.TransmuterAssetConfig `json:"asset_configs"`
-		}
+	bz, err := pi.wasmKeeper.QuerySmart(ctx, cwPool.GetAddress(), []byte(`{"list_asset_configs":{}}`))
+	if err != nil {
+		return fmt.Errorf(
+			"error querying list_asset_configs for pool (%d) contrat_address (%s): %w",
+			pool.GetId(), pool.GetAddress(), err,
+		)
+	}
+	var assetConfigsResponse struct {
+		AssetConfigs []sqsdomain.TransmuterAssetConfig `json:"asset_configs"`
+	}
 
-		if err := json.Unmarshal(bz, &assetConfigsResponse); err != nil {
-			return fmt.Errorf(
-				"error unmarshalling asset_configs for pool (%d) contrat_address (%s): %w",
-				pool.GetId(), pool.GetAddress(), err,
-			)
-		}
+	if err := json.Unmarshal(bz, &assetConfigsResponse); err != nil {
+		return fmt.Errorf(
+			"error unmarshalling asset_configs for pool (%d) contrat_address (%s): %w",
+			pool.GetId(), pool.GetAddress(), err,
+		)
+	}
 
-		bz, err = pi.wasmKeeper.QuerySmart(ctx, cwPool.GetAddress(), []byte(`{"get_share_denom":{}}`))
-		if err != nil {
-			return fmt.Errorf(
-				"error querying get_share_denom for pool (%d) contrat_address (%s): %w",
-				pool.GetId(), pool.GetAddress(), err,
-			)
-		}
+	bz, err = pi.wasmKeeper.QuerySmart(ctx, cwPool.GetAddress(), []byte(`{"get_share_denom":{}}`))
+	if err != nil {
+		return fmt.Errorf(
+			"error querying get_share_denom for pool (%d) contrat_address (%s): %w",
+			pool.GetId(), pool.GetAddress(), err,
+		)
+	}
 
-		var getShareDenomResponse struct {
-			ShareDenom string `json:"share_denom"`
-		}
+	var getShareDenomResponse struct {
+		ShareDenom string `json:"share_denom"`
+	}
 
-		if err := json.Unmarshal(bz, &getShareDenomResponse); err != nil {
-			return fmt.Errorf(
-				"error unmarshalling share_denom for pool (%d) contrat_address (%s): %w",
-				pool.GetId(), pool.GetAddress(), err,
-			)
-		}
+	if err := json.Unmarshal(bz, &getShareDenomResponse); err != nil {
+		return fmt.Errorf(
+			"error unmarshalling share_denom for pool (%d) contrat_address (%s): %w",
+			pool.GetId(), pool.GetAddress(), err,
+		)
+	}
 
-		cwPoolModel.Data.AlloyTransmuter = &sqsdomain.AlloyTransmuterData{
-			AlloyedDenom: getShareDenomResponse.ShareDenom,
-			AssetConfigs: assetConfigsResponse.AssetConfigs,
-		}
+	// append alloyed denom to denoms
+	*denoms = append(*denoms, getShareDenomResponse.ShareDenom)
+
+	cwPoolModel.Data.AlloyTransmuter = &sqsdomain.AlloyTransmuterData{
+		AlloyedDenom: getShareDenomResponse.ShareDenom,
+		AssetConfigs: assetConfigsResponse.AssetConfigs,
 	}
 
 	return nil
