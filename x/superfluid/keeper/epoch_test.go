@@ -87,7 +87,7 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 		s.Run(tc.name, func() {
 			s.SetupTest()
 
-			params := s.App.StakingKeeper.GetParams(s.Ctx)
+			params, _ := s.App.StakingKeeper.GetParams(s.Ctx)
 			params.BondDenom = appparams.BaseCoinUnit
 			err := s.App.StakingKeeper.SetParams(s.Ctx, params)
 			s.Require().NoError(err)
