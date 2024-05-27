@@ -63,7 +63,7 @@ func (s *WriteListenerTestSuite) TestWriteListener_CosmWasm() {
 
 			poolTracker := service.NewPoolTracker()
 
-			cosmWasmPoolWriteListener := writelistener.NewCosmwasmPool(poolTracker)
+			cosmWasmPoolWriteListener := writelistener.NewCosmwasmPool(poolTracker, s.App.WasmKeeper)
 
 			cosmwasmPoolKVStore := s.App.GetKey(cosmwasmpooltypes.ModuleName)
 
@@ -101,7 +101,7 @@ func (s *WriteListenerTestSuite) TestWriteListener_CosmWasmBalance() {
 
 	// Trigger cwPool write listener actions at pool creation
 	poolTracker := service.NewPoolTracker()
-	cosmWasmPoolWriteListener := writelistener.NewCosmwasmPool(poolTracker)
+	cosmWasmPoolWriteListener := writelistener.NewCosmwasmPool(poolTracker, s.App.WasmKeeper)
 	cosmwasmPoolKVStore := s.App.GetKey(cosmwasmpooltypes.ModuleName)
 	err = cosmWasmPoolWriteListener.OnWrite(cosmwasmPoolKVStore, cosmwasmpooltypes.FormatPoolsPrefix(cosmWasmPoolModel.PoolId), concentratedPoolModelBz, false)
 	s.Require().NoError(err)

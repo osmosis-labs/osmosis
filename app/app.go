@@ -314,7 +314,7 @@ func NewOsmosisApp(
 		poolTracker := service.NewPoolTracker()
 
 		// Create write listeners for the SQS service.
-		writeListeners := getSQSServiceWriteListeners(app, appCodec, poolTracker)
+		writeListeners := getSQSServiceWriteListeners(app, appCodec, poolTracker, app.WasmKeeper)
 
 		// Note: address can be moved to config in the future if needed.
 		rpcAddress, ok := appOpts.Get(rpcAddressConfigName).(string)
@@ -530,7 +530,7 @@ func NewOsmosisApp(
 }
 
 // getSQSServiceWriteListeners returns the write listeners for the app that are specific to the SQS service.
-func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker) map[storetypes.StoreKey][]storetypes.WriteListener {
+func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker, wasmkeeper *wasmkeeper.Keeper) map[storetypes.StoreKey][]storetypes.WriteListener {
 	writeListeners := make(map[storetypes.StoreKey][]storetypes.WriteListener)
 
 	writeListeners[app.GetKey(concentratedtypes.ModuleName)] = []storetypes.WriteListener{
@@ -540,7 +540,7 @@ func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoo
 		writelistener.NewGAMM(blockPoolUpdateTracker, appCodec),
 	}
 	writeListeners[app.GetKey(cosmwasmpooltypes.StoreKey)] = []storetypes.WriteListener{
-		writelistener.NewCosmwasmPool(blockPoolUpdateTracker),
+		writelistener.NewCosmwasmPool(blockPoolUpdateTracker, wasmkeeper),
 	}
 	writeListeners[app.GetKey(banktypes.StoreKey)] = []storetypes.WriteListener{
 		writelistener.NewCosmwasmPoolBalance(blockPoolUpdateTracker),
