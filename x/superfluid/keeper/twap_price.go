@@ -37,7 +37,7 @@ func (k Keeper) SetOsmoEquivalentMultiplier(ctx sdk.Context, epoch int64, denom 
 	prefixStore.Set([]byte(denom), bz)
 }
 
-func isNonNative(denom string) bool {
+func IsNonNative(denom string) bool {
 	if strings.HasPrefix(denom, cltypes.ConcentratedLiquidityTokenPrefix) {
 		return true
 	}
@@ -57,7 +57,7 @@ func (k Keeper) GetSuperfluidOSMOTokensExcludeNative(ctx sdk.Context, denom stri
 }
 
 func (k Keeper) getSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount osmomath.Int, includeNative bool) (osmomath.Int, error) {
-	if !includeNative && !isNonNative(denom) {
+	if !includeNative && !IsNonNative(denom) {
 		return osmomath.ZeroInt(), nil
 	}
 
