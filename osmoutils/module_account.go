@@ -1,6 +1,7 @@
 package osmoutils
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"reflect"
@@ -16,10 +17,10 @@ import (
 var OsmoUtilsExtraAccountTypes map[reflect.Type]struct{}
 
 type AccountKeeper interface {
-	NewAccount(sdk.Context, authtypes.AccountI) authtypes.AccountI
+	NewAccount(context.Context, sdk.AccountI) sdk.AccountI
 
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
-	SetAccount(ctx sdk.Context, acc authtypes.AccountI)
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
+	SetAccount(ctx context.Context, acc sdk.AccountI)
 }
 
 // CanCreateModuleAccountAtAddr tells us if we can safely make a module account at

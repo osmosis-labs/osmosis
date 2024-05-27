@@ -44,7 +44,11 @@ const (
 func (k Keeper) createSyntheticLockup(ctx sdk.Context,
 	underlyingLockId uint64, intermediateAcc types.SuperfluidIntermediaryAccount, lockingStat lockingStatus,
 ) error {
-	unbondingDuration := k.sk.GetParams(ctx).UnbondingTime
+	stakingParams, err := k.sk.GetParams(ctx)
+	if err != nil {
+		return err
+	}
+	unbondingDuration := stakingParams.UnbondingTime
 	return k.createSyntheticLockupWithDuration(ctx, underlyingLockId, intermediateAcc, unbondingDuration, lockingStat)
 }
 

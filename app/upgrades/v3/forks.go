@@ -31,8 +31,15 @@ func FixMinDepositDenom(ctx sdk.Context, gov *govkeeper.Keeper) {
 // than the network minimum rate.
 func FixMinCommisionRate(ctx sdk.Context, staking *stakingkeeper.Keeper) {
 	// Upgrade every validators min-commission rate
-	validators := staking.GetAllValidators(ctx)
-	minCommissionRate := staking.GetParams(ctx).MinCommissionRate
+	validators, err := staking.GetAllValidators(ctx)
+	if err != nil {
+		panic(err)
+	}
+	stakingParams, err := staking.GetParams(ctx)
+	if err != nil {
+		panic(err)
+	}
+	minCommissionRate := stakingParams.MinCommissionRate
 	for _, v := range validators {
 		// nolint
 		if v.Commission.Rate.LT(minCommissionRate) {

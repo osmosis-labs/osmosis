@@ -7,8 +7,8 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
-	stypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	storetypes "cosmossdk.io/store/types"
+	stypes "cosmossdk.io/store/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
@@ -54,7 +54,7 @@ func leafKey(key []byte) []byte {
 	return nodeKey(0, key)
 }
 
-func migrateTreeNode(store sdk.KVStore, level uint16, key []byte) {
+func migrateTreeNode(store storetypes.KVStore, level uint16, key []byte) {
 	if level == 0 {
 		migrateTreeLeaf(store, key)
 	} else {
@@ -62,7 +62,7 @@ func migrateTreeNode(store sdk.KVStore, level uint16, key []byte) {
 	}
 }
 
-func migrateTreeBranch(store sdk.KVStore, level uint16, key []byte) {
+func migrateTreeBranch(store storetypes.KVStore, level uint16, key []byte) {
 	keyBz := nodeKey(level, key)
 	oldValueBz := store.Get(keyBz)
 	fmt.Println("migrate", keyBz, string(oldValueBz), level)
@@ -78,7 +78,7 @@ func migrateTreeBranch(store sdk.KVStore, level uint16, key []byte) {
 	}
 }
 
-func migrateTreeLeaf(store sdk.KVStore, key []byte) {
+func migrateTreeLeaf(store storetypes.KVStore, key []byte) {
 	keyBz := leafKey(key)
 	oldValueBz := store.Get(keyBz)
 	newValue := migrateLeafValue(key, oldValueBz)
@@ -89,7 +89,7 @@ func migrateTreeLeaf(store sdk.KVStore, key []byte) {
 	store.Set(keyBz, newValueBz)
 }
 
-func MigrateTree(store sdk.KVStore) {
+func MigrateTree(store storetypes.KVStore) {
 	iter := stypes.KVStoreReversePrefixIterator(store, []byte("node/"))
 	defer iter.Close()
 	if !iter.Valid() {

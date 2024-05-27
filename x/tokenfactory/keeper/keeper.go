@@ -3,10 +3,10 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -66,19 +66,19 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GetDenomPrefixStore returns the substore for a specific denom
-func (k Keeper) GetDenomPrefixStore(ctx sdk.Context, denom string) sdk.KVStore {
+func (k Keeper) GetDenomPrefixStore(ctx sdk.Context, denom string) storetypes.KVStore {
 	store := ctx.KVStore(k.storeKey)
 	return prefix.NewStore(store, types.GetDenomPrefixStore(denom))
 }
 
 // GetCreatorPrefixStore returns the substore for a specific creator address
-func (k Keeper) GetCreatorPrefixStore(ctx sdk.Context, creator string) sdk.KVStore {
+func (k Keeper) GetCreatorPrefixStore(ctx sdk.Context, creator string) storetypes.KVStore {
 	store := ctx.KVStore(k.storeKey)
 	return prefix.NewStore(store, types.GetCreatorPrefix(creator))
 }
 
 // GetCreatorsPrefixStore returns the substore that contains a list of creators
-func (k Keeper) GetCreatorsPrefixStore(ctx sdk.Context) sdk.KVStore {
+func (k Keeper) GetCreatorsPrefixStore(ctx sdk.Context) storetypes.KVStore {
 	store := ctx.KVStore(k.storeKey)
 	return prefix.NewStore(store, types.GetCreatorsPrefix())
 }

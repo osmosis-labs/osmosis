@@ -3,7 +3,7 @@ package v19
 import (
 	"github.com/osmosis-labs/osmosis/v25/app/upgrades"
 
-	store "github.com/cosmos/cosmos-sdk/store/types"
+	store "cosmossdk.io/store/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the Osmosis v18 upgrade.

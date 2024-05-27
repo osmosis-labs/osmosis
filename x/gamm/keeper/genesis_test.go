@@ -87,7 +87,7 @@ func (s *KeeperTestSuite) TestGammExportGenesis() {
 	ctx := s.Ctx
 
 	acc1 := s.TestAccs[0]
-	err := testutil.FundAccount(s.App.BankKeeper, ctx, acc1, sdk.NewCoins(
+	err := testutil.FundAccount(ctx, s.App.BankKeeper, acc1, sdk.NewCoins(
 		sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000000000)),
 		sdk.NewInt64Coin("foo", 100000),
 		sdk.NewInt64Coin("bar", 100000),
@@ -132,7 +132,7 @@ func (s *KeeperTestSuite) TestMarshalUnmarshalGenesis() {
 	ctx := s.Ctx
 
 	acc1 := s.TestAccs[0]
-	err := testutil.FundAccount(s.App.BankKeeper, ctx, acc1, sdk.NewCoins(
+	err := testutil.FundAccount(ctx, s.App.BankKeeper, acc1, sdk.NewCoins(
 		sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000000000)),
 		sdk.NewInt64Coin("foo", 100000),
 		sdk.NewInt64Coin("bar", 100000),

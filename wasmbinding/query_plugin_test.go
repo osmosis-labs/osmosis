@@ -9,7 +9,6 @@ import (
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	"github.com/cometbft/cometbft/crypto/ed25519"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -41,7 +40,7 @@ type StargateTestSuite struct {
 
 func (suite *StargateTestSuite) SetupTest() {
 	suite.app = app.Setup(false)
-	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+	suite.ctx = suite.app.BaseApp.NewContextLegacy(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
 }
 
 func TestStargateTestSuite(t *testing.T) {
@@ -54,7 +53,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 		testSetup              func()
 		path                   string
 		requestData            func() []byte
-		responseProtoStruct    codec.ProtoMarshaler
+		responseProtoStruct    proto.Message
 		expectedQuerierError   bool
 		expectedUnMarshalError bool
 		resendRequest          bool
@@ -77,7 +76,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			testSetup: func() {
 				pk := ed25519.GenPrivKey().PubKey()
 				sender := sdk.AccAddress(pk.Address())
-				err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, sender, apptesting.DefaultAcctFunds)
+				err := testutil.FundAccount(suite.ctx, suite.app.BankKeeper, sender, apptesting.DefaultAcctFunds)
 				suite.Require().NoError(err)
 				msg := balancer.NewMsgCreateBalancerPool(sender,
 					balancer.NewPoolParams(osmomath.ZeroDec(), osmomath.ZeroDec(), nil),
@@ -106,7 +105,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			testSetup: func() {
 				pk := ed25519.GenPrivKey().PubKey()
 				sender := sdk.AccAddress(pk.Address())
-				err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, sender, apptesting.DefaultAcctFunds)
+				err := testutil.FundAccount(suite.ctx, suite.app.BankKeeper, sender, apptesting.DefaultAcctFunds)
 				suite.Require().NoError(err)
 				msg := balancer.NewMsgCreateBalancerPool(sender,
 					balancer.NewPoolParams(osmomath.ZeroDec(), osmomath.ZeroDec(), nil),
@@ -147,7 +146,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				suite.Require().NoError(err)
 
 				// fund account to receive non-empty response
-				err = testutil.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", osmomath.NewInt(10))})
+				err = testutil.FundAccount(suite.ctx, suite.app.BankKeeper, accAddr, sdk.Coins{sdk.NewCoin("stake", osmomath.NewInt(10))})
 				suite.Require().NoError(err)
 
 				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
@@ -170,7 +169,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				suite.Require().NoError(err)
 
 				// fund account to receive non-empty response
-				err = testutil.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", osmomath.NewInt(10))})
+				err = testutil.FundAccount(suite.ctx, suite.app.BankKeeper, accAddr, sdk.Coins{sdk.NewCoin("stake", osmomath.NewInt(10))})
 				suite.Require().NoError(err)
 
 				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
@@ -300,9 +299,9 @@ func (suite *StargateTestSuite) TestConvertProtoToJsonMarshal() {
 	testCases := []struct {
 		name                  string
 		queryPath             string
-		protoResponseStruct   codec.ProtoMarshaler
+		protoResponseStruct   proto.Message
 		originalResponse      string
-		expectedProtoResponse codec.ProtoMarshaler
+		expectedProtoResponse proto.Message
 		expectedError         bool
 	}{
 		{

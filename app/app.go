@@ -10,9 +10,11 @@ import (
 	"time"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/skip-mev/block-sdk/block"
-	"github.com/skip-mev/block-sdk/block/base"
+	"github.com/skip-mev/block-sdk/v2/block"
+	"github.com/skip-mev/block-sdk/v2/block/base"
 
+	"cosmossdk.io/x/evidence"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -20,10 +22,8 @@ import (
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/capability"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -31,26 +31,28 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/ibc-go/modules/capability"
 	ibcwasmkeeper "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/keeper"
 	ibcwasmtypes "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
-	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
-	ibc "github.com/cosmos/ibc-go/v7/modules/core"
+	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
+	ibc "github.com/cosmos/ibc-go/v8/modules/core"
 
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
+	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service/writelistener"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
 
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service/writelistener"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -58,15 +60,15 @@ import (
 
 	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 
+	"cosmossdk.io/log"
 	"github.com/CosmWasm/wasmd/x/wasm"
-	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/libs/bytes"
 	tmjson "github.com/cometbft/cometbft/libs/json"
-	"github.com/cometbft/cometbft/libs/log"
 	tmos "github.com/cometbft/cometbft/libs/os"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -74,7 +76,6 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -123,8 +124,20 @@ import (
 	_ "github.com/osmosis-labs/osmosis/v25/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v25/x/mint"
 
-	blocksdkabci "github.com/skip-mev/block-sdk/abci"
-	"github.com/skip-mev/block-sdk/abci/checktx"
+	blocksdkabci "github.com/skip-mev/block-sdk/v2/abci"
+	"github.com/skip-mev/block-sdk/v2/abci/checktx"
+
+	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
+	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
+
+	clclient "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/client"
+	cwpoolclient "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/client"
+	gammclient "github.com/osmosis-labs/osmosis/v25/x/gamm/client"
+	incentivesclient "github.com/osmosis-labs/osmosis/v25/x/incentives/client"
+	poolincentivesclient "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/client"
+	poolmanagerclient "github.com/osmosis-labs/osmosis/v25/x/poolmanager/client"
+	superfluidclient "github.com/osmosis-labs/osmosis/v25/x/superfluid/client"
+	txfeesclient "github.com/osmosis-labs/osmosis/v25/x/txfees/client"
 )
 
 const appName = "OsmosisApp"
@@ -132,11 +145,6 @@ const appName = "OsmosisApp"
 var (
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
-
-	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
-	// non-dependant module elements, such as codec registration
-	// and genesis verification.
-	ModuleBasics = module.NewBasicManager(keepers.AppModuleBasics...)
 
 	// module account permissions
 	maccPerms = moduleAccountPermissions
@@ -182,6 +190,7 @@ type OsmosisApp struct {
 	invCheckPeriod    uint
 
 	mm           *module.Manager
+	ModuleBasics module.BasicManager
 	sm           *module.SimulationManager
 	configurator module.Configurator
 	homePath     string
@@ -314,7 +323,7 @@ func NewOsmosisApp(
 		poolTracker := service.NewPoolTracker()
 
 		// Create write listeners for the SQS service.
-		writeListeners := getSQSServiceWriteListeners(app, appCodec, poolTracker)
+		writeListeners, storeKeyMap := getSQSServiceWriteListeners(app, appCodec, poolTracker)
 
 		// Note: address can be moved to config in the future if needed.
 		rpcAddress, ok := appOpts.Get(rpcAddressConfigName).(string)
@@ -325,10 +334,15 @@ func NewOsmosisApp(
 
 		// Create the SQS streaming service by setting up the write listeners,
 		// the SQS ingester, and the pool tracker.
-		sqsStreamingService := service.New(writeListeners, sqsIngester, poolTracker, nodeStatusChecker)
+		sqsStreamingService := service.New(writeListeners, storeKeyMap, sqsIngester, poolTracker, nodeStatusChecker)
 
 		// Register the SQS streaming service with the app.
-		app.SetStreamingService(sqsStreamingService)
+		app.SetStreamingManager(
+			storetypes.StreamingManager{
+				ABCIListeners: []storetypes.ABCIListener{sqsStreamingService},
+				StopNodeOnErr: true,
+			},
+		)
 	}
 
 	// TODO: There is a bug here, where we register the govRouter routes in InitNormalKeepers and then
@@ -362,6 +376,11 @@ func NewOsmosisApp(
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
 
+	// UNFORKING v2 TODO: https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md#set-preblocker
+	// The upgrading doc says we need to add upgrade types to pre blocker (done here), but also says we
+	// need to remove it from begin blocker. If we need to actually remove it, we need to change the SetOrderBeginBlockers logic.
+	app.mm.SetOrderPreBlockers(upgradetypes.ModuleName)
+
 	// Tell the app's module manager how to set the order of BeginBlockers, which are run at the beginning of every block.
 	app.mm.SetOrderBeginBlockers(orderBeginBlockers(app.mm.ModuleNames())...)
 
@@ -373,7 +392,45 @@ func NewOsmosisApp(
 	app.mm.RegisterInvariants(app.CrisisKeeper)
 
 	app.configurator = module.NewConfigurator(app.AppCodec(), app.MsgServiceRouter(), app.GRPCQueryRouter())
-	app.mm.RegisterServices(app.configurator)
+	err = app.mm.RegisterServices(app.configurator)
+	if err != nil {
+		panic(err)
+	}
+
+	// UNFORKING v2 TODO: Verify that the NewBasicManagerFromManager call is correct.
+	// Notice I have to override the gov ModuleBasic with all the custom proposal handers, otherwise we lose them in the CLI.
+	app.ModuleBasics = module.NewBasicManagerFromManager(
+		app.mm,
+		map[string]module.AppModuleBasic{
+			"gov": gov.NewAppModuleBasic(
+				[]govclient.ProposalHandler{
+					paramsclient.ProposalHandler,
+					// UNFORKING v2 TODO: Verify it is okay to remove these
+					// upgradeclient.LegacyProposalHandler,
+					// upgradeclient.LegacyCancelProposalHandler,
+					poolincentivesclient.UpdatePoolIncentivesHandler,
+					poolincentivesclient.ReplacePoolIncentivesHandler,
+					// UNFORKING v2 TODO: Verify it is okay to remove these
+					// ibcclientclient.UpdateClientProposalHandler,
+					// ibcclientclient.UpgradeProposalHandler,
+					superfluidclient.SetSuperfluidAssetsProposalHandler,
+					superfluidclient.RemoveSuperfluidAssetsProposalHandler,
+					superfluidclient.UpdateUnpoolWhitelistProposalHandler,
+					gammclient.ReplaceMigrationRecordsProposalHandler,
+					gammclient.UpdateMigrationRecordsProposalHandler,
+					gammclient.CreateCLPoolAndLinkToCFMMProposalHandler,
+					gammclient.SetScalingFactorControllerProposalHandler,
+					clclient.CreateConcentratedLiquidityPoolProposalHandler,
+					clclient.TickSpacingDecreaseProposalHandler,
+					cwpoolclient.UploadCodeIdAndWhitelistProposalHandler,
+					cwpoolclient.MigratePoolContractsProposalHandler,
+					txfeesclient.SubmitUpdateFeeTokenProposalHandler,
+					poolmanagerclient.DenomPairTakerFeeProposalHandler,
+					incentivesclient.HandleCreateGroupsProposal,
+				},
+			),
+		},
+	)
 
 	app.setupUpgradeHandlers()
 
@@ -386,7 +443,7 @@ func NewOsmosisApp(
 		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper, app.BankKeeper),
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
 		distr.NewAppModule(appCodec, *app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(distrtypes.ModuleName)),
-		slashing.NewAppModule(appCodec, *app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName)),
+		slashing.NewAppModule(appCodec, *app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName), app.interfaceRegistry),
 		params.NewAppModule(*app.ParamsKeeper),
 		evidence.NewAppModule(*app.EvidenceKeeper),
 		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
@@ -425,7 +482,7 @@ func NewOsmosisApp(
 	anteHandler := NewAnteHandler(
 		appOpts,
 		wasmConfig,
-		app.GetKey(wasmtypes.StoreKey),
+		runtime.NewKVStoreService(app.GetKey(wasmtypes.StoreKey)),
 		app.AccountKeeper,
 		app.SmartAccountKeeper,
 		app.BankKeeper,
@@ -439,6 +496,7 @@ func NewOsmosisApp(
 			auctionKeeper: *app.AppKeepers.AuctionKeeper,
 			txConfig:      txConfig,
 		},
+		appCodec,
 	)
 
 	// update ante-handlers on lanes
@@ -472,7 +530,6 @@ func NewOsmosisApp(
 		mevLane,
 		anteHandler,
 		app.BaseApp.CheckTx,
-		app.ChainID(),
 	)
 
 	// wrap checkTxHandler with mempool parity handler
@@ -487,10 +544,13 @@ func NewOsmosisApp(
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
+	app.SetPreBlocker(app.PreBlocker)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(anteHandler)
-	app.SetPostHandler(NewPostHandler(app.ProtoRevKeeper, app.SmartAccountKeeper, app.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()))
+	app.SetPostHandler(NewPostHandler(appCodec, app.ProtoRevKeeper, app.SmartAccountKeeper, app.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()))
 	app.SetEndBlocker(app.EndBlocker)
+	app.SetPrecommiter(app.Precommitter)
+	app.SetPrepareCheckStater(app.PrepareCheckStater)
 
 	// Register snapshot extensions to enable state-sync for wasm.
 	if manager := app.SnapshotManager(); manager != nil {
@@ -521,7 +581,7 @@ func NewOsmosisApp(
 			tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
 		}
 
-		if err := ibcwasmkeeper.InitializePinnedCodes(ctx, appCodec); err != nil {
+		if err := ibcwasmkeeper.InitializePinnedCodes(ctx); err != nil {
 			tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
 		}
 	}
@@ -530,22 +590,29 @@ func NewOsmosisApp(
 }
 
 // getSQSServiceWriteListeners returns the write listeners for the app that are specific to the SQS service.
-func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker) map[storetypes.StoreKey][]storetypes.WriteListener {
-	writeListeners := make(map[storetypes.StoreKey][]storetypes.WriteListener)
+func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker) (map[storetypes.StoreKey][]domain.WriteListener, map[string]storetypes.StoreKey) {
+	writeListeners := make(map[storetypes.StoreKey][]domain.WriteListener)
+	storeKeyMap := make(map[string]storetypes.StoreKey)
 
-	writeListeners[app.GetKey(concentratedtypes.ModuleName)] = []storetypes.WriteListener{
+	writeListeners[app.GetKey(concentratedtypes.ModuleName)] = []domain.WriteListener{
 		writelistener.NewConcentrated(blockPoolUpdateTracker),
 	}
-	writeListeners[app.GetKey(gammtypes.StoreKey)] = []storetypes.WriteListener{
+	writeListeners[app.GetKey(gammtypes.StoreKey)] = []domain.WriteListener{
 		writelistener.NewGAMM(blockPoolUpdateTracker, appCodec),
 	}
-	writeListeners[app.GetKey(cosmwasmpooltypes.StoreKey)] = []storetypes.WriteListener{
+	writeListeners[app.GetKey(cosmwasmpooltypes.StoreKey)] = []domain.WriteListener{
 		writelistener.NewCosmwasmPool(blockPoolUpdateTracker),
 	}
-	writeListeners[app.GetKey(banktypes.StoreKey)] = []storetypes.WriteListener{
+	writeListeners[app.GetKey(banktypes.StoreKey)] = []domain.WriteListener{
 		writelistener.NewCosmwasmPoolBalance(blockPoolUpdateTracker),
 	}
-	return writeListeners
+
+	storeKeyMap[concentratedtypes.ModuleName] = app.GetKey(concentratedtypes.ModuleName)
+	storeKeyMap[gammtypes.StoreKey] = app.GetKey(gammtypes.StoreKey)
+	storeKeyMap[cosmwasmpooltypes.StoreKey] = app.GetKey(cosmwasmpooltypes.StoreKey)
+	storeKeyMap[banktypes.StoreKey] = app.GetKey(banktypes.StoreKey)
+
+	return writeListeners, storeKeyMap
 }
 
 // we cache the reflectionService to save us time within tests.
@@ -595,60 +662,79 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 		ConsensusPubkey: pubkeyAny,
 		Jailed:          false,
 		Status:          stakingtypes.Bonded,
-		Tokens:          sdk.NewInt(900000000000000),
-		DelegatorShares: sdk.MustNewDecFromStr("10000000"),
+		Tokens:          osmomath.NewInt(900000000000000),
+		DelegatorShares: osmomath.MustNewDecFromStr("10000000"),
 		Description: stakingtypes.Description{
 			Moniker: "Testnet Validator",
 		},
 		Commission: stakingtypes.Commission{
 			CommissionRates: stakingtypes.CommissionRates{
-				Rate:          sdk.MustNewDecFromStr("0.05"),
-				MaxRate:       sdk.MustNewDecFromStr("0.1"),
-				MaxChangeRate: sdk.MustNewDecFromStr("0.05"),
+				Rate:          osmomath.MustNewDecFromStr("0.05"),
+				MaxRate:       osmomath.MustNewDecFromStr("0.1"),
+				MaxChangeRate: osmomath.MustNewDecFromStr("0.05"),
 			},
 		},
-		MinSelfDelegation: sdk.OneInt(),
+		MinSelfDelegation: osmomath.OneInt(),
 	}
 
 	// Remove all validators from power store
 	stakingKey := app.GetKey(stakingtypes.ModuleName)
 	stakingStore := ctx.KVStore(stakingKey)
-	iterator := app.StakingKeeper.ValidatorsPowerStoreIterator(ctx)
+	iterator, err := app.StakingKeeper.ValidatorsPowerStoreIterator(ctx)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
 	for ; iterator.Valid(); iterator.Next() {
 		stakingStore.Delete(iterator.Key())
 	}
 	iterator.Close()
 
 	// Remove all valdiators from last validators store
-	iterator = app.StakingKeeper.LastValidatorsIterator(ctx)
+	iterator, err = app.StakingKeeper.LastValidatorsIterator(ctx)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
 	for ; iterator.Valid(); iterator.Next() {
 		stakingStore.Delete(iterator.Key())
 	}
 	iterator.Close()
 
 	// Remove all validators from validators store
-	iterator = sdk.KVStorePrefixIterator(stakingStore, stakingtypes.ValidatorsKey)
+	iterator = storetypes.KVStorePrefixIterator(stakingStore, stakingtypes.ValidatorsKey)
 	for ; iterator.Valid(); iterator.Next() {
 		stakingStore.Delete(iterator.Key())
 	}
 	iterator.Close()
 
 	// Remove all validators from unbonding queue
-	iterator = sdk.KVStorePrefixIterator(stakingStore, stakingtypes.ValidatorQueueKey)
+	iterator = storetypes.KVStorePrefixIterator(stakingStore, stakingtypes.ValidatorQueueKey)
 	for ; iterator.Valid(); iterator.Next() {
 		stakingStore.Delete(iterator.Key())
 	}
 	iterator.Close()
 
 	// Add our validator to power and last validators store
-	app.StakingKeeper.SetValidator(ctx, newVal)
+	err = app.StakingKeeper.SetValidator(ctx, newVal)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
 	err = app.StakingKeeper.SetValidatorByConsAddr(ctx, newVal)
 	if err != nil {
 		tmos.Exit(err.Error())
 	}
-	app.StakingKeeper.SetValidatorByPowerIndex(ctx, newVal)
-	app.StakingKeeper.SetLastValidatorPower(ctx, newVal.GetOperator(), 0)
-	if err := app.StakingKeeper.Hooks().AfterValidatorCreated(ctx, newVal.GetOperator()); err != nil {
+	err = app.StakingKeeper.SetValidatorByPowerIndex(ctx, newVal)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	valAddr, err := sdk.ValAddressFromBech32(newVal.GetOperator())
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	err = app.StakingKeeper.SetLastValidatorPower(ctx, valAddr, 0)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	if err := app.StakingKeeper.Hooks().AfterValidatorCreated(ctx, valAddr); err != nil {
 		panic(err)
 	}
 
@@ -656,10 +742,26 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	//
 
 	// Initialize records for this validator across all distribution stores
-	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, newVal.GetOperator(), 0, distrtypes.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
-	app.DistrKeeper.SetValidatorCurrentRewards(ctx, newVal.GetOperator(), distrtypes.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
-	app.DistrKeeper.SetValidatorAccumulatedCommission(ctx, newVal.GetOperator(), distrtypes.InitialValidatorAccumulatedCommission())
-	app.DistrKeeper.SetValidatorOutstandingRewards(ctx, newVal.GetOperator(), distrtypes.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
+	valAddr, err = sdk.ValAddressFromBech32(newVal.GetOperator())
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	err = app.DistrKeeper.SetValidatorHistoricalRewards(ctx, valAddr, 0, distrtypes.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	err = app.DistrKeeper.SetValidatorCurrentRewards(ctx, valAddr, distrtypes.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	err = app.DistrKeeper.SetValidatorAccumulatedCommission(ctx, valAddr, distrtypes.InitialValidatorAccumulatedCommission())
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	err = app.DistrKeeper.SetValidatorOutstandingRewards(ctx, valAddr, distrtypes.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
 
 	// SLASHING
 	//
@@ -671,7 +773,10 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 		StartHeight: app.LastBlockHeight() - 1,
 		Tombstoned:  false,
 	}
-	app.SlashingKeeper.SetValidatorSigningInfo(ctx, newConsAddr, newValidatorSigningInfo)
+	err = app.SlashingKeeper.SetValidatorSigningInfo(ctx, newConsAddr, newValidatorSigningInfo)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
 
 	//
 	// Optional Changes:
@@ -683,13 +788,16 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	newExpeditedVotingPeriod := time.Minute
 	newVotingPeriod := time.Minute * 2
 
-	govParams := app.GovKeeper.GetParams(ctx)
+	govParams, err := app.GovKeeper.Params.Get(ctx)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
 	govParams.ExpeditedVotingPeriod = &newExpeditedVotingPeriod
 	govParams.VotingPeriod = &newVotingPeriod
 	govParams.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 100000000))
 	govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 150000000))
 
-	err = app.GovKeeper.SetParams(ctx, govParams)
+	err = app.GovKeeper.Params.Set(ctx, govParams)
 	if err != nil {
 		tmos.Exit(err.Error())
 	}
@@ -809,7 +917,7 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 // handler so that we can verify bid transactions before they are inserted into the mempool.
 // With the BlockSDK CheckTx, we can verify the bid transaction and all of the bundled transactions
 // before inserting the bid transaction into the mempool.
-func (app *OsmosisApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
+func (app *OsmosisApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, error) {
 	return app.checkTxHandler(req)
 }
 
@@ -831,25 +939,56 @@ func (app *OsmosisApp) GetBaseApp() *baseapp.BaseApp {
 // Name returns the name of the App.
 func (app *OsmosisApp) Name() string { return app.BaseApp.Name() }
 
+// PreBlocker application updates before each begin block.
+func (app *OsmosisApp) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+	// Set gas meter to the free gas meter.
+	// This is because there is currently non-deterministic gas usage in the
+	// pre-blocker, e.g. due to hydration of in-memory data structures.
+	//
+	// Note that we don't need to reset the gas meter after the pre-blocker
+	// because Go is pass by value.
+	ctx = ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
+	mm := app.ModuleManager()
+	return mm.PreBlock(ctx)
+}
+
 // BeginBlocker application updates every begin block.
-func (app *OsmosisApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+func (app *OsmosisApp) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 	BeginBlockForks(ctx, app)
-	return app.mm.BeginBlock(ctx, req)
+	return app.mm.BeginBlock(ctx)
 }
 
 // EndBlocker application updates every end block.
-func (app *OsmosisApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	return app.mm.EndBlock(ctx, req)
+func (app *OsmosisApp) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
+	return app.mm.EndBlock(ctx)
+}
+
+// Precommitter application updates before the commital of a block after all transactions have been delivered.
+func (app *OsmosisApp) Precommitter(ctx sdk.Context) {
+	mm := app.ModuleManager()
+	if err := mm.Precommit(ctx); err != nil {
+		panic(err)
+	}
+}
+
+func (app *OsmosisApp) PrepareCheckStater(ctx sdk.Context) {
+	mm := app.ModuleManager()
+	if err := mm.PrepareCheckState(ctx); err != nil {
+		panic(err)
+	}
 }
 
 // InitChainer application update at chain initialization.
-func (app *OsmosisApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *OsmosisApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	var genesisState GenesisState
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
 
-	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
+	err := app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
+	if err != nil {
+		panic(err)
+	}
 
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
@@ -891,10 +1030,13 @@ func (app *OsmosisApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.AP
 	// Register new tx routes from grpc-gateway.
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 	// Register new tendermint queries routes from grpc-gateway.
-	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+	cmtservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register legacy and grpc-gateway routes for all modules.
-	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+	module.NewBasicManagerFromManager(app.mm, nil).RegisterGRPCGatewayRoutes(
+		clientCtx,
+		apiSvr.GRPCGatewayRouter,
+	)
 
 	// Register node gRPC service for grpc-gateway.
 	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
@@ -912,7 +1054,7 @@ func (app *OsmosisApp) RegisterTxService(clientCtx client.Context) {
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
 func (app *OsmosisApp) RegisterTendermintService(clientCtx client.Context) {
-	tmservice.RegisterTendermintService(
+	cmtservice.RegisterTendermintService(
 		clientCtx,
 		app.BaseApp.GRPCQueryRouter(),
 		app.interfaceRegistry,
@@ -921,8 +1063,8 @@ func (app *OsmosisApp) RegisterTendermintService(clientCtx client.Context) {
 }
 
 // RegisterNodeService registers the node gRPC Query service.
-func (app *OsmosisApp) RegisterNodeService(clientCtx client.Context) {
-	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter())
+func (app *OsmosisApp) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
+	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg)
 }
 
 // SimulationManager implements the SimulationApp interface

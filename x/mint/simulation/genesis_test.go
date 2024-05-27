@@ -34,7 +34,7 @@ func TestRandomizedGenState(t *testing.T) {
 		Rand:         r,
 		NumBonded:    3,
 		Accounts:     simtypes.RandomAccounts(r, 3),
-		InitialStake: sdk.NewInt(1000),
+		InitialStake: osmomath.NewInt(1000),
 		GenState:     make(map[string]json.RawMessage),
 	}
 

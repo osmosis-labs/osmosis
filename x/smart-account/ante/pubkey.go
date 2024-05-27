@@ -32,7 +32,10 @@ func (spkd EmitPubKeyDecoratorEvents) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
 	}
 
-	signers := sigTx.GetSigners()
+	signers, err := sigTx.GetSigners()
+	if err != nil {
+		return ctx, errorsmod.Wrap(err, "failed to get signers from tx")
+	}
 
 	// Also emit the following events, so that txs can be indexed by these
 	// indices:

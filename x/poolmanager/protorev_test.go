@@ -3,6 +3,7 @@ package poolmanager_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
@@ -14,18 +15,18 @@ func (s *KeeperTestSuite) TestGetTakerFeeTrackerForStakersAndCommunityPool() {
 		secondTakerFeeForCommunityPool []sdk.Coin
 	}{
 		"happy path: get updated coin with same denom coin coin": {
-			firstTakerFeeForStakers:  sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100))),
-			secondTakerFeeForStakers: sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(200))),
+			firstTakerFeeForStakers:  sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(100))),
+			secondTakerFeeForStakers: sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(200))),
 
-			firstTakerFeeForCommunityPool:  sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(100))),
-			secondTakerFeeForCommunityPool: sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(200))),
+			firstTakerFeeForCommunityPool:  sdk.NewCoins(sdk.NewCoin("usdc", osmomath.NewInt(100))),
+			secondTakerFeeForCommunityPool: sdk.NewCoins(sdk.NewCoin("usdc", osmomath.NewInt(200))),
 		},
 		"get updated coin with different denom coins": {
-			firstTakerFeeForStakers:  sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100))),
-			secondTakerFeeForStakers: sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(200))),
+			firstTakerFeeForStakers:  sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(100))),
+			secondTakerFeeForStakers: sdk.NewCoins(sdk.NewCoin("usdc", osmomath.NewInt(200))),
 
-			firstTakerFeeForCommunityPool:  sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(100))),
-			secondTakerFeeForCommunityPool: sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(200))),
+			firstTakerFeeForCommunityPool:  sdk.NewCoins(sdk.NewCoin("usdc", osmomath.NewInt(100))),
+			secondTakerFeeForCommunityPool: sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(200))),
 		},
 	}
 
@@ -124,18 +125,18 @@ func (s *KeeperTestSuite) TestUpdateTakerFeeTrackerForStakersAndCommunityPool() 
 		increaseTakerFeeForCommunityPoolBy sdk.Coin
 	}{
 		"happy path: increase single denom tracker": {
-			initialTakerFeeForStakers:       sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100))),
-			initialTakerFeeForCommunityPool: sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(100))),
+			initialTakerFeeForStakers:       sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(100))),
+			initialTakerFeeForCommunityPool: sdk.NewCoins(sdk.NewCoin("usdc", osmomath.NewInt(100))),
 
-			increaseTakerFeeForStakersBy:       sdk.NewCoin("eth", sdk.NewInt(50)),
-			increaseTakerFeeForCommunityPoolBy: sdk.NewCoin("usdc", sdk.NewInt(50)),
+			increaseTakerFeeForStakersBy:       sdk.NewCoin("eth", osmomath.NewInt(50)),
+			increaseTakerFeeForCommunityPoolBy: sdk.NewCoin("usdc", osmomath.NewInt(50)),
 		},
 		"increase multi denom tracker": {
-			initialTakerFeeForStakers:       sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100)), sdk.NewCoin("usdc", sdk.NewInt(200))),
-			initialTakerFeeForCommunityPool: sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(100)), sdk.NewCoin("usdc", sdk.NewInt(200))),
+			initialTakerFeeForStakers:       sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(100)), sdk.NewCoin("usdc", osmomath.NewInt(200))),
+			initialTakerFeeForCommunityPool: sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(100)), sdk.NewCoin("usdc", osmomath.NewInt(200))),
 
-			increaseTakerFeeForStakersBy:       sdk.NewCoin("eth", sdk.NewInt(50)),
-			increaseTakerFeeForCommunityPoolBy: sdk.NewCoin("usdc", sdk.NewInt(50)),
+			increaseTakerFeeForStakersBy:       sdk.NewCoin("eth", osmomath.NewInt(50)),
+			increaseTakerFeeForCommunityPoolBy: sdk.NewCoin("usdc", osmomath.NewInt(50)),
 		},
 	}
 

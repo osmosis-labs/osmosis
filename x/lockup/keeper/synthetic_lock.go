@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/gogoproto/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,7 +45,7 @@ func (k Keeper) GetSyntheticLockup(ctx sdk.Context, lockID uint64, synthdenom st
 // if !found || err != nil { handle_it }
 func (k Keeper) GetSyntheticLockupByUnderlyingLockId(ctx sdk.Context, lockID uint64) (types.SyntheticLock, bool, error) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, combineKeys(types.KeyPrefixSyntheticLockup, sdk.Uint64ToBigEndian(lockID)))
+	iterator := storetypes.KVStorePrefixIterator(store, combineKeys(types.KeyPrefixSyntheticLockup, sdk.Uint64ToBigEndian(lockID)))
 	defer iterator.Close()
 
 	synthLocks := []types.SyntheticLock{}
@@ -84,7 +85,7 @@ func (k Keeper) GetAllSyntheticLockupsByAddr(ctx sdk.Context, owner sdk.AccAddre
 // HasAnySyntheticLockups returns true if the lock has a synthetic lock.
 func (k Keeper) HasAnySyntheticLockups(ctx sdk.Context, lockID uint64) bool {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, combineKeys(types.KeyPrefixSyntheticLockup, sdk.Uint64ToBigEndian(lockID)))
+	iterator := storetypes.KVStorePrefixIterator(store, combineKeys(types.KeyPrefixSyntheticLockup, sdk.Uint64ToBigEndian(lockID)))
 	defer iterator.Close()
 	return iterator.Valid()
 }
@@ -92,7 +93,7 @@ func (k Keeper) HasAnySyntheticLockups(ctx sdk.Context, lockID uint64) bool {
 // GetAllSyntheticLockups gets all synthetic locks within the store.
 func (k Keeper) GetAllSyntheticLockups(ctx sdk.Context) []types.SyntheticLock {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixSyntheticLockup)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyPrefixSyntheticLockup)
 	defer iterator.Close()
 
 	synthLocks := []types.SyntheticLock{}

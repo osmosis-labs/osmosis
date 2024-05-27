@@ -5,7 +5,7 @@ package simlogger
 import (
 	"strings"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 )
 
 type simLogger struct {
@@ -30,6 +30,14 @@ func (s *simLogger) Error(msg string, keyvals ...interface{}) {
 
 func (s *simLogger) With(keyvals ...interface{}) log.Logger {
 	return s.logger.With(keyvals...)
+}
+
+func (s *simLogger) Warn(msg string, keyvals ...interface{}) {
+	s.logger.Warn(msg, keyvals)
+}
+
+func (s *simLogger) Impl() any {
+	return s.logger
 }
 
 func NewSimLogger(logger log.Logger) log.Logger {

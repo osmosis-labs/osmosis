@@ -1,19 +1,21 @@
 package v15
 
 import (
-	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/types"
+	"context"
+
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward/types"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v7/keeper"
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
+	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v8/keeper"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 
 	"github.com/osmosis-labs/osmosis/v25/wasmbinding"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v25/x/ibc-rate-limit"
@@ -36,7 +38,8 @@ func CreateUpgradeHandler(
 	bpm upgrades.BaseAppParamManager,
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(context context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		ctx := sdk.UnwrapSDKContext(context)
 		poolmanagerParams := keepers.PoolManagerKeeper.GetParams(ctx)
 		poolmanagerParams.PoolCreationFee = keepers.GAMMKeeper.GetParams(ctx).PoolCreationFee
 
@@ -129,7 +132,7 @@ func migrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.
 		panic(err)
 	}
 	balancesAfter := bankKeeper.GetAllBalances(ctx, stableswapPool.GetAddress())
-	if !balancesBefore.IsEqual(balancesAfter) {
+	if !balancesBefore.Equal(balancesAfter) {
 		panic("balances before and after migration are not equal")
 	}
 }

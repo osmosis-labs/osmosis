@@ -2,12 +2,14 @@ package v22_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
-	abci "github.com/cometbft/cometbft/abci/types"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/x/upgrade"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -16,6 +18,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/x/protorev/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
@@ -26,6 +30,7 @@ const (
 
 type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
+	preModule appmodule.HasPreBlocker
 }
 
 func TestUpgradeTestSuite(t *testing.T) {
@@ -34,6 +39,7 @@ func TestUpgradeTestSuite(t *testing.T) {
 
 func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Setup()
+	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
 
 	expectedTakerFeeForStakers := []sdk.Coin{sdk.NewCoin("uakt", osmomath.NewInt(3000)), sdk.NewCoin("uatom", osmomath.NewInt(1000)), sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(2000))}
 	expectedTakerFeeForCommunityPool := []sdk.Coin{sdk.NewCoin("uakt", osmomath.NewInt(2000)), sdk.NewCoin("uatom", osmomath.NewInt(3000)), sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1000))}
@@ -61,7 +67,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
-		s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
+		_, err := s.preModule.PreBlock(s.Ctx)
+		s.Require().NoError(err)
 	})
 
 	allProtocolRevenue := s.App.ProtoRevKeeper.GetAllProtocolRevenue(s.Ctx)
@@ -78,8 +85,8 @@ func dummyUpgrade(s *UpgradeTestSuite) {
 	plan := upgradetypes.Plan{Name: "v22", Height: v22UpgradeHeight}
 	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
 	s.Require().NoError(err)
-	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
-	s.Require().True(exists)
+	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+	s.Require().NoError(err)
 
-	s.Ctx = s.Ctx.WithBlockHeight(v22UpgradeHeight)
+	s.Ctx = s.Ctx.WithHeaderInfo(header.Info{Height: v22UpgradeHeight, Time: s.Ctx.BlockTime().Add(time.Second)}).WithBlockHeight(v22UpgradeHeight)
 }

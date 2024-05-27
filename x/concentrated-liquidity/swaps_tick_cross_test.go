@@ -1066,7 +1066,7 @@ func (s *KeeperTestSuite) TestSwaps_Contiguous_Initialized_TickSpacingOne() {
 				nextTickToReachInCompute = nextTickToReachInCompute + 1
 			}
 
-			return nextTickToReachInCompute, sdk.NewDecWithPrec(5, 1)
+			return nextTickToReachInCompute, osmomath.NewDecWithPrec(5, 1)
 		}
 
 		return expectedSwapEndTick, osmomath.OneDec()
@@ -1435,7 +1435,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_GetLiquidityFromAmountsPositionBoun
 	validateInRangeLiquidityFromAmounts := func(currentSqrtPrice, lowerTickSqrtPrice, upperTickSqrtPrice osmomath.BigDec) {
 		liquidity0 := math.Liquidity0(DefaultAmt0, currentSqrtPrice, upperTickSqrtPrice)
 		liquidity1 := math.Liquidity1(DefaultAmt1, currentSqrtPrice, lowerTickSqrtPrice)
-		expectedLiquidity := sdk.MinDec(liquidity0, liquidity1)
+		expectedLiquidity := osmomath.MinDec(liquidity0, liquidity1)
 		actualLiquidity := math.GetLiquidityFromAmounts(currentSqrtPrice, lowerTickSqrtPrice, upperTickSqrtPrice, DefaultAmt0, DefaultAmt1)
 		s.Require().Equal(expectedLiquidity, actualLiquidity)
 	}

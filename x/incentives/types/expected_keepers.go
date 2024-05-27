@@ -1,6 +1,7 @@
 package types
 
 import (
+	context "context"
 	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,14 +15,13 @@ import (
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
-	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 
-	HasSupply(ctx sdk.Context, denom string) bool
+	HasSupply(ctx context.Context, denom string) bool
 
-	SendCoinsFromModuleToManyAccounts(
-		ctx sdk.Context, senderModule string, recipientAddrs []sdk.AccAddress, amts []sdk.Coins,
-	) error
-	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	SendCoinsFromModuleToManyAccounts(ctx context.Context, senderModule string, recipientAddrs []sdk.AccAddress, amts []sdk.Coins) error
+
+	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 }
 
 // LockupKeeper defines the expected interface needed to retrieve locks.
@@ -39,7 +39,7 @@ type EpochKeeper interface {
 
 // CommunityPoolKeeper defines the contract needed to be fulfilled for distribution keeper.
 type CommunityPoolKeeper interface {
-	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
+	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
 
 // TxFeesKeeper defines the expected interface needed to managing transaction fees.

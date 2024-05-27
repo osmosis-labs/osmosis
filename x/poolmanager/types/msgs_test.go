@@ -11,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 	appParams "github.com/osmosis-labs/osmosis/v25/app/params"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/module"
 	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
@@ -337,7 +338,7 @@ func TestAuthzMsg(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			apptesting.TestMessageAuthzSerialization(t, tc.msg)
+			apptesting.TestMessageAuthzSerialization(t, tc.msg, module.AppModuleBasic{})
 		})
 	}
 }

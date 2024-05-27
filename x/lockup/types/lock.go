@@ -89,7 +89,7 @@ func SumLocksByDenom(locks []*PeriodLock, denom string) (osmomath.Int, error) {
 	// handle overflow check here so we don't panic.
 	err = checkBigInt(sumBi)
 	if err != nil {
-		return sdk.ZeroInt(), err
+		return osmomath.ZeroInt(), err
 	}
 	return osmomath.NewIntFromBigInt(sumBi), nil
 }

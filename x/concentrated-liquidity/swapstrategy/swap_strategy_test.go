@@ -98,7 +98,7 @@ func (suite *StrategyTestSuite) setupPresetPositions(poolId uint64, positions []
 	clMsgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
 	for _, pos := range positions {
 		suite.FundAcc(suite.TestAccs[0], DefaultCoins.Add(DefaultCoins...))
-		_, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(suite.Ctx), &types.MsgCreatePosition{
+		_, err := clMsgServer.CreatePosition(suite.Ctx, &types.MsgCreatePosition{
 			PoolId:          poolId,
 			Sender:          suite.TestAccs[0].String(),
 			LowerTick:       pos.lowerTick,

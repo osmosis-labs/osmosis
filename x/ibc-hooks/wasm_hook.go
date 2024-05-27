@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 
 	errorsmod "cosmossdk.io/errors"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -16,10 +16,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
-	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
-	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 )
@@ -145,7 +145,7 @@ func (h WasmHooks) execWasmMsg(ctx sdk.Context, execMsg *wasmtypes.MsgExecuteCon
 		return nil, fmt.Errorf(types.ErrBadExecutionMsg, err.Error())
 	}
 	wasmMsgServer := wasmkeeper.NewMsgServerImpl(h.ContractKeeper)
-	return wasmMsgServer.ExecuteContract(sdk.WrapSDKContext(ctx), execMsg)
+	return wasmMsgServer.ExecuteContract(ctx, execMsg)
 }
 
 func isIcs20Packet(data []byte) (isIcs20 bool, ics20data transfertypes.FungibleTokenPacketData) {
@@ -297,6 +297,9 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 	err := im.App.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
 	if err != nil {
 		return err
+	}
+	if ctx.IsCheckTx() || ctx.IsReCheckTx() {
+		return nil
 	}
 
 	if !h.ProperlyConfigured() {

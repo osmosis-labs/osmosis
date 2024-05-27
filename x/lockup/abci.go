@@ -9,7 +9,7 @@ import (
 )
 
 // BeginBlocker is called on every block.
-func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) {
+func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 }
 
 // Called every block to automatically unlock matured locks.

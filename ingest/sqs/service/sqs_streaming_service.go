@@ -3,31 +3,31 @@ package service
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
-	"github.com/armon/go-metrics"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cometbft/cometbft/abci/types"
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	"github.com/hashicorp/go-metrics"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 )
 
-var _ baseapp.StreamingService = (*sqsStreamingService)(nil)
+var _ storetypes.ABCIListener = (*sqsStreamingService)(nil)
 
 // sqsStreamingService is a streaming service that processes block data and ingests it into SQS.
 // It does so by either processing the entire block data or only the pools that were changed in the block.
 // The service uses a pool tracker to keep track of the pools that were changed in the block.
 type sqsStreamingService struct {
-	writeListeners map[storetypes.StoreKey][]storetypes.WriteListener
+	writeListeners map[storetypes.StoreKey][]domain.WriteListener
+	storeKeyMap    map[string]storetypes.StoreKey
 	sqsIngester    domain.Ingester
 	poolTracker    domain.BlockPoolUpdateTracker
 
 	nodeStatusChecker domain.NodeStatusChecker
+	changeSet         []*storetypes.StoreKVPair
 
 	shouldProcessAllBlockData bool
 }
@@ -37,12 +37,14 @@ type sqsStreamingService struct {
 // sqsIngester is an ingester that ingests the block data into SQS.
 // poolTracker is a tracker that tracks the pools that were changed in the block.
 // nodeStatusChecker is a checker that checks if the node is syncing.
-func New(writeListeners map[storetypes.StoreKey][]storetypes.WriteListener, sqsIngester domain.Ingester, poolTracker domain.BlockPoolUpdateTracker, nodeStatusChecker domain.NodeStatusChecker) baseapp.StreamingService {
+func New(writeListeners map[storetypes.StoreKey][]domain.WriteListener, storeKeyMap map[string]storetypes.StoreKey, sqsIngester domain.Ingester, poolTracker domain.BlockPoolUpdateTracker, nodeStatusChecker domain.NodeStatusChecker) storetypes.ABCIListener {
 	return &sqsStreamingService{
 		writeListeners:    writeListeners,
+		storeKeyMap:       storeKeyMap,
 		sqsIngester:       sqsIngester,
 		poolTracker:       poolTracker,
 		nodeStatusChecker: nodeStatusChecker,
+		changeSet:         nil,
 
 		shouldProcessAllBlockData: true,
 	}
@@ -54,29 +56,22 @@ func (s *sqsStreamingService) Close() error {
 }
 
 // ListenBeginBlock implements baseapp.StreamingService.
-func (s *sqsStreamingService) ListenBeginBlock(ctx context.Context, req types.RequestBeginBlock, res types.ResponseBeginBlock) error {
+func (s *sqsStreamingService) ListenFinalizeBlock(goCtx context.Context, req types.RequestFinalizeBlock, res types.ResponseFinalizeBlock) error {
 	return nil
 }
 
-// ListenCommit implements baseapp.StreamingService.
-func (s *sqsStreamingService) ListenCommit(ctx context.Context, res types.ResponseCommit) error {
-	return nil
-}
-
-// ListenDeliverTx implements baseapp.StreamingService.
-func (s *sqsStreamingService) ListenDeliverTx(ctx context.Context, req types.RequestDeliverTx, res types.ResponseDeliverTx) error {
-	return nil
-}
-
-func (s *sqsStreamingService) ListenEndBlock(ctx context.Context, req types.RequestEndBlock, res types.ResponseEndBlock) error {
+func (s *sqsStreamingService) ListenCommit(ctx context.Context, res types.ResponseCommit, changeSet []*storetypes.StoreKVPair) error {
 	blockProcessStartTime := time.Now()
 	defer func() {
 		// Emit telemetry for the duration of processing the block.
 		telemetry.MeasureSince(blockProcessStartTime, domain.SQSProcessBlockDurationMetricName)
+		// Reset the change set after processing the block.
+		s.changeSet = nil
 	}()
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Always return nil to avoid making this consensus breaking.
+	s.changeSet = changeSet
 	_ = s.processBlockRecoverError(sdkCtx)
 	return nil
 }
@@ -117,16 +112,6 @@ func (s *sqsStreamingService) processBlockRecoverError(ctx sdk.Context) (err err
 		return err
 	}
 
-	return nil
-}
-
-// Listeners implements baseapp.StreamingService.
-func (s *sqsStreamingService) Listeners() map[storetypes.StoreKey][]storetypes.WriteListener {
-	return s.writeListeners
-}
-
-// Stream implements baseapp.StreamingService.
-func (s *sqsStreamingService) Stream(wg *sync.WaitGroup) error {
 	return nil
 }
 
@@ -181,6 +166,12 @@ func (s *sqsStreamingService) processBlock(ctx sdk.Context) error {
 		return nil
 	}
 
+	// Due to new streaming service design, we need to process the writes in the change set all at once here.
+	err := s.processBlockChangeSet()
+	if err != nil {
+		return err
+	}
+
 	// If not cold start, we only process the pools that were changed this block.
 	concentratedPools := s.poolTracker.GetConcentratedPools()
 	concentratedPoolIDTickChange := s.poolTracker.GetConcentratedPoolIDTickChange()
@@ -195,6 +186,22 @@ func (s *sqsStreamingService) processBlock(ctx sdk.Context) error {
 	}
 
 	return s.sqsIngester.ProcessChangedBlockData(ctx, changedBlockPools)
+}
+
+func (s *sqsStreamingService) processBlockChangeSet() error {
+	if s.changeSet == nil {
+		return nil
+	}
+
+	for _, kv := range s.changeSet {
+		for _, listener := range s.writeListeners[s.storeKeyMap[kv.StoreKey]] {
+			if err := listener.OnWrite(s.storeKeyMap[kv.StoreKey], kv.Key, kv.Value, kv.Delete); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 // emitFailureTelemetry emits telemetry for panics or errors

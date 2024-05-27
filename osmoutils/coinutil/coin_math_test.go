@@ -12,8 +12,8 @@ import (
 
 var (
 	defaultCoins = sdk.NewCoins(
-		sdk.NewCoin("foo", sdk.NewInt(100)),
-		sdk.NewCoin("bar", sdk.NewInt(200)),
+		sdk.NewCoin("foo", osmomath.NewInt(100)),
+		sdk.NewCoin("bar", osmomath.NewInt(200)),
 	)
 
 	defaultMultiplier = osmomath.NewInt(2)

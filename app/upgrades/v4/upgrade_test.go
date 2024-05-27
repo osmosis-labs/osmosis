@@ -7,15 +7,18 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v25/app"
 	v4 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v4"
 
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/x/upgrade"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 )
@@ -23,13 +26,15 @@ import (
 type UpgradeTestSuite struct {
 	suite.Suite
 
-	ctx sdk.Context
-	app *app.OsmosisApp
+	ctx       sdk.Context
+	app       *app.OsmosisApp
+	preModule appmodule.HasPreBlocker
 }
 
 func (s *UpgradeTestSuite) SetupTest() {
 	s.app = app.Setup(false)
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+	s.ctx = s.app.BaseApp.NewContextLegacy(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+	s.preModule = upgrade.NewAppModule(s.app.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -58,9 +63,15 @@ func (s *UpgradeTestSuite) TestUpgradePayments() {
 				s.Require().NoError(err)
 				err = s.app.BankKeeper.SendCoinsFromModuleToModule(s.ctx, "mint", "distribution", coins)
 				s.Require().NoError(err)
-				feePool := s.app.DistrKeeper.GetFeePool(s.ctx)
+				feePool, err := s.app.DistrKeeper.FeePool.Get(s.ctx)
+				if err != nil {
+					panic(err)
+				}
 				feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinFromCoin(coin))
-				s.app.DistrKeeper.SetFeePool(s.ctx, feePool)
+				err = s.app.DistrKeeper.FeePool.Set(s.ctx, feePool)
+				if err != nil {
+					panic(err)
+				}
 			},
 			func() {
 				// run upgrade
@@ -68,13 +79,13 @@ func (s *UpgradeTestSuite) TestUpgradePayments() {
 				plan := upgradetypes.Plan{Name: "v4", Height: dummyUpgradeHeight}
 				err := s.app.UpgradeKeeper.ScheduleUpgrade(s.ctx, plan)
 				s.Require().NoError(err)
-				_, exists := s.app.UpgradeKeeper.GetUpgradePlan(s.ctx)
-				s.Require().True(exists)
+				_, err = s.app.UpgradeKeeper.GetUpgradePlan(s.ctx)
+				s.Require().NoError(err)
 
-				s.ctx = s.ctx.WithBlockHeight(dummyUpgradeHeight)
+				s.ctx = s.ctx.WithHeaderInfo(header.Info{Height: dummyUpgradeHeight, Time: s.ctx.BlockTime().Add(time.Second)}).WithBlockHeight(dummyUpgradeHeight)
 				s.Require().NotPanics(func() {
-					beginBlockRequest := abci.RequestBeginBlock{}
-					s.app.BeginBlocker(s.ctx, beginBlockRequest)
+					_, err := s.preModule.PreBlock(s.ctx)
+					s.Require().NoError(err)
 				})
 			},
 			func() {
@@ -106,7 +117,10 @@ func (s *UpgradeTestSuite) TestUpgradePayments() {
 				s.Require().Equal(distBal, sdk.NewInt64Coin(appparams.BaseCoinUnit, expectedBal))
 
 				// check that feepool.communitypool has been reduced correctly
-				feePool := s.app.DistrKeeper.GetFeePool(s.ctx)
+				feePool, err := s.app.DistrKeeper.FeePool.Get(s.ctx)
+				if err != nil {
+					panic(err)
+				}
 				s.Require().Equal(feePool.GetCommunityPool(), sdk.NewDecCoins(sdk.NewInt64DecCoin(appparams.BaseCoinUnit, expectedBal)))
 
 				// Check that gamm Minimum Fee has been set correctly

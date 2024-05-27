@@ -5,18 +5,23 @@ import (
 	"time"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
+	auctiontypes "github.com/skip-mev/block-sdk/v2/x/auction/types"
 
 	"github.com/stretchr/testify/suite"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/x/upgrade"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	v4 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v4"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 	v25 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v25"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
@@ -32,6 +37,7 @@ var (
 
 type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
+	preModule appmodule.HasPreBlocker
 }
 
 func TestUpgradeTestSuite(t *testing.T) {
@@ -40,13 +46,14 @@ func TestUpgradeTestSuite(t *testing.T) {
 
 func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Setup()
+	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
 
 	// Setup spread factor migration test environment
 	oldMigrationList, lastPoolPositionID, migratedPoolBeforeUpgradeSpreadRewards, nonMigratedPoolBeforeUpgradeSpreadRewards := s.PrepareSpreadRewardsMigrationTestEnv()
 	preMigrationSigningInfo := s.prepareMissedBlocksCounterTest()
 
 	// Check consensus params before upgrade
-	consParamsPre, err := s.App.ConsensusParamsKeeper.Get(s.Ctx)
+	consParamsPre, err := s.App.ConsensusParamsKeeper.ParamsStore.Get(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().NotEqual(consParamsPre.Evidence.MaxAgeDuration, v25.NewMaxAgeDuration)
 	s.Require().NotEqual(consParamsPre.Evidence.MaxAgeNumBlocks, v25.NewMaxAgeNumBlocks)
@@ -54,7 +61,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// Run the upgrade
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
-		s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
+		_, err := s.preModule.PreBlock(s.Ctx)
+		s.Require().NoError(err)
 	})
 
 	// check auction module account
@@ -87,7 +95,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().Equal(smartAccountParams.CircuitBreakerControllers[0], v25.CircuitBreakerController)
 
 	// Check consensus params after upgrade
-	consParamsPost, err := s.App.ConsensusParamsKeeper.Get(s.Ctx)
+	consParamsPost, err := s.App.ConsensusParamsKeeper.ParamsStore.Get(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().Equal(consParamsPost.Evidence.MaxAgeDuration, v25.NewMaxAgeDuration)
 	s.Require().Equal(consParamsPost.Evidence.MaxAgeNumBlocks, v25.NewMaxAgeNumBlocks)
@@ -101,10 +109,10 @@ func dummyUpgrade(s *UpgradeTestSuite) {
 	plan := upgradetypes.Plan{Name: v25.Upgrade.UpgradeName, Height: v25UpgradeHeight}
 	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
 	s.Require().NoError(err)
-	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
-	s.Require().True(exists)
+	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+	s.Require().NoError(err)
 
-	s.Ctx = s.Ctx.WithBlockHeight(v25UpgradeHeight)
+	s.Ctx = s.Ctx.WithHeaderInfo(header.Info{Height: v25UpgradeHeight, Time: s.Ctx.BlockTime().Add(time.Second)}).WithBlockHeight(v25UpgradeHeight)
 }
 
 func (s *UpgradeTestSuite) PrepareSpreadRewardsMigrationTestEnv() (map[uint64]struct{}, uint64, sdk.Coins, sdk.Coins) {
@@ -135,11 +143,11 @@ func (s *UpgradeTestSuite) PrepareSpreadRewardsMigrationTestEnv() (map[uint64]st
 	// Manually add some spread rewards to the migrated and non-migrated pools
 	feeAccumulatorMigratedPool, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, migratedPoolID)
 	s.Require().NoError(err)
-	feeAccumulatorMigratedPool.AddToAccumulator(sdk.NewDecCoins(sdk.NewDecCoinFromDec("uosmo", sdk.MustNewDecFromStr("276701288297"))))
+	feeAccumulatorMigratedPool.AddToAccumulator(sdk.NewDecCoins(sdk.NewDecCoinFromDec("uosmo", osmomath.MustNewDecFromStr("276701288297"))))
 
 	feeAccumulatorNonMigratedPool, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, nonMigratedPoolID)
 	s.Require().NoError(err)
-	feeAccumulatorNonMigratedPool.AddToAccumulator(sdk.NewDecCoins(sdk.NewDecCoinFromDec("uosmo", sdk.MustNewDecFromStr("276701288297"))))
+	feeAccumulatorNonMigratedPool.AddToAccumulator(sdk.NewDecCoins(sdk.NewDecCoinFromDec("uosmo", osmomath.MustNewDecFromStr("276701288297"))))
 
 	// Migrated pool claim
 	migratedPoolBeforeUpgradeSpreadRewards, err := s.App.ConcentratedLiquidityKeeper.GetClaimableSpreadRewards(s.Ctx, migratedPoolPositionID)
@@ -205,8 +213,8 @@ func (s *UpgradeTestSuite) prepareMissedBlocksCounterTest() slashingtypes.Valida
 }
 
 func (s *UpgradeTestSuite) executeMissedBlocksCounterTest(preMigrationSigningInfo slashingtypes.ValidatorSigningInfo) {
-	postMigrationSigningInfo, found := s.App.SlashingKeeper.GetValidatorSigningInfo(s.Ctx, consAddr)
-	s.Require().True(found)
+	postMigrationSigningInfo, err := s.App.SlashingKeeper.GetValidatorSigningInfo(s.Ctx, consAddr)
+	s.Require().NoError(err)
 
 	// Check that the missed blocks counter was set to the correct value
 	s.Require().Equal(int64(10), postMigrationSigningInfo.MissedBlocksCounter)

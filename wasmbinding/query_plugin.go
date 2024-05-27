@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/osmosis-labs/osmosis/v25/wasmbinding/bindings"
 )
@@ -31,7 +32,7 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(
 			return nil, wasmvmtypes.UnsupportedRequest{Kind: fmt.Sprintf("No route to query '%s'", request.Path)}
 		}
 
-		res, err := route(ctx, abci.RequestQuery{
+		res, err := route(ctx, &abci.RequestQuery{
 			Data: request.Data,
 			Path: request.Path,
 		})
@@ -103,7 +104,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 // ConvertProtoToJsonMarshal  unmarshals the given bytes into a proto message and then marshals it to json.
 // This is done so that clients calling stargate queries do not need to define their own proto unmarshalers,
 // being able to use response directly by json marshalling, which is supported in cosmwasm.
-func ConvertProtoToJSONMarshal(protoResponseType codec.ProtoMarshaler, bz []byte, cdc codec.Codec) ([]byte, error) {
+func ConvertProtoToJSONMarshal(protoResponseType proto.Message, bz []byte, cdc codec.Codec) ([]byte, error) {
 	// unmarshal binary into stargate response data structure
 	err := cdc.Unmarshal(bz, protoResponseType)
 	if err != nil {

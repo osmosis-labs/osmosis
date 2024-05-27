@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -174,12 +174,15 @@ func initChain(
 	app simtypes.App,
 	initChainFn InitChainFn,
 	config *Config,
-) (mockValidators, time.Time, []simulation.Account, abci.ResponseInitChain) {
+) (mockValidators, time.Time, []simulation.Account, *abci.ResponseInitChain) {
 	// TODO: Cleanup the whole config dependency with appStateFn
 	accounts, req := initChainFn(simManager, r, accounts, config.InitializationConfig)
 	// Valid app version can only be zero on app initialization.
 	req.ConsensusParams.Version.App = 0
-	res := app.GetBaseApp().InitChain(req)
+	res, err := app.GetBaseApp().InitChain(&req)
+	if err != nil {
+		panic(fmt.Errorf("app initialization failed: %v", err))
+	}
 	validators := newMockValidators(r, res.Validators, params)
 
 	// update config

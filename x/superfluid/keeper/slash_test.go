@@ -45,8 +45,8 @@ func (s *KeeperTestSuite) TestBeforeValidatorSlashed() {
 			[]stakingtypes.BondStatus{stakingtypes.Unbonded},
 			1,
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
-			[]int64{0},
-			[]int64{0},
+			[]int64{},
+			[]int64{}, // UNFORKING v2 TODO: We no longer can slash unbonded validators, verify that this is correct
 		},
 	}
 
@@ -79,8 +79,8 @@ func (s *KeeperTestSuite) TestBeforeValidatorSlashed() {
 
 			// slash validator
 			for _, valIndex := range tc.slashedValIndexes {
-				validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrs[valIndex])
-				s.Require().True(found)
+				validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrs[valIndex])
+				s.Require().NoError(err)
 				s.Ctx = s.Ctx.WithBlockHeight(100)
 				consAddr, err := validator.GetConsAddr()
 				s.Require().NoError(err)
@@ -106,8 +106,8 @@ func (s *KeeperTestSuite) TestBeforeValidatorSlashed() {
 				gotLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, locks[lockIndex].ID)
 				s.Require().NoError(err)
 				s.Require().Equal(
-					gotLock.Coins.AmountOf(denoms[0]).String(),
 					osmomath.NewDec(1000000).Mul(osmomath.OneDec().Sub(slashFactor)).TruncateInt().String(),
+					gotLock.Coins.AmountOf(denoms[0]).String(),
 				)
 			}
 		})

@@ -19,6 +19,8 @@ import (
 
 	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
 
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/osmosis-labs/osmosis/v25/app"
 	"github.com/osmosis-labs/osmosis/v25/app/params"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
@@ -45,9 +47,8 @@ func (s *BaseAuthenticatorSuite) SetupKeys() {
 	s.OsmosisApp = app.Setup(false)
 	s.EncodingConfig = app.MakeEncodingConfig()
 
-	ak := s.OsmosisApp.AccountKeeper
-	s.Ctx = s.OsmosisApp.NewContext(false, tmproto.Header{})
-	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
+	s.Ctx = s.OsmosisApp.NewContextLegacy(false, tmproto.Header{})
+	s.Ctx = s.Ctx.WithGasMeter(storetypes.NewGasMeter(1_000_000))
 
 	// Set up test accounts
 	for _, key := range TestKeys {
@@ -58,8 +59,7 @@ func (s *BaseAuthenticatorSuite) SetupKeys() {
 		s.TestPrivKeys = append(s.TestPrivKeys, priv)
 
 		accAddress := sdk.AccAddress(priv.PubKey().Address())
-		account := authtypes.NewBaseAccount(accAddress, priv.PubKey(), 0, 0)
-		ak.SetAccount(s.Ctx, account)
+		authtypes.NewBaseAccount(accAddress, priv.PubKey(), 0, 0)
 
 		// add the test accounts to array for later use
 		s.TestAccAddress = append(s.TestAccAddress, accAddress)
@@ -76,12 +76,18 @@ func (s *BaseAuthenticatorSuite) GenSimpleTx(msgs []sdk.Msg, signers []cryptotyp
 	ak := s.OsmosisApp.AccountKeeper
 
 	for _, signer := range signers {
-		account := ak.GetAccount(s.Ctx, sdk.AccAddress(signer.PubKey().Address()))
+		var account sdk.AccountI
+		if ak.HasAccount(s.Ctx, sdk.AccAddress(signer.PubKey().Address())) {
+			account = ak.GetAccount(s.Ctx, sdk.AccAddress(signer.PubKey().Address()))
+		} else {
+			account = authtypes.NewBaseAccount(sdk.AccAddress(signer.PubKey().Address()), signer.PubKey(), ak.NextAccountNumber(s.Ctx), 0)
+		}
 		accNums = append(accNums, account.GetAccountNumber())
 		accSeqs = append(accSeqs, account.GetSequence())
 	}
 
 	tx, err := GenTx(
+		s.Ctx,
 		txconfig,
 		msgs,
 		feeCoins,
@@ -114,6 +120,7 @@ func (s *BaseAuthenticatorSuite) GenSimpleTxWithSelectedAuthenticators(msgs []sd
 	}
 
 	baseTxBuilder, err := MakeTxBuilder(
+		s.Ctx,
 		txconfig,
 		msgs,
 		feeCoins,
@@ -148,6 +155,6 @@ func (s *BaseAuthenticatorSuite) GenSimpleTxWithSelectedAuthenticators(msgs []sd
 
 // FundAcc funds target address with specified amount.
 func (s *BaseAuthenticatorSuite) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
-	err := testutil.FundAccount(s.OsmosisApp.BankKeeper, s.Ctx, acc, amounts)
+	err := testutil.FundAccount(s.Ctx, s.OsmosisApp.BankKeeper, acc, amounts)
 	s.Require().NoError(err)
 }

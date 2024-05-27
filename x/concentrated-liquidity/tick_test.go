@@ -3,7 +3,8 @@ package concentrated_liquidity_test
 import (
 	"errors"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -37,8 +38,8 @@ func withLiquidityNetandTickIndex(tick genesis.FullTick, tickIndex int64, liquid
 func (s *KeeperTestSuite) TestTickOrdering() {
 	s.SetupTest()
 
-	storeKey := sdk.NewKVStoreKey("concentrated_liquidity")
-	tKey := sdk.NewTransientStoreKey("transient_test")
+	storeKey := storetypes.NewKVStoreKey("concentrated_liquidity")
+	tKey := storetypes.NewTransientStoreKey("transient_test")
 	s.Ctx = testutil.DefaultContext(storeKey, tKey)
 	s.App.ConcentratedLiquidityKeeper = cl.NewKeeper(s.App.AppCodec(), storeKey, s.App.AccountKeeper, s.App.BankKeeper, s.App.GAMMKeeper, s.App.PoolIncentivesKeeper, s.App.IncentivesKeeper, s.App.LockupKeeper, s.App.DistrKeeper, s.App.ContractKeeper, s.App.GetSubspace(types.ModuleName))
 

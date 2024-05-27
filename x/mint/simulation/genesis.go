@@ -100,25 +100,25 @@ var (
 func RandomizedGenState(simState *module.SimulationState) {
 	var epochProvisions osmomath.Dec
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, epochProvisionsKey, &epochProvisions, simState.Rand,
+		epochProvisionsKey, &epochProvisions, simState.Rand,
 		func(r *rand.Rand) { epochProvisions = genEpochProvisions(r) },
 	)
 
 	var reductionFactor osmomath.Dec
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, reductionFactorKey, &reductionFactor, simState.Rand,
+		reductionFactorKey, &reductionFactor, simState.Rand,
 		func(r *rand.Rand) { reductionFactor = genReductionFactor(r) },
 	)
 
 	var reductionPeriodInEpochs int64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, reductionPeriodInEpochsKey, &reductionPeriodInEpochs, simState.Rand,
+		reductionPeriodInEpochsKey, &reductionPeriodInEpochs, simState.Rand,
 		func(r *rand.Rand) { reductionPeriodInEpochs = genReductionPeriodInEpochs(r) },
 	)
 
 	var mintintRewardsDistributionStartEpoch int64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, mintingRewardsDistributionStartEpochKey, &mintintRewardsDistributionStartEpoch, simState.Rand,
+		mintingRewardsDistributionStartEpochKey, &mintintRewardsDistributionStartEpoch, simState.Rand,
 		func(r *rand.Rand) { mintintRewardsDistributionStartEpoch = genMintintRewardsDistributionStartEpoch(r) },
 	)
 
