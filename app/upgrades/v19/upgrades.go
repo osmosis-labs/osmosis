@@ -43,9 +43,9 @@ func CreateUpgradeHandler(
 		// be swapped into OSMO or not. The concentrated liquidity module already requires access to the pool manager keeper,
 		// so the right move in this case is to move this parameter upwards in order to prevent circular dependencies.
 		// TODO: In v20 upgrade handler, delete this param from the concentrated liquidity params.
-		currentConcentratedLiquidityParams := keepers.ConcentratedLiquidityKeeper.GetParams(ctx)
+		// currentConcentratedLiquidityParams := keepers.ConcentratedLiquidityKeeper.GetParams(ctx)
 		defaultPoolManagerParams := poolmanagertypes.DefaultParams()
-		defaultPoolManagerParams.AuthorizedQuoteDenoms = currentConcentratedLiquidityParams.AuthorizedQuoteDenoms
+		// defaultPoolManagerParams.AuthorizedQuoteDenoms = currentConcentratedLiquidityParams.AuthorizedQuoteDenoms
 		defaultPoolManagerParams.TakerFeeParams.DefaultTakerFee = osmomath.ZeroDec()
 		keepers.PoolManagerKeeper.SetParams(ctx, defaultPoolManagerParams)
 
