@@ -224,7 +224,7 @@ func (pi *poolTransformer) convertPool(
 		return nil, err
 	}
 
-	var cwPoolModel *sqsdomain.CWPoolModel
+	var cosmWasmPoolModel *sqsdomain.CosmWasmPoolModel
 	if pool.GetType() == poolmanagertypes.CosmWasm {
 		cwPool, ok := pool.(cosmwasmpooltypes.CosmWasmExtension)
 		if !ok {
@@ -249,7 +249,7 @@ func (pi *poolTransformer) convertPool(
 			)
 		} else {
 			var contractInfo *sqsdomain.ContractInfo
-			cwPoolModel = &sqsdomain.CWPoolModel{}
+			cosmWasmPoolModel = &sqsdomain.CosmWasmPoolModel{}
 
 			if err := json.Unmarshal(bz, &contractInfo); err != nil {
 				// only log since cw pool contracts are not required to conform cw2
@@ -260,11 +260,11 @@ func (pi *poolTransformer) convertPool(
 					"contract_info", string(bz),
 				)
 			} else {
-				cwPoolModel.ContractInfo = *contractInfo
+				cosmWasmPoolModel.ContractInfo = *contractInfo
 
 				// special transformation based on different cw pool
-				if cwPoolModel.IsAlloyTransmuter() {
-					err = pi.updateAlloyTrasmuterInfo(ctx, pool, cwPool, cwPoolModel, &denoms)
+				if cosmWasmPoolModel.IsAlloyTransmuter() {
+					err = pi.updateAlloyTrasmuterInfo(ctx, pool, cwPool, cosmWasmPoolModel, &denoms)
 				}
 
 				if err != nil {
@@ -442,7 +442,7 @@ func (pi *poolTransformer) convertPool(
 			Balances:              filteredBalances,
 			PoolDenoms:            denoms,
 			SpreadFactor:          spreadFactor,
-			CWPoolModel:           cwPoolModel,
+			CosmWasmPoolModel:     cosmWasmPoolModel,
 		},
 		TickModel: tickModel,
 	}, nil
@@ -452,7 +452,7 @@ func (pi *poolTransformer) updateAlloyTrasmuterInfo(
 	ctx sdk.Context,
 	pool poolmanagertypes.PoolI,
 	cwPool cosmwasmpooltypes.CosmWasmExtension,
-	cwPoolModel *sqsdomain.CWPoolModel,
+	cosmWasmPoolModel *sqsdomain.CosmWasmPoolModel,
 	denoms *[]string,
 ) error {
 	bz, err := pi.wasmKeeper.QuerySmart(ctx, cwPool.GetAddress(), []byte(`{"list_asset_configs":{}}`))
@@ -495,7 +495,7 @@ func (pi *poolTransformer) updateAlloyTrasmuterInfo(
 	// append alloyed denom to denoms
 	*denoms = append(*denoms, getShareDenomResponse.ShareDenom)
 
-	cwPoolModel.Data.AlloyTransmuter = &sqsdomain.AlloyTransmuterData{
+	cosmWasmPoolModel.Data.AlloyTransmuter = &sqsdomain.AlloyTransmuterData{
 		AlloyedDenom: getShareDenomResponse.ShareDenom,
 		AssetConfigs: assetConfigsResponse.AssetConfigs,
 	}
