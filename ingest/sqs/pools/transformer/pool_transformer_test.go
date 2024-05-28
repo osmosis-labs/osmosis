@@ -856,5 +856,5 @@ func (s *PoolTransformerTestSuite) CreateDefaultQuoteDenomUOSMOPool() uint64 {
 
 // descaleQuoteDenomPrecisionAmount descales the amount with the quote denom precision scaling factor.
 func descaleQuoteDenomPrecisionAmount(amount osmomath.Int) osmomath.Int {
-	return osmomath.BigDecFromSDKInt(amount).QuoMut(poolstransformer.UsdcPrecisionScalingFactor).Dec().TruncateInt()
+	return osmomath.BigDecFromSDKInt(amount).QuoMut(poolstransformer.UsdcPrecisionScalingFactor).Dec().Ceil().TruncateInt()
 }

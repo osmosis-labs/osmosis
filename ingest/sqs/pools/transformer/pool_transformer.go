@@ -421,7 +421,10 @@ func (pi *poolTransformer) computeUSDCPoolLiquidityCapFromUOSMO(ctx sdk.Context,
 			// If truncation occurs, the real value is insignificant and we can ignore it.
 			poolLiquidityCapUSDC := poolLiquidityCapUSDCScaled.QuoMut(usdcPrecisionScalingFactor)
 
-			return poolLiquidityCapUSDC.Dec().TruncateInt(), noPoolLiquidityCapError
+			// Note, we round up so that pools that have non-zero liquidity get propagated to the router
+			// and reflect this context in the pool liquidity cap filtering. Otherwise, pools with zero liquidity get filtered out at the ingest level
+			// completely, breaking our edge case tests for supporting low liquidity routes.
+			return poolLiquidityCapUSDC.Dec().Ceil().TruncateInt(), noPoolLiquidityCapError
 		}
 	}
 
