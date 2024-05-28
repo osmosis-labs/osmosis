@@ -9,6 +9,7 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
 	"github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/cosmwasm/msg"
 	"github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/cosmwasm/msg/transmuter"
@@ -55,6 +56,12 @@ func (s *KeeperTestHelper) PrepareCustomTransmuterPoolCustomProjectV3(owner sdk.
 func (s *KeeperTestHelper) PreparePool(owner sdk.AccAddress, denoms []string, projectName, byteCodePath, contractName string, getInstantiateMsgBytes func([]string, sdk.AccAddress) []byte) cosmwasmpooltypes.CosmWasmExtension {
 	// Mint some assets to the account.
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
+
+	// Mint some of the denoms to ensure they exist on chain
+	for _, denom := range denoms {
+		err := s.App.BankKeeper.Supply.Set(s.Ctx, denom, osmomath.NewInt(1000000000))
+		s.Require().NoError(err)
+	}
 
 	// Upload contract code and get the code id.
 	codeId := s.StoreCosmWasmPoolContractCodeCustomProject(contractName, projectName, byteCodePath)

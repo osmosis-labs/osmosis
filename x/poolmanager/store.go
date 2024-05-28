@@ -373,11 +373,7 @@ func (k Keeper) SetAllRegisteredAlloyedPoolsIdCached(ctx sdk.Context) error {
 //
 
 func (k Keeper) queryAndCheckAlloyedDenom(ctx sdk.Context, contractAddr sdk.AccAddress) (string, error) {
-	query := `{"get_share_denom": {}}`
-	queryBz, err := json.Marshal(query)
-	if err != nil {
-		return "", err
-	}
+	queryBz := []byte(`{"get_share_denom": {}}`)
 	respBz, err := k.wasmKeeper.QuerySmart(ctx, contractAddr, queryBz)
 	if err != nil {
 		return "", err
@@ -412,11 +408,7 @@ func (k Keeper) queryAndCheckAlloyedDenom(ctx sdk.Context, contractAddr sdk.AccA
 
 func (k Keeper) snapshotTakerFeeShareAlloyComposition(ctx sdk.Context, contractAddr sdk.AccAddress) ([]types.TakerFeeShareAgreement, error) {
 	// TODO: Need to add logic for scaling factors
-	query := `{"get_total_pool_liquidity": {}}`
-	queryBz, err := json.Marshal(query)
-	if err != nil {
-		return []types.TakerFeeShareAgreement{}, err
-	}
+	queryBz := []byte(`{"get_total_pool_liquidity": {}}`)
 	respBz, err := k.wasmKeeper.QuerySmart(ctx, contractAddr, queryBz)
 	if err != nil {
 		return []types.TakerFeeShareAgreement{}, err
@@ -429,7 +421,7 @@ func (k Keeper) snapshotTakerFeeShareAlloyComposition(ctx sdk.Context, contractA
 	}
 	totalPoolLiquidity := response.TotalPoolLiquidity
 
-	var totalAlloyedLiquidity osmomath.Dec
+	totalAlloyedLiquidity := osmomath.ZeroDec()
 	var assetsWithShareAgreement []sdk.Coin
 	var takerFeeShareAgreements []types.TakerFeeShareAgreement
 	var skimAddresses []string

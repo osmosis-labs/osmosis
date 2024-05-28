@@ -1,7 +1,10 @@
 package poolmanager_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
@@ -291,6 +294,116 @@ func (s *KeeperTestSuite) TestSetDenomPairTakerFee() {
 				s.Require().NoError(err)
 				s.AssertEventEmitted(s.Ctx, types.TypeMsgSetDenomPairTakerFee, tc.expectedSetDenomPairTakerFeeEvent)
 				s.AssertEventEmitted(s.Ctx, sdk.EventTypeMessage, 0)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestSetTakerFeeShareAgreementForDenom() {
+	govAddr := s.App.AccountKeeper.GetModuleAddress(govtypes.ModuleName).String()
+	nonGovAddr := s.TestAccs[0].String()
+	skimAddress := s.TestAccs[1].String()
+
+	testcases := map[string]struct {
+		takerFeeShareAgreementMessage types.MsgSetTakerFeeShareAgreementForDenom
+		expectedError                 error
+	}{
+		"valid case": {
+			takerFeeShareAgreementMessage: types.MsgSetTakerFeeShareAgreementForDenom{
+				Sender:      govAddr,
+				Denom:       "nBTC",
+				SkimPercent: osmomath.MustNewDecFromStr("0.01"),
+				SkimAddress: skimAddress,
+			},
+		},
+		"error: not gov account": {
+			takerFeeShareAgreementMessage: types.MsgSetTakerFeeShareAgreementForDenom{
+				Sender:      nonGovAddr,
+				Denom:       "nBTC",
+				SkimPercent: osmomath.MustNewDecFromStr("0.01"),
+				SkimAddress: skimAddress,
+			},
+			expectedError: types.ErrUnauthorizedGov,
+		},
+	}
+
+	for name, tc := range testcases {
+		s.Run(name, func() {
+			s.Setup()
+
+			msgServer := poolmanagerKeeper.NewMsgServerImpl(s.App.PoolManagerKeeper)
+
+			response, err := msgServer.SetTakerFeeShareAgreementForDenom(s.Ctx, &tc.takerFeeShareAgreementMessage)
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().Equal(tc.expectedError, err)
+				s.Require().Nil(response)
+			} else {
+				s.Require().NoError(err)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestSetRegisteredAlloyedPool() {
+	govAddr := s.App.AccountKeeper.GetModuleAddress(govtypes.ModuleName).String()
+	nonGovAddr := s.TestAccs[0].String()
+
+	testcases := map[string]struct {
+		registeredAlloyedPoolMessage types.MsgSetRegisteredAlloyedPool
+		useAlloyedPool               bool
+		useConcentratedPool          bool
+		expectedError                error
+	}{
+		"valid sender, valid pool": {
+			registeredAlloyedPoolMessage: types.MsgSetRegisteredAlloyedPool{
+				Sender: govAddr,
+			},
+			useAlloyedPool: true,
+		},
+		"valid sender, invalid pool": {
+			registeredAlloyedPoolMessage: types.MsgSetRegisteredAlloyedPool{
+				Sender: govAddr,
+			},
+			useConcentratedPool: true,
+			expectedError:       fmt.Errorf("pool with id %d is not a CosmWasmPool", 1),
+		},
+		"invalid sender, valid pool": {
+			registeredAlloyedPoolMessage: types.MsgSetRegisteredAlloyedPool{
+				Sender: nonGovAddr,
+			},
+			useAlloyedPool: true,
+			expectedError:  types.ErrUnauthorizedGov,
+		},
+		"invalid sender, invalid pool": {
+			registeredAlloyedPoolMessage: types.MsgSetRegisteredAlloyedPool{
+				Sender: nonGovAddr,
+			},
+			useConcentratedPool: true,
+			expectedError:       types.ErrUnauthorizedGov,
+		},
+	}
+
+	for name, tc := range testcases {
+		s.Run(name, func() {
+			s.Setup()
+			msgServer := poolmanagerKeeper.NewMsgServerImpl(s.App.PoolManagerKeeper)
+
+			allSupportedPoolInfo := s.PrepareAllSupportedPools()
+
+			if tc.useAlloyedPool {
+				tc.registeredAlloyedPoolMessage.PoolId = allSupportedPoolInfo.AlloyedPoolID
+			} else if tc.useConcentratedPool {
+				tc.registeredAlloyedPoolMessage.PoolId = allSupportedPoolInfo.ConcentratedPoolID
+			}
+
+			response, err := msgServer.SetRegisteredAlloyedPool(s.Ctx, &tc.registeredAlloyedPoolMessage)
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().Equal(tc.expectedError, err)
+				s.Require().Nil(response)
+			} else {
+				s.Require().NoError(err)
 			}
 		})
 	}

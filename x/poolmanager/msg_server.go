@@ -112,7 +112,7 @@ func (server msgServer) SetTakerFeeShareAgreementForDenom(goCtx context.Context,
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	govAddr := server.keeper.accountKeeper.GetModuleAccount(ctx, govtypes.ModuleName)
-	if msg.Sender != govAddr.String() {
+	if msg.Sender != govAddr.GetAddress().String() {
 		return nil, types.ErrUnauthorizedGov
 	}
 
@@ -136,7 +136,7 @@ func (server msgServer) SetRegisteredAlloyedPool(goCtx context.Context, msg *typ
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	govAddr := server.keeper.accountKeeper.GetModuleAccount(ctx, govtypes.ModuleName)
-	if msg.Sender != govAddr.String() {
+	if msg.Sender != govAddr.GetAddress().String() {
 		return nil, types.ErrUnauthorizedGov
 	}
 
