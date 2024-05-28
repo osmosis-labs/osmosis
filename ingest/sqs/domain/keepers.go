@@ -41,8 +41,8 @@ type CosmWasmPoolKeeper interface {
 
 // WasmKeeper is an interface for querying CosmWasm contract.
 type WasmKeeper interface {
-	QueryRaw(ctx sdk.Context, contractAddress sdk.AccAddress, key []byte) []byte
-	QuerySmart(ctx sdk.Context, contractAddress sdk.AccAddress, req []byte) ([]byte, error)
+	QueryRaw(ctx context.Context, contractAddress sdk.AccAddress, key []byte) []byte
+	QuerySmart(ctx context.Context, contractAddress sdk.AccAddress, req []byte) ([]byte, error)
 }
 
 // BankKeeper is an interface for getting bank balances.
