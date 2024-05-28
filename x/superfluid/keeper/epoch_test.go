@@ -19,13 +19,6 @@ import (
 )
 
 func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
-	// set bond denom to appparams.BaseCoinUnit
-	//params := s.App.StakingKeeper.GetParams(s.Ctx)
-	//params.BondDenom = appparams.BaseCoinUnit
-	//err := s.App.StakingKeeper.SetParams(s.Ctx, params)
-	//s.Require().NoError(err)
-	//bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
-
 	testCases := []struct {
 		name                  string
 		asset                 types.SuperfluidAsset
