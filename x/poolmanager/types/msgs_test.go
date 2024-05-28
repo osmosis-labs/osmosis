@@ -656,3 +656,148 @@ func TestMsgSetDenomPairTakerFee(t *testing.T) {
 		})
 	}
 }
+
+func TestMsgSetTakerFeeShareAgreementForDenom(t *testing.T) {
+	createMsg := func(after func(msg types.MsgSetTakerFeeShareAgreementForDenom) types.MsgSetTakerFeeShareAgreementForDenom) types.MsgSetTakerFeeShareAgreementForDenom {
+		properMsg := types.MsgSetTakerFeeShareAgreementForDenom{
+			Sender:      addr1,
+			Denom:       "uatom",
+			SkimPercent: osmomath.MustNewDecFromStr("0.01"),
+			SkimAddress: addr1,
+		}
+
+		return after(properMsg)
+	}
+
+	msg := createMsg(func(msg types.MsgSetTakerFeeShareAgreementForDenom) types.MsgSetTakerFeeShareAgreementForDenom {
+		// Do nothing
+		return msg
+	})
+
+	require.Equal(t, msg.Route(), types.RouterKey)
+	require.Equal(t, msg.Type(), types.TypeMsgSetTakerFeeShareAgreementForDenomPair)
+	signers := msg.GetSigners()
+	require.Equal(t, len(signers), 1)
+	require.Equal(t, signers[0].String(), addr1)
+
+	tests := map[string]struct {
+		msg         types.MsgSetTakerFeeShareAgreementForDenom
+		expectError bool
+	}{
+		"valid": {
+			msg: createMsg(func(msg types.MsgSetTakerFeeShareAgreementForDenom) types.MsgSetTakerFeeShareAgreementForDenom {
+				// Do nothing
+				return msg
+			}),
+		},
+		"invalid sender": {
+			msg: createMsg(func(msg types.MsgSetTakerFeeShareAgreementForDenom) types.MsgSetTakerFeeShareAgreementForDenom {
+				msg.Sender = ""
+				return msg
+			}),
+			expectError: true,
+		},
+		"invalid skim address": {
+			msg: createMsg(func(msg types.MsgSetTakerFeeShareAgreementForDenom) types.MsgSetTakerFeeShareAgreementForDenom {
+				msg.SkimAddress = ""
+				return msg
+			}),
+			expectError: true,
+		},
+		"invalid skim percent (zero or less)": {
+			msg: createMsg(func(msg types.MsgSetTakerFeeShareAgreementForDenom) types.MsgSetTakerFeeShareAgreementForDenom {
+				msg.SkimPercent = osmomath.MustNewDecFromStr("-0.01")
+				return msg
+			}),
+			expectError: true,
+		},
+		"invalid skim percent (greater than one)": {
+			msg: createMsg(func(msg types.MsgSetTakerFeeShareAgreementForDenom) types.MsgSetTakerFeeShareAgreementForDenom {
+				msg.SkimPercent = osmomath.MustNewDecFromStr("1.01")
+				return msg
+			}),
+			expectError: true,
+		},
+		"invalid denom": {
+			msg: createMsg(func(msg types.MsgSetTakerFeeShareAgreementForDenom) types.MsgSetTakerFeeShareAgreementForDenom {
+				msg.Denom = ""
+				return msg
+			}),
+			expectError: true,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+
+			if tc.expectError {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestMsgSetRegisteredAlloyedPool(t *testing.T) {
+	createMsg := func(after func(msg types.MsgSetRegisteredAlloyedPool) types.MsgSetRegisteredAlloyedPool) types.MsgSetRegisteredAlloyedPool {
+		properMsg := types.MsgSetRegisteredAlloyedPool{
+			Sender: addr1,
+			PoolId: 1,
+		}
+
+		return after(properMsg)
+	}
+
+	msg := createMsg(func(msg types.MsgSetRegisteredAlloyedPool) types.MsgSetRegisteredAlloyedPool {
+		// Do nothing
+		return msg
+	})
+
+	require.Equal(t, msg.Route(), types.RouterKey)
+	require.Equal(t, msg.Type(), types.TypeMsgSetRegisteredAlloyedPool)
+	signers := msg.GetSigners()
+	require.Equal(t, len(signers), 1)
+	require.Equal(t, signers[0].String(), addr1)
+
+	tests := map[string]struct {
+		msg         types.MsgSetRegisteredAlloyedPool
+		expectError bool
+	}{
+		"valid": {
+			msg: createMsg(func(msg types.MsgSetRegisteredAlloyedPool) types.MsgSetRegisteredAlloyedPool {
+				// Do nothing
+				return msg
+			}),
+		},
+		"invalid sender": {
+			msg: createMsg(func(msg types.MsgSetRegisteredAlloyedPool) types.MsgSetRegisteredAlloyedPool {
+				msg.Sender = ""
+				return msg
+			}),
+			expectError: true,
+		},
+		"invalid pool id": {
+			msg: createMsg(func(msg types.MsgSetRegisteredAlloyedPool) types.MsgSetRegisteredAlloyedPool {
+				msg.PoolId = 0
+				return msg
+			}),
+			expectError: true,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+
+			if tc.expectError {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}

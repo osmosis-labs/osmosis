@@ -230,6 +230,10 @@ func (msg MsgSetRegisteredAlloyedPool) ValidateBasic() error {
 		return InvalidSenderError{Sender: msg.Sender}
 	}
 
+	if msg.PoolId <= 0 {
+		return fmt.Errorf("invalid pool id: %d", msg.PoolId)
+	}
+
 	return nil
 }
 
