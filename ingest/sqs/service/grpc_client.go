@@ -138,26 +138,11 @@ func (g *GRPCClient) marshalPools(pools []sqsdomain.PoolI) ([]*prototypes.PoolDa
 			}
 		}
 
-		// if the pool is cosmwasmpool, serialize cw pool model
-		var cwPoolModelBz []byte
-		if pool.GetType() == poolmanagertypes.CosmWasm {
-			cwPoolModel, err := pool.GetCWPoolModel()
-			if err != nil {
-				return nil, err
-			}
-
-			cwPoolModelBz, err = json.Marshal(cwPoolModel)
-			if err != nil {
-				return nil, err
-			}
-		}
-
 		// Append pool data to chunk
 		poolData = append(poolData, &prototypes.PoolData{
-			ChainModel:  chainPoolBz,
-			SqsModel:    sqsPoolBz,
-			TickModel:   tickModelBz,
-			CwPoolModel: cwPoolModelBz,
+			ChainModel: chainPoolBz,
+			SqsModel:   sqsPoolBz,
+			TickModel:  tickModelBz,
 		})
 	}
 	return poolData, nil

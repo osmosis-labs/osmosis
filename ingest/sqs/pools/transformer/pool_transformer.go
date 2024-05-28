@@ -442,9 +442,9 @@ func (pi *poolTransformer) convertPool(
 			Balances:              filteredBalances,
 			PoolDenoms:            denoms,
 			SpreadFactor:          spreadFactor,
+			CWPoolModel:           cwPoolModel,
 		},
-		TickModel:   tickModel,
-		CWPoolModel: cwPoolModel,
+		TickModel: tickModel,
 	}, nil
 }
 
