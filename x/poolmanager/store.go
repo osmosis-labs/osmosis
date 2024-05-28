@@ -169,7 +169,6 @@ func (k Keeper) GetAllTakerFeeShareAccumulators(ctx sdk.Context) []types.TakerFe
 		}
 
 		takerFeeAgreementDenomToCoins[tierDenom] = currentCoins.Add(sdk.NewCoin(takerFeeDenom, accruedValueInt))
-
 	}
 
 	var takerFeeSkimAccumulators []types.TakerFeeSkimAccumulator
