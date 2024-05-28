@@ -55,12 +55,12 @@ var (
 	// for the purposes of having convenient price increments stemming
 	// from tick to price conversion. These increments are in a human
 	// understandeable magnitude only for token1 as a quote.
-	authorizedQuoteDenoms []string = []string{
-		appparams.BaseCoinUnit,
-		ATOMIBCDenom,
-		DAIIBCDenom,
-		USDCIBCDenom,
-	}
+	// authorizedQuoteDenoms []string = []string{
+	// 	appparams.BaseCoinUnit,
+	// 	ATOMIBCDenom,
+	// 	DAIIBCDenom,
+	// 	USDCIBCDenom,
+	// }
 
 	// authorizedUptimes is the list of uptimes that are allowed to be
 	// incentivized. It is a subset of SupportedUptimes (which can be
@@ -124,8 +124,7 @@ func CreateUpgradeHandler(
 		// Although parameters are set on InitGenesis() in RunMigrations(), we reset them here
 		// for visibility of the final configuration.
 		defaultConcentratedLiquidityParams := keepers.ConcentratedLiquidityKeeper.GetParams(ctx)
-		defaultConcentratedLiquidityParams.AuthorizedQuoteDenoms = authorizedQuoteDenoms
-		defaultConcentratedLiquidityParams.AuthorizedQuoteDenoms = authorizedQuoteDenoms
+		// defaultConcentratedLiquidityParams.AuthorizedQuoteDenoms = authorizedQuoteDenoms
 		defaultConcentratedLiquidityParams.AuthorizedUptimes = authorizedUptimes
 		defaultConcentratedLiquidityParams.IsPermissionlessPoolCreationEnabled = IsPermissionlessPoolCreationEnabledCL
 		keepers.ConcentratedLiquidityKeeper.SetParams(ctx, defaultConcentratedLiquidityParams)

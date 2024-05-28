@@ -4,12 +4,10 @@ import (
 	fmt "fmt"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 )
 
 // Parameter store keys.
@@ -31,11 +29,10 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(authorizedTickSpacing []uint64, authorizedSpreadFactors []osmomath.Dec, discountRate osmomath.Dec, authorizedQuoteDenoms []string, authorizedUptimes []time.Duration, isPermissionlessPoolCreationEnabled bool, unrestrictedPoolCreatorWhitelist []string, hookGasLimit uint64) Params {
+func NewParams(authorizedTickSpacing []uint64, authorizedSpreadFactors []osmomath.Dec, discountRate osmomath.Dec, authorizedUptimes []time.Duration, isPermissionlessPoolCreationEnabled bool, unrestrictedPoolCreatorWhitelist []string, hookGasLimit uint64) Params {
 	return Params{
 		AuthorizedTickSpacing:               authorizedTickSpacing,
 		AuthorizedSpreadFactors:             authorizedSpreadFactors,
-		AuthorizedQuoteDenoms:               authorizedQuoteDenoms,
 		BalancerSharesRewardDiscount:        discountRate,
 		AuthorizedUptimes:                   authorizedUptimes,
 		IsPermissionlessPoolCreationEnabled: isPermissionlessPoolCreationEnabled,
@@ -47,14 +44,8 @@ func NewParams(authorizedTickSpacing []uint64, authorizedSpreadFactors []osmomat
 // DefaultParams returns default concentrated-liquidity module parameters.
 func DefaultParams() Params {
 	return Params{
-		AuthorizedTickSpacing:   AuthorizedTickSpacing,
-		AuthorizedSpreadFactors: AuthorizedSpreadFactors,
-		AuthorizedQuoteDenoms: []string{
-			appparams.BaseCoinUnit,
-			"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", // ATOM
-			"ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", // DAI
-			"ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // USDC
-		},
+		AuthorizedTickSpacing:               AuthorizedTickSpacing,
+		AuthorizedSpreadFactors:             AuthorizedSpreadFactors,
 		BalancerSharesRewardDiscount:        DefaultBalancerSharesDiscount,
 		AuthorizedUptimes:                   DefaultAuthorizedUptimes,
 		IsPermissionlessPoolCreationEnabled: false,
@@ -69,9 +60,6 @@ func (p Params) Validate() error {
 		return err
 	}
 	if err := validateSpreadFactors(p.AuthorizedSpreadFactors); err != nil {
-		return err
-	}
-	if err := validateAuthorizedQuoteDenoms(p.AuthorizedQuoteDenoms); err != nil {
 		return err
 	}
 	if err := validateIsPermissionLessPoolCreationEnabled(p.IsPermissionlessPoolCreationEnabled); err != nil {
@@ -97,7 +85,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyAuthorizedTickSpacing, &p.AuthorizedTickSpacing, validateTicks),
 		paramtypes.NewParamSetPair(KeyAuthorizedSpreadFactors, &p.AuthorizedSpreadFactors, validateSpreadFactors),
-		paramtypes.NewParamSetPair(KeyAuthorizedQuoteDenoms, &p.AuthorizedQuoteDenoms, validateAuthorizedQuoteDenoms),
 		paramtypes.NewParamSetPair(KeyIsPermisionlessPoolCreationEnabled, &p.IsPermissionlessPoolCreationEnabled, validateIsPermissionLessPoolCreationEnabled),
 		paramtypes.NewParamSetPair(KeyDiscountRate, &p.BalancerSharesRewardDiscount, validateBalancerSharesDiscount),
 		paramtypes.NewParamSetPair(KeyAuthorizedUptimes, &p.AuthorizedUptimes, validateAuthorizedUptimes),
@@ -156,35 +143,6 @@ func validateSpreadFactors(i interface{}) error {
 	return nil
 }
 
-// validateAuthorizedQuoteDenoms validates a slice of authorized quote denoms.
-//
-// Parameters:
-// - i: The parameter to validate.
-//
-// Returns:
-// - An error if given type is not string slice.
-// - An error if given slice is empty.
-// - An error if any of the denoms are invalid.
-func validateAuthorizedQuoteDenoms(i interface{}) error {
-	authorizedQuoteDenoms, ok := i.([]string)
-
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if len(authorizedQuoteDenoms) == 0 {
-		return fmt.Errorf("authorized quote denoms cannot be empty")
-	}
-
-	for _, denom := range authorizedQuoteDenoms {
-		if err := sdk.ValidateDenom(denom); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // validateIsPermissionLessPoolCreationEnabled validates that the given parameter is a bool.
 func validateIsPermissionLessPoolCreationEnabled(i interface{}) error {
 	_, ok := i.(bool)
@@ -202,6 +160,10 @@ func validateBalancerSharesDiscount(i interface{}) error {
 
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if balancerSharesRewardDiscount.IsNil() {
+		return fmt.Errorf("balancer shares reward discount cannot be nil")
 	}
 
 	// Ensure that the passed in discount rate is between 0 and 1.
