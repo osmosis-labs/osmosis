@@ -46,7 +46,7 @@ require (
 	github.com/osmosis-labs/sqs/sqsdomain v0.18.4-0.20240525150306-5031af5f1640
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
-	github.com/skip-mev/block-sdk/v2 v2.1.2
+	github.com/skip-mev/block-sdk/v2 v2.1.3
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
