@@ -52,10 +52,6 @@ func (m MsgSuperfluidDelegate) ValidateBasic() error {
 	return nil
 }
 
-func (m MsgSuperfluidDelegate) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
-}
-
 func (m MsgSuperfluidDelegate) GetSigners() []sdk.AccAddress {
 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
 	return []sdk.AccAddress{sender}
@@ -81,10 +77,6 @@ func (m MsgSuperfluidUndelegate) ValidateBasic() error {
 		return fmt.Errorf("lock id should be positive: %d < 0", m.LockId)
 	}
 	return nil
-}
-
-func (m MsgSuperfluidUndelegate) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 func (m MsgSuperfluidUndelegate) GetSigners() []sdk.AccAddress {
@@ -117,9 +109,6 @@ func (m MsgSuperfluidUndelegate) GetSigners() []sdk.AccAddress {
 // 	}
 // 	return nil
 // }
-// func (m MsgSuperfluidRedelegate) GetSignBytes() []byte {
-// 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
-// }
 // func (m MsgSuperfluidRedelegate) GetSigners() []sdk.AccAddress {
 // 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
 // 	return []sdk.AccAddress{sender}
@@ -148,10 +137,6 @@ func (m MsgSuperfluidUnbondLock) ValidateBasic() error {
 		return fmt.Errorf("lockID should be set")
 	}
 	return nil
-}
-
-func (m MsgSuperfluidUnbondLock) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 func (m MsgSuperfluidUnbondLock) GetSigners() []sdk.AccAddress {
@@ -190,10 +175,6 @@ func (m MsgSuperfluidUndelegateAndUnbondLock) ValidateBasic() error {
 	return nil
 }
 
-func (m MsgSuperfluidUndelegateAndUnbondLock) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
-}
-
 func (m MsgSuperfluidUndelegateAndUnbondLock) GetSigners() []sdk.AccAddress {
 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
 	return []sdk.AccAddress{sender}
@@ -227,10 +208,6 @@ func (m MsgLockAndSuperfluidDelegate) ValidateBasic() error {
 	return nil
 }
 
-func (m MsgLockAndSuperfluidDelegate) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
-}
-
 func (m MsgLockAndSuperfluidDelegate) GetSigners() []sdk.AccAddress {
 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
 	return []sdk.AccAddress{sender}
@@ -255,10 +232,6 @@ func (msg MsgUnPoolWhitelistedPool) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-func (msg MsgUnPoolWhitelistedPool) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgUnPoolWhitelistedPool) GetSigners() []sdk.AccAddress {
@@ -293,10 +266,6 @@ func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) ValidateBasi
 		return fmt.Errorf("Invalid shares to migrate (%s)", msg.SharesToMigrate)
 	}
 	return nil
-}
-
-func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) GetSigners() []sdk.AccAddress {
@@ -344,10 +313,6 @@ func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) ValidateBasic() error
 	return nil
 }
 
-func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -382,10 +347,6 @@ func (msg MsgAddToConcentratedLiquiditySuperfluidPosition) ValidateBasic() error
 	}
 
 	return nil
-}
-
-func (msg MsgAddToConcentratedLiquiditySuperfluidPosition) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgAddToConcentratedLiquiditySuperfluidPosition) GetSigners() []sdk.AccAddress {
@@ -425,11 +386,49 @@ func (msg MsgUnbondConvertAndStake) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgUnbondConvertAndStake) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+func (msg MsgUnbondConvertAndStake) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
 }
 
-func (msg MsgUnbondConvertAndStake) GetSigners() []sdk.AccAddress {
+var _ sdk.Msg = &MsgSetDenomRiskFactor{}
+
+func (msg *MsgSetDenomRiskFactor) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return fmt.Errorf("invalid sender address (%s)", err)
+	}
+	if len(msg.Denom) == 0 {
+		return fmt.Errorf("denom cannot be empty")
+	}
+	return nil
+}
+
+func (msg *MsgSetDenomRiskFactor) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgUnsetDenomRiskFactor{}
+
+func (msg *MsgUnsetDenomRiskFactor) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return fmt.Errorf("invalid sender address (%s)", err)
+	}
+	if len(msg.Denom) == 0 {
+		return fmt.Errorf("denom cannot be empty")
+	}
+	return nil
+}
+
+func (msg *MsgUnsetDenomRiskFactor) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)

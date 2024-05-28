@@ -231,7 +231,7 @@ func (s *KeeperTestSuite) TestDistribute() {
 			name:            "Non base denom, sufficient rewards to distribute all users",
 			users:           []userLocks{oneLockupUser, twoLockupUser},
 			gauges:          []perpGaugeDesc{defaultGaugeNonBaseDenom, doubleLengthGaugeNonBaseDenom},
-			poolCoins:       sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(10000)), sdk.NewCoin(nonBaseDenom, sdk.NewInt(10000))), // 1 bar equals 1 defaultRewardDenom
+			poolCoins:       sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, osmomath.NewInt(10000)), sdk.NewCoin(nonBaseDenom, osmomath.NewInt(10000))), // 1 bar equals 1 defaultRewardDenom
 			expectedRewards: []sdk.Coins{oneKRewardCoinsNonBaseDenom, fiveKRewardCoinsNonBaseDenom},
 		},
 		// Non base denom rewards test, insufficient rewards to distribute for some.
@@ -244,7 +244,7 @@ func (s *KeeperTestSuite) TestDistribute() {
 			name:            "Non base denom, insufficient rewards to distribute to user 1, sufficient rewards to distribute to user 2",
 			users:           []userLocks{oneLockupUser, twoLockupUserDoubleAmt},
 			gauges:          []perpGaugeDesc{defaultGaugeNonBaseDenom, doubleLengthGaugeNonBaseDenom},
-			poolCoins:       sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(10000)), sdk.NewCoin(nonBaseDenom, sdk.NewInt(12000))), // min amt for distribution is now equal to 1090bar
+			poolCoins:       sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, osmomath.NewInt(10000)), sdk.NewCoin(nonBaseDenom, osmomath.NewInt(12000))), // min amt for distribution is now equal to 1090bar
 			expectedRewards: []sdk.Coins{noRewardCoins, fiveKFourHundredRewardCoinsNonBaseDenom},
 		},
 		// Non base denom rewards test, insufficient rewards to distribute all locks
@@ -255,7 +255,7 @@ func (s *KeeperTestSuite) TestDistribute() {
 			name:            "Non base denom, insufficient rewards to distribute to all users",
 			users:           []userLocks{oneLockupUser, twoLockupUserDoubleAmt},
 			gauges:          []perpGaugeDesc{defaultGaugeNonBaseDenom, doubleLengthGaugeNonBaseDenom},
-			poolCoins:       sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(10000)), sdk.NewCoin(nonBaseDenom, sdk.NewInt(50000))), // min amt for distribution is now equal to 4545bar
+			poolCoins:       sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, osmomath.NewInt(10000)), sdk.NewCoin(nonBaseDenom, osmomath.NewInt(50000))), // min amt for distribution is now equal to 4545bar
 			expectedRewards: []sdk.Coins{noRewardCoins, noRewardCoins},
 		},
 		// No pool exists for the first gauge, so only the second gauge should distribute rewards.
@@ -274,7 +274,7 @@ func (s *KeeperTestSuite) TestDistribute() {
 		// set the base denom and min value for distribution
 		err := s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, defaultRewardDenom)
 		s.Require().NoError(err)
-		s.App.IncentivesKeeper.SetParam(s.Ctx, types.KeyMinValueForDistr, sdk.NewCoin(defaultRewardDenom, sdk.NewInt(1000)))
+		s.App.IncentivesKeeper.SetParam(s.Ctx, types.KeyMinValueForDistr, sdk.NewCoin(defaultRewardDenom, osmomath.NewInt(1000)))
 		baseDenom, err := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
 		s.Require().NoError(err)
 
@@ -530,7 +530,7 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 		// expected
 		expectErr                              bool
 		expectedDistributions                  sdk.Coins
-		expectedRemainingAmountIncentiveRecord []sdk.Dec
+		expectedRemainingAmountIncentiveRecord []osmomath.Dec
 	}
 
 	defaultTest := test{
@@ -573,7 +573,7 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 		tempDistributions := make(sdk.Coins, len(tc.expectedDistributions))
 		copy(tempDistributions, tc.expectedDistributions)
 
-		tempRemainingAmountIncentiveRecord := make([]sdk.Dec, len(tc.expectedRemainingAmountIncentiveRecord))
+		tempRemainingAmountIncentiveRecord := make([]osmomath.Dec, len(tc.expectedRemainingAmountIncentiveRecord))
 		copy(tempRemainingAmountIncentiveRecord, tc.expectedRemainingAmountIncentiveRecord)
 
 		for i := range tc.expectedRemainingAmountIncentiveRecord {
@@ -811,7 +811,7 @@ func (s *KeeperTestSuite) TestSyntheticDistribute() {
 			name:            "Non base denom, sufficient rewards to distribute all users",
 			users:           []userLocks{oneSyntheticLockupUser, twoSyntheticLockupUser},
 			gauges:          []perpGaugeDesc{defaultGaugeNonBaseDenom, doubleLengthGaugeNonBaseDenom},
-			poolCoins:       sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(10000)), sdk.NewCoin(nonBaseDenom, sdk.NewInt(10000))), // 1 bar equals 1 defaultRewardDenom
+			poolCoins:       sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, osmomath.NewInt(10000)), sdk.NewCoin(nonBaseDenom, osmomath.NewInt(10000))), // 1 bar equals 1 defaultRewardDenom
 			expectedRewards: []sdk.Coins{oneKRewardCoinsNonBaseDenom, fiveKRewardCoinsNonBaseDenom},
 		},
 		// Non base denom rewards test, insufficient rewards to distribute for some.
@@ -824,7 +824,7 @@ func (s *KeeperTestSuite) TestSyntheticDistribute() {
 			name:            "Non base denom, insufficient rewards to distribute to user 1, sufficient rewards to distribute to user 2",
 			users:           []userLocks{oneSyntheticLockupUser, twoSyntheticLockupUserDoubleAmt},
 			gauges:          []perpGaugeDesc{defaultGaugeNonBaseDenom, doubleLengthGaugeNonBaseDenom},
-			poolCoins:       sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(10000)), sdk.NewCoin(nonBaseDenom, sdk.NewInt(12000))), // min amt for distribution is now equal to 1090bar
+			poolCoins:       sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, osmomath.NewInt(10000)), sdk.NewCoin(nonBaseDenom, osmomath.NewInt(12000))), // min amt for distribution is now equal to 1090bar
 			expectedRewards: []sdk.Coins{noRewardCoins, fiveKFourHundredRewardCoinsNonBaseDenom},
 		},
 		// Non base denom rewards test, insufficient rewards to distribute all locks
@@ -835,7 +835,7 @@ func (s *KeeperTestSuite) TestSyntheticDistribute() {
 			name:            "Non base denom, insufficient rewards to distribute to all users",
 			users:           []userLocks{oneSyntheticLockupUser, twoSyntheticLockupUserDoubleAmt},
 			gauges:          []perpGaugeDesc{defaultGaugeNonBaseDenom, doubleLengthGaugeNonBaseDenom},
-			poolCoins:       sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(10000)), sdk.NewCoin(nonBaseDenom, sdk.NewInt(50000))), // min amt for distribution is now equal to 4545bar
+			poolCoins:       sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, osmomath.NewInt(10000)), sdk.NewCoin(nonBaseDenom, osmomath.NewInt(50000))), // min amt for distribution is now equal to 4545bar
 			expectedRewards: []sdk.Coins{noRewardCoins, noRewardCoins},
 		},
 		// No pool exists for the first gauge, so only the second gauge should distribute rewards.
@@ -854,7 +854,7 @@ func (s *KeeperTestSuite) TestSyntheticDistribute() {
 		// set the base denom and min value for distribution
 		err := s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, defaultRewardDenom)
 		s.Require().NoError(err)
-		s.App.IncentivesKeeper.SetParam(s.Ctx, types.KeyMinValueForDistr, sdk.NewCoin(defaultRewardDenom, sdk.NewInt(1000)))
+		s.App.IncentivesKeeper.SetParam(s.Ctx, types.KeyMinValueForDistr, sdk.NewCoin(defaultRewardDenom, osmomath.NewInt(1000)))
 		baseDenom, err := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
 		s.Require().NoError(err)
 
@@ -1971,7 +1971,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 		// Double the volume configuration in poolmanager because we want the current volume to be
 		// updated relative to the existing values in gauge record state.
 		// The current volume is computed = poolmanager cumulative volume - gauge record cumulative volume.
-		two = sdk.NewInt(2)
+		two = osmomath.NewInt(2)
 
 		// Volume pre-set configurations.
 		balancerOnlyVolumeConfig  = []osmomath.Int{singleRecordGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight.Mul(two), osmomath.ZeroInt()}
@@ -2434,7 +2434,9 @@ func (s *KeeperTestSuite) overwriteVolumes(poolIds []uint64, updatedPoolVolumes 
 	// Update cumulative volumes for pools
 	for i, updatedVolume := range updatedPoolVolumes {
 		// Note that even though we deal with volumes as ints, they are tracked as coins to allow for tracking of more denoms in the future.
-		s.App.PoolManagerKeeper.SetVolume(s.Ctx, poolIds[i], sdk.NewCoins(sdk.NewCoin(s.App.StakingKeeper.BondDenom(s.Ctx), updatedVolume)))
+		bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
+		s.Require().NoError(err)
+		s.App.PoolManagerKeeper.SetVolume(s.Ctx, poolIds[i], sdk.NewCoins(sdk.NewCoin(bondDenom, updatedVolume)))
 	}
 }
 

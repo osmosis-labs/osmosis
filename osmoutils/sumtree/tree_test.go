@@ -12,9 +12,9 @@ import (
 
 	"github.com/cosmos/iavl"
 
-	dbm "github.com/cometbft/cometbft-db"
+	dbm "github.com/cosmos/cosmos-db"
 
-	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
+	iavlstore "cosmossdk.io/store/iavl"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"

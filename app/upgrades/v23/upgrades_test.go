@@ -6,10 +6,12 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/x/upgrade"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
-	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
@@ -23,6 +25,7 @@ const (
 )
 
 type UpgradeTestSuite struct {
+	preModule appmodule.HasPreBlocker
 	apptesting.KeeperTestHelper
 }
 
@@ -30,8 +33,13 @@ func TestUpgradeTestSuite(t *testing.T) {
 	suite.Run(t, new(UpgradeTestSuite))
 }
 
+func (s *UpgradeTestSuite) PreBlockerSetup() {
+	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
+}
+
 func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Setup()
+	s.PreBlockerSetup()
 
 	// Set the migration pool ID threshold to far away to simulate pre-migration state.
 	s.App.ConcentratedLiquidityKeeper.SetIncentivePoolIDMigrationThreshold(s.Ctx, 1000)
@@ -63,7 +71,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	lastPoolPositionID := s.App.ConcentratedLiquidityKeeper.GetNextPositionId(s.Ctx) - 1
 
 	// Create incentive record for last pool
-	incentiveCoin := sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(1000000))
+	incentiveCoin := sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1000000))
 	_, err := s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, lastPoolID, s.TestAccs[0], incentiveCoin, osmomath.OneDec(), s.Ctx.BlockTime(), concentratedtypes.DefaultAuthorizedUptimes[0])
 	s.Require().NoError(err)
 
@@ -94,7 +102,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
-		s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
+		_, err := s.preModule.PreBlock(s.Ctx)
+		s.Require().NoError(err)
 	})
 
 	// Migrated pool: ensure that the claimable incentives are the same before and after migration
@@ -116,8 +125,8 @@ func dummyUpgrade(s *UpgradeTestSuite) {
 	plan := upgradetypes.Plan{Name: "v23", Height: v23UpgradeHeight}
 	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
 	s.Require().NoError(err)
-	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
-	s.Require().True(exists)
+	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+	s.Require().NoError(err)
 
-	s.Ctx = s.Ctx.WithBlockHeight(v23UpgradeHeight)
+	s.Ctx = s.Ctx.WithHeaderInfo(header.Info{Height: v23UpgradeHeight, Time: s.Ctx.BlockTime().Add(time.Second)}).WithBlockHeight(v23UpgradeHeight)
 }

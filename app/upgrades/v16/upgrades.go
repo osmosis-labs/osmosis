@@ -1,12 +1,13 @@
 package v16
 
 import (
+	"context"
 	"fmt"
 	"time"
 
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/keepers"
@@ -74,7 +75,8 @@ func CreateUpgradeHandler(
 	bpm upgrades.BaseAppParamManager,
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(context context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		ctx := sdk.UnwrapSDKContext(context)
 		// Run migrations before applying any other state changes.
 		// NOTE: DO NOT PUT ANY STATE CHANGES BEFORE RunMigrations().
 		migrations, err := mm.RunMigrations(ctx, configurator, fromVM)
@@ -163,7 +165,10 @@ func CreateUpgradeHandler(
 		// Because we are doing a direct send from the community pool, we need to manually change the fee pool to reflect the change.
 
 		// Remove coins we used from the community pool to make the CL position
-		feePool := keepers.DistrKeeper.GetFeePool(ctx)
+		feePool, err := keepers.DistrKeeper.FeePool.Get(ctx)
+		if err != nil {
+			return nil, err
+		}
 		fulllRangeOsmoDaiCoinsUsed := sdk.NewCoins(sdk.NewCoin(DesiredDenom0, positionData.Amount0), sdk.NewCoin(DAIIBCDenom, positionData.Amount1))
 		newPool, negative := feePool.CommunityPool.SafeSub(sdk.NewDecCoinsFromCoins(fulllRangeOsmoDaiCoinsUsed...))
 		if negative {
@@ -172,7 +177,10 @@ func CreateUpgradeHandler(
 
 		// Update and set the new fee pool
 		feePool.CommunityPool = newPool
-		keepers.DistrKeeper.SetFeePool(ctx, feePool)
+		err = keepers.DistrKeeper.FeePool.Set(ctx, feePool)
+		if err != nil {
+			return nil, err
+		}
 
 		// Add the cl pool's full range denom as an authorized superfluid asset.
 		superfluidAsset := superfluidtypes.SuperfluidAsset{

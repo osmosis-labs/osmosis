@@ -9,8 +9,8 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmtypes "github.com/cometbft/cometbft/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"golang.org/x/exp/maps"
 
@@ -82,34 +82,34 @@ func (mv mockValidators) randomProposer(r *rand.Rand) crypto.PubKey {
 	return pk
 }
 
-func (mv mockValidators) toTmProtoValidators(proposerPubKey crypto.PubKey) (tmtypes.ValidatorSet, error) {
-	var tmProtoValSet tmproto.ValidatorSet
-	var tmTypesValSet *tmtypes.ValidatorSet
+func (mv mockValidators) toTmProtoValidators(proposerPubKey crypto.PubKey) (cmtypes.ValidatorSet, error) {
+	var tmProtoValSet cmtproto.ValidatorSet
+	var tmTypesValSet *cmtypes.ValidatorSet
 	// iterate through current validators and add them to the TM ValidatorSet struct
 	for _, key := range mv.getKeys() {
-		var validator tmproto.Validator
+		var validator cmtproto.Validator
 		mapVal := mv[key]
 		validator.PubKey = mapVal.val.PubKey
 		currentPubKey, err := cryptoenc.PubKeyFromProto(mapVal.val.PubKey)
 		if err != nil {
-			return *tmTypesValSet, err
+			return cmtypes.ValidatorSet{}, err
 		}
 		validator.Address = currentPubKey.Address()
 		tmProtoValSet.Validators = append(tmProtoValSet.Validators, &validator)
 	}
 
 	// set the proposer chosen earlier as the validator set block proposer
-	var proposerVal tmtypes.Validator
+	var proposerVal cmtypes.Validator
 	proposerVal.PubKey = proposerPubKey
 	proposerVal.Address = proposerPubKey.Address()
 	blockProposer, err := proposerVal.ToProto()
 	if err != nil {
-		return *tmTypesValSet, err
+		return cmtypes.ValidatorSet{}, err
 	}
 	tmProtoValSet.Proposer = blockProposer
 
 	// create a validatorSet type from the tmproto created earlier
-	tmTypesValSet, err = tmtypes.ValidatorSetFromProto(&tmProtoValSet)
+	tmTypesValSet, err = cmtypes.ValidatorSetFromProto(&tmProtoValSet)
 	return *tmTypesValSet, err
 }
 
@@ -167,38 +167,30 @@ func updateValidators(
 	return nextSet, nil
 }
 
-// RandomRequestBeginBlock generates a list of signing validators according to
-// the provided list of validators, signing fraction, and evidence fraction
-func RandomRequestBeginBlock(r *rand.Rand, params Params,
-	validators mockValidators, pastTimes []time.Time,
+func RandomRequestFinalizeBlock(
+	r *rand.Rand,
+	params Params,
+	validators mockValidators,
+	pastTimes []time.Time,
 	pastVoteInfos [][]abci.VoteInfo,
-	event func(route, op, evResult string), header tmproto.Header,
-) abci.RequestBeginBlock {
+	event func(route, op, evResult string),
+	blockHeight int64,
+	time time.Time,
+	proposer []byte,
+) *abci.RequestFinalizeBlock {
 	if len(validators) == 0 {
-		return abci.RequestBeginBlock{
-			Header: header,
+		return &abci.RequestFinalizeBlock{
+			Height:          blockHeight,
+			Time:            time,
+			ProposerAddress: proposer,
 		}
 	}
 
-	voteInfos := randomVoteInfos(r, params, validators)
-	evidence := randomDoubleSignEvidence(r, params, pastTimes, pastVoteInfos, event, header, voteInfos)
-
-	return abci.RequestBeginBlock{
-		Header: header,
-		LastCommitInfo: abci.CommitInfo{
-			Votes: voteInfos,
-		},
-		ByzantineValidators: evidence,
-	}
-}
-
-func randomVoteInfos(r *rand.Rand, simParams Params, validators mockValidators,
-) []abci.VoteInfo {
 	voteInfos := make([]abci.VoteInfo, len(validators))
 
 	for i, key := range validators.getKeys() {
 		mVal := validators[key]
-		mVal.livenessState = simParams.LivenessTransitionMatrix().NextState(r, mVal.livenessState)
+		mVal.livenessState = params.LivenessTransitionMatrix().NextState(r, mVal.livenessState)
 		signed := true
 
 		if mVal.livenessState == 1 {
@@ -211,7 +203,11 @@ func randomVoteInfos(r *rand.Rand, simParams Params, validators mockValidators,
 			signed = false
 		}
 
-		// TODO: Do we want to log any data to statsdb here?
+		if signed {
+			event("begin_block", "signing", "signed")
+		} else {
+			event("begin_block", "signing", "missed")
+		}
 
 		pubkey, err := cryptoenc.PubKeyFromProto(mVal.val.PubKey)
 		if err != nil {
@@ -223,41 +219,33 @@ func randomVoteInfos(r *rand.Rand, simParams Params, validators mockValidators,
 				Address: pubkey.Address(),
 				Power:   mVal.val.Power,
 			},
-			SignedLastBlock: signed,
+			BlockIdFlag: cmtproto.BlockIDFlagCommit,
 		}
 	}
 
-	return voteInfos
-}
-
-func randomDoubleSignEvidence(r *rand.Rand, params Params, pastTimes []time.Time,
-	pastVoteInfos [][]abci.VoteInfo,
-	event func(route, op, evResult string), header tmproto.Header, voteInfos []abci.VoteInfo,
-) []abci.Misbehavior {
-	evidence := []abci.Misbehavior{}
-	// return if no past times or if only 10 validators remaining in the active set
+	// return if no past times
 	if len(pastTimes) == 0 {
-		return evidence
-	}
-	var n float64 = 1
-	// TODO: Change this to be markov based & clean this up
-	// Right now we incrementally lower the evidence fraction to make
-	// it less likely to jail many validators in one run.
-	// We should also add some method of including new validators into the set
-	// instead of being stuck with the ones we start with during initialization.
-	for r.Float64() < (params.EvidenceFraction() / n) {
-		// if only one validator remaining, don't jail any more validators
-		if len(voteInfos)-int(n) <= 0 {
-			return nil
+		return &abci.RequestFinalizeBlock{
+			Height:          blockHeight,
+			Time:            time,
+			ProposerAddress: proposer,
+			DecidedLastCommit: abci.CommitInfo{
+				Votes: voteInfos,
+			},
 		}
-		height := header.Height
-		time := header.Time
-		vals := voteInfos
+	}
 
-		if r.Float64() < params.PastEvidenceFraction() && header.Height > 1 {
-			height = int64(r.Intn(int(header.Height)-1)) + 1 // Tendermint starts at height 1
+	// TODO: Determine capacity before allocation
+	evidence := make([]abci.Misbehavior, 0)
+
+	for r.Float64() < params.EvidenceFraction() {
+		vals := voteInfos
+		height := blockHeight
+		misbehaviorTime := time
+		if r.Float64() < params.PastEvidenceFraction() && height > 1 {
+			height = int64(r.Intn(int(height)-1)) + 1 // CometBFT starts at height 1
 			// array indices offset by one
-			time = pastTimes[height-1]
+			misbehaviorTime = pastTimes[height-1]
 			vals = pastVoteInfos[height-1]
 		}
 
@@ -273,13 +261,118 @@ func randomDoubleSignEvidence(r *rand.Rand, params Params, pastTimes []time.Time
 				Type:             abci.MisbehaviorType_DUPLICATE_VOTE,
 				Validator:        validator,
 				Height:           height,
-				Time:             time,
+				Time:             misbehaviorTime,
 				TotalVotingPower: totalVotingPower,
 			},
 		)
 
 		event("begin_block", "evidence", "ok")
-		n++
 	}
-	return evidence
+
+	return &abci.RequestFinalizeBlock{
+		Height:          blockHeight,
+		Time:            time,
+		ProposerAddress: proposer,
+		DecidedLastCommit: abci.CommitInfo{
+			Votes: voteInfos,
+		},
+		Misbehavior: evidence,
+	}
 }
+
+// func randomVoteInfos(r *rand.Rand, simParams Params, validators mockValidators,
+// ) []abci.VoteInfo {
+// 	voteInfos := make([]abci.VoteInfo, len(validators))
+
+// 	for i, key := range validators.getKeys() {
+// 		mVal := validators[key]
+// 		mVal.livenessState = simParams.LivenessTransitionMatrix().NextState(r, mVal.livenessState)
+// 		signed := true
+
+// 		if mVal.livenessState == 1 {
+// 			// spotty connection, 50% probability of success
+// 			// See https://github.com/golang/go/issues/23804#issuecomment-365370418
+// 			// for reasoning behind computing like this
+// 			signed = r.Int63()%2 == 0
+// 		} else if mVal.livenessState == 2 {
+// 			// offline
+// 			signed = false
+// 		}
+
+// 		// TODO: Do we want to log any data to statsdb here?
+
+// 		pubkey, err := cryptoenc.PubKeyFromProto(mVal.val.PubKey)
+// 		if err != nil {
+// 			panic(err)
+// 		}
+
+// 		singedFlag := cmtproto.BlockIDFlagCommit
+// 		if !signed {
+// 			singedFlag = cmtproto.BlockIDFlagNil
+// 		}
+
+// 		voteInfos[i] = abci.VoteInfo{
+// 			Validator: abci.Validator{
+// 				Address: pubkey.Address(),
+// 				Power:   mVal.val.Power,
+// 			},
+// 			BlockIdFlag: singedFlag,
+// 		}
+// 	}
+
+// 	return voteInfos
+// }
+
+// func randomDoubleSignEvidence(r *rand.Rand, params Params, pastTimes []time.Time,
+// 	pastVoteInfos [][]abci.VoteInfo,
+// 	event func(route, op, evResult string), header cmtproto.Header, voteInfos []abci.VoteInfo,
+// ) []abci.Misbehavior {
+// 	evidence := []abci.Misbehavior{}
+// 	// return if no past times or if only 10 validators remaining in the active set
+// 	if len(pastTimes) == 0 {
+// 		return evidence
+// 	}
+// 	var n float64 = 1
+// 	// TODO: Change this to be markov based & clean this up
+// 	// Right now we incrementally lower the evidence fraction to make
+// 	// it less likely to jail many validators in one run.
+// 	// We should also add some method of including new validators into the set
+// 	// instead of being stuck with the ones we start with during initialization.
+// 	for r.Float64() < (params.EvidenceFraction() / n) {
+// 		// if only one validator remaining, don't jail any more validators
+// 		if len(voteInfos)-int(n) <= 0 {
+// 			return nil
+// 		}
+// 		height := header.Height
+// 		time := header.Time
+// 		vals := voteInfos
+
+// 		if r.Float64() < params.PastEvidenceFraction() && header.Height > 1 {
+// 			height = int64(r.Intn(int(header.Height)-1)) + 1 // Tendermint starts at height 1
+// 			// array indices offset by one
+// 			time = pastTimes[height-1]
+// 			vals = pastVoteInfos[height-1]
+// 		}
+
+// 		validator := vals[r.Intn(len(vals))].Validator
+
+// 		var totalVotingPower int64
+// 		for _, val := range vals {
+// 			totalVotingPower += val.Validator.Power
+// 		}
+
+// 		evidence = append(evidence,
+// 			abci.Misbehavior{
+// 				Type:             abci.MisbehaviorType_DUPLICATE_VOTE,
+// 				Validator:        validator,
+// 				Height:           height,
+// 				Time:             time,
+// 				TotalVotingPower: totalVotingPower,
+// 			},
+// 		)
+
+// 		event("begin_block", "evidence", "ok")
+// 		n++
+// 	}
+// 	return evidence
+// }

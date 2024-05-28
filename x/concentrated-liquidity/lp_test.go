@@ -647,7 +647,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// is nobody to forfeit to
 			updatedPool, err := concentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
 			s.Require().NoError(err)
-			if updatedPool.GetLiquidity().LTE(sdk.OneDec()) {
+			if updatedPool.GetLiquidity().LTE(osmomath.OneDec()) {
 				expectedIncentivesClaimed = expectedFullIncentivesFromAllUptimes
 			}
 
@@ -1348,10 +1348,10 @@ func mergeConfigs(dst *lpTest, overwrite *lpTest) {
 		if !overwrite.joinTime.IsZero() {
 			dst.joinTime = overwrite.joinTime
 		}
-		if !overwrite.expectedSpreadRewardGrowthOutsideLower.IsEqual(sdk.DecCoins{}) {
+		if !overwrite.expectedSpreadRewardGrowthOutsideLower.Equal(sdk.DecCoins{}) {
 			dst.expectedSpreadRewardGrowthOutsideLower = overwrite.expectedSpreadRewardGrowthOutsideLower
 		}
-		if !overwrite.expectedSpreadRewardGrowthOutsideUpper.IsEqual(sdk.DecCoins{}) {
+		if !overwrite.expectedSpreadRewardGrowthOutsideUpper.Equal(sdk.DecCoins{}) {
 			dst.expectedSpreadRewardGrowthOutsideUpper = overwrite.expectedSpreadRewardGrowthOutsideUpper
 		}
 		if overwrite.positionId != 0 {

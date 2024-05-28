@@ -25,19 +25,19 @@ func (s *KeeperTestSuite) TestAdminMsgs() {
 	s.Require().Equal(s.TestAccs[0].String(), queryRes.AuthorityMetadata.Admin)
 
 	// Test minting to admins own account
-	_, err = s.msgServer.Mint(sdk.WrapSDKContext(s.Ctx), types.NewMsgMint(s.TestAccs[0].String(), sdk.NewInt64Coin(s.defaultDenom, 10)))
+	_, err = s.msgServer.Mint(s.Ctx, types.NewMsgMint(s.TestAccs[0].String(), sdk.NewInt64Coin(s.defaultDenom, 10)))
 	addr0bal += 10
 	s.Require().NoError(err)
 	s.Require().True(bankKeeper.GetBalance(s.Ctx, s.TestAccs[0], s.defaultDenom).Amount.Int64() == addr0bal, bankKeeper.GetBalance(s.Ctx, s.TestAccs[0], s.defaultDenom))
 
 	// Test minting to a different account
-	_, err = s.msgServer.Mint(sdk.WrapSDKContext(s.Ctx), types.NewMsgMintTo(s.TestAccs[0].String(), sdk.NewInt64Coin(s.defaultDenom, 10), s.TestAccs[1].String()))
+	_, err = s.msgServer.Mint(s.Ctx, types.NewMsgMintTo(s.TestAccs[0].String(), sdk.NewInt64Coin(s.defaultDenom, 10), s.TestAccs[1].String()))
 	addr1bal += 10
 	s.Require().NoError(err)
 	s.Require().True(s.App.BankKeeper.GetBalance(s.Ctx, s.TestAccs[1], s.defaultDenom).Amount.Int64() == addr1bal, s.App.BankKeeper.GetBalance(s.Ctx, s.TestAccs[1], s.defaultDenom))
 
 	// Test force transferring
-	_, err = s.msgServer.ForceTransfer(sdk.WrapSDKContext(s.Ctx), types.NewMsgForceTransfer(s.TestAccs[0].String(), sdk.NewInt64Coin(s.defaultDenom, 5), s.TestAccs[1].String(), s.TestAccs[0].String()))
+	_, err = s.msgServer.ForceTransfer(s.Ctx, types.NewMsgForceTransfer(s.TestAccs[0].String(), sdk.NewInt64Coin(s.defaultDenom, 5), s.TestAccs[1].String(), s.TestAccs[0].String()))
 	addr1bal -= 5
 	addr0bal += 5
 	s.Require().NoError(err)
@@ -45,12 +45,12 @@ func (s *KeeperTestSuite) TestAdminMsgs() {
 	s.Require().True(s.App.BankKeeper.GetBalance(s.Ctx, s.TestAccs[1], s.defaultDenom).Amount.Int64() == addr1bal, s.App.BankKeeper.GetBalance(s.Ctx, s.TestAccs[1], s.defaultDenom))
 
 	// Test burning from own account
-	_, err = s.msgServer.Burn(sdk.WrapSDKContext(s.Ctx), types.NewMsgBurn(s.TestAccs[0].String(), sdk.NewInt64Coin(s.defaultDenom, 5)))
+	_, err = s.msgServer.Burn(s.Ctx, types.NewMsgBurn(s.TestAccs[0].String(), sdk.NewInt64Coin(s.defaultDenom, 5)))
 	s.Require().NoError(err)
 	s.Require().True(bankKeeper.GetBalance(s.Ctx, s.TestAccs[1], s.defaultDenom).Amount.Int64() == addr1bal)
 
 	// Test Change Admin
-	_, err = s.msgServer.ChangeAdmin(sdk.WrapSDKContext(s.Ctx), types.NewMsgChangeAdmin(s.TestAccs[0].String(), s.defaultDenom, s.TestAccs[1].String()))
+	_, err = s.msgServer.ChangeAdmin(s.Ctx, types.NewMsgChangeAdmin(s.TestAccs[0].String(), s.defaultDenom, s.TestAccs[1].String()))
 	s.Require().NoError(err)
 	queryRes, err = s.queryClient.DenomAuthorityMetadata(s.Ctx.Context(), &types.QueryDenomAuthorityMetadataRequest{
 		Denom: s.defaultDenom,
@@ -59,17 +59,17 @@ func (s *KeeperTestSuite) TestAdminMsgs() {
 	s.Require().Equal(s.TestAccs[1].String(), queryRes.AuthorityMetadata.Admin)
 
 	// Make sure old admin can no longer do actions
-	_, err = s.msgServer.Burn(sdk.WrapSDKContext(s.Ctx), types.NewMsgBurn(s.TestAccs[0].String(), sdk.NewInt64Coin(s.defaultDenom, 5)))
+	_, err = s.msgServer.Burn(s.Ctx, types.NewMsgBurn(s.TestAccs[0].String(), sdk.NewInt64Coin(s.defaultDenom, 5)))
 	s.Require().Error(err)
 
 	// Make sure the new admin works
-	_, err = s.msgServer.Mint(sdk.WrapSDKContext(s.Ctx), types.NewMsgMint(s.TestAccs[1].String(), sdk.NewInt64Coin(s.defaultDenom, 5)))
+	_, err = s.msgServer.Mint(s.Ctx, types.NewMsgMint(s.TestAccs[1].String(), sdk.NewInt64Coin(s.defaultDenom, 5)))
 	addr1bal += 5
 	s.Require().NoError(err)
 	s.Require().True(bankKeeper.GetBalance(s.Ctx, s.TestAccs[1], s.defaultDenom).Amount.Int64() == addr1bal)
 
 	// Try setting admin to empty
-	_, err = s.msgServer.ChangeAdmin(sdk.WrapSDKContext(s.Ctx), types.NewMsgChangeAdmin(s.TestAccs[1].String(), s.defaultDenom, ""))
+	_, err = s.msgServer.ChangeAdmin(s.Ctx, types.NewMsgChangeAdmin(s.TestAccs[1].String(), s.defaultDenom, ""))
 	s.Require().NoError(err)
 	queryRes, err = s.queryClient.DenomAuthorityMetadata(s.Ctx.Context(), &types.QueryDenomAuthorityMetadataRequest{
 		Denom: s.defaultDenom,
@@ -141,7 +141,7 @@ func (s *KeeperTestSuite) TestMintDenom() {
 		},
 	} {
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-			_, err := s.msgServer.Mint(sdk.WrapSDKContext(s.Ctx), &tc.mintMsg)
+			_, err := s.msgServer.Mint(s.Ctx, &tc.mintMsg)
 			if tc.expectPass {
 				s.Require().NoError(err)
 				balances[tc.mintMsg.MintToAddress] += tc.mintMsg.Amount.Amount.Int64()
@@ -163,7 +163,7 @@ func (s *KeeperTestSuite) TestBurnDenom() {
 	// mint 1000 default token for all testAccs
 	balances := make(map[string]int64)
 	for _, acc := range s.TestAccs {
-		_, err := s.msgServer.Mint(sdk.WrapSDKContext(s.Ctx), types.NewMsgMintTo(s.TestAccs[0].String(), sdk.NewInt64Coin(s.defaultDenom, 1000), acc.String()))
+		_, err := s.msgServer.Mint(s.Ctx, types.NewMsgMintTo(s.TestAccs[0].String(), sdk.NewInt64Coin(s.defaultDenom, 1000), acc.String()))
 		s.Require().NoError(err)
 		balances[acc.String()] = 1000
 	}
@@ -238,7 +238,7 @@ func (s *KeeperTestSuite) TestBurnDenom() {
 		},
 	} {
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-			_, err := s.msgServer.Burn(sdk.WrapSDKContext(s.Ctx), &tc.burnMsg)
+			_, err := s.msgServer.Burn(s.Ctx, &tc.burnMsg)
 			if tc.expectPass {
 				s.Require().NoError(err)
 				balances[tc.burnMsg.BurnFromAddress] -= tc.burnMsg.Amount.Amount.Int64()
@@ -260,7 +260,7 @@ func (s *KeeperTestSuite) TestForceTransferDenom() {
 	// mint 1000 default token for all testAccs
 	balances := make(map[string]int64)
 	for _, acc := range s.TestAccs {
-		_, err := s.msgServer.Mint(sdk.WrapSDKContext(s.Ctx), types.NewMsgMintTo(s.TestAccs[0].String(), sdk.NewInt64Coin(s.defaultDenom, 1000), acc.String()))
+		_, err := s.msgServer.Mint(s.Ctx, types.NewMsgMintTo(s.TestAccs[0].String(), sdk.NewInt64Coin(s.defaultDenom, 1000), acc.String()))
 		s.Require().NoError(err)
 		balances[acc.String()] = 1000
 	}
@@ -312,7 +312,7 @@ func (s *KeeperTestSuite) TestForceTransferDenom() {
 		},
 	} {
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-			_, err := s.msgServer.ForceTransfer(sdk.WrapSDKContext(s.Ctx), &tc.forceTransferMsg)
+			_, err := s.msgServer.ForceTransfer(s.Ctx, &tc.forceTransferMsg)
 			if tc.expectPass {
 				s.Require().NoError(err)
 
@@ -382,15 +382,15 @@ func (s *KeeperTestSuite) TestChangeAdminDenom() {
 			s.SetupTest()
 
 			// Create a denom and mint
-			res, err := s.msgServer.CreateDenom(sdk.WrapSDKContext(s.Ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), "bitcoin"))
+			res, err := s.msgServer.CreateDenom(s.Ctx, types.NewMsgCreateDenom(s.TestAccs[0].String(), "bitcoin"))
 			s.Require().NoError(err)
 
 			testDenom := res.GetNewTokenDenom()
 
-			_, err = s.msgServer.Mint(sdk.WrapSDKContext(s.Ctx), types.NewMsgMint(s.TestAccs[0].String(), sdk.NewInt64Coin(testDenom, 10)))
+			_, err = s.msgServer.Mint(s.Ctx, types.NewMsgMint(s.TestAccs[0].String(), sdk.NewInt64Coin(testDenom, 10)))
 			s.Require().NoError(err)
 
-			_, err = s.msgServer.ChangeAdmin(sdk.WrapSDKContext(s.Ctx), tc.msgChangeAdmin(testDenom))
+			_, err = s.msgServer.ChangeAdmin(s.Ctx, tc.msgChangeAdmin(testDenom))
 			if tc.expectedChangeAdminPass {
 				s.Require().NoError(err)
 			} else {
@@ -412,7 +412,7 @@ func (s *KeeperTestSuite) TestChangeAdminDenom() {
 
 			// we test mint to test if admin authority is performed properly after admin change.
 			if tc.msgMint != nil {
-				_, err := s.msgServer.Mint(sdk.WrapSDKContext(s.Ctx), tc.msgMint(testDenom))
+				_, err := s.msgServer.Mint(s.Ctx, tc.msgMint(testDenom))
 				if tc.expectedMintPass {
 					s.Require().NoError(err)
 				} else {
@@ -537,7 +537,7 @@ func (s *KeeperTestSuite) TestSetDenomMetaData() {
 	} {
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			bankKeeper := s.App.BankKeeper
-			res, err := s.msgServer.SetDenomMetadata(sdk.WrapSDKContext(s.Ctx), &tc.msgSetDenomMetadata)
+			res, err := s.msgServer.SetDenomMetadata(s.Ctx, &tc.msgSetDenomMetadata)
 			if tc.expectedPass {
 				s.Require().NoError(err)
 				s.Require().NotNil(res)

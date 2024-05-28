@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
+	txfeetypes "github.com/osmosis-labs/osmosis/v25/x/txfees/types"
+
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/testutils"
-
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"testing"
 
@@ -18,7 +19,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	ibctesting "github.com/cosmos/ibc-go/v7/testing"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 
 	"github.com/stretchr/testify/suite"
 
@@ -39,7 +40,7 @@ type AuthenticatorSuite struct {
 	EncodingConfig params.EncodingConfig
 
 	PrivKeys []cryptotypes.PrivKey
-	Account  authtypes.AccountI
+	Account  sdk.AccountI
 }
 
 type cpks = [][]cryptotypes.PrivKey
@@ -50,6 +51,8 @@ func TestAuthenticatorSuite(t *testing.T) {
 }
 
 func (s *AuthenticatorSuite) SetupTest() {
+	txfeetypes.ConsensusMinFee = osmomath.ZeroDec()
+
 	// Use the osmosis custom function for creating an osmosis app
 	ibctesting.DefaultTestingAppInit = osmosisibctesting.SetupTestingApp
 
@@ -71,7 +74,7 @@ func (s *AuthenticatorSuite) SetupTest() {
 	s.Account = s.CreateAccount(s.PrivKeys[0], 500_000)
 }
 
-func (s *AuthenticatorSuite) CreateAccount(privKey cryptotypes.PrivKey, amount int) authtypes.AccountI {
+func (s *AuthenticatorSuite) CreateAccount(privKey cryptotypes.PrivKey, amount int) sdk.AccountI {
 	accountAddr := sdk.AccAddress(privKey.PubKey().Address())
 	// fund the account
 	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(amount)))
@@ -107,7 +110,7 @@ func (s *AuthenticatorSuite) TestKeyRotationStory() {
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []uint64{1}, sendMsg)
 	s.Require().NoError(err, "Failed to send bank tx using the second private key")
 
-	// Try to send again osing the original PrivKey. This will succeed with no selected authenticator
+	// Try to send again using the original PrivKey. This will succeed with no selected authenticator
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
 	s.Require().NoError(err, "Sending from the original PrivKey failed. This should succeed")
 
@@ -693,9 +696,9 @@ func (s *AuthenticatorSuite) TestFeeDeduction() {
 			fee := sdk.NewInt64Coin(sdk.DefaultBondDenom, 25000)
 			expectedBalance := initialBalance.Sub(fee)
 			if tc.selectedAuthenticators[0] == payerYes {
-				s.Require().True(expectedBalance.IsEqual(finalBalance), "Fee should be deducted")
+				s.Require().True(expectedBalance.Equal(finalBalance), "Fee should be deducted")
 			} else {
-				s.Require().True(initialBalance.IsEqual(finalBalance), "Fee should not be deducted")
+				s.Require().True(initialBalance.Equal(finalBalance), "Fee should not be deducted")
 			}
 		})
 	}

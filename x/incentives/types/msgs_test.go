@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v25/x/incentives"
 	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v25/x/incentives/types"
 
@@ -417,7 +418,7 @@ func TestAuthzMsg(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			apptesting.TestMessageAuthzSerialization(t, tc.incentivesMsg)
+			apptesting.TestMessageAuthzSerialization(t, tc.incentivesMsg, incentives.AppModuleBasic{})
 		})
 	}
 }

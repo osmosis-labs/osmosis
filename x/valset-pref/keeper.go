@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -14,7 +14,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/x/valset-pref/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 )
 
 type Keeper struct {
@@ -53,7 +53,10 @@ func (k Keeper) GetDelegationPreferences(ctx sdk.Context, delegator string) (typ
 		if err != nil {
 			return types.ValidatorSetPreferences{}, err
 		}
-		existingDelegations := k.stakingKeeper.GetDelegatorDelegations(ctx, delAddr, math.MaxUint16)
+		existingDelegations, err := k.stakingKeeper.GetDelegatorDelegations(ctx, delAddr, math.MaxUint16)
+		if err != nil {
+			return types.ValidatorSetPreferences{}, err
+		}
 		if len(existingDelegations) == 0 {
 			return types.ValidatorSetPreferences{}, types.ErrNoDelegation
 		}
@@ -82,7 +85,10 @@ func (k Keeper) GetValSetPreferencesWithDelegations(ctx sdk.Context, delegator s
 	}
 
 	valSet, exists := k.GetValidatorSetPreference(ctx, delegator)
-	existingDelegations := k.stakingKeeper.GetDelegatorDelegations(ctx, delAddr, math.MaxUint16)
+	existingDelegations, err := k.stakingKeeper.GetDelegatorDelegations(ctx, delAddr, math.MaxUint16)
+	if err != nil {
+		return types.ValidatorSetPreferences{}, err
+	}
 
 	// No existing delegations for a delegator when valSet does not exist
 	if !exists && len(existingDelegations) == 0 {
@@ -113,8 +119,12 @@ func (k Keeper) formatToValPrefArr(ctx sdk.Context, delegations []stakingtypes.D
 	tokenDelegations := make(map[stakingtypes.Delegation]osmomath.Dec)
 	for _, existingDelegation := range delegations {
 		// Fetch validator corresponding to current delegation
-		validator, found := k.stakingKeeper.GetValidator(ctx, existingDelegation.GetValidatorAddr())
-		if !found {
+		valAddr, err := sdk.ValAddressFromBech32(existingDelegation.ValidatorAddress)
+		if err != nil {
+			return []types.ValidatorPreference{}, err
+		}
+		validator, err := k.stakingKeeper.GetValidator(ctx, valAddr)
+		if err != nil {
 			return []types.ValidatorPreference{}, types.ValidatorNotFoundError{ValidatorAddr: existingDelegation.ValidatorAddress}
 		}
 

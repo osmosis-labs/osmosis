@@ -38,7 +38,8 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	startTime := s.Ctx.BlockHeader().Time
 
-	unbondingDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
+	stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	unbondingDuration := stakingParams.UnbondingTime
 
 	s.App.IncentivesKeeper.SetLockableDurations(s.Ctx, []time.Duration{
 		time.Hour * 24 * 14,
@@ -52,7 +53,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	incentiveKeeperParams := s.App.IncentivesKeeper.GetParams(s.Ctx)
 	incentiveKeeperParams.DistrEpochIdentifier = superfluidEpochIdentifer
 	s.App.IncentivesKeeper.SetParams(s.Ctx, incentiveKeeperParams)
-	err := s.App.EpochsKeeper.AddEpochInfo(s.Ctx, epochtypes.EpochInfo{
+	err = s.App.EpochsKeeper.AddEpochInfo(s.Ctx, epochtypes.EpochInfo{
 		Identifier:              superfluidEpochIdentifer,
 		StartTime:               startTime,
 		Duration:                time.Hour,
@@ -74,16 +75,18 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.App.MintKeeper.SetParams(s.Ctx, mintParams)
 	s.App.MintKeeper.SetMinter(s.Ctx, minttypes.NewMinter(osmomath.NewDec(1_000_000)))
 
-	distributionParams := s.App.DistrKeeper.GetParams(s.Ctx)
+	distributionParams, err := s.App.DistrKeeper.Params.Get(s.Ctx)
+	s.Require().NoError(err)
 	distributionParams.BaseProposerReward = osmomath.ZeroDec()
 	distributionParams.BonusProposerReward = osmomath.ZeroDec()
 	distributionParams.CommunityTax = osmomath.ZeroDec()
-	s.App.DistrKeeper.SetParams(s.Ctx, distributionParams)
+	s.App.DistrKeeper.Params.Set(s.Ctx, distributionParams)
 	s.App.IncentivesKeeper.SetParam(s.Ctx, incentivetypes.KeyMinValueForDistr, sdk.NewCoin("stake", osmomath.NewInt(1)))
 }
 
 func (s *KeeperTestSuite) SetupDefaultPool() {
-	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+	bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
+	s.Require().NoError(err)
 	poolId := s.createGammPool([]string{bondDenom, "foo"})
 	s.Require().Equal(poolId, uint64(1))
 }
@@ -204,20 +207,22 @@ func (s *KeeperTestSuite) checkIntermediaryAccountDelegations(intermediaryAccs [
 		s.Require().NoError(err)
 
 		// check delegation from intermediary account to validator
-		delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, acc.GetAccAddress(), valAddr)
-		s.Require().True(found)
+		delegation, err := s.App.StakingKeeper.GetDelegation(s.Ctx, acc.GetAccAddress(), valAddr)
+		s.Require().NoError(err)
 		s.Require().True(delegation.Shares.GTE(osmomath.NewDec(10000000)))
 
 		// check delegated tokens
-		validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
-		s.Require().True(found)
+		validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
+		s.Require().NoError(err)
 		delegatedTokens := validator.TokensFromShares(delegation.Shares).TruncateInt()
 		s.Require().True(delegatedTokens.GTE(osmomath.NewInt(10000000)))
 	}
 }
 
 func (s *KeeperTestSuite) setupSuperfluidDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, denom string, amount int64) lockuptypes.PeriodLock {
-	unbondingDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
+	stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	s.Require().NoError(err)
+	unbondingDuration := stakingParams.UnbondingTime
 
 	// create lockup of LP token
 	coins := sdk.Coins{sdk.NewInt64Coin(denom, amount)}

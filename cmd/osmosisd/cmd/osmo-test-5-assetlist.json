@@ -29,7 +29,7 @@
         "dex",
         "staking",
         "osmosis-main",
-        "osmosis-price:uion:1"
+        "osmosis-price:ibc/1587E7B54FC9EFDA2350DC690EC2F9B9ECEB6FC31CF11884F9C0C5207ABE3921:310"
       ]
     },
     {
@@ -56,7 +56,7 @@
       "keywords": [
         "memecoin",
         "osmosis-main",
-        "osmosis-price:ibc/DE6792CF9E521F6AD6E9A4BDF6225C9571A3B74ACC0A529F92BC5122A39D2E58:367"
+        "osmosis-price:uosmo:1"
       ]
     },
     {
@@ -99,7 +99,7 @@
       },
       "keywords": [
         "osmosis-main",
-        "osmosis-price:ibc/DE6792CF9E521F6AD6E9A4BDF6225C9571A3B74ACC0A529F92BC5122A39D2E58:367"
+        "osmosis-price:uosmo:308"
       ]
     },
     {
@@ -544,7 +544,8 @@
         "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/testnets/chain4energytestnet/images/c4e.png"
       },
       "keywords": [
-        "osmosis-main"
+        "osmosis-main",
+        "osmosis-price:uosmo:462"
       ]
     },
     {

@@ -80,7 +80,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 		cleanup := s.SetupWithLevelDb()
 
 		for _, acc := range s.TestAccs {
-			testutil.FundAccount(s.App.BankKeeper, s.Ctx, acc, sdk.NewCoins(
+			testutil.FundAccount(s.Ctx, s.App.BankKeeper, acc, sdk.NewCoins(
 				sdk.NewCoin(denom0, maxAmountOfEachToken),
 				sdk.NewCoin(denom1, maxAmountOfEachToken),
 				sdk.NewCoin(appparams.BaseCoinUnit, maxAmountOfEachToken),
@@ -179,7 +179,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 			tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
 			accountIndex := rand.Intn(len(s.TestAccs))
 			account := s.TestAccs[accountIndex]
-			testutil.FundAccount(s.App.BankKeeper, s.Ctx, account, tokensDesired)
+			testutil.FundAccount(s.Ctx, s.App.BankKeeper, account, tokensDesired)
 			s.createPosition(accountIndex, clPoolId, tokenDesired0, tokenDesired1, lowerTick, upperTick)
 		}
 		// Setup numberOfPositions full range positions for deeper liquidity.
@@ -237,7 +237,7 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 
 		liquidityNet, err := clKeeper.GetTickLiquidityNetInDirection(s.Ctx, pool.GetId(), largeSwapInCoin.Denom, osmomath.NewInt(currentTick), osmomath.Int{})
 		noError(b, err)
-		testutil.FundAccount(s.App.BankKeeper, s.Ctx, s.TestAccs[0], sdk.NewCoins(largeSwapInCoin))
+		testutil.FundAccount(s.Ctx, s.App.BankKeeper, s.TestAccs[0], sdk.NewCoins(largeSwapInCoin))
 
 		b.StartTimer()
 

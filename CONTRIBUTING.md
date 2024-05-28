@@ -30,37 +30,37 @@ To contribute a change proposal, use the following workflow:
 6. Make sure all tests are passing locally.
 7. Next, rinse and repeat the following:
 
-    1. Commit your changes. Write a simple, straightforward commit message. To learn more, see [How to Write a Git Commit Message](https://chris.beams.io/posts/git-commit/).
-    2. Push your changes to your remote fork. To add your remote, you can copy/paste the following:
+   1. Commit your changes. Write a simple, straightforward commit message. To learn more, see [How to Write a Git Commit Message](https://chris.beams.io/posts/git-commit/).
+   2. Push your changes to your remote fork. To add your remote, you can copy/paste the following:
 
-    ```sh
+   ```sh
 
-    #Remove origin
+   #Remove origin
 
-    git remote remove origin
+   git remote remove origin
 
-    #set a new remote
+   #set a new remote
 
-    git remote add my_awesome_new_remote_repo [insert-link-found-in-source-subtab-of-your-repo]
+   git remote add my_awesome_new_remote_repo [insert-link-found-in-source-subtab-of-your-repo]
 
-    #Verify new remote
+   #Verify new remote
 
-    git remote -v
+   git remote -v
 
-    > my_awesome_new_remote_repo  [link-found-in-source-subtab-of-your-repo] (fetch)
-    > my_awesome_new_remote_repo  [link-found-in-source-subtab-of-your-repo] (push)
+   > my_awesome_new_remote_repo  [link-found-in-source-subtab-of-your-repo] (fetch)
+   > my_awesome_new_remote_repo  [link-found-in-source-subtab-of-your-repo] (push)
 
-    #Push changes to your remote repo
+   #Push changes to your remote repo
 
-    git push <your_remote_name>
+   git push <your_remote_name>
 
-    #e.g. git push my_awesome_new_remote_repo
-    ```
+   #e.g. git push my_awesome_new_remote_repo
+   ```
 
-    3. Create a PR on the Osmosis repository. There should be a PR template to help you do so.
-    4. Wait for your changes to be reviewed. If you are a maintainer, you can assign your PR to one or more reviewers. If you aren't a maintainer, one of the maintainers will assign a reviewer.
-    5. After you receive feedback from a reviewer, make the requested changes, commit them to your branch, and push them to your remote fork again.
-    6. Once approval is given, feel free to squash & merge!
+   3. Create a PR on the Osmosis repository. There should be a PR template to help you do so.
+   4. Wait for your changes to be reviewed. If you are a maintainer, you can assign your PR to one or more reviewers. If you aren't a maintainer, one of the maintainers will assign a reviewer.
+   5. After you receive feedback from a reviewer, make the requested changes, commit them to your branch, and push them to your remote fork again.
+   6. Once approval is given, feel free to squash & merge!
 
 ## Writing tests
 
@@ -146,8 +146,8 @@ func(s *KeeperTestSuite) TestCreateDenom() {
             queryClient := suite.queryClient
 
             // Create a denom
-            res, err := msgServer.CreateDenom(sdk.WrapSDKContext(ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), tc.subdenom))
-            
+            res, err := msgServer.CreateDenom(ctx, types.NewMsgCreateDenom(suite.TestAccs[0].String(), tc.subdenom))
+
             if !tc.expectError {
                 suite.Require().NoError(err)
 
@@ -205,7 +205,7 @@ func(s *KeeperTestSuite) TestMintExportGenesis() {
 }
 ```
 
-### Example #3: [Gamm-Related Test] 
+### Example #3: [Gamm-Related Test]
 
 Since the GAMM module is core to the Osmosis repo, it might be useful to have a good example of a well-structured GAMM-specific test. This example covers a simple getter function and validates the specific error messages around the function (as opposed to merely the presence of an error):
 
@@ -264,15 +264,15 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
 
 ## Debug testing e2e locally
 
-The e2e package defines an integration testing suite used for full end-to-end testing functionality. This package is decoupled from depending on the Osmosis codebase. It initializes the chains for testing via Docker files. 
+The e2e package defines an integration testing suite used for full end-to-end testing functionality. This package is decoupled from depending on the Osmosis codebase. It initializes the chains for testing via Docker files.
 
-As a result, the test suite may provide the desired Osmosis version to Docker containers during the initialization. This design allows for the opportunity of testing chain upgrades in the future by providing an older Osmosis version to the container, performing the chain upgrade, and running the latest test suite. 
+As a result, the test suite may provide the desired Osmosis version to Docker containers during the initialization. This design allows for the opportunity of testing chain upgrades in the future by providing an older Osmosis version to the container, performing the chain upgrade, and running the latest test suite.
 
 The file `e2e_setup_test.go` defines the testing suite and contains the core bootstrapping logic that creates a testing environment via Docker containers. A testing network is created dynamically by providing the desirable number of validator configurations.
 
 The file `e2e_test.go` contains the actual end-to-end integration tests that utilize the testing suite.
 
-Additionally, there is an ability to disable certain components of the e2e suite. This can be done by setting the environment variables. See the [E2E test docs](https://github.com/osmosis-labs/osmosis/blob/main/tests/e2e/README.md)  or more details.
+Additionally, there is an ability to disable certain components of the e2e suite. This can be done by setting the environment variables. See the [E2E test docs](https://github.com/osmosis-labs/osmosis/blob/main/tests/e2e/README.md) or more details.
 
 To get started:
 
@@ -281,7 +281,7 @@ To get started:
 - Inspect the logs of the docker containers and see if something is there.
 - `docker ps -a #` to list all docker containers
 - Note the container id of the one you want to see the logs
-- And then run `docker logs <CONTAINER_NAME>`  to debug via container logs
+- And then run `docker logs <CONTAINER_NAME>` to debug via container logs
 
 Please note that if the tests are stopped mid-way, the e2e framework might fail to start again due to duplicated containers. Make sure that
 containers are removed before running the tests again: `docker containers rm -f $(docker containers ls -a -q)`.
@@ -348,6 +348,7 @@ There are several steps that go into a major release
 - The GitHub release is created in our private repo via this [GitHub workflow](https://github.com/osmosis-labs/osmosis-ci/blob/main/.github/workflows/create-release.yaml). The workflow is manually triggered from the [osmosis-ci repository](https://github.com/osmosis-labs/osmosis-ci). The workflow uses the `make build-reproducible` command to create the `osmosisd` binaries using the default [Makefile](https://github.com/osmosis-labs/osmosis/blob/main/Makefile#L99).
 
 - Make a PR to main, with a cosmovisor config, generated in tandem with the binaries from tool.
+
   - Should be its own PR, as it may get denied for Fork upgrades.
 
 - Make a PR to main to update the import paths and go.mod for the new major release
@@ -357,6 +358,7 @@ There are several steps that go into a major release
 - Do a PR if that commit has conflicts
 
 - (Eventually) Make a PR that adds a version handler for the next upgrade
+
   - [Add v10 upgrade boilerplate #1649](https://github.com/osmosis-labs/osmosis/pull/1649/files)
 
 - Update chain JSON schema's recommended versions in `chain.schema.json` located in the root directory.
@@ -413,7 +415,7 @@ The following are **NOT** in the state-machine scope:
 - Queries that are not whitelisted
 - CLI interfaces
 
-#### Validating State-Compatibility 
+#### Validating State-Compatibility
 
 Tendermint ensures state compatibility by validating a number
 of hashes that can be found [here][2].
@@ -545,7 +547,7 @@ func someInternalMethod(ctx sdk.Context) {
 ```
 
 - It will run out of gas with `gasUsed = 2600` where 2600 getting merkelized
-into the tx results.
+  into the tx results.
 
 ```go
 func someInternalMethod(ctx sdk.Context) {
@@ -556,7 +558,7 @@ func someInternalMethod(ctx sdk.Context) {
 ```
 
 - It will run out of gas with `gasUsed = 2100` where 2100 is getting merkelized
-into the tx results.
+  into the tx results.
 
 Therefore, we introduced a state-incompatibility by merklezing diverging gas
 usage.
@@ -597,9 +599,9 @@ For every module with notable changes, we assign someone who was not a primary a
 
 Deliverables of review are:
 
-- PR's with in-line code comments for things they had to figure out (or questions) 
+- PR's with in-line code comments for things they had to figure out (or questions)
 
-- Tests / test comments needed to convince themselves of correctness 
+- Tests / test comments needed to convince themselves of correctness
 
 - Spec updates
 
@@ -611,14 +613,13 @@ At the moment, we're looking for a tool that lets us statically figure out every
 
 We test in testnet & e2e testnet behaviors about every message that has changed
 
-We communicate with various integrators if they'd like release-blocking QA testing for major releases
-    * Chainapsis has communicated wanting a series of osmosis-frontend functionalities to be checked for correctness on a testnet as a release blocking item
+We communicate with various integrators if they'd like release-blocking QA testing for major releases \* Chainapsis has communicated wanting a series of osmosis-frontend functionalities to be checked for correctness on a testnet as a release blocking item
 
-[1]:https://github.com/cosmos/cosmos-sdk/blob/d11196aad04e57812dbc5ac6248d35375e6603af/baseapp/abci.go#L293-L303
-[2]:https://github.com/cometbft/cometbft/blob/9f76e8da150414ce73eed2c4f248947b657c7587/proto/tendermint/types/types.proto#L70-L77
-[3]:https://github.com/cometbft/cometbft/blob/main/types/results.go#L47-L54
-[4]:https://github.com/osmosis-labs/cosmos-sdk/blob/5c9a51c277d067e0ec5cf48df30a85fae95bcd14/store/rootmulti/store.go#L430
-[5]:https://github.com/osmosis-labs/cosmos-sdk/blob/5c9a51c277d067e0ec5cf48df30a85fae95bcd14/store/types/commit_info.go#L40
+[1]: https://github.com/cosmos/cosmos-sdk/blob/d11196aad04e57812dbc5ac6248d35375e6603af/baseapp/abci.go#L293-L303
+[2]: https://github.com/cometbft/cometbft/blob/9f76e8da150414ce73eed2c4f248947b657c7587/proto/tendermint/types/types.proto#L70-L77
+[3]: https://github.com/cometbft/cometbft/blob/main/types/results.go#L47-L54
+[4]: https://github.com/osmosis-labs/cosmos-sdk/blob/5c9a51c277d067e0ec5cf48df30a85fae95bcd14/store/rootmulti/store.go#L430
+[5]: https://github.com/osmosis-labs/cosmos-sdk/blob/5c9a51c277d067e0ec5cf48df30a85fae95bcd14/store/types/commit_info.go#L40
 
 ## Common Security Considerations
 
@@ -661,6 +662,7 @@ A much less obvious example of a panic trigger is running `SendCoins` on arbitra
 ## Debug Osmosis Node VS Code & Delve
 
 1. Build the binary without stripping away debug symbols
+
 - Make sure `ldflags += -w -s` is not present
 - We have a vs code task named `build-debug` that builds the debug binary
 
@@ -669,9 +671,11 @@ A much less obvious example of a panic trigger is running `SendCoins` on arbitra
 3. Run "Attach to running osmosisd process" VS Code debug configuration
 
 What it does:
+
 - Runs a vs code background task that starts a delve server and attaches to the Osmosis node process ID
 - Attaches VS code project to delve and allows you to set breakpoints
 
 FAQ
+
 - Can this be used with localosmosis or inside Docker?
-  * Not currently but possible. Would need to run the delve server inside the container and expose the debug port
+  - Not currently but possible. Would need to run the delve server inside the container and expose the debug port

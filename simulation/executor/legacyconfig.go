@@ -4,11 +4,12 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"testing"
 
-	cometbftdb "github.com/cometbft/cometbft-db"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
+	"cosmossdk.io/store"
+	cosmosdb "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/store"
 
 	"github.com/osmosis-labs/osmosis/v25/simulation/executor/internal/stats"
 	"github.com/osmosis-labs/osmosis/v25/simulation/simtypes/simlogger"
@@ -116,7 +117,8 @@ func NewExecutionDbConfigFromFlags() ExecutionDbConfig {
 // the simulation tests. If `FlagEnabledValue` is false it skips the current test.
 // Returns error on an invalid db instantiation or temp dir creation.
 // nolint: revive
-func SetupSimulation(dirPrefix, dbName string) (cfg Config, db cometbftdb.DB, logger log.Logger, cleanup func(), err error) {
+func SetupSimulation(tb testing.TB, dirPrefix, dbName string) (cfg Config, db cosmosdb.DB, logger log.Logger, cleanup func(), err error) {
+	tb.Helper()
 	if !FlagEnabledValue {
 		return Config{}, nil, nil, func() {}, nil
 	}
@@ -125,7 +127,7 @@ func SetupSimulation(dirPrefix, dbName string) (cfg Config, db cometbftdb.DB, lo
 	config.InitializationConfig.ChainID = SimAppChainID
 
 	if FlagVerboseValue {
-		logger = log.TestingLogger()
+		logger = log.NewTestLogger(tb)
 	} else {
 		logger = log.NewNopLogger()
 	}
@@ -136,7 +138,7 @@ func SetupSimulation(dirPrefix, dbName string) (cfg Config, db cometbftdb.DB, lo
 		return Config{}, nil, nil, func() {}, err
 	}
 
-	db, err = cometbftdb.NewGoLevelDB(dbName, dir)
+	db, err = cosmosdb.NewGoLevelDB(dbName, dir, nil)
 	if err != nil {
 		return Config{}, nil, nil, func() {}, err
 	}
@@ -150,7 +152,7 @@ func SetupSimulation(dirPrefix, dbName string) (cfg Config, db cometbftdb.DB, lo
 }
 
 // PrintStats prints the corresponding statistics from the app DB.
-func PrintStats(db cometbftdb.DB) {
+func PrintStats(db cosmosdb.DB) {
 	fmt.Println("\nLevelDB Stats")
 	fmt.Println(db.Stats()["leveldb.stats"])
 	fmt.Println("LevelDB cached block size", db.Stats()["leveldb.cachedblock"])

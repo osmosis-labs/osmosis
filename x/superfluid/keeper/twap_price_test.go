@@ -75,7 +75,7 @@ func (s *KeeperTestSuite) TestGetSuperfluidOSMOTokens() {
 	s.Require().Equal(multiplier, osmomath.NewDec(2))
 
 	// Should get error since asset is not superfluid enabled
-	osmoTokens, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(s.Ctx, gammShareDenom, testAmount)
+	osmoTokens, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokensExcludeNative(s.Ctx, gammShareDenom, testAmount)
 	s.Require().Error(err)
 	s.Require().ErrorIs(err, types.ErrNonSuperfluidAsset)
 	s.Require().Equal(osmoTokens, osmomath.NewInt(0))
@@ -92,11 +92,11 @@ func (s *KeeperTestSuite) TestGetSuperfluidOSMOTokens() {
 	s.App.SuperfluidKeeper.SetOsmoEquivalentMultiplier(s.Ctx, epoch, gammShareDenom, multiplier)
 
 	// Get superfluid OSMO tokens
-	osmoTokens, err = s.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(s.Ctx, gammShareDenom, testAmount)
+	osmoTokens, err = s.App.SuperfluidKeeper.GetSuperfluidOSMOTokensExcludeNative(s.Ctx, gammShareDenom, testAmount)
 	s.Require().NoError(err)
 
 	// Adjust result with risk factor
-	osmoTokensRiskAdjusted := s.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(s.Ctx, osmoTokens)
+	osmoTokensRiskAdjusted := s.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(s.Ctx, osmoTokens, "any")
 
 	// Check result
 	s.Require().Equal(testAmount.ToLegacyDec().Mul(minRiskFactor).TruncateInt().String(), osmoTokensRiskAdjusted.String())
@@ -113,11 +113,11 @@ func (s *KeeperTestSuite) TestGetSuperfluidOSMOTokens() {
 	s.App.SuperfluidKeeper.SetOsmoEquivalentMultiplier(s.Ctx, epoch, clShareDenom, multiplier)
 
 	// Get superfluid OSMO tokens
-	osmoTokens, err = s.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(s.Ctx, clShareDenom, testAmount)
+	osmoTokens, err = s.App.SuperfluidKeeper.GetSuperfluidOSMOTokensExcludeNative(s.Ctx, clShareDenom, testAmount)
 	s.Require().NoError(err)
 
 	// Adjust result with risk factor
-	osmoTokensRiskAdjusted = s.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(s.Ctx, osmoTokens)
+	osmoTokensRiskAdjusted = s.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(s.Ctx, osmoTokens, "any")
 
 	// Check result
 	s.Require().Equal(testAmount.ToLegacyDec().Mul(minRiskFactor).TruncateInt().String(), osmoTokensRiskAdjusted.String())
