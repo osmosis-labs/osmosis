@@ -224,7 +224,7 @@ func (k Keeper) TakerFeeSkim(ctx sdk.Context, denomsInvolvedInRoute []string, to
 	// If there are 1 or more tier 1 share agreements, add up the percentage of the taker fees that should be skimmed off.
 	// If the total of taker fee share is greater than 1, return an error.
 	// Then, for each taker fee coin, calculate the amount to skim off and increase the accumulator for the tier 1 denom / taker fee denom pair.
-	if len(tier1ShareAgreements) > 1 {
+	if len(tier1ShareAgreements) > 0 {
 		percentageOfTakerFeeToSkim := osmomath.ZeroDec()
 		for _, takerFeeShareAgreement := range tier1ShareAgreements {
 			// Add up the percentage of the taker fee that should be skimmed off.

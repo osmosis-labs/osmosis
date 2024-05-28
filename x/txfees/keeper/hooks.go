@@ -315,7 +315,8 @@ func (k Keeper) clearTakerFeeShareAccumulators(ctx sdk.Context) {
 			ctx.Logger().Error("Error getting taker fee share from denom")
 			continue
 		}
-		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, txfeestypes.TakerFeeCollectorName, sdk.AccAddress(takerFeeShareAgreement.SkimAddress), takerFeeSkimAccumulator.SkimmedTakerFees)
+		skimAddress := sdk.MustAccAddressFromBech32(takerFeeShareAgreement.SkimAddress)
+		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, txfeestypes.TakerFeeCollectorName, skimAddress, takerFeeSkimAccumulator.SkimmedTakerFees)
 		if err != nil {
 			ctx.Logger().Error("Error sending coins from module to account", "error", err)
 			continue

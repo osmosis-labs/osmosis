@@ -12,6 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
 	"github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/cosmwasm/msg"
 	"github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/cosmwasm/msg/transmuter"
+	v3 "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/cosmwasm/msg/v3"
 	"github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/model"
 
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
@@ -21,6 +22,7 @@ const (
 	DefaultTransmuterDenomA       = "axlusdc"
 	DefaultTransmuterDenomB       = "gravusdc"
 	TransmuterContractName        = "transmuter"
+	TransmuterV3ContractName      = "transmuterv3"
 	TransmuterMigrateContractName = "transmuter_migrate"
 	DefaultCodeId                 = 1
 
@@ -40,20 +42,28 @@ func (s *KeeperTestHelper) PrepareCustomTransmuterPool(owner sdk.AccAddress, den
 }
 
 // PrepareCustomTransmuterPoolCustomProject sets up a transmuter pool with the custom parameters.
-// Gives flexibility for the helper to be reused outside of the Osmosis repository by providing custom
-// project name and bytecode path.
 func (s *KeeperTestHelper) PrepareCustomTransmuterPoolCustomProject(owner sdk.AccAddress, denoms []string, projectName, byteCodePath string) cosmwasmpooltypes.CosmWasmExtension {
+	return s.PreparePool(owner, denoms, projectName, byteCodePath, TransmuterContractName, s.GetTransmuterInstantiateMsgBytes)
+}
+
+// PrepareCustomTransmuterPoolCustomProjectV3 sets up a transmuter pool with the custom parameters.
+func (s *KeeperTestHelper) PrepareCustomTransmuterPoolCustomProjectV3(owner sdk.AccAddress, denoms []string, projectName, byteCodePath string) cosmwasmpooltypes.CosmWasmExtension {
+	return s.PreparePool(owner, denoms, projectName, byteCodePath, TransmuterV3ContractName, s.GetTransmuterInstantiateMsgBytesV3)
+}
+
+// PreparePool sets up a pool with the custom parameters.
+func (s *KeeperTestHelper) PreparePool(owner sdk.AccAddress, denoms []string, projectName, byteCodePath, contractName string, getInstantiateMsgBytes func([]string, sdk.AccAddress) []byte) cosmwasmpooltypes.CosmWasmExtension {
 	// Mint some assets to the account.
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
 
 	// Upload contract code and get the code id.
-	codeId := s.StoreCosmWasmPoolContractCodeCustomProject(TransmuterContractName, projectName, byteCodePath)
+	codeId := s.StoreCosmWasmPoolContractCodeCustomProject(contractName, projectName, byteCodePath)
 
 	// Add code id to the whitelist.
 	s.App.CosmwasmPoolKeeper.WhitelistCodeId(s.Ctx, codeId)
 
 	// Generate instantiate message bytes.
-	instantiateMsgBz := s.GetTransmuterInstantiateMsgBytes(denoms)
+	instantiateMsgBz := getInstantiateMsgBytes(denoms, owner)
 
 	// Generate msg create pool.
 	validCWPoolMsg := model.NewMsgCreateCosmWasmPool(codeId, owner, instantiateMsgBz)
@@ -72,17 +82,45 @@ func (s *KeeperTestHelper) PrepareCustomTransmuterPoolCustomProject(owner sdk.Ac
 // GetDefaultTransmuterInstantiateMsgBytes returns the default instantiate message for the transmuter contract
 // with DefaultTransmuterDenomA and DefaultTransmuterDenomB as the pool asset denoms.
 func (s *KeeperTestHelper) GetDefaultTransmuterInstantiateMsgBytes() []byte {
-	return s.GetTransmuterInstantiateMsgBytes([]string{DefaultTransmuterDenomA, DefaultTransmuterDenomB})
+	return s.GetTransmuterInstantiateMsgBytes([]string{DefaultTransmuterDenomA, DefaultTransmuterDenomB}, sdk.AccAddress{})
 }
 
 // GetTransmuterInstantiateMsgBytes returns the instantiate message for the transmuter contract with the
 // given pool asset denoms.
-func (s *KeeperTestHelper) GetTransmuterInstantiateMsgBytes(poolAssetDenoms []string) []byte {
+func (s *KeeperTestHelper) GetTransmuterInstantiateMsgBytes(poolAssetDenoms []string, owner sdk.AccAddress) []byte {
 	instantiateMsg := msg.InstantiateMsg{
 		PoolAssetDenoms: poolAssetDenoms,
 	}
 
 	instantiateMsgBz, err := json.Marshal(instantiateMsg)
+	s.Require().NoError(err)
+
+	return instantiateMsgBz
+}
+
+// GetTransmuterInstantiateMsgBytesV3 returns the instantiate message for the transmuter contract with the
+// given pool asset denoms.
+// TODO: Don't hardcode
+func (s *KeeperTestHelper) GetTransmuterInstantiateMsgBytesV3(poolAssetDenoms []string, owner sdk.AccAddress) []byte {
+	instantiateMsg := v3.InstantiateMsg{
+		PoolAssetConfigs: []v3.AssetConfig{
+			{
+				Denom:               poolAssetDenoms[0],
+				NormalizationFactor: "100",
+			},
+			{
+				Denom:               poolAssetDenoms[1],
+				NormalizationFactor: "1",
+			},
+		},
+		AlloyedAssetSubdenom:            "testdenom",
+		AlloyedAssetNormalizationFactor: "1",
+		Admin:                           owner.String(),
+		Moderator:                       owner.String(),
+	}
+
+	instantiateMsgBz, err := json.Marshal(instantiateMsg)
+	fmt.Println(string(instantiateMsgBz))
 	s.Require().NoError(err)
 
 	return instantiateMsgBz

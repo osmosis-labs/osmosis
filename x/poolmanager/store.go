@@ -81,9 +81,9 @@ func (k Keeper) GetTakerFeeShareAgreementFromDenom(ctx sdk.Context, tierDenom st
 
 // Used for setting a specific take fee share agreement in the store.
 // Used in the MsgSetTakerFeeShareAgreementForDenom, for governance.
-func (k Keeper) SetTakerFeeShareAgreementForDenom(ctx sdk.Context, tierDenom string, takerFeeShare types.TakerFeeShareAgreement) error {
+func (k Keeper) SetTakerFeeShareAgreementForDenom(ctx sdk.Context, takerFeeShare types.TakerFeeShareAgreement) error {
 	store := ctx.KVStore(k.storeKey)
-	key := types.FormatTakerFeeShareAgreementKey(tierDenom)
+	key := types.FormatTakerFeeShareAgreementKey(takerFeeShare.Denom)
 	bz, err := proto.Marshal(&takerFeeShare)
 	if err != nil {
 		return err
@@ -92,7 +92,7 @@ func (k Keeper) SetTakerFeeShareAgreementForDenom(ctx sdk.Context, tierDenom str
 	store.Set(key, bz)
 
 	// Set cache value
-	k.cachedTakerFeeShareAgreement[tierDenom] = takerFeeShare
+	k.cachedTakerFeeShareAgreement[takerFeeShare.Denom] = takerFeeShare
 
 	return nil
 }
@@ -134,8 +134,13 @@ func (k Keeper) SetTakerFeeShareDenomsToAccruedValue(ctx sdk.Context, tierDenom 
 func (k Keeper) IncreaseTakerFeeShareDenomsToAccruedValue(ctx sdk.Context, tierDenom string, takerFeeDenom string, additiveValue osmomath.Int) error {
 	accruedValueBefore, err := k.GetTakerFeeShareDenomsToAccruedValue(ctx, tierDenom, takerFeeDenom)
 	if err != nil {
-		return err
+		if err.Error() == fmt.Errorf("no accrued value found for tierDenom %v and takerFeeDenom %s", tierDenom, takerFeeDenom).Error() {
+			accruedValueBefore = osmomath.ZeroInt()
+		} else {
+			return err
+		}
 	}
+
 	accruedValueAfter := accruedValueBefore.Add(additiveValue)
 	return k.SetTakerFeeShareDenomsToAccruedValue(ctx, tierDenom, takerFeeDenom, accruedValueAfter)
 }
@@ -157,12 +162,14 @@ func (k Keeper) GetAllTakerFeeShareAccumulators(ctx sdk.Context) []types.TakerFe
 		takerFeeDenom := keyParts[2]
 		accruedValueInt := accruedValue.Int
 		currentCoins := takerFeeAgreementDenomToCoins[tierDenom]
-		takerFeeAgreementDenomToCoins[tierDenom] = currentCoins.Add(sdk.NewCoin(takerFeeDenom, accruedValueInt))
 
 		// Add the denom to the slice if it's not already there
 		if _, exists := takerFeeAgreementDenomToCoins[tierDenom]; !exists {
 			denoms = append(denoms, tierDenom)
 		}
+
+		takerFeeAgreementDenomToCoins[tierDenom] = currentCoins.Add(sdk.NewCoin(takerFeeDenom, accruedValueInt))
+
 	}
 
 	var takerFeeSkimAccumulators []types.TakerFeeSkimAccumulator

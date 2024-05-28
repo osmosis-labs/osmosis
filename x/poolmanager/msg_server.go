@@ -122,7 +122,7 @@ func (server msgServer) SetTakerFeeShareAgreementForDenom(goCtx context.Context,
 		SkimAddress: msg.SkimAddress,
 	}
 
-	err := server.keeper.SetTakerFeeShareAgreementForDenom(ctx, msg.Denom, takerFeeShareAgreement)
+	err := server.keeper.SetTakerFeeShareAgreementForDenom(ctx, takerFeeShareAgreement)
 	if err != nil {
 		return nil, err
 	}
