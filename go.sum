@@ -1470,6 +1470,8 @@ github.com/hashicorp/golang-lru v0.5.0/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ
 github.com/hashicorp/golang-lru v0.5.1/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
 github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d h1:dg1dEPuWpEqDnvIw251EVy4zlP8gWbsGj4BsUKCRpYs=
 github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d/go.mod h1:iADmTwqILo4mZ8BN3D2Q6+9jd8WM5uGBxy+E8yxSoD4=
+github.com/hashicorp/golang-lru/v2 v2.0.7 h1:a+bsQ5rvGLjzHuww6tVxozPZFVghXaHOwFs4luLUK2k=
+github.com/hashicorp/golang-lru/v2 v2.0.7/go.mod h1:QeFd9opnmA6QUJc5vARoKUSoFhyfM2/ZepoAG6RGpeM=
 github.com/hashicorp/hcl v1.0.0 h1:0Anlzjpi4vEasTeNFn2mLJgTSwt0+6sfsiTG8qcWGx4=
 github.com/hashicorp/hcl v1.0.0/go.mod h1:E5yfLk+7swimpb2L/Alb/PJmXilQ/rhwaUYs4T20WEQ=
 github.com/hashicorp/logutils v1.0.0/go.mod h1:QIAnNjmIWmVIIkWDTG1z5v++HQmx9WQRO+LraFDTW64=
@@ -1738,8 +1740,8 @@ github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
 github.com/ory/dockertest/v3 v3.10.0 h1:4K3z2VMe8Woe++invjaTB7VRyQXQy5UY+loujO4aNE4=
 github.com/ory/dockertest/v3 v3.10.0/go.mod h1:nr57ZbRWMqfsdGdFNLHz5jjNdDb7VVFnzAeW1n5N1Lg=
-github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-4 h1:6ZFn6bKIpQpRjQ7ktP7otxWNCs/tarhNK0S2M2KzYL4=
-github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-4/go.mod h1:p8RohShfTfbvSzgb9zFnqvtCgyLTzqA8otk0I/YDbSg=
+github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-5 h1:YexM5n/cJQ9/aChsj+P4VWQwkL+oaMdzbNo/lMQ0A3E=
+github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-5/go.mod h1:nuXFuhpSEmzgx54P5e3kDIhWQL96zPfm/JZNvyOyhE8=
 github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240520015414-d958d4441808 h1:hzInsAUEONMYTnZto5jUBsUkP2fSqbZl7HbDEbPPNHE=
 github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240520015414-d958d4441808/go.mod h1:wHS976L+EfqmcT3JyZGfXVJRaEMfnTqN5Ya0Yfn5qf4=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
