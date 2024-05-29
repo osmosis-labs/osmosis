@@ -47,9 +47,24 @@ func (s *KeeperTestHelper) PrepareCustomTransmuterPoolCustomProject(owner sdk.Ac
 	return s.PreparePool(owner, denoms, projectName, byteCodePath, TransmuterContractName, s.GetTransmuterInstantiateMsgBytes)
 }
 
-// PrepareCustomTransmuterPoolCustomProjectV3 sets up a transmuter pool with the custom parameters.
 func (s *KeeperTestHelper) PrepareCustomTransmuterPoolCustomProjectV3(owner sdk.AccAddress, denoms []string, projectName, byteCodePath string) cosmwasmpooltypes.CosmWasmExtension {
-	return s.PreparePool(owner, denoms, projectName, byteCodePath, TransmuterV3ContractName, s.GetTransmuterInstantiateMsgBytesV3)
+	pool := s.PreparePool(owner, denoms, projectName, byteCodePath, TransmuterV3ContractName, s.GetTransmuterInstantiateMsgBytesV3)
+	ratioOfDenoms := make([]uint16, len(denoms))
+	for i := range denoms {
+		ratioOfDenoms[i] = 1
+	}
+	s.AddRatioFundsToTransmuterPool(s.TestAccs[0], denoms, ratioOfDenoms, pool.GetId())
+	pool, err := s.App.CosmwasmPoolKeeper.GetPoolById(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
+	return pool
+}
+
+func (s *KeeperTestHelper) PrepareCustomTransmuterPoolCustomProjectV3CustomRatio(owner sdk.AccAddress, denoms []string, ratio []uint16, projectName, byteCodePath string) cosmwasmpooltypes.CosmWasmExtension {
+	pool := s.PreparePool(owner, denoms, projectName, byteCodePath, TransmuterV3ContractName, s.GetTransmuterInstantiateMsgBytesV3)
+	s.AddRatioFundsToTransmuterPool(s.TestAccs[0], denoms, ratio, pool.GetId())
+	pool, err := s.App.CosmwasmPoolKeeper.GetPoolById(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
+	return pool
 }
 
 // PreparePool sets up a pool with the custom parameters.
@@ -86,6 +101,29 @@ func (s *KeeperTestHelper) PreparePool(owner sdk.AccAddress, denoms []string, pr
 	return pool
 }
 
+func (s *KeeperTestHelper) AddRatioFundsToTransmuterPool(owner sdk.AccAddress, denoms []string, ratioOfDenoms []uint16, poolId uint64) {
+	if ratioOfDenoms == nil {
+		return
+	}
+
+	if len(denoms) != len(ratioOfDenoms) {
+		panic("denoms and ratioOfDenoms must be of equal length")
+	}
+
+	var poolCoins sdk.Coins
+	for i, denom := range denoms {
+		amount := osmomath.NewInt(int64(ratioOfDenoms[i])).Mul(osmomath.NewInt(1000000000))
+		if amount.IsZero() {
+			continue
+		}
+		poolCoins = append(poolCoins, sdk.NewCoin(denom, amount))
+	}
+
+	// Add funds to the pool
+	s.FundAcc(owner, poolCoins)
+	s.JoinTransmuterPool(s.TestAccs[0], poolId, poolCoins)
+}
+
 // GetDefaultTransmuterInstantiateMsgBytes returns the default instantiate message for the transmuter contract
 // with DefaultTransmuterDenomA and DefaultTransmuterDenomB as the pool asset denoms.
 func (s *KeeperTestHelper) GetDefaultTransmuterInstantiateMsgBytes() []byte {
@@ -109,17 +147,16 @@ func (s *KeeperTestHelper) GetTransmuterInstantiateMsgBytes(poolAssetDenoms []st
 // given pool asset denoms.
 // TODO: Don't hardcode
 func (s *KeeperTestHelper) GetTransmuterInstantiateMsgBytesV3(poolAssetDenoms []string, owner sdk.AccAddress) []byte {
+	var assetConfigs []v3.AssetConfig
+	for _, denom := range poolAssetDenoms {
+		assetConfigs = append(assetConfigs, v3.AssetConfig{
+			Denom:               denom,
+			NormalizationFactor: "1",
+		})
+	}
+
 	instantiateMsg := v3.InstantiateMsg{
-		PoolAssetConfigs: []v3.AssetConfig{
-			{
-				Denom:               poolAssetDenoms[0],
-				NormalizationFactor: "100",
-			},
-			{
-				Denom:               poolAssetDenoms[1],
-				NormalizationFactor: "1",
-			},
-		},
+		PoolAssetConfigs:                assetConfigs,
 		AlloyedAssetSubdenom:            "testdenom",
 		AlloyedAssetNormalizationFactor: "1",
 		Admin:                           owner.String(),

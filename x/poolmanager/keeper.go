@@ -232,3 +232,8 @@ func (k *Keeper) SetWasmKeeper(wasmKeeper types.WasmKeeper) {
 func (k *Keeper) SetTwapKeeper(twapKeeper types.TwapKeeper) {
 	k.twapKeeper = twapKeeper
 }
+
+// GetCachedMaps returns the cached maps, used for testing.
+func (k Keeper) GetCachedMaps() (map[string]types.TakerFeeShareAgreement, map[string]types.AlloyContractTakerFeeShareState, map[uint64]bool) {
+	return k.cachedTakerFeeShareAgreement, k.cachedRegisteredAlloyPoolToState, k.cachedRegisteredAlloyedPoolId
+}

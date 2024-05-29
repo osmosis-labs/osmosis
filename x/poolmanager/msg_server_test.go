@@ -299,7 +299,7 @@ func (s *KeeperTestSuite) TestSetDenomPairTakerFee() {
 	}
 }
 
-func (s *KeeperTestSuite) TestSetTakerFeeShareAgreementForDenom() {
+func (s *KeeperTestSuite) TestSetTakerFeeShareAgreementForDenomMsg() {
 	govAddr := s.App.AccountKeeper.GetModuleAddress(govtypes.ModuleName).String()
 	nonGovAddr := s.TestAccs[0].String()
 	skimAddress := s.TestAccs[1].String()
@@ -345,7 +345,7 @@ func (s *KeeperTestSuite) TestSetTakerFeeShareAgreementForDenom() {
 	}
 }
 
-func (s *KeeperTestSuite) TestSetRegisteredAlloyedPool() {
+func (s *KeeperTestSuite) TestSetRegisteredAlloyedPoolMsg() {
 	govAddr := s.App.AccountKeeper.GetModuleAddress(govtypes.ModuleName).String()
 	nonGovAddr := s.TestAccs[0].String()
 

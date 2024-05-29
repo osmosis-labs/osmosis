@@ -3,6 +3,7 @@ package poolmanager
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -50,7 +51,7 @@ func (k Keeper) GetAllTakerFeesShareAgreements(ctx sdk.Context) []types.TakerFee
 	iterator := storetypes.KVStorePrefixIterator(store, types.KeyTakerFeeShare)
 	defer iterator.Close()
 
-	var takerFeeShareAgreements []types.TakerFeeShareAgreement
+	takerFeeShareAgreements := []types.TakerFeeShareAgreement{}
 	for ; iterator.Valid(); iterator.Next() {
 		takerFeeShareAgreement := types.TakerFeeShareAgreement{}
 		osmoutils.MustGet(store, iterator.Key(), &takerFeeShareAgreement)
@@ -93,6 +94,31 @@ func (k Keeper) SetTakerFeeShareAgreementForDenom(ctx sdk.Context, takerFeeShare
 
 	// Set cache value
 	k.cachedTakerFeeShareAgreement[takerFeeShare.Denom] = takerFeeShare
+
+	// Check if this denom is in the registered alloyed pools, if so we need to recalculate the taker fee share composition
+	poolIds := make([]uint64, 0, len(k.cachedRegisteredAlloyedPoolId))
+	for poolId := range k.cachedRegisteredAlloyedPoolId {
+		poolIds = append(poolIds, poolId)
+	}
+	sort.Slice(poolIds, func(i, j int) bool { return poolIds[i] < poolIds[j] })
+
+	for _, poolId := range poolIds {
+		pool, err := k.cosmwasmpoolKeeper.GetPool(ctx, poolId)
+		if err != nil {
+			return err
+		}
+		poolDenoms := pool.GetPoolDenoms(ctx)
+		for _, denom := range poolDenoms {
+			if denom == takerFeeShare.Denom {
+				// takerFeeShare.Denom is one of the poolDenoms
+				err := k.recalculateAndSetTakerFeeShareAlloyComposition(ctx, poolId)
+				if err != nil {
+					return err
+				}
+				break
+			}
+		}
+	}
 
 	return nil
 }
@@ -171,7 +197,7 @@ func (k Keeper) GetAllTakerFeeShareAccumulators(ctx sdk.Context) []types.TakerFe
 		takerFeeAgreementDenomToCoins[tierDenom] = currentCoins.Add(sdk.NewCoin(takerFeeDenom, accruedValueInt))
 	}
 
-	var takerFeeSkimAccumulators []types.TakerFeeSkimAccumulator
+	takerFeeSkimAccumulators := []types.TakerFeeSkimAccumulator{}
 	for _, denom := range denoms {
 		takerFeeSkimAccumulators = append(takerFeeSkimAccumulators, types.TakerFeeSkimAccumulator{
 			Denom:            denom,
@@ -239,6 +265,7 @@ func (k Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error {
 
 	// Set cache value
 	k.cachedRegisteredAlloyPoolToState[alloyedDenom] = registeredAlloyedPool
+	k.cachedRegisteredAlloyedPoolId[poolId] = true
 
 	return nil
 }
@@ -424,6 +451,7 @@ func (k Keeper) snapshotTakerFeeShareAlloyComposition(ctx sdk.Context, contractA
 	var assetsWithShareAgreement []sdk.Coin
 	var takerFeeShareAgreements []types.TakerFeeShareAgreement
 	var skimAddresses []string
+	var skimPercents []osmomath.Dec
 	for _, coin := range totalPoolLiquidity {
 		totalAlloyedLiquidity = totalAlloyedLiquidity.Add(coin.Amount.ToLegacyDec())
 		takerFeeShareAgreement, found := k.GetTakerFeeShareAgreementFromDenom(ctx, coin.Denom)
@@ -432,10 +460,15 @@ func (k Keeper) snapshotTakerFeeShareAlloyComposition(ctx sdk.Context, contractA
 		}
 		assetsWithShareAgreement = append(assetsWithShareAgreement, coin)
 		skimAddresses = append(skimAddresses, takerFeeShareAgreement.SkimAddress)
+		skimPercents = append(skimPercents, takerFeeShareAgreement.SkimPercent)
+	}
+
+	if totalAlloyedLiquidity.IsZero() {
+		return []types.TakerFeeShareAgreement{}, fmt.Errorf("totalAlloyedLiquidity is zero")
 	}
 
 	for i, coin := range assetsWithShareAgreement {
-		scaledSkim := coin.Amount.ToLegacyDec().Quo(totalAlloyedLiquidity)
+		scaledSkim := coin.Amount.ToLegacyDec().Quo(totalAlloyedLiquidity).Mul(skimPercents[i])
 		takerFeeShareAgreements = append(takerFeeShareAgreements, types.TakerFeeShareAgreement{
 			Denom:       coin.Denom,
 			SkimPercent: scaledSkim,
@@ -452,7 +485,7 @@ func (k Keeper) recalculateAndSetTakerFeeShareAlloyComposition(ctx sdk.Context, 
 		return err
 	}
 
-	takerFeeShareAlloyDenoms, err := k.snapshotTakerFeeShareAlloyComposition(ctx, sdk.AccAddress(registeredAlloyedPoolPrior.ContractAddress))
+	takerFeeShareAlloyDenoms, err := k.snapshotTakerFeeShareAlloyComposition(ctx, sdk.MustAccAddressFromBech32(registeredAlloyedPoolPrior.ContractAddress))
 	if err != nil {
 		return err
 	}
@@ -468,7 +501,7 @@ func (k Keeper) recalculateAndSetTakerFeeShareAlloyComposition(ctx sdk.Context, 
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	key := types.FormatRegisteredAlloyPoolKey(0, alloyedDenom)
+	key := types.FormatRegisteredAlloyPoolKey(poolId, alloyedDenom)
 	store.Set(key, bz)
 
 	// Set cache value

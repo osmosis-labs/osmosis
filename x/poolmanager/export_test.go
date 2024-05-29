@@ -56,3 +56,15 @@ func (k Keeper) TrackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.
 func (k Keeper) ChargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, sender sdk.AccAddress, exactIn bool) (sdk.Coin, sdk.Coin, error) {
 	return k.chargeTakerFee(ctx, tokenIn, tokenOutDenom, sender, exactIn)
 }
+
+func (k Keeper) QueryAndCheckAlloyedDenom(ctx sdk.Context, contractAddr sdk.AccAddress) (string, error) {
+	return k.queryAndCheckAlloyedDenom(ctx, contractAddr)
+}
+
+func (k Keeper) SnapshotTakerFeeShareAlloyComposition(ctx sdk.Context, contractAddr sdk.AccAddress) ([]types.TakerFeeShareAgreement, error) {
+	return k.snapshotTakerFeeShareAlloyComposition(ctx, contractAddr)
+}
+
+func (k Keeper) RecalculateAndSetTakerFeeShareAlloyComposition(ctx sdk.Context, poolId uint64) error {
+	return k.recalculateAndSetTakerFeeShareAlloyComposition(ctx, poolId)
+}
