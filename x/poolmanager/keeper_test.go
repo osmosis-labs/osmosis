@@ -414,7 +414,7 @@ func (s *KeeperTestSuite) TestEndBlock() {
 	for name, tc := range tests {
 		s.Run(name, func() {
 			s.SetupTest()
-			cwPool := s.PrepareCustomTransmuterPoolCustomProjectV3CustomRatio(s.TestAccs[0], []string{"testA", "testB"}, []uint16{1, 1}, "osmosis", "x/cosmwasmpool/bytecode")
+			cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, nil, "osmosis", "x/cosmwasmpool/bytecode")
 			s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
 				Denom:       "testA",
 				SkimPercent: osmomath.MustNewDecFromStr("0.01"),

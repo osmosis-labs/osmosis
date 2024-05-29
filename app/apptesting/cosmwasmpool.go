@@ -47,19 +47,15 @@ func (s *KeeperTestHelper) PrepareCustomTransmuterPoolCustomProject(owner sdk.Ac
 	return s.PreparePool(owner, denoms, projectName, byteCodePath, TransmuterContractName, s.GetTransmuterInstantiateMsgBytes)
 }
 
-func (s *KeeperTestHelper) PrepareCustomTransmuterPoolCustomProjectV3(owner sdk.AccAddress, denoms []string, projectName, byteCodePath string) cosmwasmpooltypes.CosmWasmExtension {
-	pool := s.PreparePool(owner, denoms, projectName, byteCodePath, TransmuterV3ContractName, s.GetTransmuterInstantiateMsgBytesV3)
-	ratioOfDenoms := make([]uint16, len(denoms))
-	for i := range denoms {
-		ratioOfDenoms[i] = 1
+// PrepareCustomTransmuterPoolV3 sets up a transmuter pool with the custom parameters for version 3.
+// It initializes the pool with the provided ratio for the given denoms, or a default ratio of 1:1 if none is provided.
+func (s *KeeperTestHelper) PrepareCustomTransmuterPoolV3(owner sdk.AccAddress, denoms []string, ratio []uint16, projectName, byteCodePath string) cosmwasmpooltypes.CosmWasmExtension {
+	if ratio == nil {
+		ratio = make([]uint16, len(denoms))
+		for i := range denoms {
+			ratio[i] = 1
+		}
 	}
-	s.AddRatioFundsToTransmuterPool(s.TestAccs[0], denoms, ratioOfDenoms, pool.GetId())
-	pool, err := s.App.CosmwasmPoolKeeper.GetPoolById(s.Ctx, pool.GetId())
-	s.Require().NoError(err)
-	return pool
-}
-
-func (s *KeeperTestHelper) PrepareCustomTransmuterPoolCustomProjectV3CustomRatio(owner sdk.AccAddress, denoms []string, ratio []uint16, projectName, byteCodePath string) cosmwasmpooltypes.CosmWasmExtension {
 	pool := s.PreparePool(owner, denoms, projectName, byteCodePath, TransmuterV3ContractName, s.GetTransmuterInstantiateMsgBytesV3)
 	s.AddRatioFundsToTransmuterPool(s.TestAccs[0], denoms, ratio, pool.GetId())
 	pool, err := s.App.CosmwasmPoolKeeper.GetPoolById(s.Ctx, pool.GetId())
@@ -72,9 +68,9 @@ func (s *KeeperTestHelper) PreparePool(owner sdk.AccAddress, denoms []string, pr
 	// Mint some assets to the account.
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
 
-	// Mint some of the denoms to ensure they exist on chain
+	// Set the supply of the denoms, since the contract fails if the denom doesn't exist on chain.
 	for _, denom := range denoms {
-		err := s.App.BankKeeper.Supply.Set(s.Ctx, denom, osmomath.NewInt(1000000000))
+		err := s.App.BankKeeper.Supply.Set(s.Ctx, denom, osmomath.NewInt(100000000000000))
 		s.Require().NoError(err)
 	}
 

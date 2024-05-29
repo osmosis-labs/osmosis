@@ -936,7 +936,7 @@ func (s *KeeperTestSuite) TestGetAllRegisteredAlloyedPools() {
 				poolInfos := s.PrepareAllSupportedPools()
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
-				cwPool := s.PrepareCustomTransmuterPoolCustomProjectV3(s.TestAccs[0], []string{"testA", "testB"}, "osmosis", "x/cosmwasmpool/bytecode")
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, nil, "osmosis", "x/cosmwasmpool/bytecode")
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 			},
@@ -988,7 +988,7 @@ func (s *KeeperTestSuite) TestGetAllRegisteredAlloyedPools() {
 				}
 				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreement)
 
-				cwPool := s.PrepareCustomTransmuterPoolCustomProjectV3(s.TestAccs[0], []string{"testA", "testB"}, "osmosis", "x/cosmwasmpool/bytecode")
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, nil, "osmosis", "x/cosmwasmpool/bytecode")
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 
@@ -1070,7 +1070,7 @@ func (s *KeeperTestSuite) TestGetAllRegisteredAlloyedPoolsMap() {
 				s.Require().NoError(err)
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
-				cwPool := s.PrepareCustomTransmuterPoolCustomProjectV3(s.TestAccs[0], []string{"testA", "testB"}, "osmosis", "x/cosmwasmpool/bytecode")
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, nil, "osmosis", "x/cosmwasmpool/bytecode")
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				denomA := fmt.Sprintf("factory/%s/alloyed/testdenom", pool.GetAddress().String())
@@ -1133,7 +1133,7 @@ func (s *KeeperTestSuite) TestGetAllRegisteredAlloyedPoolsMap() {
 					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
 				}
 				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreementB)
-				cwPool := s.PrepareCustomTransmuterPoolCustomProjectV3(s.TestAccs[0], []string{"testA", "testB"}, "osmosis", "x/cosmwasmpool/bytecode")
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, nil, "osmosis", "x/cosmwasmpool/bytecode")
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				denomB := fmt.Sprintf("factory/%s/alloyed/testdenom", cwPool.GetAddress().String())
@@ -1218,7 +1218,7 @@ func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsCached() {
 				s.Require().NoError(err)
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
-				cwPool := s.PrepareCustomTransmuterPoolCustomProjectV3(s.TestAccs[0], []string{"testA", "testB"}, "osmosis", "x/cosmwasmpool/bytecode")
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, nil, "osmosis", "x/cosmwasmpool/bytecode")
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				denomA := fmt.Sprintf("factory/%s/alloyed/testdenom", pool.GetAddress().String())
@@ -1281,7 +1281,7 @@ func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsCached() {
 					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
 				}
 				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreementB)
-				cwPool := s.PrepareCustomTransmuterPoolCustomProjectV3(s.TestAccs[0], []string{"testA", "testB"}, "osmosis", "x/cosmwasmpool/bytecode")
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, nil, "osmosis", "x/cosmwasmpool/bytecode")
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				denomB := fmt.Sprintf("factory/%s/alloyed/testdenom", cwPool.GetAddress().String())
@@ -1355,7 +1355,7 @@ func (s *KeeperTestSuite) TestGetAllRegisteredAlloyedPoolsIdMap() {
 				poolInfos := s.PrepareAllSupportedPools()
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
-				cwPool := s.PrepareCustomTransmuterPoolCustomProjectV3(s.TestAccs[0], []string{"testA", "testB"}, "osmosis", "x/cosmwasmpool/bytecode")
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, nil, "osmosis", "x/cosmwasmpool/bytecode")
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				return []uint64{poolInfos.AlloyedPoolID, cwPool.GetId()}
@@ -1402,7 +1402,7 @@ func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsIdCached() {
 				poolInfos := s.PrepareAllSupportedPools()
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
-				cwPool := s.PrepareCustomTransmuterPoolCustomProjectV3(s.TestAccs[0], []string{"testA", "testB"}, "osmosis", "x/cosmwasmpool/bytecode")
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, nil, "osmosis", "x/cosmwasmpool/bytecode")
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				return []uint64{poolInfos.AlloyedPoolID, cwPool.GetId()}
@@ -1475,7 +1475,7 @@ func (s *KeeperTestSuite) TestSnapshotTakerFeeShareAlloyComposition() {
 	}{
 		"alloyed pool exists, composed of no taker fee share denoms": {
 			setupFunc: func() cosmwasmpooltypes.CosmWasmExtension {
-				cwPool := s.PrepareCustomTransmuterPoolCustomProjectV3(s.TestAccs[0], []string{"testA", "testB", "testC"}, "osmosis", "x/cosmwasmpool/bytecode")
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB", "testC"}, nil, "osmosis", "x/cosmwasmpool/bytecode")
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				return cwPool
@@ -1484,7 +1484,7 @@ func (s *KeeperTestSuite) TestSnapshotTakerFeeShareAlloyComposition() {
 		},
 		"alloyed pool exists, composed of one taker fee share denom": {
 			setupFunc: func() cosmwasmpooltypes.CosmWasmExtension {
-				cwPool := s.PrepareCustomTransmuterPoolCustomProjectV3(s.TestAccs[0], []string{"testA", "testB", "testC"}, "osmosis", "x/cosmwasmpool/bytecode")
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB", "testC"}, nil, "osmosis", "x/cosmwasmpool/bytecode")
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
@@ -1498,7 +1498,7 @@ func (s *KeeperTestSuite) TestSnapshotTakerFeeShareAlloyComposition() {
 		},
 		"alloyed pool exists, composed of two taker fee share denoms, differing ratios": {
 			setupFunc: func() cosmwasmpooltypes.CosmWasmExtension {
-				cwPool := s.PrepareCustomTransmuterPoolCustomProjectV3CustomRatio(s.TestAccs[0], []string{"testA", "testB", "testC"}, []uint16{1, 3, 6}, "osmosis", "x/cosmwasmpool/bytecode")
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB", "testC"}, []uint16{1, 3, 6}, "osmosis", "x/cosmwasmpool/bytecode")
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
@@ -1517,7 +1517,7 @@ func (s *KeeperTestSuite) TestSnapshotTakerFeeShareAlloyComposition() {
 		},
 		"alloyed pool exists, composed of two taker fee share denoms, differing ratios, first asset has no liquidity": {
 			setupFunc: func() cosmwasmpooltypes.CosmWasmExtension {
-				cwPool := s.PrepareCustomTransmuterPoolCustomProjectV3CustomRatio(s.TestAccs[0], []string{"testA", "testB", "testC"}, []uint16{0, 3, 6}, "osmosis", "x/cosmwasmpool/bytecode")
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB", "testC"}, []uint16{0, 3, 6}, "osmosis", "x/cosmwasmpool/bytecode")
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
@@ -1536,7 +1536,7 @@ func (s *KeeperTestSuite) TestSnapshotTakerFeeShareAlloyComposition() {
 		},
 		"error: alloyed pool has no liquidity": {
 			setupFunc: func() cosmwasmpooltypes.CosmWasmExtension {
-				return s.PrepareCustomTransmuterPoolCustomProjectV3CustomRatio(s.TestAccs[0], []string{"testA", "testB", "testC"}, nil, "osmosis", "x/cosmwasmpool/bytecode")
+				return s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB", "testC"}, nil, "osmosis", "x/cosmwasmpool/bytecode")
 			},
 			expectedError: fmt.Errorf("totalAlloyedLiquidity is zero"),
 		},
@@ -1570,7 +1570,7 @@ func (s *KeeperTestSuite) TestRecalculateAndSetTakerFeeShareAlloyComposition() {
 	}{
 		"1:1 to 2:1": {
 			setupFunc: func() uint64 {
-				cwPool := s.PrepareCustomTransmuterPoolCustomProjectV3CustomRatio(s.TestAccs[0], []string{"testA", "testB"}, []uint16{1, 1}, "osmosis", "x/cosmwasmpool/bytecode")
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, []uint16{1, 1}, "osmosis", "x/cosmwasmpool/bytecode")
 				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
 					Denom:       "testA",
 					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
@@ -1597,7 +1597,7 @@ func (s *KeeperTestSuite) TestRecalculateAndSetTakerFeeShareAlloyComposition() {
 		},
 		"1:1:1 to 3:2:1": {
 			setupFunc: func() uint64 {
-				cwPool := s.PrepareCustomTransmuterPoolCustomProjectV3CustomRatio(s.TestAccs[0], []string{"testA", "testB", "testC"}, []uint16{1, 1, 1}, "osmosis", "x/cosmwasmpool/bytecode")
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB", "testC"}, []uint16{1, 1, 1}, "osmosis", "x/cosmwasmpool/bytecode")
 				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
 					Denom:       "testA",
 					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
@@ -1633,7 +1633,7 @@ func (s *KeeperTestSuite) TestRecalculateAndSetTakerFeeShareAlloyComposition() {
 		},
 		"1:1:1 to 4:2:1": {
 			setupFunc: func() uint64 {
-				cwPool := s.PrepareCustomTransmuterPoolCustomProjectV3CustomRatio(s.TestAccs[0], []string{"testA", "testB", "testC"}, []uint16{1, 1, 1}, "osmosis", "x/cosmwasmpool/bytecode")
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB", "testC"}, []uint16{1, 1, 1}, "osmosis", "x/cosmwasmpool/bytecode")
 				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
 					Denom:       "testA",
 					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
