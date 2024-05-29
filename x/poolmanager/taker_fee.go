@@ -177,10 +177,10 @@ func CalcTakerFeeExactOut(tokenIn sdk.Coin, takerFee osmomath.Dec) (sdk.Coin, sd
 }
 
 // TakerFeeSkim calculates the taker fee share for each denomination involved in a route and increases the accumulator for the respective denomination pair.
-// The function first sorts the denominations lexicographically and then checks for tier 1 and tier 2 denominations.
-// Tier 1 denominations represent a bridge provider that has a taker fee share agreement, while tier 2 denominations represent the alloyed assets themselves.
-// If there are one or more tier 1 share agreements, the function calculates the percentage of the taker fees that should be skimmed off and increases the accumulator for the tier 1 denomination / taker fee denomination pair.
-// If there were no tier 1 denominations and there are tier 2 denominations, the function calculates the taker fee share for the alloyed asset for each underlying asset that has a taker fee share agreement.
+// The function first sorts the denominations lexicographically and then checks for denomShareAgreement and alloyedAssetShareAgreement denoms.
+// DenomShareAgreement denoms represent a denom that has a taker fee share agreement with the Osmosis protocol, while alloyedAssetShareAgreement denoms represent an alloyed asset composed of one or more denoms with a denomShareAgreement.
+// If there are one or more denomShareAgreement denoms, the function calculates the percentage of the taker fees that should be skimmed off and increases the accumulator for the denomShareAgreement denom / taker fee denomination pair.
+// If there were no denomShareAgreement denoms but there are one or more alloyedAssetShareAgreement denoms, the function calculates the taker fee share for the alloyed asset for each underlying asset that has a taker fee share agreement.
 // The function returns an error if the total taker fee share percentage is greater than 1.
 //
 // Parameters:
@@ -194,39 +194,38 @@ func (k Keeper) TakerFeeSkim(ctx sdk.Context, denomsInvolvedInRoute []string, to
 	// Sort the denoms involved in the route lexicographically.
 	osmoutils.SortSlice(denomsInvolvedInRoute)
 
-	// Check for tier 1 and tier 2 denoms,
-	// Tier 1 denoms are denoms that represent a bridge provider that has a taker fee share agreement.
-	// Tier 2 denoms are denoms that represent the alloyed assets themselves.
-	tier1ShareAgreements := []types.TakerFeeShareAgreement{}
-	tier2ShareAgreements := []types.TakerFeeShareAgreement{}
+	// Check for individual denomShareAgreement and alloyedAssetShareAgreement denoms,
+	denomShareAgreements := []types.TakerFeeShareAgreement{}
+	alloyedAssetShareAgreements := []types.TakerFeeShareAgreement{}
 	for _, denom := range denomsInvolvedInRoute {
-		// We first check if this denom has a taker fee share agreement with a bridge provider (tier 1).
+		// We first check if this denom has a taker fee share agreement.
 		takerFeeShareAgreement, found := k.GetTakerFeeShareAgreementFromDenom(ctx, denom)
 
 		if found {
-			// If the denom is a tier 1 denom, add it to the tier 1 share agreements slice.
-			tier1ShareAgreements = append(tier1ShareAgreements, takerFeeShareAgreement)
-		} else if len(tier1ShareAgreements) == 0 {
-			// If there are no tier 1 share agreements in the tier 1 share agreements slice, continue to filter this denom to determine if it is a tier 2 denom.
-			// If there are 1 or more tier 1 share agreements in the tier 1 share agreements slice, we don't need to check for tier 2 denoms anymore, since the taker fee share
-			// only goes to tier 2 denoms IFF there are no tier 1 denoms in the route.
-			// Check if denom is tier 2
-			// If it is, add it to the tier 2 share agreements slice.
+			// If the denom has a denomShareAgreement, add the denomShareAgreement to the denomShareAgreements slice.
+			denomShareAgreements = append(denomShareAgreements, takerFeeShareAgreement)
+		} else if len(denomShareAgreements) == 0 {
+			// If there are no denomShareAgreements in the denomShareAgreements slice, continue to filter this denom to determine if it is a alloyedAssetShareAgreement denom.
+			// If there are 1 or more denomShareAgreements in the denomShareAgreements slice, we don't need to check for alloyedAssetShareAgreements anymore, since the taker fee share
+			// only goes to alloyedAssetShareAgreements IFF there are no denomShareAgreement denoms in the route.
+
+			// Check if the denom is an alloyedAssetShareAgreement denom.
+			// If it is, add the alloyedAssetShareAgreement to the alloyedAssetShareAgreements slice.
 			cachedAlloyContractState, found := k.GetRegisteredAlloyedPoolFromDenom(ctx, denom)
 			if found {
-				tier2ShareAgreements = append(tier2ShareAgreements, cachedAlloyContractState.TakerFeeShareAgreements...)
+				alloyedAssetShareAgreements = append(alloyedAssetShareAgreements, cachedAlloyContractState.TakerFeeShareAgreements...)
 			}
 		}
 	}
 
 	// Filtering complete
 
-	// If there are 1 or more tier 1 share agreements, add up the percentage of the taker fees that should be skimmed off.
+	// If there are 1 or more denomShareAgreements, add up the percentage of the taker fees that should be skimmed off.
 	// If the total of taker fee share is greater than 1, return an error.
-	// Then, for each taker fee coin, calculate the amount to skim off and increase the accumulator for the tier 1 denom / taker fee denom pair.
-	if len(tier1ShareAgreements) > 0 {
+	// Then, for each taker fee coin, calculate the amount to skim off and increase the accumulator for the denomShareAgreement denom / taker fee denom pair.
+	if len(denomShareAgreements) > 0 {
 		percentageOfTakerFeeToSkim := osmomath.ZeroDec()
-		for _, takerFeeShareAgreement := range tier1ShareAgreements {
+		for _, takerFeeShareAgreement := range denomShareAgreements {
 			// Add up the percentage of the taker fee that should be skimmed off.
 			percentageOfTakerFeeToSkim = percentageOfTakerFeeToSkim.Add(takerFeeShareAgreement.SkimPercent)
 		}
@@ -234,10 +233,10 @@ func (k Keeper) TakerFeeSkim(ctx sdk.Context, denomsInvolvedInRoute []string, to
 			return fmt.Errorf("total taker fee share percentage is greater than 1")
 		}
 		for _, takerFeeCoin := range totalTakerFees {
-			for _, takerFeeShareAgreement := range tier1ShareAgreements {
+			for _, takerFeeShareAgreement := range denomShareAgreements {
 				amountToSkim := osmomath.NewDecFromInt(takerFeeCoin.Amount).Mul(takerFeeShareAgreement.SkimPercent).TruncateInt()
 
-				// Increase the accumulator for the tier 1 denom / taker fee denom pair.
+				// Increase the accumulator for the denomShareAgreement denom / taker fee denom pair.
 				err := k.IncreaseTakerFeeShareDenomsToAccruedValue(ctx, takerFeeShareAgreement.Denom, takerFeeCoin.Denom, amountToSkim)
 				if err != nil {
 					return err
@@ -247,10 +246,10 @@ func (k Keeper) TakerFeeSkim(ctx sdk.Context, denomsInvolvedInRoute []string, to
 		return nil
 	}
 
-	// IFF there were no tier 1 denoms and there are tier 2 denoms, we calculate the taker fee share for the alloyed asset for each underlying asset that has a taker fee share agreement.
-	if len(tier1ShareAgreements) == 0 && len(tier2ShareAgreements) > 0 {
+	// IFF there were no denomShareAgreement denoms and there are alloyedAssetShareAgreement denoms, we calculate the taker fee share for the alloyed asset for each underlying asset that has a taker fee share agreement.
+	if len(denomShareAgreements) == 0 && len(alloyedAssetShareAgreements) > 0 {
 		percentageOfTakerFeeToSkim := osmomath.ZeroDec()
-		for _, takerFeeShareAgreement := range tier2ShareAgreements {
+		for _, takerFeeShareAgreement := range alloyedAssetShareAgreements {
 			// Add up the percentage of the taker fee that should be skimmed off.
 			percentageOfTakerFeeToSkim = percentageOfTakerFeeToSkim.Add(takerFeeShareAgreement.SkimPercent)
 		}
@@ -258,11 +257,10 @@ func (k Keeper) TakerFeeSkim(ctx sdk.Context, denomsInvolvedInRoute []string, to
 			return fmt.Errorf("total taker fee share percentage is greater than 1")
 		}
 		for _, takerFeeCoin := range totalTakerFees {
-			for _, takerFeeShareAgreement := range tier2ShareAgreements {
+			for _, takerFeeShareAgreement := range alloyedAssetShareAgreements {
 				amountToSkim := osmomath.NewDecFromInt(takerFeeCoin.Amount).Mul(takerFeeShareAgreement.SkimPercent).TruncateInt()
 
-				// Increase the accumulator for the underlying tier 1 denom / taker fee denom pair.
-				// TODO
+				// Increase the accumulator for the underlying denomShareAgreement denom / taker fee denom pair.
 				err := k.IncreaseTakerFeeShareDenomsToAccruedValue(ctx, takerFeeShareAgreement.Denom, takerFeeCoin.Denom, amountToSkim)
 				if err != nil {
 					return err
