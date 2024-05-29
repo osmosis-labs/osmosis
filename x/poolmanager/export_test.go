@@ -68,3 +68,11 @@ func (k Keeper) SnapshotTakerFeeShareAlloyComposition(ctx sdk.Context, contractA
 func (k Keeper) RecalculateAndSetTakerFeeShareAlloyComposition(ctx sdk.Context, poolId uint64) error {
 	return k.recalculateAndSetTakerFeeShareAlloyComposition(ctx, poolId)
 }
+
+func (k Keeper) GetCachedMaps() (map[string]types.TakerFeeShareAgreement, map[string]types.AlloyContractTakerFeeShareState, map[uint64]bool) {
+	return k.getCachedMaps()
+}
+
+func (k *Keeper) SetCachedMaps(takerFeeShareAgreement map[string]types.TakerFeeShareAgreement, registeredAlloyPoolToState map[string]types.AlloyContractTakerFeeShareState, registeredAlloyedPoolId map[uint64]bool) {
+	k.setCachedMaps(takerFeeShareAgreement, registeredAlloyPoolToState, registeredAlloyedPoolId)
+}

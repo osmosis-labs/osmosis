@@ -6,6 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/gogoproto/proto"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
@@ -204,4 +206,161 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 	s.Require().Equal(testPoolVolumes[0].PoolVolume, genesis.PoolVolumes[0].PoolVolume)
 	s.Require().Equal(testPoolVolumes[1].PoolVolume, genesis.PoolVolumes[1].PoolVolume)
 	s.Require().Equal(testDenomPairTakerFees, genesis.DenomPairTakerFeeStore)
+}
+
+func (s *KeeperTestSuite) TestBeginBlock() {
+	defaultCachedTakerFeeShareAgreement := map[string]types.TakerFeeShareAgreement{
+		apptesting.DefaultTransmuterDenomA: {
+			Denom:       apptesting.DefaultTransmuterDenomA,
+			SkimPercent: osmomath.MustNewDecFromStr("0.01"),
+			SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
+		},
+	}
+	defaultCachedRegisteredAlloyPoolToState := map[string]types.AlloyContractTakerFeeShareState{
+		"factory/osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2/alloyed/testdenom": {
+			ContractAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
+			TakerFeeShareAgreements: []types.TakerFeeShareAgreement{
+				{
+					Denom:       apptesting.DefaultTransmuterDenomA,
+					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
+					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
+				},
+			},
+		},
+	}
+
+	defaultCachedRegisteredAlloyedPoolId := map[uint64]bool{1: true}
+
+	tests := map[string]struct {
+		storeSetup                               func()
+		expectedTakerFeeSkimAccumulators         []types.TakerFeeSkimAccumulator
+		expectedCachedTakerFeeShareAgreement     map[string]types.TakerFeeShareAgreement
+		expectedCachedRegisteredAlloyPoolToState map[string]types.AlloyContractTakerFeeShareState
+		expectedCachedRegisteredAlloyedPoolId    map[uint64]bool
+		expectedError                            error
+	}{
+		"cachedTakerFeeShareAgreement is empty, cachedRegisteredAlloyPoolToState is empty, cachedRegisteredAlloyedPoolId is empty, should update": {
+			storeSetup:                               func() {},
+			expectedCachedTakerFeeShareAgreement:     defaultCachedTakerFeeShareAgreement,
+			expectedCachedRegisteredAlloyPoolToState: defaultCachedRegisteredAlloyPoolToState,
+			expectedCachedRegisteredAlloyedPoolId:    defaultCachedRegisteredAlloyedPoolId,
+		},
+		"cachedTakerFeeShareAgreement is empty, cachedRegisteredAlloyPoolToState is not empty, cachedRegisteredAlloyedPoolId is not empty, should update": {
+			storeSetup: func() {
+				s.App.PoolManagerKeeper.SetCachedMaps(nil, defaultCachedRegisteredAlloyPoolToState, defaultCachedRegisteredAlloyedPoolId)
+			},
+			expectedCachedTakerFeeShareAgreement:     defaultCachedTakerFeeShareAgreement,
+			expectedCachedRegisteredAlloyPoolToState: defaultCachedRegisteredAlloyPoolToState,
+			expectedCachedRegisteredAlloyedPoolId:    defaultCachedRegisteredAlloyedPoolId,
+		},
+		"cachedTakerFeeShareAgreement is not empty, cachedRegisteredAlloyPoolToState is empty, cachedRegisteredAlloyedPoolId is not empty, should update": {
+			storeSetup: func() {
+				s.App.PoolManagerKeeper.SetCachedMaps(defaultCachedTakerFeeShareAgreement, nil, defaultCachedRegisteredAlloyedPoolId)
+			},
+			expectedCachedTakerFeeShareAgreement:     defaultCachedTakerFeeShareAgreement,
+			expectedCachedRegisteredAlloyPoolToState: defaultCachedRegisteredAlloyPoolToState,
+			expectedCachedRegisteredAlloyedPoolId:    defaultCachedRegisteredAlloyedPoolId,
+		},
+		"cachedTakerFeeShareAgreement is not empty, cachedRegisteredAlloyPoolToState is not empty, cachedRegisteredAlloyedPoolId is empty, should update": {
+			storeSetup: func() {
+				s.App.PoolManagerKeeper.SetCachedMaps(defaultCachedTakerFeeShareAgreement, defaultCachedRegisteredAlloyPoolToState, nil)
+			},
+			expectedCachedTakerFeeShareAgreement:     defaultCachedTakerFeeShareAgreement,
+			expectedCachedRegisteredAlloyPoolToState: defaultCachedRegisteredAlloyPoolToState,
+			expectedCachedRegisteredAlloyedPoolId:    defaultCachedRegisteredAlloyedPoolId,
+		},
+		"cachedTakerFeeShareAgreement is empty, cachedRegisteredAlloyPoolToState is empty, cachedRegisteredAlloyedPoolId is not empty, should update": {
+			storeSetup: func() {
+				s.App.PoolManagerKeeper.SetCachedMaps(nil, nil, defaultCachedRegisteredAlloyedPoolId)
+			},
+			expectedCachedTakerFeeShareAgreement:     defaultCachedTakerFeeShareAgreement,
+			expectedCachedRegisteredAlloyPoolToState: defaultCachedRegisteredAlloyPoolToState,
+			expectedCachedRegisteredAlloyedPoolId:    defaultCachedRegisteredAlloyedPoolId,
+		},
+		"cachedTakerFeeShareAgreement is not empty, cachedRegisteredAlloyPoolToState is not empty, cachedRegisteredAlloyedPoolId is not empty, should not update": {
+			storeSetup: func() {
+				differentCachedTakerFeeShareAgreement := map[string]types.TakerFeeShareAgreement{
+					apptesting.DefaultTransmuterDenomA: {
+						Denom:       apptesting.DefaultTransmuterDenomA,
+						SkimPercent: osmomath.MustNewDecFromStr("0.02"),
+						SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
+					},
+				}
+				differentCachedRegisteredAlloyPoolToState := map[string]types.AlloyContractTakerFeeShareState{
+					"factory/osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2/alloyed/testdenom2": {
+						ContractAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
+						TakerFeeShareAgreements: []types.TakerFeeShareAgreement{
+							{
+								Denom:       apptesting.DefaultTransmuterDenomA,
+								SkimPercent: osmomath.MustNewDecFromStr("0.02"),
+								SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
+							},
+						},
+					},
+				}
+				differentCachedRegisteredAlloyedPoolId := map[uint64]bool{2: true}
+				s.App.PoolManagerKeeper.SetCachedMaps(differentCachedTakerFeeShareAgreement, differentCachedRegisteredAlloyPoolToState, differentCachedRegisteredAlloyedPoolId)
+			},
+			expectedCachedTakerFeeShareAgreement: map[string]types.TakerFeeShareAgreement{
+				apptesting.DefaultTransmuterDenomA: {
+					Denom:       apptesting.DefaultTransmuterDenomA,
+					SkimPercent: osmomath.MustNewDecFromStr("0.02"),
+					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
+				},
+			},
+			expectedCachedRegisteredAlloyPoolToState: map[string]types.AlloyContractTakerFeeShareState{
+				"factory/osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2/alloyed/testdenom2": {
+					ContractAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
+					TakerFeeShareAgreements: []types.TakerFeeShareAgreement{
+						{
+							Denom:       apptesting.DefaultTransmuterDenomA,
+							SkimPercent: osmomath.MustNewDecFromStr("0.02"),
+							SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
+						},
+					},
+				},
+			},
+			expectedCachedRegisteredAlloyedPoolId: map[uint64]bool{2: true},
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+
+			// Directly set the stores
+			takerFeeShareAgreement := types.TakerFeeShareAgreement{
+				Denom:       apptesting.DefaultTransmuterDenomA,
+				SkimPercent: osmomath.MustNewDecFromStr("0.01"),
+				SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
+			}
+			poolManagerKey := s.App.AppKeepers.GetKey(types.StoreKey)
+			store := s.Ctx.KVStore(poolManagerKey)
+			key := types.FormatTakerFeeShareAgreementKey(takerFeeShareAgreement.Denom)
+			bz, err := proto.Marshal(&takerFeeShareAgreement)
+			s.Require().NoError(err)
+			store.Set(key, bz)
+
+			alloyContractState := types.AlloyContractTakerFeeShareState{
+				ContractAddress:         "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
+				TakerFeeShareAgreements: []types.TakerFeeShareAgreement{takerFeeShareAgreement},
+			}
+			bz, err = proto.Marshal(&alloyContractState)
+			s.Require().NoError(err)
+			key = types.FormatRegisteredAlloyPoolKey(1, "factory/osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2/alloyed/testdenom")
+			store.Set(key, bz)
+
+			// Set up cachedStores
+			tc.storeSetup()
+
+			// Call BeginBlock
+			s.App.PoolManagerKeeper.BeginBlock(s.Ctx)
+
+			// Check expected values
+			cachedTakerFeeShareAgreement, cachedRegisteredAlloyPoolToState, cachedRegisteredAlloyedPoolId := s.App.PoolManagerKeeper.GetCachedMaps()
+			s.Require().Equal(tc.expectedCachedTakerFeeShareAgreement, cachedTakerFeeShareAgreement)
+			s.Require().Equal(tc.expectedCachedRegisteredAlloyPoolToState, cachedRegisteredAlloyPoolToState)
+			s.Require().Equal(tc.expectedCachedRegisteredAlloyedPoolId, cachedRegisteredAlloyedPoolId)
+		})
+	}
 }

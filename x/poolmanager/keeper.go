@@ -1,6 +1,7 @@
 package poolmanager
 
 import (
+	"fmt"
 	"sync"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -233,7 +234,57 @@ func (k *Keeper) SetTwapKeeper(twapKeeper types.TwapKeeper) {
 	k.twapKeeper = twapKeeper
 }
 
-// GetCachedMaps returns the cached maps, used for testing.
-func (k Keeper) GetCachedMaps() (map[string]types.TakerFeeShareAgreement, map[string]types.AlloyContractTakerFeeShareState, map[uint64]bool) {
+func (k *Keeper) BeginBlock(ctx sdk.Context) {
+	// Set the caches if they are empty
+	if len(k.cachedTakerFeeShareAgreement) == 0 || len(k.cachedRegisteredAlloyPoolToState) == 0 || len(k.cachedRegisteredAlloyedPoolId) == 0 {
+		err := k.SetTakerFeeShareAgreementsMapCached(ctx)
+		if err != nil {
+			ctx.Logger().Error(fmt.Errorf("error in setting taker fee share agreements map cached: %w", err).Error())
+		}
+		err = k.SetAllRegisteredAlloyedPoolsCached(ctx)
+		if err != nil {
+			ctx.Logger().Error(fmt.Errorf("error in setting all registered alloyed pools cached: %w", err).Error())
+		}
+		err = k.SetAllRegisteredAlloyedPoolsIdCached(ctx)
+		if err != nil {
+			ctx.Logger().Error(fmt.Errorf("error in setting all registered alloyed pools id cached: %w", err).Error())
+		}
+	}
+}
+
+func (k *Keeper) EndBlock(ctx sdk.Context) {
+	// get changed pools grabs all altered pool ids from the twap transient store.
+	// 'altered pool ids' gets automatically cleared on commit by being a transient store
+	changedPoolIds := k.twapKeeper.GetChangedPools(ctx)
+
+	for _, id := range changedPoolIds {
+		_, found := k.cachedRegisteredAlloyedPoolId[id]
+
+		if found {
+			err := k.recalculateAndSetTakerFeeShareAlloyComposition(ctx, id)
+			if err != nil {
+				ctx.Logger().Error(fmt.Errorf(
+					"error in setting registered alloyed pool for pool id %d: %w", id, err,
+				).Error())
+			}
+		}
+	}
+}
+
+// getCachedMaps returns the cached maps, used for testing.
+func (k Keeper) getCachedMaps() (map[string]types.TakerFeeShareAgreement, map[string]types.AlloyContractTakerFeeShareState, map[uint64]bool) {
 	return k.cachedTakerFeeShareAgreement, k.cachedRegisteredAlloyPoolToState, k.cachedRegisteredAlloyedPoolId
+}
+
+// setCachedMaps sets the cached maps, used for testing.
+func (k *Keeper) setCachedMaps(takerFeeShareAgreement map[string]types.TakerFeeShareAgreement, registeredAlloyPoolToState map[string]types.AlloyContractTakerFeeShareState, registeredAlloyedPoolId map[uint64]bool) {
+	if takerFeeShareAgreement != nil {
+		k.cachedTakerFeeShareAgreement = takerFeeShareAgreement
+	}
+	if registeredAlloyPoolToState != nil {
+		k.cachedRegisteredAlloyPoolToState = registeredAlloyPoolToState
+	}
+	if registeredAlloyedPoolId != nil {
+		k.cachedRegisteredAlloyedPoolId = registeredAlloyedPoolId
+	}
 }

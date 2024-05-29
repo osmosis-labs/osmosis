@@ -62,7 +62,7 @@ func (k Keeper) GetAllTakerFeesShareAgreements(ctx sdk.Context) []types.TakerFee
 }
 
 // Used for initializing the cache for the take fee share agreements.
-func (k Keeper) SetTakerFeeShareAgreementsMapCached(ctx sdk.Context) error {
+func (k *Keeper) SetTakerFeeShareAgreementsMapCached(ctx sdk.Context) error {
 	takerFeeShareAgreement, err := k.GetAllTakerFeeShareAgreementsMap(ctx)
 	if err != nil {
 		return err
@@ -82,7 +82,7 @@ func (k Keeper) GetTakerFeeShareAgreementFromDenom(ctx sdk.Context, tierDenom st
 
 // Used for setting a specific take fee share agreement in the store.
 // Used in the MsgSetTakerFeeShareAgreementForDenom, for governance.
-func (k Keeper) SetTakerFeeShareAgreementForDenom(ctx sdk.Context, takerFeeShare types.TakerFeeShareAgreement) error {
+func (k *Keeper) SetTakerFeeShareAgreementForDenom(ctx sdk.Context, takerFeeShare types.TakerFeeShareAgreement) error {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FormatTakerFeeShareAgreementKey(takerFeeShare.Denom)
 	bz, err := proto.Marshal(&takerFeeShare)
@@ -225,7 +225,7 @@ func (k Keeper) DeleteAllTakerFeeShareAccumulatorsForTierDenom(ctx sdk.Context, 
 
 // Used for setting a specific registered alloyed pool in the store.
 // Used in the MsgRegisterAlloyedPool, for governance.
-func (k Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error {
+func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error {
 	store := ctx.KVStore(k.storeKey)
 
 	cwPool, err := k.GetPool(ctx, poolId)
@@ -346,7 +346,7 @@ func (k Keeper) GetAllRegisteredAlloyedPoolsMap(ctx sdk.Context) (map[string]typ
 }
 
 // Used for initializing the cache for the registered alloyed pools.
-func (k Keeper) SetAllRegisteredAlloyedPoolsCached(ctx sdk.Context) error {
+func (k *Keeper) SetAllRegisteredAlloyedPoolsCached(ctx sdk.Context) error {
 	registeredAlloyPools, err := k.GetAllRegisteredAlloyedPoolsMap(ctx)
 	if err != nil {
 		return err
@@ -385,7 +385,7 @@ func (k Keeper) GetAllRegisteredAlloyedPoolsIdMap(ctx sdk.Context) (map[uint64]b
 }
 
 // Used for initializing the cache for the registered alloyed pools id.
-func (k Keeper) SetAllRegisteredAlloyedPoolsIdCached(ctx sdk.Context) error {
+func (k *Keeper) SetAllRegisteredAlloyedPoolsIdCached(ctx sdk.Context) error {
 	registeredAlloyPoolsId, err := k.GetAllRegisteredAlloyedPoolsIdMap(ctx)
 	if err != nil {
 		return err
@@ -479,7 +479,7 @@ func (k Keeper) snapshotTakerFeeShareAlloyComposition(ctx sdk.Context, contractA
 	return takerFeeShareAgreements, nil
 }
 
-func (k Keeper) recalculateAndSetTakerFeeShareAlloyComposition(ctx sdk.Context, poolId uint64) error {
+func (k *Keeper) recalculateAndSetTakerFeeShareAlloyComposition(ctx sdk.Context, poolId uint64) error {
 	alloyedDenom, registeredAlloyedPoolPrior, err := k.GetRegisteredAlloyedPoolFromPoolId(ctx, poolId)
 	if err != nil {
 		return err
