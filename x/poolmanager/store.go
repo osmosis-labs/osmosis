@@ -96,13 +96,7 @@ func (k *Keeper) SetTakerFeeShareAgreementForDenom(ctx sdk.Context, takerFeeShar
 	k.cachedTakerFeeShareAgreement[takerFeeShare.Denom] = takerFeeShare
 
 	// Check if this denom is in the registered alloyed pools, if so we need to recalculate the taker fee share composition
-	poolIds := make([]uint64, 0, len(k.cachedRegisteredAlloyedPoolId))
-	for poolId := range k.cachedRegisteredAlloyedPoolId {
-		poolIds = append(poolIds, poolId)
-	}
-	sort.Slice(poolIds, func(i, j int) bool { return poolIds[i] < poolIds[j] })
-
-	for _, poolId := range poolIds {
+	for _, poolId := range k.cachedRegisteredAlloyedPoolId {
 		pool, err := k.cosmwasmpoolKeeper.GetPool(ctx, poolId)
 		if err != nil {
 			return err
@@ -265,7 +259,8 @@ func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error 
 
 	// Set cache value
 	k.cachedRegisteredAlloyPoolToState[alloyedDenom] = registeredAlloyedPool
-	k.cachedRegisteredAlloyedPoolId[poolId] = true
+	k.cachedRegisteredAlloyedPoolId = append(k.cachedRegisteredAlloyedPoolId, poolId)
+	sort.Slice(k.cachedRegisteredAlloyedPoolId, func(i, j int) bool { return k.cachedRegisteredAlloyedPoolId[i] < k.cachedRegisteredAlloyedPoolId[j] })
 
 	return nil
 }
@@ -360,12 +355,12 @@ func (k *Keeper) SetAllRegisteredAlloyedPoolsCached(ctx sdk.Context) error {
 //
 
 // Used for creating the map used for the registered alloyed pools id cache.
-func (k Keeper) GetAllRegisteredAlloyedPoolsIdMap(ctx sdk.Context) (map[uint64]bool, error) {
+func (k Keeper) GetAllRegisteredAlloyedPoolsIdArray(ctx sdk.Context) ([]uint64, error) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, types.KeyRegisteredAlloyPool)
 	defer iterator.Close()
 
-	registeredAlloyedPoolsIdMap := make(map[uint64]bool)
+	registeredAlloyedPoolsIdArray := []uint64{}
 	for ; iterator.Valid(); iterator.Next() {
 		key := string(iterator.Key())
 		parts := strings.Split(key, types.KeySeparator)
@@ -378,19 +373,20 @@ func (k Keeper) GetAllRegisteredAlloyedPoolsIdMap(ctx sdk.Context) (map[uint64]b
 		if err != nil {
 			return nil, err
 		}
-		registeredAlloyedPoolsIdMap[alloyedId] = true
+		registeredAlloyedPoolsIdArray = append(registeredAlloyedPoolsIdArray, alloyedId)
 	}
+	sort.Slice(registeredAlloyedPoolsIdArray, func(i, j int) bool { return registeredAlloyedPoolsIdArray[i] < registeredAlloyedPoolsIdArray[j] })
 
-	return registeredAlloyedPoolsIdMap, nil
+	return registeredAlloyedPoolsIdArray, nil
 }
 
 // Used for initializing the cache for the registered alloyed pools id.
 func (k *Keeper) SetAllRegisteredAlloyedPoolsIdCached(ctx sdk.Context) error {
-	registeredAlloyPoolsId, err := k.GetAllRegisteredAlloyedPoolsIdMap(ctx)
+	registeredAlloyPoolIds, err := k.GetAllRegisteredAlloyedPoolsIdArray(ctx)
 	if err != nil {
 		return err
 	}
-	k.cachedRegisteredAlloyedPoolId = registeredAlloyPoolsId
+	k.cachedRegisteredAlloyedPoolId = registeredAlloyPoolIds
 	return nil
 }
 

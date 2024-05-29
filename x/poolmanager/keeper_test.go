@@ -229,14 +229,14 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 		},
 	}
 
-	defaultCachedRegisteredAlloyedPoolId := map[uint64]bool{1: true}
+	defaultCachedRegisteredAlloyedPoolId := []uint64{1}
 
 	tests := map[string]struct {
 		storeSetup                               func()
 		expectedTakerFeeSkimAccumulators         []types.TakerFeeSkimAccumulator
 		expectedCachedTakerFeeShareAgreement     map[string]types.TakerFeeShareAgreement
 		expectedCachedRegisteredAlloyPoolToState map[string]types.AlloyContractTakerFeeShareState
-		expectedCachedRegisteredAlloyedPoolId    map[uint64]bool
+		expectedCachedRegisteredAlloyedPoolId    []uint64
 		expectedError                            error
 	}{
 		"cachedTakerFeeShareAgreement is empty, cachedRegisteredAlloyPoolToState is empty, cachedRegisteredAlloyedPoolId is empty, should update": {
@@ -247,7 +247,7 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 		},
 		"cachedTakerFeeShareAgreement is empty, cachedRegisteredAlloyPoolToState is not empty, cachedRegisteredAlloyedPoolId is not empty, should update": {
 			storeSetup: func() {
-				s.App.PoolManagerKeeper.SetCachedMaps(nil, defaultCachedRegisteredAlloyPoolToState, defaultCachedRegisteredAlloyedPoolId)
+				s.App.PoolManagerKeeper.SetCacheTrackers(nil, defaultCachedRegisteredAlloyPoolToState, defaultCachedRegisteredAlloyedPoolId)
 			},
 			expectedCachedTakerFeeShareAgreement:     defaultCachedTakerFeeShareAgreement,
 			expectedCachedRegisteredAlloyPoolToState: defaultCachedRegisteredAlloyPoolToState,
@@ -255,7 +255,7 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 		},
 		"cachedTakerFeeShareAgreement is not empty, cachedRegisteredAlloyPoolToState is empty, cachedRegisteredAlloyedPoolId is not empty, should update": {
 			storeSetup: func() {
-				s.App.PoolManagerKeeper.SetCachedMaps(defaultCachedTakerFeeShareAgreement, nil, defaultCachedRegisteredAlloyedPoolId)
+				s.App.PoolManagerKeeper.SetCacheTrackers(defaultCachedTakerFeeShareAgreement, nil, defaultCachedRegisteredAlloyedPoolId)
 			},
 			expectedCachedTakerFeeShareAgreement:     defaultCachedTakerFeeShareAgreement,
 			expectedCachedRegisteredAlloyPoolToState: defaultCachedRegisteredAlloyPoolToState,
@@ -263,7 +263,7 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 		},
 		"cachedTakerFeeShareAgreement is not empty, cachedRegisteredAlloyPoolToState is not empty, cachedRegisteredAlloyedPoolId is empty, should update": {
 			storeSetup: func() {
-				s.App.PoolManagerKeeper.SetCachedMaps(defaultCachedTakerFeeShareAgreement, defaultCachedRegisteredAlloyPoolToState, nil)
+				s.App.PoolManagerKeeper.SetCacheTrackers(defaultCachedTakerFeeShareAgreement, defaultCachedRegisteredAlloyPoolToState, nil)
 			},
 			expectedCachedTakerFeeShareAgreement:     defaultCachedTakerFeeShareAgreement,
 			expectedCachedRegisteredAlloyPoolToState: defaultCachedRegisteredAlloyPoolToState,
@@ -271,7 +271,7 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 		},
 		"cachedTakerFeeShareAgreement is empty, cachedRegisteredAlloyPoolToState is empty, cachedRegisteredAlloyedPoolId is not empty, should update": {
 			storeSetup: func() {
-				s.App.PoolManagerKeeper.SetCachedMaps(nil, nil, defaultCachedRegisteredAlloyedPoolId)
+				s.App.PoolManagerKeeper.SetCacheTrackers(nil, nil, defaultCachedRegisteredAlloyedPoolId)
 			},
 			expectedCachedTakerFeeShareAgreement:     defaultCachedTakerFeeShareAgreement,
 			expectedCachedRegisteredAlloyPoolToState: defaultCachedRegisteredAlloyPoolToState,
@@ -298,8 +298,8 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 						},
 					},
 				}
-				differentCachedRegisteredAlloyedPoolId := map[uint64]bool{2: true}
-				s.App.PoolManagerKeeper.SetCachedMaps(differentCachedTakerFeeShareAgreement, differentCachedRegisteredAlloyPoolToState, differentCachedRegisteredAlloyedPoolId)
+				differentCachedRegisteredAlloyedPoolId := []uint64{2}
+				s.App.PoolManagerKeeper.SetCacheTrackers(differentCachedTakerFeeShareAgreement, differentCachedRegisteredAlloyPoolToState, differentCachedRegisteredAlloyedPoolId)
 			},
 			expectedCachedTakerFeeShareAgreement: map[string]types.TakerFeeShareAgreement{
 				apptesting.DefaultTransmuterDenomA: {
@@ -320,7 +320,7 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 					},
 				},
 			},
-			expectedCachedRegisteredAlloyedPoolId: map[uint64]bool{2: true},
+			expectedCachedRegisteredAlloyedPoolId: []uint64{2},
 		},
 	}
 
@@ -357,10 +357,85 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 			s.App.PoolManagerKeeper.BeginBlock(s.Ctx)
 
 			// Check expected values
-			cachedTakerFeeShareAgreement, cachedRegisteredAlloyPoolToState, cachedRegisteredAlloyedPoolId := s.App.PoolManagerKeeper.GetCachedMaps()
+			cachedTakerFeeShareAgreement, cachedRegisteredAlloyPoolToState, cachedRegisteredAlloyedPoolId := s.App.PoolManagerKeeper.GetCachedTrackers()
 			s.Require().Equal(tc.expectedCachedTakerFeeShareAgreement, cachedTakerFeeShareAgreement)
 			s.Require().Equal(tc.expectedCachedRegisteredAlloyPoolToState, cachedRegisteredAlloyPoolToState)
 			s.Require().Equal(tc.expectedCachedRegisteredAlloyedPoolId, cachedRegisteredAlloyedPoolId)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestEndBlock() {
+	tests := map[string]struct {
+		swapFunc                        func()
+		expectedTakerFeeShareAgreements []types.TakerFeeShareAgreement
+		expectedError                   error
+	}{
+		"alloyed pool registered, alloyed pool changes, alloy composition changes": {
+			swapFunc: func() {
+				joinCoins := sdk.NewCoins(sdk.NewInt64Coin("testA", 1000000000))
+				s.FundAcc(s.TestAccs[0], joinCoins)
+				s.JoinTransmuterPool(s.TestAccs[0], 1, joinCoins)
+				s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, 1)
+			},
+			expectedTakerFeeShareAgreements: []types.TakerFeeShareAgreement{
+				{
+					Denom:       "testA",
+					SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("0.66666666666666666")),
+					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
+				},
+				{
+					Denom:       "testB",
+					SkimPercent: osmomath.MustNewDecFromStr("0.02").Mul(osmomath.MustNewDecFromStr("0.33333333333333333")),
+					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
+				},
+			},
+		},
+		"alloyed pool registered, non alloyed pool changes, alloy composition does not change": {
+			swapFunc: func() {
+				s.PrepareAllSupportedPools()
+				s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, 1)
+			},
+			expectedTakerFeeShareAgreements: []types.TakerFeeShareAgreement{
+				{
+					Denom:       "testA",
+					SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("0.5")),
+					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
+				},
+				{
+					Denom:       "testB",
+					SkimPercent: osmomath.MustNewDecFromStr("0.02").Mul(osmomath.MustNewDecFromStr("0.5")),
+					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
+				},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			cwPool := s.PrepareCustomTransmuterPoolCustomProjectV3CustomRatio(s.TestAccs[0], []string{"testA", "testB"}, []uint16{1, 1}, "osmosis", "x/cosmwasmpool/bytecode")
+			s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
+				Denom:       "testA",
+				SkimPercent: osmomath.MustNewDecFromStr("0.01"),
+				SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
+			})
+			s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
+				Denom:       "testB",
+				SkimPercent: osmomath.MustNewDecFromStr("0.02"),
+				SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
+			})
+
+			// Set up stores
+			tc.swapFunc()
+
+			// Call EndBlock
+			s.App.PoolManagerKeeper.EndBlock(s.Ctx)
+
+			// Check expected values
+			_, takerFeeShareState, err := s.App.PoolManagerKeeper.GetRegisteredAlloyedPoolFromPoolId(s.Ctx, cwPool.GetId())
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedTakerFeeShareAgreements, takerFeeShareState.TakerFeeShareAgreements)
 		})
 	}
 }

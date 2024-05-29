@@ -69,10 +69,10 @@ func (k Keeper) RecalculateAndSetTakerFeeShareAlloyComposition(ctx sdk.Context, 
 	return k.recalculateAndSetTakerFeeShareAlloyComposition(ctx, poolId)
 }
 
-func (k Keeper) GetCachedMaps() (map[string]types.TakerFeeShareAgreement, map[string]types.AlloyContractTakerFeeShareState, map[uint64]bool) {
-	return k.getCachedMaps()
+func (k Keeper) GetCachedTrackers() (map[string]types.TakerFeeShareAgreement, map[string]types.AlloyContractTakerFeeShareState, []uint64) {
+	return k.getCacheTrackers()
 }
 
-func (k *Keeper) SetCachedMaps(takerFeeShareAgreement map[string]types.TakerFeeShareAgreement, registeredAlloyPoolToState map[string]types.AlloyContractTakerFeeShareState, registeredAlloyedPoolId map[uint64]bool) {
-	k.setCachedMaps(takerFeeShareAgreement, registeredAlloyPoolToState, registeredAlloyedPoolId)
+func (k *Keeper) SetCacheTrackers(takerFeeShareAgreement map[string]types.TakerFeeShareAgreement, registeredAlloyPoolToState map[string]types.AlloyContractTakerFeeShareState, registeredAlloyedPoolId []uint64) {
+	k.setCacheTrackers(takerFeeShareAgreement, registeredAlloyPoolToState, registeredAlloyedPoolId)
 }

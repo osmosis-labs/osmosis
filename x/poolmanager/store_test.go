@@ -215,7 +215,7 @@ func (s *KeeperTestSuite) TestSetTakerFeeShareAgreementsMapCached() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				cachedTakerFeeShareAgreement, _, _ := s.App.PoolManagerKeeper.GetCachedMaps()
+				cachedTakerFeeShareAgreement, _, _ := s.App.PoolManagerKeeper.GetCachedTrackers()
 				s.Require().Equal(expectedTakerFeeShareAgreements, cachedTakerFeeShareAgreement, "cachedTakerFeeShareAgreement = %v, want %v", cachedTakerFeeShareAgreement, expectedTakerFeeShareAgreements)
 			}
 		})
@@ -1332,7 +1332,7 @@ func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsCached() {
 			s.Require().NoError(err)
 
 			// Check that the cache was correctly set
-			_, cachedRegisteredAlloyPoolToState, _ := s.App.PoolManagerKeeper.GetCachedMaps()
+			_, cachedRegisteredAlloyPoolToState, _ := s.App.PoolManagerKeeper.GetCachedTrackers()
 			s.Require().Equal(expectedTakerFeeShareAgreementsMap, cachedRegisteredAlloyPoolToState)
 		})
 	}
@@ -1340,35 +1340,30 @@ func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsCached() {
 
 func (s *KeeperTestSuite) TestGetAllRegisteredAlloyedPoolsIdMap() {
 	tests := map[string]struct {
-		setupFunc func() map[uint64]bool
+		setupFunc func() []uint64
 	}{
 		"single registered pool": {
-			setupFunc: func() map[uint64]bool {
+			setupFunc: func() []uint64 {
 				poolInfos := s.PrepareAllSupportedPools()
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
-				return map[uint64]bool{
-					poolInfos.AlloyedPoolID: true,
-				}
+				return []uint64{poolInfos.AlloyedPoolID}
 			},
 		},
 		"multiple registered pools": {
-			setupFunc: func() map[uint64]bool {
+			setupFunc: func() []uint64 {
 				poolInfos := s.PrepareAllSupportedPools()
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
 				cwPool := s.PrepareCustomTransmuterPoolCustomProjectV3(s.TestAccs[0], []string{"testA", "testB"}, "osmosis", "x/cosmwasmpool/bytecode")
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
-				return map[uint64]bool{
-					poolInfos.AlloyedPoolID: true,
-					cwPool.GetId():          true,
-				}
+				return []uint64{poolInfos.AlloyedPoolID, cwPool.GetId()}
 			},
 		},
 		"no registered pools": {
-			setupFunc: func() map[uint64]bool {
-				return map[uint64]bool{}
+			setupFunc: func() []uint64 {
+				return []uint64{}
 			},
 		},
 	}
@@ -1378,44 +1373,39 @@ func (s *KeeperTestSuite) TestGetAllRegisteredAlloyedPoolsIdMap() {
 			s.SetupTest()
 			expectedRegisteredAlloyedPoolsIdMap := tc.setupFunc()
 
-			registeredAlloyedPoolsIdMap, err := s.App.PoolManagerKeeper.GetAllRegisteredAlloyedPoolsIdMap(s.Ctx)
+			registeredAlloyedPoolIdsArray, err := s.App.PoolManagerKeeper.GetAllRegisteredAlloyedPoolsIdArray(s.Ctx)
 			s.Require().NoError(err)
-			s.Require().Equal(expectedRegisteredAlloyedPoolsIdMap, registeredAlloyedPoolsIdMap)
+			s.Require().Equal(expectedRegisteredAlloyedPoolsIdMap, registeredAlloyedPoolIdsArray)
 		})
 	}
 }
 
 func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsIdCached() {
 	tests := map[string]struct {
-		setupFunc func() map[uint64]bool
+		setupFunc func() []uint64
 	}{
 		"no registered pools": {
-			setupFunc: func() map[uint64]bool {
-				return map[uint64]bool{}
+			setupFunc: func() []uint64 {
+				return []uint64{}
 			},
 		},
 		"single registered pool": {
-			setupFunc: func() map[uint64]bool {
+			setupFunc: func() []uint64 {
 				poolInfos := s.PrepareAllSupportedPools()
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
-				return map[uint64]bool{
-					poolInfos.AlloyedPoolID: true,
-				}
+				return []uint64{poolInfos.AlloyedPoolID}
 			},
 		},
 		"multiple registered pools": {
-			setupFunc: func() map[uint64]bool {
+			setupFunc: func() []uint64 {
 				poolInfos := s.PrepareAllSupportedPools()
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
 				cwPool := s.PrepareCustomTransmuterPoolCustomProjectV3(s.TestAccs[0], []string{"testA", "testB"}, "osmosis", "x/cosmwasmpool/bytecode")
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
-				return map[uint64]bool{
-					poolInfos.AlloyedPoolID: true,
-					cwPool.GetId():          true,
-				}
+				return []uint64{poolInfos.AlloyedPoolID, cwPool.GetId()}
 			},
 		},
 	}
@@ -1430,7 +1420,7 @@ func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsIdCached() {
 			s.Require().NoError(err)
 
 			// Check that the cache was correctly set
-			_, _, cachedRegisteredAlloyedPoolId := s.App.PoolManagerKeeper.GetCachedMaps()
+			_, _, cachedRegisteredAlloyedPoolId := s.App.PoolManagerKeeper.GetCachedTrackers()
 			s.Require().Equal(expectedRegisteredAlloyedPoolsIdMap, cachedRegisteredAlloyedPoolId)
 		})
 	}
