@@ -429,6 +429,27 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 	communityPoolAddress := s.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
 	communityPoolBalanceBefore := s.App.BankKeeper.GetAllBalances(s.Ctx, communityPoolAddress)
 
+	// Set up taker fee share agreements
+	s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, poolmanagertypes.TakerFeeShareAgreement{
+		Denom:       "testA",
+		SkimPercent: osmomath.MustNewDecFromStr("0.01"),
+		SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
+	})
+	s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, poolmanagertypes.TakerFeeShareAgreement{
+		Denom:       "testB",
+		SkimPercent: osmomath.MustNewDecFromStr("0.02"),
+		SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
+	})
+
+	// Set accrued values for denom pairs
+	s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "testA", "foo", osmomath.NewInt(100))
+	s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "testA", "bar", osmomath.NewInt(100))
+	s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "testB", "foo", osmomath.NewInt(200))
+	s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "testB", "bar", osmomath.NewInt(200))
+
+	// Fund the taker fee collector
+	s.FundModuleAcc(types.TakerFeeCollectorName, sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(300)), sdk.NewCoin("bar", osmomath.NewInt(300))))
+
 	// System under test.
 	// AfterEpochEnd should not panic or error
 	err := s.App.TxFeesKeeper.AfterEpochEnd(s.Ctx, "day", 1)
@@ -461,6 +482,23 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 	s.Require().Equal(communityPoolBalanceDelta[1].Denom, denomWithNoPool)
 	s.Require().Equal(communityPoolBalanceDelta[2].Denom, preSwapDenom)
 	s.Require().Equal(communityPoolBalanceDelta[3].Denom, communityPoolDenom)
+
+	// Check the balances of the skim addresses
+	skimAddress := sdk.MustAccAddressFromBech32("osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn")
+	skimAddressBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, skimAddress)
+	s.Require().Equal(2, skimAddressBalance.Len())
+	s.Require().Equal(sdk.NewCoin("bar", osmomath.NewInt(100)), skimAddressBalance[0])
+	s.Require().Equal(sdk.NewCoin("foo", osmomath.NewInt(100)), skimAddressBalance[1])
+
+	skimAddress = sdk.MustAccAddressFromBech32("osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2")
+	skimAddressBalance = s.App.BankKeeper.GetAllBalances(s.Ctx, skimAddress)
+	s.Require().Equal(2, skimAddressBalance.Len())
+	s.Require().Equal(sdk.NewCoin("bar", osmomath.NewInt(200)), skimAddressBalance[0])
+	s.Require().Equal(sdk.NewCoin("foo", osmomath.NewInt(200)), skimAddressBalance[1])
+
+	// Confirm that all taker fee share accumulators are cleared
+	allTakerFeeShareAccumulators := s.App.PoolManagerKeeper.GetAllTakerFeeShareAccumulators(s.Ctx)
+	s.Require().Empty(allTakerFeeShareAccumulators)
 }
 
 // preparePoolsForSwappingToDenom sets up two pools:
