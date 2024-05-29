@@ -28,7 +28,6 @@ type Keeper struct {
 	stakingKeeper        types.StakingKeeper
 	protorevKeeper       types.ProtorevKeeper
 	wasmKeeper           types.WasmKeeper
-	twapKeeper           types.TwapKeeper
 
 	// routes is a map to get the pool module by id.
 	routes map[types.PoolType]types.PoolModuleI
@@ -54,7 +53,7 @@ type Keeper struct {
 	cachedRegisteredAlloyedPoolId    []uint64
 }
 
-func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI, stakingKeeper types.StakingKeeper, protorevKeeper types.ProtorevKeeper, wasmKeeper types.WasmKeeper, twapKeeper types.TwapKeeper) *Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI, stakingKeeper types.StakingKeeper, protorevKeeper types.ProtorevKeeper, wasmKeeper types.WasmKeeper) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -90,7 +89,6 @@ func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gam
 		stakingKeeper:                    stakingKeeper,
 		protorevKeeper:                   protorevKeeper,
 		wasmKeeper:                       wasmKeeper,
-		twapKeeper:                       twapKeeper,
 		cachedPoolModules:                cachedPoolModules,
 		cachedTakerFeeShareAgreement:     cachedTakerFeeShareAgreement,
 		cachedRegisteredAlloyPoolToState: cachedRegisteredAlloyPool,
@@ -227,11 +225,6 @@ func (k *Keeper) SetProtorevKeeper(protorevKeeper types.ProtorevKeeper) {
 // SetWasmKeeper sets wasm keeper
 func (k *Keeper) SetWasmKeeper(wasmKeeper types.WasmKeeper) {
 	k.wasmKeeper = wasmKeeper
-}
-
-// SetTwapKeeper sets twap keeper
-func (k *Keeper) SetTwapKeeper(twapKeeper types.TwapKeeper) {
-	k.twapKeeper = twapKeeper
 }
 
 // BeginBlock sets the poolmanager caches if they are empty

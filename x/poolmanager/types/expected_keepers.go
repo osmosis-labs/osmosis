@@ -118,7 +118,3 @@ type ProtorevKeeper interface {
 type WasmKeeper interface {
 	QuerySmart(ctx context.Context, contractAddress sdk.AccAddress, queryMsg []byte) ([]byte, error)
 }
-
-type TwapKeeper interface {
-	GetChangedPools(ctx sdk.Context) []uint64
-}

@@ -445,7 +445,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.StakingKeeper,
 		appKeepers.ProtoRevKeeper,
 		appKeepers.WasmKeeper,
-		appKeepers.TwapKeeper,
 	)
 	appKeepers.PoolManagerKeeper.SetStakingKeeper(appKeepers.StakingKeeper)
 	appKeepers.GAMMKeeper.SetPoolManager(appKeepers.PoolManagerKeeper)
@@ -457,7 +456,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.tkeys[twaptypes.TransientStoreKey],
 		appKeepers.GetSubspace(twaptypes.ModuleName),
 		appKeepers.PoolManagerKeeper)
-	appKeepers.PoolManagerKeeper.SetTwapKeeper(appKeepers.TwapKeeper)
 
 	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appKeepers.keys[epochstypes.StoreKey])
 
