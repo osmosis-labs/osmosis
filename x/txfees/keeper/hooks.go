@@ -312,7 +312,7 @@ func (k Keeper) clearTakerFeeShareAccumulators(ctx sdk.Context) {
 	for _, takerFeeSkimAccumulator := range takerFeeSkimAccumulators {
 		takerFeeShareAgreement, found := k.poolManager.GetTakerFeeShareAgreementFromDenom(ctx, takerFeeSkimAccumulator.Denom)
 		if !found {
-			ctx.Logger().Error("Error getting taker fee share from denom")
+			ctx.Logger().Error(fmt.Sprintf("Error getting taker fee share from denom: %s", takerFeeSkimAccumulator.Denom))
 			continue
 		}
 		skimAddress := sdk.MustAccAddressFromBech32(takerFeeShareAgreement.SkimAddress)
