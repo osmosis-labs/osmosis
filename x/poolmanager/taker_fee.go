@@ -275,20 +275,16 @@ func (k Keeper) TakerFeeSkim(ctx sdk.Context, denomsInvolvedInRoute []string, to
 
 func (k Keeper) BeginBlock(ctx sdk.Context) {
 	// Set the caches if they are empty
-	if len(k.cachedTakerFeeShareAgreement) == 0 {
+	if len(k.cachedTakerFeeShareAgreement) == 0 || len(k.cachedRegisteredAlloyPoolToState) == 0 || len(k.cachedRegisteredAlloyedPoolId) == 0 {
 		err := k.SetTakerFeeShareAgreementsMapCached(ctx)
 		if err != nil {
 			ctx.Logger().Error(fmt.Errorf("error in setting taker fee share agreements map cached: %w", err).Error())
 		}
-	}
-	if len(k.cachedRegisteredAlloyPoolToState) == 0 {
-		err := k.SetAllRegisteredAlloyedPoolsCached(ctx)
+		err = k.SetAllRegisteredAlloyedPoolsCached(ctx)
 		if err != nil {
 			ctx.Logger().Error(fmt.Errorf("error in setting all registered alloyed pools cached: %w", err).Error())
 		}
-	}
-	if len(k.cachedRegisteredAlloyedPoolId) == 0 {
-		err := k.SetAllRegisteredAlloyedPoolsIdCached(ctx)
+		err = k.SetAllRegisteredAlloyedPoolsIdCached(ctx)
 		if err != nil {
 			ctx.Logger().Error(fmt.Errorf("error in setting all registered alloyed pools id cached: %w", err).Error())
 		}
