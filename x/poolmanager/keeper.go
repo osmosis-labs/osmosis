@@ -272,11 +272,13 @@ func (k *Keeper) EndBlock(ctx sdk.Context) {
 }
 
 // getCachedMaps returns the cached maps, used for testing.
+// nolint: unused
 func (k Keeper) getCachedMaps() (map[string]types.TakerFeeShareAgreement, map[string]types.AlloyContractTakerFeeShareState, map[uint64]bool) {
 	return k.cachedTakerFeeShareAgreement, k.cachedRegisteredAlloyPoolToState, k.cachedRegisteredAlloyedPoolId
 }
 
 // setCachedMaps sets the cached maps, used for testing.
+// nolint: unused
 func (k *Keeper) setCachedMaps(takerFeeShareAgreement map[string]types.TakerFeeShareAgreement, registeredAlloyPoolToState map[string]types.AlloyContractTakerFeeShareState, registeredAlloyedPoolId map[uint64]bool) {
 	if takerFeeShareAgreement != nil {
 		k.cachedTakerFeeShareAgreement = takerFeeShareAgreement
