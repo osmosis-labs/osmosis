@@ -144,7 +144,6 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 }
 
 func (s *KeeperTestSuite) TestTakerFeeSkim() {
-
 	tests := map[string]struct {
 		alloyedPoolSetup                 func() []string
 		expectedTakerFeeSkimAccumulators []types.TakerFeeSkimAccumulator
@@ -152,69 +151,69 @@ func (s *KeeperTestSuite) TestTakerFeeSkim() {
 	}{
 		"one denomShareAgreement denom, one alloyedAssetShareAgreement denom, should be skimmed to denomShareAgreement": {
 			alloyedPoolSetup: func() []string {
-				return []string{"testA", s.setupAndRegisterAlloyedPool([]string{"testA", "testB"}, []uint16{1, 1})}
+				return []string{denomA, s.setupAndRegisterAlloyedPool([]string{denomA, denomB}, []uint16{1, 1})}
 			},
 			expectedTakerFeeSkimAccumulators: []types.TakerFeeSkimAccumulator{
 				{
-					Denom:            "testA",
-					SkimmedTakerFees: sdk.NewCoins(sdk.NewCoin("testA", osmomath.NewInt(10000000)), sdk.NewCoin("testB", osmomath.NewInt(10000000)), sdk.NewCoin("testC", osmomath.NewInt(10000000))),
+					Denom:            denomA,
+					SkimmedTakerFees: sdk.NewCoins(sdk.NewCoin(denomA, osmomath.NewInt(10000000)), sdk.NewCoin(denomB, osmomath.NewInt(10000000)), sdk.NewCoin(denomC, osmomath.NewInt(10000000))),
 				},
 			},
 		},
 		"two denomShareAgreement denoms, one alloyedAssetShareAgreement denom, should be skimmed to both denomShareAgreements": {
 			alloyedPoolSetup: func() []string {
-				return []string{"testA", "testB", s.setupAndRegisterAlloyedPool([]string{"testA", "testB"}, []uint16{1, 1})}
+				return []string{denomA, denomB, s.setupAndRegisterAlloyedPool([]string{denomA, denomB}, []uint16{1, 1})}
 			},
 			expectedTakerFeeSkimAccumulators: []types.TakerFeeSkimAccumulator{
 				{
-					Denom:            "testA",
-					SkimmedTakerFees: sdk.NewCoins(sdk.NewCoin("testA", osmomath.NewInt(10000000)), sdk.NewCoin("testB", osmomath.NewInt(10000000)), sdk.NewCoin("testC", osmomath.NewInt(10000000))),
+					Denom:            denomA,
+					SkimmedTakerFees: sdk.NewCoins(sdk.NewCoin(denomA, osmomath.NewInt(10000000)), sdk.NewCoin(denomB, osmomath.NewInt(10000000)), sdk.NewCoin(denomC, osmomath.NewInt(10000000))),
 				},
 				{
-					Denom:            "testB",
-					SkimmedTakerFees: sdk.NewCoins(sdk.NewCoin("testA", osmomath.NewInt(20000000)), sdk.NewCoin("testB", osmomath.NewInt(20000000)), sdk.NewCoin("testC", osmomath.NewInt(20000000))),
+					Denom:            denomB,
+					SkimmedTakerFees: sdk.NewCoins(sdk.NewCoin(denomA, osmomath.NewInt(20000000)), sdk.NewCoin(denomB, osmomath.NewInt(20000000)), sdk.NewCoin(denomC, osmomath.NewInt(20000000))),
 				},
 			},
 		},
 		"zero denomShareAgreement denoms, one alloyedAssetShareAgreement denom, should be skimmed to alloyedAssetShareAgreement": {
 			alloyedPoolSetup: func() []string {
-				return []string{s.setupAndRegisterAlloyedPool([]string{"testA", "testC"}, []uint16{1, 1})}
+				return []string{s.setupAndRegisterAlloyedPool([]string{denomA, denomC}, []uint16{1, 1})}
 			},
 			expectedTakerFeeSkimAccumulators: []types.TakerFeeSkimAccumulator{
 				{
-					Denom:            "testA",
-					SkimmedTakerFees: sdk.NewCoins(sdk.NewCoin("testA", osmomath.NewInt(5000000)), sdk.NewCoin("testB", osmomath.NewInt(5000000)), sdk.NewCoin("testC", osmomath.NewInt(5000000))),
+					Denom:            denomA,
+					SkimmedTakerFees: sdk.NewCoins(sdk.NewCoin(denomA, osmomath.NewInt(5000000)), sdk.NewCoin(denomB, osmomath.NewInt(5000000)), sdk.NewCoin(denomC, osmomath.NewInt(5000000))),
 				},
 			},
 		},
 		"zero denomShareAgreement denoms, zero alloyedAssetShareAgreement denoms, should not be skimmed": {
 			alloyedPoolSetup: func() []string {
-				return []string{"testC", "testD", "testE"}
+				return []string{denomC, OSMO, ATOM}
 			},
 			expectedTakerFeeSkimAccumulators: []types.TakerFeeSkimAccumulator{},
 		},
 		"zero denomShareAgreement denoms, two alloyedAssetShareAgreement denoms, should be skimmed to both alloyedAssetShareAgreements": {
 			alloyedPoolSetup: func() []string {
-				alloyedDenom1 := s.setupAndRegisterAlloyedPool([]string{"testA", "testC"}, []uint16{1, 1})
-				alloyedDenom2 := s.setupAndRegisterAlloyedPool([]string{"testB", "testC"}, []uint16{1, 1})
+				alloyedDenom1 := s.setupAndRegisterAlloyedPool([]string{denomA, denomC}, []uint16{1, 1})
+				alloyedDenom2 := s.setupAndRegisterAlloyedPool([]string{denomB, denomC}, []uint16{1, 1})
 				return []string{alloyedDenom1, alloyedDenom2}
 			},
 			expectedTakerFeeSkimAccumulators: []types.TakerFeeSkimAccumulator{
 				{
-					Denom:            "testA",
-					SkimmedTakerFees: sdk.NewCoins(sdk.NewCoin("testA", osmomath.NewInt(5000000)), sdk.NewCoin("testB", osmomath.NewInt(5000000)), sdk.NewCoin("testC", osmomath.NewInt(5000000))),
+					Denom:            denomA,
+					SkimmedTakerFees: sdk.NewCoins(sdk.NewCoin(denomA, osmomath.NewInt(5000000)), sdk.NewCoin(denomB, osmomath.NewInt(5000000)), sdk.NewCoin(denomC, osmomath.NewInt(5000000))),
 				},
 				{
-					Denom:            "testB",
-					SkimmedTakerFees: sdk.NewCoins(sdk.NewCoin("testA", osmomath.NewInt(10000000)), sdk.NewCoin("testB", osmomath.NewInt(10000000)), sdk.NewCoin("testC", osmomath.NewInt(10000000))),
+					Denom:            denomB,
+					SkimmedTakerFees: sdk.NewCoins(sdk.NewCoin(denomA, osmomath.NewInt(10000000)), sdk.NewCoin(denomB, osmomath.NewInt(10000000)), sdk.NewCoin(denomC, osmomath.NewInt(10000000))),
 				},
 			},
 		},
 		"zero denomShareAgreement denoms, one alloyedAssetShareAgreement denom, but the alloyedAssetShareAgreement consists of no active denomShareAgreements, should not be skimmed": {
 			alloyedPoolSetup: func() []string {
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testC", "testD", "testE"}, nil)
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{denomC, OSMO, ATOM}, nil)
 				alloyedDenom := fmt.Sprintf("factory/%s/alloyed/testdenom", cwPool.GetAddress().String())
-				return []string{"testC", "testD", "testE", alloyedDenom}
+				return []string{denomC, OSMO, ATOM, alloyedDenom}
 			},
 			expectedTakerFeeSkimAccumulators: []types.TakerFeeSkimAccumulator{},
 		},
@@ -225,10 +224,10 @@ func (s *KeeperTestSuite) TestTakerFeeSkim() {
 			s.SetupTest()
 			denomsInvolvedInSwap := tc.alloyedPoolSetup()
 
-			s.setupTakerFeeShareAgreement("testA", "0.01", "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn")
-			s.setupTakerFeeShareAgreement("testB", "0.02", "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2")
+			s.setupTakerFeeShareAgreement(denomA, "0.01", "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn")
+			s.setupTakerFeeShareAgreement(denomB, "0.02", "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2")
 
-			takerFeeCoins := sdk.NewCoins(sdk.NewCoin("testA", osmomath.NewInt(1000000000)), sdk.NewCoin("testB", osmomath.NewInt(1000000000)), sdk.NewCoin("testC", osmomath.NewInt(1000000000)))
+			takerFeeCoins := sdk.NewCoins(sdk.NewCoin(denomA, osmomath.NewInt(1000000000)), sdk.NewCoin(denomB, osmomath.NewInt(1000000000)), sdk.NewCoin(denomC, osmomath.NewInt(1000000000)))
 
 			err := s.App.PoolManagerKeeper.TakerFeeSkim(s.Ctx, denomsInvolvedInSwap, takerFeeCoins)
 			if tc.expectedError != nil {
