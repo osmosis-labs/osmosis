@@ -65,7 +65,7 @@ func (s *KeeperTestHelper) PrepareCustomTransmuterPoolV3(owner sdk.AccAddress, d
 	return pool
 }
 
-// PreparePool sets up a pool with the custom parameters.
+// PreparePool sets up a transmuter pool with the custom parameters.
 func (s *KeeperTestHelper) PreparePool(owner sdk.AccAddress, denoms []string, projectName, byteCodePath, contractName string, getInstantiateMsgBytes func([]string, sdk.AccAddress) []byte) cosmwasmpooltypes.CosmWasmExtension {
 	// Mint some assets to the account.
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
@@ -99,6 +99,16 @@ func (s *KeeperTestHelper) PreparePool(owner sdk.AccAddress, denoms []string, pr
 	return pool
 }
 
+// AddRatioFundsToTransmuterPool adds funds to a transmuter pool based on the provided ratio of denoms.
+// It mints the specified amounts of each denom and joins the pool with these funds.
+//
+// Parameters:
+// - owner: The account address that will own the funds.
+// - denoms: A list of denominations to be added to the pool.
+// - ratioOfDenoms: A list of ratios corresponding to each denom. Must be the same length as denoms.
+// - poolId: The ID of the pool to which the funds will be added.
+//
+// Panics if the length of denoms and ratioOfDenoms are not equal.
 func (s *KeeperTestHelper) AddRatioFundsToTransmuterPool(owner sdk.AccAddress, denoms []string, ratioOfDenoms []uint16, poolId uint64) {
 	if ratioOfDenoms == nil {
 		return

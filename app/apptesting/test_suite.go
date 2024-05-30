@@ -188,7 +188,7 @@ func (s *KeeperTestHelper) PrepareAllSupportedPoolsCustomProject(projectName, tr
 		alloyedPool        = s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{DefaultTransmuterDenomA, DefaultTransmuterDenomB}, nil)
 		alloyedPoolID      = alloyedPool.GetId()
 	)
-	fmt.Println("alloy", alloyedPool.GetContractAddress())
+
 	return SupportedPoolAndGaugeInfo{
 		ConcentratedPoolID: concentratedPoolID,
 		BalancerPoolID:     balancerPoolID,

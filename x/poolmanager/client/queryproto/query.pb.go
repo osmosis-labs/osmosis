@@ -2317,30 +2317,34 @@ type QueryClient interface {
 	EstimateTradeBasedOnPriceImpact(ctx context.Context, in *EstimateTradeBasedOnPriceImpactRequest, opts ...grpc.CallOption) (*EstimateTradeBasedOnPriceImpactResponse, error)
 	// AllTakerFeeShareAgreements returns all taker fee share agreements.
 	// A taker fee share agreement includes the denom of the denom getting the
-	// taker fees, the percent of the taker fees that the denom gets, and the
-	// address that the taker fees are sent to.
+	// taker fees, the percent of the taker fees that the denom gets when it is
+	// in the route being traded against, and the address that the taker fees are
+	// sent to at epoch.
 	AllTakerFeeShareAgreements(ctx context.Context, in *AllTakerFeeShareAgreementsRequest, opts ...grpc.CallOption) (*AllTakerFeeShareAgreementsResponse, error)
 	// TakerFeeShareAgreementFromDenom returns the taker fee share agreement for a
 	// given denom. A taker fee share agreement includes the denom of the denom
-	// getting the taker fees, the percent of the taker fees that the denom gets,
-	// and the address that the taker fees are sent to.
+	// getting the taker fees, the percent of the taker fees that the denom gets
+	// when it is in the route being traded against, and the address that the
+	// taker fees are sent to at epoch.
 	TakerFeeShareAgreementFromDenom(ctx context.Context, in *TakerFeeShareAgreementFromDenomRequest, opts ...grpc.CallOption) (*TakerFeeShareAgreementFromDenomResponse, error)
 	// TakerFeeShareDenomsToAccruedValue returns the accrued value (as an Int) of
-	// the given taker fee denom for the given fee share denom
+	// the given taker fee denom (the collected fees) for the given fee share
+	// denom (the denom with the taker fee share agreement)
 	TakerFeeShareDenomsToAccruedValue(ctx context.Context, in *TakerFeeShareDenomsToAccruedValueRequest, opts ...grpc.CallOption) (*TakerFeeShareDenomsToAccruedValueResponse, error)
 	// AllTakerFeeShareAccumulators returns all taker fee share accumulators. A
 	// taker fee share accumulator includes the denom of the denom getting the
-	// taker feess, and an accumulated value of coins that the denom has accrued.
+	// taker fees, and an accumulated value of coins that the denom has accrued
+	// since the last time it was distibuted in the epoch prior.
 	AllTakerFeeShareAccumulators(ctx context.Context, in *AllTakerFeeShareAccumulatorsRequest, opts ...grpc.CallOption) (*AllTakerFeeShareAccumulatorsResponse, error)
 	// RegisteredAlloyedPoolFromDenom returns the registered alloyed pool state
 	// from the given denom. The registered alloyed pool contains the pool's
-	// contract address, along with the current distribution composition of rev
-	// share denoms within the alloyed pool.
+	// contract address, along with the current distribution composition of taker
+	// fee share denoms within the alloyed pool.
 	RegisteredAlloyedPoolFromDenom(ctx context.Context, in *RegisteredAlloyedPoolFromDenomRequest, opts ...grpc.CallOption) (*RegisteredAlloyedPoolFromDenomResponse, error)
 	// AllRegisteredAlloyedPools returns all registered alloyed pools. The
 	// registered alloyed pool contains the pool's contract address, along with
-	// the current distribution composition of rev share denoms within the alloyed
-	// pool.
+	// the current distribution composition of taker fee share denoms within the
+	// alloyed pool.
 	AllRegisteredAlloyedPools(ctx context.Context, in *AllRegisteredAlloyedPoolsRequest, opts ...grpc.CallOption) (*AllRegisteredAlloyedPoolsResponse, error)
 }
 
@@ -2606,30 +2610,34 @@ type QueryServer interface {
 	EstimateTradeBasedOnPriceImpact(context.Context, *EstimateTradeBasedOnPriceImpactRequest) (*EstimateTradeBasedOnPriceImpactResponse, error)
 	// AllTakerFeeShareAgreements returns all taker fee share agreements.
 	// A taker fee share agreement includes the denom of the denom getting the
-	// taker fees, the percent of the taker fees that the denom gets, and the
-	// address that the taker fees are sent to.
+	// taker fees, the percent of the taker fees that the denom gets when it is
+	// in the route being traded against, and the address that the taker fees are
+	// sent to at epoch.
 	AllTakerFeeShareAgreements(context.Context, *AllTakerFeeShareAgreementsRequest) (*AllTakerFeeShareAgreementsResponse, error)
 	// TakerFeeShareAgreementFromDenom returns the taker fee share agreement for a
 	// given denom. A taker fee share agreement includes the denom of the denom
-	// getting the taker fees, the percent of the taker fees that the denom gets,
-	// and the address that the taker fees are sent to.
+	// getting the taker fees, the percent of the taker fees that the denom gets
+	// when it is in the route being traded against, and the address that the
+	// taker fees are sent to at epoch.
 	TakerFeeShareAgreementFromDenom(context.Context, *TakerFeeShareAgreementFromDenomRequest) (*TakerFeeShareAgreementFromDenomResponse, error)
 	// TakerFeeShareDenomsToAccruedValue returns the accrued value (as an Int) of
-	// the given taker fee denom for the given fee share denom
+	// the given taker fee denom (the collected fees) for the given fee share
+	// denom (the denom with the taker fee share agreement)
 	TakerFeeShareDenomsToAccruedValue(context.Context, *TakerFeeShareDenomsToAccruedValueRequest) (*TakerFeeShareDenomsToAccruedValueResponse, error)
 	// AllTakerFeeShareAccumulators returns all taker fee share accumulators. A
 	// taker fee share accumulator includes the denom of the denom getting the
-	// taker feess, and an accumulated value of coins that the denom has accrued.
+	// taker fees, and an accumulated value of coins that the denom has accrued
+	// since the last time it was distibuted in the epoch prior.
 	AllTakerFeeShareAccumulators(context.Context, *AllTakerFeeShareAccumulatorsRequest) (*AllTakerFeeShareAccumulatorsResponse, error)
 	// RegisteredAlloyedPoolFromDenom returns the registered alloyed pool state
 	// from the given denom. The registered alloyed pool contains the pool's
-	// contract address, along with the current distribution composition of rev
-	// share denoms within the alloyed pool.
+	// contract address, along with the current distribution composition of taker
+	// fee share denoms within the alloyed pool.
 	RegisteredAlloyedPoolFromDenom(context.Context, *RegisteredAlloyedPoolFromDenomRequest) (*RegisteredAlloyedPoolFromDenomResponse, error)
 	// AllRegisteredAlloyedPools returns all registered alloyed pools. The
 	// registered alloyed pool contains the pool's contract address, along with
-	// the current distribution composition of rev share denoms within the alloyed
-	// pool.
+	// the current distribution composition of taker fee share denoms within the
+	// alloyed pool.
 	AllRegisteredAlloyedPools(context.Context, *AllRegisteredAlloyedPoolsRequest) (*AllRegisteredAlloyedPoolsResponse, error)
 }
 

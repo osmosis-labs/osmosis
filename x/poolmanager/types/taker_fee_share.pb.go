@@ -27,14 +27,15 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // TakerFeeShareAgreement represents the agreement between the Osmosis protocol
-// and a bridge provider. For example, if the agreement specifies a 10% skim
-// percent, this means 10% of the taker fees generated in a swap route
-// containing the bridge provider's denom will be sent to the address specified
+// and a specific denom to share a certain percent of taker fees generated in
+// any route that contains said denom. For example, if the agreement specifies a
+// 10% skim_percent, this means 10% of the taker fees generated in a swap route
+// containing the specified denom will be sent to the address specified
 // in the skim_address field at the end of each epoch. These skim_percents are
-// additive, so if three bridge providers have skim percents of 10%, 20%, and
-// 30%, the total skim percent for the route will be 60%.
+// additive, so if three taker fee agreements have skim percents of 10%, 20%,
+// and 30%, the total skim percent for the route will be 60%.
 type TakerFeeShareAgreement struct {
-	// denom is the denom that has a taker fee share agreement.
+	// denom is the denom that has the taker fee share agreement.
 	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty" yaml:"denom"`
 	// skim_percent is the percentage of taker fees that will be skimmed for the
 	// denom, in the event that the denom is included in the swap route.
@@ -94,7 +95,7 @@ func (m *TakerFeeShareAgreement) GetSkimAddress() string {
 // TakerFeeSkimAccumulator accumulates the total skimmed taker fees for each
 // denom that has a taker fee share agreement.
 type TakerFeeSkimAccumulator struct {
-	// denom is the denom that has a taker fee share agreement.
+	// denom is the denom that has the taker fee share agreement.
 	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty" yaml:"denom"`
 	// skimmed_taker_fees is the total skimmed taker fees for the denom.
 	SkimmedTakerFees github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=skimmed_taker_fees,json=skimmedTakerFees,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"skimmed_taker_fees" yaml:"skimmed_taker_fees"`
@@ -147,8 +148,19 @@ func (m *TakerFeeSkimAccumulator) GetSkimmedTakerFees() github_com_cosmos_cosmos
 	return nil
 }
 
+// AlloyContractTakerFeeShareState contains the contract address of the alloyed
+// asset pool, along with the adjusted taker fee share agreements for any asset
+// within the alloyed asset pool that has a taker fee share agreement. If for
+// instance there are two denoms, and denomA makes up 50 percent and denomB
+// makes up 50 percent, and denom A has a taker fee share agreement with a skim
+// percent of 10%, then the adjusted taker fee share agreement for denomA will
+// be 5%.
 type AlloyContractTakerFeeShareState struct {
-	ContractAddress         string                   `protobuf:"bytes,1,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty" yaml:"contract_address"`
+	// contract_address is the address of the alloyed asset pool contract.
+	ContractAddress string `protobuf:"bytes,1,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty" yaml:"contract_address"`
+	// taker_fee_share_agreements is the adjusted taker fee share agreements for
+	// any asset within the alloyed asset pool that has a taker fee share
+	// agreement.
 	TakerFeeShareAgreements []TakerFeeShareAgreement `protobuf:"bytes,2,rep,name=taker_fee_share_agreements,json=takerFeeShareAgreements,proto3" json:"taker_fee_share_agreements" yaml:"taker_fee_share_agreements"`
 }
 
