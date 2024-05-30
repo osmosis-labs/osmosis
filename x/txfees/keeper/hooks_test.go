@@ -566,6 +566,10 @@ func prepareCoinsForSwapToDenomTest(swapToDenom string) sdk.Coins {
 	)
 }
 
+// TestClearTakerFeeShareAccumulators tests the functionality of clearing taker fee share accumulators.
+// It sets up various scenarios with different taker fee share agreements and accumulators, funds the taker fee collector,
+// and then calls the ClearTakerFeeShareAccumulators method to ensure that the accumulators are cleared correctly.
+// The test also verifies the balances of the skim addresses to ensure that the correct amounts have been transferred.
 func (s *KeeperTestSuite) TestClearTakerFeeShareAccumulators() {
 	tests := []struct {
 		name                              string
