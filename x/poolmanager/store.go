@@ -268,6 +268,13 @@ func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error 
 		return err
 	}
 
+	// Just to be safe, if a pool is registered with the same ID already, replace it
+	iterator := storetypes.KVStorePrefixIterator(store, types.FormatRegisteredAlloyPoolKeyPoolIdOnly(poolId))
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		store.Delete(iterator.Key())
+	}
+
 	key := types.FormatRegisteredAlloyPoolKey(poolId, alloyedDenom)
 	store.Set(key, bz)
 
@@ -412,6 +419,10 @@ func (k *Keeper) SetAllRegisteredAlloyedPoolIdArrayCached(ctx sdk.Context) error
 // Helpers
 //
 
+// queryAndCheckAlloyedDenom queries the smart contract for the alloyed denomination and validates its format.
+// It sends a query to the contract address to get the share denomination, then checks if the denomination
+// follows the expected format "factory/{contractAddr}/alloyed/{denom}".
+// Returns the alloyed denomination if valid, otherwise returns an error.
 func (k Keeper) queryAndCheckAlloyedDenom(ctx sdk.Context, contractAddr sdk.AccAddress) (string, error) {
 	queryBz := []byte(`{"get_share_denom": {}}`)
 	respBz, err := k.wasmKeeper.QuerySmart(ctx, contractAddr, queryBz)
@@ -446,6 +457,10 @@ func (k Keeper) queryAndCheckAlloyedDenom(ctx sdk.Context, contractAddr sdk.AccA
 	return alloyedDenom, nil
 }
 
+// snapshotTakerFeeShareAlloyComposition queries the smart contract for the total pool liquidity and calculates
+// the taker fee share agreements based on the liquidity of each asset in the pool. It returns a slice of
+// TakerFeeShareAgreement objects, each containing the denomination, skim percent, and skim address.
+// If the total alloyed liquidity is zero, it returns an error.
 func (k Keeper) snapshotTakerFeeShareAlloyComposition(ctx sdk.Context, contractAddr sdk.AccAddress) ([]types.TakerFeeShareAgreement, error) {
 	// TODO: Need to add logic for scaling factors
 	queryBz := []byte(`{"get_total_pool_liquidity": {}}`)
@@ -493,6 +508,9 @@ func (k Keeper) snapshotTakerFeeShareAlloyComposition(ctx sdk.Context, contractA
 	return takerFeeShareAgreements, nil
 }
 
+// recalculateAndSetTakerFeeShareAlloyComposition recalculates the taker fee share composition for a given pool
+// and updates the store and cache with the new values. It retrieves the registered alloyed pool, calculates
+// the new taker fee share agreements, and updates the store and cache with the new state.
 func (k *Keeper) recalculateAndSetTakerFeeShareAlloyComposition(ctx sdk.Context, poolId uint64) error {
 	registeredAlloyedPoolPrior, err := k.GetRegisteredAlloyedPoolFromPoolId(ctx, poolId)
 	if err != nil {
@@ -528,6 +546,9 @@ func (k *Keeper) recalculateAndSetTakerFeeShareAlloyComposition(ctx sdk.Context,
 	return nil
 }
 
+// GetAlloyedDenomFromPoolId retrieves the alloyed denomination associated with a given pool ID from the store.
+// It iterates through the registered alloyed pools and matches the pool ID to find the corresponding alloyed denomination.
+// Returns the alloyed denomination if found, otherwise returns an error.
 func (k Keeper) GetAlloyedDenomFromPoolId(ctx sdk.Context, poolId uint64) (string, error) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, types.KeyRegisteredAlloyPool)
@@ -550,6 +571,5 @@ func (k Keeper) GetAlloyedDenomFromPoolId(ctx sdk.Context, poolId uint64) (strin
 			return alloyedDenom, nil
 		}
 	}
-
 	return "", types.NoRegisteredAlloyedPoolError{PoolId: poolId}
 }
