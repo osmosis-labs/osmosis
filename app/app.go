@@ -255,16 +255,17 @@ func NewOsmosisApp(
 			panic(err)
 		}
 
-		tp, err := initOTELTracer(ctx, res)
+		_, err = initOTELTracer(ctx, res)
 		if err != nil {
 			panic(err)
 		}
 
-		defer func() {
-			if err := tp.Shutdown(ctx); err != nil {
-				panic(fmt.Sprintf("Error shutting down tracer provider: %s", err))
-			}
-		}()
+		// TODO: find location to shutdown this
+		// defer func() {
+		// 	if err := tp.Shutdown(ctx); err != nil {
+		// 		panic(fmt.Sprintf("Error shutting down tracer provider: %s", err))
+		// 	}
+		// }()
 	}
 
 	initReusablePackageInjections() // This should run before anything else to make sure the variables are properly initialized
