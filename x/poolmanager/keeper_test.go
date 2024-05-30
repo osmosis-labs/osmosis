@@ -209,6 +209,9 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 	s.Require().Equal(testDenomPairTakerFees, genesis.DenomPairTakerFeeStore)
 }
 
+// TestBeginBlock tests that, if any one of the cache trackers is empty, all cache trackers are updated.
+// NOTE: We should only ever be in a state where all cache trackers are empty or all are non-empty, but we
+// test various scenarios here to ensure that the cache trackers are updated correctly.
 func (s *KeeperTestSuite) TestBeginBlock() {
 	contractAddress := "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2"
 	alloyedDenom := createAlloyedDenom(contractAddress)
@@ -353,6 +356,9 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 	}
 }
 
+// TestEndBlock tests the behavior of the EndBlock method in the PoolManagerKeeper.
+// Specifically, it verifies that the taker fee share alloy composition is updated correctly
+// for registered alloyed pools at block heights that are multiples of the alloyedAssetCompositionUpdateRate.
 func (s *KeeperTestSuite) TestEndBlock() {
 	tests := map[string]struct {
 		blockHeight                     int64
