@@ -23,6 +23,7 @@ const (
 	DefaultTransmuterDenomA       = "axlusdc"
 	DefaultTransmuterDenomB       = "gravusdc"
 	DefaultTransmuterDenomC       = "nbtc"
+	DefaultAlloyedSubDenom        = "testdenom"
 	TransmuterContractName        = "transmuter"
 	TransmuterV3ContractName      = "transmuterv3"
 	TransmuterMigrateContractName = "transmuter_migrate"
@@ -169,7 +170,7 @@ func (s *KeeperTestHelper) GetTransmuterInstantiateMsgBytesV3(poolAssetDenoms []
 
 	instantiateMsg := v3.InstantiateMsg{
 		PoolAssetConfigs:                assetConfigs,
-		AlloyedAssetSubdenom:            "testdenom",
+		AlloyedAssetSubdenom:            DefaultAlloyedSubDenom,
 		AlloyedAssetNormalizationFactor: "1",
 		Admin:                           owner.String(),
 		Moderator:                       owner.String(),

@@ -209,23 +209,17 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 }
 
 func (s *KeeperTestSuite) TestBeginBlock() {
+	contractAddress := "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2"
+	alloyedDenom := createAlloyedDenom(contractAddress)
+
 	defaultCachedTakerFeeShareAgreementMap := map[string]types.TakerFeeShareAgreement{
-		apptesting.DefaultTransmuterDenomA: {
-			Denom:       apptesting.DefaultTransmuterDenomA,
-			SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-			SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-		},
+		defaultTakerFeeShareAgreements[0].Denom: defaultTakerFeeShareAgreements[0],
 	}
+
 	defaultCachedRegisteredAlloyPoolByAlloyDenomMap := map[string]types.AlloyContractTakerFeeShareState{
-		"factory/osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2/alloyed/testdenom": {
-			ContractAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-			TakerFeeShareAgreements: []types.TakerFeeShareAgreement{
-				{
-					Denom:       apptesting.DefaultTransmuterDenomA,
-					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				},
-			},
+		alloyedDenom: {
+			ContractAddress:         contractAddress,
+			TakerFeeShareAgreements: []types.TakerFeeShareAgreement{defaultTakerFeeShareAgreements[0]},
 		},
 	}
 
@@ -278,20 +272,20 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 		"cachedTakerFeeShareAgreementMap is not empty, cachedRegisteredAlloyPoolByAlloyDenomMap is not empty, cachedRegisteredAlloyedPoolIdArray is not empty, should not update": {
 			storeSetup: func() {
 				differentCachedTakerFeeShareAgreement := map[string]types.TakerFeeShareAgreement{
-					apptesting.DefaultTransmuterDenomA: {
-						Denom:       apptesting.DefaultTransmuterDenomA,
+					defaultTakerFeeShareAgreements[0].Denom: {
+						Denom:       defaultTakerFeeShareAgreements[0].Denom,
 						SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-						SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
+						SkimAddress: defaultTakerFeeShareAgreements[0].SkimAddress,
 					},
 				}
 				differentCachedRegisteredAlloyPoolToState := map[string]types.AlloyContractTakerFeeShareState{
-					"factory/osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2/alloyed/testdenom2": {
-						ContractAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
+					createAlloyedDenom(contractAddress): {
+						ContractAddress: contractAddress,
 						TakerFeeShareAgreements: []types.TakerFeeShareAgreement{
 							{
-								Denom:       apptesting.DefaultTransmuterDenomA,
+								Denom:       defaultTakerFeeShareAgreements[0].Denom,
 								SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-								SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
+								SkimAddress: defaultTakerFeeShareAgreements[0].SkimAddress,
 							},
 						},
 					},
@@ -300,20 +294,20 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 				s.App.PoolManagerKeeper.SetCacheTrackers(differentCachedTakerFeeShareAgreement, differentCachedRegisteredAlloyPoolToState, differentCachedRegisteredAlloyedPoolIdArray)
 			},
 			expectedCachedTakerFeeShareAgreementMap: map[string]types.TakerFeeShareAgreement{
-				apptesting.DefaultTransmuterDenomA: {
-					Denom:       apptesting.DefaultTransmuterDenomA,
+				defaultTakerFeeShareAgreements[0].Denom: {
+					Denom:       defaultTakerFeeShareAgreements[0].Denom,
 					SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
+					SkimAddress: defaultTakerFeeShareAgreements[0].SkimAddress,
 				},
 			},
 			expectedCachedRegisteredAlloyPoolByAlloyDenomMap: map[string]types.AlloyContractTakerFeeShareState{
-				"factory/osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2/alloyed/testdenom2": {
-					ContractAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
+				createAlloyedDenom(contractAddress): {
+					ContractAddress: contractAddress,
 					TakerFeeShareAgreements: []types.TakerFeeShareAgreement{
 						{
-							Denom:       apptesting.DefaultTransmuterDenomA,
+							Denom:       defaultTakerFeeShareAgreements[0].Denom,
 							SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-							SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
+							SkimAddress: defaultTakerFeeShareAgreements[0].SkimAddress,
 						},
 					},
 				},
@@ -327,11 +321,7 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 			s.SetupTest()
 
 			// Directly set the stores
-			takerFeeShareAgreement := types.TakerFeeShareAgreement{
-				Denom:       apptesting.DefaultTransmuterDenomA,
-				SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-				SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-			}
+			takerFeeShareAgreement := defaultTakerFeeShareAgreements[0]
 			poolManagerKey := s.App.AppKeepers.GetKey(types.StoreKey)
 			store := s.Ctx.KVStore(poolManagerKey)
 			key := types.FormatTakerFeeShareAgreementKey(takerFeeShareAgreement.Denom)
@@ -340,12 +330,12 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 			store.Set(key, bz)
 
 			alloyContractState := types.AlloyContractTakerFeeShareState{
-				ContractAddress:         "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
+				ContractAddress:         contractAddress,
 				TakerFeeShareAgreements: []types.TakerFeeShareAgreement{takerFeeShareAgreement},
 			}
 			bz, err = proto.Marshal(&alloyContractState)
 			s.Require().NoError(err)
-			key = types.FormatRegisteredAlloyPoolKey(1, "factory/osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2/alloyed/testdenom")
+			key = types.FormatRegisteredAlloyPoolKey(1, alloyedDenom)
 			store.Set(key, bz)
 
 			// Set up cachedStores
@@ -371,58 +361,33 @@ func (s *KeeperTestSuite) TestEndBlock() {
 	}{
 		"alloyed pool registered, alloyed pool changes, alloy composition changes": {
 			swapFunc: func() {
-				joinCoins := sdk.NewCoins(sdk.NewInt64Coin("testA", 1000000000))
+				joinCoins := sdk.NewCoins(sdk.NewInt64Coin(denomA, 1000000000))
 				s.FundAcc(s.TestAccs[0], joinCoins)
 				s.JoinTransmuterPool(s.TestAccs[0], 1, joinCoins)
 				s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, 1)
 			},
-			expectedTakerFeeShareAgreements: []types.TakerFeeShareAgreement{
-				{
-					Denom:       "testA",
-					SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("0.66666666666666666")),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				},
-				{
-					Denom:       "testB",
-					SkimPercent: osmomath.MustNewDecFromStr("0.02").Mul(osmomath.MustNewDecFromStr("0.33333333333333333")),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				},
-			},
+			expectedTakerFeeShareAgreements: modifySkimPercent(defaultTakerFeeShareAgreements[:2], []osmomath.Dec{
+				osmomath.MustNewDecFromStr("0.66666666666666666"),
+				osmomath.MustNewDecFromStr("0.33333333333333333"),
+			}),
 		},
 		"alloyed pool registered, non alloyed pool changes, alloy composition does not change": {
 			swapFunc: func() {
 				s.PrepareAllSupportedPools()
 				s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, 1)
 			},
-			expectedTakerFeeShareAgreements: []types.TakerFeeShareAgreement{
-				{
-					Denom:       "testA",
-					SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("0.5")),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				},
-				{
-					Denom:       "testB",
-					SkimPercent: osmomath.MustNewDecFromStr("0.02").Mul(osmomath.MustNewDecFromStr("0.5")),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				},
-			},
+			expectedTakerFeeShareAgreements: modifySkimPercent(defaultTakerFeeShareAgreements[:2], []osmomath.Dec{
+				osmomath.MustNewDecFromStr("0.5"),
+				osmomath.MustNewDecFromStr("0.5"),
+			}),
 		},
 	}
 
 	for name, tc := range tests {
 		s.Run(name, func() {
 			s.SetupTest()
-			cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, []uint16{1, 1})
-			s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
-				Denom:       "testA",
-				SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-				SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-			})
-			s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
-				Denom:       "testB",
-				SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-				SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-			})
+			cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{denomA, denomB}, []uint16{1, 1})
+			setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:2])
 
 			// Set up stores
 			tc.swapFunc()

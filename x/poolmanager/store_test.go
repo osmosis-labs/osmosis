@@ -1504,5 +1504,5 @@ func createExpectedTakerFeeShareAgreementsMap(agreements []types.TakerFeeShareAg
 }
 
 func createAlloyedDenom(address string) string {
-	return fmt.Sprintf("factory/%s/alloyed/testdenom", address)
+	return fmt.Sprintf("factory/%s/alloyed/%s", address, apptesting.DefaultAlloyedSubDenom)
 }
