@@ -478,8 +478,32 @@ type TakerFeeParams struct {
 
 Not shown here is a separate KVStore, which holds overrides for the defaultTakerFee.
 
-At time of swap, all taker fees are sent to the `taker_fee_collector` module account. At epoch:
+The Osmosis protocol now supports setting up taker fee agreements with specific denoms to share a certain percentage of taker fees generated in any route containing those denoms:
 
+```go
+func (k *Keeper) SetTakerFeeShareAgreementForDenom(ctx sdk.Context, takerFeeShare types.TakerFeeShareAgreement) error
+
+type TakerFeeShareAgreement struct {
+    Denom       string `json:"denom"`
+    SkimAddress string `json:"skim_address"`
+    SkimPercent string `json:"skim_percent"`
+}
+```
+
+For example, if the agreement specifies a 10% `skim_percent`, then 10% of all taker fees generated in a swap route containing the specified denom will be sent to the `skim_address` at the end of each epoch. These percentages are additive, so if there are agreements with skim percents of 10%, 20%, and 30%, the total skim percent for the route will be 60%.
+
+The protocol can also register alloyed asset pools, which are pools containing denoms with taker fee share agreements:
+
+```go
+func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error
+```
+
+If a swap route contains an alloyed asset pool but no individual taker fee share agreement denoms, the taker fees will be skimmed based on the underlying denoms in the pool that have taker fee share agreements, adjusted by their respective weights. For example, if an alloyed asset pool contains 50% nBTC (10% skim percent) and 50% iBTC (5% skim percent), the total skim percent for the pool will be 7.5%, with 5% of the taker fees going to the nBTC skim address and 2.5% to the iBTC skim address.
+
+At the time of swap, all taker fees (including those skimmed via taker fee share agreements) are sent to the `taker_fee_collector` module account. At the end of each epoch, the fees are distributed as follows:
+
+- Skimmed taker fee:
+    - Sent directly to the `skim_address` specified in the taker fee agreement.
 - Non native taker fees
     - For Community Pool: Sent to `non_native_fee_collector_community_pool` module account, swapped to `CommunityPoolDenomToSwapNonWhitelistedAssetsTo`, then sent to community pool
     - For Stakers: Sent to `non_native_fee_collector_stakers` module account, swapped to OSMO, then sent to auth module account, which distributes it to stakers
@@ -532,3 +556,37 @@ At epoch, we check the `OsmoTakerFeeDistribution`. In this example, let’s say 
 For community pool, this is just a direct send of the OSMO to the community pool.
 
 For staking, the OSMO is directly sent to the auth "fee collector" module account, which distributes it to stakers.
+
+### Example 3: Multi hop swap through a taker fee share denom and alloyed asset pool
+
+The swap route is as follows:
+
+OSMO -> nBTC -> allBTC -> iBTC
+
+The Osmosis protocol has a taker fee share agreement with nBTC and iBTC. The skim percent for nBTC is 10% and for iBTC is 5%.
+
+This swap generates 5 OSMO, 10 nBTC, and 20 allBTC in taker fees.
+
+Because this route is made up of two taker fee share denoms, the total skim percent for the route is 15% (10% from nBTC and 5% from iBTC). 10% of the taker fees are noted to go to the nBTC `skim_address` (0.5 OSMO, 1 nBTC, 2 allBTC) and 5% to the iBTC `skim_address` (0.25 OSMO, 0.5 iBTC, 1 allBTC). All funds, including those noted to go to the `skim_address`, are sent to the `taker_fee_collector` module account at time of swap. At epoch, the noted skim amounts are sent to the respective `skim_address`.
+
+Notice, no logic touches the alloyed asset pool due to the swap route contains taker fee share denoms, which trumps the alloyed asset pool share. The next example will show how the alloyed asset pool is used when the route does not contain taker fee share denoms.
+
+### Example 4: Multi hop swap through an alloyed asset pool
+
+The swap route is as follows:
+
+OSMO -> wBTC -> allBTC -> xBTC
+
+The Osmosis protocol has a taker fee share agreement with nBTC and iBTC. The skim percent for nBTC is 10% and for iBTC is 5%.
+
+allBTC is made up of four denoms:
+- nBTC (10% skim percent)
+- iBTC (5% skim percent)
+- WBTC (no taker fee share agreement)
+- xBTC (no taker fee share agreement)
+
+allBTC's composition is 25% nBTC, 25% iBTC, 25% WBTC, and 25% xBTC.
+
+This swap generates 5 OSMO, 10 wBTC, and 20 allBTC in taker fees.
+
+Because this route does not contain taker fee share denoms, but does contain a registered alloyed pool, each skim percent must be calculated as the weighted skim percents of the underlying denoms with taker fee share agreements. The total skim percent for the route is 3.75%, 2.5% to nBTC (10% * 25%) and 1.25% to iBTC (5% * 25%). 2.5% of the taker fees are noted to go to the nBTC `skim_address` (0.125 OSMO, 0.25 wBTC, 0.5 allBTC) and 1.25% to the iBTC `skim_address` (0.0625 OSMO, 0.125 wBTC, 0.25 allBTC). All funds, including those noted to go to the `skim_address`, are sent to the `taker_fee_collector` module account at time of swap. At epoch, the noted skim amounts are sent to the respective `skim_address`.
