@@ -229,33 +229,34 @@ func (k *Keeper) SetWasmKeeper(wasmKeeper types.WasmKeeper) {
 
 // BeginBlock sets the poolmanager caches if they are empty
 func (k *Keeper) BeginBlock(ctx sdk.Context) {
-	// Set the caches if they are empty
+	// Set the caches if they are empty.
 	if len(k.cachedTakerFeeShareAgreementMap) == 0 || len(k.cachedRegisteredAlloyPoolToStateMap) == 0 || len(k.cachedRegisteredAlloyedPoolIdArray) == 0 {
 		err := k.SetTakerFeeShareAgreementsMapCached(ctx)
 		if err != nil {
-			ctx.Logger().Error(fmt.Errorf("error in setting taker fee share agreements map cached: %w", err).Error())
+			ctx.Logger().Error(fmt.Errorf("%w", types.ErrSetTakerFeeShareAgreementsMapCached).Error())
 		}
 		err = k.SetAllRegisteredAlloyedPoolsCached(ctx)
 		if err != nil {
-			ctx.Logger().Error(fmt.Errorf("error in setting all registered alloyed pools cached: %w", err).Error())
+			ctx.Logger().Error(fmt.Errorf("%w", types.ErrSetAllRegisteredAlloyedPoolsCached).Error())
 		}
 		err = k.SetAllRegisteredAlloyedPoolsIdCached(ctx)
 		if err != nil {
-			ctx.Logger().Error(fmt.Errorf("error in setting all registered alloyed pools id cached: %w", err).Error())
+			ctx.Logger().Error(fmt.Errorf("%w", types.ErrSetAllRegisteredAlloyedPoolsIdCached).Error())
 		}
 	}
 }
 
 var alloyedAssetCompositionUpdateRate = int64(1)
 
-// EndBlock recalculates the taker fee share alloy composition for all altered registered alloyed pools
+// EndBlock updates the taker fee share alloy composition for all registered alloyed pools
+// if the current block height is a multiple of the alloyedAssetCompositionUpdateRate.
 func (k *Keeper) EndBlock(ctx sdk.Context) {
 	if ctx.BlockHeight()%alloyedAssetCompositionUpdateRate == 0 {
 		for _, id := range k.cachedRegisteredAlloyedPoolIdArray {
 			err := k.recalculateAndSetTakerFeeShareAlloyComposition(ctx, id)
 			if err != nil {
 				ctx.Logger().Error(fmt.Errorf(
-					"error in setting registered alloyed pool for pool id %d: %w", id, err,
+					"%s for pool id %d: %v", types.ErrSetRegisteredAlloyedPool, id, err,
 				).Error())
 			}
 		}
