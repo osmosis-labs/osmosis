@@ -26,7 +26,6 @@ type MaxAmountAuthenticator struct {
 }
 
 func (m MaxAmountAuthenticator) StaticGas() uint64 {
-	// Q: I see it's only used in tests but is it safe to leave as 0?
 	return 0
 }
 
