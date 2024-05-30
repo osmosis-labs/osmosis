@@ -76,3 +76,7 @@ func (k Keeper) GetCachedTrackers() (map[string]types.TakerFeeShareAgreement, ma
 func (k *Keeper) SetCacheTrackers(takerFeeShareAgreement map[string]types.TakerFeeShareAgreement, registeredAlloyPoolToState map[string]types.AlloyContractTakerFeeShareState, registeredAlloyedPoolId []uint64) {
 	k.setCacheTrackers(takerFeeShareAgreement, registeredAlloyPoolToState, registeredAlloyedPoolId)
 }
+
+func (k Keeper) GetAlloyedDenomFromPoolId(ctx sdk.Context, poolId uint64) (string, error) {
+	return k.getAlloyedDenomFromPoolId(ctx, poolId)
+}

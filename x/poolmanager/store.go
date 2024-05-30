@@ -310,7 +310,7 @@ func (k Keeper) GetRegisteredAlloyedPoolFromDenom(ctx sdk.Context, alloyedDenom 
 // GetRegisteredAlloyedPoolFromPoolId retrieves a specific registered alloyed pool from the store via the pool id.
 // Used in the RegisteredAlloyedPoolFromPoolIdRequest gRPC query.
 func (k Keeper) GetRegisteredAlloyedPoolFromPoolId(ctx sdk.Context, poolId uint64) (types.AlloyContractTakerFeeShareState, error) {
-	alloyedDenom, err := k.GetAlloyedDenomFromPoolId(ctx, poolId)
+	alloyedDenom, err := k.getAlloyedDenomFromPoolId(ctx, poolId)
 	if err != nil {
 		return types.AlloyContractTakerFeeShareState{}, err
 	}
@@ -532,7 +532,7 @@ func (k *Keeper) recalculateAndSetTakerFeeShareAlloyComposition(ctx sdk.Context,
 		return err
 	}
 
-	alloyedDenom, err := k.GetAlloyedDenomFromPoolId(ctx, poolId)
+	alloyedDenom, err := k.getAlloyedDenomFromPoolId(ctx, poolId)
 	if err != nil {
 		return err
 	}
@@ -546,10 +546,10 @@ func (k *Keeper) recalculateAndSetTakerFeeShareAlloyComposition(ctx sdk.Context,
 	return nil
 }
 
-// GetAlloyedDenomFromPoolId retrieves the alloyed denomination associated with a given pool ID from the store.
+// getAlloyedDenomFromPoolId retrieves the alloyed denomination associated with a given pool ID from the store.
 // It iterates through the registered alloyed pools and matches the pool ID to find the corresponding alloyed denomination.
 // Returns the alloyed denomination if found, otherwise returns an error.
-func (k Keeper) GetAlloyedDenomFromPoolId(ctx sdk.Context, poolId uint64) (string, error) {
+func (k Keeper) getAlloyedDenomFromPoolId(ctx sdk.Context, poolId uint64) (string, error) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, types.KeyRegisteredAlloyPool)
 	defer iterator.Close()

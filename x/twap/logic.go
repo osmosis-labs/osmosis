@@ -106,7 +106,7 @@ func (k Keeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {
 func (k Keeper) EndBlock(ctx sdk.Context) {
 	// get changed pools grabs all altered pool ids from the transient store.
 	// 'altered pool ids' gets automatically cleared on commit by being a transient store
-	changedPoolIds := k.GetChangedPools(ctx)
+	changedPoolIds := k.getChangedPools(ctx)
 	for _, id := range changedPoolIds {
 		err := k.updateRecords(ctx, id)
 		if err != nil {
