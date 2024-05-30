@@ -1,11 +1,13 @@
 package v7
 
 import (
+	"context"
+
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/v25/app/keepers"
 	"github.com/osmosis-labs/osmosis/v25/app/upgrades"
@@ -19,7 +21,8 @@ func CreateUpgradeHandler(
 	_ upgrades.BaseAppParamManager,
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+	return func(context context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		ctx := sdk.UnwrapSDKContext(context)
 		// Set wasm old version to 1 if we want to call wasm's InitGenesis ourselves
 		// in this upgrade logic ourselves.
 		//

@@ -11,14 +11,17 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/x/upgrade"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
-	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 	v24 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v24"
@@ -38,6 +41,7 @@ const (
 
 type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
+	preModule appmodule.HasPreBlocker
 }
 
 func TestUpgradeTestSuite(t *testing.T) {
@@ -46,6 +50,7 @@ func TestUpgradeTestSuite(t *testing.T) {
 
 func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Setup()
+	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
 
 	// TWAP Setup
 	//
@@ -115,7 +120,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	// Update authorized quote denoms
 	concentratedParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
-	concentratedParams.AuthorizedQuoteDenoms = append(concentratedParams.AuthorizedQuoteDenoms, apptesting.USDC)
+	// concentratedParams.AuthorizedQuoteDenoms = append(concentratedParams.AuthorizedQuoteDenoms, apptesting.USDC)
 	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, concentratedParams)
 
 	// Create two more concentrated pools with positions
@@ -131,7 +136,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	lastPoolPositionID := s.App.ConcentratedLiquidityKeeper.GetNextPositionId(s.Ctx) - 1
 
 	// Create incentive record for last pool
-	incentiveCoin := sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(1000000))
+	incentiveCoin := sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1000000))
 	_, err = s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, lastPoolID, s.TestAccs[0], incentiveCoin, osmomath.OneDec(), s.Ctx.BlockTime(), concentratedtypes.DefaultAuthorizedUptimes[0])
 	s.Require().NoError(err)
 
@@ -193,7 +198,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// Run the upgrade
 	dummyUpgrade(s)
 	s.Require().NotPanics(func() {
-		s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
+		_, err := s.preModule.PreBlock(s.Ctx)
+		s.Require().NoError(err)
 	})
 
 	// TWAP Tests
@@ -205,7 +211,10 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().Len(twapRecords, 2)
 
 	// Run the end blocker
-	s.App.EndBlocker(s.Ctx, abci.RequestEndBlock{})
+	s.Require().NotPanics(func() {
+		_, err := s.App.EndBlocker(s.Ctx)
+		s.Require().NoError(err)
+	})
 
 	// Since the prune limit was 1, 1 TWAP record indexed by time should be completely removed, leaving one more.
 	// twapRecords, err = osmoutils.GatherValuesFromStorePrefix(store, []byte(HistoricalTWAPTimeIndexPrefix), types.ParseTwapFromBz)
@@ -282,8 +291,8 @@ func dummyUpgrade(s *UpgradeTestSuite) {
 	plan := upgradetypes.Plan{Name: "v24", Height: v24UpgradeHeight}
 	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
 	s.Require().NoError(err)
-	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
-	s.Require().True(exists)
+	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+	s.Require().NoError(err)
 
-	s.Ctx = s.Ctx.WithBlockHeight(v24UpgradeHeight)
+	s.Ctx = s.Ctx.WithHeaderInfo(header.Info{Height: v24UpgradeHeight, Time: s.Ctx.BlockTime().Add(time.Second)}).WithBlockHeight(v24UpgradeHeight)
 }

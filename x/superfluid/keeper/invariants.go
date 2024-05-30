@@ -36,13 +36,13 @@ func TotalSuperfluidDelegationInvariant(keeper Keeper) sdk.Invariant {
 				return sdk.FormatInvariant(types.ModuleName, totalSuperfluidDelegationInvariantName,
 					"\tinvalid validator address exists"), true
 			}
-			validator, found := keeper.sk.GetValidator(ctx, valAddr)
-			if !found {
+			validator, err := keeper.sk.GetValidator(ctx, valAddr)
+			if err != nil {
 				return sdk.FormatInvariant(types.ModuleName, totalSuperfluidDelegationInvariantName,
 					"\tvalidator does not exists for specified validator address on intermediary account"), true
 			}
-			delegation, found := keeper.sk.GetDelegation(ctx, acc.GetAccAddress(), valAddr)
-			if found {
+			delegation, err := keeper.sk.GetDelegation(ctx, acc.GetAccAddress(), valAddr)
+			if err == nil {
 				tokens := validator.TokensFromShares(delegation.Shares)
 				totalSuperfluidDelegationTokens = totalSuperfluidDelegationTokens.Add(tokens)
 			}

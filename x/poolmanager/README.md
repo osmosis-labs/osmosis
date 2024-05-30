@@ -363,7 +363,7 @@ The following is the process in which the query finds a trade that will stay bel
 3. Return the specific `PoolI` interface from the `swapModule` based on the `PoolId`.
 4. Calculate the `SpotPrice` in terms of the token being bought, therefore if it's an `OSMO/ATOM` pool and `OSMO` is being sold we need to calculate the `SpotPrice` in terms of `ATOM` being the base asset and `OSMO` being the quote asset.
 5. If we have a `ExternalPrice` specified in the request we need to adjust the `MaxPriceImpact` into a new variable `adjustedMaxPriceImpact` which would either increase if the `SpotPrice` is cheaper than the `ExternalPrice` or decrease if the `SpotPrice` is more expensive leaving less room to estimate a trade.
-   1. If the `adjustedMaxPriceImpact` was calculated to be `0` or negative it means that the `SpotPrice` is more expensive than the `ExternalPrice` and has already exceeded the possible `MaxPriceImpact`. We return a `sdk.ZeroInt()` input and output for the input and output coins indicating that no trade is viable.
+   1. If the `adjustedMaxPriceImpact` was calculated to be `0` or negative it means that the `SpotPrice` is more expensive than the `ExternalPrice` and has already exceeded the possible `MaxPriceImpact`. We return a `osmomath.ZeroInt()` input and output for the input and output coins indicating that no trade is viable.
 6. Then according to the pool type we attempt to find a viable trade, we must process each pool type differently as they return different results for different scenarios. The sections below explain the different pool types and how they each handle input.
 
 #### Balancer Pool Type Process

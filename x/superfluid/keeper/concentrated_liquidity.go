@@ -70,7 +70,10 @@ func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, se
 	if lock.Owner != sender.String() {
 		return cltypes.CreateFullRangePositionData{}, 0, types.LockOwnerMismatchError{LockId: lockId, LockOwner: lock.Owner, ProvidedOwner: sender.String()}
 	}
-	unbondingDuration := k.sk.UnbondingTime(ctx)
+	unbondingDuration, err := k.sk.UnbondingTime(ctx)
+	if err != nil {
+		return cltypes.CreateFullRangePositionData{}, 0, err
+	}
 	if lock.Duration != unbondingDuration || !lock.EndTime.IsZero() {
 		return cltypes.CreateFullRangePositionData{}, 0, types.LockImproperStateError{LockId: lockId, UnbondingDuration: unbondingDuration.String()}
 	}

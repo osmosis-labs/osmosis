@@ -10,12 +10,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
-	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
-	"github.com/cosmos/ibc-go/v7/modules/core/exported"
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
+	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 
 	"github.com/osmosis-labs/osmosis/v25/x/ibc-rate-limit/types"
 )
@@ -157,6 +157,9 @@ func (im *IBCModule) OnAcknowledgementPacket(
 	acknowledgement []byte,
 	relayer sdk.AccAddress,
 ) error {
+	if ctx.IsCheckTx() || ctx.IsReCheckTx() {
+		return im.app.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
+	}
 	var ack channeltypes.Acknowledgement
 	if err := json.Unmarshal(acknowledgement, &ack); err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet acknowledgement: %v", err)

@@ -57,11 +57,6 @@ func (msg MsgSetHotRoutes) ValidateBasic() error {
 	return nil
 }
 
-// GetSignBytes encodes the message for signing
-func (msg MsgSetHotRoutes) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 // GetSigners defines whose signature is required
 func (msg MsgSetHotRoutes) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Admin)
@@ -104,11 +99,6 @@ func (msg MsgSetDeveloperAccount) ValidateBasic() error {
 	return nil
 }
 
-// GetSignBytes encodes the message for signing
-func (msg MsgSetDeveloperAccount) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 // GetSigners defines whose signature is required
 func (msg MsgSetDeveloperAccount) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Admin)
@@ -147,11 +137,6 @@ func (msg MsgSetMaxPoolPointsPerTx) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-// GetSignBytes encodes the message for signing
-func (msg MsgSetMaxPoolPointsPerTx) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
@@ -194,11 +179,6 @@ func (msg MsgSetMaxPoolPointsPerBlock) ValidateBasic() error {
 	return nil
 }
 
-// GetSignBytes encodes the message for signing
-func (msg MsgSetMaxPoolPointsPerBlock) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 // GetSigners defines whose signature is required
 func (msg MsgSetMaxPoolPointsPerBlock) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Admin)
@@ -236,11 +216,6 @@ func (msg MsgSetInfoByPoolType) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-// GetSignBytes encodes the message for signing
-func (msg MsgSetInfoByPoolType) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
@@ -281,11 +256,6 @@ func (msg MsgSetBaseDenoms) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-// GetSignBytes encodes the message for signing
-func (msg MsgSetBaseDenoms) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required

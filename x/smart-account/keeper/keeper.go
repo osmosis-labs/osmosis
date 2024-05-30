@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	gogotypes "github.com/gogo/protobuf/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

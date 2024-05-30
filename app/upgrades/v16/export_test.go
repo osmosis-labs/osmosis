@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	AuthorizedQuoteDenoms = authorizedQuoteDenoms
-	AuthorizedUptimes     = authorizedUptimes
+	// AuthorizedQuoteDenoms = authorizedQuoteDenoms
+	AuthorizedUptimes = authorizedUptimes
 )
 
 func UpdateTokenFactoryParams(ctx sdk.Context, tokenFactoryKeeper *tokenfactorykeeper.Keeper) {

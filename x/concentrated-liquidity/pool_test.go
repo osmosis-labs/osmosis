@@ -806,7 +806,7 @@ func (s *KeeperTestSuite) TestMigrateIncentivesAccumulatorToScalingFactor() {
 	_, err := s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, poolID, s.TestAccs[0], totalIncentiveAmount, emissionRatePerSecDec, s.Ctx.BlockTime(), types.DefaultAuthorizedUptimes[0])
 	s.Require().NoError(err)
 
-	// Increate block time
+	// Increase block time
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute))
 
 	// Refetch pool
@@ -886,7 +886,7 @@ func (s *KeeperTestSuite) TestMigrateIncentivesAccumulatorToScalingFactor() {
 	_, err = s.App.ConcentratedLiquidityKeeper.CreateIncentive(s.Ctx, poolID, s.TestAccs[0], totalIncentiveAmount, emissionRatePerSecDec, s.Ctx.BlockTime(), types.DefaultAuthorizedUptimes[0])
 	s.Require().NoError(err)
 
-	// Increate block time
+	// Increase block time
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute))
 
 	// Refetch pool
@@ -910,8 +910,8 @@ func (s *KeeperTestSuite) TestMigrateSpreadFactorAccumulatorToScalingFactor() {
 	s.SetupTest()
 	s.App.ConcentratedLiquidityKeeper.SetSpreadFactorPoolIDMigrationThreshold(s.Ctx, 1000)
 
-	spreadRewardAccumValue := sdk.NewDecCoins(sdk.NewDecCoinFromDec(USDC, sdk.MustNewDecFromStr("276701288297")))
-	positionAccumValue := sdk.NewDecCoins(sdk.NewDecCoinFromDec(USDC, sdk.MustNewDecFromStr("276701288297").Quo(sdk.MustNewDecFromStr("2"))))
+	spreadRewardAccumValue := sdk.NewDecCoins(sdk.NewDecCoinFromDec(USDC, osmomath.MustNewDecFromStr("276701288297")))
+	positionAccumValue := sdk.NewDecCoins(sdk.NewDecCoinFromDec(USDC, osmomath.MustNewDecFromStr("276701288297").Quo(osmomath.MustNewDecFromStr("2"))))
 
 	// Create CL pool that will not be migrated
 	concentratedPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, osmomath.MustNewDecFromStr("0.003"))

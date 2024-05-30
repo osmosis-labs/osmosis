@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v25/x/txfees/keeper"
 
 	errorsmod "cosmossdk.io/errors"
@@ -13,7 +15,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+
+	storetypes "cosmossdk.io/store/types"
+	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
 	smartaccountkeeper "github.com/osmosis-labs/osmosis/v25/x/smart-account/keeper"
@@ -25,15 +29,17 @@ import (
 type AuthenticatorDecorator struct {
 	smartAccountKeeper *smartaccountkeeper.Keeper
 	accountKeeper      authante.AccountKeeper
-	sigModeHandler     authsigning.SignModeHandler
+	sigModeHandler     *txsigning.HandlerMap
 	deductFeeDecorator txfeeskeeper.DeductFeeDecorator
+	cdc                codec.Codec
 }
 
 // NewAuthenticatorDecorator creates a new instance of AuthenticatorDecorator with the provided parameters.
 func NewAuthenticatorDecorator(
+	cdc codec.Codec,
 	smartAccountKeeper *smartaccountkeeper.Keeper,
 	accountKeeper authante.AccountKeeper,
-	sigModeHandler authsigning.SignModeHandler,
+	sigModeHandler *txsigning.HandlerMap,
 	deductFeeDecorator txfeeskeeper.DeductFeeDecorator,
 ) AuthenticatorDecorator {
 	return AuthenticatorDecorator{
@@ -41,6 +47,7 @@ func NewAuthenticatorDecorator(
 		accountKeeper:      accountKeeper,
 		sigModeHandler:     sigModeHandler,
 		deductFeeDecorator: deductFeeDecorator,
+		cdc:                cdc,
 	}
 }
 
@@ -55,7 +62,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, types.MeasureKeyAnteHandler)
 
 	// Authenticators don't support manually setting the fee payer
-	err = ValidateAuthenticatorFeePayer(tx)
+	err = ad.ValidateAuthenticatorFeePayer(tx)
 	if err != nil {
 		return sdk.Context{}, err
 	}
@@ -73,14 +80,14 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	// As long as the gas consumption remains below the fee payer gas limit, exceeding
 	// the original limit should be acceptable.
 	authenticatorParams := ad.smartAccountKeeper.GetParams(ctx)
-	payerGasMeter := sdk.NewGasMeter(authenticatorParams.MaximumUnauthenticatedGas)
+	payerGasMeter := storetypes.NewGasMeter(authenticatorParams.MaximumUnauthenticatedGas)
 	ctx = ctx.WithGasMeter(payerGasMeter)
 
 	// Recover from any OutOfGas panic to return an error with information of the gas limit having been reduced
 	defer func() {
 		if r := recover(); r != nil {
 			switch r.(type) {
-			case sdk.ErrorOutOfGas:
+			case storetypes.ErrorOutOfGas:
 				log := fmt.Sprintf(
 					"FeePayer must be authenticated first because gas consumption has exceeded the free gas limit for authentication process. The gas limit has been reduced to %d. Gas consumed: %d",
 					authenticatorParams.MaximumUnauthenticatedGas, payerGasMeter.GasConsumed())
@@ -102,8 +109,17 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	}
 
 	// The fee payer is the first signer of the transaction. This should have been enforced by the
+<<<<<<< HEAD
 	// call to ValidateAuthenticatorFeePayer(tx) at the beginning of this function.
 	feePayer := msgs[0].GetSigners()[0]
+=======
+	// LimitFeePayerDecorator
+	signers, _, err := ad.cdc.GetMsgV1Signers(msgs[0])
+	if err != nil {
+		return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "failed to get signers")
+	}
+	feePayer := sdk.AccAddress(signers[0])
+>>>>>>> main
 	feeGranter := feeTx.FeeGranter()
 	fee := feeTx.GetFee()
 
@@ -117,14 +133,17 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 	// Authenticate the accounts of all messages
 	for msgIndex, msg := range msgs {
-		signers := msg.GetSigners()
+		signers, _, err := ad.cdc.GetMsgV1Signers(msg)
+		if err != nil {
+			return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "failed to get signers")
+		}
 		// Enforce only one signer per message
 		if len(signers) != 1 {
 			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "messages must have exactly one signer")
 		}
 
 		// By default, the first signer is the account that is used
-		account := signers[0]
+		account := sdk.AccAddress(signers[0])
 
 		// Get the currently selected authenticator
 		selectedAuthenticatorId := int(selectedAuthenticators[msgIndex])
@@ -141,6 +160,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		// Generate the authentication request data
 		authenticationRequest, err := authenticator.GenerateAuthenticationRequest(
 			ctx,
+			ad.cdc,
 			ad.accountKeeper,
 			ad.sigModeHandler,
 			account,
@@ -178,13 +198,13 @@ func (ad AuthenticatorDecorator) AnteHandle(
 				// Once the fee payer is authenticated, we can deduct the fee.
 				// This change will persist regardless of whether the rest of the messages pass authentication
 				// or not
-				_, err := ad.deductFeeDecorator.AnteHandle(ctx, tx, simulate, sdk.ChainAnteDecorators(sdk.Terminator{}))
+				_, err := ad.deductFeeDecorator.AnteHandle(ctx, tx, simulate, sdk.ChainAnteDecorators(sdk.Terminator{})) //nolint
 				if err != nil {
 					return sdk.Context{}, err
 				}
 
 				// Write the cache multi store to persist the fee deduction
-				cacheMultiStore, ok := ctx.MultiStore().(sdk.CacheMultiStore)
+				cacheMultiStore, ok := ctx.MultiStore().(storetypes.CacheMultiStore)
 				if !ok {
 					// This should never happen
 					return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrPanic, "expected CacheMultiStore")
@@ -242,7 +262,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 // for the authenticator module.
 // The only user of a manually set fee payer is with fee grants, which are not
 // available on osmosis
-func ValidateAuthenticatorFeePayer(tx sdk.Tx) error {
+func (ad AuthenticatorDecorator) ValidateAuthenticatorFeePayer(tx sdk.Tx) error {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
@@ -255,7 +275,10 @@ func ValidateAuthenticatorFeePayer(tx sdk.Tx) error {
 	if len(msgs) == 0 {
 		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must contain at least one message")
 	}
-	signers := msgs[0].GetSigners()
+	signers, _, err := ad.cdc.GetMsgV1Signers(msgs[0])
+	if err != nil {
+		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "failed to get signers")
+	}
 	if len(signers) == 0 {
 		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx message must contain at least one signer")
 	}

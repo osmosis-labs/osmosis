@@ -385,7 +385,7 @@ pub struct AfterPoolCreated {
 pub enum CreatePoolGauges {
     // This works exactly like `gamm`'s.
     DefaultLockableDurations {},
-    // Custom guages can be created.
+    // Custom gauges can be created.
     Custom { msgs: Vec<MsgCreateGauge> },
 }
 ```

@@ -6,9 +6,9 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
-	"github.com/cosmos/ibc-go/v7/modules/core/exported"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 
 	"github.com/osmosis-labs/osmosis/v25/x/ibc-rate-limit/types"
 )

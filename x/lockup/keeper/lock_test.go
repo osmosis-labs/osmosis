@@ -740,11 +740,11 @@ func (s *KeeperTestSuite) TestAddTokensToLock() {
 			s.Require().NoError(err)
 
 			// check that tokens have been added successfully to the lock
-			s.Require().True(sdk.Coins{initialLockCoin.Add(tc.tokenToAdd)}.IsEqual(lock.Coins))
+			s.Require().True(sdk.Coins{initialLockCoin.Add(tc.tokenToAdd)}.Equal(lock.Coins))
 
 			// check balance has decreased
 			balanceAfterLock := s.App.BankKeeper.GetAllBalances(s.Ctx, tc.lockingAddress)
-			s.Require().True(balanceBeforeLock.IsEqual(balanceAfterLock.Add(tc.tokenToAdd)))
+			s.Require().True(balanceBeforeLock.Equal(balanceAfterLock.Add(tc.tokenToAdd)))
 
 			// check accumulation store
 			accum := s.App.LockupKeeper.GetPeriodLocksAccumulation(s.Ctx, types.QueryCondition{
@@ -761,7 +761,7 @@ func (s *KeeperTestSuite) TestAddTokensToLock() {
 			s.Require().NoError(err)
 
 			// check that locked coins haven't changed
-			s.Require().True(lock.Coins.IsEqual(sdk.Coins{initialLockCoin}))
+			s.Require().True(lock.Coins.Equal(sdk.Coins{initialLockCoin}))
 
 			// check accumulation store didn't change
 			accum := s.App.LockupKeeper.GetPeriodLocksAccumulation(s.Ctx, types.QueryCondition{
@@ -978,7 +978,7 @@ func (s *KeeperTestSuite) TestSplitLock() {
 		s.Require().Equal(newLock.Duration, lock.Duration)
 		s.Require().Equal(newLock.EndTime, lock.EndTime)
 		s.Require().Equal(newLock.RewardReceiverAddress, lock.RewardReceiverAddress)
-		s.Require().True(newLock.Coins.IsEqual(tc.amountToSplit))
+		s.Require().True(newLock.Coins.Equal(tc.amountToSplit))
 
 		// now check if the old lock has correctly updated state
 		updatedOriginalLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
@@ -987,7 +987,7 @@ func (s *KeeperTestSuite) TestSplitLock() {
 		s.Require().Equal(updatedOriginalLock.Duration, lock.Duration)
 		s.Require().Equal(updatedOriginalLock.EndTime, lock.EndTime)
 		s.Require().Equal(updatedOriginalLock.RewardReceiverAddress, lock.RewardReceiverAddress)
-		s.Require().True(updatedOriginalLock.Coins.IsEqual(lock.Coins.Sub(tc.amountToSplit...)))
+		s.Require().True(updatedOriginalLock.Coins.Equal(lock.Coins.Sub(tc.amountToSplit...)))
 
 		// check that last lock id has incremented properly
 		lastLockId := s.App.LockupKeeper.GetLastLockID(s.Ctx)

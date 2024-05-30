@@ -3,22 +3,24 @@ package keeper_test
 import (
 	gocontext "context"
 	"fmt"
+	"strconv"
+	"testing"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 	balancertypes "github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
 	minttypes "github.com/osmosis-labs/osmosis/v25/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v25/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
-	"github.com/stretchr/testify/suite"
-	"strconv"
-	"testing"
-	"time"
 )
 
 type TestSuite struct {
@@ -35,9 +37,10 @@ func (s *TestSuite) SetupTest() {
 	s.KeeperTestSuite.SetupTest()
 
 	// set the bond denom to be osmo (because it's hardcoded in protorev)
-	stakingParams := s.App.StakingKeeper.GetParams(s.Ctx)
+	stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	s.Require().NoError(err)
 	stakingParams.BondDenom = appparams.BaseCoinUnit
-	err := s.App.StakingKeeper.SetParams(s.Ctx, stakingParams)
+	err = s.App.StakingKeeper.SetParams(s.Ctx, stakingParams)
 	s.Require().NoError(err)
 
 	// set incentives min value in osmo
@@ -47,7 +50,9 @@ func (s *TestSuite) SetupTest() {
 
 	// make pool creation fees be paid in the bond denom. Also make them low.
 	poolmanagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
-	poolmanagerParams.PoolCreationFee = sdk.NewCoins(sdk.NewInt64Coin(s.App.StakingKeeper.BondDenom(s.Ctx), 1))
+	bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
+	s.Require().NoError(err)
+	poolmanagerParams.PoolCreationFee = sdk.NewCoins(sdk.NewInt64Coin(bondDenom, 1))
 	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolmanagerParams)
 
 	// create a proposal
@@ -124,15 +129,16 @@ func (s *TestSuite) TestGammSuperfluid() {
 
 	// denoms
 	btcDenom := "factory/osmo1pfyxruwvtwk00y8z06dh2lqjdj82ldvy74wzm3/allBTC" // Asset to superfluid stake
-	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+	bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
+	s.Require().NoError(err)
 
 	// accounts
 	// pool creator
 	lpKey := ed25519.GenPrivKey().PubKey()
 	lpAddr := sdk.AccAddress(lpKey.Address())
 
-	osmoPoolAmount := sdk.NewInt(1_000_000_000_000)
-	btcPoolAmount := sdk.NewInt(10_000_000_000)
+	osmoPoolAmount := osmomath.NewInt(1_000_000_000_000)
+	btcPoolAmount := osmomath.NewInt(10_000_000_000)
 	// default bond denom
 
 	// mint necessary tokens
@@ -147,7 +153,7 @@ func (s *TestSuite) TestGammSuperfluid() {
 		sdk.NewCoins(sdk.NewCoin(btcDenom, btcPoolAmount), sdk.NewCoin(bondDenom, osmoPoolAmount)),
 	)
 
-	_, err := s.RunMsg(createPoolMsg)
+	_, err = s.RunMsg(createPoolMsg)
 	s.Require().NoError(err)
 	gammToken := fmt.Sprintf("gamm/pool/%d", nextPoolId)
 
@@ -158,9 +164,9 @@ func (s *TestSuite) TestGammSuperfluid() {
 	s.Require().NoError(err)
 
 	// Mint assets to the lockup module. This will ensure there are assets to distribute.
-	err = s.App.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(1_000_000_000))))
+	err = s.App.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(bondDenom, osmomath.NewInt(1_000_000_000))))
 	s.Require().NoError(err)
-	err = s.App.BankKeeper.SendCoinsFromModuleToModule(s.Ctx, minttypes.ModuleName, authtypes.FeeCollectorName, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(1_000_000_000))))
+	err = s.App.BankKeeper.SendCoinsFromModuleToModule(s.Ctx, minttypes.ModuleName, authtypes.FeeCollectorName, sdk.NewCoins(sdk.NewCoin(bondDenom, osmomath.NewInt(1_000_000_000))))
 	s.Require().NoError(err)
 
 	// Keep track of the original balance of the bond denom to make sure rewards are distributed later on
@@ -175,12 +181,14 @@ func (s *TestSuite) TestGammSuperfluid() {
 	s.Require().Equal(0, len(delegations))
 
 	// superfluid stake gamm token
-	validator := s.App.StakingKeeper.GetAllValidators(s.Ctx)[0]
-	gammDelegationAmount := sdk.NewInt(1000000000000000000)
+	validators, err := s.App.StakingKeeper.GetAllValidators(s.Ctx)
+	s.Require().NoError(err)
+	validator := validators[0]
+	gammDelegationAmount := osmomath.NewInt(1000000000000000000)
 	delegateMsg := &types.MsgLockAndSuperfluidDelegate{
 		Sender:  lpAddr.String(),
 		Coins:   sdk.NewCoins(sdk.NewCoin(gammToken, gammDelegationAmount)),
-		ValAddr: validator.GetOperator().String(),
+		ValAddr: validator.GetOperator(),
 	}
 	_, err = s.RunMsg(delegateMsg)
 	s.Require().NoError(err)
@@ -212,7 +220,7 @@ func (s *TestSuite) TestGammSuperfluid() {
 	err = s.QueryHelper.Invoke(gocontext.Background(),
 		"/cosmos.distribution.v1beta1.Query/ValidatorOutstandingRewards",
 		&distrtypes.QueryValidatorOutstandingRewardsRequest{
-			ValidatorAddress: validator.GetOperator().String(),
+			ValidatorAddress: validator.GetOperator(),
 		},
 		validatorRewards)
 	s.Require().Equal(0, len(validatorRewards.Rewards.Rewards))
@@ -226,7 +234,7 @@ func (s *TestSuite) TestGammSuperfluid() {
 	err = s.QueryHelper.Invoke(gocontext.Background(),
 		"/cosmos.distribution.v1beta1.Query/ValidatorOutstandingRewards",
 		&distrtypes.QueryValidatorOutstandingRewardsRequest{
-			ValidatorAddress: validator.GetOperator().String(),
+			ValidatorAddress: validator.GetOperator(),
 		},
 		validatorRewards)
 	s.Require().NoError(err)
@@ -251,8 +259,8 @@ func (s *TestSuite) TestGammSuperfluid() {
 	s.EndBlock()
 	s.BeginNewBlock(true)
 
-	proposal, found := s.App.GovKeeper.GetProposal(s.Ctx, 1)
-	s.Require().True(found)
+	proposal, err := s.App.GovKeeper.Proposals.Get(s.Ctx, 1)
+	s.Require().NoError(err)
 	s.Require().Equal(govv1.StatusFailed, proposal.Status)
 	s.Require().Equal("5000000000", proposal.FinalTallyResult.YesCount)
 
@@ -315,7 +323,8 @@ func (s *TestSuite) TestNativeSuperfluid() {
 
 	// denoms
 	btcDenom := "factory/osmo1pfyxruwvtwk00y8z06dh2lqjdj82ldvy74wzm3/allBTC" // Asset to superfluid stake
-	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+	bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
+	s.Require().NoError(err)
 
 	// accounts
 	// pool creator
@@ -324,15 +333,15 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	userKey := ed25519.GenPrivKey().PubKey()
 	userAddr := sdk.AccAddress(userKey.Address())
 
-	osmoPoolAmount := sdk.NewInt(1_000_000_000_000)
-	btcPoolAmount := sdk.NewInt(10_000_000_000)
+	osmoPoolAmount := osmomath.NewInt(1_000_000_000_000)
+	btcPoolAmount := osmomath.NewInt(10_000_000_000)
 	// default bond denom
 
 	// mint necessary tokens
 	s.mintToAccount(btcPoolAmount, btcDenom, poolAddr)
 	s.mintToAccount(osmoPoolAmount.Mul(osmomath.NewInt(2)), bondDenom, poolAddr)
-	s.mintToAccount(sdk.NewInt(100_000_000), bondDenom, userAddr)
-	totalBTCAmount := sdk.NewInt(1_000_000)
+	s.mintToAccount(osmomath.NewInt(100_000_000), bondDenom, userAddr)
+	totalBTCAmount := osmomath.NewInt(1_000_000)
 	s.mintToAccount(totalBTCAmount, btcDenom, userAddr)
 
 	nextPoolId := s.App.PoolManagerKeeper.GetNextPoolId(s.Ctx) // the pool id we'll create
@@ -343,7 +352,7 @@ func (s *TestSuite) TestNativeSuperfluid() {
 		sdk.NewCoins(sdk.NewCoin(btcDenom, btcPoolAmount), sdk.NewCoin(bondDenom, osmoPoolAmount)),
 	)
 
-	_, err := s.RunMsg(createPoolMsg)
+	_, err = s.RunMsg(createPoolMsg)
 	s.Require().NoError(err)
 
 	// move time forward and advance a few blocks to get twaps
@@ -365,9 +374,9 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	s.Require().NoError(err)
 
 	// Mint assets to the lockup module. This will ensure there are assets to distribute.
-	err = s.App.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(1_000_000_000))))
+	err = s.App.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(bondDenom, osmomath.NewInt(1_000_000_000))))
 	s.Require().NoError(err)
-	err = s.App.BankKeeper.SendCoinsFromModuleToModule(s.Ctx, minttypes.ModuleName, authtypes.FeeCollectorName, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(1_000_000_000))))
+	err = s.App.BankKeeper.SendCoinsFromModuleToModule(s.Ctx, minttypes.ModuleName, authtypes.FeeCollectorName, sdk.NewCoins(sdk.NewCoin(bondDenom, osmomath.NewInt(1_000_000_000))))
 	s.Require().NoError(err)
 
 	// Keep track of the original balance of the bond denom to make sure rewards are distributed later on
@@ -385,17 +394,19 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	s.Require().Equal(totalBTCAmount, balance.Amount)
 
 	// superfluid stake btcDenom
-	btcStakeAmount := sdk.NewInt(500_000)
-	validator := s.App.StakingKeeper.GetAllValidators(s.Ctx)[0]
+	btcStakeAmount := osmomath.NewInt(500_000)
+	validators, err := s.App.StakingKeeper.GetAllValidators(s.Ctx)
+	s.Require().NoError(err)
+	validator := validators[0]
 	delegateMsg := &types.MsgLockAndSuperfluidDelegate{
 		Sender:  userAddr.String(),
 		Coins:   sdk.NewCoins(sdk.NewCoin(btcDenom, btcStakeAmount)),
-		ValAddr: validator.GetOperator().String(),
+		ValAddr: validator.GetOperator(),
 	}
 	result, err := s.RunMsg(delegateMsg)
 	s.Require().NoError(err)
 	// Extract the lock id to use later when undelegating
-	attrs := s.ExtractAttributes(s.FindEvent(result.GetEvents(), "superfluid_delegate"))
+	attrs := s.ExtractAttributes(s.FindEvent(result.Events, "superfluid_delegate"))
 	lockId, err := strconv.ParseUint(attrs["lock_id"], 10, 64)
 	s.Require().NoError(err)
 
@@ -420,13 +431,13 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	s.Require().NoError(err)
 	s.Require().Len(res.SuperfluidDelegationRecords, 1)
 	s.Require().Equal(userAddr.String(), res.SuperfluidDelegationRecords[0].DelegatorAddress)
-	s.Require().Equal(validator.GetOperator().String(), res.SuperfluidDelegationRecords[0].ValidatorAddress)
+	s.Require().Equal(validator.GetOperator(), res.SuperfluidDelegationRecords[0].ValidatorAddress)
 	s.Require().Equal(btcDenom, res.SuperfluidDelegationRecords[0].DelegationAmount.Denom)
 	s.Require().Equal(btcStakeAmount, res.SuperfluidDelegationRecords[0].DelegationAmount.Amount)
 	s.Require().Equal("uosmo", res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Denom)
-	s.Require().Equal(sdk.NewInt(0), res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Amount)
+	s.Require().Equal(osmomath.NewInt(0), res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Amount)
 	s.Require().Equal("uosmo", res.TotalEquivalentStakedAmount.Denom)
-	s.Require().Equal(sdk.NewInt(0), res.TotalEquivalentStakedAmount.Amount)
+	s.Require().Equal(osmomath.NewInt(0), res.TotalEquivalentStakedAmount.Amount)
 
 	//
 	// TEST: Reward distribution
@@ -441,7 +452,7 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	err = s.QueryHelper.Invoke(gocontext.Background(),
 		"/cosmos.distribution.v1beta1.Query/ValidatorOutstandingRewards",
 		&distrtypes.QueryValidatorOutstandingRewardsRequest{
-			ValidatorAddress: validator.GetOperator().String(),
+			ValidatorAddress: validator.GetOperator(),
 		},
 		validatorRewards)
 	s.Require().Equal(0, len(validatorRewards.Rewards.Rewards))
@@ -455,7 +466,7 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	err = s.QueryHelper.Invoke(gocontext.Background(),
 		"/cosmos.distribution.v1beta1.Query/ValidatorOutstandingRewards",
 		&distrtypes.QueryValidatorOutstandingRewardsRequest{
-			ValidatorAddress: validator.GetOperator().String(),
+			ValidatorAddress: validator.GetOperator(),
 		},
 		validatorRewards)
 	s.Require().NoError(err)
@@ -480,8 +491,8 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	s.EndBlock()
 	s.BeginNewBlock(true)
 
-	proposal, found := s.App.GovKeeper.GetProposal(s.Ctx, 1)
-	s.Require().True(found)
+	proposal, err := s.App.GovKeeper.Proposals.Get(s.Ctx, 1)
+	s.Require().NoError(err)
 	s.Require().Equal(govv1.StatusRejected, proposal.Status)
 	s.Require().Equal("0", proposal.FinalTallyResult.YesCount)
 

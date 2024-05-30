@@ -4,11 +4,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	ibctesting "github.com/cosmos/ibc-go/v7/testing"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/tests/osmosisibctesting"
@@ -33,7 +34,7 @@ func (suite *HooksTestSuite) SetupCW20(chainName Chain) (sdk.AccAddress, sdk.Acc
 }
 
 // Function to easily transfer the created cw20 tokens to chainA
-func (suite *HooksTestSuite) TransferCW20Tokens(path *ibctesting.Path, cw20Addr, cw20ics20Addr, receiver sdk.AccAddress, amount, memo string) (*sdk.Result, []byte) {
+func (suite *HooksTestSuite) TransferCW20Tokens(path *ibctesting.Path, cw20Addr, cw20ics20Addr, receiver sdk.AccAddress, amount, memo string) (*abci.ExecTxResult, []byte) {
 	chainB := suite.GetChain(ChainB)
 
 	osmosisApp := chainB.GetOsmosisApp()
@@ -67,7 +68,7 @@ func (suite *HooksTestSuite) TransferCW20Tokens(path *ibctesting.Path, cw20Addr,
 	suite.Require().NoError(err)
 
 	events := ctx.EventManager().Events()
-	packet, err := ibctesting.ParsePacketFromEvents(events)
+	packet, err := ibctesting.ParsePacketFromEvents(events.ToABCIEvents())
 	suite.Require().NoError(err)
 	result, ack := suite.RelayPacket(packet, CW20toA)
 	suite.Require().Contains(string(ack), "result")

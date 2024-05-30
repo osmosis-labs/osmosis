@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -71,45 +72,45 @@ func (h Hooks) OnLockupExtend(ctx sdk.Context, lockID uint64, oldDuration, newDu
 }
 
 // staking hooks.
-func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error {
+func (h Hooks) AfterValidatorCreated(ctx context.Context, valAddr sdk.ValAddress) error {
 	return nil
 }
-func (h Hooks) BeforeValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) error {
+func (h Hooks) BeforeValidatorModified(ctx context.Context, valAddr sdk.ValAddress) error {
 	return nil
 }
-func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
-	return nil
-}
-
-func (h Hooks) AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
+func (h Hooks) AfterValidatorRemoved(ctx context.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) AfterValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
+func (h Hooks) AfterValidatorBonded(ctx context.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) BeforeDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
+func (h Hooks) AfterValidatorBeginUnbonding(ctx context.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
+func (h Hooks) BeforeDelegationCreated(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) BeforeDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
+func (h Hooks) BeforeDelegationSharesModified(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
+func (h Hooks) BeforeDelegationRemoved(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) AfterUnbondingInitiated(_ sdk.Context, _ uint64) error {
+func (h Hooks) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, slashFactor osmomath.Dec) error {
+func (h Hooks) AfterUnbondingInitiated(_ context.Context, _ uint64) error {
+	return nil
+}
+
+func (h Hooks) BeforeValidatorSlashed(ctx context.Context, valAddr sdk.ValAddress, slashFactor osmomath.Dec) error {
 	if slashFactor.IsZero() {
 		return nil
 	}
@@ -117,7 +118,7 @@ func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, s
 	return nil
 }
 
-func (h Hooks) AfterValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, infractionHeight int64, slashFactor osmomath.Dec, effectiveSlashFactor osmomath.Dec) {
+func (h Hooks) AfterValidatorSlashed(ctx context.Context, valAddr sdk.ValAddress, infractionHeight int64, slashFactor osmomath.Dec, effectiveSlashFactor osmomath.Dec) {
 	if slashFactor.IsZero() {
 		return
 	}

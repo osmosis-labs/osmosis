@@ -13,6 +13,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/testutils"
 	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
@@ -185,7 +187,7 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOf() {
 			// sample tx
 			tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
 			s.Require().NoError(err)
-			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), msg, tx, 0, false, authenticator.SequenceMatch)
+			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, s.OsmosisApp.AppCodec(), ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), msg, tx, 0, false, authenticator.SequenceMatch)
 			s.Require().NoError(err)
 
 			// Attempt to authenticate using initialized authenticator
@@ -309,7 +311,8 @@ func (s *AggregatedAuthenticatorsTest) TestAllOf() {
 			// sample tx
 			tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
 			s.Require().NoError(err)
-			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), msg, tx, 0, false, authenticator.SequenceMatch)
+			cdc := s.OsmosisApp.AppCodec()
+			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, cdc, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), msg, tx, 0, false, authenticator.SequenceMatch)
 			s.Require().NoError(err)
 
 			// Attempt to authenticate using initialized authenticator
@@ -403,7 +406,7 @@ func (s *AggregatedAuthenticatorsTest) TestComposedAuthenticator() {
 			// sample tx
 			tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
 			s.Require().NoError(err)
-			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), msg, tx, 0, false, authenticator.SequenceMatch)
+			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, s.OsmosisApp.AppCodec(), ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), msg, tx, 0, false, authenticator.SequenceMatch)
 			s.Require().NoError(err)
 
 			err = initializedTop.Authenticate(s.Ctx, request)
@@ -564,7 +567,7 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 
 	for _, tc := range testCases {
 		originalCtx := s.Ctx
-		s.Ctx, _ = s.Ctx.WithGasMeter(sdk.NewGasMeter(2_000_000)).CacheContext()
+		s.Ctx, _ = s.Ctx.WithGasMeter(storetypes.NewGasMeter(2_000_000)).CacheContext()
 		data, err := tc.compositeAuth.buildInitData()
 		s.Require().NoError(err)
 
@@ -727,7 +730,7 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfNotWritingFailedSubAuthState() {
 
 	for _, tc := range testCases {
 		originalCtx := s.Ctx
-		s.Ctx, _ = s.Ctx.WithGasMeter(sdk.NewGasMeter(2_000_000)).CacheContext()
+		s.Ctx, _ = s.Ctx.WithGasMeter(storetypes.NewGasMeter(2_000_000)).CacheContext()
 		data, err := tc.compositeAuth.buildInitData()
 		s.Require().NoError(err)
 

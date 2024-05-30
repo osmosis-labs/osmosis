@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v25/x/tokenfactory"
 	"github.com/osmosis-labs/osmosis/v25/x/tokenfactory/types"
 
 	"github.com/cometbft/cometbft/crypto/ed25519"
@@ -57,7 +58,7 @@ func TestAuthzMsg(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			apptesting.TestMessageAuthzSerialization(t, tc.msg)
+			apptesting.TestMessageAuthzSerialization(t, tc.msg, tokenfactory.AppModuleBasic{})
 		})
 	}
 }

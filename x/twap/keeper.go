@@ -11,7 +11,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v25/x/twap/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 )
 
 type Keeper struct {

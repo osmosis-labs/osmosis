@@ -8,7 +8,7 @@ services:
       dockerfile: Dockerfile
       args:
         RUNNER_IMAGE: alpine:3.19
-        GO_VERSION: "1.21"
+        GO_VERSION: "1.22"
     volumes:
       - ./scripts/setup_chain.sh:/osmosis/setup.sh
       - $HOME/.osmosisd-local-a/:/osmosis/.osmosisd/
@@ -59,7 +59,7 @@ services:
       dockerfile: Dockerfile
       args:
         RUNNER_IMAGE: alpine:3.19
-        GO_VERSION: "1.21"
+        GO_VERSION: "1.22"
     volumes:
       - ./scripts/setup_chain.sh:/osmosis/setup.sh
       - $HOME/.osmosisd-local-b/:/osmosis/.osmosisd/

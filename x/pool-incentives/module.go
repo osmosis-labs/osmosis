@@ -15,7 +15,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -27,15 +26,21 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 
+	"cosmossdk.io/core/appmodule"
+
 	"github.com/osmosis-labs/osmosis/v25/x/pool-incentives/client/cli"
 	"github.com/osmosis-labs/osmosis/v25/x/pool-incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
 )
 
 var (
-	_ module.AppModule           = AppModule{}
-	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModule{}
+	_ module.AppModuleBasic   = AppModuleBasic{}
+	_ module.HasGenesisBasics = AppModuleBasic{}
+
+	_ appmodule.AppModule        = AppModule{}
+	_ module.HasConsensusVersion = AppModule{}
+	_ module.HasGenesis          = AppModule{}
+	_ module.HasServices         = AppModule{}
 )
 
 type AppModuleBasic struct{}
@@ -102,6 +107,12 @@ func NewAppModule(keeper keeper.Keeper) AppModule {
 	}
 }
 
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
+// IsOnePerModuleType is a marker function just indicates that this is a one-per-module type.
+func (am AppModule) IsOnePerModuleType() {}
+
 // RegisterInvariants registers the pool-incentives module invariants.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
@@ -110,13 +121,12 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 func (AppModule) QuerierRoute() string { return types.RouterKey }
 
 // InitGenesis performs genesis initialization for the pool-incentives module.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
 	var genesisState types.GenesisState
 
 	cdc.MustUnmarshalJSON(data, &genesisState)
 
 	am.keeper.InitGenesis(ctx, &genesisState)
-	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the mint
@@ -124,15 +134,6 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	gs := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
-}
-
-// BeginBlock performs a no-op.
-func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {}
-
-// EndBlock returns the end blocker for the pool-incentives module. It returns no validator
-// updates.
-func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
 }
 
 // ___________________________________________________________________________
@@ -158,7 +159,7 @@ func (AppModule) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedPropo
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types.
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.

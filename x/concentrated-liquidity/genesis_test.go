@@ -35,7 +35,6 @@ var (
 		Params: types.Params{
 			AuthorizedTickSpacing:        []uint64{1, 10, 100, 1000},
 			AuthorizedSpreadFactors:      []osmomath.Dec{osmomath.MustNewDecFromStr("0.0001"), osmomath.MustNewDecFromStr("0.0003"), osmomath.MustNewDecFromStr("0.0005")},
-			AuthorizedQuoteDenoms:        []string{ETH, USDC},
 			BalancerSharesRewardDiscount: types.DefaultBalancerSharesDiscount,
 			AuthorizedUptimes:            types.DefaultAuthorizedUptimes,
 		},
@@ -842,7 +841,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 func TestMarshalUnmarshalGenesis(t *testing.T) {
 	// Set up the app and context
 	app := osmoapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	now := ctx.BlockTime()
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 
@@ -857,7 +856,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	// Test that the exported genesis can be marshaled and unmarshaled without panicking
 	assert.NotPanics(t, func() {
 		app := osmoapp.Setup(false)
-		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+		ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 		ctx = ctx.WithBlockTime(now.Add(time.Second))
 		am := clmodule.NewAppModule(appCodec, *app.ConcentratedLiquidityKeeper)
 		am.InitGenesis(ctx, appCodec, genesisExported)

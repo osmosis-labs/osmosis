@@ -5,17 +5,21 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/header"
+	"cosmossdk.io/x/upgrade"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 
 	superfluidtypes "github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
 )
@@ -31,10 +35,12 @@ var (
 
 type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
+	preModule appmodule.HasPreBlocker
 }
 
 func (s *UpgradeTestSuite) SetupTest() {
 	s.Setup()
+	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
 }
 
 func TestUpgradeTestSuite(t *testing.T) {
@@ -43,7 +49,7 @@ func TestUpgradeTestSuite(t *testing.T) {
 
 func (s *UpgradeTestSuite) TestUpgrade() {
 	initialTokenBonded := sdk.DefaultPowerReduction
-	s.Setup()
+	s.SetupTest()
 
 	// prepare superfluid delegation
 	superfluidVal, lockDenom := s.setupSuperfluidDelegation()
@@ -51,19 +57,29 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	// run an epoch
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24))
-	s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
+	s.Require().NotPanics(func() {
+		_, err := s.App.BeginBlocker(s.Ctx)
+		s.Require().NoError(err)
+	})
 
-	synthLockedPreV18 := s.App.SuperfluidKeeper.GetTotalSyntheticAssetsLocked(s.Ctx, stakingSyntheticDenom(lockDenom, superfluidVal.String()))
+	synthLockedPreV18, err := s.App.SuperfluidKeeper.GetTotalSyntheticAssetsLocked(s.Ctx, stakingSyntheticDenom(lockDenom, superfluidVal.String()))
+	s.Require().NoError(err)
 
 	// run v18 upgrade
 	// by doing this, we should be having incorrect state of superfluid staking accumulator
 	s.runv18Upgrade()
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24 * 7))
-	s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
+	s.Require().NotPanics(func() {
+		_, err := s.preModule.PreBlock(s.Ctx)
+		s.Require().NoError(err)
+		_, err = s.App.BeginBlocker(s.Ctx)
+		s.Require().NoError(err)
+	})
 
 	// broken states (current status):
 	// synth lock accumulator is set to 0
-	totalSynthLocked := s.App.SuperfluidKeeper.GetTotalSyntheticAssetsLocked(s.Ctx, stakingSyntheticDenom(lockDenom, superfluidVal.String()))
+	totalSynthLocked, err := s.App.SuperfluidKeeper.GetTotalSyntheticAssetsLocked(s.Ctx, stakingSyntheticDenom(lockDenom, superfluidVal.String()))
+	s.Require().NoError(err)
 	s.Require().True(totalSynthLocked.Equal(osmomath.ZeroInt()))
 
 	// superfluid delegated tokens have been undelegated from validator,
@@ -75,11 +91,17 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// this fix should set superfluid accumulators to the correct values
 	s.runv19Upgrade()
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24 * 7))
-	s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
+	s.Require().NotPanics(func() {
+		_, err := s.preModule.PreBlock(s.Ctx)
+		s.Require().NoError(err)
+		_, err = s.App.BeginBlocker(s.Ctx)
+		s.Require().NoError(err)
+	})
 
 	// synth lock accumulator should have been fixed after v19 upgrade,
 	// and went back to normal state(pre-v18)
-	synthLockAfterV19 := s.App.SuperfluidKeeper.GetTotalSyntheticAssetsLocked(s.Ctx, stakingSyntheticDenom(lockDenom, superfluidVal.String()))
+	synthLockAfterV19, err := s.App.SuperfluidKeeper.GetTotalSyntheticAssetsLocked(s.Ctx, stakingSyntheticDenom(lockDenom, superfluidVal.String()))
+	s.Require().NoError(err)
 	s.Require().True(synthLockAfterV19.Equal(synthLockedPreV18))
 
 	// also check that we have the correct superfluid staked delegation back
@@ -105,7 +127,8 @@ func (s *UpgradeTestSuite) setupSuperfluidDelegation() (val sdk.ValAddress, lock
 	})
 	s.Require().NoError(err)
 
-	unbondingDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
+	stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	unbondingDuration := stakingParams.UnbondingTime
 
 	// set lockable duration so that we don't have errors upon creating gauge
 	s.App.IncentivesKeeper.SetLockableDurations(s.Ctx, []time.Duration{
@@ -133,10 +156,10 @@ func (s *UpgradeTestSuite) runv18Upgrade() {
 	plan := upgradetypes.Plan{Name: "v18", Height: v18UpgradeHeight}
 	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
 	s.Require().NoError(err)
-	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
-	s.Require().True(exists)
+	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+	s.Require().NoError(err)
 
-	s.Ctx = s.Ctx.WithBlockHeight(v18UpgradeHeight)
+	s.Ctx = s.Ctx.WithHeaderInfo(header.Info{Height: v18UpgradeHeight, Time: s.Ctx.BlockTime().Add(time.Second)}).WithBlockHeight(v18UpgradeHeight)
 }
 
 func (s *UpgradeTestSuite) runv19Upgrade() {
@@ -144,10 +167,10 @@ func (s *UpgradeTestSuite) runv19Upgrade() {
 	plan := upgradetypes.Plan{Name: "v19", Height: v19UpgradeHeight}
 	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
 	s.Require().NoError(err)
-	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
-	s.Require().True(exists)
+	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+	s.Require().NoError(err)
 
-	s.Ctx = s.Ctx.WithBlockHeight(v19UpgradeHeight)
+	s.Ctx = s.Ctx.WithHeaderInfo(header.Info{Height: v19UpgradeHeight, Time: s.Ctx.BlockTime().Add(time.Second)}).WithBlockHeight(v19UpgradeHeight)
 }
 
 func stakingSyntheticDenom(denom, valAddr string) string {

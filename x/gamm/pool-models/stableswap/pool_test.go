@@ -4,6 +4,7 @@ package stableswap
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
@@ -652,7 +653,7 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 			expectPass:      false,
 		},
 		"single asset pool, no-swap join attempt with one asset": {
-			tokensIn:        sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(sdk.MaxSortableDec.TruncateInt64()))),
+			tokensIn:        sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(math.LegacyMaxSortableDec.TruncateInt64()))),
 			poolAssets:      sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(1))),
 			scalingFactors:  []uint64{1},
 			expNumShare:     osmomath.NewIntFromUint64(0),

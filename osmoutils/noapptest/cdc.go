@@ -5,6 +5,7 @@ package noapptest
 import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -24,7 +25,7 @@ type TestEncodingConfig struct {
 
 func MakeTestEncodingConfig(modules ...module.AppModuleBasic) TestEncodingConfig {
 	cdc := codec.NewLegacyAmino()
-	interfaceRegistry := types.NewInterfaceRegistry()
+	interfaceRegistry := testutil.CodecOptions{AccAddressPrefix: "osmo", ValAddressPrefix: "osmovaloper"}.NewInterfaceRegistry()
 	codec := codec.NewProtoCodec(interfaceRegistry)
 
 	encCfg := TestEncodingConfig{

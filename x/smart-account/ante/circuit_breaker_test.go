@@ -50,9 +50,7 @@ func (s *AuthenticatorCircuitBreakerAnteSuite) SetupTest() {
 	// Initialize the Osmosis application
 	s.OsmosisApp = app.Setup(false)
 
-	// Access the AccountKeeper from the Osmosis app
-	ak := s.OsmosisApp.AccountKeeper
-	s.Ctx = s.OsmosisApp.NewContext(false, tmproto.Header{})
+	s.Ctx = s.OsmosisApp.NewContextLegacy(false, tmproto.Header{})
 
 	// Set up test accounts
 	for _, key := range TestKeys {
@@ -66,10 +64,7 @@ func (s *AuthenticatorCircuitBreakerAnteSuite) SetupTest() {
 		accAddress := sdk.AccAddress(priv.PubKey().Address())
 
 		// Create a new BaseAccount for the test account
-		account := authtypes.NewBaseAccount(accAddress, nil, 0, 0)
-
-		// Set the test account in the AccountKeeper
-		ak.SetAccount(s.Ctx, account)
+		authtypes.NewBaseAccount(accAddress, nil, 0, 0)
 
 		// Add the test accounts' addresses to an array for later use
 		s.TestAccAddress = append(s.TestAccAddress, accAddress)
@@ -112,7 +107,7 @@ func (s *AuthenticatorCircuitBreakerAnteSuite) TestCircuitBreakerAnte() {
 	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
 	// Generate a test transaction
-	tx, _ := GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
+	tx, _ := GenTx(s.Ctx, s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
 		testMsg2,
 	}, feeCoins, 300000, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{
@@ -155,7 +150,7 @@ func (s *AuthenticatorCircuitBreakerAnteSuite) TestCircuitBreakerAnte() {
 	s.Require().NoError(err)
 
 	// Generate a test transaction with a selected authenticator
-	tx, _ = GenTx(s.EncodingConfig.TxConfig, []sdk.Msg{
+	tx, _ = GenTx(s.Ctx, s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
 		testMsg2,
 	}, feeCoins, 300000, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{

@@ -39,7 +39,7 @@ func benchmarkResetLogic(b *testing.B, numLockups int) {
 
 	blockStartTime := time.Now().UTC()
 	app := app.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: blockStartTime})
+	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: blockStartTime})
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	numAccts := 100
@@ -55,7 +55,7 @@ func benchmarkResetLogic(b *testing.B, numLockups int) {
 		for j := 0; j < numDenoms; j++ {
 			coins = coins.Add(sdk.NewInt64Coin(fmt.Sprintf("token%d", j), r.Int63n(100000000)))
 		}
-		_ = testutil.FundAccount(app.BankKeeper, ctx, addr, coins)
+		_ = testutil.FundAccount(ctx, app.BankKeeper, addr, coins)
 		app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(addr, nil, 0, 0))
 		addrs = append(addrs, addr)
 	}

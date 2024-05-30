@@ -3,7 +3,7 @@ package concentrated_liquidity
 import (
 	fmt "fmt"
 
-	db "github.com/cometbft/cometbft-db"
+	db "github.com/cosmos/cosmos-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -429,7 +429,7 @@ func (k Keeper) computeOutAmtGivenIn(
 		return SwapResult{}, PoolUpdates{}, err
 	}
 
-	var scalingFactor sdk.Dec
+	var scalingFactor osmomath.Dec
 	if updateAccumulators {
 		// We only need the scaling factor if we are updating the accumulators
 		scalingFactor, err = k.getSpreadFactorScalingFactorForPool(ctx, poolId)
@@ -578,7 +578,7 @@ func (k Keeper) computeInAmtGivenOut(
 		return SwapResult{}, PoolUpdates{}, err
 	}
 
-	var scalingFactor sdk.Dec
+	var scalingFactor osmomath.Dec
 	if updateAccumulators {
 		// We only need the scaling factor if we are updating the accumulators
 		scalingFactor, err = k.getSpreadFactorScalingFactorForPool(ctx, poolId)

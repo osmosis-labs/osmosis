@@ -44,12 +44,12 @@ echo "import (" >> $UPGRADES_FILE
 
 # set imports for constants.go
 echo -e "\t$module/app/upgrades$bracks\n" >> $CONSTANTS_FILE
-echo -e '\tstore "github.com/cosmos/cosmos-sdk/store/types"' >> $CONSTANTS_FILE
+echo -e '\tstore "cosmossdk.io/store/types"' >> $CONSTANTS_FILE
 
 # set imports for upgrades.go
 echo -e '\tsdk "github.com/cosmos/cosmos-sdk/types"' >> $UPGRADES_FILE
 echo -e '\t"github.com/cosmos/cosmos-sdk/types/module"' >> $UPGRADES_FILE
-echo -e '\tupgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"\n' >> $UPGRADES_FILE
+echo -e '\tupgradetypes "cosmossdk.io/x/upgrade/types"\n' >> $UPGRADES_FILE
 echo -e "\t$module/app/keepers$bracks" >> $UPGRADES_FILE
 echo -e "\t$module/app/upgrades$bracks" >> $UPGRADES_FILE
 

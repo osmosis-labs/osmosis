@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,32 +36,25 @@ type poolTransformer struct {
 	bankKeeper         domain.BankKeeper
 	protorevKeeper     domain.ProtorevKeeper
 	poolManagerKeeper  domain.PoolManagerKeeper
-	assetListGetter    domain.AssetListGetter
-}
 
-// denomRoutingInfo encapsulates the routing information for a pool.
-// It has a pool ID of the pool that is paired with OSMO.
-// It has a spot price from that pool with OSMO as the base asset.
-type denomRoutingInfo struct {
-	PoolID uint64
-	Price  osmomath.BigDec
+	// Pool ID that is used for converting between USDC and UOSMO.
+	defaultUSDCUOSMOPoolID uint64
 }
 
 const (
-	UOSMO          = appparams.BaseCoinUnit
-	uosmoPrecision = 6
+	UOSMO         = appparams.BaseCoinUnit
+	usdcPrecision = 6
 
-	noTokenPrecisionErrorFmtStr   = "error getting token precision %s"
 	spotPriceErrorFmtStr          = "error calculating spot price for denom %s, %s"
 	spotPricePrecisionErrorFmtStr = "error calculating spot price from route overwrites due to precision for denom %s"
 	multiHopSpotPriceErrorFmtStr  = "error calculating spot price via multihop swap, %s"
+	// Empty string placeholder for no pool liquidity capitalization error
+	noPoolLiquidityCapError = ""
 
 	// placeholder value to disable route updates at the end of every block.
 	// nolint: unused
 	routeIngestDisablePlaceholder = 0
 
-	// https://app.osmosis.zone/pool/1263
-	usdcPool    = 1263
 	usdcDenom   = "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4"
 	stATOMDenom = "ibc/C140AFD542AE77BD7DCC83F13FDD8C5E5BB8C4929785E6EC2F4C636F98F17901"
 	atomDenom   = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
@@ -69,11 +63,11 @@ const (
 )
 
 var (
-	uosmoPrecisionBigDec = osmomath.NewBigDec(uosmoPrecision)
-	oneOsmoInt           = osmomath.NewInt(oneOSMO)
-	oneOsmoBigDec        = osmomath.NewBigDec(oneOSMO)
+	oneOsmoInt    = osmomath.NewInt(oneOSMO)
+	oneOsmoBigDec = osmomath.NewBigDec(oneOSMO)
 
-	oneOsmoCoin = sdk.NewCoin(appparams.BaseCoinUnit, oneOsmoInt)
+	oneOsmoCoin                = sdk.NewCoin(appparams.BaseCoinUnit, oneOsmoInt)
+	usdcPrecisionScalingFactor = osmomath.NewBigDec(10).PowerIntegerMut(usdcPrecision)
 )
 
 // These are the routes that we use for pricing certain tokens against OSMO
@@ -100,12 +94,13 @@ var uosmoRoutesFromDenom map[string][]poolmanagertypes.SwapAmountOutRoute = map[
 var stablesOverwrite map[string]struct{} = map[string]struct{}{
 	// Tether USD (Wormhole)
 	usdtDenom: {},
+	usdcDenom: {},
 }
 
 var _ domain.PoolsTransformer = &poolTransformer{}
 
 // NewPoolTransformer returns a new pool ingester.
-func NewPoolTransformer(assetListGetter domain.AssetListGetter, keepers domain.SQSIngestKeepers) domain.PoolsTransformer {
+func NewPoolTransformer(keepers domain.SQSIngestKeepers, defaultUSDCUOSMOPoolID uint64) domain.PoolsTransformer {
 	return &poolTransformer{
 		gammKeeper:         keepers.GammKeeper,
 		concentratedKeeper: keepers.ConcentratedKeeper,
@@ -113,22 +108,15 @@ func NewPoolTransformer(assetListGetter domain.AssetListGetter, keepers domain.S
 		bankKeeper:         keepers.BankKeeper,
 		protorevKeeper:     keepers.ProtorevKeeper,
 		poolManagerKeeper:  keepers.PoolManagerKeeper,
-		assetListGetter:    assetListGetter,
+
+		defaultUSDCUOSMOPoolID: defaultUSDCUOSMOPoolID,
 	}
 }
 
 // processPoolState processes the pool state. an
 func (pi *poolTransformer) Transform(ctx sdk.Context, blockPools domain.BlockPools) ([]sqsdomain.PoolI, sqsdomain.TakerFeeMap, error) {
-	goCtx := sdk.WrapSDKContext(ctx)
-
-	// TODO: can be cached
-	tokenPrecisionMap, err := pi.assetListGetter.GetDenomPrecisions(goCtx)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// Create a map from denom to routable pool ID.
-	denomToRoutablePoolIDMap := make(map[string]denomRoutingInfo)
+	// Create a map from denom to its price.
+	priceInfoMap := make(map[string]osmomath.BigDec)
 
 	denomPairToTakerFeeMap := make(map[sqsdomain.DenomPair]osmomath.Dec, 0)
 
@@ -142,7 +130,7 @@ func (pi *poolTransformer) Transform(ctx sdk.Context, blockPools domain.BlockPoo
 	// Parse CFMM pool to the standard SQS types.
 	for _, pool := range cfmmPools {
 		// Parse CFMM pool to the standard SQS types.
-		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap, tokenPrecisionMap)
+		pool, err := pi.convertPool(ctx, pool, priceInfoMap, denomPairToTakerFeeMap)
 		if err != nil {
 			// Silently skip pools on error to avoid breaking ingest of all other pools.
 			continue
@@ -153,7 +141,7 @@ func (pi *poolTransformer) Transform(ctx sdk.Context, blockPools domain.BlockPoo
 
 	for _, pool := range concentratedPools {
 		// Parse concentrated pool to the standard SQS types.
-		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap, tokenPrecisionMap)
+		pool, err := pi.convertPool(ctx, pool, priceInfoMap, denomPairToTakerFeeMap)
 		if err != nil {
 			// Silently skip pools on error to avoid breaking ingest of all other pools.
 			continue
@@ -164,7 +152,7 @@ func (pi *poolTransformer) Transform(ctx sdk.Context, blockPools domain.BlockPoo
 
 	for _, pool := range cosmWasmPools {
 		// Parse cosmwasm pool to the standard SQS types.
-		pool, err := pi.convertPool(ctx, pool, denomToRoutablePoolIDMap, denomPairToTakerFeeMap, tokenPrecisionMap)
+		pool, err := pi.convertPool(ctx, pool, priceInfoMap, denomPairToTakerFeeMap)
 		if err != nil {
 			// Silently skip pools on error to avoid breaking ingest of all other pools.
 			continue
@@ -189,9 +177,8 @@ func (pi *poolTransformer) Transform(ctx sdk.Context, blockPools domain.BlockPoo
 func (pi *poolTransformer) convertPool(
 	ctx sdk.Context,
 	pool poolmanagertypes.PoolI,
-	denomToRoutingInfoMap map[string]denomRoutingInfo,
+	denomPriceInfoMap map[string]osmomath.BigDec,
 	denomPairToTakerFeeMap sqsdomain.TakerFeeMap,
-	tokenPrecisionMap map[string]int,
 ) (sqsPool sqsdomain.PoolI, err error) {
 	defer func() {
 		r := recover()
@@ -213,15 +200,8 @@ func (pi *poolTransformer) convertPool(
 		balances = cwPool.GetTotalPoolLiquidity(ctx)
 	}
 
-	osmoPoolTVL := osmomath.ZeroInt()
-
-	poolDenoms := pool.GetPoolDenoms(ctx)
-	poolDenomsMap := map[string]struct{}{}
-
-	// Convert pool denoms to map
-	for _, poolDenom := range poolDenoms {
-		poolDenomsMap[poolDenom] = struct{}{}
-	}
+	// Convert pool denoms to map for faster lookup.
+	poolDenomsMap := getPoolDenomsMap(pool.GetPoolDenoms(ctx))
 
 	spreadFactor := pool.GetSpreadFactor(ctx)
 
@@ -230,123 +210,16 @@ func (pi *poolTransformer) convertPool(
 	pool = pool.AsSerializablePool()
 
 	// filtered balances consisting only of the pool denom balances.
-	filteredBalances := sdk.NewCoins()
+	filteredBalances := filterBalances(balances, poolDenomsMap)
 
-	var errorInTVLStr string
-	for _, balance := range balances {
-		// Note that there are edge cases where gamm shares or some random
-		// garbage tokens are in the balance that do not belong to the pool.
-		// A mainnet example is pool ID 2 with the following extra denoms:
-		// ibc/65BCD5909ED3D9E6223529017BC828ECBECCBE3F63D444EC44CE7412EF8C82D6
-		// ibc/778F0504E33BBB66D0950FE12E29BA81C258ED0A10CCEF9CB0096BA9E22C5D61
-		// As a result, we skilently skip them
-		// TODO: cover with test
-		_, exists := poolDenomsMap[balance.Denom]
-		if !exists {
-			continue
-		}
+	// Compute pool liquidity capitalization in UOSMO.
+	poolLiquidityCapUOSMO, poolLiquidityCapErrorStr := pi.computeUOSMOPoolLiquidityCap(ctx, filteredBalances, denomPriceInfoMap)
 
-		// update filtered balances only with pool tokens
-		filteredBalances = filteredBalances.Add(balance)
+	// Convert pool liquidity capitalization from UOSMO to USDC.
+	poolLiquidityCapUSDC, poolLiquidityCapUSDCErrorStr := pi.computeUSDCPoolLiquidityCapFromUOSMO(ctx, poolLiquidityCapUOSMO)
 
-		if balance.Denom == UOSMO {
-			osmoPoolTVL = osmoPoolTVL.Add(balance.Amount)
-			continue
-		}
-
-		// Spot price with uosmo as base asset.
-		var uosmoBaseAssetSpotPrice osmomath.BigDec
-
-		// Check if routable poolID already exists for the denom
-		routingInfo, ok := denomToRoutingInfoMap[balance.Denom]
-		if !ok {
-			basePrecison, ok := tokenPrecisionMap[balance.Denom]
-			if !ok {
-				errorInTVLStr = fmt.Sprintf(noTokenPrecisionErrorFmtStr, balance.Denom)
-				ctx.Logger().Debug(errorInTVLStr)
-				continue
-			}
-
-			// Attempt to get a single-hop pool from on-chain routes.
-			poolForDenomPair, err := pi.protorevKeeper.GetPoolForDenomPair(ctx, UOSMO, balance.Denom)
-			if err == nil {
-				// If on-chain route is present, calculate spot price with uosmo.
-				uosmoBaseAssetSpotPrice, err = pi.poolManagerKeeper.RouteCalculateSpotPrice(ctx, poolForDenomPair, balance.Denom, UOSMO)
-				if err != nil {
-					errorInTVLStr = fmt.Sprintf(spotPriceErrorFmtStr, balance.Denom, err)
-					ctx.Logger().Debug(errorInTVLStr)
-					continue
-				}
-			} else {
-				ctx.Logger().Debug("error getting OSMO-based pool from Skip route", "denom", balance.Denom, "error", err)
-
-				// Check if there exists a route from current denom to uosmo.
-				routes, hasRouteOverwrite := uosmoRoutesFromDenom[balance.Denom]
-
-				// Check if this is a stablecoin
-				_, isStableCoin := stablesOverwrite[balance.Denom]
-
-				if hasRouteOverwrite {
-					ctx.Logger().Debug("uosmo routes are present", "denom", balance.Denom)
-
-					// Estimate how many tokens in we get for 1 OSMO
-					denomAmtIn, err := pi.poolManagerKeeper.MultihopEstimateInGivenExactAmountOut(ctx, routes, oneOsmoCoin)
-					if err != nil {
-						ctx.Logger().Debug("error computing multihop from route overwrite", "denom", balance.Denom, "error", err)
-						errorInTVLStr = fmt.Sprintf(multiHopSpotPriceErrorFmtStr, err)
-						continue
-					}
-
-					denomBigDecAmtIn := osmomath.BigDecFromSDKInt(denomAmtIn)
-					if denomBigDecAmtIn.IsZero() {
-						ctx.Logger().Info("error inverting price from route overwrite", "denom", balance.Denom)
-						errorInTVLStr = "error inverting price from route overwrite"
-						continue
-					}
-
-					uosmoBaseAssetSpotPrice = oneOsmoBigDec.QuoMut(denomBigDecAmtIn)
-				} else if isStableCoin {
-					// We (very) naively assume that stablecoin has the same price as USDC for TVL ranking of pools in the router.
-					uosmoBaseAssetSpotPrice, err = pi.poolManagerKeeper.RouteCalculateSpotPrice(ctx, usdcPool, usdcDenom, UOSMO)
-					if err != nil {
-						errorInTVLStr = fmt.Sprintf(spotPriceErrorFmtStr, balance.Denom, err)
-						ctx.Logger().Debug(errorInTVLStr)
-						continue
-					}
-
-					// Set base preecision to USDC
-					basePrecison, ok = tokenPrecisionMap[usdcDenom]
-					if !ok {
-						errorInTVLStr = "no precision for denom " + usdcDenom
-						continue
-					}
-				} else {
-					// If there is no method to compute TVL for this denom, attach error and silently skip it.
-					errorInTVLStr = err.Error()
-					ctx.Logger().Debug("no overwrite present", "denom", balance.Denom)
-					continue
-				}
-			}
-
-			// Scale on-chain spot price to the correct token precision.
-			precisionMultiplier := uosmoPrecisionBigDec.Quo(osmomath.NewBigDec(int64(basePrecison)))
-
-			uosmoBaseAssetSpotPrice = uosmoBaseAssetSpotPrice.Mul(precisionMultiplier)
-
-			if uosmoBaseAssetSpotPrice.IsZero() {
-				errorInTVLStr = "failed to calculate spot price due to it becoming zero from truncations " + balance.Denom
-				continue
-			}
-
-			routingInfo = denomRoutingInfo{
-				PoolID: poolForDenomPair,
-				Price:  uosmoBaseAssetSpotPrice,
-			}
-		}
-
-		tvlAddition := osmomath.BigDecFromSDKInt(balance.Amount).QuoMut(routingInfo.Price).Dec().TruncateInt()
-		osmoPoolTVL = osmoPoolTVL.Add(tvlAddition)
-	}
+	// Join error strings for pool liquidity cap.
+	poolLiquidityCapErrorStr = strings.Join([]string{poolLiquidityCapErrorStr, poolLiquidityCapUSDCErrorStr}, " ")
 
 	// Get pool denoms. Although these can be inferred from balances, this is safer.
 	// If we used balances, for pools with no liquidity, we would not be able to get the denoms.
@@ -393,12 +266,167 @@ func (pi *poolTransformer) convertPool(
 	return &sqsdomain.PoolWrapper{
 		ChainModel: pool,
 		SQSModel: sqsdomain.SQSPool{
-			TotalValueLockedUSDC:  osmoPoolTVL,
-			TotalValueLockedError: errorInTVLStr,
+			PoolLiquidityCap:      poolLiquidityCapUSDC,
+			PoolLiquidityCapError: poolLiquidityCapErrorStr,
 			Balances:              filteredBalances,
 			PoolDenoms:            denoms,
 			SpreadFactor:          spreadFactor,
 		},
 		TickModel: tickModel,
 	}, nil
+}
+
+// getPoolDenomsMap converts pool denoms to a map for faster lookup.
+func getPoolDenomsMap(poolDenoms []string) map[string]struct{} {
+	poolDenomsMap := make(map[string]struct{}, len(poolDenoms))
+
+	// Convert pool denoms to map
+	for _, poolDenom := range poolDenoms {
+		poolDenomsMap[poolDenom] = struct{}{}
+	}
+	return poolDenomsMap
+}
+
+// filterBalances filters out balances that do not belong to the pool.
+// Note that there are edge cases where gamm shares or some random
+// garbage tokens are in the balance that do not belong to the pool.
+// A mainnet example is pool ID 2 with the following extra denoms:
+// ibc/65BCD5909ED3D9E6223529017BC828ECBECCBE3F63D444EC44CE7412EF8C82D6
+// ibc/778F0504E33BBB66D0950FE12E29BA81C258ED0A10CCEF9CB0096BA9E22C5D61
+// As a result, we skilently skip them
+func filterBalances(originalBalances sdk.Coins, poolDenomsMap map[string]struct{}) sdk.Coins {
+	// filtered balances consisting only of the pool denom balances.
+	filteredBalances := sdk.Coins{}
+
+	for _, balance := range originalBalances {
+		_, exists := poolDenomsMap[balance.Denom]
+		if !exists {
+			continue
+		}
+
+		filteredBalances = append(filteredBalances, balance)
+	}
+
+	return filteredBalances
+}
+
+// computeUOSMOPoolLiquidityCap computes the pool liquidity cap in UOSMO.
+// For each denom balance has the following cases:
+// 1. The balance is UOSMO. In that case, it is added to the total.
+// 2. Routing information is present in priceInfoMap for the denom. In that case, the spot price is used to convert the balance to UOSMO.
+// 3. If there is no routing information, we attempt to get a single-hop pool from on-chain routes.
+// 4. If there is no on-chain route, we check if there is a route overwrite for the denom.
+// 5. If the denom is a stablecoin, we assume that it has the same price as USDC and use USDC routing information.
+// 6. If there is no method to compute pool liquidity cap for this denom, we silently skip it and return a non-empty error string.
+// The routing information is updated in the cases where it was not present before calling this function.
+// Returns the pool liquidity cap in UOSMO and an error string if there was an error in computing the pool liquidity cap.
+func (pi *poolTransformer) computeUOSMOPoolLiquidityCap(ctx sdk.Context, balances sdk.Coins, denomPriceMap map[string]osmomath.BigDec) (osmomath.Int, string) {
+	poolLiquidityCap := osmomath.ZeroInt()
+	var poolLiquidityCapErrorStr string
+
+	for _, balance := range balances {
+		if balance.Denom == UOSMO {
+			poolLiquidityCap = poolLiquidityCap.Add(balance.Amount)
+			continue
+		}
+
+		// Check if spot price is already computed for a denom
+		// spot price with uosmo as base asset.
+		uosmoBaseAssetSpotPrice, ok := denomPriceMap[balance.Denom]
+		if !ok {
+			// Attempt to get a single-hop pool from on-chain routes.
+			poolForDenomPair, err := pi.protorevKeeper.GetPoolForDenomPair(ctx, UOSMO, balance.Denom)
+			if err == nil {
+				// If on-chain route is present, calculate spot price with uosmo.
+				uosmoBaseAssetSpotPrice, err = pi.poolManagerKeeper.RouteCalculateSpotPrice(ctx, poolForDenomPair, balance.Denom, UOSMO)
+				if err != nil {
+					poolLiquidityCapErrorStr = fmt.Sprintf(spotPriceErrorFmtStr, balance.Denom, err)
+					ctx.Logger().Debug(poolLiquidityCapErrorStr)
+					continue
+				}
+			} else {
+				ctx.Logger().Debug("error getting OSMO-based pool from Skip route", "denom", balance.Denom, "error", err)
+
+				// Check if there exists a route from current denom to uosmo.
+				routes, hasRouteOverwrite := uosmoRoutesFromDenom[balance.Denom]
+
+				// Check if this is a stablecoin
+				_, isStableCoin := stablesOverwrite[balance.Denom]
+
+				if hasRouteOverwrite {
+					ctx.Logger().Debug("uosmo routes are present", "denom", balance.Denom)
+
+					// Estimate how many tokens in we get for 1 OSMO
+					denomAmtIn, err := pi.poolManagerKeeper.MultihopEstimateInGivenExactAmountOut(ctx, routes, oneOsmoCoin)
+					if err != nil {
+						ctx.Logger().Debug("error computing multihop from route overwrite", "denom", balance.Denom, "error", err)
+						poolLiquidityCapErrorStr = fmt.Sprintf(multiHopSpotPriceErrorFmtStr, err)
+						continue
+					}
+
+					denomBigDecAmtIn := osmomath.BigDecFromSDKInt(denomAmtIn)
+					if denomBigDecAmtIn.IsZero() {
+						ctx.Logger().Info("error inverting price from route overwrite", "denom", balance.Denom)
+						poolLiquidityCapErrorStr = "error inverting price from route overwrite"
+						continue
+					}
+
+					uosmoBaseAssetSpotPrice = oneOsmoBigDec.QuoMut(denomBigDecAmtIn)
+				} else if isStableCoin {
+					// We (very) naively assume that stablecoin has the same price as USDC for TVL ranking of pools in the router.
+					uosmoBaseAssetSpotPrice, err = pi.poolManagerKeeper.RouteCalculateSpotPrice(ctx, pi.defaultUSDCUOSMOPoolID, usdcDenom, UOSMO)
+					if err != nil {
+						poolLiquidityCapErrorStr = fmt.Sprintf(spotPriceErrorFmtStr, balance.Denom, err)
+						ctx.Logger().Debug(poolLiquidityCapErrorStr)
+						continue
+					}
+				} else {
+					// If there is no method to compute pool liquidity cap for this denom, attach error and silently skip it.
+					poolLiquidityCapErrorStr = err.Error()
+					ctx.Logger().Debug("no overwrite present", "denom", balance.Denom)
+					continue
+				}
+			}
+
+			if uosmoBaseAssetSpotPrice.IsZero() {
+				poolLiquidityCapErrorStr = "failed to calculate spot price due to it becoming zero from truncations " + balance.Denom
+				continue
+			}
+		}
+
+		liquidityCapContribution := osmomath.BigDecFromSDKInt(balance.Amount).QuoMut(uosmoBaseAssetSpotPrice).Dec().TruncateInt()
+		poolLiquidityCap = poolLiquidityCap.Add(liquidityCapContribution)
+	}
+
+	return poolLiquidityCap, poolLiquidityCapErrorStr
+}
+
+// computeUSDCPoolLiquidityCapFromUOSMO computes the pool liquidity cap in USDC from UOSMO.
+// If the pool liquidity cap in UOSMO is zero, it returns zero.
+// Otherwise, it calculates the spot price from UOSMO to USDC and converts the pool liquidity cap to USDC.
+// Returns the pool liquidity cap in USDC and an error string if there was an error in computing the pool liquidity cap.
+// If there was an error in computing the spot price, the error string is set to the error message and zero is returned.
+func (pi *poolTransformer) computeUSDCPoolLiquidityCapFromUOSMO(ctx sdk.Context, poolLiquidityCapUOSMO osmomath.Int) (osmomath.Int, string) {
+	if !poolLiquidityCapUOSMO.IsZero() {
+		usdcQuotePrice, err := pi.poolManagerKeeper.RouteCalculateSpotPrice(ctx, pi.defaultUSDCUOSMOPoolID, usdcDenom, UOSMO)
+		if err != nil {
+			// Note: should never happen in practice.
+			poolLiquidityCapErrorStr := fmt.Sprintf(spotPriceErrorFmtStr, usdcDenom, err)
+			ctx.Logger().Debug(poolLiquidityCapErrorStr)
+			return osmomath.ZeroInt(), poolLiquidityCapErrorStr
+		} else {
+			poolLiquidityCapUSDCScaled := osmomath.BigDecFromSDKInt(poolLiquidityCapUOSMO).MulMut(usdcQuotePrice)
+
+			// Apply exponent
+			// If truncation occurs, the real value is insignificant and we can ignore it.
+			poolLiquidityCapUSDC := poolLiquidityCapUSDCScaled.QuoMut(usdcPrecisionScalingFactor)
+
+			// Note, we round up so that pools that have non-zero liquidity get propagated to the router
+			// and reflect this context in the pool liquidity cap filtering. Otherwise, pools with zero liquidity get filtered out at the ingest level
+			// completely, breaking our edge case tests for supporting low liquidity routes.
+			return poolLiquidityCapUSDC.Dec().Ceil().TruncateInt(), noPoolLiquidityCapError
+		}
+	}
+
+	return poolLiquidityCapUOSMO, noPoolLiquidityCapError
 }

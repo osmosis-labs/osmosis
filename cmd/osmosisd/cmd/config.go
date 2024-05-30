@@ -66,17 +66,6 @@ func (c *OsmosisCustomClient) SetBroadcastMode(broadcastMode string) {
 	c.BroadcastMode = broadcastMode
 }
 
-// Override sdk ConfigCmd func
-func ConfigCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "config <key> [value]",
-		Short: "Create or query an application CLI configuration file",
-		RunE:  runConfigCmd,
-		Args:  cobra.RangeArgs(0, 2),
-	}
-	return cmd
-}
-
 func runConfigCmd(cmd *cobra.Command, args []string) error {
 	clientCtx := client.GetClientContextFromCmd(cmd)
 	configPath := filepath.Join(clientCtx.HomeDir, "config")

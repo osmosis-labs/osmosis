@@ -3,7 +3,7 @@ package model_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -46,7 +46,7 @@ func (s *CosmWasmPoolSuite) TestSpotPrice() {
 
 	pool := s.PrepareCosmWasmPool()
 
-	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(100000000))
+	s.Ctx = s.Ctx.WithGasMeter(storetypes.NewGasMeter(100000000))
 
 	const (
 		// Charge gas before the system under test method and make sure it is not dropped

@@ -2,9 +2,10 @@ package keeper
 
 import (
 	"context"
+	"strconv"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
-	"strconv"
 )
 
 type msgServer struct {

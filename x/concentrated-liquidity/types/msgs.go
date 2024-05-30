@@ -64,10 +64,6 @@ func (msg MsgCreatePosition) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgCreatePosition) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 func (msg MsgCreatePosition) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -106,10 +102,6 @@ func (msg MsgAddToPosition) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgAddToPosition) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 func (msg MsgAddToPosition) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -135,10 +127,6 @@ func (msg MsgWithdrawPosition) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgWithdrawPosition) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 func (msg MsgWithdrawPosition) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -160,10 +148,6 @@ func (msg MsgCollectSpreadRewards) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgCollectSpreadRewards) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 func (msg MsgCollectSpreadRewards) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -183,10 +167,6 @@ func (msg MsgCollectIncentives) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-func (msg MsgCollectIncentives) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgCollectIncentives) GetSigners() []sdk.AccAddress {
@@ -212,10 +192,6 @@ func (msg MsgFungifyChargedPositions) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-func (msg MsgFungifyChargedPositions) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgFungifyChargedPositions) GetSigners() []sdk.AccAddress {
@@ -254,10 +230,6 @@ func (msg MsgTransferPositions) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-func (msg MsgTransferPositions) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgTransferPositions) GetSigners() []sdk.AccAddress {

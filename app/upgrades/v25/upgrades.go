@@ -1,15 +1,17 @@
 package v25
 
 import (
+	"context"
 	"errors"
 	"sort"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
-	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
+	auctiontypes "github.com/skip-mev/block-sdk/v2/x/auction/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
+
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -40,7 +42,8 @@ func CreateUpgradeHandler(
 	bpm upgrades.BaseAppParamManager,
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(context context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		ctx := sdk.UnwrapSDKContext(context)
 		// Run migrations before applying any other state changes.
 		// NOTE: DO NOT PUT ANY STATE CHANGES BEFORE RunMigrations().
 		migrations, err := mm.RunMigrations(ctx, configurator, fromVM)
@@ -94,13 +97,16 @@ func CreateUpgradeHandler(
 		keepers.SmartAccountKeeper.SetParams(ctx, authenticatorParams)
 
 		// Update consensus params in order to safely enable comet pruning
-		consensusParams, err := keepers.ConsensusParamsKeeper.Get(ctx)
+		consensusParams, err := keepers.ConsensusParamsKeeper.ParamsStore.Get(ctx)
 		if err != nil {
 			return nil, err
 		}
 		consensusParams.Evidence.MaxAgeNumBlocks = NewMaxAgeNumBlocks
 		consensusParams.Evidence.MaxAgeDuration = NewMaxAgeDuration
-		keepers.ConsensusParamsKeeper.Set(ctx, consensusParams)
+		err = keepers.ConsensusParamsKeeper.ParamsStore.Set(ctx, consensusParams)
+		if err != nil {
+			return nil, err
+		}
 
 		return migrations, nil
 	}
@@ -154,7 +160,7 @@ func migrateAllTestnetPoolsSpreadFactor(ctx sdk.Context, concentratedKeeper conc
 // This corrects a mistake that was overlooked in v24, where we cleared all missedBlocks but did not reset the counter.
 func resetMissedBlocksCounter(ctx sdk.Context, slashingKeeper *slashing.Keeper) {
 	// Iterate over all validators signing info
-	slashingKeeper.IterateValidatorSigningInfos(ctx, func(address sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool) {
+	err := slashingKeeper.IterateValidatorSigningInfos(ctx, func(address sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool) {
 		missedBlocks, err := slashingKeeper.GetValidatorMissedBlocks(ctx, address)
 		if err != nil {
 			panic(err)
@@ -162,8 +168,14 @@ func resetMissedBlocksCounter(ctx sdk.Context, slashingKeeper *slashing.Keeper) 
 
 		// Reset missed blocks counter
 		info.MissedBlocksCounter = int64(len(missedBlocks))
-		slashingKeeper.SetValidatorSigningInfo(ctx, address, info)
+		err = slashingKeeper.SetValidatorSigningInfo(ctx, address, info)
+		if err != nil {
+			panic(err)
+		}
 
 		return false
 	})
+	if err != nil {
+		panic(err)
+	}
 }

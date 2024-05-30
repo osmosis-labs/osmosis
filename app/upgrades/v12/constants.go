@@ -4,7 +4,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/app/upgrades"
 	twaptypes "github.com/osmosis-labs/osmosis/v25/x/twap/types"
 
-	store "github.com/cosmos/cosmos-sdk/store/types"
+	store "cosmossdk.io/store/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the Osmosis v12 upgrade.

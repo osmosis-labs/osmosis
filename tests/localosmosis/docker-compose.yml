@@ -7,8 +7,8 @@ services:
       context: ../../
       dockerfile: Dockerfile
       args:
-        RUNNER_IMAGE: golang:1.21.7-alpine3.19
-        GO_VERSION: "1.21"
+        RUNNER_IMAGE: golang:1.22.3-alpine3.19
+        GO_VERSION: "1.22"
     volumes:
       - ./scripts/uosmoUionBalancerPool.json:/osmosis/uosmoUionBalancerPool.json
       - ./scripts/uosmoUusdcBalancerPool.json:/osmosis/uosmoUusdcBalancerPool.json
@@ -31,7 +31,7 @@ services:
       - 9092:9092
     links:
       - redis
-   # Enable Redis for sidecar query server
+    # Enable Redis for sidecar query server
   redis:
     image: redis/redis-stack:7.2.0-v3
     ports:

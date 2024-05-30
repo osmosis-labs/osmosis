@@ -99,7 +99,7 @@ func (s *KeeperTestSuite) TestCreateGauge_Fee() {
 		s.FundAcc(testAccountAddress, tc.accountBalanceToFund)
 
 		if tc.isModuleAccount {
-			modAcc := authtypes.NewModuleAccount(authtypes.NewBaseAccount(testAccountAddress, testAccountPubkey, 1, 0),
+			modAcc := authtypes.NewModuleAccount(authtypes.NewBaseAccount(testAccountAddress, testAccountPubkey, s.App.AccountKeeper.NextAccountNumber(s.Ctx), 0),
 				"module",
 				"permission",
 			)
@@ -122,7 +122,7 @@ func (s *KeeperTestSuite) TestCreateGauge_Fee() {
 			NumEpochsPaidOver: 1,
 		}
 		// System under test.
-		_, err := msgServer.CreateGauge(sdk.WrapSDKContext(s.Ctx), msg)
+		_, err := msgServer.CreateGauge(s.Ctx, msg)
 
 		if tc.expectErr {
 			s.Require().Error(err)
@@ -217,7 +217,7 @@ func (s *KeeperTestSuite) TestAddToGauge_Fee() {
 		s.FundAcc(testAccountAddress, tc.accountBalanceToFund)
 
 		if tc.isModuleAccount {
-			modAcc := authtypes.NewModuleAccount(authtypes.NewBaseAccount(testAccountAddress, testAccountPubkey, 1, 0),
+			modAcc := authtypes.NewModuleAccount(authtypes.NewBaseAccount(testAccountAddress, testAccountPubkey, s.App.AccountKeeper.NextAccountNumber(s.Ctx), 0),
 				"module",
 				"permission",
 			)
@@ -240,7 +240,7 @@ func (s *KeeperTestSuite) TestAddToGauge_Fee() {
 			Rewards: tc.gaugeAddition,
 		}
 
-		_, err := msgServer.AddToGauge(sdk.WrapSDKContext(s.Ctx), msg)
+		_, err := msgServer.AddToGauge(s.Ctx, msg)
 
 		if tc.expectErr {
 			s.Require().Error(err, tc.name)
@@ -348,7 +348,7 @@ func (s *KeeperTestSuite) TestCreateGroup_Fee() {
 		s.overwriteVolumes(poolIDs, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount, defaultVolumeAmount})
 
 		// System under test.
-		_, err := msgServer.CreateGroup(sdk.WrapSDKContext(s.Ctx), msg)
+		_, err := msgServer.CreateGroup(s.Ctx, msg)
 
 		if tc.expectErr {
 			s.Require().Error(err)

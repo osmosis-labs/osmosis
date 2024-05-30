@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v25/x/txfees/keeper"
 
@@ -19,7 +20,7 @@ import (
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
@@ -30,6 +31,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/post"
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/testutils"
+
+	storetypes "cosmossdk.io/store/types"
 )
 
 type SpendLimitAuthenticatorTest struct {
@@ -85,8 +88,8 @@ func (s *SpendLimitAuthenticatorTest) SetupTest() {
 	s.SetupKeys()
 
 	s.OsmosisApp = app.Setup(false)
-	s.Ctx = s.OsmosisApp.NewContext(false, tmproto.Header{})
-	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(10_000_000))
+	s.Ctx = s.OsmosisApp.NewContextLegacy(false, tmproto.Header{})
+	s.Ctx = s.Ctx.WithGasMeter(storetypes.NewGasMeter(10_000_000))
 	s.Ctx = s.Ctx.WithBlockTime(time.Now())
 	s.EncodingConfig = app.MakeEncodingConfig()
 
@@ -97,6 +100,7 @@ func (s *SpendLimitAuthenticatorTest) SetupTest() {
 
 	deductFeeDecorator := txfeeskeeper.NewDeductFeeDecorator(*s.OsmosisApp.TxFeesKeeper, s.OsmosisApp.AccountKeeper, s.OsmosisApp.BankKeeper, nil)
 	s.AuthenticatorAnteDecorator = ante.NewAuthenticatorDecorator(
+		s.OsmosisApp.AppCodec(),
 		s.OsmosisApp.SmartAccountKeeper,
 		s.OsmosisApp.AccountKeeper,
 		s.EncodingConfig.TxConfig.SignModeHandler(),
@@ -104,11 +108,12 @@ func (s *SpendLimitAuthenticatorTest) SetupTest() {
 	)
 
 	s.AuthenticatorPostDecorator = post.NewAuthenticatorPostDecorator(
+		s.OsmosisApp.AppCodec(),
 		s.OsmosisApp.SmartAccountKeeper,
 		s.OsmosisApp.AccountKeeper,
 		s.EncodingConfig.TxConfig.SignModeHandler(),
 		// Add an empty handler here to enable a circuit breaker pattern
-		sdk.ChainPostDecorators(sdk.Terminator{}),
+		sdk.ChainPostDecorators(sdk.Terminator{}), //nolint
 	)
 }
 
@@ -119,12 +124,12 @@ func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 	usdcOsmoPoolId := s.preparePool(
 		[]balancer.PoolAsset{
 			{
-				Weight: sdk.NewInt(100000),
-				Token:  sdk.NewCoin(UUSDC, sdk.NewInt(1500000000)),
+				Weight: osmomath.NewInt(100000),
+				Token:  sdk.NewCoin(UUSDC, osmomath.NewInt(1500000000)),
 			},
 			{
-				Weight: sdk.NewInt(100000),
-				Token:  sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(1000000000)),
+				Weight: osmomath.NewInt(100000),
+				Token:  sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1000000000)),
 			},
 		},
 	)
@@ -198,22 +203,22 @@ func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 	s.Require().Equal(uint64(2), id)
 
 	// fund acc
-	s.FundAcc(authAcc, sdk.NewCoins(sdk.NewCoin(UUSDC, sdk.NewInt(200000000000))))
-	s.FundAcc(authAcc, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(200000000000))))
+	s.FundAcc(authAcc, sdk.NewCoins(sdk.NewCoin(UUSDC, osmomath.NewInt(200000000000))))
+	s.FundAcc(authAcc, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(200000000000))))
 
 	// a hack for setting fee payer
 	selfSend := banktypes.MsgSend{
 		FromAddress: authAcc.String(),
 		ToAddress:   authAcc.String(),
-		Amount:      sdk.NewCoins(sdk.NewCoin(UUSDC, sdk.NewInt(1))),
+		Amount:      sdk.NewCoins(sdk.NewCoin(UUSDC, osmomath.NewInt(1))),
 	}
 
 	// swap within limit
 	swapMsg := poolmanagertypes.MsgSwapExactAmountIn{
 		Sender:            authAcc.String(),
 		Routes:            []poolmanagertypes.SwapAmountInRoute{{PoolId: usdcOsmoPoolId, TokenOutDenom: UUSDC}},
-		TokenIn:           sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(3333333333)), // ~ 4,999,999,999 uusdc
-		TokenOutMinAmount: sdk.OneInt(),
+		TokenIn:           sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(3333333333)), // ~ 4,999,999,999 uusdc
+		TokenOutMinAmount: osmomath.OneInt(),
 	}
 
 	tx, err := s.GenSimpleTxWithSelectedAuthenticators([]sdk.Msg{&selfSend, &swapMsg}, []cryptotypes.PrivKey{authAccPriv}, []uint64{1, 2})
@@ -237,8 +242,8 @@ func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 	swapMsg = poolmanagertypes.MsgSwapExactAmountIn{
 		Sender:            authAcc.String(),
 		Routes:            []poolmanagertypes.SwapAmountInRoute{{PoolId: usdcOsmoPoolId, TokenOutDenom: appparams.BaseCoinUnit}},
-		TokenIn:           sdk.NewCoin(UUSDC, sdk.NewInt(2)),
-		TokenOutMinAmount: sdk.OneInt(),
+		TokenIn:           sdk.NewCoin(UUSDC, osmomath.NewInt(2)),
+		TokenOutMinAmount: osmomath.OneInt(),
 	}
 
 	tx, err = s.GenSimpleTxWithSelectedAuthenticators([]sdk.Msg{&selfSend, &swapMsg}, []cryptotypes.PrivKey{authAccPriv}, []uint64{1, 2})
@@ -327,8 +332,8 @@ func (s *SpendLimitAuthenticatorTest) preparePool(
 	}
 
 	poolParams := balancer.PoolParams{
-		SwapFee: sdk.ZeroDec(),
-		ExitFee: sdk.ZeroDec(),
+		SwapFee: osmomath.ZeroDec(),
+		ExitFee: osmomath.ZeroDec(),
 	}
 
 	poolID, err := s.OsmosisApp.PoolManagerKeeper.CreatePool(
