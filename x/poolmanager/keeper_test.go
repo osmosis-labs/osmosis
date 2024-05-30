@@ -233,11 +233,9 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 
 	tests := map[string]struct {
 		storeSetup                                  func()
-		expectedTakerFeeSkimAccumulators            []types.TakerFeeSkimAccumulator
 		expectedCachedTakerFeeShareAgreementMap     map[string]types.TakerFeeShareAgreement
 		expectedCachedRegisteredAlloyPoolToStateMap map[string]types.AlloyContractTakerFeeShareState
 		expectedCachedRegisteredAlloyedPoolIdArray  []uint64
-		expectedError                               error
 	}{
 		"cachedTakerFeeShareAgreementMap is empty, cachedRegisteredAlloyPoolToStateMap is empty, cachedRegisteredAlloyedPoolIdArray is empty, should update": {
 			storeSetup:                                  func() {},

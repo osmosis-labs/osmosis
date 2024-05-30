@@ -114,6 +114,17 @@ func (k *Keeper) SetTakerFeeShareAgreementForDenom(ctx sdk.Context, takerFeeShar
 		}
 	}
 
+	// Emit event
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeMsgSetTakerFeeShareAgreementForDenomPair,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(types.AttributeKeyTakerFeeShareDenom, takerFeeShare.Denom),
+			sdk.NewAttribute(types.AttributeKeyTakerFeeShareSkimPercent, takerFeeShare.SkimPercent.String()),
+			sdk.NewAttribute(types.AttributeKeyTakerFeeShareSkimAddress, takerFeeShare.SkimAddress),
+		),
+	})
+
 	return nil
 }
 
@@ -262,6 +273,15 @@ func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error 
 	k.cachedRegisteredAlloyedPoolIdArray = append(k.cachedRegisteredAlloyedPoolIdArray, poolId)
 	sort.Slice(k.cachedRegisteredAlloyedPoolIdArray, func(i, j int) bool {
 		return k.cachedRegisteredAlloyedPoolIdArray[i] < k.cachedRegisteredAlloyedPoolIdArray[j]
+	})
+
+	// Emit event
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeMsgSetRegisteredAlloyedPool,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
+		),
 	})
 
 	return nil
