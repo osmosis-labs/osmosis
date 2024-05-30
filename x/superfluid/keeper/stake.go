@@ -246,10 +246,13 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	}
 
 	newShares, err := k.mintOsmoTokensAndDelegate(ctx, amount, acc)
+	if err != nil {
+		return err
+	}
 
 	events.EmitDelegationEvent(ctx, valAddr, newShares, amount)
 
-	return err
+	return nil
 }
 
 // undelegateCommon is a helper function for SuperfluidUndelegate and superfluidUndelegateToConcentratedPosition.
