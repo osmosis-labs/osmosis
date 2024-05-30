@@ -24,6 +24,15 @@ type TotalPoolLiquidityResponse struct {
 	TotalPoolLiquidity []sdk.Coin `json:"total_pool_liquidity"`
 }
 
+type AssetConfig struct {
+	Denom               string `json:"denom"`
+	NormalizationFactor string `json:"normalization_factor"`
+}
+
+type ListAssetConfigsResponse struct {
+	AssetConfigs []AssetConfig `json:"asset_configs"`
+}
+
 //
 // Taker Fee Share Agreements
 //
@@ -462,27 +471,55 @@ func (k Keeper) queryAndCheckAlloyedDenom(ctx sdk.Context, contractAddr sdk.AccA
 // TakerFeeShareAgreement objects, each containing the denomination, skim percent, and skim address.
 // If the total alloyed liquidity is zero, it returns an error.
 func (k Keeper) snapshotTakerFeeShareAlloyComposition(ctx sdk.Context, contractAddr sdk.AccAddress) ([]types.TakerFeeShareAgreement, error) {
-	// TODO: Need to add logic for scaling factors
+	// Query for total pool liquidity
 	queryBz := []byte(`{"get_total_pool_liquidity": {}}`)
 	respBz, err := k.wasmKeeper.QuerySmart(ctx, contractAddr, queryBz)
 	if err != nil {
 		return []types.TakerFeeShareAgreement{}, err
 	}
 
-	var response TotalPoolLiquidityResponse
-	err = json.Unmarshal(respBz, &response)
+	var liquidityResponse TotalPoolLiquidityResponse
+	err = json.Unmarshal(respBz, &liquidityResponse)
 	if err != nil {
 		return []types.TakerFeeShareAgreement{}, err
 	}
-	totalPoolLiquidity := response.TotalPoolLiquidity
+	totalPoolLiquidity := liquidityResponse.TotalPoolLiquidity
+
+	// Query for asset configs
+	queryBz = []byte(`{"list_asset_configs": {}}`)
+	respBz, err = k.wasmKeeper.QuerySmart(ctx, contractAddr, queryBz)
+	if err != nil {
+		return []types.TakerFeeShareAgreement{}, err
+	}
+
+	var assetConfigsResponse ListAssetConfigsResponse
+	err = json.Unmarshal(respBz, &assetConfigsResponse)
+	if err != nil {
+		return []types.TakerFeeShareAgreement{}, err
+	}
+	assetConfigs := assetConfigsResponse.AssetConfigs
+
+	// Create a map for quick lookup of normalization factors
+	normalizationFactors := make(map[string]osmomath.Dec)
+	for _, config := range assetConfigs {
+		factor, err := osmomath.NewDecFromStr(config.NormalizationFactor)
+		if err != nil {
+			return []types.TakerFeeShareAgreement{}, err
+		}
+		normalizationFactors[config.Denom] = factor
+	}
 
 	totalAlloyedLiquidity := osmomath.ZeroDec()
 	var assetsWithShareAgreement []sdk.Coin
 	var takerFeeShareAgreements []types.TakerFeeShareAgreement
 	var skimAddresses []string
 	var skimPercents []osmomath.Dec
+
 	for _, coin := range totalPoolLiquidity {
-		totalAlloyedLiquidity = totalAlloyedLiquidity.Add(coin.Amount.ToLegacyDec())
+		normalizationFactor := normalizationFactors[coin.Denom]
+		normalizedAmount := coin.Amount.ToLegacyDec().Mul(normalizationFactor)
+		totalAlloyedLiquidity = totalAlloyedLiquidity.Add(normalizedAmount)
+
 		takerFeeShareAgreement, found := k.GetTakerFeeShareAgreementFromDenom(ctx, coin.Denom)
 		if !found {
 			continue
@@ -497,7 +534,9 @@ func (k Keeper) snapshotTakerFeeShareAlloyComposition(ctx sdk.Context, contractA
 	}
 
 	for i, coin := range assetsWithShareAgreement {
-		scaledSkim := coin.Amount.ToLegacyDec().Quo(totalAlloyedLiquidity).Mul(skimPercents[i])
+		normalizationFactor := normalizationFactors[coin.Denom]
+		normalizedAmount := coin.Amount.ToLegacyDec().Mul(normalizationFactor)
+		scaledSkim := normalizedAmount.Quo(totalAlloyedLiquidity).Mul(skimPercents[i])
 		takerFeeShareAgreements = append(takerFeeShareAgreements, types.TakerFeeShareAgreement{
 			Denom:       coin.Denom,
 			SkimPercent: scaledSkim,

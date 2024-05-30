@@ -1472,8 +1472,9 @@ func (s *KeeperTestSuite) TestQueryAndCheckAlloyedDenom() {
 
 func (s *KeeperTestSuite) TestSnapshotTakerFeeShareAlloyComposition() {
 	tests := map[string]struct {
-		setupFunc     func() cosmwasmpooltypes.CosmWasmExtension
-		expectedError error
+		setupFunc           func() cosmwasmpooltypes.CosmWasmExtension
+		expectedComposition []types.TakerFeeShareAgreement
+		expectedError       error
 	}{
 		"alloyed pool exists, composed of no taker fee share denoms": {
 			setupFunc: func() cosmwasmpooltypes.CosmWasmExtension {
@@ -1482,7 +1483,8 @@ func (s *KeeperTestSuite) TestSnapshotTakerFeeShareAlloyComposition() {
 				s.Require().NoError(err)
 				return cwPool
 			},
-			expectedError: nil,
+			expectedComposition: []types.TakerFeeShareAgreement(nil),
+			expectedError:       nil,
 		},
 		"alloyed pool exists, composed of one taker fee share denom": {
 			setupFunc: func() cosmwasmpooltypes.CosmWasmExtension {
@@ -1495,6 +1497,13 @@ func (s *KeeperTestSuite) TestSnapshotTakerFeeShareAlloyComposition() {
 					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
 				})
 				return cwPool
+			},
+			expectedComposition: []types.TakerFeeShareAgreement{
+				{
+					Denom:       "testA",
+					SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("0.3333333333333333")),
+					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
+				},
 			},
 			expectedError: nil,
 		},
@@ -1515,6 +1524,18 @@ func (s *KeeperTestSuite) TestSnapshotTakerFeeShareAlloyComposition() {
 				})
 				return cwPool
 			},
+			expectedComposition: []types.TakerFeeShareAgreement{
+				{
+					Denom:       "testA",
+					SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("0.1")),
+					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
+				},
+				{
+					Denom:       "testB",
+					SkimPercent: osmomath.MustNewDecFromStr("0.02").Mul(osmomath.MustNewDecFromStr("0.3")),
+					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
+				},
+			},
 			expectedError: nil,
 		},
 		"alloyed pool exists, composed of two taker fee share denoms, differing ratios, first asset has no liquidity": {
@@ -1534,15 +1555,99 @@ func (s *KeeperTestSuite) TestSnapshotTakerFeeShareAlloyComposition() {
 				})
 				return cwPool
 			},
+			expectedComposition: []types.TakerFeeShareAgreement{
+				{
+					Denom:       "testA",
+					SkimPercent: osmomath.ZeroDec(),
+					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
+				},
+				{
+					Denom:       "testB",
+					SkimPercent: osmomath.MustNewDecFromStr("0.02").Mul(osmomath.MustNewDecFromStr("0.33333333333333333")),
+					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
+				},
+			},
 			expectedError: nil,
 		},
 		"error: alloyed pool has no liquidity": {
 			setupFunc: func() cosmwasmpooltypes.CosmWasmExtension {
 				return s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB", "testC"}, nil)
 			},
-			expectedError: types.ErrTotalAlloyedLiquidityIsZero,
+			expectedComposition: []types.TakerFeeShareAgreement{},
+			expectedError:       types.ErrTotalAlloyedLiquidityIsZero,
 		},
-		// TODO: Diff scaling factors for assets
+		"alloyed pool with normalization factors 1 and 1000000000000": {
+			setupFunc: func() cosmwasmpooltypes.CosmWasmExtension {
+				cwPool := s.PrepareCustomTransmuterPoolV3WithNormalization(s.TestAccs[0], []string{"testA", "testB"}, []string{"1", "1000000000000"}, []uint16{1, 1})
+				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
+				s.Require().NoError(err)
+				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
+					Denom:       "testA",
+					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
+					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
+				})
+				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
+					Denom:       "testB",
+					SkimPercent: osmomath.MustNewDecFromStr("0.02"),
+					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
+				})
+				return cwPool
+			},
+			expectedComposition: []types.TakerFeeShareAgreement{
+				{
+					Denom:       "testA",
+					SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("100").Quo(osmomath.MustNewDecFromStr("100000000000100"))),
+					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
+				},
+				{
+					Denom:       "testB",
+					SkimPercent: osmomath.MustNewDecFromStr("0.02").Mul(osmomath.MustNewDecFromStr("100000000000000").Quo(osmomath.MustNewDecFromStr("100000000000100"))),
+					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
+				},
+			},
+			expectedError: nil,
+		},
+		"alloyed pool with normalization factors 1, 1000000000000, and 1": {
+			setupFunc: func() cosmwasmpooltypes.CosmWasmExtension {
+				cwPool := s.PrepareCustomTransmuterPoolV3WithNormalization(s.TestAccs[0], []string{"testA", "testB", "testC"}, []string{"1", "1000000000000", "1"}, []uint16{1, 1, 1})
+				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
+				s.Require().NoError(err)
+				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
+					Denom:       "testA",
+					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
+					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
+				})
+				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
+					Denom:       "testB",
+					SkimPercent: osmomath.MustNewDecFromStr("0.02"),
+					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
+				})
+				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
+					Denom:       "testC",
+					SkimPercent: osmomath.MustNewDecFromStr("0.03"),
+					SkimAddress: "osmo1k5t7xrevz5fhvs5zg5jtpnht2mzv539008uc3",
+				})
+				return cwPool
+			},
+			expectedComposition: []types.TakerFeeShareAgreement{
+				{
+					Denom:       "testA",
+					SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("100").Quo(osmomath.MustNewDecFromStr("100000000000200"))),
+					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
+				},
+				{
+					Denom:       "testB",
+					SkimPercent: osmomath.MustNewDecFromStr("0.02").Mul(osmomath.MustNewDecFromStr("100000000000000").Quo(osmomath.MustNewDecFromStr("100000000000200"))),
+					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
+				},
+				{
+					Denom:       "testC",
+					SkimPercent: osmomath.MustNewDecFromStr("0.03").Mul(osmomath.MustNewDecFromStr("100").Quo(osmomath.MustNewDecFromStr("100000000000200"))),
+					SkimAddress: "osmo1k5t7xrevz5fhvs5zg5jtpnht2mzv539008uc3",
+				},
+			},
+			expectedError: nil,
+		},
 	}
 
 	for name, tc := range tests {
@@ -1550,15 +1655,13 @@ func (s *KeeperTestSuite) TestSnapshotTakerFeeShareAlloyComposition() {
 			s.SetupTest()
 			cwPool := tc.setupFunc()
 
-			expectedComposition, err := s.App.PoolManagerKeeper.SnapshotTakerFeeShareAlloyComposition(s.Ctx, cwPool.GetAddress())
+			actualComposition, err := s.App.PoolManagerKeeper.SnapshotTakerFeeShareAlloyComposition(s.Ctx, cwPool.GetAddress())
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().Equal(tc.expectedError.Error(), err.Error())
 			} else {
 				s.Require().NoError(err)
-				alloyedComp, err := s.App.PoolManagerKeeper.GetRegisteredAlloyedPoolFromPoolId(s.Ctx, cwPool.GetId())
-				s.Require().NoError(err)
-				s.Require().Equal(expectedComposition, alloyedComp.TakerFeeShareAgreements)
+				s.Require().Equal(tc.expectedComposition, actualComposition)
 			}
 		})
 	}
