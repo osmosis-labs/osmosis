@@ -1086,7 +1086,7 @@ token.
 To add a new non-pool token to the superfluid module, a proposal needs to be sent
 specifying the new token's denom, the asset type, and a price route. 
 
-The price rounte needs to start in a pool containing the token and end in a pool
+The price route needs to start in a pool containing the token and end in a pool
 containing osmo. 
 
 Example:
@@ -1115,3 +1115,29 @@ Example:
 	}
 ```
 
+### Querying delegations
+
+To check the superfluid delegations for a user the following query can be used:
+
+```go
+types.SuperfluidDelegationsByDelegatorRequest{DelegatorAddress: userAddr.String()}
+```
+
+### Rewards
+
+The rewards for non-pool tokens are calculated in the same way as pool tokens: the amount of 
+equivalent osmo staked times the discount factor.
+The rewards are distributed to the intermediary account and then to the locks associated
+with the account.
+
+### Undelegating
+
+To undelegate, a user would send the `MsgSuperfluidUndelegate` message. 
+
+```go
+	types.MsgSuperfluidUndelegateAndUnbondLock{
+		Sender: userAddr.String(),
+		LockId: underlyingLock.ID,
+		Coin:   sdk.NewCoin(btcDenom, btcStakeAmount),
+	}
+```
