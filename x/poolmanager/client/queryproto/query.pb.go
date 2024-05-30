@@ -2334,7 +2334,7 @@ type QueryClient interface {
 	// AllTakerFeeShareAccumulators returns all taker fee share accumulators. A
 	// taker fee share accumulator includes the denom of the denom getting the
 	// taker fees, and an accumulated value of coins that the denom has accrued
-	// since the last time it was distibuted in the epoch prior.
+	// since the last time it was distributed in the epoch prior.
 	AllTakerFeeShareAccumulators(ctx context.Context, in *AllTakerFeeShareAccumulatorsRequest, opts ...grpc.CallOption) (*AllTakerFeeShareAccumulatorsResponse, error)
 	// RegisteredAlloyedPoolFromDenom returns the registered alloyed pool state
 	// from the given denom. The registered alloyed pool contains the pool's
@@ -2627,7 +2627,7 @@ type QueryServer interface {
 	// AllTakerFeeShareAccumulators returns all taker fee share accumulators. A
 	// taker fee share accumulator includes the denom of the denom getting the
 	// taker fees, and an accumulated value of coins that the denom has accrued
-	// since the last time it was distibuted in the epoch prior.
+	// since the last time it was distributed in the epoch prior.
 	AllTakerFeeShareAccumulators(context.Context, *AllTakerFeeShareAccumulatorsRequest) (*AllTakerFeeShareAccumulatorsResponse, error)
 	// RegisteredAlloyedPoolFromDenom returns the registered alloyed pool state
 	// from the given denom. The registered alloyed pool contains the pool's

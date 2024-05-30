@@ -178,7 +178,7 @@ service Query {
   // AllTakerFeeShareAccumulators returns all taker fee share accumulators. A
   // taker fee share accumulator includes the denom of the denom getting the
   // taker fees, and an accumulated value of coins that the denom has accrued
-  // since the last time it was distibuted in the epoch prior.
+  // since the last time it was distributed in the epoch prior.
   rpc AllTakerFeeShareAccumulators(AllTakerFeeShareAccumulatorsRequest)
       returns (AllTakerFeeShareAccumulatorsResponse) {
     option (google.api.http).get =
