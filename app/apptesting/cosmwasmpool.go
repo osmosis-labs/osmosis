@@ -22,6 +22,7 @@ import (
 const (
 	DefaultTransmuterDenomA       = "axlusdc"
 	DefaultTransmuterDenomB       = "gravusdc"
+	DefaultTransmuterDenomC       = "nbtc"
 	TransmuterContractName        = "transmuter"
 	TransmuterV3ContractName      = "transmuterv3"
 	TransmuterMigrateContractName = "transmuter_migrate"

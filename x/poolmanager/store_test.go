@@ -8,26 +8,55 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v25/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
-var DefaultTakerFeeShareAgreements = []types.TakerFeeShareAgreement{
-	{
-		Denom:       "uosmo",
-		SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-		SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-	},
-	{
-		Denom:       "stake",
-		SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-		SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-	},
-	{
-		Denom:       "nBTC",
-		SkimPercent: osmomath.MustNewDecFromStr("0.03"),
-		SkimAddress: "osmo1jermpr9yust7cyhfjme3cr08kt6n8jv6p35l39",
-	},
-}
+var (
+	denomA           = apptesting.DefaultTransmuterDenomA
+	denomB           = apptesting.DefaultTransmuterDenomB
+	denomC           = apptesting.DefaultTransmuterDenomC
+	OSMO             = "uosmo"
+	ATOM             = "atom"
+	secondaryDenomA  = "testA"
+	secondaryDenomB  = "testB"
+	nonExistentDenom = "nonExistentDenom"
+
+	oneHundred   = osmomath.NewInt(100)
+	twoHundred   = osmomath.NewInt(200)
+	threeHundred = osmomath.NewInt(300)
+
+	defaultTakerFeeShareAgreements = []types.TakerFeeShareAgreement{
+		{
+			Denom:       denomA,
+			SkimPercent: osmomath.MustNewDecFromStr("0.01"),
+			SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
+		},
+		{
+			Denom:       denomB,
+			SkimPercent: osmomath.MustNewDecFromStr("0.02"),
+			SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
+		},
+		{
+			Denom:       denomC,
+			SkimPercent: osmomath.MustNewDecFromStr("0.03"),
+			SkimAddress: "osmo1jermpr9yust7cyhfjme3cr08kt6n8jv6p35l39",
+		},
+	}
+
+	secondaryTakerFeeShareAgreements = []types.TakerFeeShareAgreement{
+		{
+			Denom:       secondaryDenomA,
+			SkimPercent: osmomath.MustNewDecFromStr("0.03"),
+			SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
+		},
+		{
+			Denom:       secondaryDenomB,
+			SkimPercent: osmomath.MustNewDecFromStr("0.04"),
+			SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc3",
+		},
+	}
+)
 
 func (s *KeeperTestSuite) TestGetAllTakerFeeShareAgreementsMap() {
 	tests := map[string]struct {
@@ -37,7 +66,7 @@ func (s *KeeperTestSuite) TestGetAllTakerFeeShareAgreementsMap() {
 		"single taker fee share agreement": {
 			setupFunc: func() {
 				numTakerFeeShareAgreements := 1
-				for i, takerFeeShareAgreement := range DefaultTakerFeeShareAgreements {
+				for i, takerFeeShareAgreement := range defaultTakerFeeShareAgreements {
 					if i >= numTakerFeeShareAgreements {
 						break
 					}
@@ -47,7 +76,7 @@ func (s *KeeperTestSuite) TestGetAllTakerFeeShareAgreementsMap() {
 			expectedTakerFeeShareAgreementMap: func() map[string]types.TakerFeeShareAgreement {
 				numTakerFeeShareAgreements := 1
 				expectedTakerFeeShareAgreementMap := make(map[string]types.TakerFeeShareAgreement)
-				for i, takerFeeShareAgreement := range DefaultTakerFeeShareAgreements {
+				for i, takerFeeShareAgreement := range defaultTakerFeeShareAgreements {
 					if i >= numTakerFeeShareAgreements {
 						break
 					}
@@ -58,13 +87,13 @@ func (s *KeeperTestSuite) TestGetAllTakerFeeShareAgreementsMap() {
 		},
 		"multiple taker fee share agreements": {
 			setupFunc: func() {
-				for _, takerFeeShareAgreement := range DefaultTakerFeeShareAgreements {
+				for _, takerFeeShareAgreement := range defaultTakerFeeShareAgreements {
 					s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreement)
 				}
 			},
 			expectedTakerFeeShareAgreementMap: func() map[string]types.TakerFeeShareAgreement {
 				expectedTakerFeeShareAgreementMap := make(map[string]types.TakerFeeShareAgreement)
-				for _, takerFeeShareAgreement := range DefaultTakerFeeShareAgreements {
+				for _, takerFeeShareAgreement := range defaultTakerFeeShareAgreements {
 					expectedTakerFeeShareAgreementMap[takerFeeShareAgreement.Denom] = takerFeeShareAgreement
 				}
 				return expectedTakerFeeShareAgreementMap
@@ -100,7 +129,7 @@ func (s *KeeperTestSuite) TestGetAllTakerFeesShareAgreements() {
 		"single taker fee share agreement": {
 			setupFunc: func() {
 				numTakerFeeShareAgreements := 1
-				for i, takerFeeShareAgreement := range DefaultTakerFeeShareAgreements {
+				for i, takerFeeShareAgreement := range defaultTakerFeeShareAgreements {
 					if i >= numTakerFeeShareAgreements {
 						break
 					}
@@ -110,7 +139,7 @@ func (s *KeeperTestSuite) TestGetAllTakerFeesShareAgreements() {
 			expectedTakerFeeShareAgreements: func() []types.TakerFeeShareAgreement {
 				numTakerFeeShareAgreements := 1
 				var expectedTakerFeeShareAgreements []types.TakerFeeShareAgreement
-				for i, takerFeeShareAgreement := range DefaultTakerFeeShareAgreements {
+				for i, takerFeeShareAgreement := range defaultTakerFeeShareAgreements {
 					if i >= numTakerFeeShareAgreements {
 						break
 					}
@@ -121,12 +150,12 @@ func (s *KeeperTestSuite) TestGetAllTakerFeesShareAgreements() {
 		},
 		"multiple taker fee share agreements": {
 			setupFunc: func() {
-				for _, takerFeeShareAgreement := range DefaultTakerFeeShareAgreements {
+				for _, takerFeeShareAgreement := range defaultTakerFeeShareAgreements {
 					s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreement)
 				}
 			},
 			expectedTakerFeeShareAgreements: func() []types.TakerFeeShareAgreement {
-				return reverseSlice(DefaultTakerFeeShareAgreements)
+				return reverseSlice(defaultTakerFeeShareAgreements)
 			},
 		},
 		"no taker fee share agreements": {
@@ -159,7 +188,7 @@ func (s *KeeperTestSuite) TestSetTakerFeeShareAgreementsMapCached() {
 		"single taker fee share agreement": {
 			setupFunc: func() {
 				numTakerFeeShareAgreements := 1
-				for i, takerFeeShareAgreement := range DefaultTakerFeeShareAgreements {
+				for i, takerFeeShareAgreement := range defaultTakerFeeShareAgreements {
 					if i >= numTakerFeeShareAgreements {
 						break
 					}
@@ -169,7 +198,7 @@ func (s *KeeperTestSuite) TestSetTakerFeeShareAgreementsMapCached() {
 			expectedTakerFeeShareAgreements: func() map[string]types.TakerFeeShareAgreement {
 				numTakerFeeShareAgreements := 1
 				expectedTakerFeeShareAgreements := make(map[string]types.TakerFeeShareAgreement)
-				for i, takerFeeShareAgreement := range DefaultTakerFeeShareAgreements {
+				for i, takerFeeShareAgreement := range defaultTakerFeeShareAgreements {
 					if i >= numTakerFeeShareAgreements {
 						break
 					}
@@ -181,13 +210,13 @@ func (s *KeeperTestSuite) TestSetTakerFeeShareAgreementsMapCached() {
 		},
 		"multiple taker fee share agreements": {
 			setupFunc: func() {
-				for _, takerFeeShareAgreement := range DefaultTakerFeeShareAgreements {
+				for _, takerFeeShareAgreement := range defaultTakerFeeShareAgreements {
 					s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreement)
 				}
 			},
 			expectedTakerFeeShareAgreements: func() map[string]types.TakerFeeShareAgreement {
 				expectedTakerFeeShareAgreements := make(map[string]types.TakerFeeShareAgreement)
-				for _, takerFeeShareAgreement := range DefaultTakerFeeShareAgreements {
+				for _, takerFeeShareAgreement := range defaultTakerFeeShareAgreements {
 					expectedTakerFeeShareAgreements[takerFeeShareAgreement.Denom] = takerFeeShareAgreement
 				}
 				return expectedTakerFeeShareAgreements
@@ -232,7 +261,7 @@ func (s *KeeperTestSuite) TestSetTakerFeeShareAgreementForDenom() {
 		"set one taker fee share agreement, get same taker fee share agreement": {
 			setupFunc: func() {
 				numTakerFeeShareAgreements := 1
-				for i, takerFeeShareAgreement := range DefaultTakerFeeShareAgreements {
+				for i, takerFeeShareAgreement := range defaultTakerFeeShareAgreements {
 					if i >= numTakerFeeShareAgreements {
 						break
 					}
@@ -240,27 +269,27 @@ func (s *KeeperTestSuite) TestSetTakerFeeShareAgreementForDenom() {
 					s.Require().NoError(err)
 				}
 			},
-			denomToRequest:                 "uosmo",
-			expectedTakerFeeShareAgreement: DefaultTakerFeeShareAgreements[0],
+			denomToRequest:                 denomA,
+			expectedTakerFeeShareAgreement: defaultTakerFeeShareAgreements[0],
 			expectedFound:                  true,
 		},
 		"set three taker fee share agreements, get one of the three taker fee share agreements": {
 			setupFunc: func() {
-				for _, takerFeeShareAgreement := range DefaultTakerFeeShareAgreements {
+				for _, takerFeeShareAgreement := range defaultTakerFeeShareAgreements {
 					s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreement)
 				}
 			},
-			denomToRequest:                 "stake",
-			expectedTakerFeeShareAgreement: DefaultTakerFeeShareAgreements[1],
+			denomToRequest:                 denomB,
+			expectedTakerFeeShareAgreement: defaultTakerFeeShareAgreements[1],
 			expectedFound:                  true,
 		},
 		"set three taker fee share agreements, attempt to get taker fee share agreement for denom that does not exist": {
 			setupFunc: func() {
-				for _, takerFeeShareAgreement := range DefaultTakerFeeShareAgreements {
+				for _, takerFeeShareAgreement := range defaultTakerFeeShareAgreements {
 					s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreement)
 				}
 			},
-			denomToRequest: "denomNotAdded",
+			denomToRequest: nonExistentDenom,
 			expectedFound:  false,
 		},
 	}
@@ -291,27 +320,27 @@ func (s *KeeperTestSuite) TestGetTakerFeeShareDenomsToAccruedValue() {
 	}{
 		"tier denom accrued denom value, retrieve denom value": {
 			setupFunc: func() {
-				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "uosmo", "stake", osmomath.NewInt(100))
+				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomA, denomB, oneHundred)
 				s.Require().NoError(err)
 			},
-			takerFeeShareDenom:   "uosmo",
-			takerFeeChargedDenom: "stake",
-			expectedValue:        osmomath.NewInt(100),
+			takerFeeShareDenom:   denomA,
+			takerFeeChargedDenom: denomB,
+			expectedValue:        oneHundred,
 		},
 		"tier denom did not accrue value, nothing to retrieve, so not found": {
 			setupFunc:            func() {},
-			takerFeeShareDenom:   "uosmo",
-			takerFeeChargedDenom: "stake",
-			expectedError:        types.NoAccruedValueError{TakerFeeShareDenom: "uosmo", TakerFeeChargedDenom: "stake"},
+			takerFeeShareDenom:   denomA,
+			takerFeeChargedDenom: denomB,
+			expectedError:        types.NoAccruedValueError{TakerFeeShareDenom: denomA, TakerFeeChargedDenom: denomB},
 		},
 		"tier denom accrued denom value, retrieve different denom value, so not found": {
 			setupFunc: func() {
-				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "uosmo", "stake", osmomath.NewInt(100))
+				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomA, denomB, oneHundred)
 				s.Require().NoError(err)
 			},
-			takerFeeShareDenom:   "uosmo",
-			takerFeeChargedDenom: "nonExistentDenom",
-			expectedError:        types.NoAccruedValueError{TakerFeeShareDenom: "uosmo", TakerFeeChargedDenom: "nonExistentDenom"},
+			takerFeeShareDenom:   denomA,
+			takerFeeChargedDenom: nonExistentDenom,
+			expectedError:        types.NoAccruedValueError{TakerFeeShareDenom: denomA, TakerFeeChargedDenom: nonExistentDenom},
 		},
 	}
 
@@ -343,29 +372,29 @@ func (s *KeeperTestSuite) TestSetTakerFeeShareDenomsToAccruedValue() {
 	}{
 		"set value that was previously non existent": {
 			setupFunc:     func() {},
-			tierDenom:     "uosmo",
-			takerFeeDenom: "stake",
-			accruedValue:  osmomath.NewInt(100),
+			tierDenom:     denomA,
+			takerFeeDenom: denomB,
+			accruedValue:  oneHundred,
 			expectErr:     false,
 		},
 		"set value lower than what it previously was, should override": {
 			setupFunc: func() {
-				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "uosmo", "stake", osmomath.NewInt(200))
+				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomA, denomB, twoHundred)
 				s.Require().NoError(err)
 			},
-			tierDenom:     "uosmo",
-			takerFeeDenom: "stake",
-			accruedValue:  osmomath.NewInt(100),
+			tierDenom:     denomA,
+			takerFeeDenom: denomB,
+			accruedValue:  oneHundred,
 			expectErr:     false,
 		},
 		"set value greater than what it previously was, should override": {
 			setupFunc: func() {
-				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "uosmo", "stake", osmomath.NewInt(200))
+				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomA, denomB, twoHundred)
 				s.Require().NoError(err)
 			},
-			tierDenom:     "uosmo",
-			takerFeeDenom: "stake",
-			accruedValue:  osmomath.NewInt(300),
+			tierDenom:     denomA,
+			takerFeeDenom: denomB,
+			accruedValue:  threeHundred,
 			expectErr:     false,
 		},
 	}
@@ -392,31 +421,31 @@ func (s *KeeperTestSuite) TestSetTakerFeeShareDenomsToAccruedValue() {
 
 func (s *KeeperTestSuite) TestIncreaseTakerFeeShareDenomsToAccruedValue() {
 	tests := map[string]struct {
-		setupFunc     func()
-		tierDenom     string
-		takerFeeDenom string
-		additiveValue osmomath.Int
-		expectedValue osmomath.Int
-		expectErr     bool
+		setupFunc          func()
+		takerFeeShareDenom string
+		takerFeeDenom      string
+		additiveValue      osmomath.Int
+		expectedValue      osmomath.Int
+		expectErr          bool
 	}{
 		"increase value that was previously non existent": {
-			setupFunc:     func() {},
-			tierDenom:     "uosmo",
-			takerFeeDenom: "stake",
-			additiveValue: osmomath.NewInt(100),
-			expectedValue: osmomath.NewInt(100),
-			expectErr:     false,
+			setupFunc:          func() {},
+			takerFeeShareDenom: denomA,
+			takerFeeDenom:      denomB,
+			additiveValue:      oneHundred,
+			expectedValue:      oneHundred,
+			expectErr:          false,
 		},
 		"increase value that was previously set": {
 			setupFunc: func() {
-				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "uosmo", "stake", osmomath.NewInt(200))
+				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomA, denomB, twoHundred)
 				s.Require().NoError(err)
 			},
-			tierDenom:     "uosmo",
-			takerFeeDenom: "stake",
-			additiveValue: osmomath.NewInt(100),
-			expectedValue: osmomath.NewInt(300),
-			expectErr:     false,
+			takerFeeShareDenom: denomA,
+			takerFeeDenom:      denomB,
+			additiveValue:      oneHundred,
+			expectedValue:      threeHundred,
+			expectErr:          false,
 		},
 	}
 
@@ -426,13 +455,13 @@ func (s *KeeperTestSuite) TestIncreaseTakerFeeShareDenomsToAccruedValue() {
 
 			tc.setupFunc()
 
-			err := s.App.PoolManagerKeeper.IncreaseTakerFeeShareDenomsToAccruedValue(s.Ctx, tc.tierDenom, tc.takerFeeDenom, tc.additiveValue)
+			err := s.App.PoolManagerKeeper.IncreaseTakerFeeShareDenomsToAccruedValue(s.Ctx, tc.takerFeeShareDenom, tc.takerFeeDenom, tc.additiveValue)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
 
-				value, err := s.App.PoolManagerKeeper.GetTakerFeeShareDenomsToAccruedValue(s.Ctx, tc.tierDenom, tc.takerFeeDenom)
+				value, err := s.App.PoolManagerKeeper.GetTakerFeeShareDenomsToAccruedValue(s.Ctx, tc.takerFeeShareDenom, tc.takerFeeDenom)
 				s.Require().NoError(err)
 				s.Require().Equal(tc.expectedValue, value, "GetTakerFeeShareDenomsToAccruedValue() = %v, want %v", value, tc.expectedValue)
 			}
@@ -451,27 +480,27 @@ func (s *KeeperTestSuite) TestGetAllTakerFeeShareAccumulators() {
 		},
 		"single accumulator": {
 			setupFunc: func() {
-				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "uosmo", "stake", osmomath.NewInt(100))
+				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomA, OSMO, oneHundred)
 				s.Require().NoError(err)
 			},
 			expectedAccumulators: []types.TakerFeeSkimAccumulator{
 				{
-					Denom:            "uosmo",
-					SkimmedTakerFees: sdk.NewCoins(sdk.NewCoin("stake", osmomath.NewInt(100))),
+					Denom:            denomA,
+					SkimmedTakerFees: sdk.NewCoins(sdk.NewCoin(OSMO, oneHundred)),
 				},
 			},
 		},
 		"multiple accumulators": {
 			setupFunc: func() {
-				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "uosmo", "stake", osmomath.NewInt(100))
+				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomA, OSMO, oneHundred)
 				s.Require().NoError(err)
-				err = s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "uosmo", "atom", osmomath.NewInt(200))
+				err = s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomA, ATOM, twoHundred)
 				s.Require().NoError(err)
 			},
 			expectedAccumulators: []types.TakerFeeSkimAccumulator{
 				{
-					Denom:            "uosmo",
-					SkimmedTakerFees: sdk.NewCoins(sdk.NewCoin("stake", osmomath.NewInt(100)), sdk.NewCoin("atom", osmomath.NewInt(200))),
+					Denom:            denomA,
+					SkimmedTakerFees: sdk.NewCoins(sdk.NewCoin(OSMO, oneHundred), sdk.NewCoin(ATOM, twoHundred)),
 				},
 			},
 		},
@@ -491,48 +520,48 @@ func (s *KeeperTestSuite) TestGetAllTakerFeeShareAccumulators() {
 
 func (s *KeeperTestSuite) TestDeleteAllTakerFeeShareAccumulatorsForTakerFeeShareDenom() {
 	tests := map[string]struct {
-		setupFunc                   func()
-		takerFeeShareDenom          string
-		expectedNumAccumAfterDelete uint64
+		setupFunc                      func()
+		takerFeeShareDenom             string
+		expectedNumOfAccumsAfterDelete uint64
 	}{
 		"delete non-existent accumulators": {
-			setupFunc:                   func() {},
-			takerFeeShareDenom:          "uosmo",
-			expectedNumAccumAfterDelete: 0,
+			setupFunc:                      func() {},
+			takerFeeShareDenom:             denomA,
+			expectedNumOfAccumsAfterDelete: 0,
 		},
 		"delete existing accumulators": {
 			setupFunc: func() {
-				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "uosmo", "stake", osmomath.NewInt(100))
+				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomA, OSMO, oneHundred)
 				s.Require().NoError(err)
-				err = s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "uosmo", "atom", osmomath.NewInt(200))
+				err = s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomA, ATOM, twoHundred)
 				s.Require().NoError(err)
 			},
-			takerFeeShareDenom:          "uosmo",
-			expectedNumAccumAfterDelete: 0,
+			takerFeeShareDenom:             denomA,
+			expectedNumOfAccumsAfterDelete: 0,
 		},
 		"delete existing accumulators for non existent tier denom": {
 			setupFunc: func() {
-				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "uosmo", "stake", osmomath.NewInt(100))
+				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomA, OSMO, oneHundred)
 				s.Require().NoError(err)
-				err = s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "uosmo", "atom", osmomath.NewInt(200))
+				err = s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomA, ATOM, twoHundred)
 				s.Require().NoError(err)
 			},
-			takerFeeShareDenom:          "nonExistentTierDenom",
-			expectedNumAccumAfterDelete: 1,
+			takerFeeShareDenom:             "nonExistentTierDenom",
+			expectedNumOfAccumsAfterDelete: 1,
 		},
 		"delete existing accumulators for tier denom with accumulators": {
 			setupFunc: func() {
-				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "uosmo", "stake", osmomath.NewInt(100))
+				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomA, OSMO, oneHundred)
 				s.Require().NoError(err)
-				err = s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "uosmo", "atom", osmomath.NewInt(200))
+				err = s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomA, ATOM, twoHundred)
 				s.Require().NoError(err)
-				err = s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "nBTC", "stake", osmomath.NewInt(100))
+				err = s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomC, OSMO, oneHundred)
 				s.Require().NoError(err)
-				err = s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "nBTC", "atom", osmomath.NewInt(200))
+				err = s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomC, ATOM, twoHundred)
 				s.Require().NoError(err)
 			},
-			takerFeeShareDenom:          "nBTC",
-			expectedNumAccumAfterDelete: 1,
+			takerFeeShareDenom:             denomC,
+			expectedNumOfAccumsAfterDelete: 1,
 		},
 	}
 
@@ -545,7 +574,7 @@ func (s *KeeperTestSuite) TestDeleteAllTakerFeeShareAccumulatorsForTakerFeeShare
 			s.App.PoolManagerKeeper.DeleteAllTakerFeeShareAccumulatorsForTakerFeeShareDenom(s.Ctx, tc.takerFeeShareDenom)
 
 			accumulators := s.App.PoolManagerKeeper.GetAllTakerFeeShareAccumulators(s.Ctx)
-			s.Require().Len(accumulators, int(tc.expectedNumAccumAfterDelete))
+			s.Require().Len(accumulators, int(tc.expectedNumOfAccumsAfterDelete))
 		})
 	}
 }
@@ -594,93 +623,28 @@ func (s *KeeperTestSuite) TestSetRegisteredAlloyedPool() {
 		"set alloyed pool, with one taker fee share agreement set before alloyed pool is registered and one set after": {
 			poolType: AlloyedPool,
 			preSetFunc: func(ctx sdk.Context) {
-				takerFeeShareAgreement := types.TakerFeeShareAgreement{
-					Denom:       apptesting.DefaultTransmuterDenomA,
-					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				}
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(ctx, takerFeeShareAgreement)
+				setTakerFeeShareAgreements(ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:1])
 			},
 			postSetFunc: func(ctx sdk.Context) {
-				takerFeeShareAgreement := types.TakerFeeShareAgreement{
-					Denom:       apptesting.DefaultTransmuterDenomB,
-					SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				}
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(ctx, takerFeeShareAgreement)
+				setTakerFeeShareAgreements(ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[1:2])
 			},
-			expectedTakerFeeShareAgreements: []types.TakerFeeShareAgreement{
-				{
-					Denom:       apptesting.DefaultTransmuterDenomA,
-					SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("0.5")),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				},
-				{
-					Denom:       apptesting.DefaultTransmuterDenomB,
-					SkimPercent: osmomath.MustNewDecFromStr("0.02").Mul(osmomath.MustNewDecFromStr("0.5")),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				},
-			},
+			expectedTakerFeeShareAgreements: modifySkimPercent(defaultTakerFeeShareAgreements[:2], []osmomath.Dec{osmomath.MustNewDecFromStr("0.5"), osmomath.MustNewDecFromStr("0.5")}),
 		},
 		"set alloyed pool, with both taker fee share agreements set before alloyed pool is registered": {
 			poolType: AlloyedPool,
 			preSetFunc: func(ctx sdk.Context) {
-				takerFeeShareAgreement := types.TakerFeeShareAgreement{
-					Denom:       apptesting.DefaultTransmuterDenomA,
-					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				}
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(ctx, takerFeeShareAgreement)
-				takerFeeShareAgreement = types.TakerFeeShareAgreement{
-					Denom:       apptesting.DefaultTransmuterDenomB,
-					SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				}
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(ctx, takerFeeShareAgreement)
+				setTakerFeeShareAgreements(ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:2])
 			},
-			postSetFunc: func(ctx sdk.Context) {},
-			expectedTakerFeeShareAgreements: []types.TakerFeeShareAgreement{
-				{
-					Denom:       apptesting.DefaultTransmuterDenomA,
-					SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("0.5")),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				},
-				{
-					Denom:       apptesting.DefaultTransmuterDenomB,
-					SkimPercent: osmomath.MustNewDecFromStr("0.02").Mul(osmomath.MustNewDecFromStr("0.5")),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				},
-			},
+			postSetFunc:                     func(ctx sdk.Context) {},
+			expectedTakerFeeShareAgreements: modifySkimPercent(defaultTakerFeeShareAgreements[:2], []osmomath.Dec{osmomath.MustNewDecFromStr("0.5"), osmomath.MustNewDecFromStr("0.5")}),
 		},
 		"set alloyed pool, with both taker fee share agreements set after alloyed pool is registered": {
 			poolType:   AlloyedPool,
 			preSetFunc: func(ctx sdk.Context) {},
 			postSetFunc: func(ctx sdk.Context) {
-				takerFeeShareAgreement := types.TakerFeeShareAgreement{
-					Denom:       apptesting.DefaultTransmuterDenomA,
-					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				}
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(ctx, takerFeeShareAgreement)
-				takerFeeShareAgreement = types.TakerFeeShareAgreement{
-					Denom:       apptesting.DefaultTransmuterDenomB,
-					SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				}
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(ctx, takerFeeShareAgreement)
+				setTakerFeeShareAgreements(ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:2])
 			},
-			expectedTakerFeeShareAgreements: []types.TakerFeeShareAgreement{
-				{
-					Denom:       apptesting.DefaultTransmuterDenomA,
-					SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("0.5")),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				},
-				{
-					Denom:       apptesting.DefaultTransmuterDenomB,
-					SkimPercent: osmomath.MustNewDecFromStr("0.02").Mul(osmomath.MustNewDecFromStr("0.5")),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				},
-			},
+			expectedTakerFeeShareAgreements: modifySkimPercent(defaultTakerFeeShareAgreements[:2], []osmomath.Dec{osmomath.MustNewDecFromStr("0.5"), osmomath.MustNewDecFromStr("0.5")}),
 		},
 	}
 
@@ -689,15 +653,16 @@ func (s *KeeperTestSuite) TestSetRegisteredAlloyedPool() {
 			s.SetupTest()
 
 			poolInfos := s.PrepareAllSupportedPools()
-			if tc.poolType == GammPool {
+			switch tc.poolType {
+			case GammPool:
 				tc.poolId = poolInfos.BalancerPoolID
-			} else if tc.poolType == ConcentratedPool {
+			case ConcentratedPool:
 				tc.poolId = poolInfos.ConcentratedPoolID
-			} else if tc.poolType == CWPool {
+			case CWPool:
 				tc.poolId = poolInfos.CosmWasmPoolID
-			} else if tc.poolType == AlloyedPool {
+			case AlloyedPool:
 				tc.poolId = poolInfos.AlloyedPoolID
-			} else {
+			default:
 				tc.poolId = 100
 			}
 
@@ -750,61 +715,33 @@ func (s *KeeperTestSuite) TestGetRegisteredAlloyedPoolFromDenom() {
 		},
 		"setup alloyed pool, get the alloyed pool denom, with one taker fee share agreement": {
 			setupFunc: func() {
-				takerFeeShareAgreement := types.TakerFeeShareAgreement{
-					Denom:       apptesting.DefaultTransmuterDenomA,
-					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				}
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreement)
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:1])
 			},
 			getDenomFromPool: true,
 			expectFound:      true,
-			expectedTakerFeeShareAgreements: []types.TakerFeeShareAgreement{
-				{
-					Denom:       apptesting.DefaultTransmuterDenomA,
-					SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("0.5")),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				},
-			},
+			expectedTakerFeeShareAgreements: modifySkimPercent(defaultTakerFeeShareAgreements[:1], []osmomath.Dec{
+				osmomath.MustNewDecFromStr("0.5"),
+			}),
 		},
 		"setup alloyed pool, get the alloyed pool denom, with multiple taker fee share agreements": {
 			setupFunc: func() {
-				takerFeeShareAgreement := types.TakerFeeShareAgreement{
-					Denom:       apptesting.DefaultTransmuterDenomA,
-					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				}
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreement)
-				takerFeeShareAgreement = types.TakerFeeShareAgreement{
-					Denom:       apptesting.DefaultTransmuterDenomB,
-					SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				}
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreement)
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:2])
 			},
 			getDenomFromPool: true,
 			expectFound:      true,
-			expectedTakerFeeShareAgreements: []types.TakerFeeShareAgreement{
-				{
-					Denom:       apptesting.DefaultTransmuterDenomA,
-					SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("0.5")),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				},
-				{
-					Denom:       apptesting.DefaultTransmuterDenomB,
-					SkimPercent: osmomath.MustNewDecFromStr("0.02").Mul(osmomath.MustNewDecFromStr("0.5")),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				},
-			},
+			expectedTakerFeeShareAgreements: modifySkimPercent(defaultTakerFeeShareAgreements[:2], []osmomath.Dec{
+				osmomath.MustNewDecFromStr("0.5"),
+				osmomath.MustNewDecFromStr("0.5"),
+			}),
 		},
 		"setup alloyed pool, get the alloyed pool denom, with unrelated taker fee share agreement": {
 			setupFunc: func() {
-				takerFeeShareAgreement := types.TakerFeeShareAgreement{
+				unrelatedAgreement := types.TakerFeeShareAgreement{
 					Denom:       "unrelatedDenom",
 					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
 					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
 				}
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreement)
+				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, unrelatedAgreement)
 			},
 			getDenomFromPool:                true,
 			expectFound:                     true,
@@ -868,22 +805,12 @@ func (s *KeeperTestSuite) TestGetRegisteredAlloyedPoolFromPoolId() {
 				poolInfos := s.PrepareAllSupportedPools()
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
-
-				takerFeeShareAgreement := types.TakerFeeShareAgreement{
-					Denom:       apptesting.DefaultTransmuterDenomA,
-					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				}
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreement)
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:1])
 			},
 			poolId: 5,
-			expectedTakerFeeShareAgreements: []types.TakerFeeShareAgreement{
-				{
-					Denom:       apptesting.DefaultTransmuterDenomA,
-					SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("0.5")),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				},
-			},
+			expectedTakerFeeShareAgreements: modifySkimPercent(defaultTakerFeeShareAgreements[:1], []osmomath.Dec{
+				osmomath.MustNewDecFromStr("0.5"),
+			}),
 		},
 		"get existing non-alloyed pool": {
 			setupFunc: func() {
@@ -938,7 +865,7 @@ func (s *KeeperTestSuite) TestGetAllRegisteredAlloyedPools() {
 				poolInfos := s.PrepareAllSupportedPools()
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, []uint16{1, 1})
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{secondaryDenomA, secondaryDenomB}, []uint16{1, 1})
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 			},
@@ -952,22 +879,12 @@ func (s *KeeperTestSuite) TestGetAllRegisteredAlloyedPools() {
 				poolInfos := s.PrepareAllSupportedPools()
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
-
-				takerFeeShareAgreement := types.TakerFeeShareAgreement{
-					Denom:       apptesting.DefaultTransmuterDenomA,
-					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				}
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreement)
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:1])
 			},
 			expectedTakerFeeShareAgreements: [][]types.TakerFeeShareAgreement{
-				{
-					{
-						Denom:       apptesting.DefaultTransmuterDenomA,
-						SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("0.5")),
-						SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-					},
-				},
+				modifySkimPercent(defaultTakerFeeShareAgreements[:1], []osmomath.Dec{
+					osmomath.MustNewDecFromStr("0.5"),
+				}),
 			},
 		},
 		"multiple registered pools, with multiple taker fee share agreements": {
@@ -975,52 +892,20 @@ func (s *KeeperTestSuite) TestGetAllRegisteredAlloyedPools() {
 				poolInfos := s.PrepareAllSupportedPools()
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
-
-				takerFeeShareAgreement := types.TakerFeeShareAgreement{
-					Denom:       apptesting.DefaultTransmuterDenomA,
-					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				}
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreement)
-
-				takerFeeShareAgreement = types.TakerFeeShareAgreement{
-					Denom:       apptesting.DefaultTransmuterDenomB,
-					SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				}
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreement)
-
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, []uint16{1, 1})
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:2])
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{secondaryDenomA, secondaryDenomB}, []uint16{1, 1})
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
-
-				takerFeeShareAgreement = types.TakerFeeShareAgreement{
-					Denom:       "testA",
-					SkimPercent: osmomath.MustNewDecFromStr("0.03"),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				}
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreement)
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, secondaryTakerFeeShareAgreements[:1])
 			},
 			expectedTakerFeeShareAgreements: [][]types.TakerFeeShareAgreement{
-				{
-					{
-						Denom:       apptesting.DefaultTransmuterDenomA,
-						SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("0.5")),
-						SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-					},
-					{
-						Denom:       apptesting.DefaultTransmuterDenomB,
-						SkimPercent: osmomath.MustNewDecFromStr("0.02").Mul(osmomath.MustNewDecFromStr("0.5")),
-						SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-					},
-				},
-				{
-					{
-						Denom:       "testA",
-						SkimPercent: osmomath.MustNewDecFromStr("0.03").Mul(osmomath.MustNewDecFromStr("0.5")),
-						SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-					},
-				},
+				modifySkimPercent(defaultTakerFeeShareAgreements[:2], []osmomath.Dec{
+					osmomath.MustNewDecFromStr("0.5"),
+					osmomath.MustNewDecFromStr("0.5"),
+				}),
+				modifySkimPercent(secondaryTakerFeeShareAgreements[:1], []osmomath.Dec{
+					osmomath.MustNewDecFromStr("0.5"),
+				}),
 			},
 		},
 	}
@@ -1072,7 +957,7 @@ func (s *KeeperTestSuite) TestGetAllRegisteredAlloyedPoolsMap() {
 				s.Require().NoError(err)
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, []uint16{1, 1})
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{secondaryDenomA, secondaryDenomB}, []uint16{1, 1})
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				denomA := fmt.Sprintf("factory/%s/alloyed/testdenom", pool.GetAddress().String())
@@ -1097,20 +982,13 @@ func (s *KeeperTestSuite) TestGetAllRegisteredAlloyedPoolsMap() {
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
 				denom := fmt.Sprintf("factory/%s/alloyed/testdenom", pool.GetAddress().String())
-				takerFeeShareAgreement := types.TakerFeeShareAgreement{
-					Denom:       apptesting.DefaultTransmuterDenomA,
-					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				}
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreement)
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:1])
 				return map[string]types.AlloyContractTakerFeeShareState{
 					denom: {
 						ContractAddress: pool.GetAddress().String(),
-						TakerFeeShareAgreements: []types.TakerFeeShareAgreement{{
-							Denom:       apptesting.DefaultTransmuterDenomA,
-							SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("0.5")),
-							SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-						}},
+						TakerFeeShareAgreements: modifySkimPercent(defaultTakerFeeShareAgreements[:1], []osmomath.Dec{
+							osmomath.MustNewDecFromStr("0.5"),
+						}),
 					},
 				}
 			},
@@ -1123,53 +1001,25 @@ func (s *KeeperTestSuite) TestGetAllRegisteredAlloyedPoolsMap() {
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
 				denomA := fmt.Sprintf("factory/%s/alloyed/testdenom", pool.GetAddress().String())
-				takerFeeShareAgreementA := types.TakerFeeShareAgreement{
-					Denom:       apptesting.DefaultTransmuterDenomA,
-					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				}
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreementA)
-				takerFeeShareAgreementB := types.TakerFeeShareAgreement{
-					Denom:       apptesting.DefaultTransmuterDenomB,
-					SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				}
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreementB)
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, []uint16{1, 1})
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:2])
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{secondaryDenomA, secondaryDenomB}, []uint16{1, 1})
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				denomB := fmt.Sprintf("factory/%s/alloyed/testdenom", cwPool.GetAddress().String())
-				takerFeeShareAgreementTestA := types.TakerFeeShareAgreement{
-					Denom:       "testA",
-					SkimPercent: osmomath.MustNewDecFromStr("0.03"),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				}
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreementTestA)
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, secondaryTakerFeeShareAgreements[:1])
 				return map[string]types.AlloyContractTakerFeeShareState{
 					denomA: {
 						ContractAddress: pool.GetAddress().String(),
-						TakerFeeShareAgreements: []types.TakerFeeShareAgreement{
-							{
-								Denom:       apptesting.DefaultTransmuterDenomA,
-								SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("0.5")),
-								SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-							},
-							{
-								Denom:       apptesting.DefaultTransmuterDenomB,
-								SkimPercent: osmomath.MustNewDecFromStr("0.02").Mul(osmomath.MustNewDecFromStr("0.5")),
-								SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-							},
-						},
+						TakerFeeShareAgreements: modifySkimPercent(defaultTakerFeeShareAgreements[:2], []osmomath.Dec{
+							osmomath.MustNewDecFromStr("0.5"),
+							osmomath.MustNewDecFromStr("0.5"),
+						}),
 					},
 					denomB: {
 						ContractAddress: cwPool.GetAddress().String(),
-						TakerFeeShareAgreements: []types.TakerFeeShareAgreement{
-							{
-								Denom:       "testA",
-								SkimPercent: osmomath.MustNewDecFromStr("0.03").Mul(osmomath.MustNewDecFromStr("0.5")),
-								SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-							},
-						},
+						TakerFeeShareAgreements: modifySkimPercent(secondaryTakerFeeShareAgreements[:1], []osmomath.Dec{
+							osmomath.MustNewDecFromStr("0.5"),
+						}),
 					},
 				}
 			},
@@ -1220,7 +1070,7 @@ func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsCached() {
 				s.Require().NoError(err)
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, []uint16{1, 1})
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{secondaryDenomA, secondaryDenomB}, []uint16{1, 1})
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				denomA := fmt.Sprintf("factory/%s/alloyed/testdenom", pool.GetAddress().String())
@@ -1245,20 +1095,13 @@ func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsCached() {
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
 				denom := fmt.Sprintf("factory/%s/alloyed/testdenom", pool.GetAddress().String())
-				takerFeeShareAgreement := types.TakerFeeShareAgreement{
-					Denom:       apptesting.DefaultTransmuterDenomA,
-					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				}
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreement)
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:1])
 				return map[string]types.AlloyContractTakerFeeShareState{
 					denom: {
 						ContractAddress: pool.GetAddress().String(),
-						TakerFeeShareAgreements: []types.TakerFeeShareAgreement{{
-							Denom:       apptesting.DefaultTransmuterDenomA,
-							SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("0.5")),
-							SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-						}},
+						TakerFeeShareAgreements: modifySkimPercent(defaultTakerFeeShareAgreements[:1], []osmomath.Dec{
+							osmomath.MustNewDecFromStr("0.5"),
+						}),
 					},
 				}
 			},
@@ -1271,53 +1114,25 @@ func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsCached() {
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
 				denomA := fmt.Sprintf("factory/%s/alloyed/testdenom", pool.GetAddress().String())
-				takerFeeShareAgreementA := types.TakerFeeShareAgreement{
-					Denom:       apptesting.DefaultTransmuterDenomA,
-					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				}
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreementA)
-				takerFeeShareAgreementB := types.TakerFeeShareAgreement{
-					Denom:       apptesting.DefaultTransmuterDenomB,
-					SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				}
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreementB)
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, []uint16{1, 1})
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:2])
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{secondaryDenomA, secondaryDenomB}, []uint16{1, 1})
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				denomB := fmt.Sprintf("factory/%s/alloyed/testdenom", cwPool.GetAddress().String())
-				takerFeeShareAgreementTestA := types.TakerFeeShareAgreement{
-					Denom:       "testA",
-					SkimPercent: osmomath.MustNewDecFromStr("0.03"),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				}
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreementTestA)
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, secondaryTakerFeeShareAgreements[:1])
 				return map[string]types.AlloyContractTakerFeeShareState{
 					denomA: {
 						ContractAddress: pool.GetAddress().String(),
-						TakerFeeShareAgreements: []types.TakerFeeShareAgreement{
-							{
-								Denom:       apptesting.DefaultTransmuterDenomA,
-								SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("0.5")),
-								SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-							},
-							{
-								Denom:       apptesting.DefaultTransmuterDenomB,
-								SkimPercent: osmomath.MustNewDecFromStr("0.02").Mul(osmomath.MustNewDecFromStr("0.5")),
-								SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-							},
-						},
+						TakerFeeShareAgreements: modifySkimPercent(defaultTakerFeeShareAgreements[:2], []osmomath.Dec{
+							osmomath.MustNewDecFromStr("0.5"),
+							osmomath.MustNewDecFromStr("0.5"),
+						}),
 					},
 					denomB: {
 						ContractAddress: cwPool.GetAddress().String(),
-						TakerFeeShareAgreements: []types.TakerFeeShareAgreement{
-							{
-								Denom:       "testA",
-								SkimPercent: osmomath.MustNewDecFromStr("0.03").Mul(osmomath.MustNewDecFromStr("0.5")),
-								SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-							},
-						},
+						TakerFeeShareAgreements: modifySkimPercent(secondaryTakerFeeShareAgreements[:1], []osmomath.Dec{
+							osmomath.MustNewDecFromStr("0.5"),
+						}),
 					},
 				}
 			},
@@ -1357,7 +1172,7 @@ func (s *KeeperTestSuite) TestGetAllRegisteredAlloyedPoolsIdMap() {
 				poolInfos := s.PrepareAllSupportedPools()
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, []uint16{1, 1})
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{secondaryDenomA, secondaryDenomB}, []uint16{1, 1})
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				return []uint64{poolInfos.AlloyedPoolID, cwPool.GetId()}
@@ -1404,7 +1219,7 @@ func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsIdCached() {
 				poolInfos := s.PrepareAllSupportedPools()
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, []uint16{1, 1})
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{secondaryDenomA, secondaryDenomB}, []uint16{1, 1})
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				return []uint64{poolInfos.AlloyedPoolID, cwPool.GetId()}
@@ -1478,7 +1293,7 @@ func (s *KeeperTestSuite) TestSnapshotTakerFeeShareAlloyComposition() {
 	}{
 		"alloyed pool exists, composed of no taker fee share denoms": {
 			setupFunc: func() cosmwasmpooltypes.CosmWasmExtension {
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB", "testC"}, []uint16{1, 1, 1})
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{denomA, denomB, denomC}, []uint16{1, 1, 1})
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				return cwPool
@@ -1488,173 +1303,94 @@ func (s *KeeperTestSuite) TestSnapshotTakerFeeShareAlloyComposition() {
 		},
 		"alloyed pool exists, composed of one taker fee share denom": {
 			setupFunc: func() cosmwasmpooltypes.CosmWasmExtension {
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB", "testC"}, []uint16{1, 1, 1})
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{denomA, denomB, denomC}, []uint16{1, 1, 1})
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
-					Denom:       "testA",
-					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				})
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:1])
 				return cwPool
 			},
-			expectedComposition: []types.TakerFeeShareAgreement{
-				{
-					Denom:       "testA",
-					SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("0.3333333333333333")),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				},
-			},
+			expectedComposition: modifySkimPercent(defaultTakerFeeShareAgreements[:1], []osmomath.Dec{
+				osmomath.MustNewDecFromStr("0.3333333333333333"),
+			}),
 			expectedError: nil,
 		},
 		"alloyed pool exists, composed of two taker fee share denoms, differing ratios": {
 			setupFunc: func() cosmwasmpooltypes.CosmWasmExtension {
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB", "testC"}, []uint16{1, 3, 6})
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{denomA, denomB, denomC}, []uint16{1, 3, 6})
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
-					Denom:       "testA",
-					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				})
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
-					Denom:       "testB",
-					SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				})
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:2])
 				return cwPool
 			},
-			expectedComposition: []types.TakerFeeShareAgreement{
-				{
-					Denom:       "testA",
-					SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("0.1")),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				},
-				{
-					Denom:       "testB",
-					SkimPercent: osmomath.MustNewDecFromStr("0.02").Mul(osmomath.MustNewDecFromStr("0.3")),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				},
-			},
+			expectedComposition: modifySkimPercent(defaultTakerFeeShareAgreements[:2], []osmomath.Dec{
+				osmomath.MustNewDecFromStr("0.1"),
+				osmomath.MustNewDecFromStr("0.3"),
+			}),
 			expectedError: nil,
 		},
 		"alloyed pool exists, composed of two taker fee share denoms, differing ratios, first asset has no liquidity": {
 			setupFunc: func() cosmwasmpooltypes.CosmWasmExtension {
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB", "testC"}, []uint16{0, 3, 6})
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{denomA, denomB, denomC}, []uint16{0, 3, 6})
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
-					Denom:       "testA",
-					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				})
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
-					Denom:       "testB",
-					SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				})
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:2])
 				return cwPool
 			},
-			expectedComposition: []types.TakerFeeShareAgreement{
-				{
-					Denom:       "testA",
-					SkimPercent: osmomath.ZeroDec(),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				},
-				{
-					Denom:       "testB",
-					SkimPercent: osmomath.MustNewDecFromStr("0.02").Mul(osmomath.MustNewDecFromStr("0.33333333333333333")),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				},
-			},
+			expectedComposition: modifySkimPercent(defaultTakerFeeShareAgreements[:2], []osmomath.Dec{
+				osmomath.ZeroDec(),
+				osmomath.MustNewDecFromStr("0.33333333333333333"),
+			}),
 			expectedError: nil,
 		},
 		"error: alloyed pool has no liquidity": {
 			setupFunc: func() cosmwasmpooltypes.CosmWasmExtension {
-				return s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB", "testC"}, nil)
+				return s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{denomA, denomB, denomC}, nil)
 			},
 			expectedComposition: []types.TakerFeeShareAgreement{},
 			expectedError:       types.ErrTotalAlloyedLiquidityIsZero,
 		},
 		"alloyed pool with normalization factors 1 and 1000000000000": {
 			setupFunc: func() cosmwasmpooltypes.CosmWasmExtension {
-				cwPool := s.PrepareCustomTransmuterPoolV3WithNormalization(s.TestAccs[0], []string{"testA", "testB"}, []string{"1", "1000000000000"}, []uint16{1, 1})
+				cwPool := s.PrepareCustomTransmuterPoolV3WithNormalization(s.TestAccs[0], []string{denomA, denomB}, []string{"1", "1000000000000"}, []uint16{1, 1})
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
-					Denom:       "testA",
-					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				})
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
-					Denom:       "testB",
-					SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				})
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:2])
 				return cwPool
 			},
-			expectedComposition: []types.TakerFeeShareAgreement{
-				{
-					Denom:       "testA",
-					SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("100").Quo(osmomath.MustNewDecFromStr("100000000000100"))),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				},
-				{
-					Denom:       "testB",
-					SkimPercent: osmomath.MustNewDecFromStr("0.02").Mul(osmomath.MustNewDecFromStr("100000000000000").Quo(osmomath.MustNewDecFromStr("100000000000100"))),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				},
-			},
+			expectedComposition: modifySkimPercent(defaultTakerFeeShareAgreements[:2], []osmomath.Dec{
+				osmomath.MustNewDecFromStr("100").Quo(osmomath.MustNewDecFromStr("100000000000100")),
+				osmomath.MustNewDecFromStr("100000000000000").Quo(osmomath.MustNewDecFromStr("100000000000100")),
+			}),
 			expectedError: nil,
 		},
 		"alloyed pool with normalization factors 1, 1000000000000, and 1": {
 			setupFunc: func() cosmwasmpooltypes.CosmWasmExtension {
-				cwPool := s.PrepareCustomTransmuterPoolV3WithNormalization(s.TestAccs[0], []string{"testA", "testB", "testC"}, []string{"1", "1000000000000", "1"}, []uint16{1, 1, 1})
+				cwPool := s.PrepareCustomTransmuterPoolV3WithNormalization(s.TestAccs[0], []string{denomA, denomB, denomC}, []string{"1", "1000000000000", "1"}, []uint16{1, 1, 1})
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
-					Denom:       "testA",
-					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				})
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
-					Denom:       "testB",
-					SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				})
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
-					Denom:       "testC",
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, append(defaultTakerFeeShareAgreements[:2], types.TakerFeeShareAgreement{
+					Denom:       denomC,
 					SkimPercent: osmomath.MustNewDecFromStr("0.03"),
 					SkimAddress: "osmo1k5t7xrevz5fhvs5zg5jtpnht2mzv539008uc3",
-				})
+				}))
 				return cwPool
 			},
-			expectedComposition: []types.TakerFeeShareAgreement{
-				{
-					Denom:       "testA",
-					SkimPercent: osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("100").Quo(osmomath.MustNewDecFromStr("100000000000200"))),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				},
-				{
-					Denom:       "testB",
-					SkimPercent: osmomath.MustNewDecFromStr("0.02").Mul(osmomath.MustNewDecFromStr("100000000000000").Quo(osmomath.MustNewDecFromStr("100000000000200"))),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				},
-				{
-					Denom:       "testC",
-					SkimPercent: osmomath.MustNewDecFromStr("0.03").Mul(osmomath.MustNewDecFromStr("100").Quo(osmomath.MustNewDecFromStr("100000000000200"))),
-					SkimAddress: "osmo1k5t7xrevz5fhvs5zg5jtpnht2mzv539008uc3",
-				},
-			},
+			expectedComposition: modifySkimPercent(append(defaultTakerFeeShareAgreements[:2], types.TakerFeeShareAgreement{
+				Denom:       denomC,
+				SkimPercent: osmomath.MustNewDecFromStr("0.03"),
+				SkimAddress: "osmo1k5t7xrevz5fhvs5zg5jtpnht2mzv539008uc3",
+			}), []osmomath.Dec{
+				osmomath.MustNewDecFromStr("100").Quo(osmomath.MustNewDecFromStr("100000000000200")),
+				osmomath.MustNewDecFromStr("100000000000000").Quo(osmomath.MustNewDecFromStr("100000000000200")),
+				osmomath.MustNewDecFromStr("100").Quo(osmomath.MustNewDecFromStr("100000000000200")),
+			}),
 			expectedError: nil,
 		},
 	}
-
 	for name, tc := range tests {
 		s.Run(name, func() {
 			s.SetupTest()
 			cwPool := tc.setupFunc()
-
 			actualComposition, err := s.App.PoolManagerKeeper.SnapshotTakerFeeShareAlloyComposition(s.Ctx, cwPool.GetAddress())
 			if tc.expectedError != nil {
 				s.Require().Error(err)
@@ -1675,100 +1411,63 @@ func (s *KeeperTestSuite) TestRecalculateAndSetTakerFeeShareAlloyComposition() {
 	}{
 		"1:1 to 2:1": {
 			setupFunc: func() uint64 {
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, []uint16{1, 1})
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
-					Denom:       "testA",
-					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				})
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
-					Denom:       "testB",
-					SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				})
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{denomA, denomB}, []uint16{1, 1})
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:2])
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 
-				testACoins := sdk.NewCoins(sdk.NewCoin("testA", osmomath.NewInt(1000000000)))
+				testACoins := sdk.NewCoins(sdk.NewCoin(denomA, osmomath.NewInt(1000000000)))
 				s.FundAcc(s.TestAccs[0], testACoins)
 				s.JoinTransmuterPool(s.TestAccs[0], cwPool.GetId(), testACoins)
 				return cwPool.GetId()
 			},
 			expectedUpdatedSkimPercent: []osmomath.Dec{
-				osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("0.66666666666666666")),
-				osmomath.MustNewDecFromStr("0.02").Mul(osmomath.MustNewDecFromStr("0.33333333333333333")),
+				defaultTakerFeeShareAgreements[0].SkimPercent.Mul(osmomath.MustNewDecFromStr("0.66666666666666666")),
+				defaultTakerFeeShareAgreements[1].SkimPercent.Mul(osmomath.MustNewDecFromStr("0.33333333333333333")),
 			},
 			expectedError: nil,
 		},
 		"1:1:1 to 3:2:1": {
 			setupFunc: func() uint64 {
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB", "testC"}, []uint16{1, 1, 1})
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
-					Denom:       "testA",
-					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				})
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
-					Denom:       "testB",
-					SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				})
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
-					Denom:       "testC",
-					SkimPercent: osmomath.MustNewDecFromStr("0.03"),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc3",
-				})
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{denomA, denomB, denomC}, []uint16{1, 1, 1})
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:3])
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 
-				// Change the ratio to 3:2:1 by adding more of testA and testB
-				testACoins := sdk.NewCoins(sdk.NewCoin("testA", osmomath.NewInt(2000000000)))
-				testBCoins := sdk.NewCoins(sdk.NewCoin("testB", osmomath.NewInt(1000000000)))
+				// Change the ratio to 3:2:1 by adding more of denomA and denomB
+				testACoins := sdk.NewCoins(sdk.NewCoin(denomA, osmomath.NewInt(2000000000)))
+				testBCoins := sdk.NewCoins(sdk.NewCoin(denomB, osmomath.NewInt(1000000000)))
 				s.FundAcc(s.TestAccs[0], testACoins.Add(testBCoins...))
 				s.JoinTransmuterPool(s.TestAccs[0], cwPool.GetId(), testACoins.Add(testBCoins...))
 
 				return cwPool.GetId()
 			},
 			expectedUpdatedSkimPercent: []osmomath.Dec{
-				osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("0.5")),
-				osmomath.MustNewDecFromStr("0.02").Mul(osmomath.MustNewDecFromStr("0.33333333333333333")),
-				osmomath.MustNewDecFromStr("0.03").Mul(osmomath.MustNewDecFromStr("0.16666666666666666")),
+				defaultTakerFeeShareAgreements[0].SkimPercent.Mul(osmomath.MustNewDecFromStr("0.5")),
+				defaultTakerFeeShareAgreements[1].SkimPercent.Mul(osmomath.MustNewDecFromStr("0.33333333333333333")),
+				defaultTakerFeeShareAgreements[2].SkimPercent.Mul(osmomath.MustNewDecFromStr("0.16666666666666666")),
 			},
 			expectedError: nil,
 		},
 		"1:1:1 to 4:2:1": {
 			setupFunc: func() uint64 {
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB", "testC"}, []uint16{1, 1, 1})
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
-					Denom:       "testA",
-					SkimPercent: osmomath.MustNewDecFromStr("0.01"),
-					SkimAddress: "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn",
-				})
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
-					Denom:       "testB",
-					SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
-				})
-				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
-					Denom:       "testC",
-					SkimPercent: osmomath.MustNewDecFromStr("0.03"),
-					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc3",
-				})
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{denomA, denomB, denomC}, []uint16{1, 1, 1})
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:3])
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 
-				// Change the ratio to 4:2:1 by adding more of testA and testB
-				testACoins := sdk.NewCoins(sdk.NewCoin("testA", osmomath.NewInt(3000000000)))
-				testBCoins := sdk.NewCoins(sdk.NewCoin("testB", osmomath.NewInt(1000000000)))
+				// Change the ratio to 4:2:1 by adding more of denomA and denomB
+				testACoins := sdk.NewCoins(sdk.NewCoin(denomA, osmomath.NewInt(3000000000)))
+				testBCoins := sdk.NewCoins(sdk.NewCoin(denomB, osmomath.NewInt(1000000000)))
 				s.FundAcc(s.TestAccs[0], testACoins.Add(testBCoins...))
 				s.JoinTransmuterPool(s.TestAccs[0], cwPool.GetId(), testACoins.Add(testBCoins...))
 
 				return cwPool.GetId()
 			},
 			expectedUpdatedSkimPercent: []osmomath.Dec{
-				osmomath.MustNewDecFromStr("0.01").Mul(osmomath.MustNewDecFromStr("0.5714285714285714")),
-				osmomath.MustNewDecFromStr("0.02").Mul(osmomath.MustNewDecFromStr("0.2857142857142857")),
-				osmomath.MustNewDecFromStr("0.03").Mul(osmomath.MustNewDecFromStr("0.14285714285714285")),
+				defaultTakerFeeShareAgreements[0].SkimPercent.Mul(osmomath.MustNewDecFromStr("0.5714285714285714")),
+				defaultTakerFeeShareAgreements[1].SkimPercent.Mul(osmomath.MustNewDecFromStr("0.2857142857142857")),
+				defaultTakerFeeShareAgreements[2].SkimPercent.Mul(osmomath.MustNewDecFromStr("0.14285714285714285")),
 			},
 			expectedError: nil,
 		},
@@ -1799,4 +1498,26 @@ func reverseSlice(input []types.TakerFeeShareAgreement) []types.TakerFeeShareAgr
 		return input
 	}
 	return append(reverseSlice(input[1:]), input[0])
+}
+
+func setTakerFeeShareAgreements(ctx sdk.Context, keeper *poolmanager.Keeper, agreements []types.TakerFeeShareAgreement) {
+	for _, agreement := range agreements {
+		keeper.SetTakerFeeShareAgreementForDenom(ctx, agreement)
+	}
+}
+
+func modifySkimPercent(agreements []types.TakerFeeShareAgreement, factors []osmomath.Dec) []types.TakerFeeShareAgreement {
+	if len(agreements) != len(factors) {
+		panic("length of agreements and factors must match")
+	}
+	modified := make([]types.TakerFeeShareAgreement, len(agreements))
+	for i, agreement := range agreements {
+		modified[i] = agreement
+		if factors[i].IsZero() {
+			modified[i].SkimPercent = osmomath.ZeroDec()
+		} else {
+			modified[i].SkimPercent = agreement.SkimPercent.Mul(factors[i])
+		}
+	}
+	return modified
 }
