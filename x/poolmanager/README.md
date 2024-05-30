@@ -569,7 +569,7 @@ This swap generates 5 OSMO, 10 nBTC, and 20 allBTC in taker fees.
 
 Because this route is made up of two taker fee share denoms, the total skim percent for the route is 15% (10% from nBTC and 5% from iBTC). 10% of the taker fees are noted to go to the nBTC `skim_address` (0.5 OSMO, 1 nBTC, 2 allBTC) and 5% to the iBTC `skim_address` (0.25 OSMO, 0.5 iBTC, 1 allBTC). All funds, including those noted to go to the `skim_address`, are sent to the `taker_fee_collector` module account at time of swap. At epoch, the noted skim amounts are sent to the respective `skim_address`.
 
-Notice, no logic touches the alloyed asset pool due to the swap route contains taker fee share denoms, which trumps the alloyed asset pool share. The next example will show how the alloyed asset pool is used when the route does not contain taker fee share denoms.
+Notice, no logic touches the alloyed asset pool due to the swap route containing taker fee share denoms, which trumps the alloyed asset pool share (the next example will show how the alloyed asset pool is used when the route does not contain taker fee share denoms).
 
 ### Example 4: Multi hop swap through an alloyed asset pool
 
