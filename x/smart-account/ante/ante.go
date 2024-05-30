@@ -109,17 +109,12 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	}
 
 	// The fee payer is the first signer of the transaction. This should have been enforced by the
-<<<<<<< HEAD
-	// call to ValidateAuthenticatorFeePayer(tx) at the beginning of this function.
-	feePayer := msgs[0].GetSigners()[0]
-=======
 	// LimitFeePayerDecorator
 	signers, _, err := ad.cdc.GetMsgV1Signers(msgs[0])
 	if err != nil {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "failed to get signers")
 	}
 	feePayer := sdk.AccAddress(signers[0])
->>>>>>> main
 	feeGranter := feeTx.FeeGranter()
 	fee := feeTx.GetFee()
 
