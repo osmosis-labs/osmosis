@@ -12,6 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
+	poolmanager "github.com/osmosis-labs/osmosis/v25/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
@@ -355,31 +356,59 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 
 func (s *KeeperTestSuite) TestEndBlock() {
 	tests := map[string]struct {
+		blockHeight                     int64
 		swapFunc                        func()
+		registerPool                    bool
 		expectedTakerFeeShareAgreements []types.TakerFeeShareAgreement
 		expectedError                   error
 	}{
-		"alloyed pool registered, alloyed pool changes, alloy composition changes": {
+		"alloyed pool registered, alloyed pool changes, alloy composition changes at multiple of alloyedAssetCompositionUpdateRate": {
+			blockHeight: poolmanager.AlloyedAssetCompositionUpdateRate,
 			swapFunc: func() {
 				joinCoins := sdk.NewCoins(sdk.NewInt64Coin(denomA, 1000000000))
 				s.FundAcc(s.TestAccs[0], joinCoins)
 				s.JoinTransmuterPool(s.TestAccs[0], 1, joinCoins)
-				s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, 1)
 			},
+			registerPool: true,
 			expectedTakerFeeShareAgreements: modifySkimPercent(defaultTakerFeeShareAgreements[:2], []osmomath.Dec{
 				osmomath.MustNewDecFromStr("0.66666666666666666"),
 				osmomath.MustNewDecFromStr("0.33333333333333333"),
 			}),
 		},
-		"alloyed pool registered, non alloyed pool changes, alloy composition does not change": {
+		"alloyed pool registered, non alloyed pool changes, alloy composition does not change at multiple of alloyedAssetCompositionUpdateRate": {
+			blockHeight: poolmanager.AlloyedAssetCompositionUpdateRate,
 			swapFunc: func() {
 				s.PrepareAllSupportedPools()
 				s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, 1)
 			},
+			registerPool: true,
 			expectedTakerFeeShareAgreements: modifySkimPercent(defaultTakerFeeShareAgreements[:2], []osmomath.Dec{
 				osmomath.MustNewDecFromStr("0.5"),
 				osmomath.MustNewDecFromStr("0.5"),
 			}),
+		},
+		"alloyed pool registered, alloy composition does not change at non-multiple of alloyedAssetCompositionUpdateRate": {
+			blockHeight: poolmanager.AlloyedAssetCompositionUpdateRate + 1,
+			swapFunc: func() {
+				joinCoins := sdk.NewCoins(sdk.NewInt64Coin(denomA, 1000000000))
+				s.FundAcc(s.TestAccs[0], joinCoins)
+				s.JoinTransmuterPool(s.TestAccs[0], 1, joinCoins)
+			},
+			registerPool: true,
+			expectedTakerFeeShareAgreements: modifySkimPercent(defaultTakerFeeShareAgreements[:2], []osmomath.Dec{
+				osmomath.MustNewDecFromStr("0.5"),
+				osmomath.MustNewDecFromStr("0.5"),
+			}),
+		},
+		"pool not registered, no changes to alloy composition": {
+			blockHeight: poolmanager.AlloyedAssetCompositionUpdateRate,
+			swapFunc: func() {
+				joinCoins := sdk.NewCoins(sdk.NewInt64Coin(denomA, 1000000000))
+				s.FundAcc(s.TestAccs[0], joinCoins)
+				s.JoinTransmuterPool(s.TestAccs[0], 1, joinCoins)
+			},
+			registerPool:  false,
+			expectedError: types.NoRegisteredAlloyedPoolError{PoolId: 1},
 		},
 	}
 
@@ -387,16 +416,27 @@ func (s *KeeperTestSuite) TestEndBlock() {
 		s.Run(name, func() {
 			s.SetupTest()
 			cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{denomA, denomB}, []uint16{1, 1})
+			if tc.registerPool {
+				s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
+			}
 			setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:2])
 
 			// Set up stores
 			tc.swapFunc()
+
+			// Set block height
+			s.Ctx = s.Ctx.WithBlockHeight(tc.blockHeight)
 
 			// Call EndBlock
 			s.App.PoolManagerKeeper.EndBlock(s.Ctx)
 
 			// Check expected values
 			takerFeeShareState, err := s.App.PoolManagerKeeper.GetRegisteredAlloyedPoolFromPoolId(s.Ctx, cwPool.GetId())
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().Equal(tc.expectedError, err)
+				return
+			}
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedTakerFeeShareAgreements, takerFeeShareState.TakerFeeShareAgreements)
 		})

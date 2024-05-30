@@ -177,7 +177,6 @@ func (s *KeeperTestHelper) GetTransmuterInstantiateMsgBytesV3(poolAssetDenoms []
 	}
 
 	instantiateMsgBz, err := json.Marshal(instantiateMsg)
-	fmt.Println(string(instantiateMsgBz))
 	s.Require().NoError(err)
 
 	return instantiateMsgBz

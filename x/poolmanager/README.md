@@ -500,6 +500,8 @@ func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error
 
 If a swap route contains an alloyed asset pool but no individual taker fee share agreement denoms, the taker fees will be skimmed based on the underlying denoms in the pool that have taker fee share agreements, adjusted by their respective weights. For example, if an alloyed asset pool contains 50% nBTC (10% skim percent) and 50% iBTC (5% skim percent), the total skim percent for the pool will be 7.5%, with 5% of the taker fees going to the nBTC skim address and 2.5% to the iBTC skim address.
 
+NOTE: We cache the alloyed pool asset weight composition and recalculate in the poolmanager EndBlock every 700 blocks (approx 30 minutes at 2.6s blocks) to avoid recalculating the weights for every swap.
+
 At the time of swap, all taker fees (including those skimmed via taker fee share agreements) are sent to the `taker_fee_collector` module account. At the end of each epoch, the fees are distributed as follows:
 
 - Skimmed taker fee:
@@ -569,7 +571,7 @@ This swap generates 5 OSMO, 10 nBTC, and 20 allBTC in taker fees.
 
 Because this route is made up of two taker fee share denoms, the total skim percent for the route is 15% (10% from nBTC and 5% from iBTC). 10% of the taker fees are noted to go to the nBTC `skim_address` (0.5 OSMO, 1 nBTC, 2 allBTC) and 5% to the iBTC `skim_address` (0.25 OSMO, 0.5 iBTC, 1 allBTC). All funds, including those noted to go to the `skim_address`, are sent to the `taker_fee_collector` module account at time of swap. At epoch, the noted skim amounts are sent to the respective `skim_address`.
 
-Notice, no logic touches the alloyed asset pool due to the swap route containing taker fee share denoms, which trumps the alloyed asset pool share (the next example will show how the alloyed asset pool is used when the route does not contain taker fee share denoms).
+Notice, no logic touches the alloyed asset pool due to the swap route containing taker fee share denoms, which trumps the alloyed asset pool share (the next example will show how the alloyed asset pool is used when the route does not contain taker fee share denoms). The rate of update in blocks is determined by the `alloyedAssetCompositionUpdateRate` variable.
 
 ### Example 4: Multi hop swap through an alloyed asset pool
 

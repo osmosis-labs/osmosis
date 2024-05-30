@@ -246,12 +246,13 @@ func (k *Keeper) BeginBlock(ctx sdk.Context) {
 	}
 }
 
-var alloyedAssetCompositionUpdateRate = int64(1)
+// AlloyedAssetCompositionUpdateRate is the rate in blocks at which the taker fee share alloy composition is updated in the end block.
+var AlloyedAssetCompositionUpdateRate = int64(700)
 
 // EndBlock updates the taker fee share alloy composition for all registered alloyed pools
 // if the current block height is a multiple of the alloyedAssetCompositionUpdateRate.
 func (k *Keeper) EndBlock(ctx sdk.Context) {
-	if ctx.BlockHeight()%alloyedAssetCompositionUpdateRate == 0 {
+	if ctx.BlockHeight()%AlloyedAssetCompositionUpdateRate == 0 {
 		for _, id := range k.cachedRegisteredAlloyedPoolIdArray {
 			err := k.recalculateAndSetTakerFeeShareAlloyComposition(ctx, id)
 			if err != nil {
