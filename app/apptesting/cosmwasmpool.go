@@ -49,7 +49,7 @@ func (s *KeeperTestHelper) PrepareCustomTransmuterPoolCustomProject(owner sdk.Ac
 	return s.PreparePool(owner, denoms, projectName, byteCodePath, TransmuterContractName, s.GetTransmuterInstantiateMsgBytes)
 }
 
-// PrepareCustomTransmuterPoolV3 sets up a transmuter pool with the custom parameters for version 3.
+// PrepareCustomTransmuterPoolV3 sets up a transmuter pool with the custom parameters for version 3 of the transmuter contract (alloyed assets).
 // It initializes the pool with the provided ratio for the given denoms, or a default ratio of 1:1 if none is provided.
 func (s *KeeperTestHelper) PrepareCustomTransmuterPoolV3(owner sdk.AccAddress, denoms []string, ratio []uint16) cosmwasmpooltypes.CosmWasmExtension {
 	if ratio == nil {

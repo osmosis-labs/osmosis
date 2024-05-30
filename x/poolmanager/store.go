@@ -67,13 +67,13 @@ func (k *Keeper) SetTakerFeeShareAgreementsMapCached(ctx sdk.Context) error {
 	if err != nil {
 		return err
 	}
-	k.cachedTakerFeeShareAgreement = takerFeeShareAgreement
+	k.cachedTakerFeeShareAgreementMap = takerFeeShareAgreement
 	return nil
 }
 
 // Used in the TakerFeeShareAgreementFromDenomRequest gRPC query.
 func (k Keeper) GetTakerFeeShareAgreementFromDenom(ctx sdk.Context, tierDenom string) (types.TakerFeeShareAgreement, bool) {
-	takerFeeShareAgreement, found := k.cachedTakerFeeShareAgreement[tierDenom]
+	takerFeeShareAgreement, found := k.cachedTakerFeeShareAgreementMap[tierDenom]
 	if !found {
 		return types.TakerFeeShareAgreement{}, false
 	}
@@ -93,7 +93,7 @@ func (k *Keeper) SetTakerFeeShareAgreementForDenom(ctx sdk.Context, takerFeeShar
 	store.Set(key, bz)
 
 	// Set cache value
-	k.cachedTakerFeeShareAgreement[takerFeeShare.Denom] = takerFeeShare
+	k.cachedTakerFeeShareAgreementMap[takerFeeShare.Denom] = takerFeeShare
 
 	// Check if this denom is in the registered alloyed pools, if so we need to recalculate the taker fee share composition
 	for _, poolId := range k.cachedRegisteredAlloyedPoolId {
@@ -258,7 +258,7 @@ func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error 
 	store.Set(key, bz)
 
 	// Set cache value
-	k.cachedRegisteredAlloyPoolToState[alloyedDenom] = registeredAlloyedPool
+	k.cachedRegisteredAlloyPoolToStateMap[alloyedDenom] = registeredAlloyedPool
 	k.cachedRegisteredAlloyedPoolId = append(k.cachedRegisteredAlloyedPoolId, poolId)
 	sort.Slice(k.cachedRegisteredAlloyedPoolId, func(i, j int) bool { return k.cachedRegisteredAlloyedPoolId[i] < k.cachedRegisteredAlloyedPoolId[j] })
 
@@ -267,7 +267,7 @@ func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error 
 
 // Used in the RegisteredAlloyedPoolFromDenomRequest gRPC query.
 func (k Keeper) GetRegisteredAlloyedPoolFromDenom(ctx sdk.Context, alloyedDenom string) (types.AlloyContractTakerFeeShareState, bool) {
-	registeredAlloyedPool, found := k.cachedRegisteredAlloyPoolToState[alloyedDenom]
+	registeredAlloyedPool, found := k.cachedRegisteredAlloyPoolToStateMap[alloyedDenom]
 	if !found {
 		return types.AlloyContractTakerFeeShareState{}, false
 	}
@@ -346,7 +346,7 @@ func (k *Keeper) SetAllRegisteredAlloyedPoolsCached(ctx sdk.Context) error {
 	if err != nil {
 		return err
 	}
-	k.cachedRegisteredAlloyPoolToState = registeredAlloyPools
+	k.cachedRegisteredAlloyPoolToStateMap = registeredAlloyPools
 	return nil
 }
 
@@ -501,7 +501,7 @@ func (k *Keeper) recalculateAndSetTakerFeeShareAlloyComposition(ctx sdk.Context,
 	store.Set(key, bz)
 
 	// Set cache value
-	k.cachedRegisteredAlloyPoolToState[alloyedDenom] = registeredAlloyedPool
+	k.cachedRegisteredAlloyPoolToStateMap[alloyedDenom] = registeredAlloyedPool
 
 	return nil
 }
