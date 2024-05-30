@@ -49,9 +49,6 @@ func (ad CircuitBreakerDecorator) AnteHandle(
 
 // IsCircuitBreakActive checks if smart account are active and if there is a
 // selected authenticator, the function will return true is the circuit breaker is active.
-// nit: this abstraction encapsulates more than just the circuit breaker - there is
-// also the check for the selected authenticator. Should we change it to
-// ShouldExecuteAuthenticatorFlow?
 func IsCircuitBreakActive(
 	ctx sdk.Context,
 	tx sdk.Tx,
