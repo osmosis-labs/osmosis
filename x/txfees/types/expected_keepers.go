@@ -56,7 +56,7 @@ type PoolManager interface {
 	UpdateTakerFeeTrackerForStakersByDenom(ctx sdk.Context, denom string, increasedAmt osmomath.Int) error
 	GetAllTakerFeeShareAccumulators(ctx sdk.Context) []poolmanagertypes.TakerFeeSkimAccumulator
 	GetTakerFeeShareAgreementFromDenom(ctx sdk.Context, denom string) (poolmanagertypes.TakerFeeShareAgreement, bool)
-	DeleteAllTakerFeeShareAccumulatorsForTierDenom(ctx sdk.Context, tierDenom string)
+	DeleteAllTakerFeeShareAccumulatorsForTakerFeeShareDenom(ctx sdk.Context, takerFeeShareDenom string)
 }
 
 // AccountKeeper defines the contract needed for AccountKeeper related APIs.

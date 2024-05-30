@@ -321,8 +321,8 @@ func (k Keeper) clearTakerFeeShareAccumulators(ctx sdk.Context) {
 			ctx.Logger().Error("Error sending coins from module to account", "error", err)
 			continue
 		}
-		// If no errors occurred, delete every denom accumulator for the specified tier1 denom.
-		k.poolManager.DeleteAllTakerFeeShareAccumulatorsForTierDenom(ctx, takerFeeSkimAccumulator.Denom)
+		// If no errors occurred, delete every denom accumulator for the specified taker fee share denom.
+		k.poolManager.DeleteAllTakerFeeShareAccumulatorsForTakerFeeShareDenom(ctx, takerFeeSkimAccumulator.Denom)
 	}
 }
 

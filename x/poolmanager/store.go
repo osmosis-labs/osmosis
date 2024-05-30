@@ -225,9 +225,9 @@ func (k Keeper) GetAllTakerFeeShareAccumulators(ctx sdk.Context) []types.TakerFe
 	return takerFeeSkimAccumulators
 }
 
-// DeleteAllTakerFeeShareAccumulatorsForTierDenom clears the TakerFeeShareAccumulator records for a specific taker fee share denom.
+// DeleteAllTakerFeeShareAccumulatorsForTakerFeeShareDenom clears the TakerFeeShareAccumulator records for a specific taker fee share denom.
 // Is specifically used after the distributions have been completed after epoch for each denom.
-func (k Keeper) DeleteAllTakerFeeShareAccumulatorsForTierDenom(ctx sdk.Context, takerFeeShareDenom string) {
+func (k Keeper) DeleteAllTakerFeeShareAccumulatorsForTakerFeeShareDenom(ctx sdk.Context, takerFeeShareDenom string) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, types.KeyTakerFeeShareDenomAccrualForAllDenoms(takerFeeShareDenom))
 	defer iterator.Close()
@@ -262,14 +262,14 @@ func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error 
 		return err
 	}
 
-	takerFeeShareAlloyDenoms, err := k.snapshotTakerFeeShareAlloyComposition(ctx, contractAddr)
+	takerFeeShareAgreements, err := k.snapshotTakerFeeShareAlloyComposition(ctx, contractAddr)
 	if err != nil {
 		return err
 	}
 
 	registeredAlloyedPool := types.AlloyContractTakerFeeShareState{
 		ContractAddress:         contractAddr.String(),
-		TakerFeeShareAgreements: takerFeeShareAlloyDenoms,
+		TakerFeeShareAgreements: takerFeeShareAgreements,
 	}
 
 	bz, err := proto.Marshal(&registeredAlloyedPool)

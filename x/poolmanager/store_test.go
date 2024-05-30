@@ -489,15 +489,15 @@ func (s *KeeperTestSuite) TestGetAllTakerFeeShareAccumulators() {
 	}
 }
 
-func (s *KeeperTestSuite) TestDeleteAllTakerFeeShareAccumulatorsForTierDenom() {
+func (s *KeeperTestSuite) TestDeleteAllTakerFeeShareAccumulatorsForTakerFeeShareDenom() {
 	tests := map[string]struct {
 		setupFunc                   func()
-		tierDenom                   string
+		takerFeeShareDenom          string
 		expectedNumAccumAfterDelete uint64
 	}{
 		"delete non-existent accumulators": {
 			setupFunc:                   func() {},
-			tierDenom:                   "uosmo",
+			takerFeeShareDenom:          "uosmo",
 			expectedNumAccumAfterDelete: 0,
 		},
 		"delete existing accumulators": {
@@ -507,7 +507,7 @@ func (s *KeeperTestSuite) TestDeleteAllTakerFeeShareAccumulatorsForTierDenom() {
 				err = s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "uosmo", "atom", osmomath.NewInt(200))
 				s.Require().NoError(err)
 			},
-			tierDenom:                   "uosmo",
+			takerFeeShareDenom:          "uosmo",
 			expectedNumAccumAfterDelete: 0,
 		},
 		"delete existing accumulators for non existent tier denom": {
@@ -517,7 +517,7 @@ func (s *KeeperTestSuite) TestDeleteAllTakerFeeShareAccumulatorsForTierDenom() {
 				err = s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "uosmo", "atom", osmomath.NewInt(200))
 				s.Require().NoError(err)
 			},
-			tierDenom:                   "nonExistentTierDenom",
+			takerFeeShareDenom:          "nonExistentTierDenom",
 			expectedNumAccumAfterDelete: 1,
 		},
 		"delete existing accumulators for tier denom with accumulators": {
@@ -531,7 +531,7 @@ func (s *KeeperTestSuite) TestDeleteAllTakerFeeShareAccumulatorsForTierDenom() {
 				err = s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "nBTC", "atom", osmomath.NewInt(200))
 				s.Require().NoError(err)
 			},
-			tierDenom:                   "nBTC",
+			takerFeeShareDenom:          "nBTC",
 			expectedNumAccumAfterDelete: 1,
 		},
 	}
@@ -542,7 +542,7 @@ func (s *KeeperTestSuite) TestDeleteAllTakerFeeShareAccumulatorsForTierDenom() {
 
 			tc.setupFunc()
 
-			s.App.PoolManagerKeeper.DeleteAllTakerFeeShareAccumulatorsForTierDenom(s.Ctx, tc.tierDenom)
+			s.App.PoolManagerKeeper.DeleteAllTakerFeeShareAccumulatorsForTakerFeeShareDenom(s.Ctx, tc.takerFeeShareDenom)
 
 			accumulators := s.App.PoolManagerKeeper.GetAllTakerFeeShareAccumulators(s.Ctx)
 			s.Require().Len(accumulators, int(tc.expectedNumAccumAfterDelete))
