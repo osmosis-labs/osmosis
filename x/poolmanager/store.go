@@ -96,7 +96,7 @@ func (k *Keeper) SetTakerFeeShareAgreementForDenom(ctx sdk.Context, takerFeeShar
 	k.cachedTakerFeeShareAgreementMap[takerFeeShare.Denom] = takerFeeShare
 
 	// Check if this denom is in the registered alloyed pools, if so we need to recalculate the taker fee share composition
-	for _, poolId := range k.cachedRegisteredAlloyedPoolId {
+	for _, poolId := range k.cachedRegisteredAlloyedPoolIdArray {
 		pool, err := k.cosmwasmpoolKeeper.GetPool(ctx, poolId)
 		if err != nil {
 			return err
@@ -259,8 +259,10 @@ func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error 
 
 	// Set cache value
 	k.cachedRegisteredAlloyPoolToStateMap[alloyedDenom] = registeredAlloyedPool
-	k.cachedRegisteredAlloyedPoolId = append(k.cachedRegisteredAlloyedPoolId, poolId)
-	sort.Slice(k.cachedRegisteredAlloyedPoolId, func(i, j int) bool { return k.cachedRegisteredAlloyedPoolId[i] < k.cachedRegisteredAlloyedPoolId[j] })
+	k.cachedRegisteredAlloyedPoolIdArray = append(k.cachedRegisteredAlloyedPoolIdArray, poolId)
+	sort.Slice(k.cachedRegisteredAlloyedPoolIdArray, func(i, j int) bool {
+		return k.cachedRegisteredAlloyedPoolIdArray[i] < k.cachedRegisteredAlloyedPoolIdArray[j]
+	})
 
 	return nil
 }
@@ -386,7 +388,7 @@ func (k *Keeper) SetAllRegisteredAlloyedPoolsIdCached(ctx sdk.Context) error {
 	if err != nil {
 		return err
 	}
-	k.cachedRegisteredAlloyedPoolId = registeredAlloyPoolIds
+	k.cachedRegisteredAlloyedPoolIdArray = registeredAlloyPoolIds
 	return nil
 }
 

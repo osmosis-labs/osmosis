@@ -1420,8 +1420,8 @@ func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsIdCached() {
 			s.Require().NoError(err)
 
 			// Check that the cache was correctly set
-			_, _, cachedRegisteredAlloyedPoolId := s.App.PoolManagerKeeper.GetCachedTrackers()
-			s.Require().Equal(expectedRegisteredAlloyedPoolsIdMap, cachedRegisteredAlloyedPoolId)
+			_, _, cachedRegisteredAlloyedPoolIdArray := s.App.PoolManagerKeeper.GetCachedTrackers()
+			s.Require().Equal(expectedRegisteredAlloyedPoolsIdMap, cachedRegisteredAlloyedPoolIdArray)
 		})
 	}
 }

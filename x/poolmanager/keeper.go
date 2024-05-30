@@ -50,7 +50,7 @@ type Keeper struct {
 
 	cachedTakerFeeShareAgreementMap     map[string]types.TakerFeeShareAgreement
 	cachedRegisteredAlloyPoolToStateMap map[string]types.AlloyContractTakerFeeShareState
-	cachedRegisteredAlloyedPoolId       []uint64
+	cachedRegisteredAlloyedPoolIdArray  []uint64
 }
 
 func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI, stakingKeeper types.StakingKeeper, protorevKeeper types.ProtorevKeeper, wasmKeeper types.WasmKeeper) *Keeper {
@@ -73,7 +73,7 @@ func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gam
 	cachedPoolModules := &sync.Map{}
 	cachedTakerFeeShareAgreementMap := make(map[string]types.TakerFeeShareAgreement)
 	cachedRegisteredAlloyPoolMap := make(map[string]types.AlloyContractTakerFeeShareState)
-	cachedRegistedAlloyedPoolId := []uint64{}
+	cachedRegistedAlloyedPoolIdArray := []uint64{}
 
 	return &Keeper{
 		storeKey:                            storeKey,
@@ -92,7 +92,7 @@ func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gam
 		cachedPoolModules:                   cachedPoolModules,
 		cachedTakerFeeShareAgreementMap:     cachedTakerFeeShareAgreementMap,
 		cachedRegisteredAlloyPoolToStateMap: cachedRegisteredAlloyPoolMap,
-		cachedRegisteredAlloyedPoolId:       cachedRegistedAlloyedPoolId,
+		cachedRegisteredAlloyedPoolIdArray:  cachedRegistedAlloyedPoolIdArray,
 	}
 }
 
@@ -230,7 +230,7 @@ func (k *Keeper) SetWasmKeeper(wasmKeeper types.WasmKeeper) {
 // BeginBlock sets the poolmanager caches if they are empty
 func (k *Keeper) BeginBlock(ctx sdk.Context) {
 	// Set the caches if they are empty
-	if len(k.cachedTakerFeeShareAgreementMap) == 0 || len(k.cachedRegisteredAlloyPoolToStateMap) == 0 || len(k.cachedRegisteredAlloyedPoolId) == 0 {
+	if len(k.cachedTakerFeeShareAgreementMap) == 0 || len(k.cachedRegisteredAlloyPoolToStateMap) == 0 || len(k.cachedRegisteredAlloyedPoolIdArray) == 0 {
 		err := k.SetTakerFeeShareAgreementsMapCached(ctx)
 		if err != nil {
 			ctx.Logger().Error(fmt.Errorf("error in setting taker fee share agreements map cached: %w", err).Error())
@@ -251,7 +251,7 @@ var alloyedAssetCompositionUpdateRate = int64(1)
 // EndBlock recalculates the taker fee share alloy composition for all altered registered alloyed pools
 func (k *Keeper) EndBlock(ctx sdk.Context) {
 	if ctx.BlockHeight()%alloyedAssetCompositionUpdateRate == 0 {
-		for _, id := range k.cachedRegisteredAlloyedPoolId {
+		for _, id := range k.cachedRegisteredAlloyedPoolIdArray {
 			err := k.recalculateAndSetTakerFeeShareAlloyComposition(ctx, id)
 			if err != nil {
 				ctx.Logger().Error(fmt.Errorf(
@@ -265,7 +265,7 @@ func (k *Keeper) EndBlock(ctx sdk.Context) {
 // getCacheTrackers returns the cached trackers, used for testing.
 // nolint: unused
 func (k Keeper) getCacheTrackers() (map[string]types.TakerFeeShareAgreement, map[string]types.AlloyContractTakerFeeShareState, []uint64) {
-	return k.cachedTakerFeeShareAgreementMap, k.cachedRegisteredAlloyPoolToStateMap, k.cachedRegisteredAlloyedPoolId
+	return k.cachedTakerFeeShareAgreementMap, k.cachedRegisteredAlloyPoolToStateMap, k.cachedRegisteredAlloyedPoolIdArray
 }
 
 // setCacheTrackers sets the cached trackers, used for testing.
@@ -278,6 +278,6 @@ func (k *Keeper) setCacheTrackers(takerFeeShareAgreement map[string]types.TakerF
 		k.cachedRegisteredAlloyPoolToStateMap = registeredAlloyPoolToState
 	}
 	if registeredAlloyedPoolId != nil {
-		k.cachedRegisteredAlloyedPoolId = registeredAlloyedPoolId
+		k.cachedRegisteredAlloyedPoolIdArray = registeredAlloyedPoolId
 	}
 }
