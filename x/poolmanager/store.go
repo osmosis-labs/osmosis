@@ -28,7 +28,7 @@ type TotalPoolLiquidityResponse struct {
 // Taker Fee Share Agreements
 //
 
-// Used for creating the map used for the take fee share agreements cache.
+// GetAllTakerFeeShareAgreementsMap creates the map used for the taker fee share agreements cache.
 func (k Keeper) GetAllTakerFeeShareAgreementsMap(ctx sdk.Context) (map[string]types.TakerFeeShareAgreement, error) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, types.KeyTakerFeeShare)
@@ -44,6 +44,7 @@ func (k Keeper) GetAllTakerFeeShareAgreementsMap(ctx sdk.Context) (map[string]ty
 	return takerFeeShareAgreementsMap, nil
 }
 
+// GetAllTakerFeesShareAgreements creates a slice of all taker fee share agreements.
 // Used in the AllTakerFeeShareAgreementsRequest gRPC query.
 func (k Keeper) GetAllTakerFeesShareAgreements(ctx sdk.Context) []types.TakerFeeShareAgreement {
 	store := ctx.KVStore(k.storeKey)
@@ -60,7 +61,7 @@ func (k Keeper) GetAllTakerFeesShareAgreements(ctx sdk.Context) []types.TakerFee
 	return takerFeeShareAgreements
 }
 
-// Used for initializing the cache for the take fee share agreements.
+// SetTakerFeeShareAgreementsMapCached is used for initializing the cache for the take fee share agreements.
 func (k *Keeper) SetTakerFeeShareAgreementsMapCached(ctx sdk.Context) error {
 	takerFeeShareAgreement, err := k.GetAllTakerFeeShareAgreementsMap(ctx)
 	if err != nil {
@@ -70,17 +71,18 @@ func (k *Keeper) SetTakerFeeShareAgreementsMapCached(ctx sdk.Context) error {
 	return nil
 }
 
+// GetTakerFeeShareAgreementFromDenom retrieves a specific taker fee share agreement from the store.
 // Used in the TakerFeeShareAgreementFromDenomRequest gRPC query.
-func (k Keeper) GetTakerFeeShareAgreementFromDenom(ctx sdk.Context, tierDenom string) (types.TakerFeeShareAgreement, bool) {
-	takerFeeShareAgreement, found := k.cachedTakerFeeShareAgreementMap[tierDenom]
+func (k Keeper) GetTakerFeeShareAgreementFromDenom(ctx sdk.Context, takerFeeShareDenom string) (types.TakerFeeShareAgreement, bool) {
+	takerFeeShareAgreement, found := k.cachedTakerFeeShareAgreementMap[takerFeeShareDenom]
 	if !found {
 		return types.TakerFeeShareAgreement{}, false
 	}
 	return takerFeeShareAgreement, true
 }
 
-// Used for setting a specific take fee share agreement in the store.
-// Used in the MsgSetTakerFeeShareAgreementForDenom, for governance.
+// SetTakerFeeShareAgreementForDenom is used for setting a specific take fee share agreement in the store.
+// Used in the MsgSetTakerFeeShareAgreementForDenom, by the gov address only.
 func (k *Keeper) SetTakerFeeShareAgreementForDenom(ctx sdk.Context, takerFeeShare types.TakerFeeShareAgreement) error {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FormatTakerFeeShareAgreementKey(takerFeeShare.Denom)
@@ -131,25 +133,26 @@ func (k *Keeper) SetTakerFeeShareAgreementForDenom(ctx sdk.Context, takerFeeShar
 // Taker Fee Share Accumulators
 //
 
+// GetTakerFeeShareDenomsToAccruedValue retrieves the accrued value for a specific taker fee share denomination and taker fee charged denomination from the store.
 // Used in the TakerFeeShareDenomsToAccruedValueRequest gRPC query.
-func (k Keeper) GetTakerFeeShareDenomsToAccruedValue(ctx sdk.Context, tierDenom string, takerFeeDenom string) (osmomath.Int, error) {
+func (k Keeper) GetTakerFeeShareDenomsToAccruedValue(ctx sdk.Context, takerFeeShareDenom string, takerFeeChargedDenom string) (osmomath.Int, error) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.KeyTakerFeeShareTier1DenomAccrualForSingleDenom(tierDenom, takerFeeDenom)
+	key := types.KeyTakerFeeShareDenomAccrualForTakerFeeChargedDenom(takerFeeShareDenom, takerFeeChargedDenom)
 	accruedValue := sdk.IntProto{}
 	found, err := osmoutils.Get(store, key, &accruedValue)
 	if err != nil {
 		return osmomath.Int{}, err
 	}
 	if !found {
-		return osmomath.Int{}, types.NoAccruedValueError{TierDenom: tierDenom, TakerFeeDenom: takerFeeDenom}
+		return osmomath.Int{}, types.NoAccruedValueError{TakerFeeShareDenom: takerFeeShareDenom, TakerFeeChargedDenom: takerFeeChargedDenom}
 	}
 	return accruedValue.Int, nil
 }
 
-// Used for setting the accrued value for a specific tier denomination and taker fee denomination in the store.
-func (k Keeper) SetTakerFeeShareDenomsToAccruedValue(ctx sdk.Context, tierDenom string, takerFeeDenom string, accruedValue osmomath.Int) error {
+// SetTakerFeeShareDenomsToAccruedValue sets the accrued value for a specific taker fee share denomination and taker fee charged denomination in the store.
+func (k Keeper) SetTakerFeeShareDenomsToAccruedValue(ctx sdk.Context, takerFeeShareDenom string, takerFeeChargedDenom string, accruedValue osmomath.Int) error {
 	store := ctx.KVStore(k.storeKey)
-	key := types.KeyTakerFeeShareTier1DenomAccrualForSingleDenom(tierDenom, takerFeeDenom)
+	key := types.KeyTakerFeeShareDenomAccrualForTakerFeeChargedDenom(takerFeeShareDenom, takerFeeChargedDenom)
 	accruedValueProto := sdk.IntProto{Int: accruedValue}
 	bz, err := proto.Marshal(&accruedValueProto)
 	if err != nil {
@@ -160,9 +163,9 @@ func (k Keeper) SetTakerFeeShareDenomsToAccruedValue(ctx sdk.Context, tierDenom 
 	return nil
 }
 
-// Used for increasing the accrued value for a specific tier denomination and taker fee denomination in the store.
-func (k Keeper) IncreaseTakerFeeShareDenomsToAccruedValue(ctx sdk.Context, tierDenom string, takerFeeDenom string, additiveValue osmomath.Int) error {
-	accruedValueBefore, err := k.GetTakerFeeShareDenomsToAccruedValue(ctx, tierDenom, takerFeeDenom)
+// IncreaseTakerFeeShareDenomsToAccruedValue increases (adds to, not replace) the accrued value for a specific taker fee share denomination and taker fee charged denomination in the store.
+func (k Keeper) IncreaseTakerFeeShareDenomsToAccruedValue(ctx sdk.Context, takerFeeShareDenom string, takerFeeChargedDenom string, additiveValue osmomath.Int) error {
+	accruedValueBefore, err := k.GetTakerFeeShareDenomsToAccruedValue(ctx, takerFeeShareDenom, takerFeeChargedDenom)
 	if err != nil {
 		if _, ok := err.(types.NoAccruedValueError); ok {
 			accruedValueBefore = osmomath.ZeroInt()
@@ -172,9 +175,10 @@ func (k Keeper) IncreaseTakerFeeShareDenomsToAccruedValue(ctx sdk.Context, tierD
 	}
 
 	accruedValueAfter := accruedValueBefore.Add(additiveValue)
-	return k.SetTakerFeeShareDenomsToAccruedValue(ctx, tierDenom, takerFeeDenom, accruedValueAfter)
+	return k.SetTakerFeeShareDenomsToAccruedValue(ctx, takerFeeShareDenom, takerFeeChargedDenom, accruedValueAfter)
 }
 
+// GetAllTakerFeeShareAccumulators creates a slice of all taker fee share accumulators.
 // Used in the AllTakerFeeShareAccumulatorsRequest gRPC query.
 func (k Keeper) GetAllTakerFeeShareAccumulators(ctx sdk.Context) []types.TakerFeeSkimAccumulator {
 	store := ctx.KVStore(k.storeKey)
@@ -212,10 +216,11 @@ func (k Keeper) GetAllTakerFeeShareAccumulators(ctx sdk.Context) []types.TakerFe
 	return takerFeeSkimAccumulators
 }
 
-// Used to clear the TakerFeeShareAccumulator records for a specific tier 1 denomination, specifically after the distributions have been completed after epoch.
-func (k Keeper) DeleteAllTakerFeeShareAccumulatorsForTierDenom(ctx sdk.Context, tierDenom string) {
+// DeleteAllTakerFeeShareAccumulatorsForTierDenom clears the TakerFeeShareAccumulator records for a specific taker fee share denom.
+// Is specifically used after the distributions have been completed after epoch for each denom.
+func (k Keeper) DeleteAllTakerFeeShareAccumulatorsForTierDenom(ctx sdk.Context, takerFeeShareDenom string) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := storetypes.KVStorePrefixIterator(store, types.KeyTakerFeeShareTier1DenomAccrualForAllDenoms(tierDenom))
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyTakerFeeShareDenomAccrualForAllDenoms(takerFeeShareDenom))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -227,8 +232,8 @@ func (k Keeper) DeleteAllTakerFeeShareAccumulatorsForTierDenom(ctx sdk.Context, 
 // Registered Alloyed Pool States
 //
 
-// Used for setting a specific registered alloyed pool in the store.
-// Used in the MsgRegisterAlloyedPool, for governance.
+// SetRegisteredAlloyedPool sets a specific registered alloyed pool in the store.
+// Used in the MsgRegisterAlloyedPool, by the gov address only.
 func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error {
 	store := ctx.KVStore(k.storeKey)
 
@@ -237,7 +242,6 @@ func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error 
 		return err
 	}
 
-	// Check if pool is of type CosmWasmPool
 	if cwPool.GetType() != types.CosmWasm {
 		return types.NotCosmWasmPoolError{PoolId: poolId}
 	}
@@ -267,7 +271,7 @@ func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error 
 	key := types.FormatRegisteredAlloyPoolKey(poolId, alloyedDenom)
 	store.Set(key, bz)
 
-	// Set cache value
+	// Set cache values
 	k.cachedRegisteredAlloyPoolToStateMap[alloyedDenom] = registeredAlloyedPool
 	k.cachedRegisteredAlloyedPoolIdArray = append(k.cachedRegisteredAlloyedPoolIdArray, poolId)
 	sort.Slice(k.cachedRegisteredAlloyedPoolIdArray, func(i, j int) bool {
@@ -286,6 +290,7 @@ func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error 
 	return nil
 }
 
+// GetRegisteredAlloyedPoolFromDenom retrieves a specific registered alloyed pool from the store via the alloyed denom.
 // Used in the RegisteredAlloyedPoolFromDenomRequest gRPC query.
 func (k Keeper) GetRegisteredAlloyedPoolFromDenom(ctx sdk.Context, alloyedDenom string) (types.AlloyContractTakerFeeShareState, bool) {
 	registeredAlloyedPool, found := k.cachedRegisteredAlloyPoolToStateMap[alloyedDenom]
@@ -294,6 +299,7 @@ func (k Keeper) GetRegisteredAlloyedPoolFromDenom(ctx sdk.Context, alloyedDenom 
 	}
 	return registeredAlloyedPool, true
 }
+
 
 func (k Keeper) GetRegisteredAlloyedPoolFromPoolId(ctx sdk.Context, poolId uint64) (string, types.AlloyContractTakerFeeShareState, error) {
 	store := ctx.KVStore(k.storeKey)

@@ -283,35 +283,35 @@ func (s *KeeperTestSuite) TestSetTakerFeeShareAgreementForDenom() {
 
 func (s *KeeperTestSuite) TestGetTakerFeeShareDenomsToAccruedValue() {
 	tests := map[string]struct {
-		setupFunc     func()
-		tierDenom     string
-		takerFeeDenom string
-		expectedValue osmomath.Int
-		expectedError error
+		setupFunc            func()
+		takerFeeShareDenom   string
+		takerFeeChargedDenom string
+		expectedValue        osmomath.Int
+		expectedError        error
 	}{
 		"tier denom accrued denom value, retrieve denom value": {
 			setupFunc: func() {
 				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "uosmo", "stake", osmomath.NewInt(100))
 				s.Require().NoError(err)
 			},
-			tierDenom:     "uosmo",
-			takerFeeDenom: "stake",
-			expectedValue: osmomath.NewInt(100),
+			takerFeeShareDenom:   "uosmo",
+			takerFeeChargedDenom: "stake",
+			expectedValue:        osmomath.NewInt(100),
 		},
 		"tier denom did not accrue value, nothing to retrieve, so not found": {
-			setupFunc:     func() {},
-			tierDenom:     "uosmo",
-			takerFeeDenom: "stake",
-			expectedError: types.NoAccruedValueError{TierDenom: "uosmo", TakerFeeDenom: "stake"},
+			setupFunc:            func() {},
+			takerFeeShareDenom:   "uosmo",
+			takerFeeChargedDenom: "stake",
+			expectedError:        types.NoAccruedValueError{TakerFeeShareDenom: "uosmo", TakerFeeChargedDenom: "stake"},
 		},
 		"tier denom accrued denom value, retrieve different denom value, so not found": {
 			setupFunc: func() {
 				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, "uosmo", "stake", osmomath.NewInt(100))
 				s.Require().NoError(err)
 			},
-			tierDenom:     "uosmo",
-			takerFeeDenom: "nonExistentDenom",
-			expectedError: types.NoAccruedValueError{TierDenom: "uosmo", TakerFeeDenom: "nonExistentDenom"},
+			takerFeeShareDenom:   "uosmo",
+			takerFeeChargedDenom: "nonExistentDenom",
+			expectedError:        types.NoAccruedValueError{TakerFeeShareDenom: "uosmo", TakerFeeChargedDenom: "nonExistentDenom"},
 		},
 	}
 
@@ -321,7 +321,7 @@ func (s *KeeperTestSuite) TestGetTakerFeeShareDenomsToAccruedValue() {
 
 			tc.setupFunc()
 
-			value, err := s.App.PoolManagerKeeper.GetTakerFeeShareDenomsToAccruedValue(s.Ctx, tc.tierDenom, tc.takerFeeDenom)
+			value, err := s.App.PoolManagerKeeper.GetTakerFeeShareDenomsToAccruedValue(s.Ctx, tc.takerFeeShareDenom, tc.takerFeeChargedDenom)
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().Equal(tc.expectedError.Error(), err.Error())

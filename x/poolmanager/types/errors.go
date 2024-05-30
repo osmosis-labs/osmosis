@@ -150,12 +150,12 @@ func (e NotCosmWasmPoolError) Error() string {
 }
 
 type NoAccruedValueError struct {
-	TierDenom     string
-	TakerFeeDenom string
+	TakerFeeShareDenom   string
+	TakerFeeChargedDenom string
 }
 
 func (e NoAccruedValueError) Error() string {
-	return fmt.Sprintf("no accrued value found for tierDenom %v and takerFeeDenom %s", e.TierDenom, e.TakerFeeDenom)
+	return fmt.Sprintf("no accrued value found for takerFeeShareDenom %v and takerFeeChargedDenom %s", e.TakerFeeShareDenom, e.TakerFeeChargedDenom)
 }
 
 type NoRegisteredAlloyedPoolError struct {

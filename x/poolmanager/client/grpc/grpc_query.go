@@ -91,6 +91,16 @@ func (q Querier) SpotPrice(grpcCtx context.Context,
 	return q.Q.SpotPrice(ctx, *req)
 }
 
+func (q Querier) RegisteredAlloyedPoolFromPoolId(grpcCtx context.Context,
+	req *queryproto.RegisteredAlloyedPoolFromPoolIdRequest,
+) (*queryproto.RegisteredAlloyedPoolFromPoolIdResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.RegisteredAlloyedPoolFromPoolId(ctx, *req)
+}
+
 func (q Querier) RegisteredAlloyedPoolFromDenom(grpcCtx context.Context,
 	req *queryproto.RegisteredAlloyedPoolFromDenomRequest,
 ) (*queryproto.RegisteredAlloyedPoolFromDenomResponse, error) {

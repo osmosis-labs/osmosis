@@ -118,6 +118,11 @@ queries:
       query_func: "k.GetRegisteredAlloyedPoolFromDenom"
     cli:
       cmd: "RegisteredAlloyedPoolFromDenom"
+  RegisteredAlloyedPoolFromPoolId:
+    proto_wrapper:
+      query_func: "k.GetRegisteredAlloyedPoolFromPoolId"
+    cli:
+      cmd: "RegisteredAlloyedPoolFromPoolId"
   AllRegisteredAlloyedPools:
     proto_wrapper:
       query_func: "k.GetAllRegisteredAlloyedPools"

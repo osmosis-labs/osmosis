@@ -195,6 +195,16 @@ service Query {
                                    "registered_alloyed_pool_from_denom";
   }
 
+  // RegisteredAlloyedPoolFromPoolId returns the registered alloyed pool state
+  // from the given pool id. The registered alloyed pool contains the pool's
+  // contract address, along with the current distribution composition of taker
+  // fee share denoms within the alloyed pool.
+  rpc RegisteredAlloyedPoolFromPoolId(RegisteredAlloyedPoolFromPoolIdRequest)
+      returns (RegisteredAlloyedPoolFromPoolIdResponse) {
+    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/{pool_id}/"
+                                   "registered_alloyed_pool_from_pool_id";
+  }
+
   // AllRegisteredAlloyedPools returns all registered alloyed pools. The
   // registered alloyed pool contains the pool's contract address, along with
   // the current distribution composition of taker fee share denoms within the
@@ -480,6 +490,15 @@ message AllTakerFeeShareAccumulatorsResponse {
 message RegisteredAlloyedPoolFromDenomRequest { string denom = 1; }
 
 message RegisteredAlloyedPoolFromDenomResponse {
+  AlloyContractTakerFeeShareState contract_state = 1
+      [ (gogoproto.nullable) = false ];
+}
+
+//=============================== RegisteredAlloyedPoolFromPoolIdRequest
+
+message RegisteredAlloyedPoolFromPoolIdRequest { uint64 pool_id = 1; }
+
+message RegisteredAlloyedPoolFromPoolIdResponse {
   AlloyContractTakerFeeShareState contract_state = 1
       [ (gogoproto.nullable) = false ];
 }
