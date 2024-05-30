@@ -212,7 +212,7 @@ func (s *KeeperTestSuite) TestTakerFeeSkim() {
 		},
 		"zero denomShareAgreement denoms, one alloyedAssetShareAgreement denom, but the alloyedAssetShareAgreement consists of no active denomShareAgreements, should not be skimmed": {
 			alloyedPoolSetup: func() []string {
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testC", "testD", "testE"}, nil, "osmosis", "x/cosmwasmpool/bytecode")
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testC", "testD", "testE"}, nil)
 				alloyedDenom := fmt.Sprintf("factory/%s/alloyed/testdenom", cwPool.GetAddress().String())
 				return []string{"testC", "testD", "testE", alloyedDenom}
 			},
@@ -244,7 +244,7 @@ func (s *KeeperTestSuite) TestTakerFeeSkim() {
 }
 
 func (s *KeeperTestSuite) setupAndRegisterAlloyedPool(denoms []string, ratios []uint16) string {
-	cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], denoms, ratios, "osmosis", "x/cosmwasmpool/bytecode")
+	cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], denoms, ratios)
 	err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 	s.Require().NoError(err)
 	return fmt.Sprintf("factory/%s/alloyed/testdenom", cwPool.GetAddress().String())

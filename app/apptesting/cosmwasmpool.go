@@ -43,20 +43,22 @@ func (s *KeeperTestHelper) PrepareCustomTransmuterPool(owner sdk.AccAddress, den
 }
 
 // PrepareCustomTransmuterPoolCustomProject sets up a transmuter pool with the custom parameters.
+// Gives flexibility for the helper to be reused outside of the Osmosis repository by providing custom
+// project name and bytecode path.
 func (s *KeeperTestHelper) PrepareCustomTransmuterPoolCustomProject(owner sdk.AccAddress, denoms []string, projectName, byteCodePath string) cosmwasmpooltypes.CosmWasmExtension {
 	return s.PreparePool(owner, denoms, projectName, byteCodePath, TransmuterContractName, s.GetTransmuterInstantiateMsgBytes)
 }
 
 // PrepareCustomTransmuterPoolV3 sets up a transmuter pool with the custom parameters for version 3.
 // It initializes the pool with the provided ratio for the given denoms, or a default ratio of 1:1 if none is provided.
-func (s *KeeperTestHelper) PrepareCustomTransmuterPoolV3(owner sdk.AccAddress, denoms []string, ratio []uint16, projectName, byteCodePath string) cosmwasmpooltypes.CosmWasmExtension {
+func (s *KeeperTestHelper) PrepareCustomTransmuterPoolV3(owner sdk.AccAddress, denoms []string, ratio []uint16) cosmwasmpooltypes.CosmWasmExtension {
 	if ratio == nil {
 		ratio = make([]uint16, len(denoms))
 		for i := range denoms {
 			ratio[i] = 1
 		}
 	}
-	pool := s.PreparePool(owner, denoms, projectName, byteCodePath, TransmuterV3ContractName, s.GetTransmuterInstantiateMsgBytesV3)
+	pool := s.PreparePool(owner, denoms, osmosisRepository, osmosisRepoTransmuterPath, TransmuterV3ContractName, s.GetTransmuterInstantiateMsgBytesV3)
 	s.AddRatioFundsToTransmuterPool(s.TestAccs[0], denoms, ratio, pool.GetId())
 	pool, err := s.App.CosmwasmPoolKeeper.GetPoolById(s.Ctx, pool.GetId())
 	s.Require().NoError(err)
