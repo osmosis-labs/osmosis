@@ -22,6 +22,8 @@ var (
 	ErrSetAllRegisteredAlloyedPoolsCached   = errors.New("error in setting all registered alloyed pools cached")
 	ErrSetAllRegisteredAlloyedPoolsIdCached = errors.New("error in setting all registered alloyed pools id cached")
 	ErrSetRegisteredAlloyedPool             = errors.New("error in setting registered alloyed pool")
+	ErrInvalidKeyFormat                     = errors.New("invalid key format")
+	ErrTotalAlloyedLiquidityIsZero          = errors.New("totalAlloyedLiquidity is zero")
 )
 
 type nonPositiveAmountError struct {
@@ -137,4 +139,47 @@ type InactivePoolError struct {
 
 func (e InactivePoolError) Error() string {
 	return fmt.Sprintf("Pool %d is not active.", e.PoolId)
+}
+
+type NotCosmWasmPoolError struct {
+	PoolId uint64
+}
+
+func (e NotCosmWasmPoolError) Error() string {
+	return fmt.Sprintf("pool with id %d is not a CosmWasmPool", e.PoolId)
+}
+
+type NoAccruedValueError struct {
+	TierDenom     string
+	TakerFeeDenom string
+}
+
+func (e NoAccruedValueError) Error() string {
+	return fmt.Sprintf("no accrued value found for tierDenom %v and takerFeeDenom %s", e.TierDenom, e.TakerFeeDenom)
+}
+
+type NoRegisteredAlloyedPoolError struct {
+	PoolId uint64
+}
+
+func (e NoRegisteredAlloyedPoolError) Error() string {
+	return fmt.Sprintf("no registered alloyed pool found for poolId %d", e.PoolId)
+}
+
+type InvalidAlloyedDenomFormatError struct {
+	PartsLength int
+}
+
+func (e InvalidAlloyedDenomFormatError) Error() string {
+	return fmt.Sprintf("invalid format for alloyedDenom, expected 4 parts but got %d", e.PartsLength)
+}
+
+type InvalidAlloyedDenomPartError struct {
+	PartIndex int
+	Expected  string
+	Actual    string
+}
+
+func (e InvalidAlloyedDenomPartError) Error() string {
+	return fmt.Sprintf("part %d of alloyedDenom should be '%s', but got '%s'", e.PartIndex, e.Expected, e.Actual)
 }

@@ -1,8 +1,6 @@
 package poolmanager_test
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
@@ -366,7 +364,7 @@ func (s *KeeperTestSuite) TestSetRegisteredAlloyedPoolMsg() {
 				Sender: govAddr,
 			},
 			useConcentratedPool: true,
-			expectedError:       fmt.Errorf("pool with id %d is not a CosmWasmPool", 1),
+			expectedError:       types.NotCosmWasmPoolError{PoolId: 1},
 		},
 		"invalid sender, valid pool": {
 			registeredAlloyedPoolMessage: types.MsgSetRegisteredAlloyedPool{

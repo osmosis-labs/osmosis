@@ -302,7 +302,7 @@ func (s *KeeperTestSuite) TestGetTakerFeeShareDenomsToAccruedValue() {
 			setupFunc:     func() {},
 			tierDenom:     "uosmo",
 			takerFeeDenom: "stake",
-			expectedError: fmt.Errorf("no accrued value found for tierDenom uosmo and takerFeeDenom stake"),
+			expectedError: types.NoAccruedValueError{TierDenom: "uosmo", TakerFeeDenom: "stake"},
 		},
 		"tier denom accrued denom value, retrieve different denom value, so not found": {
 			setupFunc: func() {
@@ -311,7 +311,7 @@ func (s *KeeperTestSuite) TestGetTakerFeeShareDenomsToAccruedValue() {
 			},
 			tierDenom:     "uosmo",
 			takerFeeDenom: "nonExistentDenom",
-			expectedError: fmt.Errorf("no accrued value found for tierDenom uosmo and takerFeeDenom nonExistentDenom"),
+			expectedError: types.NoAccruedValueError{TierDenom: "uosmo", TakerFeeDenom: "nonExistentDenom"},
 		},
 	}
 
@@ -577,13 +577,13 @@ func (s *KeeperTestSuite) TestSetRegisteredAlloyedPool() {
 			poolType:      GammPool,
 			preSetFunc:    func(ctx sdk.Context) {},
 			postSetFunc:   func(ctx sdk.Context) {},
-			expectedError: fmt.Errorf("pool with id %d is not a CosmWasmPool", 2),
+			expectedError: types.NotCosmWasmPoolError{PoolId: 2},
 		},
 		"set concentrated pool": {
 			poolType:      ConcentratedPool,
 			preSetFunc:    func(ctx sdk.Context) {},
 			postSetFunc:   func(ctx sdk.Context) {},
-			expectedError: fmt.Errorf("pool with id %d is not a CosmWasmPool", 1),
+			expectedError: types.NotCosmWasmPoolError{PoolId: 1},
 		},
 		"set cw pool": {
 			poolType:      CWPool,
@@ -850,7 +850,7 @@ func (s *KeeperTestSuite) TestGetRegisteredAlloyedPoolFromPoolId() {
 		"get non-existent pool": {
 			setupFunc:     func() {},
 			poolId:        1,
-			expectedError: fmt.Errorf("no registered alloyed pool found for poolId %d", 1),
+			expectedError: types.NoRegisteredAlloyedPoolError{PoolId: 1},
 		},
 		"get existing alloyed pool": {
 			setupFunc: func() {
@@ -890,7 +890,7 @@ func (s *KeeperTestSuite) TestGetRegisteredAlloyedPoolFromPoolId() {
 				s.Require().NoError(err)
 			},
 			poolId:        1,
-			expectedError: fmt.Errorf("no registered alloyed pool found for poolId %d", 1),
+			expectedError: types.NoRegisteredAlloyedPoolError{PoolId: 1},
 		},
 	}
 
@@ -1538,7 +1538,7 @@ func (s *KeeperTestSuite) TestSnapshotTakerFeeShareAlloyComposition() {
 			setupFunc: func() cosmwasmpooltypes.CosmWasmExtension {
 				return s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB", "testC"}, nil)
 			},
-			expectedError: fmt.Errorf("totalAlloyedLiquidity is zero"),
+			expectedError: types.ErrTotalAlloyedLiquidityIsZero,
 		},
 		// TODO: Diff scaling factors for assets
 	}

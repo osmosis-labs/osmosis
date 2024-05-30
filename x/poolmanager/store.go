@@ -2,7 +2,6 @@ package poolmanager
 
 import (
 	"encoding/json"
-	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -142,7 +141,7 @@ func (k Keeper) GetTakerFeeShareDenomsToAccruedValue(ctx sdk.Context, tierDenom 
 		return osmomath.Int{}, err
 	}
 	if !found {
-		return osmomath.Int{}, fmt.Errorf("no accrued value found for tierDenom %v and takerFeeDenom %s", tierDenom, takerFeeDenom)
+		return osmomath.Int{}, types.NoAccruedValueError{TierDenom: tierDenom, TakerFeeDenom: takerFeeDenom}
 	}
 	return accruedValue.Int, nil
 }
@@ -165,7 +164,7 @@ func (k Keeper) SetTakerFeeShareDenomsToAccruedValue(ctx sdk.Context, tierDenom 
 func (k Keeper) IncreaseTakerFeeShareDenomsToAccruedValue(ctx sdk.Context, tierDenom string, takerFeeDenom string, additiveValue osmomath.Int) error {
 	accruedValueBefore, err := k.GetTakerFeeShareDenomsToAccruedValue(ctx, tierDenom, takerFeeDenom)
 	if err != nil {
-		if err.Error() == fmt.Errorf("no accrued value found for tierDenom %v and takerFeeDenom %s", tierDenom, takerFeeDenom).Error() {
+		if _, ok := err.(types.NoAccruedValueError); ok {
 			accruedValueBefore = osmomath.ZeroInt()
 		} else {
 			return err
@@ -240,7 +239,7 @@ func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error 
 
 	// Check if pool is of type CosmWasmPool
 	if cwPool.GetType() != types.CosmWasm {
-		return fmt.Errorf("pool with id %d is not a CosmWasmPool", poolId)
+		return types.NotCosmWasmPoolError{PoolId: poolId}
 	}
 
 	contractAddr := cwPool.GetAddress()
@@ -303,7 +302,7 @@ func (k Keeper) GetRegisteredAlloyedPoolFromPoolId(ctx sdk.Context, poolId uint6
 	defer iterator.Close()
 
 	if !iterator.Valid() {
-		return "", types.AlloyContractTakerFeeShareState{}, fmt.Errorf("no registered alloyed pool found for poolId %d", poolId)
+		return "", types.AlloyContractTakerFeeShareState{}, types.NoRegisteredAlloyedPoolError{PoolId: poolId}
 	}
 
 	registeredAlloyedPool := types.AlloyContractTakerFeeShareState{}
@@ -312,7 +311,7 @@ func (k Keeper) GetRegisteredAlloyedPoolFromPoolId(ctx sdk.Context, poolId uint6
 	key := string(iterator.Key())
 	parts := strings.Split(key, types.KeySeparator)
 	if len(parts) < 3 {
-		return "", types.AlloyContractTakerFeeShareState{}, fmt.Errorf("invalid key format")
+		return "", types.AlloyContractTakerFeeShareState{}, types.ErrInvalidKeyFormat
 	}
 	alloyedDenom := parts[len(parts)-1]
 
@@ -353,7 +352,7 @@ func (k Keeper) GetAllRegisteredAlloyedPoolsMap(ctx sdk.Context) (map[string]typ
 		key := string(iterator.Key())
 		parts := strings.Split(key, types.KeySeparator)
 		if len(parts) < 3 {
-			return nil, fmt.Errorf("invalid key format")
+			return nil, types.ErrInvalidKeyFormat
 		}
 		alloyedDenom := parts[len(parts)-1]
 		registeredAlloyedPoolsMap[alloyedDenom] = registeredAlloyedPool
@@ -387,7 +386,7 @@ func (k Keeper) GetAllRegisteredAlloyedPoolsIdArray(ctx sdk.Context) ([]uint64, 
 		key := string(iterator.Key())
 		parts := strings.Split(key, types.KeySeparator)
 		if len(parts) < 3 {
-			return nil, fmt.Errorf("invalid key format")
+			return nil, types.ErrInvalidKeyFormat
 		}
 		alloyedIdStr := parts[len(parts)-2]
 		// Convert the string to uint64
@@ -432,19 +431,19 @@ func (k Keeper) queryAndCheckAlloyedDenom(ctx sdk.Context, contractAddr sdk.AccA
 
 	parts := strings.Split(alloyedDenom, "/")
 	if len(parts) != 4 {
-		return "", fmt.Errorf("invalid format for alloyedDenom")
+		return "", types.InvalidAlloyedDenomFormatError{PartsLength: len(parts)}
 	}
 
 	if parts[0] != "factory" {
-		return "", fmt.Errorf("first part of alloyedDenom should be 'factory'")
+		return "", types.InvalidAlloyedDenomPartError{PartIndex: 0, Expected: "factory", Actual: parts[0]}
 	}
 
 	if parts[1] != contractAddr.String() {
-		return "", fmt.Errorf("second part of alloyedDenom should match contractAddr")
+		return "", types.InvalidAlloyedDenomPartError{PartIndex: 1, Expected: contractAddr.String(), Actual: parts[1]}
 	}
 
 	if parts[2] != "alloyed" {
-		return "", fmt.Errorf("third part of alloyedDenom should be 'alloyed'")
+		return "", types.InvalidAlloyedDenomPartError{PartIndex: 2, Expected: "alloyed", Actual: parts[2]}
 	}
 
 	return alloyedDenom, nil
@@ -482,7 +481,7 @@ func (k Keeper) snapshotTakerFeeShareAlloyComposition(ctx sdk.Context, contractA
 	}
 
 	if totalAlloyedLiquidity.IsZero() {
-		return []types.TakerFeeShareAgreement{}, fmt.Errorf("totalAlloyedLiquidity is zero")
+		return []types.TakerFeeShareAgreement{}, types.ErrTotalAlloyedLiquidityIsZero
 	}
 
 	for i, coin := range assetsWithShareAgreement {
