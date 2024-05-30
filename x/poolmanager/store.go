@@ -13,25 +13,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	alloyedpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/cosmwasm/msg/v3"
 	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
-
-type ShareDenomResponse struct {
-	ShareDenom string `json:"share_denom"`
-}
-
-type TotalPoolLiquidityResponse struct {
-	TotalPoolLiquidity []sdk.Coin `json:"total_pool_liquidity"`
-}
-
-type AssetConfig struct {
-	Denom               string `json:"denom"`
-	NormalizationFactor string `json:"normalization_factor"`
-}
-
-type ListAssetConfigsResponse struct {
-	AssetConfigs []AssetConfig `json:"asset_configs"`
-}
 
 //
 // Taker Fee Share Agreements
@@ -439,7 +423,7 @@ func (k Keeper) queryAndCheckAlloyedDenom(ctx sdk.Context, contractAddr sdk.AccA
 		return "", err
 	}
 
-	var response ShareDenomResponse
+	var response alloyedpooltypes.ShareDenomResponse
 	err = json.Unmarshal(respBz, &response)
 	if err != nil {
 		return "", err
@@ -478,7 +462,7 @@ func (k Keeper) snapshotTakerFeeShareAlloyComposition(ctx sdk.Context, contractA
 		return []types.TakerFeeShareAgreement{}, err
 	}
 
-	var liquidityResponse TotalPoolLiquidityResponse
+	var liquidityResponse alloyedpooltypes.TotalPoolLiquidityResponse
 	err = json.Unmarshal(respBz, &liquidityResponse)
 	if err != nil {
 		return []types.TakerFeeShareAgreement{}, err
@@ -492,7 +476,7 @@ func (k Keeper) snapshotTakerFeeShareAlloyComposition(ctx sdk.Context, contractA
 		return []types.TakerFeeShareAgreement{}, err
 	}
 
-	var assetConfigsResponse ListAssetConfigsResponse
+	var assetConfigsResponse alloyedpooltypes.ListAssetConfigsResponse
 	err = json.Unmarshal(respBz, &assetConfigsResponse)
 	if err != nil {
 		return []types.TakerFeeShareAgreement{}, err

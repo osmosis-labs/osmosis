@@ -2,6 +2,7 @@ syntax = "proto3";
 package osmosis.cosmwasmpool.v1beta1.model.v3;
 
 import "gogoproto/gogo.proto";
+import "osmosis/cosmwasmpool/v1beta1/model/v3/pool_query_msg.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/cosmwasm/msg/v3";
 
@@ -11,9 +12,4 @@ message InstantiateMsg {
   string alloyed_asset_normalization_factor = 3;
   string admin = 4;
   string moderator = 5;
-}
-
-message AssetConfig {
-  string denom = 1;
-  string normalization_factor = 2;
 }
