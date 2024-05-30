@@ -45,6 +45,8 @@ func (server msgServer) SuperfluidDelegate(goCtx context.Context, msg *types.Msg
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	err := server.keeper.SuperfluidDelegate(ctx, msg.Sender, msg.LockId, msg.ValAddr)
+
+	// NOTE: `EmitDelegationEvent` (x/staking module's delegation event) happens in keeper level
 	if err == nil {
 		events.EmitSuperfluidDelegateEvent(ctx, msg.LockId, msg.ValAddr)
 	}
