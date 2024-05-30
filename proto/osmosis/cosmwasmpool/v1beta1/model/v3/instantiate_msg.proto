@@ -6,6 +6,8 @@ import "osmosis/cosmwasmpool/v1beta1/model/v3/pool_query_msg.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/cosmwasm/msg/v3";
 
+// InstantiateMsg defines the message to instantiate a new alloyed asset
+// transmuter v3 pool.
 message InstantiateMsg {
   repeated AssetConfig pool_asset_configs = 1 [ (gogoproto.nullable) = false ];
   string alloyed_asset_subdenom = 2;

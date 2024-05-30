@@ -23,6 +23,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// InstantiateMsg defines the message to instantiate a new alloyed asset
+// transmuter v3 pool.
 type InstantiateMsg struct {
 	PoolAssetConfigs                []AssetConfig `protobuf:"bytes,1,rep,name=pool_asset_configs,json=poolAssetConfigs,proto3" json:"pool_asset_configs"`
 	AlloyedAssetSubdenom            string        `protobuf:"bytes,2,opt,name=alloyed_asset_subdenom,json=alloyedAssetSubdenom,proto3" json:"alloyed_asset_subdenom,omitempty"`
