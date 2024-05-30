@@ -213,17 +213,16 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 	contractAddress := "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2"
 	alloyedDenom := createAlloyedDenom(contractAddress)
 
+	// Define the default values for all three cache trackers
 	defaultCachedTakerFeeShareAgreementMap := map[string]types.TakerFeeShareAgreement{
 		defaultTakerFeeShareAgreements[0].Denom: defaultTakerFeeShareAgreements[0],
 	}
-
 	defaultCachedRegisteredAlloyPoolByAlloyDenomMap := map[string]types.AlloyContractTakerFeeShareState{
 		alloyedDenom: {
 			ContractAddress:         contractAddress,
 			TakerFeeShareAgreements: []types.TakerFeeShareAgreement{defaultTakerFeeShareAgreements[0]},
 		},
 	}
-
 	defaultCachedRegisteredAlloyedPoolIdArray := []uint64{1}
 
 	tests := map[string]struct {
