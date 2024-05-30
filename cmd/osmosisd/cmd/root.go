@@ -139,7 +139,7 @@ var (
 		{
 			Section: "p2p",
 			Key:     "flush_throttle_timeout",
-			Value:   "100ms",
+			Value:   "80ms",
 		},
 		{
 			Section: "consensus",
