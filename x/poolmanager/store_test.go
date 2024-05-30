@@ -187,39 +187,19 @@ func (s *KeeperTestSuite) TestSetTakerFeeShareAgreementsMapCached() {
 	}{
 		"single taker fee share agreement": {
 			setupFunc: func() {
-				numTakerFeeShareAgreements := 1
-				for i, takerFeeShareAgreement := range defaultTakerFeeShareAgreements {
-					if i >= numTakerFeeShareAgreements {
-						break
-					}
-					s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreement)
-				}
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:1])
 			},
 			expectedTakerFeeShareAgreements: func() map[string]types.TakerFeeShareAgreement {
-				numTakerFeeShareAgreements := 1
-				expectedTakerFeeShareAgreements := make(map[string]types.TakerFeeShareAgreement)
-				for i, takerFeeShareAgreement := range defaultTakerFeeShareAgreements {
-					if i >= numTakerFeeShareAgreements {
-						break
-					}
-					expectedTakerFeeShareAgreements[takerFeeShareAgreement.Denom] = takerFeeShareAgreement
-				}
-				return expectedTakerFeeShareAgreements
+				return createExpectedTakerFeeShareAgreementsMap(defaultTakerFeeShareAgreements[:1])
 			},
 			expectErr: false,
 		},
 		"multiple taker fee share agreements": {
 			setupFunc: func() {
-				for _, takerFeeShareAgreement := range defaultTakerFeeShareAgreements {
-					s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreement)
-				}
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements)
 			},
 			expectedTakerFeeShareAgreements: func() map[string]types.TakerFeeShareAgreement {
-				expectedTakerFeeShareAgreements := make(map[string]types.TakerFeeShareAgreement)
-				for _, takerFeeShareAgreement := range defaultTakerFeeShareAgreements {
-					expectedTakerFeeShareAgreements[takerFeeShareAgreement.Denom] = takerFeeShareAgreement
-				}
-				return expectedTakerFeeShareAgreements
+				return createExpectedTakerFeeShareAgreementsMap(defaultTakerFeeShareAgreements)
 			},
 			expectErr: false,
 		},
@@ -1051,10 +1031,10 @@ func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsCached() {
 			setupFunc: func() map[string]types.AlloyContractTakerFeeShareState {
 				poolInfos := s.PrepareAllSupportedPools()
 				pool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, poolInfos.AlloyedPoolID)
-				denom := fmt.Sprintf("factory/%s/alloyed/testdenom", pool.GetAddress().String())
 				s.Require().NoError(err)
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
+				denom := createAlloyedDenom(pool.GetAddress().String())
 				return map[string]types.AlloyContractTakerFeeShareState{
 					denom: {
 						ContractAddress:         pool.GetAddress().String(),
@@ -1073,8 +1053,8 @@ func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsCached() {
 				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{secondaryDenomA, secondaryDenomB}, []uint16{1, 1})
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
-				denomA := fmt.Sprintf("factory/%s/alloyed/testdenom", pool.GetAddress().String())
-				denomB := fmt.Sprintf("factory/%s/alloyed/testdenom", cwPool.GetAddress().String())
+				denomA := createAlloyedDenom(pool.GetAddress().String())
+				denomB := createAlloyedDenom(cwPool.GetAddress().String())
 				return map[string]types.AlloyContractTakerFeeShareState{
 					denomA: {
 						ContractAddress:         pool.GetAddress().String(),
@@ -1094,7 +1074,7 @@ func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsCached() {
 				s.Require().NoError(err)
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
-				denom := fmt.Sprintf("factory/%s/alloyed/testdenom", pool.GetAddress().String())
+				denom := createAlloyedDenom(pool.GetAddress().String())
 				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:1])
 				return map[string]types.AlloyContractTakerFeeShareState{
 					denom: {
@@ -1113,12 +1093,12 @@ func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsCached() {
 				s.Require().NoError(err)
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
-				denomA := fmt.Sprintf("factory/%s/alloyed/testdenom", pool.GetAddress().String())
+				denomA := createAlloyedDenom(pool.GetAddress().String())
 				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:2])
 				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{secondaryDenomA, secondaryDenomB}, []uint16{1, 1})
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
-				denomB := fmt.Sprintf("factory/%s/alloyed/testdenom", cwPool.GetAddress().String())
+				denomB := createAlloyedDenom(cwPool.GetAddress().String())
 				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, secondaryTakerFeeShareAgreements[:1])
 				return map[string]types.AlloyContractTakerFeeShareState{
 					denomA: {
@@ -1520,4 +1500,16 @@ func modifySkimPercent(agreements []types.TakerFeeShareAgreement, factors []osmo
 		}
 	}
 	return modified
+}
+
+func createExpectedTakerFeeShareAgreementsMap(agreements []types.TakerFeeShareAgreement) map[string]types.TakerFeeShareAgreement {
+	expectedTakerFeeShareAgreements := make(map[string]types.TakerFeeShareAgreement)
+	for _, agreement := range agreements {
+		expectedTakerFeeShareAgreements[agreement.Denom] = agreement
+	}
+	return expectedTakerFeeShareAgreements
+}
+
+func createAlloyedDenom(address string) string {
+	return fmt.Sprintf("factory/%s/alloyed/testdenom", address)
 }
