@@ -453,7 +453,7 @@ func (q Querier) RegisteredAlloyedPoolFromDenom(ctx sdk.Context, req queryproto.
 }
 
 func (q Querier) RegisteredAlloyedPoolFromPoolId(ctx sdk.Context, req queryproto.RegisteredAlloyedPoolFromPoolIdRequest) (*queryproto.RegisteredAlloyedPoolFromPoolIdResponse, error) {
-	_, contractState, err := q.K.GetRegisteredAlloyedPoolFromPoolId(ctx, req.PoolId)
+	contractState, err := q.K.GetRegisteredAlloyedPoolFromPoolId(ctx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "pool not found")
 	}

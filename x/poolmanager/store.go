@@ -272,7 +272,7 @@ func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error 
 	store.Set(key, bz)
 
 	// Set cache values
-	k.cachedRegisteredAlloyPoolToStateMap[alloyedDenom] = registeredAlloyedPool
+	k.cachedRegisteredAlloyPoolByAlloyDenomMap[alloyedDenom] = registeredAlloyedPool
 	k.cachedRegisteredAlloyedPoolIdArray = append(k.cachedRegisteredAlloyedPoolIdArray, poolId)
 	sort.Slice(k.cachedRegisteredAlloyedPoolIdArray, func(i, j int) bool {
 		return k.cachedRegisteredAlloyedPoolIdArray[i] < k.cachedRegisteredAlloyedPoolIdArray[j]
@@ -293,37 +293,28 @@ func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error 
 // GetRegisteredAlloyedPoolFromDenom retrieves a specific registered alloyed pool from the store via the alloyed denom.
 // Used in the RegisteredAlloyedPoolFromDenomRequest gRPC query.
 func (k Keeper) GetRegisteredAlloyedPoolFromDenom(ctx sdk.Context, alloyedDenom string) (types.AlloyContractTakerFeeShareState, bool) {
-	registeredAlloyedPool, found := k.cachedRegisteredAlloyPoolToStateMap[alloyedDenom]
+	registeredAlloyedPool, found := k.cachedRegisteredAlloyPoolByAlloyDenomMap[alloyedDenom]
 	if !found {
 		return types.AlloyContractTakerFeeShareState{}, false
 	}
 	return registeredAlloyedPool, true
 }
 
-
-func (k Keeper) GetRegisteredAlloyedPoolFromPoolId(ctx sdk.Context, poolId uint64) (string, types.AlloyContractTakerFeeShareState, error) {
-	store := ctx.KVStore(k.storeKey)
-	prefix := types.FormatRegisteredAlloyPoolKeyPoolIdOnly(poolId)
-	iterator := storetypes.KVStorePrefixIterator(store, prefix)
-	defer iterator.Close()
-
-	if !iterator.Valid() {
-		return "", types.AlloyContractTakerFeeShareState{}, types.NoRegisteredAlloyedPoolError{PoolId: poolId}
+// GetRegisteredAlloyedPoolFromPoolId retrieves a specific registered alloyed pool from the store via the pool id.
+// Used in the RegisteredAlloyedPoolFromPoolIdRequest gRPC query.
+func (k Keeper) GetRegisteredAlloyedPoolFromPoolId(ctx sdk.Context, poolId uint64) (types.AlloyContractTakerFeeShareState, error) {
+	alloyedDenom, err := k.GetAlloyedDenomFromPoolId(ctx, poolId)
+	if err != nil {
+		return types.AlloyContractTakerFeeShareState{}, err
 	}
-
-	registeredAlloyedPool := types.AlloyContractTakerFeeShareState{}
-	osmoutils.MustGet(store, iterator.Key(), &registeredAlloyedPool)
-
-	key := string(iterator.Key())
-	parts := strings.Split(key, types.KeySeparator)
-	if len(parts) < 3 {
-		return "", types.AlloyContractTakerFeeShareState{}, types.ErrInvalidKeyFormat
+	registeredAlloyedPool, found := k.GetRegisteredAlloyedPoolFromDenom(ctx, alloyedDenom)
+	if !found {
+		return types.AlloyContractTakerFeeShareState{}, types.NoRegisteredAlloyedPoolError{PoolId: poolId}
 	}
-	alloyedDenom := parts[len(parts)-1]
-
-	return alloyedDenom, registeredAlloyedPool, nil
+	return registeredAlloyedPool, nil
 }
 
+// GetAllRegisteredAlloyedPools creates a slice of all registered alloyed pools.
 // Used in the AllRegisteredAlloyedPoolsRequest gRPC query.
 func (k Keeper) GetAllRegisteredAlloyedPools(ctx sdk.Context) ([]types.AlloyContractTakerFeeShareState, error) {
 	store := ctx.KVStore(k.storeKey)
@@ -344,8 +335,8 @@ func (k Keeper) GetAllRegisteredAlloyedPools(ctx sdk.Context) ([]types.AlloyCont
 	return registeredAlloyedPools, nil
 }
 
-// Used for creating the map used for the registered alloyed pools cache.
-func (k Keeper) GetAllRegisteredAlloyedPoolsMap(ctx sdk.Context) (map[string]types.AlloyContractTakerFeeShareState, error) {
+// GetAllRegisteredAlloyedPoolsByDenomMap creates the map used for the registered alloyed pools cache.
+func (k Keeper) GetAllRegisteredAlloyedPoolsByDenomMap(ctx sdk.Context) (map[string]types.AlloyContractTakerFeeShareState, error) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, types.KeyRegisteredAlloyPool)
 	defer iterator.Close()
@@ -367,13 +358,13 @@ func (k Keeper) GetAllRegisteredAlloyedPoolsMap(ctx sdk.Context) (map[string]typ
 	return registeredAlloyedPoolsMap, nil
 }
 
-// Used for initializing the cache for the registered alloyed pools.
-func (k *Keeper) SetAllRegisteredAlloyedPoolsCached(ctx sdk.Context) error {
-	registeredAlloyPools, err := k.GetAllRegisteredAlloyedPoolsMap(ctx)
+// SetAllRegisteredAlloyedPoolsByDenomCached initializes the cache for the registered alloyed pools.
+func (k *Keeper) SetAllRegisteredAlloyedPoolsByDenomCached(ctx sdk.Context) error {
+	registeredAlloyPools, err := k.GetAllRegisteredAlloyedPoolsByDenomMap(ctx)
 	if err != nil {
 		return err
 	}
-	k.cachedRegisteredAlloyPoolToStateMap = registeredAlloyPools
+	k.cachedRegisteredAlloyPoolByAlloyDenomMap = registeredAlloyPools
 	return nil
 }
 
@@ -381,7 +372,7 @@ func (k *Keeper) SetAllRegisteredAlloyedPoolsCached(ctx sdk.Context) error {
 // Registered Alloyed Pool Ids
 //
 
-// Used for creating the map used for the registered alloyed pools id cache.
+// GetAllRegisteredAlloyedPoolsIdArray creates the array used for the registered alloyed pools id array cache.
 func (k Keeper) GetAllRegisteredAlloyedPoolsIdArray(ctx sdk.Context) ([]uint64, error) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, types.KeyRegisteredAlloyPool)
@@ -407,8 +398,8 @@ func (k Keeper) GetAllRegisteredAlloyedPoolsIdArray(ctx sdk.Context) ([]uint64, 
 	return registeredAlloyedPoolsIdArray, nil
 }
 
-// Used for initializing the cache for the registered alloyed pools id.
-func (k *Keeper) SetAllRegisteredAlloyedPoolsIdCached(ctx sdk.Context) error {
+// SetAllRegisteredAlloyedPoolIdArrayCached initializes the cache for the registered alloyed pools id array.
+func (k *Keeper) SetAllRegisteredAlloyedPoolIdArrayCached(ctx sdk.Context) error {
 	registeredAlloyPoolIds, err := k.GetAllRegisteredAlloyedPoolsIdArray(ctx)
 	if err != nil {
 		return err
@@ -503,7 +494,7 @@ func (k Keeper) snapshotTakerFeeShareAlloyComposition(ctx sdk.Context, contractA
 }
 
 func (k *Keeper) recalculateAndSetTakerFeeShareAlloyComposition(ctx sdk.Context, poolId uint64) error {
-	alloyedDenom, registeredAlloyedPoolPrior, err := k.GetRegisteredAlloyedPoolFromPoolId(ctx, poolId)
+	registeredAlloyedPoolPrior, err := k.GetRegisteredAlloyedPoolFromPoolId(ctx, poolId)
 	if err != nil {
 		return err
 	}
@@ -523,12 +514,42 @@ func (k *Keeper) recalculateAndSetTakerFeeShareAlloyComposition(ctx sdk.Context,
 		return err
 	}
 
+	alloyedDenom, err := k.GetAlloyedDenomFromPoolId(ctx, poolId)
+	if err != nil {
+		return err
+	}
 	store := ctx.KVStore(k.storeKey)
 	key := types.FormatRegisteredAlloyPoolKey(poolId, alloyedDenom)
 	store.Set(key, bz)
 
 	// Set cache value
-	k.cachedRegisteredAlloyPoolToStateMap[alloyedDenom] = registeredAlloyedPool
+	k.cachedRegisteredAlloyPoolByAlloyDenomMap[alloyedDenom] = registeredAlloyedPool
 
 	return nil
+}
+
+func (k Keeper) GetAlloyedDenomFromPoolId(ctx sdk.Context, poolId uint64) (string, error) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyRegisteredAlloyPool)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		key := string(iterator.Key())
+		parts := strings.Split(key, types.KeySeparator)
+		if len(parts) < 3 {
+			return "", types.ErrInvalidKeyFormat
+		}
+		alloyedIdStr := parts[len(parts)-2]
+		// Convert the string to uint64
+		alloyedId, err := strconv.ParseUint(alloyedIdStr, 10, 64)
+		if err != nil {
+			return "", err
+		}
+		if alloyedId == poolId {
+			alloyedDenom := parts[len(parts)-1]
+			return alloyedDenom, nil
+		}
+	}
+
+	return "", types.NoRegisteredAlloyedPoolError{PoolId: poolId}
 }

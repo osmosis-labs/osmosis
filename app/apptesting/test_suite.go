@@ -185,7 +185,7 @@ func (s *KeeperTestHelper) PrepareAllSupportedPoolsCustomProject(projectName, tr
 		stableswapPoolID   = s.PrepareBasicStableswapPool()
 		cosmWasmPool       = s.PrepareCustomTransmuterPoolCustomProject(s.TestAccs[0], []string{DefaultTransmuterDenomA, DefaultTransmuterDenomB}, projectName, transmuterPath)
 		cosmWasmPoolID     = cosmWasmPool.GetId()
-		alloyedPool        = s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{DefaultTransmuterDenomA, DefaultTransmuterDenomB}, nil)
+		alloyedPool        = s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{DefaultTransmuterDenomA, DefaultTransmuterDenomB}, []uint16{1, 1})
 		alloyedPoolID      = alloyedPool.GetId()
 	)
 

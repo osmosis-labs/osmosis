@@ -589,7 +589,7 @@ func (s *KeeperTestSuite) TestSetRegisteredAlloyedPool() {
 			poolType:      CWPool,
 			preSetFunc:    func(ctx sdk.Context) {},
 			postSetFunc:   func(ctx sdk.Context) {},
-			expectedError: fmt.Errorf("third part of alloyedDenom should be 'alloyed'"),
+			expectedError: types.InvalidAlloyedDenomPartError{PartIndex: 2, Expected: "alloyed", Actual: "transmuter"},
 		},
 		"set alloyed pool, with one taker fee share agreement set before alloyed pool is registered and one set after": {
 			poolType: AlloyedPool,
@@ -710,7 +710,9 @@ func (s *KeeperTestSuite) TestSetRegisteredAlloyedPool() {
 				s.Require().Equal(tc.expectedError.Error(), err.Error())
 			} else {
 				s.Require().NoError(err)
-				alloyedDenom, shareState, err := s.App.PoolManagerKeeper.GetRegisteredAlloyedPoolFromPoolId(s.Ctx, tc.poolId)
+				shareState, err := s.App.PoolManagerKeeper.GetRegisteredAlloyedPoolFromPoolId(s.Ctx, tc.poolId)
+				s.Require().NoError(err)
+				alloyedDenom, err := s.App.PoolManagerKeeper.GetAlloyedDenomFromPoolId(s.Ctx, tc.poolId)
 				s.Require().NoError(err)
 
 				alloyedPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, tc.poolId)
@@ -900,7 +902,7 @@ func (s *KeeperTestSuite) TestGetRegisteredAlloyedPoolFromPoolId() {
 
 			tc.setupFunc()
 
-			_, shareState, err := s.App.PoolManagerKeeper.GetRegisteredAlloyedPoolFromPoolId(s.Ctx, tc.poolId)
+			shareState, err := s.App.PoolManagerKeeper.GetRegisteredAlloyedPoolFromPoolId(s.Ctx, tc.poolId)
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().Equal(tc.expectedError.Error(), err.Error())
@@ -936,7 +938,7 @@ func (s *KeeperTestSuite) TestGetAllRegisteredAlloyedPools() {
 				poolInfos := s.PrepareAllSupportedPools()
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, nil)
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, []uint16{1, 1})
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 			},
@@ -988,7 +990,7 @@ func (s *KeeperTestSuite) TestGetAllRegisteredAlloyedPools() {
 				}
 				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreement)
 
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, nil)
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, []uint16{1, 1})
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 
@@ -1070,7 +1072,7 @@ func (s *KeeperTestSuite) TestGetAllRegisteredAlloyedPoolsMap() {
 				s.Require().NoError(err)
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, nil)
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, []uint16{1, 1})
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				denomA := fmt.Sprintf("factory/%s/alloyed/testdenom", pool.GetAddress().String())
@@ -1133,7 +1135,7 @@ func (s *KeeperTestSuite) TestGetAllRegisteredAlloyedPoolsMap() {
 					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
 				}
 				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreementB)
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, nil)
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, []uint16{1, 1})
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				denomB := fmt.Sprintf("factory/%s/alloyed/testdenom", cwPool.GetAddress().String())
@@ -1179,7 +1181,7 @@ func (s *KeeperTestSuite) TestGetAllRegisteredAlloyedPoolsMap() {
 			s.SetupTest()
 			expectedTakerFeeShareAgreementsMap := tc.setupFunc()
 
-			shareStatesMap, err := s.App.PoolManagerKeeper.GetAllRegisteredAlloyedPoolsMap(s.Ctx)
+			shareStatesMap, err := s.App.PoolManagerKeeper.GetAllRegisteredAlloyedPoolsByDenomMap(s.Ctx)
 			s.Require().NoError(err)
 			s.Require().Equal(expectedTakerFeeShareAgreementsMap, shareStatesMap)
 		})
@@ -1218,7 +1220,7 @@ func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsCached() {
 				s.Require().NoError(err)
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, nil)
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, []uint16{1, 1})
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				denomA := fmt.Sprintf("factory/%s/alloyed/testdenom", pool.GetAddress().String())
@@ -1281,7 +1283,7 @@ func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsCached() {
 					SkimAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
 				}
 				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, takerFeeShareAgreementB)
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, nil)
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, []uint16{1, 1})
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				denomB := fmt.Sprintf("factory/%s/alloyed/testdenom", cwPool.GetAddress().String())
@@ -1328,12 +1330,12 @@ func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsCached() {
 			expectedTakerFeeShareAgreementsMap := tc.setupFunc()
 
 			// Call the function to test
-			err := s.App.PoolManagerKeeper.SetAllRegisteredAlloyedPoolsCached(s.Ctx)
+			err := s.App.PoolManagerKeeper.SetAllRegisteredAlloyedPoolsByDenomCached(s.Ctx)
 			s.Require().NoError(err)
 
 			// Check that the cache was correctly set
-			_, cachedRegisteredAlloyPoolToStateMap, _ := s.App.PoolManagerKeeper.GetCachedTrackers()
-			s.Require().Equal(expectedTakerFeeShareAgreementsMap, cachedRegisteredAlloyPoolToStateMap)
+			_, cachedRegisteredAlloyPoolByAlloyDenomMap, _ := s.App.PoolManagerKeeper.GetCachedTrackers()
+			s.Require().Equal(expectedTakerFeeShareAgreementsMap, cachedRegisteredAlloyPoolByAlloyDenomMap)
 		})
 	}
 }
@@ -1355,7 +1357,7 @@ func (s *KeeperTestSuite) TestGetAllRegisteredAlloyedPoolsIdMap() {
 				poolInfos := s.PrepareAllSupportedPools()
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, nil)
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, []uint16{1, 1})
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				return []uint64{poolInfos.AlloyedPoolID, cwPool.GetId()}
@@ -1402,7 +1404,7 @@ func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsIdCached() {
 				poolInfos := s.PrepareAllSupportedPools()
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 				s.Require().NoError(err)
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, nil)
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB"}, []uint16{1, 1})
 				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				return []uint64{poolInfos.AlloyedPoolID, cwPool.GetId()}
@@ -1416,7 +1418,7 @@ func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsIdCached() {
 			expectedRegisteredAlloyedPoolsIdMap := tc.setupFunc()
 
 			// Call the function to test
-			err := s.App.PoolManagerKeeper.SetAllRegisteredAlloyedPoolsIdCached(s.Ctx)
+			err := s.App.PoolManagerKeeper.SetAllRegisteredAlloyedPoolIdArrayCached(s.Ctx)
 			s.Require().NoError(err)
 
 			// Check that the cache was correctly set
@@ -1448,7 +1450,7 @@ func (s *KeeperTestSuite) TestQueryAndCheckAlloyedDenom() {
 				s.Require().NoError(err)
 				return pool.GetAddress()
 			},
-			expectedError: fmt.Errorf("third part of alloyedDenom should be 'alloyed'"),
+			expectedError: types.InvalidAlloyedDenomPartError{PartIndex: 2, Expected: "alloyed", Actual: "transmuter"},
 		},
 	}
 
@@ -1475,7 +1477,7 @@ func (s *KeeperTestSuite) TestSnapshotTakerFeeShareAlloyComposition() {
 	}{
 		"alloyed pool exists, composed of no taker fee share denoms": {
 			setupFunc: func() cosmwasmpooltypes.CosmWasmExtension {
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB", "testC"}, nil)
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB", "testC"}, []uint16{1, 1, 1})
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				return cwPool
@@ -1484,7 +1486,7 @@ func (s *KeeperTestSuite) TestSnapshotTakerFeeShareAlloyComposition() {
 		},
 		"alloyed pool exists, composed of one taker fee share denom": {
 			setupFunc: func() cosmwasmpooltypes.CosmWasmExtension {
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB", "testC"}, nil)
+				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{"testA", "testB", "testC"}, []uint16{1, 1, 1})
 				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, types.TakerFeeShareAgreement{
@@ -1554,7 +1556,7 @@ func (s *KeeperTestSuite) TestSnapshotTakerFeeShareAlloyComposition() {
 				s.Require().Equal(tc.expectedError.Error(), err.Error())
 			} else {
 				s.Require().NoError(err)
-				_, alloyedComp, err := s.App.PoolManagerKeeper.GetRegisteredAlloyedPoolFromPoolId(s.Ctx, cwPool.GetId())
+				alloyedComp, err := s.App.PoolManagerKeeper.GetRegisteredAlloyedPoolFromPoolId(s.Ctx, cwPool.GetId())
 				s.Require().NoError(err)
 				s.Require().Equal(expectedComposition, alloyedComp.TakerFeeShareAgreements)
 			}
@@ -1679,11 +1681,11 @@ func (s *KeeperTestSuite) TestRecalculateAndSetTakerFeeShareAlloyComposition() {
 				s.Require().Error(err)
 				s.Require().Equal(tc.expectedError.Error(), err.Error())
 			} else {
-				_, shareStates, err := s.App.PoolManagerKeeper.GetRegisteredAlloyedPoolFromPoolId(s.Ctx, poolId)
+				shareStates, err := s.App.PoolManagerKeeper.GetRegisteredAlloyedPoolFromPoolId(s.Ctx, poolId)
+				s.Require().NoError(err)
 				for i, shareState := range shareStates.TakerFeeShareAgreements {
 					s.Require().Equal(tc.expectedUpdatedSkimPercent[i], shareState.SkimPercent)
 				}
-				s.Require().NoError(err)
 			}
 		})
 	}

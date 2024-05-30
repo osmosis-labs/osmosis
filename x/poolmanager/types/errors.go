@@ -13,17 +13,17 @@ const (
 )
 
 var (
-	ErrEmptyRoutes                          = errors.New("provided empty routes")
-	ErrTooFewPoolAssets                     = errors.New("pool should have at least 2 assets, as they must be swapping between at least two assets")
-	ErrTooManyPoolAssets                    = errors.New("pool has too many assets (currently capped at 8 assets per pool)")
-	ErrDuplicateRoutesNotAllowed            = errors.New("duplicate multihop routes are not allowed")
-	ErrUnauthorizedGov                      = errors.New("only the governance module is allowed to execute this message")
-	ErrSetTakerFeeShareAgreementsMapCached  = errors.New("error in setting taker fee share agreements map cached")
-	ErrSetAllRegisteredAlloyedPoolsCached   = errors.New("error in setting all registered alloyed pools cached")
-	ErrSetAllRegisteredAlloyedPoolsIdCached = errors.New("error in setting all registered alloyed pools id cached")
-	ErrSetRegisteredAlloyedPool             = errors.New("error in setting registered alloyed pool")
-	ErrInvalidKeyFormat                     = errors.New("invalid key format")
-	ErrTotalAlloyedLiquidityIsZero          = errors.New("totalAlloyedLiquidity is zero")
+	ErrEmptyRoutes                               = errors.New("provided empty routes")
+	ErrTooFewPoolAssets                          = errors.New("pool should have at least 2 assets, as they must be swapping between at least two assets")
+	ErrTooManyPoolAssets                         = errors.New("pool has too many assets (currently capped at 8 assets per pool)")
+	ErrDuplicateRoutesNotAllowed                 = errors.New("duplicate multihop routes are not allowed")
+	ErrUnauthorizedGov                           = errors.New("only the governance module is allowed to execute this message")
+	ErrSetTakerFeeShareAgreementsMapCached       = errors.New("error in setting taker fee share agreements map cached")
+	ErrSetAllRegisteredAlloyedPoolsByDenomCached = errors.New("error in setting all registered alloyed pools by denom cached")
+	ErrSetAllRegisteredAlloyedPoolsIdArrayCached = errors.New("error in setting registered alloyed pool id array cached")
+	ErrSetRegisteredAlloyedPool                  = errors.New("error in setting registered alloyed pool")
+	ErrInvalidKeyFormat                          = errors.New("invalid key format")
+	ErrTotalAlloyedLiquidityIsZero               = errors.New("totalAlloyedLiquidity is zero")
 )
 
 type nonPositiveAmountError struct {
