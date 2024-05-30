@@ -54,7 +54,7 @@ func (k Keeper) GetAllTakerFeesShareAgreements(ctx sdk.Context) []types.TakerFee
 	return takerFeeShareAgreements
 }
 
-// SetTakerFeeShareAgreementsMapCached is used for initializing the cache for the take fee share agreements.
+// SetTakerFeeShareAgreementsMapCached is used for initializing the cache for the taker fee share agreements.
 func (k *Keeper) SetTakerFeeShareAgreementsMapCached(ctx sdk.Context) error {
 	takerFeeShareAgreement, err := k.GetAllTakerFeeShareAgreementsMap(ctx)
 	if err != nil {
@@ -261,7 +261,7 @@ func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error 
 		return err
 	}
 
-	// Just to be safe, if a pool is registered with the same ID already, replace it
+	// Just to be safe, if a pool is registered with the same ID already but different alloyed denom, remove it.
 	iterator := storetypes.KVStorePrefixIterator(store, types.FormatRegisteredAlloyPoolKeyPoolIdOnly(poolId))
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
