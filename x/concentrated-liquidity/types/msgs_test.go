@@ -11,6 +11,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 	appParams "github.com/osmosis-labs/osmosis/v25/app/params"
 
+	osmosisapp "github.com/osmosis-labs/osmosis/v25/app"
+	clmod "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/clmodule"
 	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 )
@@ -19,6 +21,7 @@ type extMsg interface {
 	sdk.Msg
 	Route() string
 	Type() string
+	ValidateBasic() error
 }
 
 var (
@@ -41,9 +44,11 @@ func runValidateBasicTest(t *testing.T, name string, msg extMsg, expectPass bool
 		require.NoError(t, msg.ValidateBasic(), "test: %v", name)
 		require.Equal(t, msg.Route(), types.RouterKey)
 		require.Equal(t, msg.Type(), expType)
-		signers := msg.GetSigners()
+		encCfg := osmosisapp.GetEncodingConfig().Marshaler
+		signers, _, err := encCfg.GetMsgV1Signers(msg)
+		require.NoError(t, err)
 		require.Equal(t, len(signers), 1)
-		require.Equal(t, signers[0].String(), addr1)
+		require.Equal(t, sdk.AccAddress(signers[0]).String(), addr1)
 	} else {
 		require.Error(t, msg.ValidateBasic(), "test: %v", name)
 	}
@@ -365,7 +370,7 @@ func TestConcentratedLiquiditySerialization(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			apptesting.TestMessageAuthzSerialization(t, tc.clMsg)
+			apptesting.TestMessageAuthzSerialization(t, tc.clMsg, clmod.AppModuleBasic{})
 		})
 	}
 }

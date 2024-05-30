@@ -7,6 +7,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
@@ -110,10 +111,14 @@ func (server msgServer) SuperfluidUndelegateAndUnbondLock(goCtx context.Context,
 // `SuperfluidDelegate` from the superfluid module msg server.
 func (server msgServer) LockAndSuperfluidDelegate(goCtx context.Context, msg *types.MsgLockAndSuperfluidDelegate) (*types.MsgLockAndSuperfluidDelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	stakingParams, err := server.keeper.sk.GetParams(ctx)
+	if err != nil {
+		return &types.MsgLockAndSuperfluidDelegateResponse{}, err
+	}
 
 	lockupMsg := lockuptypes.MsgLockTokens{
 		Owner:    msg.Sender,
-		Duration: server.keeper.sk.GetParams(ctx).UnbondingTime,
+		Duration: stakingParams.UnbondingTime,
 		Coins:    msg.Coins,
 	}
 
@@ -169,12 +174,16 @@ func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.
 
 func (server msgServer) CreateFullRangePositionAndSuperfluidDelegate(goCtx context.Context, msg *types.MsgCreateFullRangePositionAndSuperfluidDelegate) (*types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	stakingParams, err := server.keeper.sk.GetParams(ctx)
+	if err != nil {
+		return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}, err
+	}
 
 	address, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}, err
 	}
-	positionData, lockId, err := server.keeper.clk.CreateFullRangePositionLocked(ctx, msg.PoolId, address, msg.Coins, server.keeper.sk.GetParams(ctx).UnbondingTime)
+	positionData, lockId, err := server.keeper.clk.CreateFullRangePositionLocked(ctx, msg.PoolId, address, msg.Coins, stakingParams.UnbondingTime)
 	if err != nil {
 		return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}, err
 	}
@@ -254,4 +263,32 @@ func (server msgServer) UnbondConvertAndStake(goCtx context.Context, msg *types.
 	}
 
 	return &types.MsgUnbondConvertAndStakeResponse{TotalAmtStaked: totalAmtConverted}, nil
+}
+
+func (server msgServer) SetDenomRiskFactor(goCtx context.Context, msg *types.MsgSetDenomRiskFactor) (*types.MsgSetDenomRiskFactorResponse, error) {
+	govAddr := server.keeper.ak.GetModuleAddress(govtypes.ModuleName)
+	if msg.Sender != govAddr.String() {
+		return nil, types.ErrUnauthorizedGov
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	err := server.keeper.SetDenomRiskFactor(ctx, msg.Denom, msg.RiskFactor)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgSetDenomRiskFactorResponse{}, nil
+}
+
+func (server msgServer) UnsetDenomRiskFactor(goCtx context.Context, msg *types.MsgUnsetDenomRiskFactor) (*types.MsgUnsetDenomRiskFactorResponse, error) {
+	govAddr := server.keeper.ak.GetModuleAddress(govtypes.ModuleName)
+	if msg.Sender != govAddr.String() {
+		return nil, types.ErrUnauthorizedGov
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	server.keeper.DeleteDenomRiskFactor(ctx, msg.Denom)
+
+	return &types.MsgUnsetDenomRiskFactorResponse{}, nil
 }

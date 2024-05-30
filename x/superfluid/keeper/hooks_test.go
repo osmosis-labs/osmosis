@@ -102,8 +102,8 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			for _, acc := range intermediaryAccs {
 				valAddr, err := sdk.ValAddressFromBech32(acc.ValAddr)
 				s.Require().NoError(err)
-				delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, acc.GetAccAddress(), valAddr)
-				s.Require().True(found)
+				delegation, err := s.App.StakingKeeper.GetDelegation(s.Ctx, acc.GetAccAddress(), valAddr)
+				s.Require().NoError(err)
 				s.Require().Equal(osmomath.NewDec(7500000), delegation.Shares)
 			}
 
@@ -281,8 +281,8 @@ func (s *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 			superDelegations:      []superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			superUnbondingLockIds: []uint64{1, 2},
 			slashedValIndexes:     []int64{0},
-			expSlashedLockIds:     []uint64{1},
-			expUnslashedLockIds:   []uint64{2},
+			expSlashedLockIds:     []uint64{}, // UNFORKING v2 TODO: We no longer slash unbonded validators so we no longer expect this to be slashed, verify that this is correct.
+			expUnslashedLockIds:   []uint64{1, 2},
 		},
 	}
 
@@ -314,8 +314,8 @@ func (s *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 
 			// slash unbonding lockups for all intermediary accounts
 			for _, valIndex := range tc.slashedValIndexes {
-				validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrs[valIndex])
-				s.Require().True(found)
+				validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrs[valIndex])
+				s.Require().NoError(err)
 				s.Ctx = s.Ctx.WithBlockHeight(100)
 				consAddr, err := validator.GetConsAddr()
 				s.Require().NoError(err)
@@ -364,7 +364,7 @@ func (s *KeeperTestSuite) TestAfterAddTokensToLock_Event() {
 
 	for index, lock := range locks {
 		lockupMsgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
-		c := sdk.WrapSDKContext(s.Ctx)
+		c := s.Ctx
 		coinsToLock := sdk.NewCoins(sdk.NewCoin(denoms[index], osmomath.NewInt(100)))
 		sender, _ := sdk.AccAddressFromBech32(lock.Owner)
 		s.FundAcc(sender, coinsToLock)

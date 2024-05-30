@@ -269,19 +269,19 @@ func TestMergeCoinMaps(t *testing.T) {
 	// Test case 2: Merging maps with overlapping keys.
 	t.Run("Merge Maps with Overlapping Keys", func(t *testing.T) {
 		currentMap := map[string]sdk.Coins{
-			"pool1": sdk.NewCoins(sdk.NewCoin("token1", sdk.NewInt(100))),
-			"pool2": sdk.NewCoins(sdk.NewCoin("token2", sdk.NewInt(200))),
+			"pool1": sdk.NewCoins(sdk.NewCoin("token1", osmomath.NewInt(100))),
+			"pool2": sdk.NewCoins(sdk.NewCoin("token2", osmomath.NewInt(200))),
 		}
 
 		poolMap := map[string]sdk.Coins{
-			"pool2": sdk.NewCoins(sdk.NewCoin("token2", sdk.NewInt(300))),
-			"pool3": sdk.NewCoins(sdk.NewCoin("token3", sdk.NewInt(400))),
+			"pool2": sdk.NewCoins(sdk.NewCoin("token2", osmomath.NewInt(300))),
+			"pool3": sdk.NewCoins(sdk.NewCoin("token3", osmomath.NewInt(400))),
 		}
 
 		expectedMergedMap := map[string]sdk.Coins{
-			"pool1": sdk.NewCoins(sdk.NewCoin("token1", sdk.NewInt(100))),
-			"pool2": sdk.NewCoins(sdk.NewCoin("token2", sdk.NewInt(500))), // 200 + 300
-			"pool3": sdk.NewCoins(sdk.NewCoin("token3", sdk.NewInt(400))),
+			"pool1": sdk.NewCoins(sdk.NewCoin("token1", osmomath.NewInt(100))),
+			"pool2": sdk.NewCoins(sdk.NewCoin("token2", osmomath.NewInt(500))), // 200 + 300
+			"pool3": sdk.NewCoins(sdk.NewCoin("token3", osmomath.NewInt(400))),
 		}
 
 		mergedMap := osmoutils.MergeCoinMaps(currentMap, poolMap)

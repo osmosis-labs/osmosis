@@ -18,6 +18,8 @@ import (
 func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 	defaultJoinTime := s.Ctx.BlockTime()
 	owner, nonOwner := apptesting.CreateRandomAccounts(1)[0], apptesting.CreateRandomAccounts(1)[0]
+	unbondingTime, err := s.App.StakingKeeper.UnbondingTime(s.Ctx)
+	s.Require().NoError(err)
 	type sendTest struct {
 		superfluidDelegated    bool
 		superfluidUndelegating bool
@@ -80,7 +82,7 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 			unlocking:     true,
 			amount0Added:  osmomath.NewInt(100000000),
 			amount1Added:  osmomath.NewInt(100000000),
-			expectedError: types.LockImproperStateError{LockId: 1, UnbondingDuration: s.App.StakingKeeper.UnbondingTime(s.Ctx).String()},
+			expectedError: types.LockImproperStateError{LockId: 1, UnbondingDuration: unbondingTime.String()},
 		},
 		"error: lock that is superfluid undelegating, not unlocking": {
 			superfluidDelegated:    true,
@@ -95,7 +97,7 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 			unlocking:              true,
 			amount0Added:           osmomath.NewInt(100000000),
 			amount1Added:           osmomath.NewInt(100000000),
-			expectedError:          types.LockImproperStateError{LockId: 1, UnbondingDuration: s.App.StakingKeeper.UnbondingTime(s.Ctx).String()},
+			expectedError:          types.LockImproperStateError{LockId: 1, UnbondingDuration: unbondingTime.String()},
 		},
 		"error: non-existent position ID": {
 			overwritePositionId: true,
@@ -115,7 +117,8 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 			stakingKeeper := s.App.StakingKeeper
 			concentratedLiquidityKeeper := s.App.ConcentratedLiquidityKeeper
 			bankKeeper := s.App.BankKeeper
-			bondDenom := stakingKeeper.BondDenom(ctx)
+			bondDenom, err := stakingKeeper.BondDenom(ctx)
+			s.Require().NoError(err)
 
 			// Run test setup logic.
 			positionId, lockId, amount0, amount1, valAddr, poolJoinAcc := s.SetupSuperfluidConcentratedPosition(ctx, tc.superfluidDelegated, tc.superfluidUndelegating, tc.unlocking, owner)
@@ -173,7 +176,7 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 
 			// Check that bond denom supply changed by the amount of bond denom added (taking into consideration risk adjusted osmo value and err tolerance)
 			diffInBondDenomSupply := postAddToPositionStakeSupply.Amount.Sub(preAddToPositionStakeSupply.Amount)
-			expectedBondDenomSupplyDiff := superfluidKeeper.GetRiskAdjustedOsmoValue(ctx, tc.amount0Added)
+			expectedBondDenomSupplyDiff := superfluidKeeper.GetRiskAdjustedOsmoValue(ctx, tc.amount0Added, "any")
 			osmoassert.Equal(s.T(), errTolerance, expectedBondDenomSupplyDiff, diffInBondDenomSupply)
 			// Check that the pool funds changed by the amount of tokens added (taking into consideration err tolerance)
 			diffInPoolFundsToken0 := postAddToPositionPoolFunds.AmountOf(clPool.GetToken0()).Sub(preAddToPositionPoolFunds.AmountOf(clPool.GetToken0()))
@@ -191,9 +194,11 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 			osmoassert.Equal(s.T(), errTolerance, expectedNewCoins[1].Amount, positionData.Amount1)
 
 			// Check the new lock.
+			unbondingTime, err = s.App.StakingKeeper.UnbondingTime(s.Ctx)
+			s.Require().NoError(err)
 			newLock, err := s.App.LockupKeeper.GetLockByID(ctx, newLockId)
 			s.Require().NoError(err)
-			s.Require().Equal(s.App.StakingKeeper.UnbondingTime(ctx), newLock.Duration)
+			s.Require().Equal(unbondingTime, newLock.Duration)
 			s.Require().True(newLock.EndTime.IsZero())
 			s.Require().Equal(poolJoinAcc.String(), newLock.Owner)
 			s.Require().Equal(expectedLockCoins.String(), newLock.Coins.String())
@@ -220,13 +225,13 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 			s.Require().NoError(err)
 
 			// Check if the old intermediary account has no delegation.
-			_, found := stakingKeeper.GetDelegation(ctx, oldIntermediaryAcc, valAddr)
-			s.Require().False(found)
+			_, err = stakingKeeper.GetDelegation(ctx, oldIntermediaryAcc, valAddr)
+			s.Require().Error(err)
 
 			// Check if the new intermediary account has expected delegation amount.
-			expectedDelegationAmt := superfluidKeeper.GetRiskAdjustedOsmoValue(ctx, positionData.Amount0)
-			delegationAmt, found := stakingKeeper.GetDelegation(ctx, newIntermediaryAcc, valAddr)
-			s.Require().True(found)
+			expectedDelegationAmt := superfluidKeeper.GetRiskAdjustedOsmoValue(ctx, positionData.Amount0, "any")
+			delegationAmt, err := stakingKeeper.GetDelegation(ctx, newIntermediaryAcc, valAddr)
+			s.Require().NoError(err)
 			s.Require().Equal(expectedDelegationAmt, delegationAmt.Shares.TruncateInt())
 		})
 	}
@@ -248,7 +253,7 @@ func (s *KeeperTestSuite) SetupSuperfluidConcentratedPosition(ctx sdk.Context, s
 	delAddrs = append(delAddrs, owner)
 	poolJoinAcc = delAddrs[1]
 	for _, acc := range delAddrs {
-		err := testutil.FundAccount(bankKeeper, ctx, acc, defaultAcctFunds)
+		err := testutil.FundAccount(ctx, bankKeeper, acc, defaultAcctFunds)
 		s.Require().NoError(err)
 	}
 
@@ -260,7 +265,9 @@ func (s *KeeperTestSuite) SetupSuperfluidConcentratedPosition(ctx sdk.Context, s
 	clPoolId := clPool.GetId()
 
 	// The lock duration is the same as the staking module's unbonding duration.
-	unbondingDuration := stakingKeeper.GetParams(ctx).UnbondingTime
+	stakingParams, err := stakingKeeper.GetParams(ctx)
+	s.Require().NoError(err)
+	unbondingDuration := stakingParams.UnbondingTime
 
 	// Create a full range position in the concentrated liquidity pool.
 	positionData, lockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPoolId, poolJoinAcc, fullRangeCoins, unbondingDuration)

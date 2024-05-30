@@ -7,6 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
@@ -43,7 +45,7 @@ func (protoRevDec ProtoRevDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simu
 	//
 	// 50M is chosen as a large enough number to ensure that the posthandler will not run out of gas,
 	// but will eventually terminate in event of an accidental infinite loop with some gas usage.
-	upperGasLimitMeter := sdk.NewGasMeter(sdk.Gas(50_000_000))
+	upperGasLimitMeter := storetypes.NewGasMeter(storetypes.Gas(50_000_000))
 	cacheCtx = cacheCtx.WithGasMeter(upperGasLimitMeter)
 
 	// Check if the protorev posthandler can be executed
@@ -67,7 +69,7 @@ func (protoRevDec ProtoRevDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simu
 	// Delete swaps to backrun for next transaction without consuming gas
 	// from the current transaction's gas meter, but instead from a new gas meter with 50mil gas.
 	// 50 mil gas was chosen as an arbitrary large number to ensure deletion does not run out of gas.
-	protoRevDec.ProtoRevKeeper.DeleteSwapsToBackrun(ctx.WithGasMeter(sdk.NewGasMeter(sdk.Gas(50_000_000))))
+	protoRevDec.ProtoRevKeeper.DeleteSwapsToBackrun(ctx.WithGasMeter(storetypes.NewGasMeter(storetypes.Gas(50_000_000))))
 
 	return next(ctx, tx, success, simulate)
 }

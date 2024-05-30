@@ -784,7 +784,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 		expectedError            error
 	}
 
-	validateResult := func(ctx sdk.Context, err error, tc updateAccumToNow, poolId uint64, initUptimeAccumValues []sdk.DecCoins, qualifyingLiquidity sdk.Dec) []sdk.DecCoins {
+	validateResult := func(ctx sdk.Context, err error, tc updateAccumToNow, poolId uint64, initUptimeAccumValues []sdk.DecCoins, qualifyingLiquidity osmomath.Dec) []sdk.DecCoins {
 		if tc.expectedError != nil {
 			s.Require().ErrorContains(err, tc.expectedError.Error())
 
@@ -3663,7 +3663,7 @@ func (s *KeeperTestSuite) TestIncentiveTruncation() {
 	//   total: "0"
 	// 24 * 60 * 60 * 9645.061724537037037037
 	// 833333333.0        -<------ Initial incentives in recorrd
-	incentiveCoin := sdk.NewCoin("ibc/A8CA5EE328FA10C9519DF6057DA1F69682D28F7D0F5CCC7ECB72E3DCA2D157A4", sdk.NewInt(833333333))
+	incentiveCoin := sdk.NewCoin("ibc/A8CA5EE328FA10C9519DF6057DA1F69682D28F7D0F5CCC7ECB72E3DCA2D157A4", osmomath.NewInt(833333333))
 
 	// Create a pool state simulating pool 1423. The only difference is that we force the pool state given 1 position as
 	// opposed to many.
@@ -3835,15 +3835,15 @@ func (s *KeeperTestSuite) TestRedepositForfeitedIncentives() {
 		},
 		"With active liquidity - forfeited incentives redeposited": {
 			setupPoolWithActiveLiquidity: true,
-			forfeitedIncentives:          []sdk.Coins{{sdk.NewCoin("foo", sdk.NewInt(12345))}, sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins()},
+			forfeitedIncentives:          []sdk.Coins{{sdk.NewCoin("foo", osmomath.NewInt(12345))}, sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins()},
 		},
 		"Multiple forfeited incentives redeposited": {
 			setupPoolWithActiveLiquidity: true,
-			forfeitedIncentives:          []sdk.Coins{sdk.NewCoins(), {sdk.NewCoin("bar", sdk.NewInt(54321))}, sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), {sdk.NewCoin("foo", sdk.NewInt(12345))}},
+			forfeitedIncentives:          []sdk.Coins{sdk.NewCoins(), {sdk.NewCoin("bar", osmomath.NewInt(54321))}, sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), {sdk.NewCoin("foo", osmomath.NewInt(12345))}},
 		},
 		"All slots filled with forfeited incentives": {
 			setupPoolWithActiveLiquidity: true,
-			forfeitedIncentives:          []sdk.Coins{{sdk.NewCoin("foo", sdk.NewInt(10000))}, {sdk.NewCoin("bar", sdk.NewInt(20000))}, {sdk.NewCoin("baz", sdk.NewInt(30000))}, {sdk.NewCoin("qux", sdk.NewInt(40000))}, {sdk.NewCoin("quux", sdk.NewInt(50000))}, {sdk.NewCoin("corge", sdk.NewInt(60000))}},
+			forfeitedIncentives:          []sdk.Coins{{sdk.NewCoin("foo", osmomath.NewInt(10000))}, {sdk.NewCoin("bar", osmomath.NewInt(20000))}, {sdk.NewCoin("baz", osmomath.NewInt(30000))}, {sdk.NewCoin("qux", osmomath.NewInt(40000))}, {sdk.NewCoin("quux", osmomath.NewInt(50000))}, {sdk.NewCoin("corge", osmomath.NewInt(60000))}},
 		},
 		"No active liquidity with no forfeited incentives": {
 			setupPoolWithActiveLiquidity: false,
@@ -3851,7 +3851,7 @@ func (s *KeeperTestSuite) TestRedepositForfeitedIncentives() {
 		},
 		"No active liquidity with forfeited incentives sent to owner": {
 			setupPoolWithActiveLiquidity: false,
-			forfeitedIncentives:          []sdk.Coins{{sdk.NewCoin("foo", sdk.NewInt(10000))}, sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins()},
+			forfeitedIncentives:          []sdk.Coins{{sdk.NewCoin("foo", osmomath.NewInt(10000))}, sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins(), sdk.NewCoins()},
 		},
 		"Incorrect forfeited incentives length": {
 			setupPoolWithActiveLiquidity: true,

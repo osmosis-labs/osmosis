@@ -1,6 +1,7 @@
 package initialization
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -9,11 +10,12 @@ import (
 	"strings"
 	"time"
 
+	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	"cosmossdk.io/x/tx/signing"
 	tmconfig "github.com/cometbft/cometbft/config"
 	tmos "github.com/cometbft/cometbft/libs/os"
 	"github.com/cometbft/cometbft/p2p"
 	"github.com/cometbft/cometbft/privval"
-	tmtypes "github.com/cometbft/cometbft/types"
 	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -26,12 +28,13 @@ import (
 	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/viper"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmosisApp "github.com/osmosis-labs/osmosis/v25/app"
+	keepers "github.com/osmosis-labs/osmosis/v25/app/keepers"
 	"github.com/osmosis-labs/osmosis/v25/tests/e2e/util"
 )
 
@@ -86,7 +89,7 @@ func (n *internalNode) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error)
 	// get the initial validator min self delegation
 	minSelfDelegation, _ := osmomath.NewIntFromString("1")
 
-	valPubKey, err := cryptocodec.FromTmPubKeyInterface(n.consensusKey.PubKey)
+	valPubKey, err := cryptocodec.FromCmtPubKeyInterface(n.consensusKey.PubKey)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +100,7 @@ func (n *internalNode) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error)
 	}
 
 	return stakingtypes.NewMsgCreateValidator(
-		sdk.ValAddress(addr),
+		sdk.ValAddress(addr).String(),
 		valPubKey,
 		amount,
 		description,
@@ -235,13 +238,13 @@ func (n *internalNode) getNodeKey() *p2p.NodeKey {
 	return &n.nodeKey
 }
 
-func (n *internalNode) getGenesisDoc() (*tmtypes.GenesisDoc, error) {
+func (n *internalNode) getGenesisDoc() (*genutiltypes.AppGenesis, error) {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 	config.SetRoot(n.configDir())
 
 	genFile := config.GenesisFile()
-	doc := &tmtypes.GenesisDoc{}
+	doc := &genutiltypes.AppGenesis{}
 
 	if _, err := os.Stat(genFile); err != nil {
 		if !os.IsNotExist(err) {
@@ -250,9 +253,9 @@ func (n *internalNode) getGenesisDoc() (*tmtypes.GenesisDoc, error) {
 	} else {
 		var err error
 
-		doc, err = tmtypes.GenesisDocFromFile(genFile)
+		_, doc, err = genutiltypes.GenesisStateFromGenFile(genFile)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read genesis doc from file: %w", err)
+			return nil, fmt.Errorf("failed to unmarshal genesis state: %w", err)
 		}
 	}
 
@@ -275,13 +278,15 @@ func (n *internalNode) init() error {
 		return err
 	}
 
-	appState, err := json.MarshalIndent(osmosisApp.ModuleBasics.DefaultGenesis(util.Cdc), "", " ")
+	appState, err := json.MarshalIndent(keepers.AppModuleBasics.DefaultGenesis(util.Cdc), "", " ")
 	if err != nil {
 		return fmt.Errorf("failed to JSON encode app genesis state: %w", err)
 	}
 
 	genDoc.ChainID = n.chain.chainMeta.Id
-	genDoc.Validators = nil
+	// UNFORKING v2 TODO: This used to be genDoc.Consensus.Validators = nil, but got the error that Consensus can't be nil.
+	// Verify that this is the correct fix.
+	genDoc.Consensus = &genutiltypes.ConsensusGenesis{}
 	genDoc.AppState = appState
 
 	if err = genutil.ExportGenesisFile(genDoc, config.GenesisFile()); err != nil {
@@ -378,8 +383,15 @@ func (n *internalNode) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 	txBuilder.SetFeeAmount(sdk.NewCoins())
 	txBuilder.SetGasLimit(uint64(200000 * len(msgs)))
 
+	// UNFORKING v2 TODO: Verify that the type casting to V2AdaptableTx is correct.
+	adaptableTx, ok := txBuilder.GetTx().(authsigning.V2AdaptableTx)
+	if !ok {
+		return nil, fmt.Errorf("expected tx to be V2AdaptableTx, got %T", adaptableTx)
+	}
+	txData := adaptableTx.GetSigningTxData()
+
 	// TODO: Find a better way to sign this tx with less code.
-	signerData := authsigning.SignerData{
+	signerData := signing.SignerData{
 		ChainID:       n.chain.chainMeta.Id,
 		AccountNumber: 0,
 		Sequence:      0,
@@ -412,9 +424,12 @@ func (n *internalNode) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 	}
 
 	bytesToSign, err := util.EncodingConfig.TxConfig.SignModeHandler().GetSignBytes(
-		txsigning.SignMode_SIGN_MODE_DIRECT,
+		// UNFORKING v2 TODO: Verify that empty context is fine due to sign mode direct and not textual.
+		// Should we be expecting to eventually support textual mode?
+		context.Background(),
+		signingv1beta1.SignMode_SIGN_MODE_DIRECT,
 		signerData,
-		txBuilder.GetTx(),
+		txData,
 	)
 	if err != nil {
 		return nil, err

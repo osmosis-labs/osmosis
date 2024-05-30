@@ -62,11 +62,11 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.contractKeeper = wasmkeeper.NewGovPermissionKeeper(s.App.WasmKeeper)
 	s.queryClient = types.NewQueryClient(s.QueryHelper)
 	s.msgServer = keeper.NewMsgServerImpl(*s.App.TokenFactoryKeeper)
-	s.bankMsgServer = bankkeeper.NewMsgServerImpl(s.App.BankKeeper)
+	s.bankMsgServer = bankkeeper.NewMsgServerImpl(*s.App.BankKeeper)
 }
 
 func (s *KeeperTestSuite) CreateDefaultDenom() {
-	res, _ := s.msgServer.CreateDenom(sdk.WrapSDKContext(s.Ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), "bitcoin"))
+	res, _ := s.msgServer.CreateDenom(s.Ctx, types.NewMsgCreateDenom(s.TestAccs[0].String(), "bitcoin"))
 	s.defaultDenom = res.GetNewTokenDenom()
 }
 
@@ -81,7 +81,7 @@ func (s *KeeperTestSuite) TestCreateModuleAccount() {
 	app.AccountKeeper.RemoveAccount(s.Ctx, tokenfactoryModuleAccount)
 
 	// ensure module account was removed
-	s.Ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	s.Ctx = app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	tokenfactoryModuleAccount = app.AccountKeeper.GetAccount(s.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
 	s.Require().Nil(tokenfactoryModuleAccount)
 

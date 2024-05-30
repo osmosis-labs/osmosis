@@ -102,6 +102,8 @@ var (
 	// Various sqrt estimates
 	Sqrt4994 = osmomath.MustNewDecFromStr("70.668238976219012614")
 
+	usdcChainDenom = "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4"
+
 	// swap out given in test cases
 	SwapOutGivenInCases = map[string]ConcentratedSwapTest{
 		//  One price range
@@ -896,7 +898,7 @@ func (s *KeeperTestHelper) CreateFullRangePosition(pool types.ConcentratedPoolEx
 func (s *KeeperTestHelper) WithdrawFullRangePosition(pool types.ConcentratedPoolExtension, positionId uint64, liquidityToRemove osmomath.Dec) {
 	clMsgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
 
-	_, err := clMsgServer.WithdrawPosition(sdk.WrapSDKContext(s.Ctx), &types.MsgWithdrawPosition{
+	_, err := clMsgServer.WithdrawPosition(s.Ctx, &types.MsgWithdrawPosition{
 		PositionId:      positionId,
 		LiquidityAmount: liquidityToRemove,
 		Sender:          s.TestAccs[0].String(),
@@ -914,7 +916,7 @@ func (s *KeeperTestHelper) SetupConcentratedLiquidityDenomsAndPoolCreation() {
 	defaultParams.IsPermissionlessPoolCreationEnabled = true
 	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, defaultParams)
 
-	authorizedQuoteDenoms := append(poolmanagertypes.DefaultParams().AuthorizedQuoteDenoms, ETH, USDC, BAR, BAZ, FOO, appparams.BaseCoinUnit, STAKE, WBTC)
+	authorizedQuoteDenoms := append(poolmanagertypes.DefaultParams().AuthorizedQuoteDenoms, ETH, USDC, BAR, BAZ, FOO, appparams.BaseCoinUnit, STAKE, WBTC, usdcChainDenom)
 	s.App.PoolManagerKeeper.SetParam(s.Ctx, poolmanagertypes.KeyAuthorizedQuoteDenoms, authorizedQuoteDenoms)
 }
 

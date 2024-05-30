@@ -31,7 +31,7 @@ func (s *KeeperTestSuite) TestMsgServer_AddAuthenticator() {
 		Data:   priv.PubKey().Bytes(),
 	}
 
-	resp, err := msgServer.AddAuthenticator(sdk.WrapSDKContext(ctx), msg)
+	resp, err := msgServer.AddAuthenticator(ctx, msg)
 	s.Require().NoError(err)
 	s.Require().True(resp.Success)
 
@@ -68,7 +68,7 @@ func (s *KeeperTestSuite) TestMsgServer_AddAuthenticatorFail() {
 	}
 
 	msg.Type = "PassKeyAuthenticator"
-	_, err := msgServer.AddAuthenticator(sdk.WrapSDKContext(ctx), msg)
+	_, err := msgServer.AddAuthenticator(ctx, msg)
 	s.Require().Error(err)
 }
 
@@ -88,7 +88,7 @@ func (s *KeeperTestSuite) TestMsgServer_RemoveAuthenticator() {
 		Type:   authenticator.SignatureVerification{}.Type(),
 		Data:   priv.PubKey().Bytes(),
 	}
-	_, err := msgServer.AddAuthenticator(sdk.WrapSDKContext(ctx), addMsg)
+	_, err := msgServer.AddAuthenticator(ctx, addMsg)
 	s.Require().NoError(err)
 
 	// Now attempt to remove it
@@ -97,7 +97,7 @@ func (s *KeeperTestSuite) TestMsgServer_RemoveAuthenticator() {
 		Id:     1,
 	}
 
-	resp, err := msgServer.RemoveAuthenticator(sdk.WrapSDKContext(ctx), removeMsg)
+	resp, err := msgServer.RemoveAuthenticator(ctx, removeMsg)
 	s.Require().NoError(err)
 	s.Require().True(resp.Success)
 }
@@ -129,7 +129,7 @@ func (s *KeeperTestSuite) TestMsgServer_SetActiveState() {
 
 	// deactivate by unauthorized account
 	_, err := msgServer.SetActiveState(
-		sdk.WrapSDKContext(ctx),
+		ctx,
 		&types.MsgSetActiveState{
 			Sender: unauthorizedAccAddress.String(),
 			Active: false,
@@ -140,7 +140,7 @@ func (s *KeeperTestSuite) TestMsgServer_SetActiveState() {
 
 	// deactivate
 	_, err = msgServer.SetActiveState(
-		sdk.WrapSDKContext(ctx),
+		ctx,
 
 		&types.MsgSetActiveState{
 			Sender: authorizedAccAddress.String(),
@@ -158,7 +158,7 @@ func (s *KeeperTestSuite) TestMsgServer_SetActiveState() {
 
 	// reactivate by a controller (unauthorized)
 	_, err = msgServer.SetActiveState(
-		sdk.WrapSDKContext(ctx),
+		ctx,
 		&types.MsgSetActiveState{
 			Sender: authorizedAccAddress.String(),
 			Active: true,
@@ -169,7 +169,7 @@ func (s *KeeperTestSuite) TestMsgServer_SetActiveState() {
 	// reactivate by gov
 	governor := s.App.SmartAccountKeeper.CircuitBreakerGovernor
 	_, err = msgServer.SetActiveState(
-		sdk.WrapSDKContext(ctx),
+		ctx,
 		&types.MsgSetActiveState{
 			Sender: governor.String(),
 			Active: true,
@@ -197,7 +197,7 @@ func (s *KeeperTestSuite) TestMsgServer_SmartAccountsNotActive() {
 		Data:   []byte(""),
 	}
 
-	_, err := msgServer.AddAuthenticator(sdk.WrapSDKContext(ctx), msg)
+	_, err := msgServer.AddAuthenticator(ctx, msg)
 	s.Require().Error(err)
 	s.Require().Equal(err.Error(), "smartaccount module is not active: unauthorized")
 
@@ -206,7 +206,7 @@ func (s *KeeperTestSuite) TestMsgServer_SmartAccountsNotActive() {
 		Id:     1,
 	}
 
-	_, err = msgServer.RemoveAuthenticator(sdk.WrapSDKContext(ctx), removeMsg)
+	_, err = msgServer.RemoveAuthenticator(ctx, removeMsg)
 	s.Require().Error(err)
 	s.Require().Equal(err.Error(), "smartaccount module is not active: unauthorized")
 }

@@ -6,9 +6,9 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/upgrades"
 
-	store "github.com/cosmos/cosmos-sdk/store/types"
+	store "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	auctiontypes "github.com/skip-mev/block-sdk/x/auction/types"
+	auctiontypes "github.com/skip-mev/block-sdk/v2/x/auction/types"
 
 	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
 )
@@ -49,8 +49,8 @@ var Upgrade = upgrades.Upgrade{
 // AuctionParams expected initial params for the block-sdk
 var AuctionParams = auctiontypes.Params{
 	MaxBundleSize:          5,
-	ReserveFee:             sdk.NewCoin(AuctionUSDCDenom, sdk.NewInt(1000000)),
-	MinBidIncrement:        sdk.NewCoin(AuctionUSDCDenom, sdk.NewInt(1000000)),
+	ReserveFee:             sdk.NewCoin(AuctionUSDCDenom, osmomath.NewInt(1000000)),
+	MinBidIncrement:        sdk.NewCoin(AuctionUSDCDenom, osmomath.NewInt(1000000)),
 	EscrowAccountAddress:   auctiontypes.DefaultEscrowAccountAddress,
 	FrontRunningProtection: true,
 	ProposerFee:            osmomath.MustNewDecFromStr("0.05"),

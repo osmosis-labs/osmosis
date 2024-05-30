@@ -28,10 +28,6 @@ func (msg MsgSetFeeTokens) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgSetFeeTokens) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 func (msg MsgSetFeeTokens) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {

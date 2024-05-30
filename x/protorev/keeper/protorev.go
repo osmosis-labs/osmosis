@@ -7,10 +7,11 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v25/x/protorev/types"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -40,7 +41,7 @@ func (k Keeper) GetAllTokenPairArbRoutes(ctx sdk.Context) ([]types.TokenPairArbR
 	routes := make([]types.TokenPairArbRoutes, 0)
 
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixTokenPairRoutes)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyPrefixTokenPairRoutes)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -82,7 +83,7 @@ func (k Keeper) DeprecatedGetAllBaseDenoms(ctx sdk.Context) ([]types.BaseDenom, 
 	baseDenoms := make([]types.BaseDenom, 0)
 
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixDeprecatedBaseDenoms)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyPrefixDeprecatedBaseDenoms)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -250,7 +251,7 @@ func (k Keeper) AddSwapsToSwapsToBackrun(ctx sdk.Context, swaps []types.Trade) e
 // DeleteAllEntriesForKeyPrefix deletes all the entries from the store for the given key prefix
 func (k Keeper) DeleteAllEntriesForKeyPrefix(ctx sdk.Context, keyPrefix []byte) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, keyPrefix)
+	iterator := storetypes.KVStorePrefixIterator(store, keyPrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -306,7 +307,7 @@ func (k Keeper) GetAllDeveloperFees(ctx sdk.Context) ([]sdk.Coin, error) {
 	fees := make([]sdk.Coin, 0)
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDeveloperFees)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixDeveloperFees)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyPrefixDeveloperFees)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

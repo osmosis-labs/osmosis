@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -20,7 +21,7 @@ import (
 // Furthermore, if the infraction height is sufficiently old, slashes unbondings
 // Note: Based on sdk.staking.Slash function review, slashed tokens are burnt not sent to community pool
 // we ignore that, and send the underliyng tokens to the community pool anyway.
-func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAddress, slashFactor osmomath.Dec) {
+func (k Keeper) SlashLockupsForValidatorSlash(context context.Context, valAddr sdk.ValAddress, slashFactor osmomath.Dec) {
 	// Important note: The SDK slashing for historical heights is wrong.
 	// It defines a "slash amount" off of the live staked amount.
 	// Then it charges all the unbondings & redelegations at the slash factor.
@@ -33,6 +34,7 @@ func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAd
 	// We are not concerned about maximal consistency with the SDK, and instead charge slashFactor to
 	// both unbonding and live delegations. Rather than slashFactor to unbonding delegations,
 	// and effectiveSlashFactor to new delegations.
+	ctx := sdk.UnwrapSDKContext(context)
 	accs := k.GetIntermediaryAccountsForVal(ctx, valAddr)
 
 	// for every intermediary account, we first slash the live tokens comprosing delegated to it,

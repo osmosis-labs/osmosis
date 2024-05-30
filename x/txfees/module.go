@@ -10,12 +10,11 @@ only specify their tx fee parameters for a single "base" asset.
 package txfees
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	"cosmossdk.io/core/appmodule"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -25,6 +24,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/x/txfees/client/cli"
 	"github.com/osmosis-labs/osmosis/v25/x/txfees/keeper"
 	mempool1559 "github.com/osmosis-labs/osmosis/v25/x/txfees/keeper/mempool-1559"
@@ -32,9 +34,15 @@ import (
 )
 
 var (
-	_                    module.AppModule      = AppModule{}
-	_                    module.AppModuleBasic = AppModuleBasic{}
-	cachedConsParamBytes []byte
+	_ module.AppModuleBasic   = AppModuleBasic{}
+	_ module.HasGenesisBasics = AppModuleBasic{}
+
+	_ appmodule.AppModule        = AppModule{}
+	_ module.HasConsensusVersion = AppModule{}
+	_ module.HasGenesis          = AppModule{}
+	_ module.HasServices         = AppModule{}
+
+	cachedConsParams cmtproto.ConsensusParams
 )
 
 const ModuleName = types.ModuleName
@@ -112,6 +120,12 @@ func NewAppModule(keeper keeper.Keeper) AppModule {
 	}
 }
 
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
+// IsOnePerModuleType is a marker function just indicates that this is a one-per-module type.
+func (am AppModule) IsOnePerModuleType() {}
+
 // Name returns the txfees module's name.
 func (am AppModule) Name() string {
 	return am.AppModuleBasic.Name()
@@ -132,7 +146,7 @@ func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // InitGenesis performs the txfees module's genesis initialization It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) {
 	var genState types.GenesisState
 	// Initialize global index to index in genesis state
 	cdc.MustUnmarshalJSON(gs, &genState)
@@ -141,8 +155,6 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 	}
 
 	am.keeper.InitGenesis(ctx, genState)
-
-	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the txfees module's exported genesis state as raw JSON bytes.
@@ -152,19 +164,22 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the txfees module.
-func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
+func (am AppModule) BeginBlock(context context.Context) error {
+	ctx := sdk.UnwrapSDKContext(context)
 	mempool1559.BeginBlockCode(ctx)
 
 	// Check if the block gas limit has changed.
 	// If it has, update the target gas for eip1559.
 	am.CheckAndSetTargetGas(ctx)
+	return nil
 }
 
 // EndBlock executes all ABCI EndBlock logic respective to the txfees module. It
 // returns no validator updates.
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+func (am AppModule) EndBlock(context context.Context) error {
+	ctx := sdk.UnwrapSDKContext(context)
 	mempool1559.EndBlockCode(ctx)
-	return []abci.ValidatorUpdate{}
+	return nil
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
@@ -175,48 +190,42 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 // If they have, we unmarshal the current consensus params, update the target gas, and cache the value.
 // This is done to improve performance by not having to fetch and unmarshal the consensus params on every block.
 // TODO: Move this to EIP-1559 code
+// UNFORKING v2 TODO: Do we still want to use cachedConsParams here? I guess it removes the need to do arithmetic operations on every block.
+// We used to have a method that only pulled the bytes to avoid the unmarshal, but that is no longer possible AFAIK in the new sdk.
 func (am AppModule) CheckAndSetTargetGas(ctx sdk.Context) {
 	// Check if the block gas limit has changed.
 	// If it has, update the target gas for eip1559.
-	consParamsBytes := am.keeper.GetParamsNoUnmarshal(ctx)
+	consParams, err := am.keeper.GetConsParams(ctx)
+	if err != nil {
+		panic(err)
+	}
 
-	// If cachedConsParamBytes is nil, set equal to consParamsBytes and set the target gas.
-	if cachedConsParamBytes == nil {
-		cachedConsParamBytes = consParamsBytes
-		newConsensusParams, err := am.keeper.UnmarshalParamBytes(ctx, consParamsBytes)
-		if err != nil {
-			panic(err)
-		}
+	// If cachedConsParams is empty, set equal to consParams and set the target gas.
+	if cachedConsParams.Equal(cmtproto.ConsensusParams{}) {
+		cachedConsParams = *consParams.Params
 
-		// Check if newConsensusParams.Block is nil to prevent panic
-		if newConsensusParams.Block == nil || newConsensusParams.Block.MaxGas == 0 {
+		// Check if cachedConsParams.Block is nil to prevent panic
+		if cachedConsParams.Block == nil || cachedConsParams.Block.MaxGas == 0 {
 			return
 		}
 
-		if newConsensusParams.Block.MaxGas == -1 {
+		if cachedConsParams.Block.MaxGas == -1 {
 			return
 		}
 
-		newBlockMaxGas := mempool1559.TargetBlockSpacePercent.Mul(sdk.NewDec(newConsensusParams.Block.MaxGas)).TruncateInt().Int64()
+		newBlockMaxGas := mempool1559.TargetBlockSpacePercent.Mul(osmomath.NewDec(cachedConsParams.Block.MaxGas)).TruncateInt().Int64()
 		mempool1559.TargetGas = newBlockMaxGas
 		return
 	}
 
-	// If the consensus params have changed, unmarshal and update the target gas.
-	if !bytes.Equal(consParamsBytes, cachedConsParamBytes) {
-		newConsensusParams, err := am.keeper.UnmarshalParamBytes(ctx, consParamsBytes)
-		if err != nil {
-			panic(err)
-		}
-
-		if newConsensusParams.Block.MaxGas == -1 {
+	// If the consensus params have changed, check if it was maxGas that changed. If so, update the target gas.
+	if consParams.Params.Block.MaxGas != cachedConsParams.Block.MaxGas {
+		if consParams.Params.Block.MaxGas == -1 {
 			return
 		}
 
-		// Sure, its possible that the thing that changes in consensus params was something other than the block gas limit,
-		// but just double setting it here is fine instead of doing more logic to see what actually changed.
-		newBlockMaxGas := mempool1559.TargetBlockSpacePercent.Mul(sdk.NewDec(newConsensusParams.Block.MaxGas)).TruncateInt().Int64()
+		newBlockMaxGas := mempool1559.TargetBlockSpacePercent.Mul(osmomath.NewDec(consParams.Params.Block.MaxGas)).TruncateInt().Int64()
 		mempool1559.TargetGas = newBlockMaxGas
-		cachedConsParamBytes = consParamsBytes
+		cachedConsParams = *consParams.Params
 	}
 }

@@ -7,6 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v25/x/twap/types"
 )
@@ -272,7 +274,7 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 // that were indexed by time.
 func (k Keeper) DeleteHistoricalTimeIndexedTWAPs(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, []byte("historical_time_index"))
+	iter := storetypes.KVStorePrefixIterator(store, []byte("historical_time_index"))
 	defer iter.Close()
 
 	iterationCounter := uint16(0)

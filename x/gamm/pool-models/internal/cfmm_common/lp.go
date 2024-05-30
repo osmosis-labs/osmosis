@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/x/gamm/types"
@@ -65,7 +66,7 @@ func CalcExitPool(ctx sdk.Context, pool types.CFMMPoolI, exitingShares osmomath.
 //  3. calculate the number of shares that could be joined (total share * min share ratio), return the remaining coins
 func MaximalExactRatioJoin(p types.CFMMPoolI, ctx sdk.Context, tokensIn sdk.Coins) (numShares osmomath.Int, remCoins sdk.Coins, err error) {
 	coinShareRatios := make([]osmomath.Dec, len(tokensIn))
-	minShareRatio := sdk.MaxSortableDec
+	minShareRatio := math.LegacyMaxSortableDec
 	maxShareRatio := osmomath.ZeroDec()
 
 	poolLiquidity := p.GetTotalPoolLiquidity(ctx)
@@ -85,7 +86,7 @@ func MaximalExactRatioJoin(p types.CFMMPoolI, ctx sdk.Context, tokensIn sdk.Coin
 		coinShareRatios[i] = shareRatio
 	}
 
-	if minShareRatio.Equal(sdk.MaxSortableDec) {
+	if minShareRatio.Equal(math.LegacyMaxSortableDec) {
 		return numShares, remCoins, errors.New("unexpected error in MaximalExactRatioJoin")
 	}
 

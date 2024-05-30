@@ -3,7 +3,7 @@ package service_test
 import (
 	"errors"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain/mocks"
@@ -15,7 +15,8 @@ var (
 	// The write listeners are irrelevant for the tests of the sqs service
 	// since the service does not use them directly other than storing and returning
 	// via getter. As a result, we wire empty write listeners for the tests.
-	emptyWriteListeners = make(map[storetypes.StoreKey][]storetypes.WriteListener)
+	emptyWriteListeners = make(map[storetypes.StoreKey][]domain.WriteListener)
+	emptyStoreKeyMap    = make(map[string]storetypes.StoreKey)
 
 	// mockError is a mock error for testing.
 	mockError = errors.New("mock error")
@@ -110,7 +111,7 @@ func (s *SQSServiceTestSuite) TestProcessBlock() {
 			poolTracker.TrackCFMM(balancerPool)
 			s.Require().Equal(len(poolTracker.GetCFMMPools()), 1)
 
-			sqsStreamingServiceI := service.New(emptyWriteListeners, sqsIngesterMock, poolTracker, nodeStatusCheckerMock)
+			sqsStreamingServiceI := service.New(emptyWriteListeners, emptyStoreKeyMap, sqsIngesterMock, poolTracker, nodeStatusCheckerMock)
 
 			// cast the interface to the concrete type for testing unexported concrete method.
 			sqsStreamingService, ok := sqsStreamingServiceI.(*service.SQSStreamingService)
@@ -207,7 +208,7 @@ func (s *SQSServiceTestSuite) TestProcessBlockRecoverError() {
 			poolTracker.TrackCFMM(balancerPool)
 			s.Require().Equal(len(poolTracker.GetCFMMPools()), 1)
 
-			sqsStreamingServiceI := service.New(emptyWriteListeners, sqsIngesterMock, poolTracker, nodeStatusCheckerMock)
+			sqsStreamingServiceI := service.New(emptyWriteListeners, emptyStoreKeyMap, sqsIngesterMock, poolTracker, nodeStatusCheckerMock)
 
 			// cast the interface to the concrete type for testing unexported concrete method.
 			sqsStreamingService, ok := sqsStreamingServiceI.(*service.SQSStreamingService)

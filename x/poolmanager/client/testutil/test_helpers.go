@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/app"
+	"github.com/osmosis-labs/osmosis/v25/app/keepers"
 	poolmanagercli "github.com/osmosis-labs/osmosis/v25/x/poolmanager/client/cli"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 
@@ -75,7 +75,7 @@ func MsgCreatePool(
 // UpdateTxFeeDenom creates and modifies gamm genesis to pay fee with given denom.
 func UpdateTxFeeDenom(cdc codec.Codec, denom string) map[string]json.RawMessage {
 	// modification to pay fee with test bond denom "stake"
-	genesisState := app.ModuleBasics.DefaultGenesis(cdc)
+	genesisState := keepers.AppModuleBasics.DefaultGenesis(cdc)
 	poolmanagerGen := poolmanagertypes.DefaultGenesis()
 	poolmanagerGen.Params.PoolCreationFee = sdk.Coins{sdk.NewInt64Coin(denom, 1000000)}
 	poolmanagerGenJson := cdc.MustMarshalJSON(poolmanagerGen)

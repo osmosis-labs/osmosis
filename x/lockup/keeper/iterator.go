@@ -3,11 +3,11 @@ package keeper
 import (
 	"time"
 
-	db "github.com/cometbft/cometbft-db"
+	db "github.com/cosmos/cosmos-db"
 
 	"github.com/osmosis-labs/osmosis/v25/x/lockup/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -19,7 +19,7 @@ func unlockingPrefix(isUnlocking bool) []byte {
 }
 
 // iteratorAfterTime iterates through keys between that use prefix, and have a time.
-func (k Keeper) iteratorAfterTime(ctx sdk.Context, prefix []byte, time time.Time) sdk.Iterator {
+func (k Keeper) iteratorAfterTime(ctx sdk.Context, prefix []byte, time time.Time) storetypes.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	timeKey := getTimeKey(time)
 	key := combineKeys(prefix, timeKey)
@@ -29,7 +29,7 @@ func (k Keeper) iteratorAfterTime(ctx sdk.Context, prefix []byte, time time.Time
 }
 
 // iteratorBeforeTime iterates through keys between that use prefix, and have a time LTE max time.
-func (k Keeper) iteratorBeforeTime(ctx sdk.Context, prefix []byte, maxTime time.Time) sdk.Iterator {
+func (k Keeper) iteratorBeforeTime(ctx sdk.Context, prefix []byte, maxTime time.Time) storetypes.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	timeKey := getTimeKey(maxTime)
 	key := combineKeys(prefix, timeKey)
@@ -39,15 +39,15 @@ func (k Keeper) iteratorBeforeTime(ctx sdk.Context, prefix []byte, maxTime time.
 }
 
 // iteratorDuration iterates over a domain of keys for a specified duration.
-func (k Keeper) iteratorDuration(ctx sdk.Context, prefix []byte, duration time.Duration) sdk.Iterator {
+func (k Keeper) iteratorDuration(ctx sdk.Context, prefix []byte, duration time.Duration) storetypes.Iterator {
 	durationKey := getDurationKey(duration)
 	key := combineKeys(prefix, durationKey)
 	store := ctx.KVStore(k.storeKey)
-	return sdk.KVStorePrefixIterator(store, key)
+	return storetypes.KVStorePrefixIterator(store, key)
 }
 
 // iteratorLongerDuration iterates over a domain of keys for longer than a specified duration.
-func (k Keeper) iteratorLongerDuration(ctx sdk.Context, prefix []byte, duration time.Duration) sdk.Iterator {
+func (k Keeper) iteratorLongerDuration(ctx sdk.Context, prefix []byte, duration time.Duration) storetypes.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	durationKey := getDurationKey(duration)
 	key := combineKeys(prefix, durationKey)
@@ -56,7 +56,7 @@ func (k Keeper) iteratorLongerDuration(ctx sdk.Context, prefix []byte, duration 
 }
 
 // iteratorShorterDuration iterates over a domain of keys for shorter than a specified duration.
-func (k Keeper) iteratorShorterDuration(ctx sdk.Context, prefix []byte, duration time.Duration) sdk.Iterator {
+func (k Keeper) iteratorShorterDuration(ctx sdk.Context, prefix []byte, duration time.Duration) storetypes.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	durationKey := getDurationKey(duration)
 	key := combineKeys(prefix, durationKey)
@@ -65,115 +65,115 @@ func (k Keeper) iteratorShorterDuration(ctx sdk.Context, prefix []byte, duration
 }
 
 // iterator iterates over a domain of keys.
-func (k Keeper) iterator(ctx sdk.Context, prefix []byte) sdk.Iterator {
+func (k Keeper) iterator(ctx sdk.Context, prefix []byte) storetypes.Iterator {
 	store := ctx.KVStore(k.storeKey)
-	return sdk.KVStorePrefixIterator(store, prefix)
+	return storetypes.KVStorePrefixIterator(store, prefix)
 }
 
 // LockIteratorAfterTime returns the iterator to get locked coins.
-func (k Keeper) LockIteratorAfterTime(ctx sdk.Context, time time.Time) sdk.Iterator {
+func (k Keeper) LockIteratorAfterTime(ctx sdk.Context, time time.Time) storetypes.Iterator {
 	unlockingPrefix := unlockingPrefix(true)
 	return k.iteratorAfterTime(ctx, combineKeys(unlockingPrefix, types.KeyPrefixLockTimestamp), time)
 }
 
 // LockIteratorBeforeTime returns the iterator to get unlockable coins.
-func (k Keeper) LockIteratorBeforeTime(ctx sdk.Context, time time.Time) sdk.Iterator {
+func (k Keeper) LockIteratorBeforeTime(ctx sdk.Context, time time.Time) storetypes.Iterator {
 	unlockingPrefix := unlockingPrefix(true)
 	return k.iteratorBeforeTime(ctx, combineKeys(unlockingPrefix, types.KeyPrefixLockTimestamp), time)
 }
 
 // LockIterator returns the iterator used for getting all locks.
-func (k Keeper) LockIterator(ctx sdk.Context, isUnlocking bool) sdk.Iterator {
+func (k Keeper) LockIterator(ctx sdk.Context, isUnlocking bool) storetypes.Iterator {
 	unlockingPrefix := unlockingPrefix(isUnlocking)
 	return k.iterator(ctx, combineKeys(unlockingPrefix, types.KeyPrefixLockDuration))
 }
 
 // LockIteratorAfterTimeDenom returns the iterator to get locked coins by denom.
-func (k Keeper) LockIteratorAfterTimeDenom(ctx sdk.Context, denom string, time time.Time) sdk.Iterator {
+func (k Keeper) LockIteratorAfterTimeDenom(ctx sdk.Context, denom string, time time.Time) storetypes.Iterator {
 	unlockingPrefix := unlockingPrefix(true)
 	return k.iteratorAfterTime(ctx, combineKeys(unlockingPrefix, types.KeyPrefixDenomLockTimestamp, []byte(denom)), time)
 }
 
 // LockIteratorBeforeTimeDenom returns the iterator to get unlockable coins by denom.
-func (k Keeper) LockIteratorBeforeTimeDenom(ctx sdk.Context, denom string, time time.Time) sdk.Iterator {
+func (k Keeper) LockIteratorBeforeTimeDenom(ctx sdk.Context, denom string, time time.Time) storetypes.Iterator {
 	unlockingPrefix := unlockingPrefix(true)
 	return k.iteratorBeforeTime(ctx, combineKeys(unlockingPrefix, types.KeyPrefixDenomLockTimestamp, []byte(denom)), time)
 }
 
 // LockIteratorLongerThanDurationDenom returns the iterator to get locked locks by denom.
-func (k Keeper) LockIteratorLongerThanDurationDenom(ctx sdk.Context, isUnlocking bool, denom string, duration time.Duration) sdk.Iterator {
+func (k Keeper) LockIteratorLongerThanDurationDenom(ctx sdk.Context, isUnlocking bool, denom string, duration time.Duration) storetypes.Iterator {
 	unlockingPrefix := unlockingPrefix(isUnlocking)
 	return k.iteratorLongerDuration(ctx, combineKeys(unlockingPrefix, types.KeyPrefixDenomLockDuration, []byte(denom)), duration)
 }
 
 // LockIteratorDenom returns the iterator used for getting all locks by denom.
-func (k Keeper) LockIteratorDenom(ctx sdk.Context, isUnlocking bool, denom string) sdk.Iterator {
+func (k Keeper) LockIteratorDenom(ctx sdk.Context, isUnlocking bool, denom string) storetypes.Iterator {
 	unlockingPrefix := unlockingPrefix(isUnlocking)
 	return k.iterator(ctx, combineKeys(unlockingPrefix, types.KeyPrefixDenomLockDuration, []byte(denom)))
 }
 
 // AccountLockIteratorAfterTime returns the iterator to get locked coins by account.
-func (k Keeper) AccountLockIteratorAfterTime(ctx sdk.Context, addr sdk.AccAddress, time time.Time) sdk.Iterator {
+func (k Keeper) AccountLockIteratorAfterTime(ctx sdk.Context, addr sdk.AccAddress, time time.Time) storetypes.Iterator {
 	unlockingPrefix := unlockingPrefix(true)
 	return k.iteratorAfterTime(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountLockTimestamp, addr), time)
 }
 
 // AccountLockIteratorBeforeTime returns the iterator to get unlockable coins by account.
-func (k Keeper) AccountLockIteratorBeforeTime(ctx sdk.Context, addr sdk.AccAddress, time time.Time) sdk.Iterator {
+func (k Keeper) AccountLockIteratorBeforeTime(ctx sdk.Context, addr sdk.AccAddress, time time.Time) storetypes.Iterator {
 	unlockingPrefix := unlockingPrefix(true)
 	return k.iteratorBeforeTime(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountLockTimestamp, addr), time)
 }
 
 // AccountLockIterator returns the iterator used for getting all locks by account.
-func (k Keeper) AccountLockIterator(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress) sdk.Iterator {
+func (k Keeper) AccountLockIterator(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress) storetypes.Iterator {
 	unlockingPrefix := unlockingPrefix(isUnlocking)
 	return k.iterator(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountLockDuration, addr))
 }
 
 // AccountLockIteratorAfterTimeDenom returns the iterator to get locked coins by account and denom.
-func (k Keeper) AccountLockIteratorAfterTimeDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, time time.Time) sdk.Iterator {
+func (k Keeper) AccountLockIteratorAfterTimeDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, time time.Time) storetypes.Iterator {
 	unlockingPrefix := unlockingPrefix(true)
 	return k.iteratorAfterTime(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountDenomLockTimestamp, addr, []byte(denom)), time)
 }
 
 // AccountLockIteratorBeforeTimeDenom returns the iterator to get unlockable coins by account and denom.
-func (k Keeper) AccountLockIteratorBeforeTimeDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, time time.Time) sdk.Iterator {
+func (k Keeper) AccountLockIteratorBeforeTimeDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, time time.Time) storetypes.Iterator {
 	unlockingPrefix := unlockingPrefix(true)
 	return k.iteratorBeforeTime(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountDenomLockTimestamp, addr, []byte(denom)), time)
 }
 
 // AccountLockIteratorDenom returns the iterator used for getting all locks by account and denom.
-func (k Keeper) AccountLockIteratorDenom(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, denom string) sdk.Iterator {
+func (k Keeper) AccountLockIteratorDenom(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, denom string) storetypes.Iterator {
 	unlockingPrefix := unlockingPrefix(isUnlocking)
 	return k.iterator(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountDenomLockDuration, addr, []byte(denom)))
 }
 
 // AccountLockIteratorLongerDuration returns iterator used for getting all locks by account longer than duration.
-func (k Keeper) AccountLockIteratorLongerDuration(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, duration time.Duration) sdk.Iterator {
+func (k Keeper) AccountLockIteratorLongerDuration(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, duration time.Duration) storetypes.Iterator {
 	unlockingPrefix := unlockingPrefix(isUnlocking)
 	return k.iteratorLongerDuration(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountLockDuration, addr), duration)
 }
 
 // AccountLockIteratorDuration returns an iterator used for getting all locks for a given account, isUnlocking, and specific duration.
-func (k Keeper) AccountLockIteratorDuration(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, duration time.Duration) sdk.Iterator {
+func (k Keeper) AccountLockIteratorDuration(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, duration time.Duration) storetypes.Iterator {
 	unlockingPrefix := unlockingPrefix(isUnlocking)
 	return k.iteratorDuration(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountLockDuration, addr), duration)
 }
 
 // AccountLockIteratorShorterThanDuration returns an iterator used for getting all locks by account shorter than the specified duration.
-func (k Keeper) AccountLockIteratorShorterThanDuration(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, duration time.Duration) sdk.Iterator {
+func (k Keeper) AccountLockIteratorShorterThanDuration(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, duration time.Duration) storetypes.Iterator {
 	unlockingPrefix := unlockingPrefix(isUnlocking)
 	return k.iteratorShorterDuration(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountLockDuration, addr), duration)
 }
 
 // AccountLockIteratorLongerDurationDenom returns iterator used for getting all locks by account and denom longer than duration.
-func (k Keeper) AccountLockIteratorLongerDurationDenom(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, denom string, duration time.Duration) sdk.Iterator {
+func (k Keeper) AccountLockIteratorLongerDurationDenom(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, denom string, duration time.Duration) storetypes.Iterator {
 	unlockingPrefix := unlockingPrefix(isUnlocking)
 	return k.iteratorLongerDuration(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountDenomLockDuration, addr, []byte(denom)), duration)
 }
 
 // AccountLockIteratorDurationDenom returns iterator used for getting all locks by account and denom with specific duration.
-func (k Keeper) AccountLockIteratorDurationDenom(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, denom string, duration time.Duration) sdk.Iterator {
+func (k Keeper) AccountLockIteratorDurationDenom(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, denom string, duration time.Duration) storetypes.Iterator {
 	unlockingPrefix := unlockingPrefix(isUnlocking)
 	return k.iteratorDuration(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountDenomLockDuration, addr, []byte(denom)), duration)
 }

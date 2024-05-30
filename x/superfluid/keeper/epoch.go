@@ -3,10 +3,14 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"time"
+
+	sdkerrors "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	cl "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity"
@@ -61,7 +65,10 @@ func (k Keeper) AfterEpochStartBeginBlock(ctx sdk.Context) {
 }
 
 func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context, accs []types.SuperfluidIntermediaryAccount) {
-	bondDenom := k.sk.BondDenom(ctx)
+	bondDenom, err := k.sk.BondDenom(ctx)
+	if err != nil {
+		panic(err)
+	}
 	for _, acc := range accs {
 		addr := acc.GetAccAddress()
 		valAddr, err := sdk.ValAddressFromBech32(acc.ValAddr)
@@ -125,7 +132,10 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		}
 
 		// get OSMO amount
-		bondDenom := k.sk.BondDenom(ctx)
+		bondDenom, err := k.sk.BondDenom(ctx)
+		if err != nil {
+			return err
+		}
 		osmoPoolAsset := pool.GetTotalPoolLiquidity(ctx).AmountOf(bondDenom)
 		if osmoPoolAsset.IsZero() {
 			err := fmt.Errorf("pool %d has zero OSMO amount", poolId)
@@ -143,10 +153,25 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 			return k.updateConcentratedOsmoEquivalentMultiplier(cacheCtx, asset, newEpochNumber)
 		})
 	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
-		// TODO: Consider deleting superfluid asset type native
-		k.Logger(ctx).Error("unsupported superfluid asset type")
-		return errors.New("SuperfluidAssetTypeNative is unsupported")
+		bondDenom, err := k.sk.BondDenom(ctx)
+		if err != nil {
+			return err
+		}
+		if asset.Denom == bondDenom {
+			// The bond denom should be locked via x/lockup and not superfluid
+			return errors.New("osmo should not be a superfluid asset. It can be staked natively")
+		}
+		// get the twap price of the native asset in osmo
+
+		// Twap price is calculated from the last 5 minutes
+		startTime := ctx.BlockTime().Add(-5 * time.Minute) // TODO: make this configurable
+		price, err := k.twapk.GetArithmeticTwapToNow(ctx, asset.PricePoolId, bondDenom, asset.Denom, startTime)
+		if err != nil {
+			return sdkerrors.Wrap(err, "failed to get twap price")
+		}
+		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, osmomath.NewDec(1).Quo(price))
 	}
+
 	return nil
 }
 
@@ -164,7 +189,6 @@ func (k Keeper) updateConcentratedOsmoEquivalentMultiplier(ctx sdk.Context, asse
 
 	// get underlying assets from all liquidity in a full range position
 	// note: this is not the same as the total liquidity in the pool, as this includes positions not in the full range
-	bondDenom := k.sk.BondDenom(ctx)
 	fullRangeLiquidity, err := k.clk.GetFullRangeLiquidityInPool(ctx, poolId)
 	if err != nil {
 		k.Logger(ctx).Error(err.Error())
@@ -186,6 +210,10 @@ func (k Keeper) updateConcentratedOsmoEquivalentMultiplier(ctx sdk.Context, asse
 	assets := sdk.NewCoins(asset0, asset1)
 
 	// get OSMO amount from underlying assets
+	bondDenom, err := k.sk.BondDenom(ctx)
+	if err != nil {
+		return err
+	}
 	osmoPoolAsset := assets.AmountOf(bondDenom)
 	if osmoPoolAsset.IsZero() {
 		// Pool has unexpectedly removed OSMO from its assets.

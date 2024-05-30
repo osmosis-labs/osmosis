@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	gogotypes "github.com/gogo/protobuf/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -86,7 +86,7 @@ func (k Keeper) GetAuthenticatorDataForAccount(
 	return accountAuthenticators, nil
 }
 
-// GetSelectedAuthenticatorDataForAccount gets all authenticators from an account
+// GetSelectedAuthenticatorData gets all authenticators from an account
 // from the store, the data is  prefixed by 2|<accAddr|<keyId>
 func (k Keeper) GetSelectedAuthenticatorData(
 	ctx sdk.Context,
@@ -105,9 +105,9 @@ func (k Keeper) GetSelectedAuthenticatorData(
 	return authenticatorFromStore, nil
 }
 
-// GetSelectedAuthenticatorForAccountFromStore returns a single authenticator for the account
-// this function relies in GetAuthenticationDataForAccount, this function calls
-// Initialise on the specific authenticator
+// GetInitializedAuthenticatorForAccount returns a single authenticator for the account
+// this function relies in GetAuthenticatorDataForAccount, this function calls
+// Initialize on the specific authenticator
 func (k Keeper) GetInitializedAuthenticatorForAccount(
 	ctx sdk.Context,
 	account sdk.AccAddress,

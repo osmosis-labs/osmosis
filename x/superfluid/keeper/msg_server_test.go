@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -63,7 +64,7 @@ func (s *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 		s.Run(test.name, func() {
 			s.SetupTest()
 			lockupMsgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
-			c := sdk.WrapSDKContext(s.Ctx)
+			c := s.Ctx
 
 			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
@@ -121,7 +122,7 @@ func (s *KeeperTestSuite) TestMsgSuperfluidUndelegate() {
 		s.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
 		lockupMsgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
-		c := sdk.WrapSDKContext(s.Ctx)
+		c := s.Ctx
 		resp, err := lockupMsgServer.LockTokens(c, lockuptypes.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 		s.Require().NoError(err)
 
@@ -177,7 +178,7 @@ func (s *KeeperTestSuite) TestMsgCreateFullRangePositionAndSuperfluidDelegate() 
 		s.Run(test.name, func() {
 			s.SetupTest()
 
-			ctx := sdk.WrapSDKContext(s.Ctx)
+			ctx := s.Ctx
 
 			clPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(defaultFunds[0].Denom, defaultFunds[1].Denom)
 			clLockupDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPool.GetId())
@@ -245,7 +246,7 @@ func (s *KeeperTestSuite) TestMsgSuperfluidUnbondLock() {
 		s.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
 		lockupMsgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
-		c := sdk.WrapSDKContext(s.Ctx)
+		c := s.Ctx
 		resp, err := lockupMsgServer.LockTokens(c, lockuptypes.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 		s.Require().NoError(err)
 
@@ -293,7 +294,7 @@ func (s *KeeperTestSuite) TestMsgSuperfluidUndelegateAndUnbondLock() {
 		s.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
 		lockupMsgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
-		c := sdk.WrapSDKContext(s.Ctx)
+		c := s.Ctx
 		resp, err := lockupMsgServer.LockTokens(c, lockuptypes.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 		s.Require().NoError(err)
 
@@ -338,7 +339,7 @@ func (s *KeeperTestSuite) TestMsgLockAndSuperfluidDelegate() {
 
 		s.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
-		c := sdk.WrapSDKContext(s.Ctx)
+		c := s.Ctx
 		valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
 		msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
@@ -382,7 +383,7 @@ func (s *KeeperTestSuite) TestMsgSuperfluidUndelegate_Event() {
 	for _, test := range testCases {
 		s.SetupTest()
 		msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
-		c := sdk.WrapSDKContext(s.Ctx)
+		c := s.Ctx
 
 		// setup validators
 		valAddrs := s.SetupValidators(test.validatorStats)
@@ -430,7 +431,7 @@ func (s *KeeperTestSuite) TestMsgSuperfluidUnbondLock_Event() {
 		sender, _ := sdk.AccAddressFromBech32(lock.Owner)
 
 		// first we test that SuperfluidUnbondLock would cause error before undelegating
-		_, err := msgServer.SuperfluidUnbondLock(sdk.WrapSDKContext(s.Ctx), types.NewMsgSuperfluidUnbondLock(sender, lock.ID))
+		_, err := msgServer.SuperfluidUnbondLock(s.Ctx, types.NewMsgSuperfluidUnbondLock(sender, lock.ID))
 		s.Require().Error(err)
 
 		// undelegation needs to happen prior to SuperfluidUnbondLock
@@ -440,7 +441,7 @@ func (s *KeeperTestSuite) TestMsgSuperfluidUnbondLock_Event() {
 		// test SuperfluidUnbondLock
 		unbondLockStartTime := startTime.Add(time.Hour)
 		s.Ctx = s.Ctx.WithBlockTime(unbondLockStartTime)
-		_, err = msgServer.SuperfluidUnbondLock(sdk.WrapSDKContext(s.Ctx), types.NewMsgSuperfluidUnbondLock(sender, lock.ID))
+		_, err = msgServer.SuperfluidUnbondLock(s.Ctx, types.NewMsgSuperfluidUnbondLock(sender, lock.ID))
 		s.Require().NoError(err)
 		s.AssertEventEmitted(s.Ctx, types.TypeEvtSuperfluidUnbondLock, 1)
 	}
@@ -466,7 +467,7 @@ func (s *KeeperTestSuite) TestMsgUnPoolWhitelistedPool_Event() {
 	for index, poolId := range poolIds {
 		sender, _ := sdk.AccAddressFromBech32(locks[index].Owner)
 		s.Ctx = s.Ctx.WithBlockHeight(v8constants.UpgradeHeight)
-		_, err := msgServer.UnPoolWhitelistedPool(sdk.WrapSDKContext(s.Ctx), types.NewMsgUnPoolWhitelistedPool(sender, poolId))
+		_, err := msgServer.UnPoolWhitelistedPool(s.Ctx, types.NewMsgUnPoolWhitelistedPool(sender, poolId))
 		s.Require().NoError(err)
 		s.AssertEventEmitted(s.Ctx, types.TypeEvtUnpoolId, 1)
 	}
@@ -525,7 +526,7 @@ func (s *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedPosit
 	// Execute UnlockAndMigrateSharesToFullRangeConcentratedPosition message
 	sender, err := sdk.AccAddressFromBech32(locks[0].Owner)
 	s.Require().NoError(err)
-	_, err = msgServer.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sdk.WrapSDKContext(s.Ctx),
+	_, err = msgServer.UnlockAndMigrateSharesToFullRangeConcentratedPosition(s.Ctx,
 		types.NewMsgUnlockAndMigrateSharesToFullRangeConcentratedPosition(sender, int64(locks[0].ID), locks[0].Coins[0]))
 	s.Require().NoError(err)
 
@@ -582,7 +583,7 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition_Event
 				TokenDesired1: defaultFunds[1],
 			}
 
-			response, err := msgServer.AddToConcentratedLiquiditySuperfluidPosition(sdk.WrapSDKContext(s.Ctx), msg)
+			response, err := msgServer.AddToConcentratedLiquiditySuperfluidPosition(s.Ctx, msg)
 
 			if tc.expectedError == nil {
 				s.NoError(err)
@@ -596,4 +597,97 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition_Event
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestSetDenomRiskFactors() {
+	s.SetupTest()
+
+	msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
+	c := sdk.WrapSDKContext(s.Ctx)
+
+	govAddr := s.App.AccountKeeper.GetModuleAccount(s.Ctx, govtypes.ModuleName).GetAddress().String()
+
+	// Let's turn this into a table test
+	setDenomRiskFactorTests := []struct {
+		name          string
+		sender        string
+		denom         string
+		riskFactor    string
+		expectedError string
+	}{
+		{"happy path", govAddr, "something", "0.1", ""},
+		{"happy path with zero", govAddr, "something", "0", ""},
+		{"bad gov addr", "osmo1herasn5ewvv9acpujdmqxz698y849aq9ucsccl", "something", "0", "only the governance module is allowed to execute this message"},
+		{"bad gov addr 2", "something else", "something", "0", "invalid sender address (decoding bech32 failed"},
+		{"bad denom", govAddr, "", "0", "denom cannot be empty"},
+	}
+
+	for _, test := range setDenomRiskFactorTests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+
+			msg := &types.MsgSetDenomRiskFactor{
+				Sender:     test.sender,
+				Denom:      test.denom,
+				RiskFactor: osmomath.MustNewDecFromStr(test.riskFactor),
+			}
+			err := msg.ValidateBasic()
+			if err == nil {
+				_, err = msgServer.SetDenomRiskFactor(c, msg)
+			}
+
+			if test.expectedError != "" {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, test.expectedError)
+			} else {
+				s.Require().NoError(err)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestUnsetDenomRiskFactors() {
+	s.SetupTest()
+	denom := "anything"
+
+	msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
+	c := sdk.WrapSDKContext(s.Ctx)
+	govAddr := s.App.AccountKeeper.GetModuleAccount(s.Ctx, govtypes.ModuleName).GetAddress().String()
+
+	_, found := s.App.SuperfluidKeeper.GetDenomRiskFactor(s.Ctx, denom)
+	s.Require().False(found)
+
+	// Set the risk factor
+	_, err := msgServer.SetDenomRiskFactor(c, &types.MsgSetDenomRiskFactor{
+		Sender:     govAddr,
+		Denom:      denom,
+		RiskFactor: osmomath.MustNewDecFromStr("0.5"),
+	})
+	s.Require().NoError(err)
+
+	riskFactor, found := s.App.SuperfluidKeeper.GetDenomRiskFactor(s.Ctx, denom)
+	s.Require().True(found)
+	s.Require().Equal(osmomath.MustNewDecFromStr("0.5"), riskFactor)
+
+	// Unset fails if the sender is not the governance module
+	_, err = msgServer.UnsetDenomRiskFactor(c, &types.MsgUnsetDenomRiskFactor{
+		Sender: "osmo1herasn5ewvv9acpujdmqxz698y849aq9ucsccl",
+		Denom:  denom,
+	})
+	s.Require().Error(err)
+
+	riskFactor, found = s.App.SuperfluidKeeper.GetDenomRiskFactor(s.Ctx, denom)
+	s.Require().True(found)
+	s.Require().Equal(osmomath.MustNewDecFromStr("0.5"), riskFactor)
+
+	// Unset the risk factor
+	_, err = msgServer.UnsetDenomRiskFactor(c, &types.MsgUnsetDenomRiskFactor{
+		Sender: govAddr,
+		Denom:  denom,
+	})
+	s.Require().NoError(err)
+
+	riskFactor, found = s.App.SuperfluidKeeper.GetDenomRiskFactor(s.Ctx, denom)
+	s.Require().False(found)
+
 }
