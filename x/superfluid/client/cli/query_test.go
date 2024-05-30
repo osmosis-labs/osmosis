@@ -47,7 +47,7 @@ func (s *QueryTestSuite) SetupSuite() {
 	})
 	s.Require().NoError(err)
 	// set up sfs delegation
-	_, _, err = s.App.SuperfluidKeeper.SuperfluidDelegate(s.Ctx, s.TestAccs[0].String(), 1, s.val.String())
+	err = s.App.SuperfluidKeeper.SuperfluidDelegate(s.Ctx, s.TestAccs[0].String(), 1, s.val.String())
 	s.Require().NoError(err)
 
 	s.Commit()

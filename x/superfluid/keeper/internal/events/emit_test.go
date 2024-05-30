@@ -124,11 +124,9 @@ func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidDelegateEvent() {
 		delegatedAmt math.Int
 	}{
 		"basic valid": {
-			ctx:          suite.CreateTestContext(),
-			lockID:       1,
-			valAddr:      sdk.AccAddress([]byte(addressString)).String(),
-			newShares:    math.LegacyMustNewDecFromStr("5.0"),
-			delegatedAmt: math.NewInt(10),
+			ctx:     suite.CreateTestContext(),
+			lockID:  1,
+			valAddr: sdk.AccAddress([]byte(addressString)).String(),
 		},
 		"context with no event manager": {
 			ctx: sdk.Context{},
@@ -154,7 +152,7 @@ func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidDelegateEvent() {
 			hasNoEventManager := tc.ctx.EventManager() == nil
 
 			// System under test.
-			events.EmitSuperfluidDelegateEvent(tc.ctx, tc.lockID, tc.valAddr, tc.newShares, tc.delegatedAmt)
+			events.EmitSuperfluidDelegateEvent(tc.ctx, tc.lockID, tc.valAddr)
 
 			// Assertions
 			if hasNoEventManager {

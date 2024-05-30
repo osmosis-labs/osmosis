@@ -44,9 +44,9 @@ var _ types.MsgServer = msgServer{}
 func (server msgServer) SuperfluidDelegate(goCtx context.Context, msg *types.MsgSuperfluidDelegate) (*types.MsgSuperfluidDelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	delegatedAmt, newShares, err := server.keeper.SuperfluidDelegate(ctx, msg.Sender, msg.LockId, msg.ValAddr)
+	err := server.keeper.SuperfluidDelegate(ctx, msg.Sender, msg.LockId, msg.ValAddr)
 	if err == nil {
-		events.EmitSuperfluidDelegateEvent(ctx, msg.LockId, msg.ValAddr, newShares, delegatedAmt)
+		events.EmitSuperfluidDelegateEvent(ctx, msg.LockId, msg.ValAddr)
 	}
 	return &types.MsgSuperfluidDelegateResponse{}, err
 }

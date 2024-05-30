@@ -231,7 +231,7 @@ func (s *KeeperTestSuite) setupSuperfluidDelegate(delAddr sdk.AccAddress, valAdd
 	// if `LockTokens` created a new lock, we continue SuperfluidDelegate
 	// if lock has been existing before, we wouldn't have to call SuperfluidDelegate separately, as hooks on LockTokens would have automatically called IncreaseSuperfluidDelegation
 	if lastLockID != lockID {
-		_, _, err = s.App.SuperfluidKeeper.SuperfluidDelegate(s.Ctx, lock.Owner, lock.ID, valAddr.String())
+		err = s.App.SuperfluidKeeper.SuperfluidDelegate(s.Ctx, lock.Owner, lock.ID, valAddr.String())
 		s.Require().NoError(err)
 	} else {
 		// here we handle two cases.
@@ -244,7 +244,7 @@ func (s *KeeperTestSuite) setupSuperfluidDelegate(delAddr sdk.AccAddress, valAdd
 		_, err := s.App.LockupKeeper.GetSyntheticLockup(s.Ctx, lockID, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr.String()))
 		// if lock has existed before but has not been superfluid staked, we do initial superfluid staking
 		if err != nil {
-			_, _, err = s.App.SuperfluidKeeper.SuperfluidDelegate(s.Ctx, lock.Owner, lock.ID, valAddr.String())
+			err = s.App.SuperfluidKeeper.SuperfluidDelegate(s.Ctx, lock.Owner, lock.ID, valAddr.String())
 			s.Require().NoError(err)
 		}
 	}

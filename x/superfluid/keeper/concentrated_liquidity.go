@@ -116,7 +116,7 @@ func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, se
 	if err != nil {
 		return cltypes.CreateFullRangePositionData{}, 0, err
 	}
-	_, _, err = k.SuperfluidDelegate(ctx, sender.String(), newLockId, intermediateAccount.ValAddr)
+	err = k.SuperfluidDelegate(ctx, sender.String(), newLockId, intermediateAccount.ValAddr)
 	if err != nil {
 		return cltypes.CreateFullRangePositionData{}, 0, err
 	}

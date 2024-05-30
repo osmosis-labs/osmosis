@@ -46,13 +46,22 @@ func newRemoveSuperfluidAssetEvent(denom string) sdk.Event {
 	)
 }
 
-func EmitSuperfluidDelegateEvent(ctx sdk.Context, lockId uint64, valAddress string, newShares math.LegacyDec, delegatedAmt math.Int) {
+func EmitSuperfluidDelegateEvent(ctx sdk.Context, lockId uint64, valAddress string) {
 	if ctx.EventManager() == nil {
 		return
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		newSuperfluidDelegateEvent(lockId, valAddress),
+	})
+}
+
+func EmitDelegationEvent(ctx sdk.Context, valAddress string, newShares math.LegacyDec, delegatedAmt math.Int) {
+	if ctx.EventManager() == nil {
+		return
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
 		newDelegationEvent(valAddress, newShares, delegatedAmt),
 	})
 }

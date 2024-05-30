@@ -11,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v25/x/superfluid/keeper/internal/events"
 	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
 	valsettypes "github.com/osmosis-labs/osmosis/v25/x/valset-pref/types"
 
@@ -203,10 +204,10 @@ func (k Keeper) validateValAddrForDelegate(ctx sdk.Context, valAddr string) (sta
 // and the intermediary account, as an intermediary account does not serve for delegations from a single delegator.
 // The actual amount of delegation is not equal to the equivalent amount of osmo the lock has. That is,
 // the actual amount of delegation is amount * osmo equivalent multiplier * (1 - k.RiskFactor(asset)).
-func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64, valAddr string) (delegatedAmt math.Int, newShares math.LegacyDec, err error) {
+func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64, valAddr string) error {
 	lock, err := k.lk.GetLockByID(ctx, lockID)
 	if err != nil {
-		return math.Int{}, math.LegacyDec{}, err
+		return err
 	}
 
 	// This guarantees the lockID does not already have a superfluid stake position
@@ -214,7 +215,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	// Thus when we stake this lock, it will be the only superfluid position for this lockID.
 	err = k.validateLockForSFDelegate(ctx, lock, sender)
 	if err != nil {
-		return math.Int{}, math.LegacyDec{}, err
+		return err
 	}
 	lockedCoin := lock.Coins[0]
 
@@ -223,7 +224,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	// If an intermediary account doesn't exist, then create it + a perpetual gauge.
 	acc, err := k.GetOrCreateIntermediaryAccount(ctx, lockedCoin.Denom, valAddr)
 	if err != nil {
-		return math.Int{}, math.LegacyDec{}, err
+		return err
 	}
 	// create connection record between lock id and intermediary account
 	k.SetLockIdIntermediaryAccountConnection(ctx, lockID, acc)
@@ -231,22 +232,24 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	// Register a synthetic lockup for superfluid staking
 	err = k.createSyntheticLockup(ctx, lockID, acc, bondedStatus)
 	if err != nil {
-		return math.Int{}, math.LegacyDec{}, err
+		return err
 	}
 
 	// Find how many new osmo tokens this delegation is worth at superfluids current risk adjustment
 	// and twap of the denom.
 	amount, err := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, lockedCoin.Amount)
 	if err != nil {
-		return math.Int{}, math.LegacyDec{}, err
+		return err
 	}
 	if amount.IsZero() {
-		return math.Int{}, math.LegacyDec{}, types.ErrOsmoEquivalentZeroNotAllowed
+		return types.ErrOsmoEquivalentZeroNotAllowed
 	}
 
-	newShares, err = k.mintOsmoTokensAndDelegate(ctx, amount, acc)
+	newShares, err := k.mintOsmoTokensAndDelegate(ctx, amount, acc)
 
-	return amount, newShares, err
+	events.EmitDelegationEvent(ctx, valAddr, newShares, amount)
+
+	return err
 }
 
 // undelegateCommon is a helper function for SuperfluidUndelegate and superfluidUndelegateToConcentratedPosition.
@@ -387,7 +390,7 @@ func (k Keeper) SuperfluidUndelegateAndUnbondLock(ctx sdk.Context, lockID uint64
 	}
 
 	// re-delegate remainder
-	_, _, err = k.SuperfluidDelegate(ctx, sender, lockID, intermediaryAcc.ValAddr)
+	err = k.SuperfluidDelegate(ctx, sender, lockID, intermediaryAcc.ValAddr)
 	if err != nil {
 		return 0, err
 	}
