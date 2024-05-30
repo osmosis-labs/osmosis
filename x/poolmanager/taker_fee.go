@@ -178,7 +178,7 @@ func CalcTakerFeeExactOut(tokenIn sdk.Coin, takerFee osmomath.Dec) (sdk.Coin, sd
 
 // TakerFeeSkim calculates the taker fee share for each denomination involved in a route and increases the accumulator for the respective denomination pair.
 // The function first sorts the denominations lexicographically and then checks for denomShareAgreement and alloyedAssetShareAgreement denoms.
-// DenomShareAgreement denoms represent a denom that has a taker fee share agreement with the Osmosis protocol, while alloyedAssetShareAgreement denoms represent an alloyed asset composed of one or more denoms with a denomShareAgreement.
+// DenomShareAgreement denoms represent a denom that has a taker fee share agreement with the Osmosis protocol, while alloyedAssetShareAgreement denoms represent a registered alloyed asset pool composed of one or more denoms with a denomShareAgreement.
 // If there are one or more denomShareAgreement denoms, the function calculates the percentage of the taker fees that should be skimmed off and increases the accumulator for the denomShareAgreement denom / taker fee denomination pair.
 // If there were no denomShareAgreement denoms but there are one or more alloyedAssetShareAgreement denoms, the function calculates the taker fee share for the alloyed asset for each underlying asset that has a taker fee share agreement.
 // The function returns an error if the total taker fee share percentage is greater than 1.
@@ -205,7 +205,7 @@ func (k Keeper) TakerFeeSkim(ctx sdk.Context, denomsInvolvedInRoute []string, to
 			// If the denom has a denomShareAgreement, add the denomShareAgreement to the denomShareAgreements slice.
 			denomShareAgreements = append(denomShareAgreements, takerFeeShareAgreement)
 		} else if len(denomShareAgreements) == 0 {
-			// If there are no denomShareAgreements in the denomShareAgreements slice, continue to filter this denom to determine if it is a alloyedAssetShareAgreement denom.
+			// If there are no denomShareAgreements in the denomShareAgreements slice, continue to filter this denom to determine if it is a registered alloyedAssetShareAgreement denom.
 			// If there are 1 or more denomShareAgreements in the denomShareAgreements slice, we don't need to check for alloyedAssetShareAgreements anymore, since the taker fee share
 			// only goes to alloyedAssetShareAgreements IFF there are no denomShareAgreement denoms in the route.
 
