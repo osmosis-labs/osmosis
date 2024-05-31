@@ -1,5 +1,5 @@
 {
-	"initial-deposit": "1000000stake,1000uosmo",
+	"initial-deposit": "1000000stake,1000note",
 	"swap-fee": "0.005",
 	"exit-fee": "0",
 	"future-governor": "",

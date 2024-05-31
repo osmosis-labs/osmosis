@@ -13,7 +13,7 @@ import (
 
 // ExportAppStateAndValidators exports the state of the application for a genesis
 // file.
-func (app *OsmosisApp) ExportAppStateAndValidators(
+func (app *SymphonyApp) ExportAppStateAndValidators(
 	forZeroHeight bool, jailAllowedAddrs []string, modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
 	// as if they could withdraw from the start of the next block
@@ -41,6 +41,6 @@ func (app *OsmosisApp) ExportAppStateAndValidators(
 	}, err
 }
 
-func (app *OsmosisApp) ExportState(ctx sdk.Context) map[string]json.RawMessage {
+func (app *SymphonyApp) ExportState(ctx sdk.Context) map[string]json.RawMessage {
 	return app.mm.ExportGenesis(ctx, app.AppCodec())
 }

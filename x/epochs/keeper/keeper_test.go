@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v22/app"
+	"github.com/osmosis-labs/osmosis/v23/app"
 	epochskeeper "github.com/osmosis-labs/osmosis/x/epochs/keeper"
 	"github.com/osmosis-labs/osmosis/x/epochs/types"
 )
@@ -48,7 +48,7 @@ func Setup() (sdk.Context, *epochskeeper.Keeper) {
 	ctx := testutil.DefaultContext(epochsStoreKey, sdk.NewTransientStoreKey("transient_test"))
 	epochsKeeper := epochskeeper.NewKeeper(epochsStoreKey)
 	epochsKeeper = epochsKeeper.SetHooks(types.NewMultiEpochHooks())
-	ctx.WithBlockHeight(1).WithChainID("osmosis-1").WithBlockTime(time.Now().UTC())
+	ctx.WithBlockHeight(1).WithChainID("symphony-1").WithBlockTime(time.Now().UTC())
 	epochsKeeper.InitGenesis(ctx, *types.DefaultGenesis())
 	SetEpochStartTime(ctx, epochsKeeper)
 	return ctx, epochsKeeper

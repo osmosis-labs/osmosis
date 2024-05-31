@@ -18,7 +18,7 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 	return nil
 }
 
-// at the end of each epoch, swap all non-OSMO fees into the desired denom and send either to fee collector or community pool.
+// at the end of each epoch, swap all non-MELODY fees into the desired denom and send either to fee collector or community pool.
 // Staking fee collector for staking rewards.
 // - All non-native rewards that have a pool with liquidity and a link set in protorev get swapped to native denom
 // - All resulting native tokens get sent to the fee collector.
@@ -123,7 +123,7 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 		}
 
 		// Search for the denom pair route via the protorev store.
-		// Since OSMO is one of the protorev denoms, many of the routes will exist in this store.
+		// Since MELODY is one of the protorev denoms, many of the routes will exist in this store.
 		// There will be times when this store does not know about a route, but this is acceptable
 		// since this will likely be a very small value of a relatively unknown token. If this begins
 		// to accrue more value, we can always manually register the route and it will get swapped in
@@ -155,7 +155,7 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 		err = osmoutils.ApplyFuncIfNoErrorLogToDebug(ctx, func(cacheCtx sdk.Context) error {
 			// We allow full slippage. There's not really an effective way to bound slippage until TWAP's land,
 			// but even then the point is a bit moot.
-			// The only thing that could be done is a costly griefing attack to reduce the amount of osmo given as tx fees.
+			// The only thing that could be done is a costly griefing attack to reduce the amount of melody given as tx fees.
 			// However the idea of the txfees FeeToken gating is that the pool is sufficiently liquid for that base token.
 			minAmountOut := osmomath.ZeroInt()
 

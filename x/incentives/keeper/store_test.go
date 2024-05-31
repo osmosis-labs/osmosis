@@ -85,7 +85,7 @@ func (s *KeeperTestSuite) TestGetGroupByGaugeID() {
 
 	for name, test := range tests {
 		s.Run(name, func() {
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(100_000_000)))) // 1,000 osmo
+			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(100_000_000)))) // 1,000 melody
 			clPool := s.PrepareConcentratedPool()                                                     // gaugeid = 1
 
 			// create 3 internal Gauge

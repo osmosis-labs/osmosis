@@ -268,7 +268,7 @@ func (s *KeeperTestSuite) TestPoolCreation() {
 							Weight: osmomath.NewInt(1),
 						},
 						{
-							Token:  sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(1000000000)),
+							Token:  sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(1000000000)),
 							Weight: osmomath.NewInt(1),
 						},
 					},
@@ -379,7 +379,7 @@ func (s *KeeperTestSuite) TestPoolCreation() {
 		s.Run(tc.name, func() {
 			s.SetupTest()
 			poolId := tc.param.executePoolCreation()
-			setPoolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, types.OsmosisDenomination, tc.param.matchDenom)
+			setPoolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, types.SymphonyDenomination, tc.param.matchDenom)
 
 			if tc.expectPass {
 				s.Require().NoError(err)
@@ -660,7 +660,7 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 					// Prepare a balancer pool with coins
 					poolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("note", osmomath.NewInt(10)), sdk.NewCoin("juno", osmomath.NewInt(10)))
 
-					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
+					// Delete all pools for the base denom note so that all tests start with a clean slate
 					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "note")
 
 					return poolId, poolId
@@ -677,7 +677,7 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 					// Prepare a concentrated liquidity pool with coins
 					poolId := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("note", "stake").GetId()
 
-					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
+					// Delete all pools for the base denom note so that all tests start with a clean slate
 					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "note")
 
 					return poolId, poolId
@@ -694,7 +694,7 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 					// Create a concentrated liquidity pool with more liquidity
 					clPoolId := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("note", "stake").GetId()
 
-					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
+					// Delete all pools for the base denom note so that all tests start with a clean slate
 					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "note")
 
 					preparedPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("note", osmomath.NewInt(10)), sdk.NewCoin("stake", osmomath.NewInt(10)))
@@ -717,7 +717,7 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 					// Create a concentrated liquidity pool with more liquidity
 					clPoolId := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("note", "stake").GetId()
 
-					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
+					// Delete all pools for the base denom note so that all tests start with a clean slate
 					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "note")
 
 					// Prepare a balancer pool with more liquidity
@@ -741,7 +741,7 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 					// Prepare a balancer pool with more liquidity
 					balancerPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("note", osmomath.NewInt(2000000000000000000)), sdk.NewCoin("stake", osmomath.NewInt(1000000000000000000)))
 
-					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
+					// Delete all pools for the base denom note so that all tests start with a clean slate
 					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "note")
 
 					// Prepare a concentrated liquidity pool with less liquidity, should be stored since nothing is stored
@@ -765,7 +765,7 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 					// Prepare a balancer pool with less liquidity
 					balancerPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("note", osmomath.NewInt(500000000000000000)), sdk.NewCoin("stake", osmomath.NewInt(1000000000000000000)))
 
-					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
+					// Delete all pools for the base denom note so that all tests start with a clean slate
 					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "note")
 
 					// Prepare a concentrated liquidity pool with less liquidity, should be stored since nothing is stored
@@ -791,7 +791,7 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 						sdk.NewCoin("note", osmomath.Int(osmomath.NewUintFromString("999999999999999999999999999999999999999"))),
 						sdk.NewCoin("stake", osmomath.Int(osmomath.NewUintFromString("999999999999999999999999999999999999999"))))
 
-					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
+					// Delete all pools for the base denom note so that all tests start with a clean slate
 					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "note")
 
 					// Prepare a balancer pool with normal liquidity
@@ -812,7 +812,7 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 					// Prepare a balancer pool with normal liquidity
 					poolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("note", osmomath.NewInt(10)), sdk.NewCoin("stake", osmomath.NewInt(10)))
 
-					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
+					// Delete all pools for the base denom note so that all tests start with a clean slate
 					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "note")
 
 					// Prepare a balancer pool with liquidity levels that will overflow when multiplied

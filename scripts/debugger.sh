@@ -10,11 +10,11 @@ fi
 
 
 # Make sure that the binary is already running
-osmosis_pid=$(pgrep osmosis)
-if [ -z "${osmosis_pid}" ]; then
-    echo "osmosisd is not running, cannot find its process ID"
+symphony_pid=$(pgrep symphony)
+if [ -z "${symphony_pid}" ]; then
+    echo "symphonyd is not running, cannot find its process ID"
     exit 1
 fi
 
 
-$go_path/bin/dlv attach --headless --listen=:2345 $osmosis_pid
+$go_path/bin/dlv attach --headless --listen=:2345 $symphony_pid

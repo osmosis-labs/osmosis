@@ -13,7 +13,7 @@ var (
 	// See https://github.com/osmosis-labs/osmosis/issues/4349 for more details
 	// Note that governance has full ability to change this live on-chain, and this admin can at most prevent protorev from working.
 	// All the settings manager's controls have limits, so it can't lead to a chain halt, excess processing time or prevention of swaps.
-	DefaultAdminAccount = "symphony1gq370zx4c60yxymg9x2fgq799lgfnsfanslgsv"
+	DefaultAdminAccount = "symphony1vl3s0njph7uq9ar6vq6tdgy252tj0n0eeaz4zr"
 
 	ParamStoreKeyEnableModule = []byte("EnableProtoRevModule")
 	ParamStoreKeyAdminAccount = []byte("AdminAccount")

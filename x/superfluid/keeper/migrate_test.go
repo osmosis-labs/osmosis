@@ -313,7 +313,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 
 			if tc.overwriteValidatorAddress {
 				synthDenomParts := strings.Split(synthLockBeforeMigration.SynthDenom, "/")
-				synthDenomParts[4] = "osmovaloper1n69ghlk6404gzxtmtq0w7ma59n9vd9ed9dplg" // invalid, too short
+				synthDenomParts[4] = "symphonyvaloper1n69ghlk6404gzxtmtq0w7ma59n9vd9ed9dplg" // invalid, too short
 				newSynthDenom := strings.Join(synthDenomParts, "/")
 				synthLockBeforeMigration.SynthDenom = newSynthDenom
 			}
@@ -467,7 +467,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrated()
 			// Modify migration inputs if necessary
 			if tc.overwriteValidatorAddress {
 				synthDenomParts := strings.Split(synthLockBeforeMigration.SynthDenom, "/")
-				synthDenomParts[4] = "osmovaloper1n69ghlk6404gzxtmtq0w7ma59n9vd9ed9dplg" // invalid, too short
+				synthDenomParts[4] = "symphonyvaloper1n69ghlk6404gzxtmtq0w7ma59n9vd9ed9dplg" // invalid, too short
 				newSynthDenom := strings.Join(synthDenomParts, "/")
 				synthLockBeforeMigration.SynthDenom = newSynthDenom
 			}

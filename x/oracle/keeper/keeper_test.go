@@ -73,7 +73,7 @@ func TestKeeperTestSuite(t *testing.T) {
 func (s *KeeperTestSuite) SetupTest() {
 	s.Setup()
 
-	// Set the bond denom to be uosmo to make volume tracking tests more readable.
+	// Set the bond denom to be note to make volume tracking tests more readable.
 	skParams := s.App.StakingKeeper.GetParams(s.Ctx)
 	skParams.BondDenom = appparams.BaseCoinUnit
 	s.App.StakingKeeper.SetParams(s.Ctx, skParams)
@@ -153,30 +153,30 @@ func (s *KeeperTestSuite) TestExchangeRate() {
 	cnyExchangeRate := sdk.NewDecWithPrec(839, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
 	gbpExchangeRate := sdk.NewDecWithPrec(4995, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
 	krwExchangeRate := sdk.NewDecWithPrec(2838, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
-	lunaExchangeRate := sdk.NewDecWithPrec(3282384, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
+	noteExchangeRate := sdk.NewDecWithPrec(3282384, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
 
 	// Set & get rates
-	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.MicroCNYDenom, cnyExchangeRate)
-	rate, err := s.App.OracleKeeper.GetOsmoExchangeRate(s.Ctx, appparams.MicroCNYDenom)
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, appparams.MicroCNYDenom, cnyExchangeRate)
+	rate, err := s.App.OracleKeeper.GetMelodyExchangeRate(s.Ctx, appparams.MicroCNYDenom)
 	s.Require().NoError(err)
 	s.Require().Equal(cnyExchangeRate, rate)
 
-	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.MicroGBPDenom, gbpExchangeRate)
-	rate, err = s.App.OracleKeeper.GetOsmoExchangeRate(s.Ctx, appparams.MicroGBPDenom)
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, appparams.MicroGBPDenom, gbpExchangeRate)
+	rate, err = s.App.OracleKeeper.GetMelodyExchangeRate(s.Ctx, appparams.MicroGBPDenom)
 	s.Require().NoError(err)
 	s.Require().Equal(gbpExchangeRate, rate)
 
-	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.MicroKRWDenom, krwExchangeRate)
-	rate, err = s.App.OracleKeeper.GetOsmoExchangeRate(s.Ctx, appparams.MicroKRWDenom)
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, appparams.MicroKRWDenom, krwExchangeRate)
+	rate, err = s.App.OracleKeeper.GetMelodyExchangeRate(s.Ctx, appparams.MicroKRWDenom)
 	s.Require().NoError(err)
 	s.Require().Equal(krwExchangeRate, rate)
 
-	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.BaseCoinUnit, lunaExchangeRate)
-	rate, _ = s.App.OracleKeeper.GetOsmoExchangeRate(s.Ctx, appparams.BaseCoinUnit)
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, appparams.BaseCoinUnit, noteExchangeRate)
+	rate, _ = s.App.OracleKeeper.GetMelodyExchangeRate(s.Ctx, appparams.BaseCoinUnit)
 	s.Require().Equal(sdk.OneDec(), rate)
 
-	s.App.OracleKeeper.DeleteOsmoExchangeRate(s.Ctx, appparams.MicroKRWDenom)
-	_, err = s.App.OracleKeeper.GetOsmoExchangeRate(s.Ctx, appparams.MicroKRWDenom)
+	s.App.OracleKeeper.DeleteMelodyExchangeRate(s.Ctx, appparams.MicroKRWDenom)
+	_, err = s.App.OracleKeeper.GetMelodyExchangeRate(s.Ctx, appparams.MicroKRWDenom)
 	s.Require().Error(err)
 
 	numExchangeRates := 0
@@ -184,24 +184,24 @@ func (s *KeeperTestSuite) TestExchangeRate() {
 		numExchangeRates++
 		return false
 	}
-	s.App.OracleKeeper.IterateLunaExchangeRates(s.Ctx, handler)
+	s.App.OracleKeeper.IterateNoteExchangeRates(s.Ctx, handler)
 
 	s.Require().True(numExchangeRates == 3)
 }
 
-func (s *KeeperTestSuite) TestIterateOsmoExchangeRates() {
+func (s *KeeperTestSuite) TestIterateMelodyExchangeRates() {
 	cnyExchangeRate := sdk.NewDecWithPrec(839, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
 	gbpExchangeRate := sdk.NewDecWithPrec(4995, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
 	krwExchangeRate := sdk.NewDecWithPrec(2838, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
-	osmoExchangeRate := sdk.NewDecWithPrec(3282384, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
+	melodyExchangeRate := sdk.NewDecWithPrec(3282384, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
 
 	// Set & get rates
-	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.MicroCNYDenom, cnyExchangeRate)
-	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.MicroGBPDenom, gbpExchangeRate)
-	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.MicroKRWDenom, krwExchangeRate)
-	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.BaseCoinUnit, osmoExchangeRate)
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, appparams.MicroCNYDenom, cnyExchangeRate)
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, appparams.MicroGBPDenom, gbpExchangeRate)
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, appparams.MicroKRWDenom, krwExchangeRate)
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, appparams.BaseCoinUnit, melodyExchangeRate)
 
-	s.App.OracleKeeper.IterateLunaExchangeRates(s.Ctx, func(denom string, rate sdk.Dec) (stop bool) {
+	s.App.OracleKeeper.IterateNoteExchangeRates(s.Ctx, func(denom string, rate sdk.Dec) (stop bool) {
 		switch denom {
 		case appparams.MicroCNYDenom:
 			s.Require().Equal(cnyExchangeRate, rate)
@@ -210,7 +210,7 @@ func (s *KeeperTestSuite) TestIterateOsmoExchangeRates() {
 		case appparams.MicroKRWDenom:
 			s.Require().Equal(krwExchangeRate, rate)
 		case appparams.BaseCoinUnit:
-			s.Require().Equal(osmoExchangeRate, rate)
+			s.Require().Equal(melodyExchangeRate, rate)
 		}
 		return false
 	})

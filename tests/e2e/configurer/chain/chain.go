@@ -186,8 +186,8 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 
 	// removes the fee token from balances for calculating the difference in other tokens
 	// before and after the IBC send. Since we run tests in parallel now, some tests may
-	// send uosmo between accounts while this test is running. Since we don't care about
-	// non ibc denoms, its safe to filter uosmo out.
+	// send note between accounts while this test is running. Since we don't care about
+	// non ibc denoms, its safe to filter note out.
 	// TODO: we can probably improve this by specifying the denom we expect to be received
 	// and just look out for that. This wasn't required prior to parallel tests, but
 	// would be useful now.

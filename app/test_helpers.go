@@ -23,7 +23,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func GenesisStateWithValSet(app *OsmosisApp) GenesisState {
+func GenesisStateWithValSet(app *SymphonyApp) GenesisState {
 	privVal := mock.NewPV()
 	pubKey, _ := privVal.GetPubKey()
 	validator := tmtypes.NewValidator(pubKey, 1)
@@ -112,10 +112,10 @@ func GenesisStateWithValSet(app *OsmosisApp) GenesisState {
 	return genesisState
 }
 
-// SetupWithCustomHome initializes a new OsmosisApp with a custom home directory
-func SetupWithCustomHome(isCheckTx bool, dir string) *OsmosisApp {
+// SetupWithCustomHome initializes a new SymphonyApp with a custom home directory
+func SetupWithCustomHome(isCheckTx bool, dir string) *SymphonyApp {
 	db := cometbftdb.NewMemDB()
-	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, dir, 0, sims.EmptyAppOptions{}, EmptyWasmOpts, baseapp.SetChainID("osmosis-1"))
+	app := NewSymphonyApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, dir, 0, sims.EmptyAppOptions{}, EmptyWasmOpts, baseapp.SetChainID("symphony-1"))
 	if !isCheckTx {
 		genesisState := GenesisStateWithValSet(app)
 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
@@ -128,7 +128,7 @@ func SetupWithCustomHome(isCheckTx bool, dir string) *OsmosisApp {
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: sims.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
-				ChainId:         "osmosis-1",
+				ChainId:         "symphony-1",
 			},
 		)
 	}
@@ -136,9 +136,9 @@ func SetupWithCustomHome(isCheckTx bool, dir string) *OsmosisApp {
 	return app
 }
 
-func SetupWithCustomHomeAndChainId(isCheckTx bool, dir, chainId string) *OsmosisApp {
+func SetupWithCustomHomeAndChainId(isCheckTx bool, dir, chainId string) *SymphonyApp {
 	db := cometbftdb.NewMemDB()
-	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, dir, 0, sims.EmptyAppOptions{}, EmptyWasmOpts, baseapp.SetChainID(chainId))
+	app := NewSymphonyApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, dir, 0, sims.EmptyAppOptions{}, EmptyWasmOpts, baseapp.SetChainID(chainId))
 	if !isCheckTx {
 		genesisState := GenesisStateWithValSet(app)
 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
@@ -159,23 +159,23 @@ func SetupWithCustomHomeAndChainId(isCheckTx bool, dir, chainId string) *Osmosis
 	return app
 }
 
-// Setup initializes a new OsmosisApp.
-func Setup(isCheckTx bool) *OsmosisApp {
+// Setup initializes a new SymphonyApp.
+func Setup(isCheckTx bool) *SymphonyApp {
 	return SetupWithCustomHome(isCheckTx, DefaultNodeHome)
 }
 
-// SetupTestingAppWithLevelDb initializes a new OsmosisApp intended for testing,
+// SetupTestingAppWithLevelDb initializes a new SymphonyApp intended for testing,
 // with LevelDB as a db.
-func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func()) {
-	dir, err := os.MkdirTemp(os.TempDir(), "osmosis_leveldb_testing")
+func SetupTestingAppWithLevelDb(isCheckTx bool) (app *SymphonyApp, cleanupFn func()) {
+	dir, err := os.MkdirTemp(os.TempDir(), "symphony_leveldb_testing")
 	if err != nil {
 		panic(err)
 	}
-	db, err := cometbftdb.NewGoLevelDB("osmosis_leveldb_testing", dir)
+	db, err := cometbftdb.NewGoLevelDB("symphony_leveldb_testing", dir)
 	if err != nil {
 		panic(err)
 	}
-	app = NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, sims.EmptyAppOptions{}, EmptyWasmOpts, baseapp.SetChainID("osmosis-1"))
+	app = NewSymphonyApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, sims.EmptyAppOptions{}, EmptyWasmOpts, baseapp.SetChainID("symphony-1"))
 	if !isCheckTx {
 		genesisState := GenesisStateWithValSet(app)
 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
@@ -188,7 +188,7 @@ func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: sims.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
-				ChainId:         "osmosis-1",
+				ChainId:         "symphony-1",
 			},
 		)
 	}

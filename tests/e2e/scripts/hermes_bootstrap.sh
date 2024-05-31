@@ -39,8 +39,8 @@ rpc_addr = 'http://$OSMO_A_E2E_VAL_HOST:26657'
 grpc_addr = 'http://$OSMO_A_E2E_VAL_HOST:9090'
 websocket_addr = 'ws://$OSMO_A_E2E_VAL_HOST:26657/websocket'
 rpc_timeout = '30s'
-account_prefix = 'osmo'
-key_name = 'val01-osmosis-a'
+account_prefix = 'melody'
+key_name = 'val01-symphony-a'
 store_prefix = 'ibc'
 max_gas = 9000000
 gas_multiplier = 1.5
@@ -55,8 +55,8 @@ rpc_addr = 'http://$OSMO_B_E2E_VAL_HOST:26657'
 grpc_addr = 'http://$OSMO_B_E2E_VAL_HOST:9090'
 websocket_addr = 'ws://$OSMO_B_E2E_VAL_HOST:26657/websocket'
 rpc_timeout = '30s'
-account_prefix = 'osmo'
-key_name = 'val01-osmosis-b'
+account_prefix = 'melody'
+key_name = 'val01-symphony-b'
 store_prefix = 'ibc'
 max_gas = 9000000
 gas_multiplier = 1.5
@@ -68,8 +68,8 @@ trust_threshold = { numerator = '1', denominator = '3' }
 EOF
 
 # import keys
-hermes keys add --chain ${OSMO_B_E2E_CHAIN_ID} --key-name "val01-osmosis-b" --mnemonic-file /root/.hermes/OSMO_B_MNEMONIC.txt
-hermes keys add --chain ${OSMO_A_E2E_CHAIN_ID} --key-name "val01-osmosis-a" --mnemonic-file /root/.hermes/OSMO_A_MNEMONIC.txt
+hermes keys add --chain ${OSMO_B_E2E_CHAIN_ID} --key-name "val01-symphony-b" --mnemonic-file /root/.hermes/OSMO_B_MNEMONIC.txt
+hermes keys add --chain ${OSMO_A_E2E_CHAIN_ID} --key-name "val01-symphony-a" --mnemonic-file /root/.hermes/OSMO_A_MNEMONIC.txt
 
 # start Hermes relayer
 hermes start

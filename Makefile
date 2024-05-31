@@ -18,7 +18,7 @@ help:
 	@echo "Usage:"
 	@echo "    make [command]"
 	@echo ""
-	@echo "  make build        	        Build symphonyd binary"
+	@echo "  make build        	    	Build symphonyd binary"
 	@echo "  make install        	    Install symphonyd binary"
 	@echo "  make deps                  Show available deps commands"
 	@echo "  make proto                 Show available proto commands"
@@ -142,10 +142,10 @@ endif
 
 build: build-check-version go.sum
 	mkdir -p $(BUILDDIR)/
-	GOWORK=off go build -mod=readonly  $(BUILD_FLAGS) -o $(BUILDDIR)/ $(GO_MODULE)/cmd/osmosisd
+	GOWORK=off go build -mod=readonly -buildvcs=false $(BUILD_FLAGS) -o $(BUILDDIR)/ $(GO_MODULE)/cmd/symphonyd
 
 install: build-check-version go.sum
-	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
+	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/symphonyd
 
 ###############################################################################
 ###                                Gen                                      ###
@@ -221,8 +221,8 @@ release:
 		-e GITHUB_TOKEN=$(GITHUB_TOKEN) \
 		-e COSMWASM_VERSION=$(COSMWASM_VERSION) \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		-v `pwd`:/go/src/osmosisd \
-		-w /go/src/osmosisd \
+		-v `pwd`:/go/src/symphonyd \
+		-w /go/src/symphonyd \
 		$(GORELEASER_IMAGE) \
 		release \
 		--clean

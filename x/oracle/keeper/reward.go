@@ -21,7 +21,7 @@ func (k Keeper) RewardBallotWinners(
 	voteTargets map[string]sdk.Dec,
 	ballotWinners map[string]types.Claim,
 ) {
-	// Add Luna explicitly for oracle account balance coming from the market swap fee
+	// Add Note explicitly for oracle account balance coming from the market swap fee
 	rewardDenoms := make([]string, len(voteTargets)+1)
 	rewardDenoms[0] = appparams.BaseCoinUnit
 

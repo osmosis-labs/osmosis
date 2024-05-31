@@ -13,8 +13,8 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*CosmWasmExtension)(nil), nil)
 
 	// gov proposals
-	cdc.RegisterConcrete(&UploadCosmWasmPoolCodeAndWhiteListProposal{}, "osmosis/upload-cw-pool-code", nil)
-	cdc.RegisterConcrete(&MigratePoolContractsProposal{}, "osmosis/migrate-pool-contracts", nil)
+	cdc.RegisterConcrete(&UploadCosmWasmPoolCodeAndWhiteListProposal{}, "symphony/upload-cw-pool-code", nil)
+	cdc.RegisterConcrete(&MigratePoolContractsProposal{}, "symphony/migrate-pool-contracts", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {

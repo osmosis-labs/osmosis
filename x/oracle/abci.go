@@ -48,8 +48,8 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 		})
 
 		// Clear all exchange rates
-		k.IterateLunaExchangeRates(ctx, func(denom string, _ sdk.Dec) (stop bool) {
-			k.DeleteOsmoExchangeRate(ctx, denom)
+		k.IterateNoteExchangeRates(ctx, func(denom string, _ sdk.Dec) (stop bool) {
+			k.DeleteMelodyExchangeRate(ctx, denom)
 			return false
 		})
 
@@ -58,29 +58,29 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 		// NOTE: **Make abstain votes to have zero vote power**
 		voteMap := k.OrganizeBallotByDenom(ctx, validatorClaimMap)
 
-		if referenceTerra := PickReferenceTerra(ctx, k, voteTargets, voteMap); referenceTerra != "" {
-			// make voteMap of Reference Terra to calculate cross exchange rates
-			ballotRT := voteMap[referenceTerra]
+		if referenceSymphony := PickReferenceSymphony(ctx, k, voteTargets, voteMap); referenceSymphony != "" {
+			// make voteMap of Reference Symphony to calculate cross exchange rates
+			ballotRT := voteMap[referenceSymphony]
 			voteMapRT := ballotRT.ToMap()
 			exchangeRateRT := ballotRT.WeightedMedian()
 
 			// Iterate through ballots and update exchange rates; drop if not enough votes have been achieved.
 			for denom, ballot := range voteMap {
 				// Convert ballot to cross exchange rates
-				if denom != referenceTerra {
+				if denom != referenceSymphony {
 					ballot = ballot.ToCrossRateWithSort(voteMapRT)
 				}
 
 				// Get weighted median of cross exchange rates
 				exchangeRate := Tally(ballot, params.RewardBand, validatorClaimMap)
 
-				// Transform into the original form uluna/stablecoin
-				if denom != referenceTerra {
+				// Transform into the original form unote/stablecoin
+				if denom != referenceSymphony {
 					exchangeRate = exchangeRateRT.Quo(exchangeRate)
 				}
 
 				// Set the exchange rate, emit ABCI event
-				k.SetOsmoExchangeRateWithEvent(ctx, denom, exchangeRate)
+				k.SetMelodyExchangeRateWithEvent(ctx, denom, exchangeRate)
 			}
 		}
 

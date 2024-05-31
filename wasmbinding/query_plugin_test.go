@@ -35,12 +35,12 @@ type StargateTestSuite struct {
 	suite.Suite
 
 	ctx sdk.Context
-	app *app.OsmosisApp
+	app *app.SymphonyApp
 }
 
 func (suite *StargateTestSuite) SetupTest() {
 	suite.app = app.Setup(false)
-	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "symphony-1", Time: time.Now().UTC()})
 }
 
 func TestStargateTestSuite(t *testing.T) {
@@ -142,7 +142,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 		{
 			name: "test query using iterator",
 			testSetup: func() {
-				accAddr, err := sdk.AccAddressFromBech32("osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44")
+				accAddr, err := sdk.AccAddressFromBech32("symphony1p822vyk8ylf3hpwh9qgv6p6dft7hedntyqyw7w")
 				suite.Require().NoError(err)
 
 				// fund account to receive non-empty response
@@ -154,7 +154,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			path: "/cosmos.bank.v1beta1.Query/AllBalances",
 			requestData: func() []byte {
 				bankrequest := banktypes.QueryAllBalancesRequest{
-					Address: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
+					Address: "symphony1p822vyk8ylf3hpwh9qgv6p6dft7hedntyqyw7w",
 				}
 				bz, err := proto.Marshal(&bankrequest)
 				suite.Require().NoError(err)
@@ -165,7 +165,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 		{
 			name: "edge case: resending request",
 			testSetup: func() {
-				accAddr, err := sdk.AccAddressFromBech32("osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44")
+				accAddr, err := sdk.AccAddressFromBech32("symphony1p822vyk8ylf3hpwh9qgv6p6dft7hedntyqyw7w")
 				suite.Require().NoError(err)
 
 				// fund account to receive non-empty response
@@ -177,7 +177,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			path: "/cosmos.bank.v1beta1.Query/AllBalances",
 			requestData: func() []byte {
 				bankrequest := banktypes.QueryAllBalancesRequest{
-					Address: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
+					Address: "symphony1p822vyk8ylf3hpwh9qgv6p6dft7hedntyqyw7w",
 				}
 				bz, err := proto.Marshal(&bankrequest)
 				suite.Require().NoError(err)

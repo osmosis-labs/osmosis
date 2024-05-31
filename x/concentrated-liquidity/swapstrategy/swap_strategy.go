@@ -137,7 +137,7 @@ func GetSqrtPriceLimit(priceLimit osmomath.BigDec, zeroForOne bool) (osmomath.Bi
 	// To keep state-compatibility with the original at-launch price range
 	// we utilize the same sqrt price function.
 	if priceLimit.GTE(types.MinSpotPriceBigDec) {
-		// Truncation is fine since previous Osmosis version only supported
+		// Truncation is fine since previous Symphony version only supported
 		// 18 decimal price ranges.
 		sqrtPriceLimit, err := osmomath.MonotonicSqrt(priceLimit.Dec())
 		if err != nil {

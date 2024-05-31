@@ -21,7 +21,7 @@ func (s *AssetListTestSuite) TestParseExponents() {
 	s.T().Skip("skip the test that does network call and is used for debugging")
 
 	const (
-		assetListFileURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmosis-1/osmosis-1.assetlist.json"
+		assetListFileURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/symphony-1/symphony-1.assetlist.json"
 
 		defaultCosmosExponent = 6
 	)

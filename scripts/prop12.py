@@ -1,22 +1,22 @@
 #!/bin/python3
 
 # Usage: python3 prop12.py state_export_from_block_65838.json
-# This script returns a csv of addresses and the amount of uosmo to be paid to them 
-# 65838 is the epoch detailed in Osmosis prop 12
+# This script returns a csv of addresses and the amount of note to be paid to them 
+# 65838 is the epoch detailed in Symphony prop 12
 # state export should be obtained via version `v1.0.4`
 
 import json
 import functools
 import sys
 
-osmo_issued = (300000000*1000000*0.45)/365
+melody_issued = (300000000*1000000*0.45)/365
 
-def dict_osmo_rewards_by_gauge_id(data):
-  # returns a map of the uosmo rewards for each gauge id in poolincentives
+def dict_melody_rewards_by_gauge_id(data):
+  # returns a map of the note rewards for each gauge id in poolincentives
   poolincentives = data["app_state"]["poolincentives"]
   gauge_weights = {x["gauge_id"] : int(x["weight"]) for x in poolincentives["distr_info"]["records"]}
   total_weight = int(poolincentives["distr_info"]["total_weight"])
-  return {gid : (osmo_issued*gauge_weights[gid]/total_weight) for gid in gauge_weights}
+  return {gid : (melody_issued*gauge_weights[gid]/total_weight) for gid in gauge_weights}
 
 def dict_gauge_id_by_denom_duration(data):
   # returns a map from (denom, duration) to gauge ids
@@ -55,31 +55,31 @@ def dict_locked_by_gauge_id_by_address(data):
   return accum
 
 def dict_rewards_by_address(data):
-  osmo_per_gauge = dict_osmo_rewards_by_gauge_id(data)
+  melody_per_gauge = dict_melody_rewards_by_gauge_id(data)
   locked = dict_locked_by_gauge_id_by_address(data)
   gauge_totals = {gid : sum(locked[gid].values()) for gid in locked}
 
   #converts the {gauge_id -> {addr -> amount_locked}} dictionary into {gauge_id -> {addr -> usomo_issued}}
-  # by multiplying by uosmo issued to the gauge, and dividing by total locked for the gauge
-  mint_by_gauge_addr = {gid : {addr : osmo_per_gauge.get(gid, 0)*locked[gid][addr]/gauge_totals[gid] for addr in locked[gid]} for gid in locked}
+  # by multiplying by note issued to the gauge, and dividing by total locked for the gauge
+  mint_by_gauge_addr = {gid : {addr : melody_per_gauge.get(gid, 0)*locked[gid][addr]/gauge_totals[gid] for addr in locked[gid]} for gid in locked}
 
   #merge dictionaries by adding when they share a key (assumes numerical values)
   #example: a={"foo":3, "bar":5} , b={"foo":1, "baz":8} => {"foo":4, "bar":5, "baz":8}
   merge_dict_by_sum = lambda a, b: {k : a[k] + b[k] if k in a and k in b else a.get(k, b.get(k)) for k in a.keys() | b.keys()}
 
-  #convert {gauge_id -> {addr -> uosmo_issued}} into {addr -> uosmo_issued} by merging the dictionaries for each gauge id, adding the osmo issued for each address
+  #convert {gauge_id -> {addr -> note_issued}} into {addr -> note_issued} by merging the dictionaries for each gauge id, adding the melody issued for each address
   return functools.reduce(merge_dict_by_sum, mint_by_gauge_addr.values())
 
 
 def compute_sanity_check_and_export(data):
   rewards = dict_rewards_by_address(data)
   total_paid = sum(rewards.values())
-  community_paid = dict_osmo_rewards_by_gauge_id(data)["0"]
+  community_paid = dict_melody_rewards_by_gauge_id(data)["0"]
 
-  print("expected total: ", int(osmo_issued), "note")
+  print("expected total: ", int(melody_issued), "note")
   print("paid to LPers: ", int(total_paid), "note")
   print("paid to community pool: ", int(community_paid), "note")
-  imbalance = int(osmo_issued - (total_paid + community_paid))
+  imbalance = int(melody_issued - (total_paid + community_paid))
   print("imbalance: ", imbalance)
   assert(imbalance == 0)
 

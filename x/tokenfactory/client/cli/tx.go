@@ -29,7 +29,7 @@ func GetTxCmd() *cobra.Command {
 func NewCreateDenomCmd() *cobra.Command {
 	return osmocli.BuildTxCli[*types.MsgCreateDenom](&osmocli.TxCliDesc{
 		Use:   "create-denom",
-		Short: "create a new denom from an account. (Costs osmo though!)",
+		Short: "create a new denom from an account. (Costs melody though!)",
 	})
 }
 

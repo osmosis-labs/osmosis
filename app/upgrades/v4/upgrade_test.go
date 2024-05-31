@@ -22,7 +22,7 @@ type UpgradeTestSuite struct {
 	suite.Suite
 
 	ctx sdk.Context
-	app *app.OsmosisApp
+	app *app.SymphonyApp
 }
 
 func (s *UpgradeTestSuite) SetupTest() {

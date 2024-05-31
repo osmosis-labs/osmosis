@@ -220,7 +220,7 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 			)
 
 			// Set a custom creation fee to avoid test balances having false positives
-			// due to having OSMO added during test setup
+			// due to having MELODY added during test setup
 			s.App.IncentivesKeeper.SetParam(s.Ctx, types.KeyGroupCreationFee, customGroupCreationFee)
 
 			// Fund fee once to a specific test account

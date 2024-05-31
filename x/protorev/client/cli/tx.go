@@ -206,7 +206,7 @@ func CmdSetProtoRevAdminAccountProposal() *cobra.Command {
 		Use:     "set-admin-account-proposal [sdk.AccAddress]",
 		Args:    cobra.ExactArgs(1),
 		Short:   "submit a set protorev admin account proposal to set the admin account for x/protorev",
-		Example: fmt.Sprintf(`$ %s tx protorev set-protorev-admin-account osmo123... --from mykey`, version.AppName),
+		Example: fmt.Sprintf(`$ %s tx protorev set-protorev-admin-account symphony123... --from mykey`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			createContent := func(title string, description string, args ...string) (govtypesv1beta1.Content, error) {
 				return types.NewSetProtoRevAdminAccountProposal(title, description, args[0]), nil

@@ -23,9 +23,9 @@ func (chain *TestChain) StoreContractCode(suite *suite.Suite, path string) {
 }
 
 func (chain *TestChain) InstantiateRLContract(suite *suite.Suite, quotas string) sdk.AccAddress {
-	osmosisApp := chain.GetOsmosisApp()
-	transferModule := osmosisApp.AccountKeeper.GetModuleAddress(transfertypes.ModuleName)
-	govModule := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
+	symphonyApp := chain.GetSymphonyApp()
+	transferModule := symphonyApp.AccountKeeper.GetModuleAddress(transfertypes.ModuleName)
+	govModule := symphonyApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
 
 	initMsgBz := []byte(fmt.Sprintf(`{
            "gov_module":  "%s",
@@ -34,18 +34,18 @@ func (chain *TestChain) InstantiateRLContract(suite *suite.Suite, quotas string)
         }`,
 		govModule, transferModule, quotas))
 
-	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(symphonyApp.WasmKeeper)
 	codeID := uint64(1)
-	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
+	creator := symphonyApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
 	addr, _, err := contractKeeper.Instantiate(chain.GetContext(), codeID, creator, creator, initMsgBz, "rate limiting contract", nil)
 	suite.Require().NoError(err)
 	return addr
 }
 
 func (chain *TestChain) StoreContractCodeDirect(suite *suite.Suite, path string) uint64 {
-	osmosisApp := chain.GetOsmosisApp()
-	govKeeper := wasmkeeper.NewGovPermissionKeeper(osmosisApp.WasmKeeper)
-	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
+	symphonyApp := chain.GetSymphonyApp()
+	govKeeper := wasmkeeper.NewGovPermissionKeeper(symphonyApp.WasmKeeper)
+	creator := symphonyApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
 
 	wasmCode, err := os.ReadFile(path)
 	suite.Require().NoError(err)
@@ -56,24 +56,24 @@ func (chain *TestChain) StoreContractCodeDirect(suite *suite.Suite, path string)
 }
 
 func (chain *TestChain) InstantiateContract(suite *suite.Suite, msg string, codeID uint64) sdk.AccAddress {
-	osmosisApp := chain.GetOsmosisApp()
-	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
-	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
+	symphonyApp := chain.GetSymphonyApp()
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(symphonyApp.WasmKeeper)
+	creator := symphonyApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
 	addr, _, err := contractKeeper.Instantiate(chain.GetContext(), codeID, creator, creator, []byte(msg), "contract", nil)
 	suite.Require().NoError(err)
 	return addr
 }
 
 func (chain *TestChain) QueryContract(suite *suite.Suite, contract sdk.AccAddress, key []byte) string {
-	osmosisApp := chain.GetOsmosisApp()
-	state, err := osmosisApp.WasmKeeper.QuerySmart(chain.GetContext(), contract, key)
+	symphonyApp := chain.GetSymphonyApp()
+	state, err := symphonyApp.WasmKeeper.QuerySmart(chain.GetContext(), contract, key)
 	suite.Require().NoError(err)
 	return string(state)
 }
 
 func (chain *TestChain) QueryContractJson(suite *suite.Suite, contract sdk.AccAddress, key []byte) gjson.Result {
-	osmosisApp := chain.GetOsmosisApp()
-	state, err := osmosisApp.WasmKeeper.QuerySmart(chain.GetContext(), contract, key)
+	symphonyApp := chain.GetSymphonyApp()
+	state, err := symphonyApp.WasmKeeper.QuerySmart(chain.GetContext(), contract, key)
 	suite.Require().NoError(err)
 	suite.Require().True(gjson.Valid(string(state)))
 	json := gjson.Parse(string(state))
@@ -82,12 +82,12 @@ func (chain *TestChain) QueryContractJson(suite *suite.Suite, contract sdk.AccAd
 }
 
 func (chain *TestChain) RegisterRateLimitingContract(addr []byte) {
-	addrStr, err := sdk.Bech32ifyAddressBytes("osmo", addr)
+	addrStr, err := sdk.Bech32ifyAddressBytes("symphony", addr)
 	require.NoError(chain.T, err)
 	params, err := types.NewParams(addrStr)
 	require.NoError(chain.T, err)
-	osmosisApp := chain.GetOsmosisApp()
-	paramSpace, ok := osmosisApp.AppKeepers.ParamsKeeper.GetSubspace(types.ModuleName)
+	symphonyApp := chain.GetSymphonyApp()
+	paramSpace, ok := symphonyApp.AppKeepers.ParamsKeeper.GetSubspace(types.ModuleName)
 	require.True(chain.T, ok)
 	paramSpace.SetParamSet(chain.GetContext(), &params)
 }

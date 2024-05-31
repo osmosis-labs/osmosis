@@ -57,14 +57,14 @@ type KeeperTestHelper struct {
 	// this is not always enabled, because some tests may take a painful performance hit due to CacheKv.
 	withCaching bool
 
-	App         *app.OsmosisApp
+	App         *app.SymphonyApp
 	Ctx         sdk.Context
 	QueryHelper *baseapp.QueryServiceTestHelper
 	TestAccs    []sdk.AccAddress
 }
 
 // Defines IDs for all supported
-// Osmosis pools. Additionally, encapsulates
+// Symphony pools. Additionally, encapsulates
 // an internal gauge ID for each pool.
 // This struct is initialized and returned by
 // PrepareAllSupportedPools().
@@ -93,7 +93,7 @@ func init() {
 // Setup sets up basic environment for suite (App, Ctx, and test accounts)
 // preserves the caching enabled/disabled state.
 func (s *KeeperTestHelper) Setup() {
-	dir, err := os.MkdirTemp("", "osmosisd-test-home")
+	dir, err := os.MkdirTemp("", "symphonyd-test-home")
 	if err != nil {
 		panic(fmt.Sprintf("failed creating temporary directory: %v", err))
 	}
@@ -118,7 +118,7 @@ func (s *KeeperTestHelper) Setup() {
 }
 
 func (s *KeeperTestHelper) SetupWithCustomChainId(chainId string) {
-	dir, err := os.MkdirTemp("", "osmosisd-test-home")
+	dir, err := os.MkdirTemp("", "symphonyd-test-home")
 	if err != nil {
 		panic(fmt.Sprintf("failed creating temporary directory: %v", err))
 	}
@@ -145,12 +145,12 @@ func (s *KeeperTestHelper) SetupWithCustomChainId(chainId string) {
 // PrepareAllSupportedPools creates all supported pools and returns their IDs.
 // Additionally, attaches an internal gauge ID for each pool.
 func (s *KeeperTestHelper) PrepareAllSupportedPools() SupportedPoolAndGaugeInfo {
-	return s.PrepareAllSupportedPoolsCustomProject(osmosisRepository, osmosisRepoTransmuterPath)
+	return s.PrepareAllSupportedPoolsCustomProject(symphonyRepository, symphonyRepoTransmuterPath)
 }
 
 // PrepareAllSupportedPoolsCustomProject creates all supported pools and returns their IDs.
 // Additionally, attaches an internal gauge ID for each pool.
-// Allows the flexibility of being used from outside the Osmosis repository by providing custom project name and transmuter bytecode path.
+// Allows the flexibility of being used from outside the Symphony repository by providing custom project name and transmuter bytecode path.
 func (s *KeeperTestHelper) PrepareAllSupportedPoolsCustomProject(projectName, transmuterPath string) SupportedPoolAndGaugeInfo {
 	// This is the ID of the first gauge created next (concentrated).
 	nextGaugeID := s.App.IncentivesKeeper.GetLastGaugeID(s.Ctx) + 1
@@ -208,7 +208,7 @@ func (s *KeeperTestHelper) SetupWithLevelDb() func() {
 }
 
 func (s *KeeperTestHelper) setupGeneral() {
-	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: "osmosis-1", Time: defaultTestStartTime})
+	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: "symphony-1", Time: defaultTestStartTime})
 	if s.withCaching {
 		s.Ctx, _ = s.Ctx.CacheContext()
 	}
@@ -469,10 +469,10 @@ func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []o
 	pools := []gammtypes.CFMMPoolI{}
 	for index, multiplier := range multipliers {
 		token := fmt.Sprintf("token%d", index)
-		uosmoAmount := gammtypes.InitPoolSharesSupply.ToLegacyDec().Mul(multiplier).RoundInt()
+		noteAmount := gammtypes.InitPoolSharesSupply.ToLegacyDec().Mul(multiplier).RoundInt()
 
 		s.FundAcc(acc1, sdk.NewCoins(
-			sdk.NewCoin(bondDenom, uosmoAmount.Mul(osmomath.NewInt(10))),
+			sdk.NewCoin(bondDenom, noteAmount.Mul(osmomath.NewInt(10))),
 			sdk.NewInt64Coin(token, 100000),
 		).Add(params.PoolCreationFee...))
 
@@ -482,7 +482,7 @@ func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []o
 			// pool assets
 			defaultFooAsset = balancer.PoolAsset{
 				Weight: osmomath.NewInt(100),
-				Token:  sdk.NewCoin(bondDenom, uosmoAmount),
+				Token:  sdk.NewCoin(bondDenom, noteAmount),
 			}
 			defaultBarAsset = balancer.PoolAsset{
 				Weight: osmomath.NewInt(100),
@@ -680,7 +680,7 @@ func (s *KeeperTestHelper) SetupVolumeForPools(poolIDs []uint64, volumesForEachP
 		fmt.Printf("currentVolume %d %s\n", i, currentVolume)
 
 		// Retrieve the existing volume to add to it.
-		existingVolume := s.App.PoolManagerKeeper.GetOsmoVolumeForPool(s.Ctx, currentPoolID)
+		existingVolume := s.App.PoolManagerKeeper.GetMelodyVolumeForPool(s.Ctx, currentPoolID)
 
 		s.App.PoolManagerKeeper.SetVolume(s.Ctx, currentPoolID, sdk.NewCoins(sdk.NewCoin(bondDenom, existingVolume.Add(currentVolume))))
 

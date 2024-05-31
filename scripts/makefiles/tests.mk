@@ -2,7 +2,7 @@
 ###                                 Tests                                   ###
 ###############################################################################
 
-PACKAGES_UNIT=$(shell go list ./... ./osmomath/... ./osmoutils/... ./x/ibc-hooks/... ./x/epochs | grep -E -v 'tests/simulator|e2e')
+PACKAGES_UNIT=$(shell go list ./... ./osmomath.... ./osmoutils/... ./x/ibc-hooks/... ./x/epochs | grep -E -v 'tests/simulator|e2e')
 PACKAGES_E2E := $(shell go list ./... | grep '/e2e' | awk -F'/e2e' '{print $$1 "/e2e"}' | uniq)
 PACKAGES_SIM=$(shell go list ./... | grep '/tests/simulator')
 TEST_PACKAGES=./...
@@ -56,7 +56,7 @@ test-sim-bench:
 	@VERSION=$(VERSION) go test -benchmem -run ^BenchmarkFullAppSimulation -bench ^BenchmarkFullAppSimulation -cpuprofile cpu.out $(PACKAGES_SIM)
 
 # test-e2e runs a full e2e test suite
-# deletes any pre-existing Osmosis containers before running.
+# deletes any pre-existing Symphony containers before running.
 #
 # Deletes Docker resources at the end.
 # Utilizes Go cache.

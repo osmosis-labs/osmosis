@@ -56,7 +56,7 @@ type AssetList struct {
 	} `json:"assets"`
 }
 
-const assetListFileURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmosis-1/osmosis-1.assetlist.json"
+const assetListFileURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/symphony-1/symphony-1.assetlist.json"
 
 // GetDenomPrecisions implements domain.TokensUsecase.
 func GetDenomPrecisions(ctx context.Context) (map[string]int, error) {

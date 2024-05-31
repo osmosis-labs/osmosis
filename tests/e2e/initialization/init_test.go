@@ -45,7 +45,7 @@ func TestChainInit(t *testing.T) {
 				IsValidator:        false,
 			},
 		}
-		dataDir, err = os.MkdirTemp("", "osmosis-e2e-testnet-test")
+		dataDir, err = os.MkdirTemp("", "symphony-e2e-testnet-test")
 	)
 	require.NoError(t, err)
 
@@ -103,7 +103,7 @@ func TestSingleNodeInit(t *testing.T) {
 			SnapshotKeepRecent: 1,
 			IsValidator:        false,
 		}
-		dataDir, err = os.MkdirTemp("", "osmosis-e2e-testnet-test")
+		dataDir, err = os.MkdirTemp("", "symphony-e2e-testnet-test")
 	)
 	require.NoError(t, err)
 

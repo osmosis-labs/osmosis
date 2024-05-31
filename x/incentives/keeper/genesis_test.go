@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmoapp "github.com/osmosis-labs/osmosis/v23/app"
+	symphonyapp "github.com/osmosis-labs/osmosis/v23/app"
 
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
@@ -89,7 +89,7 @@ var (
 func TestIncentivesExportGenesis(t *testing.T) {
 	// export genesis using default configurations
 	// ensure resulting genesis params match default params
-	app := osmoapp.Setup(false)
+	app := symphonyapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	genesis := app.IncentivesKeeper.ExportGenesis(ctx)
 	require.Equal(t, genesis.Params.DistrEpochIdentifier, "week")
@@ -170,7 +170,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 
 // TestIncentivesInitGenesis takes a genesis state and tests initializing that genesis for the incentives module.
 func TestIncentivesInitGenesis(t *testing.T) {
-	app := osmoapp.Setup(false)
+	app := symphonyapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	// checks that the default genesis parameters pass validation
@@ -229,7 +229,7 @@ func TestIncentivesInitGenesis(t *testing.T) {
 	require.Equal(t, expectedGroups, groups)
 }
 
-func createAllGaugeTypes(t *testing.T, app *osmoapp.OsmosisApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins, startTime time.Time) {
+func createAllGaugeTypes(t *testing.T, app *symphonyapp.SymphonyApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins, startTime time.Time) {
 	// create a byDuration gauge
 	_, err := app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrToByDuration, startTime, 1, 0)
 	require.NoError(t, err)

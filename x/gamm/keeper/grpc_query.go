@@ -58,7 +58,7 @@ func (q Querier) Pool(
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	// GetPool gets pool from poolmanager that has the knowledge of all pool ids
-	// within Osmosis.
+	// within Symphony.
 	pool, err := q.Keeper.poolManager.GetPool(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

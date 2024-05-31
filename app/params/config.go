@@ -13,7 +13,7 @@ import (
 const (
 	HumanCoinUnit = "melody"
 	BaseCoinUnit  = "note"
-	OsmoExponent  = 6
+	MelodyExponent  = 6
 
 	DefaultBondDenom = BaseCoinUnit
 
@@ -59,7 +59,7 @@ func RegisterDenoms() {
 	if err != nil {
 		panic(err)
 	}
-	err = sdk.RegisterDenom(BaseCoinUnit, osmomath.NewDecWithPrec(1, OsmoExponent))
+	err = sdk.RegisterDenom(BaseCoinUnit, osmomath.NewDecWithPrec(1, MelodyExponent))
 	if err != nil {
 		panic(err)
 	}

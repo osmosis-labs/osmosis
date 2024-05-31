@@ -25,9 +25,9 @@ func TestGetCmdDenomsFromCreator(t *testing.T) {
 	desc, _ := cli.GetCmdDenomsFromCreator()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryDenomsFromCreatorRequest]{
 		"basic test": {
-			Cmd: "osmo1test",
+			Cmd: "symphony1test",
 			ExpectedQuery: &types.QueryDenomsFromCreatorRequest{
-				Creator: "osmo1test",
+				Creator: "symphony1test",
 			},
 		},
 	}

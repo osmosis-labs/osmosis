@@ -22,7 +22,7 @@ func (s *KeeperTestSuite) TestQuerySwap() {
 	querier := keeper.NewQuerier(*s.App.MarketKeeper)
 
 	price := sdk.NewDecWithPrec(17, 1)
-	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appParams.MicroSDRDenom, price)
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, appParams.MicroSDRDenom, price)
 
 	var err error
 

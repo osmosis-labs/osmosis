@@ -44,18 +44,18 @@ DEBUG_BUILD_FLAGS:= $(subst $(REMOVE_STRING),,$(BUILD_FLAGS))
 DEBUG_LDFLAGS = $(subst $(REMOVE_STRING),,$(ldflags))
 
 build-dev-install: go.sum
-	GOWORK=off go install $(DEBUG_BUILD_FLAGS) $(GC_FLAGS) $(GO_MODULE)/cmd/osmosisd
+	GOWORK=off go install $(DEBUG_BUILD_FLAGS) $(GC_FLAGS) $(GO_MODULE)/cmd/symphonyd
 
 build-dev-build:
 	mkdir -p $(BUILDDIR)/
 	GOWORK=off go build $(GC_FLAGS) -mod=readonly -ldflags '$(DEBUG_LDFLAGS)' -trimpath -o $(BUILDDIR) ./...;
 
 build-install-with-autocomplete: build-check-version go.sum
-	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
+	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/symphonyd
 	@PARENT_SHELL=$$(ps -o ppid= -p $$PPID | xargs ps -o comm= -p); \
 	if echo "$$PARENT_SHELL" | grep -q "zsh"; then \
-		if ! grep -q ". <(osmosisd enable-cli-autocomplete zsh)" ~/.zshrc; then \
-			echo ". <(osmosisd enable-cli-autocomplete zsh)" >> ~/.zshrc; \
+		if ! grep -q ". <(symphonyd enable-cli-autocomplete zsh)" ~/.zshrc; then \
+			echo ". <(symphonyd enable-cli-autocomplete zsh)" >> ~/.zshrc; \
 			echo; \
 			echo "Autocomplete enabled. Run 'source ~/.zshrc' to complete installation."; \
 		else \
@@ -63,10 +63,10 @@ build-install-with-autocomplete: build-check-version go.sum
 			echo "Autocomplete already enabled in ~/.zshrc"; \
 		fi \
 	elif echo "$$PARENT_SHELL" | grep -q "bash" && [ "$$(uname)" = "Darwin" ]; then \
-		if ! grep -q -e "\. <(osmosisd enable-cli-autocomplete bash)" -e '\[\[ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" \]\] && \. "/opt/homebrew/etc/profile.d/bash_completion.sh"' ~/.bash_profile; then \
+		if ! grep -q -e "\. <(symphonyd enable-cli-autocomplete bash)" -e '\[\[ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" \]\] && \. "/opt/homebrew/etc/profile.d/bash_completion.sh"' ~/.bash_profile; then \
 			brew install bash-completion; \
 			echo '[ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" ] && . "/opt/homebrew/etc/profile.d/bash_completion.sh"' >> ~/.bash_profile; \
-			echo ". <(osmosisd enable-cli-autocomplete bash)" >> ~/.bash_profile; \
+			echo ". <(symphonyd enable-cli-autocomplete bash)" >> ~/.bash_profile; \
 			echo; \
 			echo; \
 			echo "Autocomplete enabled. Run 'source ~/.bash_profile' to complete installation."; \
@@ -74,10 +74,10 @@ build-install-with-autocomplete: build-check-version go.sum
 			echo "Autocomplete already enabled in ~/.bash_profile"; \
 		fi \
 	elif echo "$$PARENT_SHELL" | grep -q "bash" && [ "$$(uname)" = "Linux" ]; then \
-		if ! grep -q ". <(osmosisd enable-cli-autocomplete bash)" ~/.bash_profile; then \
+		if ! grep -q ". <(symphonyd enable-cli-autocomplete bash)" ~/.bash_profile; then \
 			sudo apt-get install -y bash-completion; \
 			echo '[ -r "/etc/bash_completion" ] && . "/etc/bash_completion"' >> ~/.bash_profile; \
-			echo ". <(osmosisd enable-cli-autocomplete bash)" >> ~/.bash_profile; \
+			echo ". <(symphonyd enable-cli-autocomplete bash)" >> ~/.bash_profile; \
 			echo; \
 			echo "Autocomplete enabled. Run 'source ~/.bash_profile' to complete installation."; \
 		else \
@@ -97,39 +97,39 @@ build-reproducible: build-reproducible-amd64 build-reproducible-arm64
 
 build-reproducible-amd64: go.sum
 	mkdir -p $(BUILDDIR)
-	$(DOCKER) buildx create --name osmobuilder || true
-	$(DOCKER) buildx use osmobuilder
+	$(DOCKER) buildx create --name melodybuilder || true
+	$(DOCKER) buildx use melodybuilder
 	$(DOCKER) buildx build \
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--build-arg GIT_VERSION=$(VERSION) \
 		--build-arg GIT_COMMIT=$(COMMIT) \
 		--build-arg RUNNER_IMAGE=alpine:3.17 \
 		--platform linux/amd64 \
-		-t osmosis:local-amd64 \
+		-t symphony:local-amd64 \
 		--load \
 		-f Dockerfile .
-	$(DOCKER) rm -f osmobinary || true
-	$(DOCKER) create -ti --name osmobinary osmosis:local-amd64
-	$(DOCKER) cp osmobinary:/bin/osmosisd $(BUILDDIR)/osmosisd-linux-amd64
-	$(DOCKER) rm -f osmobinary
+	$(DOCKER) rm -f melodybinary || true
+	$(DOCKER) create -ti --name melodybinary symphony:local-amd64
+	$(DOCKER) cp melodybinary:/bin/symphonyd $(BUILDDIR)/symphonyd-linux-amd64
+	$(DOCKER) rm -f melodybinary
 
 build-reproducible-arm64: go.sum
 	mkdir -p $(BUILDDIR)
-	$(DOCKER) buildx create --name osmobuilder || true
-	$(DOCKER) buildx use osmobuilder
+	$(DOCKER) buildx create --name melodybuilder || true
+	$(DOCKER) buildx use melodybuilder
 	$(DOCKER) buildx build \
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--build-arg GIT_VERSION=$(VERSION) \
 		--build-arg GIT_COMMIT=$(COMMIT) \
 		--build-arg RUNNER_IMAGE=alpine:3.17 \
 		--platform linux/arm64 \
-		-t osmosis:local-arm64 \
+		-t symphony:local-arm64 \
 		--load \
 		-f Dockerfile .
-	$(DOCKER) rm -f osmobinary || true
-	$(DOCKER) create -ti --name osmobinary osmosis:local-arm64
-	$(DOCKER) cp osmobinary:/bin/osmosisd $(BUILDDIR)/osmosisd-linux-arm64
-	$(DOCKER) rm -f osmobinary
+	$(DOCKER) rm -f melodybinary || true
+	$(DOCKER) create -ti --name melodybinary symphony:local-arm64
+	$(DOCKER) cp melodybinary:/bin/symphonyd $(BUILDDIR)/symphonyd-linux-arm64
+	$(DOCKER) rm -f melodybinary
 
 build-linux: go.sum
 	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build

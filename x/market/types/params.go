@@ -13,7 +13,7 @@ import (
 
 // Parameter keys
 var (
-	// Terra liquidity pool(usdr unit) made available per ${PoolRecoveryPeriod} (usdr unit)
+	// Symphony liquidity pool(usdr unit) made available per ${PoolRecoveryPeriod} (usdr unit)
 	KeyBasePool = []byte("BasePool")
 	// The period required to recover BasePool
 	KeyPoolRecoveryPeriod = []byte("PoolRecoveryPeriod")

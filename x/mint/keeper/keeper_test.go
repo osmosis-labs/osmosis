@@ -122,7 +122,6 @@ func (s *KeeperTestSuite) TestGetProportions() {
 			mintedCoin: sdk.NewCoin("note", osmomath.NewInt(54617981)),
 			ratio:      complexRatioDec, // .131/.273
 			// TODO: Should not be truncated. Remove truncation after rounding errors are addressed and resolved.
-			// Ref: https://github.com/osmosis-osmomath.NewInt(s/issues/1917
 			expectedCoin: sdk.NewCoin("note", osmomath.NewInt(54617981).ToLegacyDec().Mul(complexRatioDec).TruncateInt()),
 		},
 		{

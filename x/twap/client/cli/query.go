@@ -43,8 +43,8 @@ func GetQueryArithmeticCommand() *cobra.Command {
 		Long: osmocli.FormatLongDescDirect(`Query arithmetic twap for pool. Start time must be unix time. End time can be unix time or duration.
 
 Example:
-{{.CommandPrefix}} arithmetic 1 uosmo 1667088000 24h
-{{.CommandPrefix}} arithmetic 1 uosmo 1667088000 1667174400
+{{.CommandPrefix}} arithmetic 1 note 1667088000 24h
+{{.CommandPrefix}} arithmetic 1 note 1667088000 1667174400
 `, types.ModuleName),
 		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -91,8 +91,8 @@ func GetQueryGeometricCommand() *cobra.Command {
 		Long: osmocli.FormatLongDescDirect(`Query geometric twap for pool. Start time must be unix time. End time can be unix time or duration.
 
 Example:
-{{.CommandPrefix}} geometric 1 uosmo 1667088000 24h
-{{.CommandPrefix}} geometric 1 uosmo 1667088000 1667174400
+{{.CommandPrefix}} geometric 1 note 1667088000 24h
+{{.CommandPrefix}} geometric 1 note 1667088000 1667174400
 `, types.ModuleName),
 		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {

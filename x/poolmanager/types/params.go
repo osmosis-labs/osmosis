@@ -15,8 +15,8 @@ import (
 var (
 	KeyPoolCreationFee                                = []byte("PoolCreationFee")
 	KeyDefaultTakerFee                                = []byte("DefaultTakerFee")
-	KeyOsmoTakerFeeDistribution                       = []byte("OsmoTakerFeeDistribution")
-	KeyNonOsmoTakerFeeDistribution                    = []byte("NonOsmoTakerFeeDistribution")
+	KeyMelodyTakerFeeDistribution                     = []byte("OsmoTakerFeeDistribution")
+	KeyNonMelodyTakerFeeDistribution                  = []byte("NonOsmoTakerFeeDistribution")
 	KeyAdminAddresses                                 = []byte("AdminAddresses")
 	KeyCommunityPoolDenomToSwapNonWhitelistedAssetsTo = []byte("CommunityPoolDenomToSwapNonWhitelistedAssetsTo")
 	KeyAuthorizedQuoteDenoms                          = []byte("AuthorizedQuoteDenoms")
@@ -30,15 +30,15 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 func NewParams(poolCreationFee sdk.Coins,
 	defaultTakerFee osmomath.Dec,
-	osmoTakerFeeDistribution, nonOsmoTakerFeeDistribution TakerFeeDistributionPercentage,
+	melodyTakerFeeDistribution, nonMelodyTakerFeeDistribution TakerFeeDistributionPercentage,
 	adminAddresses, authorizedQuoteDenoms []string,
 	communityPoolDenomToSwapNonWhitelistedAssetsTo string) Params {
 	return Params{
 		PoolCreationFee: poolCreationFee,
 		TakerFeeParams: TakerFeeParams{
 			DefaultTakerFee:                                defaultTakerFee,
-			OsmoTakerFeeDistribution:                       osmoTakerFeeDistribution,
-			NonOsmoTakerFeeDistribution:                    nonOsmoTakerFeeDistribution,
+			OsmoTakerFeeDistribution:                       melodyTakerFeeDistribution,
+			NonOsmoTakerFeeDistribution:                    nonMelodyTakerFeeDistribution,
 			AdminAddresses:                                 adminAddresses,
 			CommunityPoolDenomToSwapNonWhitelistedAssetsTo: communityPoolDenomToSwapNonWhitelistedAssetsTo,
 		},
@@ -49,7 +49,7 @@ func NewParams(poolCreationFee sdk.Coins,
 // DefaultParams are the default poolmanager module parameters.
 func DefaultParams() Params {
 	return Params{
-		PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)}, // 1000 OSMO
+		PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)}, // 1000 MELODY
 		TakerFeeParams: TakerFeeParams{
 			DefaultTakerFee: osmomath.ZeroDec(), // 0%
 			OsmoTakerFeeDistribution: TakerFeeDistributionPercentage{
@@ -108,8 +108,8 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyPoolCreationFee, &p.PoolCreationFee, validatePoolCreationFee),
 		paramtypes.NewParamSetPair(KeyDefaultTakerFee, &p.TakerFeeParams.DefaultTakerFee, validateDefaultTakerFee),
-		paramtypes.NewParamSetPair(KeyOsmoTakerFeeDistribution, &p.TakerFeeParams.OsmoTakerFeeDistribution, validateTakerFeeDistribution),
-		paramtypes.NewParamSetPair(KeyNonOsmoTakerFeeDistribution, &p.TakerFeeParams.NonOsmoTakerFeeDistribution, validateTakerFeeDistribution),
+		paramtypes.NewParamSetPair(KeyMelodyTakerFeeDistribution, &p.TakerFeeParams.OsmoTakerFeeDistribution, validateTakerFeeDistribution),
+		paramtypes.NewParamSetPair(KeyNonMelodyTakerFeeDistribution, &p.TakerFeeParams.NonOsmoTakerFeeDistribution, validateTakerFeeDistribution),
 		paramtypes.NewParamSetPair(KeyAdminAddresses, &p.TakerFeeParams.AdminAddresses, validateAdminAddresses),
 		paramtypes.NewParamSetPair(KeyCommunityPoolDenomToSwapNonWhitelistedAssetsTo, &p.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo, validateCommunityPoolDenomToSwapNonWhitelistedAssetsTo),
 		paramtypes.NewParamSetPair(KeyAuthorizedQuoteDenoms, &p.AuthorizedQuoteDenoms, validateAuthorizedQuoteDenoms),

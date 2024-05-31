@@ -30,7 +30,7 @@ pub struct Packet {
 pub enum IBCAsyncOptions {
     #[serde(rename = "request_ack")]
     RequestAck {
-        /// The source channel (osmosis side) of the IBC packet
+        /// The source channel (symphony side) of the IBC packet
         source_channel: String,
         /// The sequence number that the packet was sent with
         packet_sequence: u64,

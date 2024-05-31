@@ -73,7 +73,7 @@ func (n *NodeConfig) Run() error {
 		for {
 			select {
 			case <-timeout:
-				n.t.Logf("Osmosis node failed to produce blocks")
+				n.t.Logf("Symphony node failed to produce blocks")
 				// break out of the for loop, not just the select statement
 				goto Retry
 			case <-ticker.C:
@@ -169,13 +169,13 @@ func (n *NodeConfig) extractOperatorAddressIfValidator() error {
 		return nil
 	}
 
-	cmd := []string{"osmosisd", "debug", "addr", n.PublicKey}
+	cmd := []string{"symphonyd", "debug", "addr", n.PublicKey}
 	n.t.Logf("extracting validator operator addresses for validator: %s", n.Name)
 	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
 	if err != nil {
 		return err
 	}
-	re := regexp.MustCompile("osmovaloper(.{39})")
+	re := regexp.MustCompile("symphonyvaloper(.{39})")
 	operAddr := fmt.Sprintf("%s\n", re.FindString(errBuf.String()))
 	n.OperatorAddress = strings.TrimSuffix(operAddr, "\n")
 	return nil

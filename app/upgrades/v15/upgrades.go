@@ -108,7 +108,7 @@ func migrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.
 		stableswap.PoolParams{SwapFee: balancerPool.GetSpreadFactor(ctx), ExitFee: balancerPool.GetExitFee(ctx)},
 		balancerPoolLiquidity,
 		[]uint64{1, 1},
-		"osmo1k8c2m5cn322akk5wy8lpt87dd2f4yh9afcd7af", // Stride Foundation 2/3 multisig
+		"symphony1k8rl3h48hz9mqhs3yu9ee9te5we4xf564rj354", // Stride Foundation 2/3 multisig
 		"",
 	)
 	if err != nil {
@@ -266,7 +266,7 @@ func registerOsmoIonMetadata(ctx sdk.Context, bankKeeper bankkeeper.Keeper) {
 			},
 			{
 				Denom:    appParams.HumanCoinUnit,
-				Exponent: appParams.OsmoExponent,
+				Exponent: appParams.MelodyExponent,
 				Aliases:  nil,
 			},
 		},

@@ -58,7 +58,7 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 		"create concentrated liquidity pool was not successful.",
 	)
 
-	fundTokens := []string{"100000000stake", "100000000uosmo"}
+	fundTokens := []string{"100000000stake", "100000000note"}
 
 	// Get address to create positions
 	address1 := chainANode.CreateWalletAndFund("address1", fundTokens, chainA)
@@ -103,7 +103,7 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	afterSwapTwapBOverA, err := chainANode.QueryGeometricTwap(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterSwap, timeAfterSwapPlus1Height)
 	s.Require().NoError(err)
 
-	// We swap stake so uosmo's supply will decrease and stake will increase.
+	// We swap stake so note's supply will decrease and stake will increase.
 	// The price after will be larger than the previous one.
 	s.Require().True(afterSwapTwapBOverA.GT(firstPositionTwapBOverA))
 
@@ -170,7 +170,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 
 	changeProtorevAdminAndMaxPoolPoints := func() {
 		// Update the protorev admin address to a known wallet we can control
-		adminWalletAddr = chainBNode.CreateWalletAndFund("admin", []string{"4000000uosmo"}, chainB)
+		adminWalletAddr = chainBNode.CreateWalletAndFund("admin", []string{"4000000note"}, chainB)
 		err := chainBNode.ParamChangeProposal("protorev", string(protorevtypes.ParamStoreKeyAdminAccount), []byte(fmt.Sprintf(`"%s"`, adminWalletAddr)), chainB, true)
 		s.Require().NoError(err)
 
@@ -201,7 +201,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	s.Require().Equal(concentratedPool.GetTickSpacing(), tickSpacing)
 	s.Require().Equal(concentratedPool.GetSpreadFactor(sdk.Context{}), osmomath.MustNewDecFromStr(spreadFactor))
 
-	fundTokens := []string{"100000000uosmo", "100000000uion", "100000000stake"}
+	fundTokens := []string{"100000000note", "100000000uion", "100000000stake"}
 
 	// Get 3 addresses to create positions
 	address1 := chainBNode.CreateWalletAndFund("addr1", fundTokens, chainB)
@@ -282,19 +282,19 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Asserts that spread rewards are correctly collected for non cross-tick swaps
 	var (
 		// Swap parameters
-		uosmoInDec_Swap1 = osmomath.NewBigDec(3465198)
-		uosmoIn_Swap1    = fmt.Sprintf("%suosmo", uosmoInDec_Swap1.Dec().String())
+		noteInDec_Swap1 = osmomath.NewBigDec(3465198)
+		noteIn_Swap1    = fmt.Sprintf("%snote", noteInDec_Swap1.Dec().String())
 	)
 	// Perform swap (not crossing initialized ticks)
-	chainBNode.SwapExactAmountIn(uosmoIn_Swap1, outMinAmt, fmt.Sprintf("%d", poolID), denom0, initialization.ValidatorWalletName)
+	chainBNode.SwapExactAmountIn(noteIn_Swap1, outMinAmt, fmt.Sprintf("%d", poolID), denom0, initialization.ValidatorWalletName)
 	// Calculate and track global spread reward growth for swap 1
-	uosmoInDec_Swap1_SubTakerFee := uosmoInDec_Swap1.Dec().Mul(osmomath.OneDec().Sub(takerFee)).TruncateDec()
-	uosmoInDec_Swap1_SubTakerFee_SubSpreadFactor := uosmoInDec_Swap1_SubTakerFee.Mul(osmomath.OneDec().Sub(spreadFactorDec))
-	totalSpreadReward := uosmoInDec_Swap1_SubTakerFee.Sub(uosmoInDec_Swap1_SubTakerFee_SubSpreadFactor).TruncateDec()
+	noteInDec_Swap1_SubTakerFee := noteInDec_Swap1.Dec().Mul(osmomath.OneDec().Sub(takerFee)).TruncateDec()
+	noteInDec_Swap1_SubTakerFee_SubSpreadFactor := noteInDec_Swap1_SubTakerFee.Mul(osmomath.OneDec().Sub(spreadFactorDec))
+	totalSpreadReward := noteInDec_Swap1_SubTakerFee.Sub(noteInDec_Swap1_SubTakerFee_SubSpreadFactor).TruncateDec()
 
 	spreadRewardGrowthGlobal.AddMut(calculateSpreadRewardGrowthGlobal(totalSpreadReward, concentratedPool.GetLiquidity()))
 	// Check swap properties
-	expectedSqrtPriceDelta := osmomath.BigDecFromDec(uosmoInDec_Swap1_SubTakerFee_SubSpreadFactor).QuoTruncate(osmomath.BigDecFromDec(concentratedPool.GetLiquidity())) // Δ(sqrtPrice) = Δy / L
+	expectedSqrtPriceDelta := osmomath.BigDecFromDec(noteInDec_Swap1_SubTakerFee_SubSpreadFactor).QuoTruncate(osmomath.BigDecFromDec(concentratedPool.GetLiquidity())) // Δ(sqrtPrice) = Δy / L
 	concentratedPoolAfterSwap := s.updatedConcentratedPool(chainBNode, poolID)
 	s.assertClSwap(concentratedPool, concentratedPoolAfterSwap, expectedSqrtPriceDelta)
 	concentratedPool = concentratedPoolAfterSwap
@@ -306,7 +306,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	chainBNode.CollectSpreadRewards(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
 	addr1BalancesAfter := s.addrBalance(chainBNode, address1)
 
-	// Assert that the balance changed only for tokenIn (uosmo)
+	// Assert that the balance changed only for tokenIn (note)
 	s.assertBalancesInvariants(addr1BalancesBefore, addr1BalancesAfter, false, true)
 
 	// Assert Balances: Swap 1
@@ -368,7 +368,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	deltaSqrtPriceAfterNextInitializedTick := sqrtPriceAfterNextInitializedTickBigDec.Sub(sqrtPriceAtNextInitializedTickBigDec).Dec()
 	deltaSqrtPriceAtNextInitializedTick := sqrtPriceAtNextInitializedTickBigDec.Sub(sqrtPriceBeforeSwap).Dec()
 
-	// Calculate the amount of osmo required to:
+	// Calculate the amount of melody required to:
 	// * amountInToGetToTickAfterInitialized - move price from next initialized tick (40000) to destination tick (40000 + tickOffset)
 	// * amountInToGetToNextInitTick - move price from current tick to next initialized tick
 	// Formula is as follows:
@@ -379,18 +379,18 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	var (
 		// Swap parameters
 
-		// uosmoInDec_Swap2_NoSpreadReward is calculated such that swapping this amount (not considering spread reward) moves the price over the next initialized tick
-		uosmoInDec_Swap2_NoSpreadReward = amountInToGetToNextInitTick.Add(amountInToGetToTickAfterInitialized)
-		uosmoInDec_Swap2                = uosmoInDec_Swap2_NoSpreadReward.Quo(osmomath.OneDec().Sub(spreadFactorDec)).TruncateDec() // account for spread factor of 1%
+		// noteInDec_Swap2_NoSpreadReward is calculated such that swapping this amount (not considering spread reward) moves the price over the next initialized tick
+		noteInDec_Swap2_NoSpreadReward = amountInToGetToNextInitTick.Add(amountInToGetToTickAfterInitialized)
+		noteInDec_Swap2                = noteInDec_Swap2_NoSpreadReward.Quo(osmomath.OneDec().Sub(spreadFactorDec)).TruncateDec() // account for spread factor of 1%
 
 		spreadRewardGrowthGlobal_Swap1 = spreadRewardGrowthGlobalBeforeDustRedistribution.Clone()
 	)
 
-	uosmoInDec_Swap2_AddTakerFee := uosmoInDec_Swap2.Quo(osmomath.OneDec().Sub(takerFee)).TruncateDec() // account for taker fee
-	uosmoIn_Swap2 := fmt.Sprintf("%suosmo", uosmoInDec_Swap2_AddTakerFee.String())
+	noteInDec_Swap2_AddTakerFee := noteInDec_Swap2.Quo(osmomath.OneDec().Sub(takerFee)).TruncateDec() // account for taker fee
+	noteIn_Swap2 := fmt.Sprintf("%snote", noteInDec_Swap2_AddTakerFee.String())
 
 	// Perform a swap
-	chainBNode.SwapExactAmountIn(uosmoIn_Swap2, outMinAmt, fmt.Sprintf("%d", poolID), denom0, initialization.ValidatorWalletName)
+	chainBNode.SwapExactAmountIn(noteIn_Swap2, outMinAmt, fmt.Sprintf("%d", poolID), denom0, initialization.ValidatorWalletName)
 
 	// Calculate the amount of liquidity of the position that was kicked out during swap (address1 position1)
 	liquidityOfKickedOutPosition := positionsAddress1[0].Position.Liquidity
@@ -407,14 +407,14 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 
 	// Calculate spread reward charges per each step
 
-	// Step1: amountIn is uosmo tokens that are swapped + uosmo tokens that are paid for spread reward
+	// Step1: amountIn is note tokens that are swapped + note tokens that are paid for spread reward
 	// hasReachedTarget in SwapStep is true, hence, to find spread rewards, calculate:
 	// spreadRewardCharge = amountIn * spreadFactor / (1 - spreadFactor)
 	spreadRewardCharge_Swap2_Step1 := amountInToGetToNextInitTick.Mul(spreadFactorDec).Quo(osmomath.OneDec().Sub(spreadFactorDec))
 
 	// Step2: hasReachedTarget in SwapStep is false (nextTick is 120000), hence, to find spread rewards, calculate:
 	// spreadRewardCharge = amountRemaining - amountOne
-	amountRemainingAfterStep1 := uosmoInDec_Swap2.Sub(amountInToGetToNextInitTick).Sub(spreadRewardCharge_Swap2_Step1)
+	amountRemainingAfterStep1 := noteInDec_Swap2.Sub(amountInToGetToNextInitTick).Sub(spreadRewardCharge_Swap2_Step1)
 	spreadRewardCharge_Swap2_Step2 := amountRemainingAfterStep1.Sub(amountInToGetToTickAfterInitialized)
 
 	// per unit of virtual liquidity
@@ -433,7 +433,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	chainBNode.CollectSpreadRewards(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
 	addr1BalancesAfter = s.addrBalance(chainBNode, address1)
 
-	// Assert that the balance changed only for tokenIn (uosmo)
+	// Assert that the balance changed only for tokenIn (note)
 	s.assertBalancesInvariants(addr1BalancesBefore, addr1BalancesAfter, false, true)
 
 	// Calculate uncollected spread rewards for position, which liquidity will only be live part of the swap
@@ -769,14 +769,14 @@ func calculateSpreadRewardGrowthInside(spreadRewardGrowthGlobal, spreadRewardGro
 // Assert balances that are not affected by swap:
 // * same amount of `stake` in balancesBefore and balancesAfter
 // * amount of `e2e-default-feetoken` dropped by 1000 (default amount for fee per tx)
-// * depending on `assertUosmoBalanceIsConstant` and `assertUionBalanceIsConstant` parameters, check that those balances have also not been changed
-func (s *IntegrationTestSuite) assertBalancesInvariants(balancesBefore, balancesAfter sdk.Coins, assertUosmoBalanceIsConstant, assertUionBalanceIsConstant bool) {
+// * depending on `assertNoteBalanceIsConstant` and `assertUionBalanceIsConstant` parameters, check that those balances have also not been changed
+func (s *IntegrationTestSuite) assertBalancesInvariants(balancesBefore, balancesAfter sdk.Coins, assertNoteBalanceIsConstant, assertUionBalanceIsConstant bool) {
 	s.Require().True(balancesAfter.AmountOf("stake").Equal(balancesBefore.AmountOf("stake")))
 	s.Require().True(balancesAfter.AmountOf("e2e-default-feetoken").Equal(balancesBefore.AmountOf("e2e-default-feetoken").Sub(defaultFeePerTx)))
 	if assertUionBalanceIsConstant {
 		s.Require().True(balancesAfter.AmountOf("uion").Equal(balancesBefore.AmountOf("uion")))
 	}
-	if assertUosmoBalanceIsConstant {
+	if assertNoteBalanceIsConstant {
 		s.Require().True(balancesAfter.AmountOf("note").Equal(balancesBefore.AmountOf("note")))
 	}
 }

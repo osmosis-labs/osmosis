@@ -16,7 +16,7 @@
                     "max_change_rate": "0.010000000000000000"
                 },
                 "min_self_delegation": "10000000000",
-                "delegator_address": "osmo1grgelyng2v6v3t8z87wu3sxgt9m5s03xytvfcl",
+                "delegator_address": "symphony1m2y8f4nuy5en8yuu26n0k36awt5f7xhur70xp0",
                 "validator_address": "osmovaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03x7uy20c",
                 "pubkey": {
                     "@type": "/cosmos.crypto.ed25519.PubKey",

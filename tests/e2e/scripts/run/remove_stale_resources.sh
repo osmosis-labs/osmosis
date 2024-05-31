@@ -2,9 +2,9 @@
 
 source $(dirname $0)/common.sh
 
-# Filtering by containers belonging to the "osmosis-testnet" network
-LIST_CONTAINERS_CMD=$(docker ps -a --filter network=osmosis-testnet --format {{.ID}})
-LIST_NETWORKS_CMD=$(docker network ls --filter name=osmosis-testnet --format {{.ID}})
+# Filtering by containers belonging to the "symphony-testnet" network
+LIST_CONTAINERS_CMD=$(docker ps -a --filter network=symphony-testnet --format {{.ID}})
+LIST_NETWORKS_CMD=$(docker network ls --filter name=symphony-testnet --format {{.ID}})
 
 if [[ "$LIST_CONTAINERS_CMD" != "" ]]; then
     echo "Removing stale e2e containers"
@@ -24,6 +24,6 @@ local_git_sha=$(git rev-parse HEAD)
 for cur_image_sha in $LIST_DOCKER_IMAGE_HASHES; do
     if [[ "$cur_image_sha" != "$local_git_sha" ]]; then
         echo "Removing stale e2e image with SHA $cur_image_sha"
-        docker rmi -f $(docker images --filter=reference="osmosis:$cur_image_sha" -q)
+        docker rmi -f $(docker images --filter=reference="symphony:$cur_image_sha" -q)
     fi
 done

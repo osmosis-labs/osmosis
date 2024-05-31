@@ -32,7 +32,7 @@ const (
 
 var (
 	oneTrillion          = osmomath.NewInt(1e12)
-	defaultOsmoPoolAsset = balancer.PoolAsset{
+	defaultPoolAsset = balancer.PoolAsset{
 		Token:  sdk.NewCoin("note", oneTrillion),
 		Weight: osmomath.NewInt(100),
 	}
@@ -41,7 +41,7 @@ var (
 		Weight: osmomath.NewInt(100),
 	}
 	oneTrillionEvenPoolAssets = []balancer.PoolAsset{
-		defaultOsmoPoolAsset,
+		defaultPoolAsset,
 		defaultAtomPoolAsset,
 	}
 )
@@ -138,7 +138,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		// 	P_supply = initial pool supply = 1e20
 		//	A_t = amount of deposited asset = 50,000
 		//	B_t = existing balance of deposited asset in the pool prior to deposit = 1,000,000,000,000
-		//	W_t = normalized weight of deposited asset in pool = 0.25 (asset A, uosmo, has weight 1/4 of uatom)
+		//	W_t = normalized weight of deposited asset in pool = 0.25 (asset A, note, has weight 1/4 of uatom)
 		// 	spreadFactorRatio = (1 - (1 - W_t) * spreadFactor)
 		// Plugging all of this in, we get:
 		// 	Full solution: https://www.wolframalpha.com/input?i=%28100+*+10%5E18+%29*+%28%28+1+%2B+%2850%2C000+*+%281+-+%281+-+0.25%29+*+0.99%29+%2F+1000000000000%29%29%5E0.25+-+1%29
@@ -146,7 +146,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		name:         "single tokensIn - unequal weights with 0.99 spread factor",
 		spreadFactor: osmomath.MustNewDecFromStr("0.99"),
 		poolAssets: []balancer.PoolAsset{
-			defaultOsmoPoolAsset,
+			defaultPoolAsset,
 			{
 				Token:  sdk.NewInt64Coin("uatom", 1e12),
 				Weight: osmomath.NewInt(300),
@@ -493,7 +493,7 @@ var multiAssetExactInputTestCases = []calcJoinSharesTestCase{
 	},
 	{
 		// This test doubles the liquidity in a fresh pool, so it should generate the base number of LP shares for pool creation as new shares
-		// This is set to 1e20 (or 100 * 10^18) for Osmosis, so we should expect:
+		// This is set to 1e20 (or 100 * 10^18) for Symphony, so we should expect:
 		// P_issued = 1e20
 		name:         "minimum input with two assets and minimum liquidity",
 		spreadFactor: osmomath.MustNewDecFromStr("0"),
@@ -546,8 +546,8 @@ var multiAssetExactInputTestCases = []calcJoinSharesTestCase{
 
 var multiAssetUnevenInputTestCases = []calcJoinSharesTestCase{
 	{
-		// For uosmos and uatom
-		// join pool is first done to the extent where the ratio can be preserved, which is 25,000 uosmo and 25,000 uatom
+		// For notes and uatom
+		// join pool is first done to the extent where the ratio can be preserved, which is 25,000 note and 25,000 uatom
 		// then we perform single asset deposit for the remaining 25,000 uatom with the equation below
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
 		// P_issued = P_supply * ((1 + (A_t * spreadFactorRatio  / B_t))^W_t - 1)
@@ -574,8 +574,8 @@ var multiAssetUnevenInputTestCases = []calcJoinSharesTestCase{
 		expectShares: osmomath.NewInt(2.5e12 + 1249999992187),
 	},
 	{
-		// For uosmos and uatom
-		// join pool is first done to the extent where the ratio can be preserved, which is 25,000 uosmo and 25,000 uatom
+		// For notes and uatom
+		// join pool is first done to the extent where the ratio can be preserved, which is 25,000 note and 25,000 uatom
 		// then we perform single asset deposit for the remaining 25,000 uatom with the equation below
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
 		// P_issued = P_supply * ((1 + (A_t * spreadFactorRatio  / B_t))^W_t - 1)
@@ -601,7 +601,7 @@ var multiAssetUnevenInputTestCases = []calcJoinSharesTestCase{
 		expectShares: osmomath.NewInt(2.5e12 + 1243750000000),
 	},
 	{
-		// join pool is first done to the extent where the ratio can be preserved, which is 25,000 uosmo and 12,500 uatom.
+		// join pool is first done to the extent where the ratio can be preserved, which is 25,000 note and 12,500 uatom.
 		// the minimal total share resulted here would be 1,250,000,000,000 =  2500 / 2,000,000,000,000 * 100,000,000,000,000,000,000
 		// then we perform single asset deposit for the remaining 37,500 uatom with the equation below
 		//
@@ -979,7 +979,7 @@ func (s *KeeperTestSuite) TestJoinPoolNoSwap() {
 		{
 			// Note that the ratio of the assets matter, but their weights don't
 			// We expect a 2:1 ratio in the joined liquidity because there's a 2:1 ration in existing liquidity
-			// Since only the exact ratio portion is successfully joined, we expect 25k uosmo and 12.5k uatom
+			// Since only the exact ratio portion is successfully joined, we expect 25k note and 12.5k uatom
 			name:         "Multi-tokens In: unequal amounts, with unequal weights with 0.03 spread factor",
 			spreadFactor: osmomath.MustNewDecFromStr("0.03"),
 			poolAssets: []balancer.PoolAsset{

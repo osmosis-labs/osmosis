@@ -20,7 +20,7 @@ var (
 	KeyCreatorWhitelist     = []byte("CreatorWhitelist")
 	KeyInternalUptime       = []byte("InternalUptime")
 
-	// 100 OSMO
+	// 100 MELODY
 	DefaultGroupCreationFee = sdk.NewCoins(sdk.NewCoin("note", sdk.NewInt(100_000_000)))
 )
 

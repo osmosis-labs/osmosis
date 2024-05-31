@@ -45,7 +45,7 @@ func BenchmarkStableSwapHotRouteArb(b *testing.B) {
 			Routes: []poolmanagertypes.SwapAmountInRoute{
 				{
 					PoolId:        29,
-					TokenOutDenom: types.OsmosisDenomination,
+					TokenOutDenom: types.SymphonyDenomination,
 				},
 			},
 			TokenIn:           sdk.NewCoin("usdc", osmomath.NewInt(10000)),
@@ -137,7 +137,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 				expectedNumOfTrades: osmomath.OneInt(),
 				expectedProfits: []sdk.Coin{
 					{
-						Denom:  types.OsmosisDenomination,
+						Denom:  types.SymphonyDenomination,
 						Amount: osmomath.NewInt(24848),
 					},
 				},
@@ -162,7 +162,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 						Amount: osmomath.NewInt(5826),
 					},
 					{
-						Denom:  types.OsmosisDenomination,
+						Denom:  types.SymphonyDenomination,
 						Amount: osmomath.NewInt(24848),
 					},
 				},
@@ -176,7 +176,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 				trades: []types.Trade{
 					{
 						Pool:     29,
-						TokenOut: types.OsmosisDenomination,
+						TokenOut: types.SymphonyDenomination,
 						TokenIn:  "usdc",
 					},
 				},
@@ -187,7 +187,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 						Amount: osmomath.NewInt(5826),
 					},
 					{
-						Denom:  types.OsmosisDenomination,
+						Denom:  types.SymphonyDenomination,
 						Amount: osmomath.NewInt(56609900),
 					},
 				},
@@ -212,7 +212,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 						Amount: osmomath.NewInt(19_988_248),
 					},
 					{
-						Denom:  types.OsmosisDenomination,
+						Denom:  types.SymphonyDenomination,
 						Amount: osmomath.NewInt(56_609_900),
 					},
 				},
@@ -227,7 +227,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 					{
 						Pool:     38,
 						TokenOut: "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
-						TokenIn:  types.OsmosisDenomination,
+						TokenIn:  types.SymphonyDenomination,
 					},
 				},
 				expectedNumOfTrades: osmomath.NewInt(5),
@@ -237,7 +237,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 						Amount: osmomath.NewInt(19_988_248),
 					},
 					{
-						Denom:  types.OsmosisDenomination,
+						Denom:  types.SymphonyDenomination,
 						Amount: osmomath.NewInt(256_086_256),
 					},
 				},
@@ -262,7 +262,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 						Amount: osmomath.NewInt(19_988_248),
 					},
 					{
-						Denom:  types.OsmosisDenomination,
+						Denom:  types.SymphonyDenomination,
 						Amount: osmomath.NewInt(256_086_256),
 					},
 				},
@@ -287,7 +287,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 						Amount: osmomath.NewInt(19_988_248),
 					},
 					{
-						Denom:  types.OsmosisDenomination,
+						Denom:  types.SymphonyDenomination,
 						Amount: osmomath.NewInt(256_086_256),
 					},
 				},
@@ -312,7 +312,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 						Amount: osmomath.NewInt(19_988_248),
 					},
 					{
-						Denom:  types.OsmosisDenomination,
+						Denom:  types.SymphonyDenomination,
 						Amount: osmomath.NewInt(256_086_256),
 					},
 				},
@@ -337,7 +337,7 @@ func (s *KeeperTestSuite) TestPostHandle() {
 						Amount: osmomath.NewInt(19_988_248),
 					},
 					{
-						Denom:  types.OsmosisDenomination,
+						Denom:  types.SymphonyDenomination,
 						Amount: osmomath.NewInt(216_132_910_493),
 					},
 				},
@@ -717,7 +717,7 @@ func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.
 	priv0, _, addr0 := testdata.KeyTestPubAddr()
 	acc1 := s.App.AccountKeeper.NewAccountWithAddress(s.Ctx, addr0)
 	s.App.AccountKeeper.SetAccount(s.Ctx, acc1)
-	err = testutil.FundAccount(s.App.BankKeeper, s.Ctx, addr0, sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(10000))))
+	err = testutil.FundAccount(s.App.BankKeeper, s.Ctx, addr0, sdk.NewCoins(sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(10000))))
 	s.Require().NoError(err)
 
 	// Build the tx
@@ -736,7 +736,7 @@ func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.
 		s.clientCtx.TxConfig,
 		accSeqs[0],
 	)
-	tx := s.BuildTx(txBuilder, msgs, sigV2, "", sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(10000))), 500000)
+	tx := s.BuildTx(txBuilder, msgs, sigV2, "", sdk.NewCoins(sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(10000))), 500000)
 
 	// Set up the post handler
 	protoRevDecorator := keeper.NewProtoRevDecorator(*s.App.ProtoRevKeeper)

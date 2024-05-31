@@ -14,11 +14,11 @@ const (
 	// FeeCollectorName the module account name for the fee collector account address.
 	FeeCollectorName = "fee_collector"
 
-	// FeeCollectorForStakingRewardsName the module account name for the alt fee collector account address (used for auto-swapping non-OSMO tx fees).
+	// FeeCollectorForStakingRewardsName the module account name for the alt fee collector account address (used for auto-swapping non-MELODY tx fees).
 	// These fees go to the staking rewards pool.
 	FeeCollectorForStakingRewardsName = "non_native_fee_collector"
 
-	// FeeCollectorForCommunityPoolName the module account name for the alt fee collector account address (used for auto-swapping non-OSMO tx fees).
+	// FeeCollectorForCommunityPoolName the module account name for the alt fee collector account address (used for auto-swapping non-MELODY tx fees).
 	// These fees go to the community pool.
 	FeeCollectorForCommunityPoolName = "non_native_fee_collector_community_pool"
 

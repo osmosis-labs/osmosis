@@ -36,7 +36,7 @@ func TestKeeperTestSuite(t *testing.T) {
 func (s *KeeperTestSuite) SetupTest() {
 	s.Setup()
 
-	// Set the bond denom to be uosmo to make volume tracking tests more readable.
+	// Set the bond denom to be note to make volume tracking tests more readable.
 	skParams := s.App.StakingKeeper.GetParams(s.Ctx)
 	skParams.BondDenom = "note"
 	s.App.StakingKeeper.SetParams(s.Ctx, skParams)
@@ -55,24 +55,24 @@ func (s *KeeperTestSuite) SetupTest() {
 }
 
 func (s *KeeperTestSuite) TestOsmosisPoolDeltaUpdate() {
-	terraPoolDelta := s.App.MarketKeeper.GetOsmosisPoolDelta(s.Ctx)
-	s.Require().Equal(sdk.ZeroDec(), terraPoolDelta)
+	sPoolDelta := s.App.MarketKeeper.GetOsmosisPoolDelta(s.Ctx)
+	s.Require().Equal(sdk.ZeroDec(), sPoolDelta)
 
 	diff := sdk.NewDec(10)
 	s.App.MarketKeeper.SetOsmosisPoolDelta(s.Ctx, diff)
 
-	terraPoolDelta = s.App.MarketKeeper.GetOsmosisPoolDelta(s.Ctx)
-	s.Require().Equal(diff, terraPoolDelta)
+	sPoolDelta = s.App.MarketKeeper.GetOsmosisPoolDelta(s.Ctx)
+	s.Require().Equal(diff, sPoolDelta)
 }
 
 // TestReplenishPools tests that
 // each pools move towards base pool
 func (s *KeeperTestSuite) TestReplenishPools() {
-	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.StakeDenom, sdk.OneDec())
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, appparams.StakeDenom, sdk.OneDec())
 
 	basePool := s.App.MarketKeeper.BasePool(s.Ctx)
-	terraPoolDelta := s.App.MarketKeeper.GetOsmosisPoolDelta(s.Ctx)
-	s.Require().True(terraPoolDelta.IsZero())
+	sPoolDelta := s.App.MarketKeeper.GetOsmosisPoolDelta(s.Ctx)
+	s.Require().True(sPoolDelta.IsZero())
 
 	// Positive delta
 	diff := basePool.QuoInt64((int64)(appparams.BlocksPerDay))
@@ -80,10 +80,10 @@ func (s *KeeperTestSuite) TestReplenishPools() {
 
 	s.App.MarketKeeper.ReplenishPools(s.Ctx)
 
-	terraPoolDelta = s.App.MarketKeeper.GetOsmosisPoolDelta(s.Ctx)
+	sPoolDelta = s.App.MarketKeeper.GetOsmosisPoolDelta(s.Ctx)
 	replenishAmt := diff.QuoInt64((int64)(s.App.MarketKeeper.PoolRecoveryPeriod(s.Ctx)))
 	expectedDelta := diff.Sub(replenishAmt)
-	s.Require().Equal(expectedDelta, terraPoolDelta)
+	s.Require().Equal(expectedDelta, sPoolDelta)
 
 	// Negative delta
 	diff = diff.Neg()
@@ -91,8 +91,8 @@ func (s *KeeperTestSuite) TestReplenishPools() {
 
 	s.App.MarketKeeper.ReplenishPools(s.Ctx)
 
-	osmosisPoolDelta := s.App.MarketKeeper.GetOsmosisPoolDelta(s.Ctx)
+	sPoolDelta = s.App.MarketKeeper.GetOsmosisPoolDelta(s.Ctx)
 	replenishAmt = diff.QuoInt64((int64)(s.App.MarketKeeper.PoolRecoveryPeriod(s.Ctx)))
 	expectedDelta = diff.Sub(replenishAmt)
-	s.Require().Equal(expectedDelta, osmosisPoolDelta)
+	s.Require().Equal(expectedDelta, sPoolDelta)
 }

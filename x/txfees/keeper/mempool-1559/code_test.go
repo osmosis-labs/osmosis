@@ -11,7 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/noapptest"
 )
 
-// TestUpdateBaseFee simulates the update of a base fee in Osmosis.
+// TestUpdateBaseFee simulates the update of a base fee in Symphony.
 // It employs the following equation to calculate the new base fee:
 //
 //	baseFeeMultiplier = 1 + (gasUsed - targetGas) / targetGas * maxChangeRate

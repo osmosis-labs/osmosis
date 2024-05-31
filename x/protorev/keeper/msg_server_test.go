@@ -51,18 +51,18 @@ func (s *KeeperTestSuite) TestMsgSetHotRoutes() {
 								{
 									Pool:     0,
 									TokenIn:  "Juno",
-									TokenOut: types.OsmosisDenomination,
+									TokenOut: types.SymphonyDenomination,
 								},
 								{
 									Pool:     3,
-									TokenIn:  types.OsmosisDenomination,
+									TokenIn:  types.SymphonyDenomination,
 									TokenOut: "Atom",
 								},
 							},
 							StepSize: validStepSize,
 						},
 					},
-					TokenIn:  types.OsmosisDenomination,
+					TokenIn:  types.SymphonyDenomination,
 					TokenOut: "Juno",
 				},
 			},
@@ -85,18 +85,18 @@ func (s *KeeperTestSuite) TestMsgSetHotRoutes() {
 								{
 									Pool:     0,
 									TokenIn:  "Juno",
-									TokenOut: types.OsmosisDenomination,
+									TokenOut: types.SymphonyDenomination,
 								},
 								{
 									Pool:     3,
-									TokenIn:  types.OsmosisDenomination,
+									TokenIn:  types.SymphonyDenomination,
 									TokenOut: "Atom",
 								},
 							},
 							StepSize: validStepSize,
 						},
 					},
-					TokenIn:  types.OsmosisDenomination,
+					TokenIn:  types.SymphonyDenomination,
 					TokenOut: "Juno",
 				},
 				{
@@ -111,18 +111,18 @@ func (s *KeeperTestSuite) TestMsgSetHotRoutes() {
 								{
 									Pool:     0,
 									TokenIn:  "Juno",
-									TokenOut: types.OsmosisDenomination,
+									TokenOut: types.SymphonyDenomination,
 								},
 								{
 									Pool:     3,
-									TokenIn:  types.OsmosisDenomination,
+									TokenIn:  types.SymphonyDenomination,
 									TokenOut: "Atom",
 								},
 							},
 							StepSize: validStepSize,
 						},
 					},
-					TokenIn:  types.OsmosisDenomination,
+					TokenIn:  types.SymphonyDenomination,
 					TokenOut: "Juno",
 				},
 			},
@@ -145,18 +145,18 @@ func (s *KeeperTestSuite) TestMsgSetHotRoutes() {
 								{
 									Pool:     0,
 									TokenIn:  "Juno",
-									TokenOut: types.OsmosisDenomination,
+									TokenOut: types.SymphonyDenomination,
 								},
 								{
 									Pool:     3,
-									TokenIn:  types.OsmosisDenomination,
+									TokenIn:  types.SymphonyDenomination,
 									TokenOut: "Atom",
 								},
 							},
 							StepSize: invalidStepSize,
 						},
 					},
-					TokenIn:  types.OsmosisDenomination,
+					TokenIn:  types.SymphonyDenomination,
 					TokenOut: "Juno",
 				},
 			},
@@ -179,17 +179,17 @@ func (s *KeeperTestSuite) TestMsgSetHotRoutes() {
 								{
 									Pool:     0,
 									TokenIn:  "Juno",
-									TokenOut: types.OsmosisDenomination,
+									TokenOut: types.SymphonyDenomination,
 								},
 								{
 									Pool:     3,
-									TokenIn:  types.OsmosisDenomination,
+									TokenIn:  types.SymphonyDenomination,
 									TokenOut: "Atom",
 								},
 							},
 						},
 					},
-					TokenIn:  types.OsmosisDenomination,
+					TokenIn:  types.SymphonyDenomination,
 					TokenOut: "Juno",
 				},
 			},
@@ -579,7 +579,7 @@ func (s *KeeperTestSuite) TestMsgSetBaseDenoms() {
 			"admin",
 			[]types.BaseDenom{
 				{
-					Denom:    types.OsmosisDenomination,
+					Denom:    types.SymphonyDenomination,
 					StepSize: osmomath.NewInt(1_000_000),
 				},
 			},
@@ -587,7 +587,7 @@ func (s *KeeperTestSuite) TestMsgSetBaseDenoms() {
 			false,
 		},
 		{
-			"Invalid message (invalid base denoms must start with osmo)",
+			"Invalid message (invalid base denoms must start with melody)",
 			s.adminAccount.String(),
 			[]types.BaseDenom{
 				{
@@ -603,7 +603,7 @@ func (s *KeeperTestSuite) TestMsgSetBaseDenoms() {
 			s.adminAccount.String(),
 			[]types.BaseDenom{
 				{
-					Denom:    types.OsmosisDenomination,
+					Denom:    types.SymphonyDenomination,
 					StepSize: osmomath.NewInt(0),
 				},
 			},
@@ -615,7 +615,7 @@ func (s *KeeperTestSuite) TestMsgSetBaseDenoms() {
 			apptesting.CreateRandomAccounts(1)[0].String(),
 			[]types.BaseDenom{
 				{
-					Denom:    types.OsmosisDenomination,
+					Denom:    types.SymphonyDenomination,
 					StepSize: osmomath.NewInt(1_000_000),
 				},
 			},
@@ -627,7 +627,7 @@ func (s *KeeperTestSuite) TestMsgSetBaseDenoms() {
 			s.adminAccount.String(),
 			[]types.BaseDenom{
 				{
-					Denom:    types.OsmosisDenomination,
+					Denom:    types.SymphonyDenomination,
 					StepSize: osmomath.NewInt(1_000_000),
 				},
 			},

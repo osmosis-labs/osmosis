@@ -15,7 +15,7 @@ var (
 	ErrMultipleCoinsLockupNotSupported = errorsmod.Register(ModuleName, 1, "multiple coins lockup is not supported")
 	ErrUnbondingLockupNotSupported     = errorsmod.Register(ModuleName, 2, "unbonding lockup is not allowed to participate in superfluid staking")
 	ErrNotEnoughLockupDuration         = errorsmod.Register(ModuleName, 3, "lockup does not have enough lock duration")
-	ErrOsmoEquivalentZeroNotAllowed    = errorsmod.Register(ModuleName, 4, "not able to do superfluid staking for zero osmo equivalent")
+	ErrOsmoEquivalentZeroNotAllowed    = errorsmod.Register(ModuleName, 4, "not able to do superfluid staking for zero melody equivalent")
 	ErrNotSuperfluidUsedLockup         = errorsmod.Register(ModuleName, 5, "lockup is not used for superfluid staking")
 	ErrSameValidatorRedelegation       = errorsmod.Register(ModuleName, 6, "redelegation to the same validator is not allowed")
 	ErrAlreadyUsedSuperfluidLockup     = errorsmod.Register(ModuleName, 7, "lockup is already being used for superfluid staking")

@@ -1,10 +1,10 @@
 openapi: 3.0.0
 info:
-  title: Osmosis - gRPC Gateway docs
+  title: Symphony - gRPC Gateway docs
   description: A REST interface for state queries, legacy transactions
   version: 1.0.0
 paths:
-  /osmosis/epochs/v1beta1/current_epoch:
+  /symphony/epochs/v1beta1/current_epoch:
     get:
       summary: CurrentEpoch provide current epoch of specified identifier
       operationId: CurrentEpoch
@@ -51,7 +51,7 @@ paths:
             type: string
       tags:
         - Query
-  /osmosis/epochs/v1beta1/epochs:
+  /symphony/epochs/v1beta1/epochs:
     get:
       summary: EpochInfos provide running epochInfos
       operationId: EpochInfos
@@ -179,7 +179,7 @@ paths:
                           format: byte
       tags:
         - Query
-  /osmosis/gamm/v1beta1/cfmm_concentrated_pool_links:
+  /symphony/gamm/v1beta1/cfmm_concentrated_pool_links:
     get:
       summary: |-
         CFMMConcentratedPoolLinks returns migration links between CFMM and
@@ -395,7 +395,7 @@ paths:
                             }
       tags:
         - Query
-  "/osmosis/gamm/v1beta1/concentrated_pool_id_link_from_cfmm/{cfmm_pool_id}":
+  "/symphony/gamm/v1beta1/concentrated_pool_id_link_from_cfmm/{cfmm_pool_id}":
     get:
       summary: >-
         ConcentratedPoolIdLinkFromBalancer returns the pool id of the concentrated
@@ -592,7 +592,7 @@ paths:
             format: uint64
       tags:
         - Query
-  /osmosis/gamm/v1beta1/filtered_pools:
+  /symphony/gamm/v1beta1/filtered_pools:
     get:
       summary: |-
         PoolsWithFilter allows you to query specific pools with requested
@@ -953,7 +953,7 @@ paths:
         - name: min_liquidity
           description: |-
             String of the coins in single string separated by comma. Ex)
-            10uatom,100uosmo.
+            10uatom,100note.
           in: query
           required: false
           schema:
@@ -1020,7 +1020,7 @@ paths:
             type: boolean
       tags:
         - Query
-  /osmosis/gamm/v1beta1/num_pools:
+  /symphony/gamm/v1beta1/num_pools:
     get:
       summary: "Deprecated: please use the alternative in x/poolmanager"
       operationId: NumPools
@@ -1207,7 +1207,7 @@ paths:
                             }
       tags:
         - Query
-  "/osmosis/gamm/v1beta1/pool_type/{pool_id}":
+  "/symphony/gamm/v1beta1/pool_type/{pool_id}":
     get:
       summary: |-
         PoolType returns the type of the pool.
@@ -1403,7 +1403,7 @@ paths:
             format: uint64
       tags:
         - Query
-  /osmosis/gamm/v1beta1/pools:
+  /symphony/gamm/v1beta1/pools:
     get:
       operationId: Pools
       responses:
@@ -1815,7 +1815,7 @@ paths:
             type: boolean
       tags:
         - Query
-  "/osmosis/gamm/v1beta1/pools/{pool_id}":
+  "/symphony/gamm/v1beta1/pools/{pool_id}":
     get:
       summary: "Deprecated: please use the alternative in x/poolmanager"
       operationId: Pool
@@ -2161,7 +2161,7 @@ paths:
             format: uint64
       tags:
         - Query
-  "/osmosis/gamm/v1beta1/pools/{pool_id}/exit_swap_share_amount_in":
+  "/symphony/gamm/v1beta1/pools/{pool_id}/exit_swap_share_amount_in":
     get:
       operationId: CalcExitPoolCoinsFromShares
       responses:
@@ -2372,7 +2372,7 @@ paths:
             type: string
       tags:
         - Query
-  "/osmosis/gamm/v1beta1/pools/{pool_id}/join_swap_exact_in":
+  "/symphony/gamm/v1beta1/pools/{pool_id}/join_swap_exact_in":
     get:
       operationId: CalcJoinPoolShares
       responses:
@@ -2580,7 +2580,7 @@ paths:
             format: uint64
       tags:
         - Query
-  "/osmosis/gamm/v1beta1/pools/{pool_id}/params":
+  "/symphony/gamm/v1beta1/pools/{pool_id}/params":
     get:
       operationId: PoolParams
       responses:
@@ -2924,7 +2924,7 @@ paths:
             format: uint64
       tags:
         - Query
-  "/osmosis/gamm/v1beta1/pools/{pool_id}/prices":
+  "/symphony/gamm/v1beta1/pools/{pool_id}/prices":
     get:
       summary: |-
         SpotPrice defines a gRPC query handler that returns the spot price given
@@ -3134,7 +3134,7 @@ paths:
             type: string
       tags:
         - Query
-  "/osmosis/gamm/v1beta1/pools/{pool_id}/total_pool_liquidity":
+  "/symphony/gamm/v1beta1/pools/{pool_id}/total_pool_liquidity":
     get:
       summary: "Deprecated: please use the alternative in x/poolmanager"
       operationId: TotalPoolLiquidity
@@ -3342,7 +3342,7 @@ paths:
             format: uint64
       tags:
         - Query
-  "/osmosis/gamm/v1beta1/pools/{pool_id}/total_shares":
+  "/symphony/gamm/v1beta1/pools/{pool_id}/total_shares":
     get:
       operationId: TotalShares
       responses:
@@ -3546,7 +3546,7 @@ paths:
             format: uint64
       tags:
         - Query
-  /osmosis/gamm/v1beta1/total_liquidity:
+  /symphony/gamm/v1beta1/total_liquidity:
     get:
       operationId: TotalLiquidity
       responses:
@@ -3745,7 +3745,7 @@ paths:
                             }
       tags:
         - Query
-  "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_in":
+  "/symphony/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_in":
     get:
       summary: "Deprecated: please use the alternative in x/poolmanager"
       operationId: EstimateSwapExactAmountIn
@@ -3948,7 +3948,7 @@ paths:
             type: string
       tags:
         - Query
-  "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_out":
+  "/symphony/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_out":
     get:
       summary: "Deprecated: please use the alternative in x/poolmanager"
       operationId: EstimateSwapExactAmountOut
@@ -4151,7 +4151,7 @@ paths:
             type: string
       tags:
         - Query
-  /osmosis/incentives/v1beta1/active_gauges:
+  /symphony/incentives/v1beta1/active_gauges:
     get:
       summary: ActiveGauges returns active gauges
       operationId: ActiveGauges
@@ -4401,7 +4401,7 @@ paths:
             type: boolean
       tags:
         - Query
-  /osmosis/incentives/v1beta1/active_gauges_per_denom:
+  /symphony/incentives/v1beta1/active_gauges_per_denom:
     get:
       summary: ActiveGaugesPerDenom returns active gauges by denom
       operationId: ActiveGaugesPerDenom
@@ -4657,7 +4657,7 @@ paths:
             type: boolean
       tags:
         - Query
-  /osmosis/incentives/v1beta1/all_groups:
+  /symphony/incentives/v1beta1/all_groups:
     get:
       summary: AllGroups returns all groups
       operationId: AllGroups
@@ -4758,7 +4758,7 @@ paths:
                           format: byte
       tags:
         - Query
-  /osmosis/incentives/v1beta1/all_groups_gauges:
+  /symphony/incentives/v1beta1/all_groups_gauges:
     get:
       summary: AllGroupsGauges returns all group gauges
       operationId: AllGroupsGauges
@@ -4924,7 +4924,7 @@ paths:
                           format: byte
       tags:
         - Query
-  /osmosis/incentives/v1beta1/all_groups_with_gauge:
+  /symphony/incentives/v1beta1/all_groups_with_gauge:
     get:
       summary: AllGroupsWithGauge returns all groups with their group gauge
       operationId: AllGroupsWithGauge
@@ -5158,7 +5158,7 @@ paths:
                           format: byte
       tags:
         - Query
-  "/osmosis/incentives/v1beta1/gauge_by_id/{id}":
+  "/symphony/incentives/v1beta1/gauge_by_id/{id}":
     get:
       summary: GaugeByID returns gauges by their respective ID
       operationId: GaugeByID
@@ -5331,7 +5331,7 @@ paths:
             format: uint64
       tags:
         - Query
-  /osmosis/incentives/v1beta1/gauges:
+  /symphony/incentives/v1beta1/gauges:
     get:
       summary: Gauges returns both upcoming and active gauges
       operationId: Gauges
@@ -5581,7 +5581,7 @@ paths:
             type: boolean
       tags:
         - Query
-  "/osmosis/incentives/v1beta1/group_by_group_gauge_id/{id}":
+  "/symphony/incentives/v1beta1/group_by_group_gauge_id/{id}":
     get:
       summary: GroupByGroupGaugeID returns a group given its group gauge ID
       operationId: GroupByGroupGaugeID
@@ -5687,7 +5687,7 @@ paths:
             format: uint64
       tags:
         - Query
-  /osmosis/incentives/v1beta1/lockable_durations:
+  /symphony/incentives/v1beta1/lockable_durations:
     get:
       summary: >-
         LockableDurations returns lockable durations that are valid to distribute
@@ -5733,7 +5733,7 @@ paths:
                           format: byte
       tags:
         - Query
-  /osmosis/incentives/v1beta1/module_to_distribute_coins:
+  /symphony/incentives/v1beta1/module_to_distribute_coins:
     get:
       summary: ModuleToDistributeCoins returns coins that are going to be distributed
       operationId: ModuleToDistributeCoins
@@ -5788,7 +5788,7 @@ paths:
                           format: byte
       tags:
         - Query
-  "/osmosis/incentives/v1beta1/rewards_est/{owner}":
+  "/symphony/incentives/v1beta1/rewards_est/{owner}":
     get:
       summary: >-
         RewardsEst returns an estimate of the rewards from now until a specified
@@ -5877,7 +5877,7 @@ paths:
             format: int64
       tags:
         - Query
-  /osmosis/incentives/v1beta1/upcoming_gauges:
+  /symphony/incentives/v1beta1/upcoming_gauges:
     get:
       summary: Returns scheduled gauges that have not yet occurred
       operationId: UpcomingGauges
@@ -6127,7 +6127,7 @@ paths:
             type: boolean
       tags:
         - Query
-  /osmosis/incentives/v1beta1/upcoming_gauges_per_denom:
+  /symphony/incentives/v1beta1/upcoming_gauges_per_denom:
     get:
       summary: >-
         UpcomingGaugesPerDenom returns scheduled gauges that have not yet occurred
@@ -6386,7 +6386,7 @@ paths:
             type: boolean
       tags:
         - Query
-  "/osmosis/lockup/v1beta1/account_locked_coins/{owner}":
+  "/symphony/lockup/v1beta1/account_locked_coins/{owner}":
     get:
       summary: Return a locked coins that can't be withdrawn
       operationId: AccountLockedCoins
@@ -6446,7 +6446,7 @@ paths:
             type: string
       tags:
         - Query
-  "/osmosis/lockup/v1beta1/account_locked_duration/{owner}":
+  "/symphony/lockup/v1beta1/account_locked_duration/{owner}":
     get:
       summary: Returns account locked records with a specific duration
       operationId: AccountLockedDuration
@@ -6564,7 +6564,7 @@ paths:
             type: string
       tags:
         - Query
-  "/osmosis/lockup/v1beta1/account_locked_longer_duration/{owner}":
+  "/symphony/lockup/v1beta1/account_locked_longer_duration/{owner}":
     get:
       summary: Returns account locked records with longer duration
       operationId: AccountLockedLongerDuration
@@ -6682,7 +6682,7 @@ paths:
             type: string
       tags:
         - Query
-  "/osmosis/lockup/v1beta1/account_locked_longer_duration_denom/{owner}":
+  "/symphony/lockup/v1beta1/account_locked_longer_duration_denom/{owner}":
     get:
       summary: Returns account's locked records for a denom with longer duration
       operationId: AccountLockedLongerDurationDenom
@@ -6805,7 +6805,7 @@ paths:
             type: string
       tags:
         - Query
-  "/osmosis/lockup/v1beta1/account_locked_longer_duration_not_unlocking_only/{owner}":
+  "/symphony/lockup/v1beta1/account_locked_longer_duration_not_unlocking_only/{owner}":
     get:
       summary: |-
         Returns account locked records with longer duration excluding tokens
@@ -6925,7 +6925,7 @@ paths:
             type: string
       tags:
         - Query
-  "/osmosis/lockup/v1beta1/account_locked_pasttime/{owner}":
+  "/symphony/lockup/v1beta1/account_locked_pasttime/{owner}":
     get:
       summary: Returns locked records of an account with unlock time beyond timestamp
       operationId: AccountLockedPastTime
@@ -7044,7 +7044,7 @@ paths:
             format: date-time
       tags:
         - Query
-  "/osmosis/lockup/v1beta1/account_locked_pasttime_denom/{owner}":
+  "/symphony/lockup/v1beta1/account_locked_pasttime_denom/{owner}":
     get:
       summary: Returns lock records by address, timestamp, denom
       operationId: AccountLockedPastTimeDenom
@@ -7168,7 +7168,7 @@ paths:
             type: string
       tags:
         - Query
-  "/osmosis/lockup/v1beta1/account_locked_pasttime_not_unlocking_only/{owner}":
+  "/symphony/lockup/v1beta1/account_locked_pasttime_not_unlocking_only/{owner}":
     get:
       summary: |-
         Returns locked records of an account with unlock time beyond timestamp
@@ -7289,7 +7289,7 @@ paths:
             format: date-time
       tags:
         - Query
-  "/osmosis/lockup/v1beta1/account_unlockable_coins/{owner}":
+  "/symphony/lockup/v1beta1/account_unlockable_coins/{owner}":
     get:
       summary: Returns unlockable coins which are not withdrawn yet
       operationId: AccountUnlockableCoins
@@ -7349,7 +7349,7 @@ paths:
             type: string
       tags:
         - Query
-  "/osmosis/lockup/v1beta1/account_unlocked_before_time/{owner}":
+  "/symphony/lockup/v1beta1/account_unlocked_before_time/{owner}":
     get:
       summary: Returns unlocked records with unlock time before timestamp
       operationId: AccountUnlockedBeforeTime
@@ -7468,7 +7468,7 @@ paths:
             format: date-time
       tags:
         - Query
-  "/osmosis/lockup/v1beta1/account_unlocking_coins/{owner}":
+  "/symphony/lockup/v1beta1/account_unlocking_coins/{owner}":
     get:
       summary: Returns unlocking coins
       operationId: AccountUnlockingCoins
@@ -7528,7 +7528,7 @@ paths:
             type: string
       tags:
         - Query
-  "/osmosis/lockup/v1beta1/lock_reward_receiver/{lock_id}":
+  "/symphony/lockup/v1beta1/lock_reward_receiver/{lock_id}":
     get:
       summary: Returns lock record by id
       operationId: LockRewardReceiver
@@ -7575,7 +7575,7 @@ paths:
             format: uint64
       tags:
         - Query
-  "/osmosis/lockup/v1beta1/locked_by_id/{lock_id}":
+  "/symphony/lockup/v1beta1/locked_by_id/{lock_id}":
     get:
       summary: Returns lock record by id
       operationId: LockedByID
@@ -7687,7 +7687,7 @@ paths:
             format: uint64
       tags:
         - Query
-  /osmosis/lockup/v1beta1/locked_denom:
+  /symphony/lockup/v1beta1/locked_denom:
     get:
       summary: Returns total locked per denom with longer past given time
       operationId: LockedDenom
@@ -7738,7 +7738,7 @@ paths:
             type: string
       tags:
         - Query
-  /osmosis/lockup/v1beta1/module_balance:
+  /symphony/lockup/v1beta1/module_balance:
     get:
       summary: Return full balance of the module
       operationId: ModuleBalance
@@ -7792,7 +7792,7 @@ paths:
                           format: byte
       tags:
         - Query
-  /osmosis/lockup/v1beta1/module_locked_amount:
+  /symphony/lockup/v1beta1/module_locked_amount:
     get:
       summary: Return locked balance of the module
       operationId: ModuleLockedAmount
@@ -7846,7 +7846,7 @@ paths:
                           format: byte
       tags:
         - Query
-  /osmosis/lockup/v1beta1/next_lock_id:
+  /symphony/lockup/v1beta1/next_lock_id:
     get:
       summary: Returns next lock ID
       operationId: NextLockID
@@ -7887,7 +7887,7 @@ paths:
                           format: byte
       tags:
         - Query
-  /osmosis/lockup/v1beta1/params:
+  /symphony/lockup/v1beta1/params:
     get:
       summary: Params returns lockup params.
       operationId: LockupParams
@@ -7932,7 +7932,7 @@ paths:
                           format: byte
       tags:
         - Query
-  "/osmosis/lockup/v1beta1/synthetic_lockup_by_lock_id/{lock_id}":
+  "/symphony/lockup/v1beta1/synthetic_lockup_by_lock_id/{lock_id}":
     get:
       summary: Returns synthetic lockup by native lockup id
       operationId: SyntheticLockupByLockupID
@@ -8014,7 +8014,7 @@ paths:
             format: uint64
       tags:
         - Query
-  "/osmosis/lockup/v1beta1/synthetic_lockups_by_lock_id/{lock_id}":
+  "/symphony/lockup/v1beta1/synthetic_lockups_by_lock_id/{lock_id}":
     get:
       summary: |-
         Returns synthetic lockup by native lockup id
@@ -8100,7 +8100,7 @@ paths:
             format: uint64
       tags:
         - Query
-  /osmosis/mint/v1beta1/epoch_provisions:
+  /symphony/mint/v1beta1/epoch_provisions:
     get:
       summary: EpochProvisions returns the current minting epoch provisions value.
       operationId: EpochProvisions
@@ -8291,7 +8291,7 @@ paths:
                             }
       tags:
         - Query
-  /osmosis/mint/v1beta1/params:
+  /symphony/mint/v1beta1/params:
     get:
       summary: Params returns the total set of minting parameters.
       operationId: MintParams
@@ -8565,7 +8565,7 @@ paths:
                             }
       tags:
         - Query
-  /osmosis/pool-incentives/v1beta1/distr_info:
+  /symphony/pool-incentives/v1beta1/distr_info:
     get:
       summary: DistrInfo returns the pool's matching gauge ids and weights.
       operationId: DistrInfo
@@ -8618,7 +8618,7 @@ paths:
                           format: byte
       tags:
         - Query
-  /osmosis/pool-incentives/v1beta1/external_incentive_gauges:
+  /symphony/pool-incentives/v1beta1/external_incentive_gauges:
     get:
       summary: ExternalIncentiveGauges returns external incentive gauges.
       operationId: ExternalIncentiveGauges
@@ -8784,7 +8784,7 @@ paths:
                           format: byte
       tags:
         - Query
-  "/osmosis/pool-incentives/v1beta1/gauge-ids/{pool_id}":
+  "/symphony/pool-incentives/v1beta1/gauge-ids/{pool_id}":
     get:
       summary: GaugeIds takes the pool id and returns the matching gauge ids and durations
       operationId: GaugeIds
@@ -8841,7 +8841,7 @@ paths:
             format: uint64
       tags:
         - Query
-  /osmosis/pool-incentives/v1beta1/incentivized_pools:
+  /symphony/pool-incentives/v1beta1/incentivized_pools:
     get:
       summary: IncentivizedPools returns currently incentivized pools
       operationId: IncentivizedPools
@@ -8892,7 +8892,7 @@ paths:
                           format: byte
       tags:
         - Query
-  /osmosis/pool-incentives/v1beta1/lockable_durations:
+  /symphony/pool-incentives/v1beta1/lockable_durations:
     get:
       summary: LockableDurations returns lock durations for pools.
       operationId: PoolLockableDurations
@@ -8934,7 +8934,7 @@ paths:
                           format: byte
       tags:
         - Query
-  /osmosis/pool-incentives/v1beta1/params:
+  /symphony/pool-incentives/v1beta1/params:
     get:
       summary: Params returns pool incentives params.
       operationId: PoolIncentivesParams
@@ -8985,7 +8985,7 @@ paths:
                           format: byte
       tags:
         - Query
-  "/osmosis/superfluid/v1beta1/account_delegated_cl_positions/{delegator_address}":
+  "/symphony/superfluid/v1beta1/account_delegated_cl_positions/{delegator_address}":
     get:
       summary: Returns all of a user's full range CL positions that are superfluid staked.
       operationId: UserConcentratedSuperfluidPositionsDelegated
@@ -9253,7 +9253,7 @@ paths:
             type: string
       tags:
         - Query
-  "/osmosis/superfluid/v1beta1/account_undelegating_cl_positions/{delegator_address}":
+  "/symphony/superfluid/v1beta1/account_undelegating_cl_positions/{delegator_address}":
     get:
       operationId: UserConcentratedSuperfluidPositionsUndelegating
       responses:
@@ -9520,7 +9520,7 @@ paths:
             type: string
       tags:
         - Query
-  /osmosis/superfluid/v1beta1/all_assets:
+  /symphony/superfluid/v1beta1/all_assets:
     get:
       summary: Returns all registered superfluid assets.
       operationId: AllAssets
@@ -9723,7 +9723,7 @@ paths:
                             }
       tags:
         - Query
-  /osmosis/superfluid/v1beta1/all_intermediary_accounts:
+  /symphony/superfluid/v1beta1/all_intermediary_accounts:
     get:
       summary: Returns all superfluid intermediary accounts.
       operationId: AllIntermediaryAccounts
@@ -10003,11 +10003,11 @@ paths:
             type: boolean
       tags:
         - Query
-  /osmosis/superfluid/v1beta1/all_superfluid_delegations:
+  /symphony/superfluid/v1beta1/all_superfluid_delegations:
     get:
       summary: |-
-        Returns the total amount of osmo superfluidly staked.
-        Response is denominated in uosmo.
+        Returns the total amount of melody superfluidly staked.
+        Response is denominated in note.
       operationId: TotalSuperfluidDelegations
       responses:
         "200":
@@ -10191,9 +10191,9 @@ paths:
                             }
       tags:
         - Query
-  /osmosis/superfluid/v1beta1/asset_multiplier:
+  /symphony/superfluid/v1beta1/asset_multiplier:
     get:
-      summary: Returns the osmo equivalent multiplier used in the most recent epoch.
+      summary: Returns the melody equivalent multiplier used in the most recent epoch.
       operationId: AssetMultiplier
       responses:
         "200":
@@ -10203,7 +10203,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  osmo_equivalent_multiplier:
+                  melody_equivalent_multiplier:
                     type: object
                     properties:
                       epoch_number:
@@ -10215,11 +10215,11 @@ paths:
                       multiplier:
                         type: string
                     description: >-
-                      The Osmo-Equivalent-Multiplier Record for epoch N refers to the osmo worth we
+                      The Melody-Equivalent-Multiplier Record for epoch N refers to the melody worth we
 
                       treat an LP share as having, for all of epoch N. Eventually this is intended
 
-                      to be set as the Time-weighted-average-osmo-backing for the entire duration
+                      to be set as the Time-weighted-average-melody-backing for the entire duration
 
                       of epoch N-1. (Thereby locking what's in use for epoch N as based on the prior
 
@@ -10406,7 +10406,7 @@ paths:
             type: string
       tags:
         - Query
-  /osmosis/superfluid/v1beta1/asset_type:
+  /symphony/superfluid/v1beta1/asset_type:
     get:
       summary: |-
         Returns superfluid asset type, whether if it's a native asset or an lp
@@ -10609,7 +10609,7 @@ paths:
             type: string
       tags:
         - Query
-  "/osmosis/superfluid/v1beta1/connected_intermediary_account/{lock_id}":
+  "/symphony/superfluid/v1beta1/connected_intermediary_account/{lock_id}":
     get:
       summary: Returns intermediary account connected to a superfluid staked lock by id
       operationId: ConnectedIntermediaryAccount
@@ -10812,7 +10812,7 @@ paths:
             format: uint64
       tags:
         - Query
-  /osmosis/superfluid/v1beta1/estimate_superfluid_delegation_amount_by_validator_denom:
+  /symphony/superfluid/v1beta1/estimate_superfluid_delegation_amount_by_validator_denom:
     get:
       summary: >-
         Returns the amount of a specific denom delegated to a specific validator
@@ -11028,7 +11028,7 @@ paths:
             type: string
       tags:
         - Query
-  /osmosis/superfluid/v1beta1/params:
+  /symphony/superfluid/v1beta1/params:
     get:
       summary: Params returns the total set of superfluid parameters.
       operationId: SuperfluidParams
@@ -11227,7 +11227,7 @@ paths:
                             }
       tags:
         - Query
-  /osmosis/superfluid/v1beta1/superfluid_delegation_amount:
+  /symphony/superfluid/v1beta1/superfluid_delegation_amount:
     get:
       summary: >-
         Returns the coins superfluid delegated for the delegator, validator, denom
@@ -11446,7 +11446,7 @@ paths:
             type: string
       tags:
         - Query
-  "/osmosis/superfluid/v1beta1/superfluid_delegations/{delegator_address}":
+  "/symphony/superfluid/v1beta1/superfluid_delegations/{delegator_address}":
     get:
       summary: Returns all the delegated superfluid positions for a specific delegator.
       operationId: SuperfluidDelegationsByDelegator
@@ -11707,7 +11707,7 @@ paths:
             type: string
       tags:
         - Query
-  /osmosis/superfluid/v1beta1/superfluid_delegations_by_validator_denom:
+  /symphony/superfluid/v1beta1/superfluid_delegations_by_validator_denom:
     get:
       summary: >-
         Returns all the superfluid positions of a specific denom delegated to one
@@ -11946,7 +11946,7 @@ paths:
             type: string
       tags:
         - Query
-  "/osmosis/superfluid/v1beta1/superfluid_undelegations_by_delegator/{delegator_address}":
+  "/symphony/superfluid/v1beta1/superfluid_undelegations_by_delegator/{delegator_address}":
     get:
       summary: Returns all the undelegating superfluid positions for a specific delegator.
       operationId: SuperfluidUndelegationsByDelegator
@@ -12237,7 +12237,7 @@ paths:
             type: string
       tags:
         - Query
-  "/osmosis/superfluid/v1beta1/total_delegation_by_delegator/{delegator_address}":
+  "/symphony/superfluid/v1beta1/total_delegation_by_delegator/{delegator_address}":
     get:
       summary: Returns the specified delegations for a specific delegator
       operationId: TotalDelegationByDelegator
@@ -12539,7 +12539,7 @@ paths:
             type: string
       tags:
         - Query
-  /osmosis/superfluid/v1beta1/unpool_whitelist:
+  /symphony/superfluid/v1beta1/unpool_whitelist:
     get:
       summary: Returns a list of whitelisted pool ids to unpool.
       operationId: UnpoolWhitelist
@@ -12747,7 +12747,7 @@ paths:
                     properties:
                       admin:
                         type: string
-                        title: Can be empty for no admin, or a valid osmosis address
+                        title: Can be empty for no admin, or a valid symphony address
                     description: >-
                       DenomAuthorityMetadata specifies metadata for addresses that have specific
 
@@ -12974,7 +12974,7 @@ paths:
                           format: byte
       tags:
         - Query
-  /osmosis/txfees/v1beta1/base_denom:
+  /symphony/txfees/v1beta1/base_denom:
     get:
       summary: Returns a list of all base denom tokens and their corresponding pools.
       operationId: TxFeesBaseDenom
@@ -13014,7 +13014,7 @@ paths:
                           format: byte
       tags:
         - Query
-  "/osmosis/txfees/v1beta1/denom_pool_id/{denom}":
+  "/symphony/txfees/v1beta1/denom_pool_id/{denom}":
     get:
       summary: Returns the poolID for a specified denom input.
       operationId: DenomPoolId
@@ -13061,7 +13061,7 @@ paths:
             type: string
       tags:
         - Query
-  /osmosis/txfees/v1beta1/fee_tokens:
+  /symphony/txfees/v1beta1/fee_tokens:
     get:
       summary: >-
         FeeTokens returns a list of all the whitelisted fee tokens and their
@@ -13091,11 +13091,11 @@ paths:
                       description: >-
                         FeeToken is a struct that specifies a coin denom, and pool ID pair.
 
-                        This marks the token as eligible for use as a tx fee asset in Osmosis.
+                        This marks the token as eligible for use as a tx fee asset in Symphony.
 
-                        Its price in osmo is derived through looking at the provided pool ID.
+                        Its price in melody is derived through looking at the provided pool ID.
 
-                        The pool ID must have osmo as one of its assets.
+                        The pool ID must have melody as one of its assets.
         default:
           description: An unexpected error response.
           content:
@@ -13122,7 +13122,7 @@ paths:
                           format: byte
       tags:
         - Query
-  /osmosis/txfees/v1beta1/spot_price_by_denom:
+  /symphony/txfees/v1beta1/spot_price_by_denom:
     get:
       summary: DenomSpotPrice returns all spot prices by each registered token denom.
       operationId: DenomSpotPrice
@@ -32065,7 +32065,7 @@ components:
                     "@type": "type.googleapis.com/google.protobuf.Duration",
                     "value": "1.212s"
                   }
-    osmosis.epochs.v1beta1.EpochInfo:
+    symphony.epochs.v1beta1.EpochInfo:
       type: object
       properties:
         identifier:
@@ -32149,13 +32149,13 @@ components:
       description: |-
         EpochInfo is a struct that describes the data going into
         a timer defined by the x/epochs module.
-    osmosis.epochs.v1beta1.QueryCurrentEpochResponse:
+    symphony.epochs.v1beta1.QueryCurrentEpochResponse:
       type: object
       properties:
         current_epoch:
           type: string
           format: int64
-    osmosis.epochs.v1beta1.QueryEpochsInfoResponse:
+    symphony.epochs.v1beta1.QueryEpochsInfoResponse:
       type: object
       properties:
         epochs:
@@ -32332,7 +32332,7 @@ components:
 
         NOTE: The amount field is an Int which implements the custom method
         signatures required by gogoproto.
-    osmosis.gamm.v1beta1.BalancerToConcentratedPoolLink:
+    symphony.gamm.v1beta1.BalancerToConcentratedPoolLink:
       type: object
       properties:
         balancer_pool_id:
@@ -32353,7 +32353,7 @@ components:
         A balancer pool can be linked to a maximum of one cl pool, and a cl pool can
 
         be linked to a maximum of one balancer pool.
-    osmosis.gamm.v1beta1.MigrationRecords:
+    symphony.gamm.v1beta1.MigrationRecords:
       type: object
       properties:
         balancer_to_concentrated_pool_links:
@@ -32383,7 +32383,7 @@ components:
         MigrationRecords contains all the links between balancer and concentrated
 
         pools
-    osmosis.gamm.v1beta1.QueryCFMMConcentratedPoolLinksResponse:
+    symphony.gamm.v1beta1.QueryCFMMConcentratedPoolLinksResponse:
       type: object
       properties:
         migration_records:
@@ -32416,7 +32416,7 @@ components:
             MigrationRecords contains all the links between balancer and concentrated
 
             pools
-    osmosis.gamm.v1beta1.QueryCalcExitPoolCoinsFromSharesResponse:
+    symphony.gamm.v1beta1.QueryCalcExitPoolCoinsFromSharesResponse:
       type: object
       properties:
         tokens_out:
@@ -32435,7 +32435,7 @@ components:
               NOTE: The amount field is an Int which implements the custom method
 
               signatures required by gogoproto.
-    osmosis.gamm.v1beta1.QueryCalcJoinPoolNoSwapSharesResponse:
+    symphony.gamm.v1beta1.QueryCalcJoinPoolNoSwapSharesResponse:
       type: object
       properties:
         tokens_out:
@@ -32456,7 +32456,7 @@ components:
               signatures required by gogoproto.
         shares_out:
           type: string
-    osmosis.gamm.v1beta1.QueryCalcJoinPoolSharesResponse:
+    symphony.gamm.v1beta1.QueryCalcJoinPoolSharesResponse:
       type: object
       properties:
         share_out_amount:
@@ -32477,19 +32477,19 @@ components:
               NOTE: The amount field is an Int which implements the custom method
 
               signatures required by gogoproto.
-    osmosis.gamm.v1beta1.QueryConcentratedPoolIdLinkFromCFMMResponse:
+    symphony.gamm.v1beta1.QueryConcentratedPoolIdLinkFromCFMMResponse:
       type: object
       properties:
         concentrated_pool_id:
           type: string
           format: uint64
-    osmosis.gamm.v1beta1.QueryNumPoolsResponse:
+    symphony.gamm.v1beta1.QueryNumPoolsResponse:
       type: object
       properties:
         num_pools:
           type: string
           format: uint64
-    osmosis.gamm.v1beta1.QueryPoolParamsResponse:
+    symphony.gamm.v1beta1.QueryPoolParamsResponse:
       type: object
       properties:
         params:
@@ -32646,7 +32646,7 @@ components:
                   "@type": "type.googleapis.com/google.protobuf.Duration",
                   "value": "1.212s"
                 }
-    osmosis.gamm.v1beta1.QueryPoolResponse:
+    symphony.gamm.v1beta1.QueryPoolResponse:
       type: object
       properties:
         pool:
@@ -32804,12 +32804,12 @@ components:
                   "value": "1.212s"
                 }
       title: "Deprecated: please use the alternative in x/poolmanager"
-    osmosis.gamm.v1beta1.QueryPoolTypeResponse:
+    symphony.gamm.v1beta1.QueryPoolTypeResponse:
       type: object
       properties:
         pool_type:
           type: string
-    osmosis.gamm.v1beta1.QueryPoolsResponse:
+    symphony.gamm.v1beta1.QueryPoolsResponse:
       type: object
       properties:
         pools:
@@ -32985,7 +32985,7 @@ components:
                 total is total number of results available if PageRequest.count_total
 
                 was set, its value is undefined otherwise
-    osmosis.gamm.v1beta1.QueryPoolsWithFilterResponse:
+    symphony.gamm.v1beta1.QueryPoolsWithFilterResponse:
       type: object
       properties:
         pools:
@@ -33161,7 +33161,7 @@ components:
                 total is total number of results available if PageRequest.count_total
 
                 was set, its value is undefined otherwise
-    osmosis.gamm.v1beta1.QuerySpotPriceResponse:
+    symphony.gamm.v1beta1.QuerySpotPriceResponse:
       type: object
       properties:
         spot_price:
@@ -33171,17 +33171,17 @@ components:
         QuerySpotPriceResponse defines the gRPC response structure for a SpotPrice
 
         query.
-    osmosis.gamm.v1beta1.QuerySwapExactAmountInResponse:
+    symphony.gamm.v1beta1.QuerySwapExactAmountInResponse:
       type: object
       properties:
         token_out_amount:
           type: string
-    osmosis.gamm.v1beta1.QuerySwapExactAmountOutResponse:
+    symphony.gamm.v1beta1.QuerySwapExactAmountOutResponse:
       type: object
       properties:
         token_in_amount:
           type: string
-    osmosis.gamm.v1beta1.QueryTotalLiquidityResponse:
+    symphony.gamm.v1beta1.QueryTotalLiquidityResponse:
       type: object
       properties:
         liquidity:
@@ -33200,7 +33200,7 @@ components:
               NOTE: The amount field is an Int which implements the custom method
 
               signatures required by gogoproto.
-    osmosis.gamm.v1beta1.QueryTotalPoolLiquidityResponse:
+    symphony.gamm.v1beta1.QueryTotalPoolLiquidityResponse:
       type: object
       properties:
         liquidity:
@@ -33220,7 +33220,7 @@ components:
 
               signatures required by gogoproto.
       title: "Deprecated: please use the alternative in x/poolmanager"
-    osmosis.gamm.v1beta1.QueryTotalSharesResponse:
+    symphony.gamm.v1beta1.QueryTotalSharesResponse:
       type: object
       properties:
         total_shares:
@@ -33235,7 +33235,7 @@ components:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
-    osmosis.poolmanager.v1beta1.SwapAmountInRoute:
+    symphony.poolmanager.v1beta1.SwapAmountInRoute:
       type: object
       properties:
         pool_id:
@@ -33243,7 +33243,7 @@ components:
           format: uint64
         token_out_denom:
           type: string
-    osmosis.poolmanager.v1beta1.SwapAmountOutRoute:
+    symphony.poolmanager.v1beta1.SwapAmountOutRoute:
       type: object
       properties:
         pool_id:
@@ -33251,7 +33251,7 @@ components:
           format: uint64
         token_in_denom:
           type: string
-    osmosis.incentives.ActiveGaugesPerDenomResponse:
+    symphony.incentives.ActiveGaugesPerDenomResponse:
       type: object
       properties:
         data:
@@ -33405,7 +33405,7 @@ components:
                      repeated Bar results = 1;
                      PageResponse page = 2;
              }
-    osmosis.incentives.ActiveGaugesResponse:
+    symphony.incentives.ActiveGaugesResponse:
       type: object
       properties:
         data:
@@ -33559,7 +33559,7 @@ components:
                      repeated Bar results = 1;
                      PageResponse page = 2;
              }
-    osmosis.incentives.Gauge:
+    symphony.incentives.Gauge:
       type: object
       properties:
         id:
@@ -33682,7 +33682,7 @@ components:
         satisfy certain conditions. Currently gauges support conditions around the
 
         duration for which a given denom is locked.
-    osmosis.incentives.GaugeByIDResponse:
+    symphony.incentives.GaugeByIDResponse:
       type: object
       properties:
         gauge:
@@ -33809,7 +33809,7 @@ components:
 
             duration for which a given denom is locked.
           title: Gauge that corresponds to provided gague ID
-    osmosis.incentives.GaugesResponse:
+    symphony.incentives.GaugesResponse:
       type: object
       properties:
         data:
@@ -33963,7 +33963,7 @@ components:
                      repeated Bar results = 1;
                      PageResponse page = 2;
              }
-    osmosis.incentives.Group:
+    symphony.incentives.Group:
       type: object
       properties:
         group_gauge_id:
@@ -34024,7 +34024,7 @@ components:
         allow for distribution of group incentives to internal gauges according to
 
         the specified splitting policy.
-    osmosis.incentives.GroupsWithGauge:
+    symphony.incentives.GroupsWithGauge:
       type: object
       properties:
         group:
@@ -34214,7 +34214,7 @@ components:
       description: |-
         GroupsWithGauge is a helper struct that stores a group and its
         associated gauge.
-    osmosis.incentives.InternalGaugeInfo:
+    symphony.incentives.InternalGaugeInfo:
       type: object
       properties:
         total_weight:
@@ -34255,7 +34255,7 @@ components:
         specific way that does not directly relate to gauge logic). This also helps
 
         us sidestep a refactor to avoid an import cycle.
-    osmosis.incentives.InternalGaugeRecord:
+    symphony.incentives.InternalGaugeRecord:
       type: object
       properties:
         gauge_id:
@@ -34277,7 +34277,7 @@ components:
             based on splitting policy. For instance, for volume splitting policy, this
 
             stores the cumulative volume for the linked pool at time of last update.
-    osmosis.incentives.ModuleToDistributeCoinsResponse:
+    symphony.incentives.ModuleToDistributeCoinsResponse:
       type: object
       properties:
         coins:
@@ -34297,7 +34297,7 @@ components:
 
               signatures required by gogoproto.
           title: Coins that have yet to be distributed
-    osmosis.incentives.QueryAllGroupsGaugesResponse:
+    symphony.incentives.QueryAllGroupsGaugesResponse:
       type: object
       properties:
         gauges:
@@ -34425,7 +34425,7 @@ components:
               satisfy certain conditions. Currently gauges support conditions around the
 
               duration for which a given denom is locked.
-    osmosis.incentives.QueryAllGroupsResponse:
+    symphony.incentives.QueryAllGroupsResponse:
       type: object
       properties:
         groups:
@@ -34491,7 +34491,7 @@ components:
               allow for distribution of group incentives to internal gauges according to
 
               the specified splitting policy.
-    osmosis.incentives.QueryAllGroupsWithGaugeResponse:
+    symphony.incentives.QueryAllGroupsWithGaugeResponse:
       type: object
       properties:
         groups_with_gauge:
@@ -34689,7 +34689,7 @@ components:
             description: |-
               GroupsWithGauge is a helper struct that stores a group and its
               associated gauge.
-    osmosis.incentives.QueryGroupByGroupGaugeIDResponse:
+    symphony.incentives.QueryGroupByGroupGaugeIDResponse:
       type: object
       properties:
         group:
@@ -34753,7 +34753,7 @@ components:
             allow for distribution of group incentives to internal gauges according to
 
             the specified splitting policy.
-    osmosis.incentives.QueryLockableDurationsResponse:
+    symphony.incentives.QueryLockableDurationsResponse:
       type: object
       properties:
         lockable_durations:
@@ -34761,7 +34761,7 @@ components:
           items:
             type: string
           title: Time durations that users can lock coins for in order to receive rewards
-    osmosis.incentives.RewardsEstResponse:
+    symphony.incentives.RewardsEstResponse:
       type: object
       properties:
         coins:
@@ -34783,13 +34783,13 @@ components:
           title: |-
             Estimated coin rewards that will be received at provided address
             from specified locks between current time and end epoch
-    osmosis.incentives.SplittingPolicy:
+    symphony.incentives.SplittingPolicy:
       type: string
       enum:
         - ByVolume
       default: ByVolume
       title: SplittingPolicy determines the way we want to split incentives in groupGauges
-    osmosis.incentives.UpcomingGaugesPerDenomResponse:
+    symphony.incentives.UpcomingGaugesPerDenomResponse:
       type: object
       properties:
         upcoming_gauges:
@@ -34943,7 +34943,7 @@ components:
                      repeated Bar results = 1;
                      PageResponse page = 2;
              }
-    osmosis.incentives.UpcomingGaugesResponse:
+    symphony.incentives.UpcomingGaugesResponse:
       type: object
       properties:
         data:
@@ -35097,7 +35097,7 @@ components:
                      repeated Bar results = 1;
                      PageResponse page = 2;
              }
-    osmosis.lockup.LockQueryType:
+    symphony.lockup.LockQueryType:
       type: string
       enum:
         - ByDuration
@@ -35108,7 +35108,7 @@ components:
       description: |-
         LockQueryType defines the type of the lock query that can
         either be by duration or start time of the lock.
-    osmosis.lockup.QueryCondition:
+    symphony.lockup.QueryCondition:
       type: object
       properties:
         lock_query_type:
@@ -35149,7 +35149,7 @@ components:
         Duration field and timestamp fields could be optional, depending on the
 
         LockQueryType.
-    osmosis.lockup.AccountLockedCoinsResponse:
+    symphony.lockup.AccountLockedCoinsResponse:
       type: object
       properties:
         coins:
@@ -35168,7 +35168,7 @@ components:
               NOTE: The amount field is an Int which implements the custom method
 
               signatures required by gogoproto.
-    osmosis.lockup.AccountLockedDurationResponse:
+    symphony.lockup.AccountLockedDurationResponse:
       type: object
       properties:
         locks:
@@ -35240,7 +35240,7 @@ components:
               created upon lock creation, and deleted once the lock has been matured after
 
               the `duration` has passed since unbonding started.
-    osmosis.lockup.AccountLockedLongerDurationDenomResponse:
+    symphony.lockup.AccountLockedLongerDurationDenomResponse:
       type: object
       properties:
         locks:
@@ -35312,7 +35312,7 @@ components:
               created upon lock creation, and deleted once the lock has been matured after
 
               the `duration` has passed since unbonding started.
-    osmosis.lockup.AccountLockedLongerDurationNotUnlockingOnlyResponse:
+    symphony.lockup.AccountLockedLongerDurationNotUnlockingOnlyResponse:
       type: object
       properties:
         locks:
@@ -35384,7 +35384,7 @@ components:
               created upon lock creation, and deleted once the lock has been matured after
 
               the `duration` has passed since unbonding started.
-    osmosis.lockup.AccountLockedLongerDurationResponse:
+    symphony.lockup.AccountLockedLongerDurationResponse:
       type: object
       properties:
         locks:
@@ -35456,7 +35456,7 @@ components:
               created upon lock creation, and deleted once the lock has been matured after
 
               the `duration` has passed since unbonding started.
-    osmosis.lockup.AccountLockedPastTimeDenomResponse:
+    symphony.lockup.AccountLockedPastTimeDenomResponse:
       type: object
       properties:
         locks:
@@ -35528,7 +35528,7 @@ components:
               created upon lock creation, and deleted once the lock has been matured after
 
               the `duration` has passed since unbonding started.
-    osmosis.lockup.AccountLockedPastTimeNotUnlockingOnlyResponse:
+    symphony.lockup.AccountLockedPastTimeNotUnlockingOnlyResponse:
       type: object
       properties:
         locks:
@@ -35600,7 +35600,7 @@ components:
               created upon lock creation, and deleted once the lock has been matured after
 
               the `duration` has passed since unbonding started.
-    osmosis.lockup.AccountLockedPastTimeResponse:
+    symphony.lockup.AccountLockedPastTimeResponse:
       type: object
       properties:
         locks:
@@ -35672,7 +35672,7 @@ components:
               created upon lock creation, and deleted once the lock has been matured after
 
               the `duration` has passed since unbonding started.
-    osmosis.lockup.AccountUnlockableCoinsResponse:
+    symphony.lockup.AccountUnlockableCoinsResponse:
       type: object
       properties:
         coins:
@@ -35691,7 +35691,7 @@ components:
               NOTE: The amount field is an Int which implements the custom method
 
               signatures required by gogoproto.
-    osmosis.lockup.AccountUnlockedBeforeTimeResponse:
+    symphony.lockup.AccountUnlockedBeforeTimeResponse:
       type: object
       properties:
         locks:
@@ -35763,7 +35763,7 @@ components:
               created upon lock creation, and deleted once the lock has been matured after
 
               the `duration` has passed since unbonding started.
-    osmosis.lockup.AccountUnlockingCoinsResponse:
+    symphony.lockup.AccountUnlockingCoinsResponse:
       type: object
       properties:
         coins:
@@ -35782,17 +35782,17 @@ components:
               NOTE: The amount field is an Int which implements the custom method
 
               signatures required by gogoproto.
-    osmosis.lockup.LockRewardReceiverResponse:
+    symphony.lockup.LockRewardReceiverResponse:
       type: object
       properties:
         reward_receiver:
           type: string
-    osmosis.lockup.LockedDenomResponse:
+    symphony.lockup.LockedDenomResponse:
       type: object
       properties:
         amount:
           type: string
-    osmosis.lockup.LockedResponse:
+    symphony.lockup.LockedResponse:
       type: object
       properties:
         lock:
@@ -35862,7 +35862,7 @@ components:
             created upon lock creation, and deleted once the lock has been matured after
 
             the `duration` has passed since unbonding started.
-    osmosis.lockup.ModuleBalanceResponse:
+    symphony.lockup.ModuleBalanceResponse:
       type: object
       properties:
         coins:
@@ -35881,7 +35881,7 @@ components:
               NOTE: The amount field is an Int which implements the custom method
 
               signatures required by gogoproto.
-    osmosis.lockup.ModuleLockedAmountResponse:
+    symphony.lockup.ModuleLockedAmountResponse:
       type: object
       properties:
         coins:
@@ -35900,20 +35900,20 @@ components:
               NOTE: The amount field is an Int which implements the custom method
 
               signatures required by gogoproto.
-    osmosis.lockup.NextLockIDResponse:
+    symphony.lockup.NextLockIDResponse:
       type: object
       properties:
         lock_id:
           type: string
           format: uint64
-    osmosis.lockup.Params:
+    symphony.lockup.Params:
       type: object
       properties:
         force_unlock_allowed_addresses:
           type: array
           items:
             type: string
-    osmosis.lockup.PeriodLock:
+    symphony.lockup.PeriodLock:
       type: object
       properties:
         ID:
@@ -35979,7 +35979,7 @@ components:
         created upon lock creation, and deleted once the lock has been matured after
 
         the `duration` has passed since unbonding started.
-    osmosis.lockup.QueryParamsResponse:
+    symphony.lockup.QueryParamsResponse:
       type: object
       properties:
         params:
@@ -35989,7 +35989,7 @@ components:
               type: array
               items:
                 type: string
-    osmosis.lockup.SyntheticLock:
+    symphony.lockup.SyntheticLock:
       type: object
       properties:
         underlying_lock_id:
@@ -36024,7 +36024,7 @@ components:
         and deletion, accumulation store is also being updated and on querier side,
 
         they can query as freely as native lockup.
-    osmosis.lockup.SyntheticLockupByLockupIDResponse:
+    symphony.lockup.SyntheticLockupByLockupIDResponse:
       type: object
       properties:
         synthetic_lock:
@@ -36062,7 +36062,7 @@ components:
             and deletion, accumulation store is also being updated and on querier side,
 
             they can query as freely as native lockup.
-    osmosis.lockup.SyntheticLockupsByLockupIDResponse:
+    symphony.lockup.SyntheticLockupsByLockupIDResponse:
       type: object
       properties:
         synthetic_locks:
@@ -36102,7 +36102,7 @@ components:
               and deletion, accumulation store is also being updated and on querier side,
 
               they can query as freely as native lockup.
-    osmosis.mint.v1beta1.DistributionProportions:
+    symphony.mint.v1beta1.DistributionProportions:
       type: object
       properties:
         staking:
@@ -36135,7 +36135,7 @@ components:
         denom. In other words, defines which stakeholders will receive the minted
 
         denoms and how much.
-    osmosis.mint.v1beta1.Params:
+    symphony.mint.v1beta1.Params:
       type: object
       properties:
         mint_denom:
@@ -36222,7 +36222,7 @@ components:
 
             rewards
       description: Params holds parameters for the x/mint module.
-    osmosis.mint.v1beta1.QueryEpochProvisionsResponse:
+    symphony.mint.v1beta1.QueryEpochProvisionsResponse:
       type: object
       properties:
         epoch_provisions:
@@ -36232,7 +36232,7 @@ components:
       description: |-
         QueryEpochProvisionsResponse is the response type for the
         Query/EpochProvisions RPC method.
-    osmosis.mint.v1beta1.QueryParamsResponse:
+    symphony.mint.v1beta1.QueryParamsResponse:
       type: object
       properties:
         params:
@@ -36323,7 +36323,7 @@ components:
 
                 rewards
       description: QueryParamsResponse is the response type for the Query/Params RPC method.
-    osmosis.mint.v1beta1.WeightedAddress:
+    symphony.mint.v1beta1.WeightedAddress:
       type: object
       properties:
         address:
@@ -36334,7 +36334,7 @@ components:
         WeightedAddress represents an address with a weight assigned to it.
         The weight is used to determine the proportion of the total minted
         tokens to be minted to the address.
-    osmosis.poolincentives.v1beta1.DistrInfo:
+    symphony.poolincentives.v1beta1.DistrInfo:
       type: object
       properties:
         total_weight:
@@ -36349,7 +36349,7 @@ components:
                 format: uint64
               weight:
                 type: string
-    osmosis.poolincentives.v1beta1.DistrRecord:
+    symphony.poolincentives.v1beta1.DistrRecord:
       type: object
       properties:
         gauge_id:
@@ -36357,7 +36357,7 @@ components:
           format: uint64
         weight:
           type: string
-    osmosis.poolincentives.v1beta1.IncentivizedPool:
+    symphony.poolincentives.v1beta1.IncentivizedPool:
       type: object
       properties:
         pool_id:
@@ -36368,7 +36368,7 @@ components:
         gauge_id:
           type: string
           format: uint64
-    osmosis.poolincentives.v1beta1.Params:
+    symphony.poolincentives.v1beta1.Params:
       type: object
       properties:
         minted_denom:
@@ -36381,7 +36381,7 @@ components:
             itself, but rather manages the distribution of coins that matches the
 
             defined minted_denom.
-    osmosis.poolincentives.v1beta1.QueryDistrInfoResponse:
+    symphony.poolincentives.v1beta1.QueryDistrInfoResponse:
       type: object
       properties:
         distr_info:
@@ -36399,7 +36399,7 @@ components:
                     format: uint64
                   weight:
                     type: string
-    osmosis.poolincentives.v1beta1.QueryExternalIncentiveGaugesResponse:
+    symphony.poolincentives.v1beta1.QueryExternalIncentiveGaugesResponse:
       type: object
       properties:
         data:
@@ -36527,7 +36527,7 @@ components:
               satisfy certain conditions. Currently gauges support conditions around the
 
               duration for which a given denom is locked.
-    osmosis.poolincentives.v1beta1.QueryGaugeIdsResponse:
+    symphony.poolincentives.v1beta1.QueryGaugeIdsResponse:
       type: object
       properties:
         gauge_ids_with_duration:
@@ -36542,7 +36542,7 @@ components:
                 type: string
               gauge_incentive_percentage:
                 type: string
-    osmosis.poolincentives.v1beta1.QueryGaugeIdsResponse.GaugeIdWithDuration:
+    symphony.poolincentives.v1beta1.QueryGaugeIdsResponse.GaugeIdWithDuration:
       type: object
       properties:
         gauge_id:
@@ -36552,7 +36552,7 @@ components:
           type: string
         gauge_incentive_percentage:
           type: string
-    osmosis.poolincentives.v1beta1.QueryIncentivizedPoolsResponse:
+    symphony.poolincentives.v1beta1.QueryIncentivizedPoolsResponse:
       type: object
       properties:
         incentivized_pools:
@@ -36568,14 +36568,14 @@ components:
               gauge_id:
                 type: string
                 format: uint64
-    osmosis.poolincentives.v1beta1.QueryLockableDurationsResponse:
+    symphony.poolincentives.v1beta1.QueryLockableDurationsResponse:
       type: object
       properties:
         lockable_durations:
           type: array
           items:
             type: string
-    osmosis.poolincentives.v1beta1.QueryParamsResponse:
+    symphony.poolincentives.v1beta1.QueryParamsResponse:
       type: object
       properties:
         params:
@@ -36644,7 +36644,7 @@ components:
         DelegationResponse is equivalent to Delegation except that it contains a
 
         balance in addition to shares which is more suitable for client responses.
-    osmosis.superfluid.AllAssetsResponse:
+    symphony.superfluid.AllAssetsResponse:
       type: object
       properties:
         assets:
@@ -36666,7 +36666,7 @@ components:
                   - SuperfluidAssetTypeConcentratedShare
                 default: SuperfluidAssetTypeNative
             title: SuperfluidAsset stores the pair of superfluid asset type and denom pair
-    osmosis.superfluid.AllIntermediaryAccountsResponse:
+    symphony.superfluid.AllIntermediaryAccountsResponse:
       type: object
       properties:
         accounts:
@@ -36707,10 +36707,10 @@ components:
                      repeated Bar results = 1;
                      PageResponse page = 2;
              }
-    osmosis.superfluid.AssetMultiplierResponse:
+    symphony.superfluid.AssetMultiplierResponse:
       type: object
       properties:
-        osmo_equivalent_multiplier:
+        melody_equivalent_multiplier:
           type: object
           properties:
             epoch_number:
@@ -36722,11 +36722,11 @@ components:
             multiplier:
               type: string
           description: >-
-            The Osmo-Equivalent-Multiplier Record for epoch N refers to the osmo worth we
+            The Melody-Equivalent-Multiplier Record for epoch N refers to the melody worth we
 
             treat an LP share as having, for all of epoch N. Eventually this is intended
 
-            to be set as the Time-weighted-average-osmo-backing for the entire duration
+            to be set as the Time-weighted-average-melody-backing for the entire duration
 
             of epoch N-1. (Thereby locking what's in use for epoch N as based on the prior
 
@@ -36735,7 +36735,7 @@ components:
             price at the boundary. For different types of assets in the future, it could
 
             change.
-    osmosis.superfluid.AssetTypeResponse:
+    symphony.superfluid.AssetTypeResponse:
       type: object
       properties:
         asset_type:
@@ -36748,7 +36748,7 @@ components:
           title: |-
             SuperfluidAssetType indicates whether the superfluid asset is
             a native token, lp share of a pool, or concentrated share of a pool
-    osmosis.superfluid.ConcentratedPoolUserPositionRecord:
+    symphony.superfluid.ConcentratedPoolUserPositionRecord:
       type: object
       properties:
         validator_address:
@@ -36818,7 +36818,7 @@ components:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
-    osmosis.superfluid.ConnectedIntermediaryAccountResponse:
+    symphony.superfluid.ConnectedIntermediaryAccountResponse:
       type: object
       properties:
         account:
@@ -36833,16 +36833,16 @@ components:
               format: uint64
             address:
               type: string
-    osmosis.superfluid.Delegations:
+    symphony.superfluid.Delegations:
       type: object
       properties:
         val_addr:
           type: string
         amount_sfsd:
           type: string
-        osmo_equivalent:
+        melody_equivalent:
           type: string
-    osmosis.superfluid.EstimateSuperfluidDelegatedAmountByValidatorDenomResponse:
+    symphony.superfluid.EstimateSuperfluidDelegatedAmountByValidatorDenomResponse:
       type: object
       properties:
         total_delegated_coins:
@@ -36861,7 +36861,7 @@ components:
               NOTE: The amount field is an Int which implements the custom method
 
               signatures required by gogoproto.
-    osmosis.superfluid.OsmoEquivalentMultiplierRecord:
+    symphony.superfluid.OsmoEquivalentMultiplierRecord:
       type: object
       properties:
         epoch_number:
@@ -36873,11 +36873,11 @@ components:
         multiplier:
           type: string
       description: >-
-        The Osmo-Equivalent-Multiplier Record for epoch N refers to the osmo worth we
+        The Melody-Equivalent-Multiplier Record for epoch N refers to the melody worth we
 
         treat an LP share as having, for all of epoch N. Eventually this is intended
 
-        to be set as the Time-weighted-average-osmo-backing for the entire duration
+        to be set as the Time-weighted-average-melody-backing for the entire duration
 
         of epoch N-1. (Thereby locking what's in use for epoch N as based on the prior
 
@@ -36886,7 +36886,7 @@ components:
         price at the boundary. For different types of assets in the future, it could
 
         change.
-    osmosis.superfluid.Params:
+    symphony.superfluid.Params:
       type: object
       properties:
         minimum_risk_factor:
@@ -36900,7 +36900,7 @@ components:
 
             volatilities, and have base staking be 'resistant' to volatility.
       title: Params holds parameters for the superfluid module
-    osmosis.superfluid.QueryParamsResponse:
+    symphony.superfluid.QueryParamsResponse:
       type: object
       properties:
         params:
@@ -36918,7 +36918,7 @@ components:
 
                 volatilities, and have base staking be 'resistant' to volatility.
           title: Params holds parameters for the superfluid module
-    osmosis.superfluid.QueryTotalDelegationByDelegatorResponse:
+    symphony.superfluid.QueryTotalDelegationByDelegatorResponse:
       type: object
       properties:
         superfluid_delegation_records:
@@ -37031,7 +37031,7 @@ components:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
-    osmosis.superfluid.QueryTotalDelegationByValidatorForDenomResponse:
+    symphony.superfluid.QueryTotalDelegationByValidatorForDenomResponse:
       type: object
       properties:
         assets:
@@ -37043,9 +37043,9 @@ components:
                 type: string
               amount_sfsd:
                 type: string
-              osmo_equivalent:
+              melody_equivalent:
                 type: string
-    osmosis.superfluid.QueryUnpoolWhitelistResponse:
+    symphony.superfluid.QueryUnpoolWhitelistResponse:
       type: object
       properties:
         pool_ids:
@@ -37053,7 +37053,7 @@ components:
           items:
             type: string
             format: uint64
-    osmosis.superfluid.SuperfluidAsset:
+    symphony.superfluid.SuperfluidAsset:
       type: object
       properties:
         denom:
@@ -37070,7 +37070,7 @@ components:
             - SuperfluidAssetTypeConcentratedShare
           default: SuperfluidAssetTypeNative
       title: SuperfluidAsset stores the pair of superfluid asset type and denom pair
-    osmosis.superfluid.SuperfluidAssetType:
+    symphony.superfluid.SuperfluidAssetType:
       type: string
       enum:
         - SuperfluidAssetTypeNative
@@ -37080,7 +37080,7 @@ components:
       title: |-
         SuperfluidAssetType indicates whether the superfluid asset is
         a native token, lp share of a pool, or concentrated share of a pool
-    osmosis.superfluid.SuperfluidDelegationAmountResponse:
+    symphony.superfluid.SuperfluidDelegationAmountResponse:
       type: object
       properties:
         amount:
@@ -37099,7 +37099,7 @@ components:
               NOTE: The amount field is an Int which implements the custom method
 
               signatures required by gogoproto.
-    osmosis.superfluid.SuperfluidDelegationRecord:
+    symphony.superfluid.SuperfluidDelegationRecord:
       type: object
       properties:
         delegator_address:
@@ -37133,7 +37133,7 @@ components:
       description: |-
         SuperfluidDelegationRecord is a struct used to indicate superfluid
         delegations of an account in the state machine in a user friendly form.
-    osmosis.superfluid.SuperfluidDelegationsByDelegatorResponse:
+    symphony.superfluid.SuperfluidDelegationsByDelegatorResponse:
       type: object
       properties:
         superfluid_delegation_records:
@@ -37205,7 +37205,7 @@ components:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
-    osmosis.superfluid.SuperfluidDelegationsByValidatorDenomResponse:
+    symphony.superfluid.SuperfluidDelegationsByValidatorDenomResponse:
       type: object
       properties:
         superfluid_delegation_records:
@@ -37249,7 +37249,7 @@ components:
               SuperfluidDelegationRecord is a struct used to indicate superfluid
 
               delegations of an account in the state machine in a user friendly form.
-    osmosis.superfluid.SuperfluidIntermediaryAccountInfo:
+    symphony.superfluid.SuperfluidIntermediaryAccountInfo:
       type: object
       properties:
         denom:
@@ -37261,7 +37261,7 @@ components:
           format: uint64
         address:
           type: string
-    osmosis.superfluid.SuperfluidUndelegationsByDelegatorResponse:
+    symphony.superfluid.SuperfluidUndelegationsByDelegatorResponse:
       type: object
       properties:
         superfluid_delegation_records:
@@ -37358,12 +37358,12 @@ components:
               and deletion, accumulation store is also being updated and on querier side,
 
               they can query as freely as native lockup.
-    osmosis.superfluid.TotalSuperfluidDelegationsResponse:
+    symphony.superfluid.TotalSuperfluidDelegationsResponse:
       type: object
       properties:
         total_delegations:
           type: string
-    osmosis.superfluid.UserConcentratedSuperfluidPositionsDelegatedResponse:
+    symphony.superfluid.UserConcentratedSuperfluidPositionsDelegatedResponse:
       type: object
       properties:
         cl_pool_user_position_records:
@@ -37442,7 +37442,7 @@ components:
                   NOTE: The amount field is an Int which implements the custom method
 
                   signatures required by gogoproto.
-    osmosis.superfluid.UserConcentratedSuperfluidPositionsUndelegatingResponse:
+    symphony.superfluid.UserConcentratedSuperfluidPositionsUndelegatingResponse:
       type: object
       properties:
         cl_pool_user_position_records:
@@ -37521,19 +37521,19 @@ components:
                   NOTE: The amount field is an Int which implements the custom method
 
                   signatures required by gogoproto.
-    osmosis.tokenfactory.v1beta1.DenomAuthorityMetadata:
+    symphony.tokenfactory.v1beta1.DenomAuthorityMetadata:
       type: object
       properties:
         admin:
           type: string
-          title: Can be empty for no admin, or a valid osmosis address
+          title: Can be empty for no admin, or a valid symphony address
       description: >-
         DenomAuthorityMetadata specifies metadata for addresses that have specific
 
         capabilities over a token factory denom. Right now there is only one Admin
 
         permission, but is planned to be extended to the future.
-    osmosis.tokenfactory.v1beta1.Params:
+    symphony.tokenfactory.v1beta1.Params:
       type: object
       properties:
         denom_creation_fee:
@@ -37569,7 +37569,7 @@ components:
 
             See: https://github.com/CosmWasm/token-factory/issues/11
       description: Params defines the parameters for the tokenfactory module.
-    osmosis.tokenfactory.v1beta1.QueryBeforeSendHookAddressResponse:
+    symphony.tokenfactory.v1beta1.QueryBeforeSendHookAddressResponse:
       type: object
       properties:
         cosmwasm_address:
@@ -37578,7 +37578,7 @@ components:
         QueryBeforeSendHookAddressResponse defines the response structure for the
 
         DenomBeforeSendHook gRPC query.
-    osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataResponse:
+    symphony.tokenfactory.v1beta1.QueryDenomAuthorityMetadataResponse:
       type: object
       properties:
         authority_metadata:
@@ -37586,7 +37586,7 @@ components:
           properties:
             admin:
               type: string
-              title: Can be empty for no admin, or a valid osmosis address
+              title: Can be empty for no admin, or a valid symphony address
           description: >-
             DenomAuthorityMetadata specifies metadata for addresses that have specific
 
@@ -37597,7 +37597,7 @@ components:
         QueryDenomAuthorityMetadataResponse defines the response structure for the
 
         DenomAuthorityMetadata gRPC query.
-    osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorResponse:
+    symphony.tokenfactory.v1beta1.QueryDenomsFromCreatorResponse:
       type: object
       properties:
         denoms:
@@ -37607,7 +37607,7 @@ components:
       description: |-
         QueryDenomsFromCreatorRequest defines the response structure for the
         DenomsFromCreator gRPC query.
-    osmosis.tokenfactory.v1beta1.QueryParamsResponse:
+    symphony.tokenfactory.v1beta1.QueryParamsResponse:
       type: object
       properties:
         params:
@@ -37647,7 +37647,7 @@ components:
 
                 See: https://github.com/CosmWasm/token-factory/issues/11
       description: QueryParamsResponse is the response type for the Query/Params RPC method.
-    osmosis.txfees.v1beta1.FeeToken:
+    symphony.txfees.v1beta1.FeeToken:
       type: object
       properties:
         denom:
@@ -37657,21 +37657,21 @@ components:
           format: uint64
       description: |-
         FeeToken is a struct that specifies a coin denom, and pool ID pair.
-        This marks the token as eligible for use as a tx fee asset in Osmosis.
-        Its price in osmo is derived through looking at the provided pool ID.
-        The pool ID must have osmo as one of its assets.
-    osmosis.txfees.v1beta1.QueryBaseDenomResponse:
+        This marks the token as eligible for use as a tx fee asset in Symphony.
+        Its price in melody is derived through looking at the provided pool ID.
+        The pool ID must have melody as one of its assets.
+    symphony.txfees.v1beta1.QueryBaseDenomResponse:
       type: object
       properties:
         base_denom:
           type: string
-    osmosis.txfees.v1beta1.QueryDenomPoolIdResponse:
+    symphony.txfees.v1beta1.QueryDenomPoolIdResponse:
       type: object
       properties:
         poolID:
           type: string
           format: uint64
-    osmosis.txfees.v1beta1.QueryDenomSpotPriceResponse:
+    symphony.txfees.v1beta1.QueryDenomSpotPriceResponse:
       type: object
       properties:
         poolID:
@@ -37683,7 +37683,7 @@ components:
         QueryDenomSpotPriceRequest defines grpc response structure for querying spot
 
         price for the specified tx fee denom
-    osmosis.txfees.v1beta1.QueryFeeTokensResponse:
+    symphony.txfees.v1beta1.QueryFeeTokensResponse:
       type: object
       properties:
         fee_tokens:
@@ -37699,11 +37699,11 @@ components:
             description: >-
               FeeToken is a struct that specifies a coin denom, and pool ID pair.
 
-              This marks the token as eligible for use as a tx fee asset in Osmosis.
+              This marks the token as eligible for use as a tx fee asset in Symphony.
 
-              Its price in osmo is derived through looking at the provided pool ID.
+              Its price in melody is derived through looking at the provided pool ID.
 
-              The pool ID must have osmo as one of its assets.
+              The pool ID must have melody as one of its assets.
     cosmos.auth.v1beta1.Params:
       type: object
       properties:
@@ -52357,7 +52357,7 @@ components:
 
         RPC method.
 servers:
-  - url: https://lcd.osmosis.zone
-    description: Osmosis mainnet node
-  - url: https://lcd-test.osmosis.zone
-    description: Osmosis testnet node
+  - url: https://lcd.symphony.zone
+    description: Symphony mainnet node
+  - url: https://lcd-test.symphony.zone
+    description: Symphony testnet node

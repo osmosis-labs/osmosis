@@ -4,7 +4,7 @@ set -e
 killall symphonyd || true
 rm -rf $HOME/.symphonyd/
 
-# make 5 osmosis directories
+# make 5 symphony directories
 mkdir $HOME/.symphonyd
 mkdir $HOME/.symphonyd/validator1
 mkdir $HOME/.symphonyd/validator2
@@ -16,7 +16,7 @@ mkdir -p ~/.symphonyd/cosmovisor/genesis
 mkdir -p ~/.symphonyd/cosmovisor/genesis/bin
 mkdir -p ~/.symphonyd/cosmovisor/upgrades
 
-cp /home/uliana/Projects/cosmos/symphony-osmosis/symphony-osmosis/build/symphonyd ~/.symphonyd/cosmovisor/genesis/bin
+cp ../build/symphonyd ~/.symphonyd/cosmovisor/genesis/bin
 
 # init all 4 validators
 symphonyd init --chain-id=testing validator1 --home=$HOME/.symphonyd/validator1
@@ -186,27 +186,27 @@ sed -i -E "s|rpc_servers = \"\"|rpc_servers = \"$(symphonyd tendermint show-node
 
 
 # start all three validators
-tmux new -s validator1 -d symphonyd start --home=$HOME/.symphonyd/validator1
+#tmux new -s validator1 -d symphonyd start --home=$HOME/.symphonyd/validator1
 #tmux new -s validator2 -d symphonyd start --home=$HOME/.symphonyd/validator2
 #tmux new -s validator3 -d symphonyd start --home=$HOME/.symphonyd/validator3
 #tmux new -s validator4 -d symphonyd start --home=$HOME/.symphonyd/validator4
 
 # send note from first validator to second validator
-sleep 7
-symphonyd tx bank send validator1 $(symphonyd keys show validator2 -a --keyring-backend=test --home=$HOME/.symphonyd/validator2) 500000000note,50000000000stake --keyring-backend=test --home=$HOME/.symphonyd/validator1 --chain-id=testing --broadcast-mode sync --node http://localhost:26657 --yes --fees 1000000stake
-sleep 4
-symphonyd tx bank send validator1 $(symphonyd keys show validator2 -a --keyring-backend=test --home=$HOME/.symphonyd/validator2) 500000000note,50000000000stake --keyring-backend=test --home=$HOME/.symphonyd/validator1 --chain-id=testing --broadcast-mode sync --node http://localhost:26657 --yes --fees 1000000stake
-sleep 4
-symphonyd tx bank send validator1 $(symphonyd keys show validator3 -a --keyring-backend=test --home=$HOME/.symphonyd/validator3) 400000000note,5000000000stake --keyring-backend=test --home=$HOME/.symphonyd/validator1 --chain-id=testing --broadcast-mode sync --node http://localhost:26657 --yes --fees 1000000stake
-sleep 4
-symphonyd tx bank send validator1 $(symphonyd keys show validator4 -a --keyring-backend=test --home=$HOME/.symphonyd/validator4) 400000000note,5000000000stake --keyring-backend=test --home=$HOME/.symphonyd/validator1 --chain-id=testing --broadcast-mode sync --node http://localhost:26657 --yes --fees 1000000stake
+#sleep 7
+#symphonyd tx bank send validator1 $(symphonyd keys show validator2 -a --keyring-backend=test --home=$HOME/.symphonyd/validator2) 500000000note,50000000000stake --keyring-backend=test --home=$HOME/.symphonyd/validator1 --chain-id=testing --broadcast-mode sync --node http://localhost:26657 --yes --fees 1000000stake
+#sleep 4
+#symphonyd tx bank send validator1 $(symphonyd keys show validator2 -a --keyring-backend=test --home=$HOME/.symphonyd/validator2) 500000000note,50000000000stake --keyring-backend=test --home=$HOME/.symphonyd/validator1 --chain-id=testing --broadcast-mode sync --node http://localhost:26657 --yes --fees 1000000stake
+#sleep 4
+#symphonyd tx bank send validator1 $(symphonyd keys show validator3 -a --keyring-backend=test --home=$HOME/.symphonyd/validator3) 400000000note,5000000000stake --keyring-backend=test --home=$HOME/.symphonyd/validator1 --chain-id=testing --broadcast-mode sync --node http://localhost:26657 --yes --fees 1000000stake
+#sleep 4
+#symphonyd tx bank send validator1 $(symphonyd keys show validator4 -a --keyring-backend=test --home=$HOME/.symphonyd/validator4) 400000000note,5000000000stake --keyring-backend=test --home=$HOME/.symphonyd/validator1 --chain-id=testing --broadcast-mode sync --node http://localhost:26657 --yes --fees 1000000stake
 
-sleep 4
-symphonyd tx staking create-validator --amount=500000000note --from=validator1 --pubkey=$(symphonyd tendermint show-validator --home=$HOME/.symphonyd/validator2) --moniker="validator2" --chain-id="testing" --commission-rate="0.1" --commission-max-rate="0.2" --commission-max-change-rate="0.05" --min-self-delegation="500000000" --keyring-backend=test --home=$HOME/.symphonyd/validator1 --broadcast-mode sync --node http://localhost:26657 --yes --fees 1000000stake
-sleep 4
-symphonyd tx staking create-validator --amount=500000000note --from=validator1 --pubkey=$(symphonyd tendermint show-validator --home=$HOME/.symphonyd/validator3) --moniker="validator3" --chain-id="testing" --commission-rate="0.1" --commission-max-rate="0.2" --commission-max-change-rate="0.05" --min-self-delegation="500000000" --keyring-backend=test --home=$HOME/.symphonyd/validator1 --broadcast-mode sync --node http://localhost:26657 --yes --fees 1000000stake
-sleep 4
-symphonyd tx staking create-validator --amount=500000000note --from=validator1 --pubkey=$(symphonyd tendermint show-validator --home=$HOME/.symphonyd/validator4) --moniker="validator4" --chain-id="testing" --commission-rate="0.1" --commission-max-rate="0.2" --commission-max-change-rate="0.05" --min-self-delegation="500000000" --keyring-backend=test --home=$HOME/.symphonyd/validator1 --broadcast-mode sync --node http://localhost:26657 --yes --fees 1000000stake
+#sleep 4
+#symphonyd tx staking create-validator --amount=500000000note --from=validator1 --pubkey=$(symphonyd tendermint show-validator --home=$HOME/.symphonyd/validator2) --moniker="validator2" --chain-id="testing" --commission-rate="0.1" --commission-max-rate="0.2" --commission-max-change-rate="0.05" --min-self-delegation="500000000" --keyring-backend=test --home=$HOME/.symphonyd/validator1 --broadcast-mode sync --node http://localhost:26657 --yes --fees 1000000stake
+#sleep 4
+#symphonyd tx staking create-validator --amount=500000000note --from=validator1 --pubkey=$(symphonyd tendermint show-validator --home=$HOME/.symphonyd/validator3) --moniker="validator3" --chain-id="testing" --commission-rate="0.1" --commission-max-rate="0.2" --commission-max-change-rate="0.05" --min-self-delegation="500000000" --keyring-backend=test --home=$HOME/.symphonyd/validator1 --broadcast-mode sync --node http://localhost:26657 --yes --fees 1000000stake
+#sleep 4
+#symphonyd tx staking create-validator --amount=500000000note --from=validator1 --pubkey=$(symphonyd tendermint show-validator --home=$HOME/.symphonyd/validator4) --moniker="validator4" --chain-id="testing" --commission-rate="0.1" --commission-max-rate="0.2" --commission-max-change-rate="0.05" --min-self-delegation="500000000" --keyring-backend=test --home=$HOME/.symphonyd/validator1 --broadcast-mode sync --node http://localhost:26657 --yes --fees 1000000stake
 
 sleep 3
 echo "All 4 Validators are up and running!"

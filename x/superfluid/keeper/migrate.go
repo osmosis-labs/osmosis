@@ -96,7 +96,7 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 	}
 
 	// Superfluid undelegate the portion of shares the user is migrating from the superfluid delegated position.
-	// If all shares are being migrated, this deletes the connection between the gamm lock and the intermediate account, deletes the synthetic lock, and burns the synthetic osmo.
+	// If all shares are being migrated, this deletes the connection between the gamm lock and the intermediate account, deletes the synthetic lock, and burns the synthetic melody.
 	intermediateAccount, err := k.SuperfluidUndelegateToConcentratedPosition(ctx, sender.String(), originalLockId)
 	if err != nil {
 		return cltypes.CreateFullRangePositionData{}, 0, types.MigrationPoolIDs{}, err

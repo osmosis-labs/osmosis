@@ -158,7 +158,7 @@ func (s *KeeperTestSuite) TestSetValidatorSetPreference() {
 			c := sdk.WrapSDKContext(s.Ctx)
 
 			if test.setExistingDelegations {
-				amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)} // 100 osmo
+				amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)} // 100 melody
 				s.FundAcc(test.delegator, amountToFund)
 
 				err := s.PrepareExistingDelegations(s.Ctx, valAddrs, test.delegator, test.amountToDelegate.Amount)
@@ -336,8 +336,8 @@ func (s *KeeperTestSuite) TestDelegateToValidatorSet() {
 // 		{
 // 			name:                       "Unstake half from the ValSet",
 // 			delegator:                  sdk.AccAddress([]byte("addr1---------------")),
-// 			coinToStake:                sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)), // delegate 20osmo
-// 			coinToUnStake:              sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)), // undelegate 10osmo
+// 			coinToStake:                sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)), // delegate 20melody
+// 			coinToUnStake:              sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)), // undelegate 10melody
 // 			expectedSharesToUndelegate: []sdk.Dec{sdk.NewDec(3_500_000), sdk.NewDec(3_300_000), sdk.NewDec(2_000_000), sdk.NewDec(1_200_000)},
 
 // 			setValSet:  true,
@@ -346,8 +346,8 @@ func (s *KeeperTestSuite) TestDelegateToValidatorSet() {
 // 		{
 // 			name:                       "Unstake x amount from ValSet",
 // 			delegator:                  sdk.AccAddress([]byte("addr2---------------")),
-// 			coinToStake:                sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),                                             // delegate 20osmo
-// 			coinToUnStake:              sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(15_000_000)),                                             // undelegate 15osmo
+// 			coinToStake:                sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),                                             // delegate 20melody
+// 			coinToUnStake:              sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(15_000_000)),                                             // undelegate 15melody
 // 			expectedSharesToUndelegate: []sdk.Dec{sdk.NewDec(5_250_000), sdk.NewDec(4_950_000), sdk.NewDec(3_000_000), sdk.NewDec(1_800_000)}, // (weight * coinToUnstake)
 
 // 			setValSet:  true,
@@ -468,7 +468,7 @@ func (s *KeeperTestSuite) TestDelegateToValidatorSet() {
 
 // 	for _, test := range tests {
 // 		s.Run(test.name, func() {
-// 			s.FundAcc(test.delegator, amountToFund) // 100 osmo
+// 			s.FundAcc(test.delegator, amountToFund) // 100 melody
 
 // 			// setup message server
 // 			msgServer := valPref.NewMsgServerImpl(s.App.ValidatorSetPreferenceKeeper)
@@ -567,8 +567,8 @@ func (s *KeeperTestSuite) TestUnDelegateFromRebalancedValidatorSet() {
 		{
 			name:                       "Unstake half from the ValSet",
 			delegator:                  sdk.AccAddress([]byte("addr1---------------")),
-			coinToStake:                sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)), // delegate 20osmo
-			coinToUnStake:              sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)), // undelegate 10osmo
+			coinToStake:                sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)), // delegate 20melody
+			coinToUnStake:              sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)), // undelegate 10melody
 			expectedSharesToUndelegate: []sdk.Dec{sdk.NewDec(3_500_000), sdk.NewDec(3_300_000), sdk.NewDec(2_000_000), sdk.NewDec(1_200_000)},
 
 			setValSet:  true,
@@ -577,8 +577,8 @@ func (s *KeeperTestSuite) TestUnDelegateFromRebalancedValidatorSet() {
 		{
 			name:                       "Unstake x amount from ValSet",
 			delegator:                  sdk.AccAddress([]byte("addr2---------------")),
-			coinToStake:                sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),                                             // delegate 20osmo
-			coinToUnStake:              sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(15_000_000)),                                             // undelegate 15osmo
+			coinToStake:                sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),                                             // delegate 20melody
+			coinToUnStake:              sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(15_000_000)),                                             // undelegate 15melody
 			expectedSharesToUndelegate: []sdk.Dec{sdk.NewDec(5_250_000), sdk.NewDec(4_950_000), sdk.NewDec(3_000_000), sdk.NewDec(1_800_000)}, // (weight * coinToUnstake)
 
 			setValSet:  true,
@@ -699,7 +699,7 @@ func (s *KeeperTestSuite) TestUnDelegateFromRebalancedValidatorSet() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			s.FundAcc(test.delegator, amountToFund) // 100 osmo
+			s.FundAcc(test.delegator, amountToFund) // 100 melody
 
 			// setup message server
 			msgServer := valPref.NewMsgServerImpl(s.App.ValidatorSetPreferenceKeeper)
@@ -939,7 +939,7 @@ func (s *KeeperTestSuite) TestWithdrawDelegationRewards() {
 		{
 			name:                "Withdraw all rewards from existing valset delegations",
 			delegator:           sdk.AccAddress([]byte("addr1---------------")),
-			coinsToDelegate:     sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(20_000_000)), // delegate 20osmo
+			coinsToDelegate:     sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(20_000_000)), // delegate 20melody
 			setValSetDelegation: true,
 			expectPass:          true,
 		},
@@ -954,7 +954,7 @@ func (s *KeeperTestSuite) TestWithdrawDelegationRewards() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			s.FundAcc(test.delegator, amountToFund) // 100 osmo
+			s.FundAcc(test.delegator, amountToFund) // 100 melody
 
 			// setup message server
 			msgServer := valPref.NewMsgServerImpl(s.App.ValidatorSetPreferenceKeeper)
@@ -1014,16 +1014,16 @@ func (s *KeeperTestSuite) TestDelegateBondedTokens() {
 		name                 string
 		delegator            sdk.AccAddress
 		lockId               uint64
-		expectedUnlockedOsmo sdk.Coin
+		expectedUnlockedMelody sdk.Coin
 		expectedDelegations  []osmomath.Dec
 		setValSet            bool
 		expectPass           bool
 	}{
 		{
-			name:                 "DelegateBondedTokens with existing osmo denom lockId, bonded and <= 2 weeks bond duration",
+			name:                 "DelegateBondedTokens with existing melody denom lockId, bonded and <= 2 weeks bond duration",
 			delegator:            sdk.AccAddress([]byte("addr1---------------")),
 			lockId:               testLock[0].ID,
-			expectedUnlockedOsmo: sdk.NewCoin(appParams.BaseCoinUnit, osmomath.NewInt(60_000_000)), // delegator has 100osmo and creates 5 locks 10osmo each, forceUnlock only 1 lock
+			expectedUnlockedMelody: sdk.NewCoin(appParams.BaseCoinUnit, osmomath.NewInt(60_000_000)), // delegator has 100melody and creates 5 locks 10melody each, forceUnlock only 1 lock
 			expectedDelegations:  []osmomath.Dec{osmomath.NewDec(2_000_000), osmomath.NewDec(3_300_000), osmomath.NewDec(1_200_000), osmomath.NewDec(3_500_000)},
 			setValSet:            true,
 			expectPass:           true,
@@ -1099,7 +1099,7 @@ func (s *KeeperTestSuite) TestDelegateBondedTokens() {
 				s.Require().Equal(len(existingLocks), len(testLock)-1)
 
 				balance := s.App.BankKeeper.GetBalance(s.Ctx, test.delegator, appParams.BaseCoinUnit)
-				s.Require().Equal(test.expectedUnlockedOsmo, balance)
+				s.Require().Equal(test.expectedUnlockedMelody, balance)
 
 				// check if delegation has been done by checking if expectedDelegations matches after delegation
 				for i, val := range preferences {

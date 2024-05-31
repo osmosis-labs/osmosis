@@ -130,7 +130,7 @@ var fourPoolRoute = poolmanagertypes.SwapAmountInRoutes{
 	},
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        35,
-		TokenOutDenom: types.OsmosisDenomination,
+		TokenOutDenom: types.SymphonyDenomination,
 	},
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        36,
@@ -148,7 +148,7 @@ var fourPoolRoute = poolmanagertypes.SwapAmountInRoutes{
 var twoPoolRoute = poolmanagertypes.SwapAmountInRoutes{
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        38,
-		TokenOutDenom: types.OsmosisDenomination,
+		TokenOutDenom: types.SymphonyDenomination,
 	},
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        39,
@@ -440,7 +440,7 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 				inputCoin:      sdk.NewCoin("note", osmomath.NewInt(10100000)),
 				expectedProfit: osmomath.NewInt(24852),
 			},
-			arbDenom:            types.OsmosisDenomination,
+			arbDenom:            types.SymphonyDenomination,
 			expectPass:          true,
 			expectedNumOfTrades: osmomath.NewInt(1),
 		},
@@ -451,7 +451,7 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 				inputCoin:      sdk.NewCoin("note", osmomath.NewInt(1000000)),
 				expectedProfit: osmomath.NewInt(0),
 			},
-			arbDenom:   types.OsmosisDenomination,
+			arbDenom:   types.SymphonyDenomination,
 			expectPass: false,
 		},
 		{
@@ -461,7 +461,7 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 				inputCoin:      sdk.NewCoin("note", osmomath.NewInt(0)),
 				expectedProfit: osmomath.NewInt(0),
 			},
-			arbDenom:   types.OsmosisDenomination,
+			arbDenom:   types.SymphonyDenomination,
 			expectPass: false,
 		},
 		{
@@ -555,7 +555,7 @@ func (s *KeeperTestSuite) TestIterateRoutes() {
 				expectedMaxProfitAmount:    osmomath.NewInt(24848),
 				expectedMaxProfitInputCoin: sdk.NewCoin("note", osmomath.NewInt(10000000)),
 				expectedOptimalRoute:       routeTwoAssetSameWeight,
-				arbDenom:                   types.OsmosisDenomination,
+				arbDenom:                   types.SymphonyDenomination,
 			},
 			expectPass: true,
 		},
@@ -566,7 +566,7 @@ func (s *KeeperTestSuite) TestIterateRoutes() {
 				expectedMaxProfitAmount:    osmomath.NewInt(24848),
 				expectedMaxProfitInputCoin: sdk.NewCoin("note", osmomath.NewInt(10000000)),
 				expectedOptimalRoute:       routeTwoAssetSameWeight,
-				arbDenom:                   types.OsmosisDenomination,
+				arbDenom:                   types.SymphonyDenomination,
 			},
 			expectPass: true,
 		},
@@ -577,7 +577,7 @@ func (s *KeeperTestSuite) TestIterateRoutes() {
 				expectedMaxProfitAmount:    osmomath.NewInt(67511675),
 				expectedMaxProfitInputCoin: sdk.NewCoin("note", osmomath.NewInt(520000000)),
 				expectedOptimalRoute:       routeMostProfitable,
-				arbDenom:                   types.OsmosisDenomination,
+				arbDenom:                   types.SymphonyDenomination,
 			},
 			expectPass: true,
 		},
@@ -645,7 +645,7 @@ func (s *KeeperTestSuite) TestConvertProfits() {
 	type param struct {
 		inputCoin           sdk.Coin
 		profit              osmomath.Int
-		expectedUosmoProfit osmomath.Int
+		expectedNoteProfit osmomath.Int
 	}
 
 	tests := []struct {
@@ -654,29 +654,29 @@ func (s *KeeperTestSuite) TestConvertProfits() {
 		expectPass bool
 	}{
 		{
-			name: "Convert atom to uosmo",
+			name: "Convert atom to note",
 			param: param{
 				inputCoin:           sdk.NewCoin("Atom", osmomath.NewInt(100)),
 				profit:              osmomath.NewInt(10),
-				expectedUosmoProfit: osmomath.NewInt(8),
+				expectedNoteProfit: osmomath.NewInt(8),
 			},
 			expectPass: true,
 		},
 		{
-			name: "Convert juno to uosmo (random denom)",
+			name: "Convert juno to note (random denom)",
 			param: param{
 				inputCoin:           sdk.NewCoin("juno", osmomath.NewInt(100)),
 				profit:              osmomath.NewInt(10),
-				expectedUosmoProfit: osmomath.NewInt(9),
+				expectedNoteProfit: osmomath.NewInt(9),
 			},
 			expectPass: true,
 		},
 		{
-			name: "Convert denom without pool to uosmo",
+			name: "Convert denom without pool to note",
 			param: param{
 				inputCoin:           sdk.NewCoin("random", osmomath.NewInt(100)),
 				profit:              osmomath.NewInt(10),
-				expectedUosmoProfit: osmomath.NewInt(10),
+				expectedNoteProfit: osmomath.NewInt(10),
 			},
 			expectPass: false,
 		},
@@ -687,7 +687,7 @@ func (s *KeeperTestSuite) TestConvertProfits() {
 
 		if test.expectPass {
 			s.Require().NoError(err)
-			s.Require().Equal(test.param.expectedUosmoProfit, profit)
+			s.Require().Equal(test.param.expectedNoteProfit, profit)
 		} else {
 			s.Require().Error(err)
 		}

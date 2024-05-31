@@ -809,7 +809,7 @@ func (k Keeper) accumulationStore(ctx sdk.Context, denom string) sumtree.Tree {
 // removeTokensFromLock is called by lockup slash function.
 // Called by the superfluid module ONLY.
 func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, coins sdk.Coins) error {
-	// TODO: Handle 100% slash eventually, not needed for osmosis codebase atm.
+	// TODO: Handle 100% slash eventually, not needed for symphony codebase atm.
 	lock.Coins = lock.Coins.Sub(coins...)
 
 	err := k.setLock(ctx, *lock)

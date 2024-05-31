@@ -58,7 +58,7 @@ func (uc *UpgradeConfigurer) ConfigureChains() error {
 
 func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 	uc.t.Logf("starting upgrade e2e infrastructure for chain-id: %s", chainConfig.Id)
-	tmpDir, err := os.MkdirTemp("", "osmosis-e2e-testnet-")
+	tmpDir, err := os.MkdirTemp("", "symphony-e2e-testnet-")
 	if err != nil {
 		return err
 	}
@@ -126,13 +126,13 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	go func() {
 		defer wg.Done()
-		chainA.SendIBC(chainB, chainBNode.PublicAddress, initialization.OsmoToken)
+		chainA.SendIBC(chainB, chainBNode.PublicAddress, initialization.MelodyToken)
 		chainA.SendIBC(chainB, chainBNode.PublicAddress, initialization.StakeToken)
 	}()
 
 	go func() {
 		defer wg.Done()
-		chainB.SendIBC(chainA, chainANode.PublicAddress, initialization.OsmoToken)
+		chainB.SendIBC(chainA, chainANode.PublicAddress, initialization.MelodyToken)
 		chainB.SendIBC(chainA, chainANode.PublicAddress, initialization.StakeToken)
 	}()
 
@@ -391,8 +391,8 @@ func (uc *UpgradeConfigurer) runForkUpgrade() {
 func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHeight int64) error {
 	// upgrade containers to the locally compiled daemon
 	uc.t.Logf("starting upgrade for chain-id: %s...", chainConfig.Id)
-	uc.containerManager.OsmosisRepository = containers.CurrentBranchOsmoRepository
-	uc.containerManager.OsmosisTag = containers.CurrentBranchOsmoTag
+	uc.containerManager.SymphonyRepository = containers.CurrentBranchMelodyRepository
+	uc.containerManager.SymphonyTag = containers.CurrentBranchMelodyTag
 
 	for _, node := range chainConfig.NodeConfigs {
 		if err := node.Run(); err != nil {

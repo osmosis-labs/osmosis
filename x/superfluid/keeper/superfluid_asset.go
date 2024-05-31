@@ -25,7 +25,7 @@ func (k Keeper) BeginUnwindSuperfluidAsset(ctx sdk.Context, epochNum int64, asse
 // Returns amount * (1 - k.RiskFactor(asset))
 // Fow now, the risk factor is a global constant.
 // It will move towards per pool functions.
-func (k Keeper) GetRiskAdjustedOsmoValue(ctx sdk.Context, amount osmomath.Int) osmomath.Int {
+func (k Keeper) GetRiskAdjustedMelodyValue(ctx sdk.Context, amount osmomath.Int) osmomath.Int {
 	minRiskFactor := k.GetParams(ctx).MinimumRiskFactor
 	return amount.Sub(amount.ToLegacyDec().Mul(minRiskFactor).RoundInt())
 }
@@ -34,13 +34,13 @@ func (k Keeper) GetRiskAdjustedOsmoValue(ctx sdk.Context, amount osmomath.Int) o
 // y = x (1 - minRisk)
 // y / (1 - minRisk) = x
 
-func (k Keeper) UnriskAdjustOsmoValue(ctx sdk.Context, amount osmomath.Dec) osmomath.Dec {
+func (k Keeper) UnriskAdjustMelodyValue(ctx sdk.Context, amount osmomath.Dec) osmomath.Dec {
 	minRiskFactor := k.GetParams(ctx).MinimumRiskFactor
 	return amount.Quo(osmomath.OneDec().Sub(minRiskFactor))
 }
 
 func (k Keeper) AddNewSuperfluidAsset(ctx sdk.Context, asset types.SuperfluidAsset) error {
-	// initialize osmo equivalent multipliers
+	// initialize melody equivalent multipliers
 	epochIdentifier := k.GetEpochIdentifier(ctx)
 	currentEpoch := k.ek.GetEpochInfo(ctx, epochIdentifier).CurrentEpoch
 	return osmoutils.ApplyFuncIfNoError(ctx, func(ctx sdk.Context) error {

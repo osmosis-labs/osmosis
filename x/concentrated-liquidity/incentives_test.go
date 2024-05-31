@@ -23,10 +23,10 @@ var (
 	defaultPoolId     = uint64(1)
 	defaultMultiplier = osmomath.OneInt()
 
-	testAddressOne   = sdk.MustAccAddressFromBech32("osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks")
-	testAddressTwo   = sdk.MustAccAddressFromBech32("osmo18s5lynnmx37hq4wlrw9gdn68sg2uxp5rgk26vv")
-	testAddressThree = sdk.MustAccAddressFromBech32("osmo1qwexv7c6sm95lwhzn9027vyu2ccneaqad4w8ka")
-	testAddressFour  = sdk.MustAccAddressFromBech32("osmo14hcxlnwlqtq75ttaxf674vk6mafspg8xwgnn53")
+	testAddressOne   = sdk.MustAccAddressFromBech32("symphony1c605nvcw94rvvehrcdfj85qe09ulseyt0efhk7")
+	testAddressTwo   = sdk.MustAccAddressFromBech32("symphony1jpr5824frn5472qm73ckfe2c3rh6vrn4lvlgj7")
+	testAddressThree = sdk.MustAccAddressFromBech32("symphony1amr6zrvs0hymf62qd5mwvshx94ul8cgfu9jtxn")
+	testAddressFour  = sdk.MustAccAddressFromBech32("symphony1egts9ayaqr6t54ahs62awmz5smuf764uu5f5xv")
 
 	// Note: lexicographic order is denomFour, denomOne, denomThree, denomTwo
 	testDenomOne   = "denomOne"
@@ -3620,7 +3620,7 @@ func (s *KeeperTestSuite) TestIncentiveTruncation() {
 	// Create a pool
 	pool := s.PrepareConcentratedPool()
 
-	// 	osmosisd q concentratedliquidity incentive-records 1423 --node https://osmosis-rpc.polkachu.com:443
+	// 	symphonyd q concentratedliquidity incentive-records 1423 --node https://symphony-rpc.polkachu.com:443
 	// incentive_records:
 	// - incentive_id: "5833"
 	//   incentive_record_body:

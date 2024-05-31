@@ -223,8 +223,8 @@ func (s *IntegrationTestSuite) ProtoRev() {
 
 	supportedBaseDenoms, err := chainANode.QueryProtoRevBaseDenoms()
 	s.Require().NoError(err)
-	s.Require().Len(supportedBaseDenoms, 1, "protorev module should only have uosmo as a supported base denom on init")
-	s.Require().Equal(supportedBaseDenoms[0].Denom, "note", "protorev module should only have uosmo as a supported base denom on init")
+	s.Require().Len(supportedBaseDenoms, 1, "protorev module should only have note as a supported base denom on init")
+	s.Require().Equal(supportedBaseDenoms[0].Denom, "note", "protorev module should only have note as a supported base denom on init")
 
 	s.T().Logf("completed protorev module init checks")
 
@@ -340,14 +340,14 @@ func (s *IntegrationTestSuite) GeometricTwapMigration() {
 
 	sender := chainABNode.GetWallet(initialization.ValidatorWalletName)
 
-	uosmoIn := fmt.Sprintf("1000000%s", "note")
+	noteIn := fmt.Sprintf("1000000%s", "note")
 
 	swapWalletAddr := chainABNode.CreateWallet(migrationWallet, chainAB)
 
-	chainABNode.BankSend(uosmoIn, sender, swapWalletAddr)
+	chainABNode.BankSend(noteIn, sender, swapWalletAddr)
 
 	// Swap to create new twap records on the pool that was created pre-upgrade.
-	chainABNode.SwapExactAmountIn(uosmoIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradePoolId[index]), otherDenom[index], swapWalletAddr)
+	chainABNode.SwapExactAmountIn(noteIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradePoolId[index]), otherDenom[index], swapWalletAddr)
 }
 
 // TestIBCTokenTransfer tests that IBC token transfers work as expected.
@@ -365,7 +365,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferAndCreatePool() {
 		srcNode   *chain.NodeConfig
 		recipient string
 	}{{chainA, chainB, chainANode, chainBNode.PublicAddress}, {chainB, chainA, chainBNode, chainANode.PublicAddress}}
-	tokens := []sdk.Coin{initialization.OsmoToken, initialization.StakeToken}
+	tokens := []sdk.Coin{initialization.MelodyToken, initialization.StakeToken}
 
 	unlockFn := chain.IbcLockAddrs([]string{chainANode.PublicAddress, chainBNode.PublicAddress, initialization.ValidatorWalletName})
 	defer unlockFn()
@@ -429,7 +429,7 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 		},
 		govPropTimeout,
 		10*time.Millisecond,
-		"Osmosis node failed to retrieve prop tally",
+		"Symphony node failed to retrieve prop tally",
 	)
 	propTally, err := chainABNode.QueryPropTally(propNumber)
 	s.Require().NoError(err)
@@ -468,19 +468,19 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 	param := chainANode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
 	fmt.Println("param", param)
 
-	osmoSupply, err := chainANode.QuerySupplyOf("note")
+	melodySupply, err := chainANode.QuerySupplyOf("note")
 	s.Require().NoError(err)
 
-	f, err := osmoSupply.ToLegacyDec().Float64()
+	f, err := melodySupply.ToLegacyDec().Float64()
 	s.Require().NoError(err)
 
 	over := f * 0.02
 
-	paths := fmt.Sprintf(`{"channel_id": "channel-0", "denom": "%s", "quotas": [{"name":"testQuota", "duration": 86400, "send_recv": [1, 1]}] }`, initialization.OsmoToken.Denom)
+	paths := fmt.Sprintf(`{"channel_id": "channel-0", "denom": "%s", "quotas": [{"name":"testQuota", "duration": 86400, "send_recv": [1, 1]}] }`, initialization.MelodyToken.Denom)
 
 	// Sending >1%
 	fmt.Println("Sending >1%")
-	chainANode.SendIBC(chainA, chainB, receiver, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
+	chainANode.SendIBC(chainA, chainB, receiver, sdk.NewInt64Coin(initialization.MelodyDenom, int64(over)))
 
 	contract, err := chainANode.SetupRateLimiting(paths, chainANode.PublicAddress, chainA, true)
 	s.Require().NoError(err)
@@ -492,15 +492,15 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 		},
 		govPropTimeout,
 		10*time.Millisecond,
-		"Osmosis node failed to retrieve params",
+		"Symphony node failed to retrieve params",
 	)
 
 	// Sending <1%. Should work
 	fmt.Println("Sending <1%. Should work")
-	chainANode.SendIBC(chainA, chainB, receiver, sdk.NewInt64Coin(initialization.OsmoDenom, 1))
+	chainANode.SendIBC(chainA, chainB, receiver, sdk.NewInt64Coin(initialization.MelodyDenom, 1))
 	// Sending >1%. Should fail
 	fmt.Println("Sending >1%. Should fail")
-	chainANode.FailIBCTransfer(initialization.ValidatorWalletName, receiver, fmt.Sprintf("%duosmo", int(over)))
+	chainANode.FailIBCTransfer(initialization.ValidatorWalletName, receiver, fmt.Sprintf("%dnote", int(over)))
 
 	// Removing the rate limit so it doesn't affect other tests
 	chainANode.WasmExecute(contract, `{"remove_path": {"channel_id": "channel-0", "denom": "note"}}`, initialization.ValidatorWalletName)
@@ -549,7 +549,7 @@ func (s *IntegrationTestSuite) IBCWasmHooks() {
 	s.CallCheckBalance(chainANode, contractAddr, ibcDenom, transferAmount)
 
 	// sender wasm addr
-	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
+	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "melody")
 
 	var response map[string]interface{}
 	s.Require().Eventually(func() bool {
@@ -624,12 +624,12 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 	senderStr := fmt.Sprintf("channel-0/%s", validatorAddr)
 	senderHash32 := address.Hash(packetforwardingtypes.ModuleName, []byte(senderStr)) // typo intended
 	sender := sdk.AccAddress(senderHash32[:20])
-	bech32Prefix := "osmo"
+	bech32Prefix := "melody"
 	pfmSender, err := sdk.Bech32ifyAddressBytes(bech32Prefix, sender)
 	s.Require().NoError(err)
 
 	// sender wasm addr
-	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", pfmSender, "osmo")
+	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", pfmSender, "melody")
 	s.Require().NoError(err)
 
 	s.Require().Eventually(func() bool {
@@ -773,11 +773,11 @@ func (s *IntegrationTestSuite) ArithmeticTWAP() {
 	twapFromBeforeSwapToAfterSwapCA, err := chainABNode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeBeforeSwap)
 	s.Require().NoError(err)
 	// We had a swap of 2000000stake for some amount of uion,
-	// 2000000uion for some amount of uosmo, and
-	// 2000000uosmo for some amount of stake
+	// 2000000uion for some amount of note, and
+	// 2000000note for some amount of stake
 	// Because we traded the same amount of all three assets, we expect the asset with the greatest
 	// initial value (B, or uion) to have a largest negative price impact,
-	// to the benefit (positive price impact) of the other two assets (A&C, or stake and uosmo)
+	// to the benefit (positive price impact) of the other two assets (A&C, or stake and note)
 	s.Require().True(twapFromBeforeSwapToAfterSwapAB.GT(twapFromBeforeSwapToBeforeSwapOneAB))
 	s.Require().True(twapFromBeforeSwapToAfterSwapBC.LT(twapFromBeforeSwapToBeforeSwapOneBC))
 	s.Require().True(twapFromBeforeSwapToAfterSwapCA.GT(twapFromBeforeSwapToBeforeSwapOneCA))
@@ -914,21 +914,21 @@ func (s *IntegrationTestSuite) ExpeditedProposals() {
 // TestGeometricTWAP tests geometric twap.
 // It does the following:  creates a pool, queries twap, performs a swap , and queries twap again.
 // Twap is expected to change after the swap.
-// The pool is created with 1_000_000 uosmo and 2_000_000 stake and equal weights.
-// Assuming base asset is uosmo, the initial twap is 2
-// Upon swapping 1_000_000 uosmo for stake, supply changes, making uosmo less expensive.
+// The pool is created with 1_000_000 note and 2_000_000 stake and equal weights.
+// Assuming base asset is note, the initial twap is 2
+// Upon swapping 1_000_000 note for stake, supply changes, making note less expensive.
 // As a result of the swap, twap changes to 0.5.
 // Note: do not use chain B in this test as it has taker fee set.
 // This TWAP test depends on specific values that might be affected
 // by the taker fee.
 func (s *IntegrationTestSuite) GeometricTWAP() {
 	const (
-		// This pool contains 1_000_000 uosmo and 2_000_000 stake.
+		// This pool contains 1_000_000 note and 2_000_000 stake.
 		// Equals weights.
 		poolFile   = "geometricPool.json"
 		walletName = "geometric-twap-wallet"
 
-		denomA = "note"  // 1_000_000 uosmo
+		denomA = "note"  // 1_000_000 note
 		denomB = "stake" // 2_000_000 stake
 
 		minAmountOut = "1"
@@ -955,7 +955,7 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 	chainA.WaitUntilBlockTime(timeBeforeSwapPlus5ms.Add(time.Second * 3))
 
 	s.T().Log("querying for the first geometric TWAP to now (before swap)")
-	// Assume base = uosmo, quote = stake
+	// Assume base = note, quote = stake
 	// At pool creation time, the twap should be:
 	// quote asset supply / base asset supply = 2_000_000 / 1_000_000 = 2
 	curBlockTime := chainANode.QueryLatestBlockTime().Unix()
@@ -965,7 +965,7 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewDec(2), initialTwapBOverA)
 
-	// Assume base = stake, quote = uosmo
+	// Assume base = stake, quote = note
 	// At pool creation time, the twap should be:
 	// quote asset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
 	initialTwapAOverB, err := chainANode.QueryGeometricTwapToNow(poolId, denomB, denomA, timeBeforeSwapPlus5ms)
@@ -977,7 +977,7 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 
 	s.T().Logf("performing swap of %s for %s", coinAIn, denomB)
 
-	// stake out = stake supply * (1 - (uosmo supply before / uosmo supply after)^(uosmo weight / stake weight))
+	// stake out = stake supply * (1 - (note supply before / note supply after)^(note weight / stake weight))
 	//           = 2_000_000 * (1 - (1_000_000 / 2_000_000)^1)
 	//           = 2_000_000 * 0.5
 	//           = 1_000_000
@@ -985,7 +985,7 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 
 	// New supply post swap:
 	// stake = 2_000_000 - 1_000_000 - 1_000_000
-	// uosmo = 1_000_000 + 1_000_000 = 2_000_000
+	// note = 1_000_000 + 1_000_000 = 2_000_000
 
 	timeAfterSwap := chainANode.QueryLatestBlockTime()
 	chainA.WaitForNumHeights(1)
@@ -995,17 +995,17 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 	afterSwapTwapBOverA, err := chainANode.QueryGeometricTwap(poolId, denomA, denomB, timeAfterSwap, timeAfterSwapPlus1Height)
 	s.Require().NoError(err)
 
-	// We swap uosmo so uosmo's supply will increase and stake will decrease.
+	// We swap note so note's supply will increase and stake will decrease.
 	// The the price after will be smaller than the previous one.
 	s.Require().True(initialTwapBOverA.GT(afterSwapTwapBOverA))
 
-	// Assume base = uosmo, quote = stake
+	// Assume base = note, quote = stake
 	// At pool creation, we had:
 	// quote asset supply / base asset supply = 2_000_000 / 1_000_000 = 2
-	// Next, we swapped 1_000_000 uosmo for stake.
+	// Next, we swapped 1_000_000 note for stake.
 	// Now, we roughly have
 	// uatom = 1_000_000
-	// uosmo = 2_000_000
+	// note = 2_000_000
 	// quote asset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
 	osmoassert.DecApproxEq(s.T(), osmomath.NewDecWithPrec(5, 1), afterSwapTwapBOverA, osmomath.NewDecWithPrec(1, 2))
 }

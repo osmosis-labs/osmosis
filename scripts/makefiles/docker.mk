@@ -21,8 +21,8 @@ docker: docker-help
 
 docker-build:
 	@DOCKER_BUILDKIT=1 docker build \
-		-t osmosis:local \
-		-t osmosis:local-distroless \
+		-t symphony:local \
+		-t symphony:local-distroless \
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--build-arg RUNNER_IMAGE=$(RUNNER_BASE_IMAGE_DISTROLESS) \
 		--build-arg GIT_VERSION=$(VERSION) \
@@ -33,7 +33,7 @@ docker-build-distroless: docker-build
 
 docker-build-alpine:
 	@DOCKER_BUILDKIT=1 docker build \
-		-t osmosis:local-alpine \
+		-t symphony:local-alpine \
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--build-arg RUNNER_IMAGE=$(RUNNER_BASE_IMAGE_ALPINE) \
 		--build-arg GIT_VERSION=$(VERSION) \
@@ -42,7 +42,7 @@ docker-build-alpine:
 
 docker-build-nonroot:
 	@DOCKER_BUILDKIT=1 docker build \
-		-t osmosis:local-nonroot \
+		-t symphony:local-nonroot \
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--build-arg RUNNER_IMAGE=$(RUNNER_BASE_IMAGE_NONROOT) \
 		--build-arg GIT_VERSION=$(VERSION) \

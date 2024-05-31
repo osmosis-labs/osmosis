@@ -497,7 +497,7 @@ func (k Keeper) calculateGroupWeights(ctx sdk.Context, group types.Group) (types
 		}
 
 		// Get new volume for pool. Assert GTE gauge's weight
-		cumulativePoolVolume := k.pmk.GetOsmoVolumeForPool(ctx, poolId)
+		cumulativePoolVolume := k.pmk.GetMelodyVolumeForPool(ctx, poolId)
 
 		// If new volume is 0, there was an issue with volume tracking. Return error.
 		// We expect this to be handled quietly in update logic but not in init logic.
@@ -662,7 +662,7 @@ func (k Keeper) distributeInternal(
 			remainCoinPerEpoch := sdk.NewCoin(remainCoin.Denom, remainAmountPerEpoch)
 
 			// emissionRate calculates amount of tokens to emit per second
-			// for ex: 10000uosmo to be distributed over 1day epoch will be 1000 tokens ÷ 86,400 seconds ≈ 0.01157 tokens per second (truncated)
+			// for ex: 10000note to be distributed over 1day epoch will be 1000 tokens ÷ 86,400 seconds ≈ 0.01157 tokens per second (truncated)
 			// Note: reason why we do millisecond conversion is because floats are non-deterministic.
 			emissionRate := osmomath.NewDecFromInt(remainAmountPerEpoch).QuoTruncateMut(osmomath.NewDec(currentEpoch.Duration.Milliseconds()).QuoMut(millisecondsInSecDec))
 

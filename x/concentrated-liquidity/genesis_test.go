@@ -12,7 +12,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	osmoapp "github.com/osmosis-labs/osmosis/v23/app"
+	symphonyapp "github.com/osmosis-labs/osmosis/v23/app"
 	cl "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
 	clmodule "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/clmodule"
 	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
@@ -831,13 +831,13 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 // It checks that the exported genesis can be marshaled and unmarshaled without panicking.
 func TestMarshalUnmarshalGenesis(t *testing.T) {
 	// Set up the app and context
-	app := osmoapp.Setup(false)
+	app := symphonyapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	now := ctx.BlockTime()
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 
 	// Create an app module for the ConcentratedLiquidityKeeper
-	encodingConfig := osmoapp.MakeEncodingConfig()
+	encodingConfig := symphonyapp.MakeEncodingConfig()
 	appCodec := encodingConfig.Marshaler
 	appModule := clmodule.NewAppModule(appCodec, *app.ConcentratedLiquidityKeeper)
 
@@ -846,7 +846,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 	// Test that the exported genesis can be marshaled and unmarshaled without panicking
 	assert.NotPanics(t, func() {
-		app := osmoapp.Setup(false)
+		app := symphonyapp.Setup(false)
 		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 		ctx = ctx.WithBlockTime(now.Add(time.Second))
 		am := clmodule.NewAppModule(appCodec, *app.ConcentratedLiquidityKeeper)

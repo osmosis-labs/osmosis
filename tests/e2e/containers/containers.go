@@ -49,7 +49,7 @@ const (
 )
 
 var (
-	// We set consensus min fee = .0025 uosmo / gas * 400000 gas = 1000
+	// We set consensus min fee = .0025 note / gas * 400000 gas = 1000
 	Fees = txfeestypes.ConsensusMinFee.Mul(osmomath.NewDec(GasLimit)).Ceil().TruncateInt64()
 
 	defaultErrRegex = regexp.MustCompile(`(E|e)rror`)
@@ -83,7 +83,7 @@ func NewManager(isUpgrade bool, isFork bool, isDebugLogEnabled bool) (docker *Ma
 	if err != nil {
 		return nil, err
 	}
-	docker.network, err = docker.pool.CreateNetwork("osmosis-testnet")
+	docker.network, err = docker.pool.CreateNetwork("symphony-testnet")
 	if err != nil {
 		return nil, err
 	}
@@ -356,9 +356,9 @@ func (m *Manager) ExecQueryTxHash(t *testing.T, containerName, txHash string, re
 
 	var command []string
 	if returnAsJson {
-		command = []string{"osmosisd", "query", "tx", txHash, "-o=json"}
+		command = []string{"symphonyd", "query", "tx", txHash, "-o=json"}
 	} else {
-		command = []string{"osmosisd", "query", "tx", txHash}
+		command = []string{"symphonyd", "query", "tx", txHash}
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -427,7 +427,7 @@ func (m *Manager) ExecQueryTxHash(t *testing.T, containerName, txHash string, re
 
 // RunHermesResource runs a Hermes container. Returns the container resource and error if any.
 // the name of the hermes container is "<chain A id>-<chain B id>-relayer"
-func (m *Manager) RunHermesResource(chainAID, osmoARelayerNodeName, osmoAValMnemonic, chainBID, osmoBRelayerNodeName, osmoBValMnemonic string, hermesCfgPath string) (*dockertest.Resource, error) {
+func (m *Manager) RunHermesResource(chainAID, melodyARelayerNodeName, melodyAValMnemonic, chainBID, melodyBRelayerNodeName, melodyBValMnemonic string, hermesCfgPath string) (*dockertest.Resource, error) {
 	hermesResource, err := m.pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       hermesContainerName,
@@ -450,10 +450,10 @@ func (m *Manager) RunHermesResource(chainAID, osmoARelayerNodeName, osmoAValMnem
 			Env: []string{
 				fmt.Sprintf("OSMO_A_E2E_CHAIN_ID=%s", chainAID),
 				fmt.Sprintf("OSMO_B_E2E_CHAIN_ID=%s", chainBID),
-				fmt.Sprintf("OSMO_A_E2E_VAL_MNEMONIC=%s", osmoAValMnemonic),
-				fmt.Sprintf("OSMO_B_E2E_VAL_MNEMONIC=%s", osmoBValMnemonic),
-				fmt.Sprintf("OSMO_A_E2E_VAL_HOST=%s", osmoARelayerNodeName),
-				fmt.Sprintf("OSMO_B_E2E_VAL_HOST=%s", osmoBRelayerNodeName),
+				fmt.Sprintf("OSMO_A_E2E_VAL_MNEMONIC=%s", melodyAValMnemonic),
+				fmt.Sprintf("OSMO_B_E2E_VAL_MNEMONIC=%s", melodyBValMnemonic),
+				fmt.Sprintf("OSMO_A_E2E_VAL_HOST=%s", melodyARelayerNodeName),
+				fmt.Sprintf("OSMO_B_E2E_VAL_HOST=%s", melodyBRelayerNodeName),
 			},
 			Entrypoint: []string{
 				"sh",
@@ -480,14 +480,14 @@ func (m *Manager) RunNodeResource(chainId string, containerName, valCondifDir st
 
 	runOpts := &dockertest.RunOptions{
 		Name:       containerName,
-		Repository: m.OsmosisRepository,
-		Tag:        m.OsmosisTag,
+		Repository: m.SymphonyRepository,
+		Tag:        m.SymphonyTag,
 		NetworkID:  m.network.Network.ID,
 		User:       "root:root",
 		Cmd:        []string{"start"},
 		Mounts: []string{
-			fmt.Sprintf("%s/:/osmosis/.osmosisd", valCondifDir),
-			fmt.Sprintf("%s/scripts:/osmosis", pwd),
+			fmt.Sprintf("%s/:/symphony/.symphonyd", valCondifDir),
+			fmt.Sprintf("%s/scripts:/symphony", pwd),
 		},
 	}
 

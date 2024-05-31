@@ -171,7 +171,7 @@ func (s *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 func (s *UpgradeTestSuite) TestRegisterOsmoIonMetadata() {
 	s.SetupTest() // reset
 
-	expectedUosmodenom := "note"
+	expectedNotedenom := "note"
 	expectedUiondenom := "uion"
 
 	ctx := s.Ctx
@@ -193,7 +193,7 @@ func (s *UpgradeTestSuite) TestRegisterOsmoIonMetadata() {
 	uionMetadata, found := s.App.BankKeeper.GetDenomMetaData(ctx, "uion")
 	s.Require().True(found)
 
-	s.Require().Equal(expectedUosmodenom, uosmoMetadata.Base)
+	s.Require().Equal(expectedNotedenom, uosmoMetadata.Base)
 	s.Require().Equal(expectedUiondenom, uionMetadata.Base)
 }
 
@@ -229,7 +229,7 @@ func (s *UpgradeTestSuite) TestSetRateLimits() {
 
 	addr, _, err := contractKeeper.Instantiate(s.Ctx, codeID, govModule, govModule, initMsgBz, "rate limiting contract", nil)
 	s.Require().NoError(err)
-	addrStr, err := sdk.Bech32ifyAddressBytes("osmo", addr)
+	addrStr, err := sdk.Bech32ifyAddressBytes("symphony", addr)
 	s.Require().NoError(err)
 	params, err := ibcratelimittypes.NewParams(addrStr)
 	s.Require().NoError(err)

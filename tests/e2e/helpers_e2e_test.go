@@ -143,7 +143,7 @@ func (s *IntegrationTestSuite) UploadAndInstantiateCounter(chain *chain.Config) 
 }
 
 func (s *IntegrationTestSuite) getChainIndex(chain *chain.Config) int {
-	if chain.Id == "osmo-test-a" {
+	if chain.Id == "melody-test-a" {
 		return 0
 	} else {
 		return 1

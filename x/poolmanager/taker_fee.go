@@ -149,34 +149,34 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 	// If the denom is the base denom:
 	takerFeeAmtRemaining := takerFeeCoin.Amount
 	if takerFeeCoin.Denom == defaultTakerFeeDenom {
-		osmoTakerFeeDistribution := types.TakerFeeDistributionPercentage{}
-		k.paramSpace.Get(ctx, types.KeyOsmoTakerFeeDistribution, &osmoTakerFeeDistribution)
+		melodyTakerFeeDistribution := types.TakerFeeDistributionPercentage{}
+		k.paramSpace.Get(ctx, types.KeyMelodyTakerFeeDistribution, &melodyTakerFeeDistribution)
 
 		// Community Pool:
-		if osmoTakerFeeDistribution.CommunityPool.GT(zeroDec) && takerFeeAmtRemaining.GT(osmomath.ZeroInt()) {
-			// Osmo community pool funds is a direct send
-			osmoTakerFeeToCommunityPoolDec := takerFeeAmtRemaining.ToLegacyDec().Mul(osmoTakerFeeDistribution.CommunityPool)
-			osmoTakerFeeToCommunityPoolCoin := sdk.NewCoin(defaultTakerFeeDenom, osmoTakerFeeToCommunityPoolDec.TruncateInt())
-			err := k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(osmoTakerFeeToCommunityPoolCoin), sender)
+		if melodyTakerFeeDistribution.CommunityPool.GT(zeroDec) && takerFeeAmtRemaining.GT(osmomath.ZeroInt()) {
+			// Melody community pool funds is a direct send
+			melodyTakerFeeToCommunityPoolDec := takerFeeAmtRemaining.ToLegacyDec().Mul(melodyTakerFeeDistribution.CommunityPool)
+			melodyTakerFeeToCommunityPoolCoin := sdk.NewCoin(defaultTakerFeeDenom, melodyTakerFeeToCommunityPoolDec.TruncateInt())
+			err := k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(melodyTakerFeeToCommunityPoolCoin), sender)
 			if err != nil {
 				return sdk.Coin{}, err
 			}
-			err = k.UpdateTakerFeeTrackerForCommunityPoolByDenom(ctx, osmoTakerFeeToCommunityPoolCoin.Denom, osmoTakerFeeToCommunityPoolCoin.Amount)
+			err = k.UpdateTakerFeeTrackerForCommunityPoolByDenom(ctx, melodyTakerFeeToCommunityPoolCoin.Denom, melodyTakerFeeToCommunityPoolCoin.Amount)
 			if err != nil {
 				ctx.Logger().Error("Error updating taker fee tracker for community pool by denom", "error", err)
 			}
-			takerFeeAmtRemaining = takerFeeAmtRemaining.Sub(osmoTakerFeeToCommunityPoolCoin.Amount)
+			takerFeeAmtRemaining = takerFeeAmtRemaining.Sub(melodyTakerFeeToCommunityPoolCoin.Amount)
 		}
 		// Staking Rewards:
-		if osmoTakerFeeDistribution.StakingRewards.GT(zeroDec) && takerFeeAmtRemaining.GT(osmomath.ZeroInt()) {
-			// Osmo staking rewards funds are sent to the non native fee pool module account (even though its native, we want to distribute at the same time as the non native fee tokens)
+		if melodyTakerFeeDistribution.StakingRewards.GT(zeroDec) && takerFeeAmtRemaining.GT(osmomath.ZeroInt()) {
+			// Melody staking rewards funds are sent to the non native fee pool module account (even though its native, we want to distribute at the same time as the non native fee tokens)
 			// We could stream these rewards via the fee collector account, but this is decision to be made by governance.
-			osmoTakerFeeToStakingRewardsCoin := sdk.NewCoin(defaultTakerFeeDenom, takerFeeAmtRemaining)
-			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, feeCollectorForStakingRewardsName, sdk.NewCoins(osmoTakerFeeToStakingRewardsCoin))
+			melodyTakerFeeToStakingRewardsCoin := sdk.NewCoin(defaultTakerFeeDenom, takerFeeAmtRemaining)
+			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, feeCollectorForStakingRewardsName, sdk.NewCoins(melodyTakerFeeToStakingRewardsCoin))
 			if err != nil {
 				return sdk.Coin{}, err
 			}
-			err = k.UpdateTakerFeeTrackerForStakersByDenom(ctx, osmoTakerFeeToStakingRewardsCoin.Denom, osmoTakerFeeToStakingRewardsCoin.Amount)
+			err = k.UpdateTakerFeeTrackerForStakersByDenom(ctx, melodyTakerFeeToStakingRewardsCoin.Denom, melodyTakerFeeToStakingRewardsCoin.Amount)
 			if err != nil {
 				ctx.Logger().Error("Error updating taker fee tracker for stakers by denom", "error", err)
 			}
@@ -184,52 +184,52 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 
 		// If the denom is not the base denom:
 	} else {
-		nonOsmoTakerFeeDistribution := types.TakerFeeDistributionPercentage{}
-		k.paramSpace.Get(ctx, types.KeyNonOsmoTakerFeeDistribution, &nonOsmoTakerFeeDistribution)
+		nonMelodyTakerFeeDistribution := types.TakerFeeDistributionPercentage{}
+		k.paramSpace.Get(ctx, types.KeyNonMelodyTakerFeeDistribution, &nonMelodyTakerFeeDistribution)
 		authorizedQuoteDenoms := []string{}
 		k.paramSpace.Get(ctx, types.KeyAuthorizedQuoteDenoms, &authorizedQuoteDenoms)
 
 		// Community Pool:
-		if nonOsmoTakerFeeDistribution.CommunityPool.GT(zeroDec) && takerFeeAmtRemaining.GT(osmomath.ZeroInt()) {
+		if nonMelodyTakerFeeDistribution.CommunityPool.GT(zeroDec) && takerFeeAmtRemaining.GT(osmomath.ZeroInt()) {
 			denomIsWhitelisted := isDenomWhitelisted(takerFeeCoin.Denom, authorizedQuoteDenoms)
-			// If the non osmo denom is a whitelisted quote asset, we send to the community pool
+			// If the non melody denom is a whitelisted quote asset, we send to the community pool
 			if denomIsWhitelisted {
-				nonOsmoTakerFeeToCommunityPoolDec := takerFeeAmtRemaining.ToLegacyDec().Mul(nonOsmoTakerFeeDistribution.CommunityPool)
-				nonOsmoTakerFeeToCommunityPoolCoin := sdk.NewCoin(tokenIn.Denom, nonOsmoTakerFeeToCommunityPoolDec.TruncateInt())
-				err := k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(nonOsmoTakerFeeToCommunityPoolCoin), sender)
+				nonMelodyTakerFeeToCommunityPoolDec := takerFeeAmtRemaining.ToLegacyDec().Mul(nonMelodyTakerFeeDistribution.CommunityPool)
+				nonMelodyTakerFeeToCommunityPoolCoin := sdk.NewCoin(tokenIn.Denom, nonMelodyTakerFeeToCommunityPoolDec.TruncateInt())
+				err := k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(nonMelodyTakerFeeToCommunityPoolCoin), sender)
 				if err != nil {
 					return sdk.Coin{}, err
 				}
-				err = k.UpdateTakerFeeTrackerForCommunityPoolByDenom(ctx, nonOsmoTakerFeeToCommunityPoolCoin.Denom, nonOsmoTakerFeeToCommunityPoolCoin.Amount)
+				err = k.UpdateTakerFeeTrackerForCommunityPoolByDenom(ctx, nonMelodyTakerFeeToCommunityPoolCoin.Denom, nonMelodyTakerFeeToCommunityPoolCoin.Amount)
 				if err != nil {
 					ctx.Logger().Error("Error updating taker fee tracker for community pool by denom", "error", err)
 				}
-				takerFeeAmtRemaining = takerFeeAmtRemaining.Sub(nonOsmoTakerFeeToCommunityPoolCoin.Amount)
+				takerFeeAmtRemaining = takerFeeAmtRemaining.Sub(nonMelodyTakerFeeToCommunityPoolCoin.Amount)
 			} else {
-				// If the non osmo denom is not a whitelisted asset, we send to the non native fee pool for community pool module account.
+				// If the non melody denom is not a whitelisted asset, we send to the non native fee pool for community pool module account.
 				// At epoch, this account swaps the non native, non whitelisted assets for XXX and sends to the community pool.
-				nonOsmoTakerFeeToCommunityPoolDec := takerFeeAmtRemaining.ToLegacyDec().Mul(nonOsmoTakerFeeDistribution.CommunityPool)
-				nonOsmoTakerFeeToCommunityPoolCoin := sdk.NewCoin(tokenIn.Denom, nonOsmoTakerFeeToCommunityPoolDec.TruncateInt())
-				err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, feeCollectorForCommunityPoolName, sdk.NewCoins(nonOsmoTakerFeeToCommunityPoolCoin))
+				nonMelodyTakerFeeToCommunityPoolDec := takerFeeAmtRemaining.ToLegacyDec().Mul(nonMelodyTakerFeeDistribution.CommunityPool)
+				nonMelodyTakerFeeToCommunityPoolCoin := sdk.NewCoin(tokenIn.Denom, nonMelodyTakerFeeToCommunityPoolDec.TruncateInt())
+				err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, feeCollectorForCommunityPoolName, sdk.NewCoins(nonMelodyTakerFeeToCommunityPoolCoin))
 				if err != nil {
 					return sdk.Coin{}, err
 				}
-				err = k.UpdateTakerFeeTrackerForCommunityPoolByDenom(ctx, nonOsmoTakerFeeToCommunityPoolCoin.Denom, nonOsmoTakerFeeToCommunityPoolCoin.Amount)
+				err = k.UpdateTakerFeeTrackerForCommunityPoolByDenom(ctx, nonMelodyTakerFeeToCommunityPoolCoin.Denom, nonMelodyTakerFeeToCommunityPoolCoin.Amount)
 				if err != nil {
 					ctx.Logger().Error("Error updating taker fee tracker for community pool by denom", "error", err)
 				}
-				takerFeeAmtRemaining = takerFeeAmtRemaining.Sub(nonOsmoTakerFeeToCommunityPoolCoin.Amount)
+				takerFeeAmtRemaining = takerFeeAmtRemaining.Sub(nonMelodyTakerFeeToCommunityPoolCoin.Amount)
 			}
 		}
 		// Staking Rewards:
-		if nonOsmoTakerFeeDistribution.StakingRewards.GT(zeroDec) && takerFeeAmtRemaining.GT(osmomath.ZeroInt()) {
-			// Non Osmo staking rewards are sent to the non native fee pool module account
-			nonOsmoTakerFeeToStakingRewardsCoin := sdk.NewCoin(takerFeeCoin.Denom, takerFeeAmtRemaining)
-			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, feeCollectorForStakingRewardsName, sdk.NewCoins(nonOsmoTakerFeeToStakingRewardsCoin))
+		if nonMelodyTakerFeeDistribution.StakingRewards.GT(zeroDec) && takerFeeAmtRemaining.GT(osmomath.ZeroInt()) {
+			// Non Melody staking rewards are sent to the non native fee pool module account
+			nonMelodyTakerFeeToStakingRewardsCoin := sdk.NewCoin(takerFeeCoin.Denom, takerFeeAmtRemaining)
+			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, feeCollectorForStakingRewardsName, sdk.NewCoins(nonMelodyTakerFeeToStakingRewardsCoin))
 			if err != nil {
 				return sdk.Coin{}, err
 			}
-			err = k.UpdateTakerFeeTrackerForStakersByDenom(ctx, nonOsmoTakerFeeToStakingRewardsCoin.Denom, nonOsmoTakerFeeToStakingRewardsCoin.Amount)
+			err = k.UpdateTakerFeeTrackerForStakersByDenom(ctx, nonMelodyTakerFeeToStakingRewardsCoin.Denom, nonMelodyTakerFeeToStakingRewardsCoin.Amount)
 			if err != nil {
 				ctx.Logger().Error("Error updating taker fee tracker for stakers by denom", "error", err)
 			}

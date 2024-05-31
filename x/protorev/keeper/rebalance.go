@@ -31,7 +31,7 @@ func (k Keeper) IterateRoutes(ctx sdk.Context, routes []RouteMetaData, remaining
 			continue
 		}
 
-		// If the profit is greater than zero, then we convert the profits to uosmo and compare profits in terms of uosmo
+		// If the profit is greater than zero, then we convert the profits to note and compare profits in terms of note
 		if profit.GT(zeroInt) {
 			profit, err := k.ConvertProfits(ctx, inputCoin, profit)
 			if err != nil {
@@ -51,16 +51,16 @@ func (k Keeper) IterateRoutes(ctx sdk.Context, routes []RouteMetaData, remaining
 	return maxProfitInputCoin, maxProfit, optimalRoute
 }
 
-// ConvertProfits converts the profit denom to uosmo to allow for a fair comparison of profits
+// ConvertProfits converts the profit denom to note to allow for a fair comparison of profits
 //
 // NOTE: This does not check the underlying pool before swapping so this may go over the MaxTicksCrossed.
 func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit osmomath.Int) (osmomath.Int, error) {
-	if inputCoin.Denom == types.OsmosisDenomination {
+	if inputCoin.Denom == types.SymphonyDenomination {
 		return profit, nil
 	}
 
-	// Get highest liquidity pool ID for the input coin and uosmo
-	conversionPoolID, err := k.GetPoolForDenomPair(ctx, types.OsmosisDenomination, inputCoin.Denom)
+	// Get highest liquidity pool ID for the input coin and note
+	conversionPoolID, err := k.GetPoolForDenomPair(ctx, types.SymphonyDenomination, inputCoin.Denom)
 	if err != nil {
 		return profit, err
 	}
@@ -76,20 +76,20 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit osmom
 		return profit, err
 	}
 
-	// Calculate the amount of uosmo that we can get if we swapped the
-	// profited amount of the original asset through the highest uosmo liquidity pool
+	// Calculate the amount of note that we can get if we swapped the
+	// profited amount of the original asset through the highest note liquidity pool
 	conversionTokenOut, err := swapModule.CalcOutAmtGivenIn(
 		ctx,
 		conversionPool,
 		sdk.NewCoin(inputCoin.Denom, profit),
-		types.OsmosisDenomination,
+		types.SymphonyDenomination,
 		conversionPool.GetSpreadFactor(ctx),
 	)
 	if err != nil {
 		return profit, err
 	}
 
-	// return the profit denominated in uosmo
+	// return the profit denominated in note
 	return conversionTokenOut.Amount, nil
 }
 

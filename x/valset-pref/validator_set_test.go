@@ -38,7 +38,7 @@ func (s *KeeperTestSuite) TestValidateLockForForceUnlock() {
 			expectPass:    false,
 		},
 		{
-			name:          "Invalid Lock: contains non osmo denom",
+			name:          "Invalid Lock: contains non melody denom",
 			lockID:        locks[1].ID,
 			delegatorAddr: "addr1---------------",
 			expectPass:    false,
@@ -568,11 +568,11 @@ func (s *KeeperTestSuite) TestUndelegateFromValSetErrorCase() {
 	}
 
 	delegator := sdk.AccAddress([]byte("addr1---------------"))
-	coinToStake := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000))   // delegate 10osmo using Valset now and 10 osmo using regular staking delegate
-	coinToUnStake := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)) // undelegate 20osmo
+	coinToStake := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000))   // delegate 10melody using Valset now and 10 melody using regular staking delegate
+	coinToUnStake := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)) // undelegate 20melody
 	expectedShares := []osmomath.Dec{sdk.NewDec(15_000_000), sdk.NewDec(500_000)}
 
-	s.FundAcc(delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)}) // 100 osmo
+	s.FundAcc(delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)}) // 100 melody
 
 	// valset test setup
 	// SetValidatorSetPreference sets a new list of val-set
@@ -638,10 +638,10 @@ func (s *KeeperTestSuite) TestUndelegateFromValSetErrorCase1() {
 	}
 
 	delegator := sdk.AccAddress([]byte("addr4---------------"))
-	coinToStake := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100_000_000))   // delegate 100osmo using Valset now and 10 osmo using regular staking delegate
-	coinToUnStake := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(200_000_000)) // undelegate 20osmo
+	coinToStake := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100_000_000))   // delegate 100melody using Valset now and 10 melody using regular staking delegate
+	coinToUnStake := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(200_000_000)) // undelegate 20melody
 
-	s.FundAcc(delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 300_000_000)}) // 100 osmo
+	s.FundAcc(delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 300_000_000)}) // 100 melody
 
 	// valset test setup
 	// SetValidatorSetPreference sets a new list of val-set

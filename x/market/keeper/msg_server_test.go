@@ -27,10 +27,10 @@ func (s *KeeperTestSuite) TestMsgServer_SwapToNativeCoins() {
 	msgServer := s.setupServer()
 
 	// Set Oracle Price
-	osmoPriceInSDR := sdk.NewDecWithPrec(17, 1)
-	s.App.OracleKeeper.SetOsmoExchangeRate(s.Ctx, appparams.MicroSDRDenom, osmoPriceInSDR)
+	melodyPriceInSDR := sdk.NewDecWithPrec(17, 1)
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, appparams.MicroSDRDenom, melodyPriceInSDR)
 
-	swapAmountInSDR := osmoPriceInSDR.MulInt64(rand.Int63()%10000 + 2).TruncateInt()
+	swapAmountInSDR := melodyPriceInSDR.MulInt64(rand.Int63()%10000 + 2).TruncateInt()
 	offerCoin := sdk.NewCoin(appparams.MicroSDRDenom, swapAmountInSDR)
 
 	// 1) empty both vaults, expected ErrNotEnoughBalanceOnMarketVaults error

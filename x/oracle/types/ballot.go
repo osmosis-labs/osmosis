@@ -53,7 +53,7 @@ func (pb ExchangeRateBallot) ToCrossRate(bases map[string]sdk.Dec) (cb ExchangeR
 		if exchangeRateRT, ok := bases[string(vote.Voter)]; ok && vote.ExchangeRate.IsPositive() {
 			vote.ExchangeRate = exchangeRateRT.Quo(vote.ExchangeRate)
 		} else {
-			// If we can't get reference terra exchange rate, we just convert the vote as abstain vote
+			// If we can't get reference symphony exchange rate, we just convert the vote as abstain vote
 			vote.ExchangeRate = sdk.ZeroDec()
 			vote.Power = 0
 		}
@@ -72,7 +72,7 @@ func (pb ExchangeRateBallot) ToCrossRateWithSort(bases map[string]sdk.Dec) (cb E
 		if exchangeRateRT, ok := bases[string(vote.Voter)]; ok && vote.ExchangeRate.IsPositive() {
 			vote.ExchangeRate = exchangeRateRT.Quo(vote.ExchangeRate)
 		} else {
-			// If we can't get reference terra exchange rate, we just convert the vote as abstain vote
+			// If we can't get reference symphony exchange rate, we just convert the vote as abstain vote
 			vote.ExchangeRate = sdk.ZeroDec()
 			vote.Power = 0
 		}

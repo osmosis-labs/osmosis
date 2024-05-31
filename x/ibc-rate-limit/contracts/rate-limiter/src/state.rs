@@ -47,8 +47,8 @@ pub enum FlowType {
 /// A Flow represents the transfer of value for a denom through an IBC channel
 /// during a time window.
 ///
-/// It tracks inflows (transfers into osmosis) and outflows (transfers out of
-/// osmosis).
+/// It tracks inflows (transfers into symphony) and outflows (transfers out of
+/// symphony).
 ///
 /// The period_end represents the last point in time for which this Flow is
 /// tracking the value transfer.
@@ -321,7 +321,7 @@ pub const IBCMODULE: Item<Addr> = Item::new("ibc_module");
 /// allowing to flow through that channel in a specific duration (quota)
 ///
 /// For simplicity, the channel in the map keys refers to the "host" channel on
-/// the osmosis side. This means that on PacketSend it will refer to the source
+/// the symphony side. This means that on PacketSend it will refer to the source
 /// channel while on PacketRecv it refers to the destination channel.
 ///
 /// It is the responsibility of the go module to pass the appropriate channel

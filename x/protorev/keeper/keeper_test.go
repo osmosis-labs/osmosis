@@ -18,7 +18,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/stableswap"
 
-	osmosisapp "github.com/osmosis-labs/osmosis/v23/app"
+	symphonyapp "github.com/osmosis-labs/osmosis/v23/app"
 )
 
 type KeeperTestSuite struct {
@@ -82,7 +82,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	// Configure the initial base denoms used for cyclic route building
 	baseDenomPriorities := []types.BaseDenom{
 		{
-			Denom:    types.OsmosisDenomination,
+			Denom:    types.SymphonyDenomination,
 			StepSize: osmomath.NewInt(1_000_000),
 		},
 		{
@@ -97,7 +97,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	err := s.App.ProtoRevKeeper.SetBaseDenoms(s.Ctx, baseDenomPriorities)
 	s.Require().NoError(err)
 
-	encodingConfig := osmosisapp.MakeEncodingConfig()
+	encodingConfig := symphonyapp.MakeEncodingConfig()
 	s.clientCtx = client.Context{}.
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
@@ -106,7 +106,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	// Set default configuration for testing
 	s.balances = sdk.NewCoins(
-		sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(9000000000000000000)),
+		sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(9000000000000000000)),
 		sdk.NewCoin("Atom", osmomath.NewInt(9000000000000000000)),
 		sdk.NewCoin("akash", osmomath.NewInt(9000000000000000000)),
 		sdk.NewCoin("bitcoin", osmomath.NewInt(9000000000000000000)),
@@ -161,11 +161,11 @@ func (s *KeeperTestSuite) SetupTest() {
 
 // setUpPools sets up the pools needed for testing
 // This creates several assets and pools between most of them (used in testing throughout the module)
-// akash <-> types.OsmosisDenomination
-// juno <-> types.OsmosisDenomination
-// ethereum <-> types.OsmosisDenomination
-// bitcoin <-> types.OsmosisDenomination
-// canto <-> types.OsmosisDenomination
+// akash <-> types.SymphonyDenomination
+// juno <-> types.SymphonyDenomination
+// ethereum <-> types.SymphonyDenomination
+// bitcoin <-> types.SymphonyDenomination
+// canto <-> types.SymphonyDenomination
 // and so on....
 func (s *KeeperTestSuite) setUpPools() {
 	// Create any necessary osmomath.Ints that require string conversion
@@ -252,7 +252,7 @@ func (s *KeeperTestSuite) setUpPools() {
 		{ // Pool 6
 			PoolAssets: []balancer.PoolAsset{
 				{
-					Token:  sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(1000)),
+					Token:  sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(1000)),
 					Weight: osmomath.NewInt(1),
 				},
 				{
@@ -271,7 +271,7 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: osmomath.NewInt(1),
 				},
 				{
-					Token:  sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(1000)),
+					Token:  sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(1000)),
 					Weight: osmomath.NewInt(1),
 				},
 			},
@@ -286,7 +286,7 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: osmomath.NewInt(1),
 				},
 				{
-					Token:  sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(1000)),
+					Token:  sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(1000)),
 					Weight: osmomath.NewInt(1),
 				},
 			},
@@ -301,7 +301,7 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: osmomath.NewInt(1),
 				},
 				{
-					Token:  sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(1000)),
+					Token:  sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(1000)),
 					Weight: osmomath.NewInt(1),
 				},
 			},
@@ -316,7 +316,7 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: osmomath.NewInt(1),
 				},
 				{
-					Token:  sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(1000)),
+					Token:  sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(1000)),
 					Weight: osmomath.NewInt(1),
 				},
 			},
@@ -331,7 +331,7 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: osmomath.NewInt(1),
 				},
 				{
-					Token:  sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(1000)),
+					Token:  sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(1000)),
 					Weight: osmomath.NewInt(1),
 				},
 			},
@@ -496,7 +496,7 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: osmomath.NewInt(1),
 				},
 				{
-					Token:  sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(191801648570)),
+					Token:  sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(191801648570)),
 					Weight: osmomath.NewInt(1),
 				},
 			},
@@ -526,7 +526,7 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: osmomath.NewInt(1),
 				},
 				{
-					Token:  sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(13901565323)),
+					Token:  sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(13901565323)),
 					Weight: osmomath.NewInt(1),
 				},
 			},
@@ -541,7 +541,7 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: osmomath.NewInt(1),
 				},
 				{
-					Token:  sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(139015653231902)),
+					Token:  sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(139015653231902)),
 					Weight: osmomath.NewInt(1),
 				},
 			},
@@ -556,7 +556,7 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: osmomath.NewInt(50),
 				},
 				{
-					Token:  sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(171274446980)),
+					Token:  sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(171274446980)),
 					Weight: osmomath.NewInt(50),
 				},
 			},
@@ -571,7 +571,7 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: osmomath.NewInt(50),
 				},
 				{
-					Token:  sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(13466662920841)),
+					Token:  sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(13466662920841)),
 					Weight: osmomath.NewInt(50),
 				},
 			},
@@ -707,7 +707,7 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: osmomath.NewInt(1),
 				},
 				{
-					Token:  sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(1694086377216)),
+					Token:  sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(1694086377216)),
 					Weight: osmomath.NewInt(1),
 				},
 			},
@@ -718,7 +718,7 @@ func (s *KeeperTestSuite) setUpPools() {
 		{ // Pool 36
 			PoolAssets: []balancer.PoolAsset{
 				{
-					Token:  sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(2774812791932)),
+					Token:  sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(2774812791932)),
 					Weight: osmomath.NewInt(1),
 				},
 				{
@@ -748,7 +748,7 @@ func (s *KeeperTestSuite) setUpPools() {
 		{ // Pool 38
 			PoolAssets: []balancer.PoolAsset{
 				{
-					Token:  sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(6111815027)),
+					Token:  sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(6111815027)),
 					Weight: osmomath.NewInt(1),
 				},
 				{
@@ -767,7 +767,7 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: osmomath.NewInt(1),
 				},
 				{
-					Token:  sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(17000185817963)),
+					Token:  sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(17000185817963)),
 					Weight: osmomath.NewInt(1),
 				},
 			},
@@ -929,7 +929,7 @@ func (s *KeeperTestSuite) setUpPools() {
 				Weight: osmomath.NewInt(1),
 			},
 			{
-				Token:  sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(10000)),
+				Token:  sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(10000)),
 				Weight: osmomath.NewInt(1),
 			},
 		},
@@ -946,7 +946,7 @@ func (s *KeeperTestSuite) setUpPools() {
 				Weight: osmomath.NewInt(1),
 			},
 			{
-				Token:  sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(10000)),
+				Token:  sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(10000)),
 				Weight: osmomath.NewInt(1),
 			},
 		},
@@ -963,7 +963,7 @@ func (s *KeeperTestSuite) setUpPools() {
 				Weight: osmomath.NewInt(1),
 			},
 			{
-				Token:  sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(10000)),
+				Token:  sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(10000)),
 				Weight: osmomath.NewInt(1),
 			},
 		},
@@ -980,7 +980,7 @@ func (s *KeeperTestSuite) setUpPools() {
 				Weight: osmomath.NewInt(1),
 			},
 			{
-				Token:  sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(1000000000)),
+				Token:  sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(1000000000)),
 				Weight: osmomath.NewInt(1),
 			},
 		},
@@ -1121,9 +1121,9 @@ func (s *KeeperTestSuite) setUpTokenPairRoutes() {
 	atomBitcoin := types.NewTrade(4, "bitcoin", "Atom")
 
 	// Stableswap Route
-	uosmoUSDC := types.NewTrade(0, types.OsmosisDenomination, "usdc")
+	noteUSDC := types.NewTrade(0, types.SymphonyDenomination, "usdc")
 	usdcBUSD := types.NewTrade(40, "usdc", "busd")
-	busdUOSMO := types.NewTrade(30, "busd", types.OsmosisDenomination)
+	busdNOTE := types.NewTrade(30, "busd", types.SymphonyDenomination)
 
 	// Atom Route
 	atomIBC1 := types.NewTrade(31, "Atom", "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC")
@@ -1132,18 +1132,18 @@ func (s *KeeperTestSuite) setUpTokenPairRoutes() {
 
 	// Four-Pool Route
 	fourPool0 := types.NewTrade(34, "Atom", "test/1")
-	fourPool1 := types.NewTrade(35, "test/1", types.OsmosisDenomination)
-	fourPool2 := types.NewTrade(36, types.OsmosisDenomination, "test/2")
+	fourPool1 := types.NewTrade(35, "test/1", types.SymphonyDenomination)
+	fourPool2 := types.NewTrade(36, types.SymphonyDenomination, "test/2")
 	fourPool3 := types.NewTrade(0, "test/2", "Atom")
 
 	// Two-Pool Route
-	twoPool0 := types.NewTrade(0, "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", types.OsmosisDenomination)
-	twoPool1 := types.NewTrade(39, types.OsmosisDenomination, "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7")
+	twoPool0 := types.NewTrade(0, "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", types.SymphonyDenomination)
+	twoPool1 := types.NewTrade(39, types.SymphonyDenomination, "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7")
 
 	// Doomsday Route - Stableswap
-	doomsdayStable0 := types.NewTrade(29, types.OsmosisDenomination, "usdc")
+	doomsdayStable0 := types.NewTrade(29, types.SymphonyDenomination, "usdc")
 	doomsdayStable1 := types.NewTrade(0, "usdc", "busd")
-	doomsdayStable2 := types.NewTrade(30, "busd", types.OsmosisDenomination)
+	doomsdayStable2 := types.NewTrade(30, "busd", types.SymphonyDenomination)
 
 	standardStepSize := osmomath.NewInt(1_000_000)
 
@@ -1160,11 +1160,11 @@ func (s *KeeperTestSuite) setUpTokenPairRoutes() {
 		},
 		{
 			TokenIn:  "usdc",
-			TokenOut: types.OsmosisDenomination,
+			TokenOut: types.SymphonyDenomination,
 			ArbRoutes: []types.Route{
 				{
 					StepSize: standardStepSize,
-					Trades:   []types.Trade{uosmoUSDC, usdcBUSD, busdUOSMO},
+					Trades:   []types.Trade{noteUSDC, usdcBUSD, busdNOTE},
 				},
 			},
 		},
@@ -1189,7 +1189,7 @@ func (s *KeeperTestSuite) setUpTokenPairRoutes() {
 			},
 		},
 		{
-			TokenIn:  types.OsmosisDenomination,
+			TokenIn:  types.SymphonyDenomination,
 			TokenOut: "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
 			ArbRoutes: []types.Route{
 				{

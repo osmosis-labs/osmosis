@@ -94,7 +94,7 @@ func GetCmdQueryActives() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Short: "Query the active list of Symphony assets recognized by the oracle",
 		Long: strings.TrimSpace(`
-Query the active list of Terra assets recognized by the types.
+Query the active list of Symphony assets recognized by the types.
 
 $ symphonyd query oracle actives
 `),
@@ -153,7 +153,7 @@ func GetCmdQueryFeederDelegation() *cobra.Command {
 		Long: strings.TrimSpace(`
 Query the account the validator's oracle voting right is delegated to.
 
-$ symphonyd query oracle feeder terravaloper...
+$ symphonyd query oracle feeder symphonyvaloper...
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)

@@ -37,7 +37,7 @@ RUN ARCH=$(uname -m) && WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm |
 # Copy the remaining files
 COPY . .
 
-# Build osmosisd binary
+# Build symphonyd binary
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/root/go/pkg/mod \
     GOWORK=off go build \
@@ -73,3 +73,4 @@ EXPOSE 1317
 # EXPOSE 6060
 
 ENTRYPOINT ["symphonyd"]
+n

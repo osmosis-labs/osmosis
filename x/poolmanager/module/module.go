@@ -136,7 +136,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 // GenerateGenesisState creates a randomized GenState of the poolmanager module.
 func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
 	poolmanagerGen := types.DefaultGenesis()
-	// change the pool creation fee denom from uosmo to stake
+	// change the pool creation fee denom from note to stake
 	poolmanagerGen.Params.PoolCreationFee = sdk.NewCoins(gammsimulation.PoolCreationFee)
 	DefaultGenJson := simState.Cdc.MustMarshalJSON(poolmanagerGen)
 	simState.GenState[types.ModuleName] = DefaultGenJson

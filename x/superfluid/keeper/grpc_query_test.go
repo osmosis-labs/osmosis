@@ -67,12 +67,12 @@ func (s *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
 		s.Require().Equal(len(valAddrs), len(res.Assets))
 
 		for _, result := range res.Assets {
-			// check osmo equivalent is correct
-			actual_response_osmo := result.OsmoEquivalent
-			needed_response_osmo, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(ctx, denom, osmomath.NewInt(delegation_amount))
+			// check melody equivalent is correct
+			actual_response_melody := result.OsmoEquivalent
+			needed_response_melody, err := s.App.SuperfluidKeeper.GetSuperfluidMELODYTokens(ctx, denom, osmomath.NewInt(delegation_amount))
 			s.Require().NoError(err)
 
-			s.Require().Equal(actual_response_osmo, needed_response_osmo)
+			s.Require().Equal(actual_response_melody, needed_response_melody)
 
 			// check sfs'd asset amount correct
 			actual_response_asset := result.AmountSfsd
@@ -464,8 +464,8 @@ func (s *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
 			sdk.NewInt64Coin("note", 18000000),
 		)))
 
-		total_osmo_equivalent := sdk.NewCoin("note", expectAmount0.RoundInt().Add(expectAmount1.RoundInt()).Add(osmomath.NewInt(18000000)))
+		total_melody_equivalent := sdk.NewCoin("note", expectAmount0.RoundInt().Add(expectAmount1.RoundInt()).Add(osmomath.NewInt(18000000)))
 
-		s.Require().True(res.TotalEquivalentStakedAmount.IsEqual(total_osmo_equivalent))
+		s.Require().True(res.TotalEquivalentStakedAmount.IsEqual(total_melody_equivalent))
 	}
 }

@@ -38,7 +38,7 @@ pub struct GetTotalFundsResponse {
 pub enum IBCLifecycleComplete {
     #[serde(rename = "ibc_ack")]
     IBCAck {
-        /// The source channel (osmosis side) of the IBC packet
+        /// The source channel (symphony side) of the IBC packet
         channel: String,
         /// The sequence number that the packet was sent with
         sequence: u64,
@@ -49,7 +49,7 @@ pub enum IBCLifecycleComplete {
     },
     #[serde(rename = "ibc_timeout")]
     IBCTimeout {
-        /// The source channel (osmosis side) of the IBC packet
+        /// The source channel (symphony side) of the IBC packet
         channel: String,
         /// The sequence number that the packet was sent with
         sequence: u64,

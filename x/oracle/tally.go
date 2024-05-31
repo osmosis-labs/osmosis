@@ -43,12 +43,12 @@ func ballotIsPassing(ballot types.ExchangeRateBallot, thresholdVotes math.Int) (
 	return ballotPower, !ballotPower.IsZero() && ballotPower.GTE(thresholdVotes)
 }
 
-// PickReferenceTerra choose Reference Terra with the highest voter turnout
+// PickReferenceSymphony choose Reference Symphony with the highest voter turnout
 // If the voting power of the two denominations is the same,
-// select reference Terra in alphabetical order.
-func PickReferenceTerra(ctx sdk.Context, k keeper.Keeper, voteTargets map[string]sdk.Dec, voteMap map[string]types.ExchangeRateBallot) string {
+// select reference Symphony in alphabetical order.
+func PickReferenceSymphony(ctx sdk.Context, k keeper.Keeper, voteTargets map[string]sdk.Dec, voteMap map[string]types.ExchangeRateBallot) string {
 	largestBallotPower := int64(0)
-	referenceTerra := ""
+	referenceSymphony := ""
 
 	totalBondedPower := sdk.TokensToConsensusPower(k.StakingKeeper.TotalBondedTokens(ctx), k.StakingKeeper.PowerReduction(ctx))
 	voteThreshold := k.VoteThreshold(ctx)
@@ -75,12 +75,12 @@ func PickReferenceTerra(ctx sdk.Context, k keeper.Keeper, voteTargets map[string
 		}
 
 		if ballotPower > largestBallotPower || largestBallotPower == 0 {
-			referenceTerra = denom
+			referenceSymphony = denom
 			largestBallotPower = ballotPower
-		} else if largestBallotPower == ballotPower && referenceTerra > denom {
-			referenceTerra = denom
+		} else if largestBallotPower == ballotPower && referenceSymphony > denom {
+			referenceSymphony = denom
 		}
 	}
 
-	return referenceTerra
+	return referenceSymphony
 }

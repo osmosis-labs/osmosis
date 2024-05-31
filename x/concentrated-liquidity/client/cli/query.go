@@ -111,7 +111,7 @@ func GetTickLiquidityNetInDirection() (*osmocli.QueryDescriptor, *queryproto.Liq
 		Use:   "liquidity-net-in-direction",
 		Short: "Query liquidity net in direction",
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} 4 uosmo "[-18000000]" true "[-9000000]" true
+{{.CommandPrefix}} 4 note "[-18000000]" true "[-9000000]" true
 
 [poolid] [inputDenom] [start tick] [use cur tick] [bound tick] [use_no_bound]
 TODO: What does any of that mean...?`,

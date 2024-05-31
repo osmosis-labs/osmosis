@@ -31,7 +31,7 @@ type Config struct {
 }
 
 const (
-	groupOptName = "osmosis-sqs"
+	groupOptName = "symphony-sqs"
 
 	noRoutesCacheExpiry = 0
 )

@@ -348,7 +348,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		}
 
 		spreadFactor := pool.GetSpreadFactor(ctx)
-		// If we determined the routeStep is an osmo multi-hop and both route are incentivized,
+		// If we determined the routeStep is an melody multi-hop and both route are incentivized,
 		// we modify the swap fee accordingly.
 		if isMultiHopRouted {
 			spreadFactor = routeSpreadFactor.Mul((spreadFactor.Quo(sumOfSpreadFactors)))
@@ -665,39 +665,39 @@ func isDenomWhitelisted(denom string, authorizedQuoteDenoms []string) bool {
 }
 
 // nolint: unused
-// trackVolume converts the input token into OSMO units and adds it to the global tracked volume for the given pool ID.
-// Fails quietly if an OSMO paired pool cannot be found, although this should only happen in rare scenarios where OSMO is
+// trackVolume converts the input token into MELODY units and adds it to the global tracked volume for the given pool ID.
+// Fails quietly if an MELODY paired pool cannot be found, although this should only happen in rare scenarios where MELODY is
 // removed as a base denom from the protorev module (which this function relies on).
 //
 // CONTRACT: `volumeGenerated` corresponds to one of the denoms in the pool
 // CONTRACT: pool with `poolId` exists
 func (k Keeper) trackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.Coin) {
-	// If the denom is already denominated in uosmo, we can just use it directly
-	OSMO := k.stakingKeeper.BondDenom(ctx)
-	if volumeGenerated.Denom == OSMO {
+	// If the denom is already denominated in note, we can just use it directly
+	MELODY := k.stakingKeeper.BondDenom(ctx)
+	if volumeGenerated.Denom == MELODY {
 		k.addVolume(ctx, poolId, volumeGenerated)
 		return
 	}
 
-	// Get the most liquid OSMO-paired pool with `volumeGenerated`'s denom using `GetPoolForDenomPair`
-	osmoPairedPoolId, err := k.protorevKeeper.GetPoolForDenomPair(ctx, OSMO, volumeGenerated.Denom)
+	// Get the most liquid MELODY-paired pool with `volumeGenerated`'s denom using `GetPoolForDenomPair`
+	melodyPairedPoolId, err := k.protorevKeeper.GetPoolForDenomPair(ctx, MELODY, volumeGenerated.Denom)
 
 	// If no pool is found, fail quietly.
 	//
-	// This is a rare scenario that should only happen if OSMO-paired pools are all removed from the protorev module.
+	// This is a rare scenario that should only happen if MELODY-paired pools are all removed from the protorev module.
 	// Since this removal scenario is all-or-nothing, this is functionally equiavalent to freezing the tracked volume amounts
 	// where they were prior to the disabling, which seems an appropriate response.
 	//
-	// This branch would also get triggered in the case where there is a token that has no OSMO-paired pool on the entire chain.
+	// This branch would also get triggered in the case where there is a token that has no MELODY-paired pool on the entire chain.
 	// We simply do not track volume in these cases. Importantly, volume splitting gauge logic should prevent a gauge from being
 	// created for such a pool that includes such a token, although it is okay to no-op in these cases regardless.
 	if err != nil {
 		return
 	}
 
-	// Since we want to ultimately multiply the volume by this spot price, we want to quote OSMO in terms of the input token.
-	// This is so that once we multiply the volume by the spot price, we get the volume in units of OSMO.
-	osmoPerInputToken, err := k.RouteCalculateSpotPrice(ctx, osmoPairedPoolId, OSMO, volumeGenerated.Denom)
+	// Since we want to ultimately multiply the volume by this spot price, we want to quote MELODY in terms of the input token.
+	// This is so that once we multiply the volume by the spot price, we get the volume in units of MELODY.
+	melodyPerInputToken, err := k.RouteCalculateSpotPrice(ctx, melodyPairedPoolId, MELODY, volumeGenerated.Denom)
 
 	// We expect that if a pool is found, there should always be an available spot price as well.
 	// That being said, if there is an error finding the spot price, we fail quietly and leave tracked volume unchanged.
@@ -708,10 +708,10 @@ func (k Keeper) trackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.
 
 	// Multiply `volumeGenerated.Amount.ToDec()` by this spot price.
 	// While rounding does not particularly matter here, we round down to ensure that we do not overcount volume.
-	volumeInOsmo := osmomath.BigDecFromSDKInt(volumeGenerated.Amount).Mul(osmoPerInputToken).Dec().TruncateInt()
+	volumeInMelody := osmomath.BigDecFromSDKInt(volumeGenerated.Amount).Mul(melodyPerInputToken).Dec().TruncateInt()
 
 	// Add this new volume to the global tracked volume for the pool ID
-	k.addVolume(ctx, poolId, sdk.NewCoin(OSMO, volumeInOsmo))
+	k.addVolume(ctx, poolId, sdk.NewCoin(MELODY, volumeInMelody))
 }
 
 // addVolume adds the given volume to the global tracked volume for the given pool ID.
@@ -754,8 +754,8 @@ func (k Keeper) GetTotalVolumeForPool(ctx sdk.Context, poolId uint64) sdk.Coins 
 	return currentTotalVolume
 }
 
-// GetOsmoVolumeForPool gets the total OSMO-denominated historical volume for a given pool ID.
-func (k Keeper) GetOsmoVolumeForPool(ctx sdk.Context, poolId uint64) osmomath.Int {
+// GetMelodyVolumeForPool gets the total MELODY-denominated historical volume for a given pool ID.
+func (k Keeper) GetMelodyVolumeForPool(ctx sdk.Context, poolId uint64) osmomath.Int {
 	totalVolume := k.GetTotalVolumeForPool(ctx, poolId)
 	return totalVolume.AmountOf(k.stakingKeeper.BondDenom(ctx))
 }

@@ -7,18 +7,18 @@ import (
 )
 
 func (s *KeeperTestSuite) TestABCIReplenishPools() {
-	osmosisDelta := sdk.NewDecWithPrec(17987573223725367, 3)
-	s.App.MarketKeeper.SetOsmosisPoolDelta(s.Ctx, osmosisDelta)
+	symphonyDelta := sdk.NewDecWithPrec(17987573223725367, 3)
+	s.App.MarketKeeper.SetOsmosisPoolDelta(s.Ctx, symphonyDelta)
 
 	for i := 0; i < 100; i++ {
-		osmosisDelta = s.App.MarketKeeper.GetOsmosisPoolDelta(s.Ctx)
+		symphonyDelta = s.App.MarketKeeper.GetOsmosisPoolDelta(s.Ctx)
 
 		poolRecoveryPeriod := int64(s.App.MarketKeeper.PoolRecoveryPeriod(s.Ctx))
-		osmosisRegressionAmt := osmosisDelta.QuoInt64(poolRecoveryPeriod)
+		symphonyRegressionAmt := symphonyDelta.QuoInt64(poolRecoveryPeriod)
 
 		market.EndBlocker(s.Ctx, *s.App.MarketKeeper)
 
-		osmosisPoolDelta := s.App.MarketKeeper.GetOsmosisPoolDelta(s.Ctx)
-		s.Require().Equal(osmosisDelta.Sub(osmosisRegressionAmt), osmosisPoolDelta)
+		sPoolDelta := s.App.MarketKeeper.GetOsmosisPoolDelta(s.Ctx)
+		s.Require().Equal(symphonyDelta.Sub(symphonyRegressionAmt), sPoolDelta)
 	}
 }

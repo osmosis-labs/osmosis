@@ -39,10 +39,10 @@ type expectedTakerFees struct {
 }
 
 const (
-	FOO   = apptesting.FOO
-	BAR   = apptesting.BAR
-	BAZ   = apptesting.BAZ
-	UOSMO = apptesting.UOSMO
+	FOO  = apptesting.FOO
+	BAR  = apptesting.BAR
+	BAZ  = apptesting.BAZ
+	NOTE = apptesting.NOTE
 
 	// Not an authorized quote denom
 	// ("abc" ensures its always first lexicographically which simplifies setup)
@@ -72,32 +72,32 @@ var (
 	defaultPoolInitAmount     = osmomath.NewInt(10_000_000_000)
 	twentyFiveBaseUnitsAmount = osmomath.NewInt(25_000_000)
 
-	fooCoin   = sdk.NewCoin(FOO, defaultPoolInitAmount)
-	barCoin   = sdk.NewCoin(BAR, defaultPoolInitAmount)
-	bazCoin   = sdk.NewCoin(BAZ, defaultPoolInitAmount)
-	uosmoCoin = sdk.NewCoin(UOSMO, defaultPoolInitAmount)
-	abcCoin   = sdk.NewCoin(abc, defaultPoolInitAmount)
+	fooCoin  = sdk.NewCoin(FOO, defaultPoolInitAmount)
+	barCoin  = sdk.NewCoin(BAR, defaultPoolInitAmount)
+	bazCoin  = sdk.NewCoin(BAZ, defaultPoolInitAmount)
+	noteCoin = sdk.NewCoin(NOTE, defaultPoolInitAmount)
+	abcCoin  = sdk.NewCoin(abc, defaultPoolInitAmount)
 
 	// Note: These are initialized in such a way as it makes
 	// it easier to reason about the test cases.
-	fooBarCoins    = sdk.NewCoins(fooCoin, barCoin)
-	fooBarPoolId   = uint64(1)
-	fooBazCoins    = sdk.NewCoins(fooCoin, bazCoin)
-	fooBazPoolId   = fooBarPoolId + 1
-	fooUosmoCoins  = sdk.NewCoins(fooCoin, uosmoCoin)
-	fooUosmoPoolId = fooBazPoolId + 1
-	barBazCoins    = sdk.NewCoins(barCoin, bazCoin)
-	barBazPoolId   = fooUosmoPoolId + 1
-	barUosmoCoins  = sdk.NewCoins(barCoin, uosmoCoin)
-	barUosmoPoolId = barBazPoolId + 1
-	bazUosmoCoins  = sdk.NewCoins(bazCoin, uosmoCoin)
-	bazUosmoPoolId = barUosmoPoolId + 1
-	fooAbcCoins    = sdk.NewCoins(abcCoin, fooCoin)
-	fooAbcPoolId   = bazUosmoPoolId + 1
-	bazAbcCoins    = sdk.NewCoins(abcCoin, bazCoin)
-	bazAbcPoolId   = fooAbcPoolId + 1
-	uosmoAbcCoins  = sdk.NewCoins(abcCoin, uosmoCoin)
-	uosmoAbcPoolId = bazAbcPoolId + 1
+	fooBarCoins   = sdk.NewCoins(fooCoin, barCoin)
+	fooBarPoolId  = uint64(1)
+	fooBazCoins   = sdk.NewCoins(fooCoin, bazCoin)
+	fooBazPoolId  = fooBarPoolId + 1
+	fooNoteCoins  = sdk.NewCoins(fooCoin, noteCoin)
+	fooNotePoolId = fooBazPoolId + 1
+	barBazCoins   = sdk.NewCoins(barCoin, bazCoin)
+	barBazPoolId  = fooNotePoolId + 1
+	barNoteCoins  = sdk.NewCoins(barCoin, noteCoin)
+	barNotePoolId = barBazPoolId + 1
+	bazNoteCoins  = sdk.NewCoins(bazCoin, noteCoin)
+	bazNotePoolId = barNotePoolId + 1
+	fooAbcCoins   = sdk.NewCoins(abcCoin, fooCoin)
+	fooAbcPoolId  = bazNotePoolId + 1
+	bazAbcCoins   = sdk.NewCoins(abcCoin, bazCoin)
+	bazAbcPoolId  = fooAbcPoolId + 1
+	noteAbcCoins  = sdk.NewCoins(abcCoin, noteCoin)
+	noteAbcPoolId = bazAbcPoolId + 1
 
 	defaultValidPools = []poolSetup{
 		{
@@ -112,7 +112,7 @@ var (
 		},
 		{
 			poolType:         types.Balancer,
-			initialLiquidity: fooUosmoCoins,
+			initialLiquidity: fooNoteCoins,
 			takerFee:         defaultTakerFee,
 		},
 		{
@@ -122,12 +122,12 @@ var (
 		},
 		{
 			poolType:         types.Balancer,
-			initialLiquidity: barUosmoCoins,
+			initialLiquidity: barNoteCoins,
 			takerFee:         defaultTakerFee,
 		},
 		{
 			poolType:         types.Concentrated,
-			initialLiquidity: bazUosmoCoins,
+			initialLiquidity: bazNoteCoins,
 			takerFee:         defaultTakerFee,
 		},
 		// Note that abc is not an authorized quote denom
@@ -143,7 +143,7 @@ var (
 		},
 		{
 			poolType:         types.Balancer,
-			initialLiquidity: uosmoAbcCoins,
+			initialLiquidity: noteAbcCoins,
 			takerFee:         defaultTakerFee,
 		},
 	}
@@ -485,17 +485,17 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 			tokenOutMinAmount:  osmomath.NewInt(1),
 		},
 		{
-			name: "Two routes: Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2), both pools 1 percent fee, sanity check no more half fee applied",
+			name: "Two routes: Swap - [foo -> note](pool 1) - [note -> baz](pool 2), both pools 1 percent fee, sanity check no more half fee applied",
 			poolCoins: []sdk.Coins{
-				sdk.NewCoins(sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1.
-				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 2.
+				sdk.NewCoins(sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 2.
 			},
 			poolType:         []types.PoolType{types.Balancer, types.Balancer},
 			poolSpreadFactor: []osmomath.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor},
 			routes: []types.SwapAmountInRoute{
 				{
 					PoolId:        1,
-					TokenOutDenom: UOSMO,
+					TokenOutDenom: NOTE,
 				},
 				{
 					PoolId:        2,
@@ -507,18 +507,18 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 			tokenOutMinAmount:  osmomath.NewInt(1),
 		},
 		{
-			name: "Three routes: Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) - [baz -> bar](pool 3), all pools 1 percent fee",
+			name: "Three routes: Swap - [foo -> note](pool 1) - [note -> baz](pool 2) - [baz -> bar](pool 3), all pools 1 percent fee",
 			poolCoins: []sdk.Coins{
-				sdk.NewCoins(sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1.
-				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 2.
-				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount)),   // pool 3.
+				sdk.NewCoins(sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 2.
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount)),  // pool 3.
 			},
 			poolType:         []types.PoolType{types.Balancer, types.Balancer, types.Balancer},
 			poolSpreadFactor: []osmomath.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor, defaultPoolSpreadFactor},
 			routes: []types.SwapAmountInRoute{
 				{
 					PoolId:        1,
-					TokenOutDenom: UOSMO,
+					TokenOutDenom: NOTE,
 				},
 				{
 					PoolId:        2,
@@ -537,9 +537,9 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 			name: "Two routes: Swap between four asset pools - [foo -> bar](pool 1) - [bar -> baz](pool 2), all pools 1 percent fee",
 			poolCoins: []sdk.Coins{
 				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount),
-					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1.
+					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 1.
 				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount),
-					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 2.                                                                                     // pool 3.
+					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 2.                                                                                     // pool 3.
 			},
 			poolType:         []types.PoolType{types.Balancer, types.Balancer},
 			poolSpreadFactor: []osmomath.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor},
@@ -558,21 +558,21 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 			tokenOutMinAmount:  osmomath.NewInt(1),
 		},
 		{
-			name: "Three routes: Swap between four asset pools - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) - [baz -> bar](pool 3), all pools 1 percent fee",
+			name: "Three routes: Swap between four asset pools - [foo -> note](pool 1) - [note -> baz](pool 2) - [baz -> bar](pool 3), all pools 1 percent fee",
 			poolCoins: []sdk.Coins{
 				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount),
-					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1.
+					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 1.
 				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount),
-					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 2.
+					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 2.
 				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount),
-					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 3.                                                                                      // pool 3.
+					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 3.                                                                                      // pool 3.
 			},
 			poolType:         []types.PoolType{types.Balancer, types.Balancer, types.Balancer},
 			poolSpreadFactor: []osmomath.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor, defaultPoolSpreadFactor},
 			routes: []types.SwapAmountInRoute{
 				{
 					PoolId:        1,
-					TokenOutDenom: UOSMO,
+					TokenOutDenom: NOTE,
 				},
 				{
 					PoolId:        2,
@@ -604,10 +604,10 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 			tokenOutMinAmount: osmomath.NewInt(1),
 		},
 		{
-			name: "[Concentrated[ Three routes: Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) - [baz -> bar](pool 3), all pools 1 percent fee",
+			name: "[Concentrated[ Three routes: Swap - [foo -> note](pool 1) - [note -> baz](pool 2) - [baz -> bar](pool 3), all pools 1 percent fee",
 			poolCoins: []sdk.Coins{
-				sdk.NewCoins(sdk.NewCoin(FOO, apptesting.DefaultCoinAmount), sdk.NewCoin(UOSMO, apptesting.DefaultCoinAmount)),
-				sdk.NewCoins(sdk.NewCoin(BAZ, apptesting.DefaultCoinAmount), sdk.NewCoin(UOSMO, apptesting.DefaultCoinAmount)),
+				sdk.NewCoins(sdk.NewCoin(FOO, apptesting.DefaultCoinAmount), sdk.NewCoin(NOTE, apptesting.DefaultCoinAmount)),
+				sdk.NewCoins(sdk.NewCoin(BAZ, apptesting.DefaultCoinAmount), sdk.NewCoin(NOTE, apptesting.DefaultCoinAmount)),
 				sdk.NewCoins(sdk.NewCoin(BAR, apptesting.DefaultCoinAmount), sdk.NewCoin(BAZ, apptesting.DefaultCoinAmount)),
 			},
 			poolType:         []types.PoolType{types.Concentrated, types.Concentrated, types.Concentrated},
@@ -615,7 +615,7 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 			routes: []types.SwapAmountInRoute{
 				{
 					PoolId:        1,
-					TokenOutDenom: UOSMO,
+					TokenOutDenom: NOTE,
 				},
 				{
 					PoolId:        2,
@@ -764,10 +764,10 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 			tokenOut:         sdk.NewCoin(BAZ, osmomath.NewInt(100000)),
 		},
 		{
-			name: "Two routes: Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2), both pools 1 percent fee, sanity check no more half fee applied",
+			name: "Two routes: Swap - [foo -> note](pool 1) - [note -> baz](pool 2), both pools 1 percent fee, sanity check no more half fee applied",
 			poolCoins: []sdk.Coins{
-				sdk.NewCoins(sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1.
-				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 2.
+				sdk.NewCoins(sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 2.
 			},
 			poolType:         []types.PoolType{types.Balancer, types.Balancer},
 			poolSpreadFactor: []osmomath.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor},
@@ -778,7 +778,7 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 				},
 				{
 					PoolId:       2,
-					TokenInDenom: UOSMO,
+					TokenInDenom: NOTE,
 				},
 			},
 			incentivizedGauges: []uint64{1, 2, 3, 4, 5, 6},
@@ -786,11 +786,11 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 			tokenOut:           sdk.NewCoin(BAZ, osmomath.NewInt(100000)),
 		},
 		{
-			name: "Three routes: Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) - [baz -> bar](pool 3), all pools 1 percent fee",
+			name: "Three routes: Swap - [foo -> note](pool 1) - [note -> baz](pool 2) - [baz -> bar](pool 3), all pools 1 percent fee",
 			poolCoins: []sdk.Coins{
-				sdk.NewCoins(sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1.
-				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 2.
-				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount)),   // pool 3.
+				sdk.NewCoins(sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 2.
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount)),  // pool 3.
 			},
 			poolType:         []types.PoolType{types.Balancer, types.Balancer, types.Balancer},
 			poolSpreadFactor: []osmomath.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor, defaultPoolSpreadFactor},
@@ -801,7 +801,7 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 				},
 				{
 					PoolId:       2,
-					TokenInDenom: UOSMO,
+					TokenInDenom: NOTE,
 				},
 				{
 					PoolId:       3,
@@ -816,9 +816,9 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 			name: "Two routes: Swap between four asset pools - [foo -> bar](pool 1) - [bar -> baz](pool 2), all pools 1 percent fee",
 			poolCoins: []sdk.Coins{
 				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount),
-					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1.
+					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 1.
 				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount),
-					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 2.                                                                                     // pool 3.
+					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 2.                                                                                     // pool 3.
 			},
 			poolType:         []types.PoolType{types.Balancer, types.Balancer},
 			poolSpreadFactor: []osmomath.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor},
@@ -837,14 +837,14 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 			tokenInMaxAmount:   osmomath.NewInt(90000000),
 		},
 		{
-			name: "Three routes: Swap between four asset pools - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) - [baz -> bar](pool 3), all pools 1 percent fee",
+			name: "Three routes: Swap between four asset pools - [foo -> note](pool 1) - [note -> baz](pool 2) - [baz -> bar](pool 3), all pools 1 percent fee",
 			poolCoins: []sdk.Coins{
 				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount),
-					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1.
+					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 1.
 				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount),
-					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 2.
+					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 2.
 				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount),
-					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 3.                                                                                    // pool 3.
+					sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 3.                                                                                    // pool 3.
 			},
 			poolType:         []types.PoolType{types.Balancer, types.Balancer, types.Balancer},
 			poolSpreadFactor: []osmomath.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor, defaultPoolSpreadFactor},
@@ -855,7 +855,7 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 				},
 				{
 					PoolId:       2,
-					TokenInDenom: UOSMO,
+					TokenInDenom: NOTE,
 				},
 				{
 					PoolId:       3,
@@ -992,12 +992,12 @@ func (s *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 			expectPass: true,
 		},
 		{
-			name: "Swap - foo -> uosmo(pool 1) - uosmo(pool 2) -> baz with a half fee applied",
+			name: "Swap - foo -> note(pool 1) - note(pool 2) -> baz with a half fee applied",
 			param: param{
 				routes: []types.SwapAmountInRoute{
 					{
 						PoolId:        1,
-						TokenOutDenom: UOSMO,
+						TokenOutDenom: NOTE,
 					},
 					{
 						PoolId:        2,
@@ -1007,7 +1007,7 @@ func (s *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 				estimateRoutes: []types.SwapAmountInRoute{
 					{
 						PoolId:        3,
-						TokenOutDenom: UOSMO,
+						TokenOutDenom: NOTE,
 					},
 					{
 						PoolId:        4,
@@ -1174,7 +1174,7 @@ func (s *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 			expectPass: true,
 		},
 		{
-			name: "Swap - foo -> uosmo(pool 1) - uosmo(pool 2) -> baz with a half fee applied",
+			name: "Swap - foo -> note(pool 1) - note(pool 2) -> baz with a half fee applied",
 			param: param{
 				routes: []types.SwapAmountOutRoute{
 					{
@@ -1183,7 +1183,7 @@ func (s *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 					},
 					{
 						PoolId:       2,
-						TokenInDenom: UOSMO,
+						TokenInDenom: NOTE,
 					},
 				},
 				estimateRoutes: []types.SwapAmountOutRoute{
@@ -1193,7 +1193,7 @@ func (s *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 					},
 					{
 						PoolId:       4,
-						TokenInDenom: UOSMO,
+						TokenInDenom: NOTE,
 					},
 				},
 				tokenInMaxAmount: osmomath.NewInt(90000000),
@@ -2517,11 +2517,11 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 					TokenOutDenom: BAR,
 				},
 				{
-					PoolId:        barUosmoPoolId,
-					TokenOutDenom: UOSMO,
+					PoolId:        barNotePoolId,
+					TokenOutDenom: NOTE,
 				},
 				{
-					PoolId:        bazUosmoPoolId,
+					PoolId:        bazNotePoolId,
 					TokenOutDenom: BAZ,
 				},
 			},
@@ -2855,15 +2855,15 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			},
 		}
 
-		fooUosmoBazTwoHops = types.SwapAmountOutSplitRoute{
+		fooNoteBazTwoHops = types.SwapAmountOutSplitRoute{
 			Pools: []types.SwapAmountOutRoute{
 				{
-					PoolId:       fooUosmoPoolId,
+					PoolId:       fooNotePoolId,
 					TokenInDenom: FOO,
 				},
 				{
-					PoolId:       bazUosmoPoolId,
-					TokenInDenom: UOSMO,
+					PoolId:       bazNotePoolId,
+					TokenInDenom: NOTE,
 				},
 			},
 			TokenOutAmount: twentyFiveBaseUnitsAmount,
@@ -2881,12 +2881,12 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 					TokenInDenom: FOO,
 				},
 				{
-					PoolId:       barUosmoPoolId,
+					PoolId:       barNotePoolId,
 					TokenInDenom: BAR,
 				},
 				{
-					PoolId:       bazUosmoPoolId,
-					TokenInDenom: UOSMO,
+					PoolId:       bazNotePoolId,
+					TokenInDenom: NOTE,
 				},
 			},
 			TokenOutAmount: osmomath.NewInt(twentyFiveBaseUnitsAmount.Int64() * 3),
@@ -2962,7 +2962,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			),
 			routes: []types.SwapAmountOutSplitRoute{
 				withInputSwapOut(defaultSingleRouteTwoHops, osmomath.NewInt(1000)),
-				withInputSwapOut(fooUosmoBazTwoHops, osmomath.NewInt(1000)),
+				withInputSwapOut(fooNoteBazTwoHops, osmomath.NewInt(1000)),
 			},
 			tokenOutDenom:    BAZ,
 			tokenInMaxAmount: poolmanager.IntMaxValue,
@@ -2986,7 +2986,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			),
 			routes: []types.SwapAmountOutSplitRoute{
 				withInputSwapOut(defaultSingleRouteTwoHops, osmomath.NewInt(1000)),
-				withInputSwapOut(fooUosmoBazTwoHops, osmomath.NewInt(1000)),
+				withInputSwapOut(fooNoteBazTwoHops, osmomath.NewInt(1000)),
 			},
 			tokenOutDenom:    BAZ,
 			tokenInMaxAmount: poolmanager.IntMaxValue,
@@ -3283,7 +3283,7 @@ func (suite *KeeperTestSuite) TestCreateMultihopExpectedSwapOuts() {
 			route: []types.SwapAmountOutRoute{
 				{
 					PoolId:       1,
-					TokenInDenom: UOSMO,
+					TokenInDenom: NOTE,
 				},
 			},
 
@@ -3325,27 +3325,27 @@ func (s *KeeperTestSuite) runMultipleTrackVolumes(poolId uint64, volume sdk.Coin
 }
 
 // Testing strategy:
-// 1. If applicable, create an OSMO-paired pool
-// 2. Set OSMO-paired pool as canonical for that denom pair in state
-// 3. Run `trackVolume` on test input amount (cases include both OSMO and non-OSMO volumes)
+// 1. If applicable, create an MELODY-paired pool
+// 2. Set MELODY-paired pool as canonical for that denom pair in state
+// 3. Run `trackVolume` on test input amount (cases include both MELODY and non-MELODY volumes)
 // 4. Assert correct amount was added to pool volume
 func (s *KeeperTestSuite) TestTrackVolume() {
 	hundred := osmomath.NewInt(100)
 	hundredFoo := sdk.NewCoin(FOO, hundred)
-	hundredUosmo := sdk.NewCoin(UOSMO, hundred)
+	hundredNote := sdk.NewCoin(NOTE, hundred)
 	oneRun := int64(1)
 	threeRuns := int64(3)
 
 	tests := map[string]struct {
-		generatedVolume     sdk.Coin
-		timesRun            int64
-		osmoPairedPoolType  types.PoolType
-		osmoPairedPoolCoins sdk.Coins
+		generatedVolume       sdk.Coin
+		timesRun              int64
+		melodyPairedPoolType  types.PoolType
+		melodyPairedPoolCoins sdk.Coins
 
 		expectedVolume osmomath.Int
 	}{
-		"Happy path: volume denominated in OSMO": {
-			generatedVolume: hundredUosmo,
+		"Happy path: volume denominated in MELODY": {
+			generatedVolume: hundredNote,
 			timesRun:        oneRun,
 
 			expectedVolume: hundred.MulRaw(oneRun),
@@ -3353,68 +3353,68 @@ func (s *KeeperTestSuite) TestTrackVolume() {
 
 		// --- Pricing against balancer pool ---
 
-		"Non-OSMO volume priced with balancer pool": {
-			generatedVolume:    hundredFoo,
-			timesRun:           oneRun,
-			osmoPairedPoolType: types.Balancer,
+		"Non-MELODY volume priced with balancer pool": {
+			generatedVolume:      hundredFoo,
+			timesRun:             oneRun,
+			melodyPairedPoolType: types.Balancer,
 			// Spot price = 1
-			osmoPairedPoolCoins: fooUosmoCoins,
+			melodyPairedPoolCoins: fooNoteCoins,
 
 			expectedVolume: hundred.MulRaw(oneRun),
 		},
-		"Non-OSMO volume priced with balancer pool, multiple runs": {
-			generatedVolume:    hundredFoo,
-			timesRun:           threeRuns,
-			osmoPairedPoolType: types.Balancer,
+		"Non-MELODY volume priced with balancer pool, multiple runs": {
+			generatedVolume:      hundredFoo,
+			timesRun:             threeRuns,
+			melodyPairedPoolType: types.Balancer,
 			// Spot price = 1
-			osmoPairedPoolCoins: fooUosmoCoins,
+			melodyPairedPoolCoins: fooNoteCoins,
 
 			expectedVolume: hundred.MulRaw(threeRuns),
 		},
-		"Non-OSMO volume priced with balancer pool, large spot price": {
-			generatedVolume:    hundredFoo,
-			timesRun:           oneRun,
-			osmoPairedPoolType: types.Balancer,
-			// 100 foo corresponds to 1000 osmo (spot price = 10)
-			osmoPairedPoolCoins: sdk.NewCoins(
+		"Non-MELODY volume priced with balancer pool, large spot price": {
+			generatedVolume:      hundredFoo,
+			timesRun:             oneRun,
+			melodyPairedPoolType: types.Balancer,
+			// 100 foo corresponds to 1000 melody (spot price = 10)
+			melodyPairedPoolCoins: sdk.NewCoins(
 				sdk.NewCoin(FOO, osmomath.NewInt(100)),
-				sdk.NewCoin(UOSMO, osmomath.NewInt(1000)),
+				sdk.NewCoin(NOTE, osmomath.NewInt(1000)),
 			),
 
 			expectedVolume: osmomath.NewInt(10).Mul(hundred).MulRaw(oneRun),
 		},
-		"Non-OSMO volume priced with balancer pool, small spot price": {
-			generatedVolume:    hundredFoo,
-			timesRun:           oneRun,
-			osmoPairedPoolType: types.Balancer,
-			// 100 foo corresponds to 10 osmo (spot price = 0.1)
-			osmoPairedPoolCoins: sdk.NewCoins(
+		"Non-MELODY volume priced with balancer pool, small spot price": {
+			generatedVolume:      hundredFoo,
+			timesRun:             oneRun,
+			melodyPairedPoolType: types.Balancer,
+			// 100 foo corresponds to 10 melody (spot price = 0.1)
+			melodyPairedPoolCoins: sdk.NewCoins(
 				sdk.NewCoin(FOO, osmomath.NewInt(100)),
-				sdk.NewCoin(UOSMO, osmomath.NewInt(10)),
+				sdk.NewCoin(NOTE, osmomath.NewInt(10)),
 			),
 
 			expectedVolume: hundred.MulRaw(oneRun).Quo(osmomath.NewInt(10)),
 		},
-		"Non-OSMO volume priced with balancer pool, large spot price, multiple runs": {
-			generatedVolume:    hundredFoo,
-			timesRun:           threeRuns,
-			osmoPairedPoolType: types.Balancer,
-			// 100 foo corresponds to 1000 osmo (spot price = 10)
-			osmoPairedPoolCoins: sdk.NewCoins(
+		"Non-MELODY volume priced with balancer pool, large spot price, multiple runs": {
+			generatedVolume:      hundredFoo,
+			timesRun:             threeRuns,
+			melodyPairedPoolType: types.Balancer,
+			// 100 foo corresponds to 1000 melody (spot price = 10)
+			melodyPairedPoolCoins: sdk.NewCoins(
 				sdk.NewCoin(FOO, osmomath.NewInt(100)),
-				sdk.NewCoin(UOSMO, osmomath.NewInt(1000)),
+				sdk.NewCoin(NOTE, osmomath.NewInt(1000)),
 			),
 
 			expectedVolume: osmomath.NewInt(10).Mul(hundred).MulRaw(threeRuns),
 		},
-		"Non-OSMO volume priced with balancer pool, small spot price, multiple runs": {
-			generatedVolume:    hundredFoo,
-			timesRun:           threeRuns,
-			osmoPairedPoolType: types.Balancer,
-			// 100 foo corresponds to 10 osmo (spot price = 0.1)
-			osmoPairedPoolCoins: sdk.NewCoins(
+		"Non-MELODY volume priced with balancer pool, small spot price, multiple runs": {
+			generatedVolume:      hundredFoo,
+			timesRun:             threeRuns,
+			melodyPairedPoolType: types.Balancer,
+			// 100 foo corresponds to 10 melody (spot price = 0.1)
+			melodyPairedPoolCoins: sdk.NewCoins(
 				sdk.NewCoin(FOO, osmomath.NewInt(100)),
-				sdk.NewCoin(UOSMO, osmomath.NewInt(10)),
+				sdk.NewCoin(NOTE, osmomath.NewInt(10)),
 			),
 
 			expectedVolume: hundred.MulRaw(threeRuns).Quo(osmomath.NewInt(10)),
@@ -3422,59 +3422,59 @@ func (s *KeeperTestSuite) TestTrackVolume() {
 
 		// --- Pricing against CL pool ---
 
-		"Non-OSMO volume priced with concentrated pool, multiple runs": {
-			generatedVolume:    hundredFoo,
-			timesRun:           threeRuns,
-			osmoPairedPoolType: types.Concentrated,
+		"Non-MELODY volume priced with concentrated pool, multiple runs": {
+			generatedVolume:      hundredFoo,
+			timesRun:             threeRuns,
+			melodyPairedPoolType: types.Concentrated,
 			// Spot price = 1
-			osmoPairedPoolCoins: fooUosmoCoins,
+			melodyPairedPoolCoins: fooNoteCoins,
 
 			expectedVolume: hundred.MulRaw(threeRuns),
 		},
-		"Non-OSMO volume priced with concentrated pool, large spot price": {
-			generatedVolume:    hundredFoo,
-			timesRun:           oneRun,
-			osmoPairedPoolType: types.Concentrated,
-			// 100 foo corresponds to 1000 osmo (spot price = 10)
-			osmoPairedPoolCoins: sdk.NewCoins(
+		"Non-MELODY volume priced with concentrated pool, large spot price": {
+			generatedVolume:      hundredFoo,
+			timesRun:             oneRun,
+			melodyPairedPoolType: types.Concentrated,
+			// 100 foo corresponds to 1000 melody (spot price = 10)
+			melodyPairedPoolCoins: sdk.NewCoins(
 				sdk.NewCoin(FOO, osmomath.NewInt(100)),
-				sdk.NewCoin(UOSMO, osmomath.NewInt(1000)),
+				sdk.NewCoin(NOTE, osmomath.NewInt(1000)),
 			),
 
 			expectedVolume: osmomath.NewInt(10).Mul(hundred).MulRaw(oneRun),
 		},
-		"Non-OSMO volume priced with concentrated pool, small spot price": {
-			generatedVolume:    hundredFoo,
-			timesRun:           oneRun,
-			osmoPairedPoolType: types.Concentrated,
-			// 100 foo corresponds to 10 osmo (spot price = 0.1)
-			osmoPairedPoolCoins: sdk.NewCoins(
+		"Non-MELODY volume priced with concentrated pool, small spot price": {
+			generatedVolume:      hundredFoo,
+			timesRun:             oneRun,
+			melodyPairedPoolType: types.Concentrated,
+			// 100 foo corresponds to 10 melody (spot price = 0.1)
+			melodyPairedPoolCoins: sdk.NewCoins(
 				sdk.NewCoin(FOO, osmomath.NewInt(100)),
-				sdk.NewCoin(UOSMO, osmomath.NewInt(10)),
+				sdk.NewCoin(NOTE, osmomath.NewInt(10)),
 			),
 
 			expectedVolume: hundred.MulRaw(oneRun).Quo(osmomath.NewInt(10)),
 		},
-		"Non-OSMO volume priced with concentrated pool, large spot price, multiple runs": {
-			generatedVolume:    hundredFoo,
-			timesRun:           threeRuns,
-			osmoPairedPoolType: types.Concentrated,
-			// 100 foo corresponds to 1000 osmo (spot price = 10)
-			osmoPairedPoolCoins: sdk.NewCoins(
+		"Non-MELODY volume priced with concentrated pool, large spot price, multiple runs": {
+			generatedVolume:      hundredFoo,
+			timesRun:             threeRuns,
+			melodyPairedPoolType: types.Concentrated,
+			// 100 foo corresponds to 1000 melody (spot price = 10)
+			melodyPairedPoolCoins: sdk.NewCoins(
 				sdk.NewCoin(FOO, osmomath.NewInt(100)),
-				sdk.NewCoin(UOSMO, osmomath.NewInt(1000)),
+				sdk.NewCoin(NOTE, osmomath.NewInt(1000)),
 			),
 
 			expectedVolume: osmomath.NewInt(10).Mul(hundred).MulRaw(threeRuns),
 		},
-		"Non-OSMO volume priced with concentrated pool, small spot price, multiple runs": {
-			generatedVolume:    hundredFoo,
-			timesRun:           threeRuns,
-			osmoPairedPoolType: types.Concentrated,
-			// 100 foo corresponds to 10 osmo (spot price = 0.1)
-			osmoPairedPoolCoins: sdk.NewCoins(
+		"Non-MELODY volume priced with concentrated pool, small spot price, multiple runs": {
+			generatedVolume:      hundredFoo,
+			timesRun:             threeRuns,
+			melodyPairedPoolType: types.Concentrated,
+			// 100 foo corresponds to 10 melody (spot price = 0.1)
+			melodyPairedPoolCoins: sdk.NewCoins(
 				sdk.NewCoin(FOO, osmomath.NewInt(100)),
-				sdk.NewCoin(UOSMO, osmomath.NewInt(10)),
+				sdk.NewCoin(NOTE, osmomath.NewInt(10)),
 			),
 
 			expectedVolume: hundred.MulRaw(threeRuns).Quo(osmomath.NewInt(10)),
@@ -3482,47 +3482,47 @@ func (s *KeeperTestSuite) TestTrackVolume() {
 
 		// --- Pricing against cosmwasm pool ---
 
-		"Non-OSMO volume priced with CosmWasm pool, multiple runs": {
-			generatedVolume:    hundredFoo,
-			timesRun:           threeRuns,
-			osmoPairedPoolType: types.CosmWasm,
+		"Non-MELODY volume priced with CosmWasm pool, multiple runs": {
+			generatedVolume:      hundredFoo,
+			timesRun:             threeRuns,
+			melodyPairedPoolType: types.CosmWasm,
 			// Spot price = 1 since our test CW pool is a 1:1 transmuter
-			osmoPairedPoolCoins: fooUosmoCoins,
+			melodyPairedPoolCoins: fooNoteCoins,
 
 			expectedVolume: hundred.MulRaw(threeRuns),
 		},
 
 		// --- Edge cases ---
 
-		"OSMO denominated volume, no volume added": {
-			generatedVolume:     sdk.NewCoin(UOSMO, osmomath.NewInt(0)),
-			timesRun:            oneRun,
-			osmoPairedPoolType:  types.Balancer,
-			osmoPairedPoolCoins: fooUosmoCoins,
+		"MELODY denominated volume, no volume added": {
+			generatedVolume:       sdk.NewCoin(NOTE, osmomath.NewInt(0)),
+			timesRun:              oneRun,
+			melodyPairedPoolType:  types.Balancer,
+			melodyPairedPoolCoins: fooNoteCoins,
 
 			expectedVolume: osmomath.NewInt(0),
 		},
-		"Non-OSMO volume priced with balancer pool, no volume added": {
-			generatedVolume:     sdk.NewCoin(FOO, osmomath.NewInt(0)),
-			timesRun:            oneRun,
-			osmoPairedPoolType:  types.Balancer,
-			osmoPairedPoolCoins: fooUosmoCoins,
+		"Non-MELODY volume priced with balancer pool, no volume added": {
+			generatedVolume:       sdk.NewCoin(FOO, osmomath.NewInt(0)),
+			timesRun:              oneRun,
+			melodyPairedPoolType:  types.Balancer,
+			melodyPairedPoolCoins: fooNoteCoins,
 
 			expectedVolume: osmomath.NewInt(0),
 		},
 		"Added volume truncated to zero (no volume added)": {
-			generatedVolume:    sdk.NewCoin(FOO, osmomath.NewInt(1)),
-			timesRun:           oneRun,
-			osmoPairedPoolType: types.Balancer,
-			// 100 foo corresponds to 10 osmo (spot price = 0.1)
-			osmoPairedPoolCoins: sdk.NewCoins(
+			generatedVolume:      sdk.NewCoin(FOO, osmomath.NewInt(1)),
+			timesRun:             oneRun,
+			melodyPairedPoolType: types.Balancer,
+			// 100 foo corresponds to 10 melody (spot price = 0.1)
+			melodyPairedPoolCoins: sdk.NewCoins(
 				sdk.NewCoin(FOO, osmomath.NewInt(100)),
-				sdk.NewCoin(UOSMO, osmomath.NewInt(10)),
+				sdk.NewCoin(NOTE, osmomath.NewInt(10)),
 			),
 
 			expectedVolume: osmomath.NewInt(0),
 		},
-		"Non-OSMO denominated volume, no OSMO-paired pool": {
+		"Non-MELODY denominated volume, no MELODY-paired pool": {
 			generatedVolume: hundredFoo,
 			timesRun:        oneRun,
 
@@ -3542,10 +3542,10 @@ func (s *KeeperTestSuite) TestTrackVolume() {
 			// Note that the actual contents or type of this pool do not matter for this test as we just need the ID.
 			targetPoolId := s.PrepareBalancerPool()
 
-			// If applicable, create an OSMO-paired pool and set it in protorev
-			if tc.osmoPairedPoolCoins != nil {
-				osmoPairedPoolId := s.CreatePoolFromTypeWithCoins(tc.osmoPairedPoolType, tc.osmoPairedPoolCoins)
-				s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, UOSMO, FOO, osmoPairedPoolId)
+			// If applicable, create an MELODY-paired pool and set it in protorev
+			if tc.melodyPairedPoolCoins != nil {
+				melodyPairedPoolId := s.CreatePoolFromTypeWithCoins(tc.melodyPairedPoolType, tc.melodyPairedPoolCoins)
+				s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, NOTE, FOO, melodyPairedPoolId)
 			}
 
 			// --- System under test ---
@@ -3557,11 +3557,11 @@ func (s *KeeperTestSuite) TestTrackVolume() {
 
 			// Assert that the correct amount of volume was added to the pool tracker
 
-			// Note that the units should always be in OSMO, even if the input volume was in another token.
+			// Note that the units should always be in MELODY, even if the input volume was in another token.
 			//
 			// We wrap with sdk.NewCoins() to sanitize the outputs for comparison in case they are empty.
 			totalVolume := s.App.PoolManagerKeeper.GetTotalVolumeForPool(s.Ctx, targetPoolId)
-			s.Require().Equal(sdk.NewCoins(sdk.NewCoin(UOSMO, tc.expectedVolume)), sdk.NewCoins(totalVolume...))
+			s.Require().Equal(sdk.NewCoins(sdk.NewCoin(NOTE, tc.expectedVolume)), sdk.NewCoins(totalVolume...))
 		})
 	}
 }
@@ -3577,7 +3577,7 @@ func (s *KeeperTestSuite) TestTakerFee() {
 			{
 				Pools: []types.SwapAmountInRoute{
 					{
-						PoolId:        fooUosmoPoolId,
+						PoolId:        fooNotePoolId,
 						TokenOutDenom: FOO,
 					},
 				},
@@ -3606,9 +3606,9 @@ func (s *KeeperTestSuite) TestTakerFee() {
 				TokenInAmount: twentyFiveBaseUnitsAmount,
 			},
 		}
-		totalExpectedTakerFee = osmomath.NewDecFromInt(twentyFiveBaseUnitsAmount).Mul(nonZeroTakerFee)
-		osmoTakerFeeDistr     = s.App.PoolManagerKeeper.GetParams(s.Ctx).TakerFeeParams.OsmoTakerFeeDistribution
-		nonOsmoTakerFeeDistr  = s.App.PoolManagerKeeper.GetParams(s.Ctx).TakerFeeParams.NonOsmoTakerFeeDistribution
+		totalExpectedTakerFee  = osmomath.NewDecFromInt(twentyFiveBaseUnitsAmount).Mul(nonZeroTakerFee)
+		melodyTakerFeeDistr    = s.App.PoolManagerKeeper.GetParams(s.Ctx).TakerFeeParams.OsmoTakerFeeDistribution
+		nonMelodyTakerFeeDistr = s.App.PoolManagerKeeper.GetParams(s.Ctx).TakerFeeParams.NonOsmoTakerFeeDistribution
 	)
 
 	tests := map[string]struct {
@@ -3625,17 +3625,17 @@ func (s *KeeperTestSuite) TestTakerFee() {
 	}{
 		"native denom taker fee": {
 			routes:            quoteNativeDenomRoute,
-			tokenInDenom:      UOSMO,
+			tokenInDenom:      NOTE,
 			tokenOutMinAmount: osmomath.OneInt(),
 
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
 			expectedTakerFees: expectedTakerFees{
 				communityPoolQuoteAssets:    sdk.Coins{},
 				communityPoolNonQuoteAssets: sdk.Coins{},
-				stakingRewardAssets:         sdk.NewCoins(sdk.NewCoin(UOSMO, totalExpectedTakerFee.Mul(osmoTakerFeeDistr.StakingRewards).TruncateInt())),
+				stakingRewardAssets:         sdk.NewCoins(sdk.NewCoin(NOTE, totalExpectedTakerFee.Mul(melodyTakerFeeDistr.StakingRewards).TruncateInt())),
 			},
 			// full native denom set in the main fee collector addr
-			expectedStakingRewardFeeCollectorMainBalanceDelta: sdk.NewCoins(sdk.NewCoin(UOSMO, totalExpectedTakerFee.Mul(osmoTakerFeeDistr.StakingRewards).TruncateInt())),
+			expectedStakingRewardFeeCollectorMainBalanceDelta: sdk.NewCoins(sdk.NewCoin(NOTE, totalExpectedTakerFee.Mul(melodyTakerFeeDistr.StakingRewards).TruncateInt())),
 			expectedCommunityPoolBalancesDelta:                sdk.Coins{},
 		},
 		"quote denom taker fee": {
@@ -3645,14 +3645,14 @@ func (s *KeeperTestSuite) TestTakerFee() {
 
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
 			expectedTakerFees: expectedTakerFees{
-				communityPoolQuoteAssets:    sdk.NewCoins(sdk.NewCoin(FOO, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.CommunityPool).TruncateInt())),
+				communityPoolQuoteAssets:    sdk.NewCoins(sdk.NewCoin(FOO, totalExpectedTakerFee.Mul(nonMelodyTakerFeeDistr.CommunityPool).TruncateInt())),
 				communityPoolNonQuoteAssets: sdk.Coins{},
-				stakingRewardAssets:         sdk.NewCoins(sdk.NewCoin(FOO, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.StakingRewards).TruncateInt())),
+				stakingRewardAssets:         sdk.NewCoins(sdk.NewCoin(FOO, totalExpectedTakerFee.Mul(nonMelodyTakerFeeDistr.StakingRewards).TruncateInt())),
 			},
 			// since foo is whitelisted token, it is sent directly to community pool
-			expectedCommunityPoolBalancesDelta: sdk.NewCoins(sdk.NewCoin(FOO, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.CommunityPool).TruncateInt())),
-			// foo swapped for uosmo, uosmo sent to main fee collector, 1 uosmo diff due to slippage from swap
-			expectedStakingRewardFeeCollectorMainBalanceDelta: sdk.NewCoins(sdk.NewCoin(UOSMO, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.StakingRewards).Sub(osmomath.OneDec()).TruncateInt())),
+			expectedCommunityPoolBalancesDelta: sdk.NewCoins(sdk.NewCoin(FOO, totalExpectedTakerFee.Mul(nonMelodyTakerFeeDistr.CommunityPool).TruncateInt())),
+			// foo swapped for note, note sent to main fee collector, 1 note diff due to slippage from swap
+			expectedStakingRewardFeeCollectorMainBalanceDelta: sdk.NewCoins(sdk.NewCoin(NOTE, totalExpectedTakerFee.Mul(nonMelodyTakerFeeDistr.StakingRewards).Sub(osmomath.OneDec()).TruncateInt())),
 		},
 		"non quote denom taker fee": {
 			routes:            quoteNonquoteDenomRoute,
@@ -3662,13 +3662,13 @@ func (s *KeeperTestSuite) TestTakerFee() {
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
 			expectedTakerFees: expectedTakerFees{
 				communityPoolQuoteAssets:    sdk.Coins{},
-				communityPoolNonQuoteAssets: sdk.NewCoins(sdk.NewCoin(abc, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.CommunityPool).TruncateInt())),
-				stakingRewardAssets:         sdk.NewCoins(sdk.NewCoin(abc, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.StakingRewards).TruncateInt())),
+				communityPoolNonQuoteAssets: sdk.NewCoins(sdk.NewCoin(abc, totalExpectedTakerFee.Mul(nonMelodyTakerFeeDistr.CommunityPool).TruncateInt())),
+				stakingRewardAssets:         sdk.NewCoins(sdk.NewCoin(abc, totalExpectedTakerFee.Mul(nonMelodyTakerFeeDistr.StakingRewards).TruncateInt())),
 			},
 			// since abc is not whitelisted token, it gets swapped for `CommunityPoolDenomToSwapNonWhitelistedAssetsTo`, which is set to baz, 1 baz diff due to slippage from swap
-			expectedCommunityPoolBalancesDelta: sdk.NewCoins(sdk.NewCoin(BAZ, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.CommunityPool).Sub(osmomath.OneDec()).TruncateInt())),
-			// abc swapped for uosmo, uosmo sent to main fee collector, 1 uosmo diff due to slippage from swap
-			expectedStakingRewardFeeCollectorMainBalanceDelta: sdk.NewCoins(sdk.NewCoin(UOSMO, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.StakingRewards).Sub(osmomath.OneDec()).TruncateInt())),
+			expectedCommunityPoolBalancesDelta: sdk.NewCoins(sdk.NewCoin(BAZ, totalExpectedTakerFee.Mul(nonMelodyTakerFeeDistr.CommunityPool).Sub(osmomath.OneDec()).TruncateInt())),
+			// abc swapped for note, note sent to main fee collector, 1 note diff due to slippage from swap
+			expectedStakingRewardFeeCollectorMainBalanceDelta: sdk.NewCoins(sdk.NewCoin(NOTE, totalExpectedTakerFee.Mul(nonMelodyTakerFeeDistr.StakingRewards).Sub(osmomath.OneDec()).TruncateInt())),
 		},
 	}
 
@@ -3783,22 +3783,22 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_VolumeTracked() {
 func (s *KeeperTestSuite) testSwapExactAmpountInVolumeTracked(noTakerFeeVariant bool) {
 	s.SetupTest()
 
-	// Set UOSMO as bond denom
+	// Set NOTE as bond denom
 
 	stakingParams := s.App.StakingKeeper.GetParams(s.Ctx)
-	stakingParams.BondDenom = UOSMO
+	stakingParams.BondDenom = NOTE
 	s.App.StakingKeeper.SetParams(s.Ctx, stakingParams)
 
 	// Prepare pool with liquidity
-	concentratedPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], UOSMO, FOO, 1, sdk.ZeroDec())
-	s.CreateFullRangePosition(concentratedPool, sdk.NewCoins(sdk.NewCoin(UOSMO, osmomath.NewInt(1_000_000_000)), sdk.NewCoin(FOO, osmomath.NewInt(5_000_000_000))))
+	concentratedPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], NOTE, FOO, 1, sdk.ZeroDec())
+	s.CreateFullRangePosition(concentratedPool, sdk.NewCoins(sdk.NewCoin(NOTE, osmomath.NewInt(1_000_000_000)), sdk.NewCoin(FOO, osmomath.NewInt(5_000_000_000))))
 
 	// Validate that volume is zero
 	totalVolume := s.App.PoolManagerKeeper.GetTotalVolumeForPool(s.Ctx, concentratedPool.GetId())
 	s.Require().Equal(emptyCoins.String(), totalVolume.String())
 
 	// Fund sender
-	tokenIn := sdk.NewCoin(UOSMO, sdk.NewInt(1000))
+	tokenIn := sdk.NewCoin(NOTE, sdk.NewInt(1000))
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(tokenIn))
 
 	// System under test
@@ -3828,7 +3828,7 @@ func (suite *KeeperTestSuite) TestListPoolsByDenom() {
 		"Single pool, pool contain denom": {
 			poolType: []types.PoolType{types.Balancer},
 			poolCoins: []sdk.Coins{
-				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1 bar-uosmo
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 1 bar-note
 			},
 			denom:            BAR,
 			expectedNumPools: 1,
@@ -3836,7 +3836,7 @@ func (suite *KeeperTestSuite) TestListPoolsByDenom() {
 		"Single pool, pool does not contain denom": {
 			poolType: []types.PoolType{types.Balancer},
 			poolCoins: []sdk.Coins{
-				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1 bar-uosmo
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 1 bar-note
 			},
 			denom:            FOO,
 			expectedNumPools: 0,
@@ -3844,8 +3844,8 @@ func (suite *KeeperTestSuite) TestListPoolsByDenom() {
 		"Two pools, pools contains denom": {
 			poolType: []types.PoolType{types.Balancer, types.Balancer},
 			poolCoins: []sdk.Coins{
-				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1 bar-uosmo
-				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(FOO, defaultInitPoolAmount)),   // pool 2. baz-foo
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 1 bar-note
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(FOO, defaultInitPoolAmount)),  // pool 2. baz-foo
 			},
 			denom:            BAR,
 			expectedNumPools: 2,
@@ -3853,8 +3853,8 @@ func (suite *KeeperTestSuite) TestListPoolsByDenom() {
 		"Two pools, pools does not contains denom": {
 			poolType: []types.PoolType{types.Balancer, types.Concentrated},
 			poolCoins: []sdk.Coins{
-				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1 bar-uosmo
-				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 2. baz-foo
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 1 bar-note
+				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 2. baz-foo
 			},
 			denom:            FOO,
 			expectedNumPools: 0,
@@ -3862,10 +3862,10 @@ func (suite *KeeperTestSuite) TestListPoolsByDenom() {
 		"Many pools": {
 			poolType: []types.PoolType{types.Concentrated, types.Balancer, types.Concentrated, types.Balancer},
 			poolCoins: []sdk.Coins{
-				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 1 bar-uosmo
-				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(FOO, defaultInitPoolAmount)),   // pool 2. baz-foo
-				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount)),   // pool 3. bar-baz
-				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(UOSMO, defaultInitPoolAmount)), // pool 4. baz-uosmo
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 1 bar-note
+				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(FOO, defaultInitPoolAmount)),  // pool 2. baz-foo
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount)),  // pool 3. bar-baz
+				sdk.NewCoins(sdk.NewCoin(BAZ, defaultInitPoolAmount), sdk.NewCoin(NOTE, defaultInitPoolAmount)), // pool 4. baz-note
 			},
 			denom:            BAR,
 			expectedNumPools: 2,

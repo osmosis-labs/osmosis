@@ -30,7 +30,7 @@ To instantiate the contract, you need to specify the following parameters:
 ### Example instantiation message
 
 ``` json
-{"swap_contract": "osmo1thiscontract", "governor": "osmo1..."}
+{"swap_contract": "symphony1thiscontract", "governor": "symphony1..."}
 ```
 
 ## Usage
@@ -42,7 +42,7 @@ of an IBC transfer to do crosschain swaps would look as follows:
 
 ``` json
 {"wasm": {
-    "contract": "osmo1crosschainswapscontract", 
+    "contract": "symphony1crosschainswapscontract", 
     "msg": {
         "osmosis_swap": {
             "output_denom":"token1",
@@ -65,7 +65,7 @@ The `slippage` can be set to a percentage of the twap price (as shown above), or
 the minimum amount of tokens expected to be received: `{"min_output_amount": "100"}`.
 
 The `on_failed_delivery` field can be set to `do_nothing` or a local recovery addr 
-via `{"local_recovery_addr": "osmo1..."}`. If set to `do_nothing`, the contract will
+via `{"local_recovery_addr": "symphony1..."}`. If set to `do_nothing`, the contract will
 not track the packet, and the user will not be able to recover the funds if the packet 
 fails. If set to a local recovery addr, the contract will track the packet, and 
 the specified address will be able to execute `{"recover": {}}` on the crosschain swaps 

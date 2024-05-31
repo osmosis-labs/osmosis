@@ -37,7 +37,7 @@ var (
 // with the updated liquidity given by the parameter
 func TestUpdateIntermediaryPoolAssetsLiquidity(t *testing.T) {
 	const (
-		uosmoValueOriginal = 1_000_000_000_000
+		noteValueOriginal = 1_000_000_000_000
 		atomValueOriginal  = 123
 		ionValueOriginal   = 657
 
@@ -59,7 +59,7 @@ func TestUpdateIntermediaryPoolAssetsLiquidity(t *testing.T) {
 				sdk.NewInt64Coin("ion", 3_000)),
 			poolAssets: map[string]balancer.PoolAsset{
 				"note": {
-					Token:  sdk.NewInt64Coin("note", uosmoValueOriginal),
+					Token:  sdk.NewInt64Coin("note", noteValueOriginal),
 					Weight: osmomath.NewInt(weight),
 				},
 				"atom": {
@@ -78,7 +78,7 @@ func TestUpdateIntermediaryPoolAssetsLiquidity(t *testing.T) {
 			newLiquidity: sdk.NewCoins(),
 			poolAssets: map[string]balancer.PoolAsset{
 				"note": {
-					Token:  sdk.NewInt64Coin("note", uosmoValueOriginal),
+					Token:  sdk.NewInt64Coin("note", noteValueOriginal),
 					Weight: osmomath.NewInt(weight),
 				},
 				"atom": {
@@ -98,7 +98,7 @@ func TestUpdateIntermediaryPoolAssetsLiquidity(t *testing.T) {
 				sdk.NewInt64Coin("juno", 1_000)),
 			poolAssets: map[string]balancer.PoolAsset{
 				"note": {
-					Token:  sdk.NewInt64Coin("note", uosmoValueOriginal),
+					Token:  sdk.NewInt64Coin("note", noteValueOriginal),
 					Weight: osmomath.NewInt(weight),
 				},
 			},
@@ -270,7 +270,7 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			expectShares: osmomath.NewInt(2_487_500_000_000 * 2),
 		},
 		{
-			// For uosmo:
+			// For note:
 			//
 			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) with on page 10
 			// with spreadFactorRatio added:

@@ -26,7 +26,7 @@ func TestTxFeeFilters(t *testing.T) {
 func (suite *KeeperTestSuite) TestIsArbTxLooseAuthz_AffiliateSwapMsg() {
 	affiliateSwapMsg := &txfee_filters.AffiliateSwapMsg{
 		Swap: txfee_filters.Swap{
-			FeeCollector:  "osmo1dldrxz5p8uezxz3qstpv92de7wgfp7hvr72dcm",
+			FeeCollector:  "symphony1le6kdvsx9z4fvscqjtgxt9qahkhh8yj9sdfq95",
 			FeePercentage: sdk.ZeroDec(),
 			Routes: []poolmanagertypes.SwapAmountInRoute{
 				{
@@ -55,8 +55,8 @@ func (suite *KeeperTestSuite) TestIsArbTxLooseAuthz_AffiliateSwapMsg() {
 
 	// https://celatone.osmosis.zone/osmosis-1/txs/315EB6284778EBB5BAC0F94CC740F5D7E35DDA5BBE4EC9EC79F012548589C6E5
 	executeMsg := &wasmtypes.MsgExecuteContract{
-		Contract: "osmo1etpha3a65tds0hmn3wfjeag6wgxgrkuwg2zh94cf5hapz7mz04dq6c25s5",
-		Sender:   "osmo1dldrxz5p8uezxz3qstpv92de7wgfp7hvr72dcm",
+		Contract: "symphony1etpha3a65tds0hmn3wfjeag6wgxgrkuwg2zh94cf5hapz7mz04dq6c25s5",
+		Sender:   "symphony1le6kdvsx9z4fvscqjtgxt9qahkhh8yj9sdfq95",
 		Funds:    sdk.NewCoins(sdk.NewCoin("ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4", sdk.NewInt(217084399))),
 		Msg:      affiliateSwapMsgBz,
 	}
@@ -85,8 +85,8 @@ func (suite *KeeperTestSuite) TestIsArbTxLooseAuthz_SwapMsg() {
 
 	// https://celatone.osmosis.zone/osmosis-1/txs/8D20755D4E009CB72C763963A76886BCCCC5C2EBFC3F57266332710216A0D10D
 	executeMsg := &wasmtypes.MsgExecuteContract{
-		Contract: "osmo1etpha3a65tds0hmn3wfjeag6wgxgrkuwg2zh94cf5hapz7mz04dq6c25s5",
-		Sender:   "osmo1dldrxz5p8uezxz3qstpv92de7wgfp7hvr72dcm",
+		Contract: "symphony1etpha3a65tds0hmn3wfjeag6wgxgrkuwg2zh94cf5hapz7mz04dq6c25s5",
+		Sender:   "symphony1le6kdvsx9z4fvscqjtgxt9qahkhh8yj9sdfq95",
 		Funds:    sdk.NewCoins(sdk.NewCoin("ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4", sdk.NewInt(217084399))),
 		Msg:      msgBz,
 	}
@@ -100,8 +100,8 @@ func (suite *KeeperTestSuite) TestIsArbTxLooseAuthz_OtherMsg() {
 
 	// https://celatone.osmosis.zone/osmosis-1/txs/315EB6284778EBB5BAC0F94CC740F5D7E35DDA5BBE4EC9EC79F012548589C6E5
 	executeMsg := &wasmtypes.MsgExecuteContract{
-		Contract: "osmo1etpha3a65tds0hmn3wfjeag6wgxgrkuwg2zh94cf5hapz7mz04dq6c25s5",
-		Sender:   "osmo1dldrxz5p8uezxz3qstpv92de7wgfp7hvr72dcm",
+		Contract: "symphony1etpha3a65tds0hmn3wfjeag6wgxgrkuwg2zh94cf5hapz7mz04dq6c25s5",
+		Sender:   "symphony1le6kdvsx9z4fvscqjtgxt9qahkhh8yj9sdfq95",
 		Funds:    sdk.NewCoins(sdk.NewCoin("ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4", sdk.NewInt(217084399))),
 		Msg:      otherMsg,
 	}

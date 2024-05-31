@@ -13,9 +13,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/simulation/simtypes"
 )
 
-func OsmosisAppCreator(logger log.Logger, db db.DB) simtypes.AppCreator {
+func SymphonyAppCreator(logger log.Logger, db db.DB) simtypes.AppCreator {
 	return func(homepath string, legacyInvariantPeriod uint, baseappOptions ...func(*baseapp.BaseApp)) simtypes.App {
-		return app.NewOsmosisApp(
+		return app.NewSymphonyApp(
 			logger,
 			db,
 			nil,
@@ -29,7 +29,7 @@ func OsmosisAppCreator(logger log.Logger, db db.DB) simtypes.AppCreator {
 	}
 }
 
-var OsmosisInitFns = simexec.InitFunctions{
+var SymphonyInitFns = simexec.InitFunctions{
 	RandomAccountFn: simexec.WrapRandAccFnForResampling(simulation.RandomAccounts, app.ModuleAccountAddrs()),
 	InitChainFn:     InitChainFn(),
 }

@@ -28,7 +28,7 @@ deps-go.sum: go.mod
 deps-draw:
 	@# requires brew install graphviz or apt-get install graphviz
 	go get github.com/RobotsAndPencils/goviz
-	@goviz -i ./cmd/osmosisd -d 2 | dot -Tpng -o dependency-graph.png
+	@goviz -i ./cmd/symphonyd -d 2 | dot -Tpng -o dependency-graph.png
 
 dpes-clean:
 	rm -rf $(CURDIR)/artifacts/
@@ -37,7 +37,7 @@ deps-distclean: clean
 	rm -rf vendor/
 
 VERSION := 
-MODFILES := ./go.mod ./osmoutils/go.mod ./osmomath/go.mod ./x/epochs/go.mod ./x/ibc-hooks/go.mod ./tests/cl-genesis-positions/go.mod ./tests/cl-go-client/go.mod
+MODFILES := ./go.mod ./osmoutils/go.mod ./osmomath.go.mod ./x/epochs/go.mod ./x/ibc-hooks/go.mod ./tests/cl-genesis-positions/go.mod ./tests/cl-go-client/go.mod
 # run with VERSION argument specified
 # e.g) make update-sdk-version VERSION=v0.45.1-0.20230523200430-193959b898ec
 # This will change sdk dependencyu version for go.mod in root directory + all sub-modules in this repo.

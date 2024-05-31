@@ -107,7 +107,7 @@ func simulationHomeDir() string {
 		panic(err)
 	}
 
-	return filepath.Join(userHomeDir, ".osmosis_simulation")
+	return filepath.Join(userHomeDir, ".symphony_simulation")
 }
 
 // The goal of this function is to group the extremely badly abstracted genesis logic,

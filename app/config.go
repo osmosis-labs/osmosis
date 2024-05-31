@@ -29,10 +29,10 @@ func DefaultConfig() network.Config {
 		LegacyAmino:       encCfg.Amino,
 		InterfaceRegistry: encCfg.InterfaceRegistry,
 		AccountRetriever:  authtypes.AccountRetriever{},
-		AppConstructor:    NewAppConstructor("osmosis-code-test"),
+		AppConstructor:    NewAppConstructor("symphony-code-test"),
 		GenesisState:      ModuleBasics.DefaultGenesis(encCfg.Marshaler),
 		TimeoutCommit:     1 * time.Second / 2,
-		ChainID:           "osmosis-code-test",
+		ChainID:           "symphony-code-test",
 		NumValidators:     1,
 		BondDenom:         sdk.DefaultBondDenom,
 		MinGasPrices:      fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
@@ -46,13 +46,13 @@ func DefaultConfig() network.Config {
 	}
 }
 
-// NewAppConstructor returns a new Osmosis app given encoding type configs.
+// NewAppConstructor returns a new Symphony app given encoding type configs.
 func NewAppConstructor(chainId string) network.AppConstructor {
 	return func(val network.ValidatorI) servertypes.Application {
 		valCtx := val.GetCtx()
 		appConfig := val.GetAppConfig()
 
-		return NewOsmosisApp(
+		return NewSymphonyApp(
 			valCtx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), valCtx.Config.RootDir, 0,
 			sims.EmptyAppOptions{},
 			EmptyWasmOpts,

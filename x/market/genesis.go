@@ -33,7 +33,7 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data *types.GenesisState
 // with InitGenesis
 func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) (data *types.GenesisState) {
 	params := keeper.GetParams(ctx)
-	osmosisPoolDelta := keeper.GetOsmosisPoolDelta(ctx)
+	sPoolDelta := keeper.GetOsmosisPoolDelta(ctx)
 
-	return types.NewGenesisState(osmosisPoolDelta, params)
+	return types.NewGenesisState(sPoolDelta, params)
 }

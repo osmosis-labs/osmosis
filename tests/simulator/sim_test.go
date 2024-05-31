@@ -58,8 +58,8 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 	_, _, simErr := osmosim.SimulateFromSeed(
 		tb,
 		os.Stdout,
-		OsmosisAppCreator(logger, db),
-		OsmosisInitFns,
+		SymphonyAppCreator(logger, db),
+		SymphonyInitFns,
 		config,
 	)
 
@@ -115,8 +115,8 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 // 			lastCommitId, _, simErr := osmosim.SimulateFromSeed(
 // 				t,
 // 				os.Stdout,
-// 				OsmosisAppCreator(logger, db),
-// 				OsmosisInitFns,
+// 				SymphonyAppCreator(logger, db),
+// 				SymphonyInitFns,
 // 				config,
 // 			)
 

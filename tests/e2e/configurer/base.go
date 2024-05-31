@@ -120,7 +120,7 @@ func (bc *baseConfigurer) RunIBC() error {
 func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB *chain.Config) error {
 	bc.t.Log("starting Hermes relayer container...")
 
-	tmpDir, err := os.MkdirTemp("", "osmosis-e2e-testnet-hermes-")
+	tmpDir, err := os.MkdirTemp("", "symphony-e2e-testnet-hermes-")
 	if err != nil {
 		return err
 	}
@@ -194,7 +194,7 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 	// transport errors.
 	time.Sleep(10 * time.Second)
 
-	// create the client, connection and channel between the two Osmosis chains
+	// create the client, connection and channel between the two Symphony chains
 	return bc.connectIBCChains(chainConfigA, chainConfigB)
 }
 

@@ -600,7 +600,7 @@ func (s *KeeperTestSuite) TestQueryBalancerPoolTotalLiquidity() {
 	// create pool
 	res, err = queryClient.TotalLiquidity(gocontext.Background(), &types.QueryTotalLiquidityRequest{})
 	s.Require().NoError(err)
-	s.Require().Equal("5000000bar,5000000baz,5000000foo,5000000uosmo", sdk.Coins(res.Liquidity).String())
+	s.Require().Equal("5000000bar,5000000baz,5000000foo,5000000note", sdk.Coins(res.Liquidity).String())
 }
 
 // TODO: Come fix

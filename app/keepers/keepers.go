@@ -116,7 +116,7 @@ import (
 )
 
 const (
-	AccountAddressPrefix = "osmo"
+	AccountAddressPrefix = "melody"
 )
 
 type AppKeepers struct {
@@ -484,7 +484,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
-	supportedFeatures := "iterator,staking,stargate,osmosis,cosmwasm_1_1,cosmwasm_1_2,cosmwasm_1_4"
+	supportedFeatures := "iterator,staking,stargate,symphony,cosmwasm_1_1,cosmwasm_1_2,cosmwasm_1_4"
 
 	wasmOpts = append(owasm.RegisterCustomPlugins(appKeepers.BankKeeper, appKeepers.TokenFactoryKeeper), wasmOpts...)
 	wasmOpts = append(owasm.RegisterStargateQueries(*bApp.GRPCQueryRouter(), appCodec), wasmOpts...)
@@ -598,8 +598,8 @@ func (appKeepers *AppKeepers) WireICS20PreWasmKeeper(
 	hooksKeeper *ibchookskeeper.Keeper,
 ) {
 	// Setup the ICS4Wrapper used by the hooks middleware
-	osmoPrefix := sdk.GetConfig().GetBech32AccountAddrPrefix()
-	wasmHooks := ibchooks.NewWasmHooks(hooksKeeper, nil, osmoPrefix) // The contract keeper needs to be set later
+	melodyPrefix := sdk.GetConfig().GetBech32AccountAddrPrefix()
+	wasmHooks := ibchooks.NewWasmHooks(hooksKeeper, nil, melodyPrefix) // The contract keeper needs to be set later
 	appKeepers.Ics20WasmHooks = &wasmHooks
 	appKeepers.HooksICS4Wrapper = ibchooks.NewICS4Middleware(
 		appKeepers.IBCKeeper.ChannelKeeper,

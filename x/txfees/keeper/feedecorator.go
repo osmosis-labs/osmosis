@@ -105,7 +105,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee,
 			"Expected 1 fee denom attached, got %d", len(feeCoins))
 	}
-	// The minimum base gas price is in uosmo, convert the fee denom's worth to uosmo terms.
+	// The minimum base gas price is in note, convert the fee denom's worth to note terms.
 	// Then compare if its sufficient for paying the tx fee.
 	err = mfd.TxFeesKeeper.IsSufficientFee(ctx, minBaseGasPrice, feeTx.GetGas(), feeCoins[0])
 	if err != nil {
@@ -132,7 +132,7 @@ func (mfd MempoolFeeDecorator) getMinBaseGasPrice(ctx sdk.Context, baseDenom str
 	return minBaseGasPrice
 }
 
-// IsSufficientFee checks if the feeCoin provided (in any asset), is worth enough osmo at current spot prices
+// IsSufficientFee checks if the feeCoin provided (in any asset), is worth enough melody at current spot prices
 // to pay the gas cost of this tx.
 func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice osmomath.Dec, gasRequested uint64, feeCoin sdk.Coin) error {
 	baseDenom, err := k.GetBaseDenom(ctx)
@@ -248,11 +248,11 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 
 	fees := feeTx.GetFee()
 
-	// if we are simulating, set the fees to 1 uosmo as they don't matter.
+	// if we are simulating, set the fees to 1 note as they don't matter.
 	// set it as coming from the burn addr
 	if simulate && fees.IsZero() {
 		fees = sdk.NewCoins(sdk.NewInt64Coin("note", 1))
-		burnAcctAddr, _ := sdk.AccAddressFromBech32("osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030")
+		burnAcctAddr, _ := sdk.AccAddressFromBech32("symphony1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqymqs4m")
 		// were doing 1 extra get account call alas
 		burnAcct := dfd.ak.GetAccount(ctx, burnAcctAddr)
 		if burnAcct != nil {
@@ -282,13 +282,13 @@ func DeductFees(txFeesKeeper types.TxFeesKeeper, bankKeeper types.BankKeeper, ct
 		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}
 
-	// pulls base denom from TxFeesKeeper (should be uOSMO)
+	// pulls base denom from TxFeesKeeper (should be NOTE)
 	baseDenom, err := txFeesKeeper.GetBaseDenom(ctx)
 	if err != nil {
 		return err
 	}
 
-	// checks if input fee is uOSMO (assumes only one fee token exists in the fees array (as per the check in mempoolFeeDecorator))
+	// checks if input fee is NOTE (assumes only one fee token exists in the fees array (as per the check in mempoolFeeDecorator))
 	if fees[0].Denom == baseDenom {
 		// sends to FeeCollectorName module account, which sends to staking rewards
 		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, fees)

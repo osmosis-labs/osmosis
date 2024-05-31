@@ -56,7 +56,7 @@ func NewKeeper(
 	}
 }
 
-// GetOsmosisPoolDelta returns the gap between the OsmosisPool and the OsmosisBasePool
+// GetOsmosisPoolDelta returns the gap between the SymphonyPool and the SymphonyBasePool
 func (k Keeper) GetOsmosisPoolDelta(ctx sdk.Context) sdk.Dec {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.OsmosisPoolDeltaKey)
@@ -69,14 +69,14 @@ func (k Keeper) GetOsmosisPoolDelta(ctx sdk.Context) sdk.Dec {
 	return dp.Dec
 }
 
-// SetOsmosisPoolDelta updates OsmosisPoolDelta which is gap between the OsmosisPool and the BasePool
+// SetOsmosisPoolDelta updates OsmosisPoolDelta which is gap between the SymphonyPool and the BasePool
 func (k Keeper) SetOsmosisPoolDelta(ctx sdk.Context, delta sdk.Dec) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&sdk.DecProto{Dec: delta})
 	store.Set(types.OsmosisPoolDeltaKey, bz)
 }
 
-// ReplenishPools replenishes each pool(Osmo,Luna) to BasePool
+// ReplenishPools replenishes each pool(Melody,Note) to BasePool
 func (k Keeper) ReplenishPools(ctx sdk.Context) {
 	poolDelta := k.GetOsmosisPoolDelta(ctx)
 

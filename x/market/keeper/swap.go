@@ -32,7 +32,7 @@ func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string
 		return sdk.DecCoin{}, sdk.Dec{}, err
 	}
 
-	// Terra => Terra swap
+	// Symphony => Symphony swap
 	// Apply only tobin tax without constant product spread
 	if offerCoin.Denom != appParams.BaseCoinUnit && askDenom != appParams.BaseCoinUnit {
 		var tobinTax sdk.Dec
@@ -62,20 +62,20 @@ func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string
 
 	// constant-product, which by construction is square of base(equilibrium) pool
 	cp := basePool.Mul(basePool)
-	osmosisPoolDelta := k.GetOsmosisPoolDelta(ctx)
-	terraPool := basePool.Add(osmosisPoolDelta)
-	lunaPool := cp.Quo(terraPool)
+	sPoolDelta := k.GetOsmosisPoolDelta(ctx)
+	symphonyPool := basePool.Add(sPoolDelta)
+	notePool := cp.Quo(symphonyPool)
 
 	var offerPool sdk.Dec // base denom(usdr) unit
 	var askPool sdk.Dec   // base denom(usdr) unit
 	if offerCoin.Denom != appParams.BaseCoinUnit {
-		// Terra->Luna swap
-		offerPool = terraPool
-		askPool = lunaPool
+		// Symphony->Note swap
+		offerPool = symphonyPool
+		askPool = notePool
 	} else {
-		// Luna->Terra swap
-		offerPool = lunaPool
-		askPool = terraPool
+		// Note->Symphony swap
+		offerPool = notePool
+		askPool = symphonyPool
 	}
 
 	// Get cp(constant-product) based swap amount
@@ -103,12 +103,12 @@ func (k Keeper) ComputeInternalSwap(ctx sdk.Context, offerCoin sdk.DecCoin, askD
 		return offerCoin, nil
 	}
 
-	offerRate, err := k.OracleKeeper.GetOsmoExchangeRate(ctx, offerCoin.Denom)
+	offerRate, err := k.OracleKeeper.GetMelodyExchangeRate(ctx, offerCoin.Denom)
 	if err != nil {
 		return sdk.DecCoin{}, errorsmod.Wrap(types.ErrNoEffectivePrice, offerCoin.Denom)
 	}
 
-	askRate, err := k.OracleKeeper.GetOsmoExchangeRate(ctx, askDenom)
+	askRate, err := k.OracleKeeper.GetMelodyExchangeRate(ctx, askDenom)
 	if err != nil {
 		return sdk.DecCoin{}, errorsmod.Wrap(types.ErrNoEffectivePrice, askDenom)
 	}

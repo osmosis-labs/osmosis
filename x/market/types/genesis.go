@@ -8,9 +8,9 @@ import (
 )
 
 // NewGenesisState creates a new GenesisState object
-func NewGenesisState(osmosisPoolDelta sdk.Dec, params Params) *GenesisState {
+func NewGenesisState(sPoolDelta sdk.Dec, params Params) *GenesisState {
 	return &GenesisState{
-		OsmosisPoolDelta: osmosisPoolDelta,
+		OsmosisPoolDelta: sPoolDelta,
 		Params:           params,
 	}
 }

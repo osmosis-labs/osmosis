@@ -12,7 +12,7 @@ const (
 	foo   = "foo"
 	bar   = "bar"
 	baz   = "baz"
-	uosmo = "note"
+	note = "note"
 )
 
 var (
@@ -22,10 +22,10 @@ var (
 	// it easier to reason about the test cases.
 	fooBarPoolId   = uint64(1)
 	fooBazPoolId   = fooBarPoolId + 1
-	fooUosmoPoolId = fooBazPoolId + 1
-	barBazPoolId   = fooUosmoPoolId + 1
-	barUosmoPoolId = barBazPoolId + 1
-	bazUosmoPoolId = barUosmoPoolId + 1
+	fooNotePoolId = fooBazPoolId + 1
+	barBazPoolId   = fooNotePoolId + 1
+	barNotePoolId = barBazPoolId + 1
+	bazNotePoolId = barNotePoolId + 1
 
 	// Amount in default routes
 
@@ -64,11 +64,11 @@ var (
 				TokenOutDenom: bar,
 			},
 			{
-				PoolId:        barUosmoPoolId,
-				TokenOutDenom: uosmo,
+				PoolId:        barNotePoolId,
+				TokenOutDenom: note,
 			},
 			{
-				PoolId:        bazUosmoPoolId,
+				PoolId:        bazNotePoolId,
 				TokenOutDenom: baz,
 			},
 		},
@@ -112,12 +112,12 @@ var (
 				TokenInDenom: foo,
 			},
 			{
-				PoolId:       barUosmoPoolId,
+				PoolId:       barNotePoolId,
 				TokenInDenom: bar,
 			},
 			{
-				PoolId:       bazUosmoPoolId,
-				TokenInDenom: uosmo,
+				PoolId:       bazNotePoolId,
+				TokenInDenom: note,
 			},
 		},
 		TokenOutAmount: osmomath.NewInt(twentyFiveBaseUnitsAmount.Int64() * 3),
@@ -320,7 +320,7 @@ func TestIntermediateDenoms(t *testing.T) {
 				},
 				{
 					PoolId:        5,
-					TokenOutDenom: uosmo,
+					TokenOutDenom: note,
 				},
 				{
 					PoolId:        3,
@@ -328,7 +328,7 @@ func TestIntermediateDenoms(t *testing.T) {
 				},
 			}),
 
-			expectedDenoms: []string{bar, baz, uosmo},
+			expectedDenoms: []string{bar, baz, note},
 		},
 		"no intermediate denoms (single pool)": {
 			route: SwapAmountInRoutes([]SwapAmountInRoute{

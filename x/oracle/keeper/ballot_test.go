@@ -169,12 +169,12 @@ func (s *KeeperTestSuite) TestApplyWhitelist() {
 	s.Require().Equal(metadata.Base, "uusd")
 	s.Require().Equal(metadata.Display, "usd")
 	s.Require().Equal(len(metadata.DenomUnits), 3)
-	s.Require().Equal(metadata.Description, "The native stable token of the Terra Columbus.")
+	s.Require().Equal(metadata.Description, "The native stable token of the Symphony.")
 
 	metadata, ok = s.App.BankKeeper.GetDenomMetaData(s.Ctx, "ukrw")
 	s.Require().True(ok)
 	s.Require().Equal(metadata.Base, "ukrw")
 	s.Require().Equal(metadata.Display, "krw")
 	s.Require().Equal(len(metadata.DenomUnits), 3)
-	s.Require().Equal(metadata.Description, "The native stable token of the Terra Columbus.")
+	s.Require().Equal(metadata.Description, "The native stable token of the Symphony.")
 }
