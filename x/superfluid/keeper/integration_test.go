@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govmoduletypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/stretchr/testify/suite"
@@ -63,7 +64,8 @@ func (s *TestSuite) SetupTest() {
 		Description: "tokens for all!",
 	}
 
-	proposalMsg, err := govv1.NewLegacyContent(testProposal, "")
+	govAddr := s.App.AccountKeeper.GetModuleAddress(govmoduletypes.ModuleName)
+	proposalMsg, err := govv1.NewLegacyContent(testProposal, govAddr.String())
 	s.Require().NoError(err)
 
 	proposal, err := govv1.NewProposal(
@@ -74,7 +76,7 @@ func (s *TestSuite) SetupTest() {
 		"test proposal",
 		"title",
 		"Description",
-		sdk.AccAddress("proposer"),
+		s.TestAccs[0],
 		false,
 	)
 	s.Require().NoError(err)
@@ -107,7 +109,7 @@ func createPoolMsgGen(sender sdk.AccAddress, assets sdk.Coins) *balancertypes.Ms
 		Sender:             sender.String(),
 		PoolAssets:         poolAssets,
 		PoolParams:         poolParams,
-		FuturePoolGovernor: "",
+		FuturePoolGovernor: sender.String(),
 	}
 
 	return msg
@@ -539,6 +541,9 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	s.EndBlock()
 	s.BeginNewBlock(true)
 
+	// TODO: !!!!! This test is passing for the wrong reasons. To test it, you need to modify the
+	//  superfluid/stake.go:IterateDelegations so that native tokens can vote and see that this still passes.
+	//  The proposal properly passes and is saved in state, but here we don't see it. What's going on?!!!
 	proposal, err := s.App.GovKeeper.Proposals.Get(s.Ctx, 1)
 	s.Require().NoError(err)
 	s.Require().Equal(govv1.StatusRejected, proposal.Status)

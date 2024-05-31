@@ -279,7 +279,7 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 		)
 		res.TotalDelegatedCoins = res.TotalDelegatedCoins.Add(lockedCoins)
 		res.TotalEquivalentStakedAmount = res.TotalEquivalentStakedAmount.Add(coin)
-		if !IsNonNative(baseDenom) {
+		if !IsPoolToken(baseDenom) {
 			res.TotalEquivalentNonOsmoStakedAmount = res.TotalEquivalentNonOsmoStakedAmount.Add(
 				sdk.NewCoin(appparams.BaseCoinUnit, coin.Amount))
 		}
@@ -711,7 +711,7 @@ func (q Querier) filterConcentratedPositionLocks(ctx sdk.Context, positions []mo
 
 		baseDenom := lock.Coins.GetDenomByIndex(0)
 		lockedCoins := sdk.NewCoin(baseDenom, lock.GetCoins().AmountOf(baseDenom))
-		equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokensExcludeNative(ctx, baseDenom, lockedCoins.Amount)
+		equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokensExcludeNonPool(ctx, baseDenom, lockedCoins.Amount)
 		if err != nil {
 			return nil, err
 		}

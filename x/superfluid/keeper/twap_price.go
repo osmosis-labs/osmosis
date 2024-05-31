@@ -37,7 +37,7 @@ func (k Keeper) SetOsmoEquivalentMultiplier(ctx sdk.Context, epoch int64, denom 
 	prefixStore.Set([]byte(denom), bz)
 }
 
-func IsNonNative(denom string) bool {
+func IsPoolToken(denom string) bool {
 	if strings.HasPrefix(denom, cltypes.ConcentratedLiquidityTokenPrefix) {
 		return true
 	}
@@ -52,12 +52,12 @@ func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount os
 	return k.getSuperfluidOSMOTokens(ctx, denom, amount, true)
 }
 
-func (k Keeper) GetSuperfluidOSMOTokensExcludeNative(ctx sdk.Context, denom string, amount osmomath.Int) (osmomath.Int, error) {
+func (k Keeper) GetSuperfluidOSMOTokensExcludeNonPool(ctx sdk.Context, denom string, amount osmomath.Int) (osmomath.Int, error) {
 	return k.getSuperfluidOSMOTokens(ctx, denom, amount, false)
 }
 
-func (k Keeper) getSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount osmomath.Int, includeNative bool) (osmomath.Int, error) {
-	if !includeNative && !IsNonNative(denom) {
+func (k Keeper) getSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount osmomath.Int, IncludeNonPool bool) (osmomath.Int, error) {
+	if !IncludeNonPool && !IsPoolToken(denom) {
 		return osmomath.ZeroInt(), nil
 	}
 
@@ -72,6 +72,8 @@ func (k Keeper) getSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount os
 		return osmomath.ZeroInt(), err
 	}
 
+	// TODO: This is the other potential place to modify the native asset's (i.e.: btc) osmo equivalent to ensure it
+	//   does not exceed 25% of all stake
 	return k.GetRiskAdjustedOsmoValue(ctx, decAmt.RoundInt(), denom), nil
 }
 

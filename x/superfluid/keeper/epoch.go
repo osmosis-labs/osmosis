@@ -165,6 +165,9 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		if err != nil {
 			return sdkerrors.Wrap(err, "failed to get twap price")
 		}
+		// TODO: Before setting the multiplier, we want to make sure that it doesn't go beyond the max allowed for native assets
+		//       To do this, we get the total amount of staked osmo, and check that total_staked_for_denom * multiplier does not exceed 25% of total_staked.
+		//       If it does, we adjust the multiplier/price accordingly
 		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, price)
 	}
 

@@ -577,7 +577,7 @@ func (k Keeper) TotalBondedTokens(ctx context.Context) (osmomath.Int, error) {
 }
 
 // IterateDelegations implements govtypes.StakingKeeper
-// Iterates through staking keeper's delegations, and then all of the superfluid delegations.
+// Iterates through staking keeper's delegations, and then all the superfluid delegations backed by real osmo.
 func (k Keeper) IterateDelegations(context context.Context, delegator sdk.AccAddress, fn func(int64, stakingtypes.DelegationI) bool) error {
 	ctx := sdk.UnwrapSDKContext(context)
 	// call the callback with the non-superfluid delegations
@@ -611,7 +611,7 @@ func (k Keeper) IterateDelegations(context context.Context, delegator sdk.AccAdd
 		}
 
 		// get osmo-equivalent token amount
-		amount, err := k.GetSuperfluidOSMOTokensExcludeNative(ctx, interim.Denom, coin.Amount)
+		amount, err := k.GetSuperfluidOSMOTokensExcludeNonPool(ctx, interim.Denom, coin.Amount)
 		if err != nil {
 			ctx.Logger().Error("failed to get osmo equivalent of token", "Denom", interim.Denom, "Amount", coin.Amount, "Error", err)
 			return err
