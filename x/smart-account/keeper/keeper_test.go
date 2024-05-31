@@ -116,11 +116,11 @@ func (s *KeeperTestSuite) TestKeeper_GetAuthenticatorDataForAccount() {
 func (s *KeeperTestSuite) TestKeeper_GetAndSetAuthenticatorId() {
 	ctx := s.Ctx
 
-	authenticatorId := s.App.SmartAccountKeeper.GetNextAuthenticatorId(ctx)
-	s.Require().Equal(uint64(1), authenticatorId, "Get authenticator id returned incorrect id")
+	authenticatorId := s.App.SmartAccountKeeper.InitializeOrGetNextAuthenticatorId(ctx)
+	s.Require().Equal(uint64(1), authenticatorId, "Initialize/Get authenticator id returned incorrect id")
 
-	authenticatorId = s.App.SmartAccountKeeper.GetNextAuthenticatorId(ctx)
-	s.Require().Equal(uint64(1), authenticatorId, "Get authenticator id returned incorrect id")
+	authenticatorId = s.App.SmartAccountKeeper.InitializeOrGetNextAuthenticatorId(ctx)
+	s.Require().Equal(uint64(1), authenticatorId, "Initialize/Get authenticator id returned incorrect id")
 
 	// Set up account
 	key := "6cf5103c60c939a5f38e383b52239c5296c968579eec1c68a47d70fbf1d19159"
@@ -136,8 +136,8 @@ func (s *KeeperTestSuite) TestKeeper_GetAndSetAuthenticatorId() {
 	)
 	s.Require().NoError(err, "Should successfully add a SignatureVerification")
 
-	authenticatorId = s.App.SmartAccountKeeper.GetNextAuthenticatorId(ctx)
-	s.Require().Equal(authenticatorId, uint64(2), "Get authenticator id returned incorrect id")
+	authenticatorId = s.App.SmartAccountKeeper.InitializeOrGetNextAuthenticatorId(ctx)
+	s.Require().Equal(authenticatorId, uint64(2), "Initialize/Get authenticator id returned incorrect id")
 
 	_, err = s.App.SmartAccountKeeper.AddAuthenticator(
 		ctx,
@@ -147,8 +147,8 @@ func (s *KeeperTestSuite) TestKeeper_GetAndSetAuthenticatorId() {
 	)
 	s.Require().NoError(err, "Should successfully add a MessageFilter")
 
-	authenticatorId = s.App.SmartAccountKeeper.GetNextAuthenticatorId(ctx)
-	s.Require().Equal(authenticatorId, uint64(3), "Get authenticator id returned incorrect id")
+	authenticatorId = s.App.SmartAccountKeeper.InitializeOrGetNextAuthenticatorId(ctx)
+	s.Require().Equal(authenticatorId, uint64(3), "Initialize/Get authenticator id returned incorrect id")
 }
 
 func (s *KeeperTestSuite) TestKeeper_GetSelectedAuthenticatorForAccount() {
