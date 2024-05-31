@@ -27,11 +27,14 @@ const (
 )
 
 var (
+	// Store prefix keys
 	KeyNextAccountAuthenticatorIdPrefix = []byte{0x01}
 	KeyAccountAuthenticatorsPrefix      = []byte{0x02}
-	KeyMaximumUnauthenticatedGas        = []byte("MaximumUnauthenticatedGas")
-	KeyIsSmartAccountActive             = []byte("IsSmartAccountActive")
-	KeyCircuitBreakerControllers        = []byte("CircuitBreakerControllers")
+
+	// Parameter keys
+	KeyMaximumUnauthenticatedGas = []byte("MaximumUnauthenticatedGas")
+	KeyIsSmartAccountActive      = []byte("IsSmartAccountActive")
+	KeyCircuitBreakerControllers = []byte("CircuitBreakerControllers")
 )
 
 func KeyAccount(account sdk.AccAddress) []byte {
