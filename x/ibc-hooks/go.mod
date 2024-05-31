@@ -15,7 +15,7 @@ require (
 	github.com/cosmos/ibc-go/modules/capability v1.0.0
 	github.com/cosmos/ibc-go/v8 v8.2.1
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240517164659-346d610d3627
+	github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240517165907-1625703bc16d
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240531071717-7c405f96761a
 	github.com/spf13/cobra v1.8.0
 	google.golang.org/grpc v1.63.2
@@ -39,7 +39,7 @@ require (
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
-	github.com/CosmWasm/wasmvm/v2 v2.0.0 // indirect
+	github.com/CosmWasm/wasmvm/v2 v2.0.1 // indirect
 	github.com/DataDog/datadog-go v3.2.0+incompatible // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/aws/aws-sdk-go v1.44.224 // indirect
