@@ -49,8 +49,8 @@ github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 h1:L/gRVlceqvL25
 github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161/go.mod h1:xomTg63KZ2rFqZQzSB4Vz2SUXa1BpHTVz9L5PTmPC4E=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/CosmWasm/wasmvm v1.5.2 h1:+pKB1Mz9GZVt1vadxB+EDdD1FOz3dMNjIKq/58/lrag=
-github.com/CosmWasm/wasmvm v1.5.2/go.mod h1:Q0bSEtlktzh7W2hhEaifrFp1Erx11ckQZmjq8FLCyys=
+github.com/CosmWasm/wasmvm/v2 v2.0.1 h1:0YCQ7MKGNri7NFeRp75erPJXrqyCtH4gdc9jMstyMzk=
+github.com/CosmWasm/wasmvm/v2 v2.0.1/go.mod h1:su9lg5qLr7adV95eOfzjZWkGiky8WNaNIHDr7Fpu7Ck=
 github.com/DataDog/datadog-go v3.2.0+incompatible h1:qSG2N4FghB1He/r2mFrWKCaL7dXCilEuNEeAn20fdD4=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
 github.com/DataDog/zstd v1.5.5 h1:oWf5W7GtOLgp6bciQYDmhHHjdhYkALu6S/5Ni9ZgSvQ=
@@ -600,8 +600,8 @@ github.com/osmosis-labs/cosmos-sdk v0.50.0-rc.0.0.20240510201416-1a5662f2a458 h1
 github.com/osmosis-labs/cosmos-sdk v0.50.0-rc.0.0.20240510201416-1a5662f2a458/go.mod h1:0cuDcJXs1CQ38F8cPNN56uktyI7nZ60lKxKnJJaGSz4=
 github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240517165907-1625703bc16d h1:Wbf/4tR1ibsQWiBPBcAKS54eipmKGoC2bFp9rxxhnQQ=
 github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240517165907-1625703bc16d/go.mod h1:dztmzd8WPUjybmWJ0lj8aarBWvGC6IumV2gjpZNRQeQ=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240517165907-1625703bc16d h1:Li/X5jkq9jYBFAGYAeMmmo1BzrlxzgShwEsJgDK2jbw=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240517165907-1625703bc16d/go.mod h1:qcN+nYbl9Q6hGC7HsvORDKCYrX22PrNw7Y/9t55dBaM=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240531072302-49f7d41cf3f8 h1:AqO2n0pXSZRGtp4HthPpQZq5pmqQhCdCEBRBuMJjfM8=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240531072302-49f7d41cf3f8/go.mod h1:obuFUL8XSP6Pk9nEUllHCmhCDH913MQr8AnXO9dSikU=
 github.com/pact-foundation/pact-go v1.0.4/go.mod h1:uExwJY4kCzNPcHRj+hCR/HBbOOIwwtUjcrb0b5/5kLM=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pascaldekloe/goe v0.1.0 h1:cBOtyMzM9HTpWjXfbbunk26uA6nG3a8n06Wieeh0MwY=
