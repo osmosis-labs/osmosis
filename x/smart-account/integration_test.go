@@ -107,7 +107,15 @@ func (s *AuthenticatorSuite) TestKeyRotationStory() {
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []uint64{1}, sendMsg)
 	s.Require().NoError(err, "Failed to send bank tx using the second private key")
 
+<<<<<<< HEAD
 	// Try to send again osing the original PrivKey. This will succeed with no selected authenticator
+=======
+	// Submit a bank send tx using the first private key. This will fail
+	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[0]}, []uint64{1}, sendMsg)
+	s.Require().Error(err)
+
+	// Try to send again using the original PrivKey. This will succeed with no selected authenticator
+>>>>>>> 95303b69 (Nits from smart accounts review (#8295))
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
 	s.Require().NoError(err, "Sending from the original PrivKey failed. This should succeed")
 
@@ -115,7 +123,7 @@ func (s *AuthenticatorSuite) TestKeyRotationStory() {
 	err = s.app.SmartAccountKeeper.RemoveAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), sigVerAuthId)
 	s.Require().NoError(err, "Failed to remove authenticator")
 
-	// Sending from the default PrivKey now works again
+	// Sending from the default PrivKey still works
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
 	s.Require().NoError(err, "Failed to send bank tx using the first private key after removing the authenticator")
 }
@@ -301,10 +309,12 @@ func (s *AuthenticatorSuite) TestAuthenticatorMultiMsg() {
 	_, err := s.app.SmartAccountKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "MaxAmountAuthenticator", []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
 
+	// Note that we are sending 2 messages here, so the amount should be 2_000 (2*1_000)
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []uint64{1, 1}, successSendMsg, successSendMsg)
 	s.Require().NoError(err)
 	s.Require().Equal(int64(2_000), maxAmount.GetAmount(s.chainA.GetContext()).Int64())
 
+	// This should now fail, as the max amount has been reached
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(pks{s.PrivKeys[0]}, pks{s.PrivKeys[1]}, []uint64{1, 1}, successSendMsg, successSendMsg)
 	s.Require().Error(err)
 	s.Require().Equal(int64(2_000), maxAmount.GetAmount(s.chainA.GetContext()).Int64())
@@ -336,8 +346,11 @@ func (s *AuthenticatorSuite) TestAuthenticatorGas() {
 		Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000)),
 	}
 
+	// Will always approve and will consume 0 gas
 	alwaysLow := testutils.TestingAuthenticator{Approve: testutils.Always, GasConsumption: 0}
+	// Will always approve and will consume 4k gas
 	alwaysHigh := testutils.TestingAuthenticator{Approve: testutils.Always, GasConsumption: 4_000}
+	// Will always approve and will consume 500k gas
 	alwaysHigher := testutils.TestingAuthenticator{Approve: testutils.Always, GasConsumption: 500_000}
 
 	s.app.AuthenticatorManager.RegisterAuthenticator(alwaysLow)
@@ -359,7 +372,7 @@ func (s *AuthenticatorSuite) TestAuthenticatorGas() {
 	err = s.app.SmartAccountKeeper.RemoveAuthenticator(s.chainA.GetContext(), account2.GetAddress(), acc2authId)
 	s.Require().NoError(err, "Failed to remove authenticator")
 
-	// Add two authenticators that are never high, and one always high.
+	// Add two authenticators that are always higher, and one always high.
 	// This allows account2 to execute but *only* after consuming >9k gas
 	_, err = s.app.SmartAccountKeeper.AddAuthenticator(s.chainA.GetContext(), account2.GetAddress(), alwaysHigher.Type(), []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
@@ -483,9 +496,10 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorAllOf() {
 	}
 	// Send from account 0 the account key using the AllOf authenticator
 	_, err = s.chainA.SendMsgsFromPrivKeysWithAuthenticator(
-		pks{s.PrivKeys[1]}, pks{s.PrivKeys[1]}, []uint64{2}, failedSendMsg,
+		pks{s.PrivKeys[1]}, pks{s.PrivKeys[1]}, []uint64{1}, failedSendMsg,
 	)
 	s.Require().Error(err, "Should be rejected because the message filter rejects the transaction")
+	s.Require().ErrorContains(err, "message does not match pattern")
 
 	// Remove the first AllOf authenticator
 	err = s.app.SmartAccountKeeper.RemoveAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), allOfAuthId)
