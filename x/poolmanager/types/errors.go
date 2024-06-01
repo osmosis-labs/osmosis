@@ -185,3 +185,16 @@ type InvalidAlloyedDenomPartError struct {
 func (e InvalidAlloyedDenomPartError) Error() string {
 	return fmt.Sprintf("part %d of alloyedDenom should be '%s', but got '%s'", e.PartIndex, e.Expected, e.Actual)
 }
+
+type ErrInvalidAlloyedPoolID struct {
+	AlloyedIDStr string
+	Err          error
+}
+
+func (e ErrInvalidAlloyedPoolID) Error() string {
+	return fmt.Sprintf("failed to parse alloyed pool ID '%s': %v", e.AlloyedIDStr, e.Err)
+}
+
+func (e ErrInvalidAlloyedPoolID) Unwrap() error {
+	return e.Err
+}

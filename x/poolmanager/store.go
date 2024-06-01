@@ -397,7 +397,7 @@ func (k Keeper) GetAllRegisteredAlloyedPoolsIdArray(ctx sdk.Context) ([]uint64, 
 		// Convert the string to uint64
 		alloyedId, err := strconv.ParseUint(alloyedIdStr, 10, 64)
 		if err != nil {
-			return nil, err
+			return nil, types.ErrInvalidAlloyedPoolID{AlloyedIDStr: alloyedIdStr, Err: err}
 		}
 		registeredAlloyedPoolsIdArray = append(registeredAlloyedPoolsIdArray, alloyedId)
 	}
