@@ -595,7 +595,7 @@ func (k Keeper) getAlloyedDenomFromPoolId(ctx sdk.Context, poolId uint64) (strin
 		// Convert the string to uint64
 		alloyedId, err := strconv.ParseUint(alloyedIdStr, 10, 64)
 		if err != nil {
-			return "", err
+			return "", types.ErrInvalidAlloyedPoolID{AlloyedIDStr: alloyedIdStr, Err: err}
 		}
 		if alloyedId == poolId {
 			alloyedDenom := parts[len(parts)-1]
