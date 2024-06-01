@@ -397,7 +397,7 @@ func (k Keeper) GetAllRegisteredAlloyedPoolsIdArray(ctx sdk.Context) ([]uint64, 
 		// Convert the string to uint64
 		alloyedId, err := strconv.ParseUint(alloyedIdStr, 10, 64)
 		if err != nil {
-			return nil, types.ErrInvalidAlloyedPoolID{AlloyedIDStr: alloyedIdStr, Err: err}
+			return nil, types.InvalidAlloyedPoolIDError{AlloyedIDStr: alloyedIdStr, Err: err}
 		}
 		registeredAlloyedPoolsIdArray = append(registeredAlloyedPoolsIdArray, alloyedId)
 	}
@@ -595,7 +595,7 @@ func (k Keeper) getAlloyedDenomFromPoolId(ctx sdk.Context, poolId uint64) (strin
 		// Convert the string to uint64
 		alloyedId, err := strconv.ParseUint(alloyedIdStr, 10, 64)
 		if err != nil {
-			return "", types.ErrInvalidAlloyedPoolID{AlloyedIDStr: alloyedIdStr, Err: err}
+			return "", types.InvalidAlloyedPoolIDError{AlloyedIDStr: alloyedIdStr, Err: err}
 		}
 		if alloyedId == poolId {
 			alloyedDenom := parts[len(parts)-1]
