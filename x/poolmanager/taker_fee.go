@@ -230,10 +230,10 @@ func (k Keeper) TakerFeeSkim(ctx sdk.Context, denomsInvolvedInRoute []string, to
 			percentageOfTakerFeeToSkim = percentageOfTakerFeeToSkim.Add(takerFeeShareAgreement.SkimPercent)
 		}
 		if percentageOfTakerFeeToSkim.GT(osmomath.OneDec()) {
-			return types.ErrTakerFeeSharePercentageIsGreaterThan100
+			return types.InvalidTakerFeeSharePercentageError{Percentage: percentageOfTakerFeeToSkim}
 		}
 		if percentageOfTakerFeeToSkim.LT(osmomath.ZeroDec()) {
-			return types.ErrTakerFeeSharePercentageIsLessThanZero
+			return types.InvalidTakerFeeSharePercentageError{Percentage: percentageOfTakerFeeToSkim}
 		}
 		for _, takerFeeCoin := range totalTakerFees {
 			for _, takerFeeShareAgreement := range denomShareAgreements {
@@ -257,10 +257,10 @@ func (k Keeper) TakerFeeSkim(ctx sdk.Context, denomsInvolvedInRoute []string, to
 			percentageOfTakerFeeToSkim = percentageOfTakerFeeToSkim.Add(takerFeeShareAgreement.SkimPercent)
 		}
 		if percentageOfTakerFeeToSkim.GT(osmomath.OneDec()) {
-			return types.ErrTakerFeeSharePercentageIsGreaterThan100
+			return types.InvalidTakerFeeSharePercentageError{Percentage: percentageOfTakerFeeToSkim}
 		}
 		if percentageOfTakerFeeToSkim.LT(osmomath.ZeroDec()) {
-			return types.ErrTakerFeeSharePercentageIsLessThanZero
+			return types.InvalidTakerFeeSharePercentageError{Percentage: percentageOfTakerFeeToSkim}
 		}
 		for _, takerFeeCoin := range totalTakerFees {
 			for _, takerFeeShareAgreement := range alloyedAssetShareAgreements {

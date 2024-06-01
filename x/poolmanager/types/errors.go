@@ -24,8 +24,6 @@ var (
 	ErrSetRegisteredAlloyedPool                  = errors.New("error in setting registered alloyed pool")
 	ErrInvalidKeyFormat                          = errors.New("invalid key format")
 	ErrTotalAlloyedLiquidityIsZero               = errors.New("totalAlloyedLiquidity is zero")
-	ErrTakerFeeSharePercentageIsGreaterThan100   = errors.New("takerFeeSharePercentage is greater than 100")
-	ErrTakerFeeSharePercentageIsLessThanZero     = errors.New("takerFeeSharePercentage is less than zero")
 )
 
 type nonPositiveAmountError struct {
@@ -197,4 +195,12 @@ func (e InvalidAlloyedPoolIDError) Error() string {
 
 func (e InvalidAlloyedPoolIDError) Unwrap() error {
 	return e.Err
+}
+
+type InvalidTakerFeeSharePercentageError struct {
+	Percentage osmomath.Dec
+}
+
+func (e InvalidTakerFeeSharePercentageError) Error() string {
+	return fmt.Sprintf("invalid taker fee share percentage: %s, must be between 0 and 1", e.Percentage)
 }
