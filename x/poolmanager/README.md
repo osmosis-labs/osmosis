@@ -490,7 +490,7 @@ type TakerFeeShareAgreement struct {
 }
 ```
 
-For example, if the agreement specifies a 10% `skim_percent`, then 10% of all taker fees generated in a swap route containing the specified denom will be sent to the `skim_address` at the end of each epoch. These percentages are additive, so if there are agreements with skim percents of 10%, 20%, and 30%, the total skim percent for the route will be 60%.
+For example, if the agreement specifies a 10% `skim_percent`, then 10% of all taker fees generated in a swap route containing the specified denom will be sent to the `skim_address` at the end of each epoch. These percentages are additive, so if there are agreements with skim percents of 10%, 20%, and 30%, the total skim percent for the route will be 60%. If the skim percent exceeds 100%, the swap fails to go through.
 
 The protocol can also register alloyed asset pools, which are pools containing denoms with taker fee share agreements:
 
@@ -498,7 +498,7 @@ The protocol can also register alloyed asset pools, which are pools containing d
 func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error
 ```
 
-If a swap route contains an alloyed asset pool but no individual taker fee share agreement denoms, the taker fees will be skimmed based on the underlying denoms in the pool that have taker fee share agreements, adjusted by their respective weights. For example, if an alloyed asset pool contains 50% nBTC (10% skim percent) and 50% iBTC (5% skim percent), the total skim percent for the pool will be 7.5%, with 5% of the taker fees going to the nBTC skim address and 2.5% to the iBTC skim address.
+If a swap route contains an alloyed asset pool but no individual taker fee share agreement denoms, the taker fees will be skimmed based on the underlying denoms in the pool that have taker fee share agreements, adjusted by their respective weights. For example, if an alloyed asset pool contains 50% nBTC (10% skim percent) and 50% iBTC (5% skim percent), the total skim percent for the pool will be 7.5%, with 5% of the taker fees going to the nBTC skim address and 2.5% to the iBTC skim address. Just like the taker fee share agreements, if the skim percent exceeds 100%, the swap fails to go through.
 
 NOTE: We cache the alloyed pool asset weight composition and recalculate in the poolmanager EndBlock every 700 blocks (approx 30 minutes at 2.6s blocks) to avoid recalculating the weights for every swap.
 
