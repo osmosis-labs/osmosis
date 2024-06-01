@@ -406,7 +406,10 @@ func (q Querier) EstimateTradeBasedOnPriceImpact(
 }
 
 func (q Querier) AllTakerFeeShareAgreements(ctx sdk.Context, req queryproto.AllTakerFeeShareAgreementsRequest) (*queryproto.AllTakerFeeShareAgreementsResponse, error) {
-	takerFeeShareAgreements := q.K.GetAllTakerFeesShareAgreements(ctx)
+	takerFeeShareAgreements, err := q.K.GetAllTakerFeesShareAgreements(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 	return &queryproto.AllTakerFeeShareAgreementsResponse{
 		TakerFeeShareAgreements: takerFeeShareAgreements,
 	}, nil
@@ -434,7 +437,10 @@ func (q Querier) TakerFeeShareDenomsToAccruedValue(ctx sdk.Context, req querypro
 }
 
 func (q Querier) AllTakerFeeShareAccumulators(ctx sdk.Context, req queryproto.AllTakerFeeShareAccumulatorsRequest) (*queryproto.AllTakerFeeShareAccumulatorsResponse, error) {
-	takerFeeSkimAccumulators := q.K.GetAllTakerFeeShareAccumulators(ctx)
+	takerFeeSkimAccumulators, err := q.K.GetAllTakerFeeShareAccumulators(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 
 	return &queryproto.AllTakerFeeShareAccumulatorsResponse{
 		TakerFeeSkimAccumulators: takerFeeSkimAccumulators,

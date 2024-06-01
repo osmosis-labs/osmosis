@@ -520,7 +520,8 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 	}
 
 	// Confirm that all taker fee share accumulators are cleared
-	allTakerFeeShareAccumulators := s.App.PoolManagerKeeper.GetAllTakerFeeShareAccumulators(s.Ctx)
+	allTakerFeeShareAccumulators, err := s.App.PoolManagerKeeper.GetAllTakerFeeShareAccumulators(s.Ctx)
+	s.Require().NoError(err)
 	s.Require().Empty(allTakerFeeShareAccumulators)
 }
 
@@ -680,7 +681,8 @@ func (s *KeeperTestSuite) TestClearTakerFeeShareAccumulators() {
 			tc.setupAccumulators()
 			tc.fundTakerFeeCollector()
 			s.App.TxFeesKeeper.ClearTakerFeeShareAccumulators(s.Ctx)
-			allTakerFeeShareAccumulators := s.App.PoolManagerKeeper.GetAllTakerFeeShareAccumulators(s.Ctx)
+			allTakerFeeShareAccumulators, err := s.App.PoolManagerKeeper.GetAllTakerFeeShareAccumulators(s.Ctx)
+			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedTakerFeeShareAccumulators, allTakerFeeShareAccumulators)
 			tc.checkSkimAddressBalance()
 		})

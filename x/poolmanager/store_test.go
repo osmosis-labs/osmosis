@@ -173,7 +173,8 @@ func (s *KeeperTestSuite) TestGetAllTakerFeesShareAgreements() {
 			tc.setupFunc()
 			expectedTakerFeeShareAgreements := tc.expectedTakerFeeShareAgreements()
 
-			takerFeeShareAgreements := s.App.PoolManagerKeeper.GetAllTakerFeesShareAgreements(s.Ctx)
+			takerFeeShareAgreements, err := s.App.PoolManagerKeeper.GetAllTakerFeesShareAgreements(s.Ctx)
+			s.Require().NoError(err)
 			s.Require().Equal(expectedTakerFeeShareAgreements, takerFeeShareAgreements, "GetAllTakerFeesShareAgreements() = %v, want %v", takerFeeShareAgreements, expectedTakerFeeShareAgreements)
 		})
 	}
@@ -492,7 +493,8 @@ func (s *KeeperTestSuite) TestGetAllTakerFeeShareAccumulators() {
 
 			tc.setupFunc()
 
-			accumulators := s.App.PoolManagerKeeper.GetAllTakerFeeShareAccumulators(s.Ctx)
+			accumulators, err := s.App.PoolManagerKeeper.GetAllTakerFeeShareAccumulators(s.Ctx)
+			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedAccumulators, accumulators, "GetAllTakerFeeShareAccumulators() = %v, want %v", accumulators, tc.expectedAccumulators)
 		})
 	}
@@ -553,7 +555,8 @@ func (s *KeeperTestSuite) TestDeleteAllTakerFeeShareAccumulatorsForTakerFeeShare
 
 			s.App.PoolManagerKeeper.DeleteAllTakerFeeShareAccumulatorsForTakerFeeShareDenom(s.Ctx, tc.takerFeeShareDenom)
 
-			accumulators := s.App.PoolManagerKeeper.GetAllTakerFeeShareAccumulators(s.Ctx)
+			accumulators, err := s.App.PoolManagerKeeper.GetAllTakerFeeShareAccumulators(s.Ctx)
+			s.Require().NoError(err)
 			s.Require().Len(accumulators, int(tc.expectedNumOfAccumsAfterDelete))
 		})
 	}

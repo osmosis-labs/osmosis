@@ -308,7 +308,11 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 // clearTakerFeeShareAccumulators retrieves all taker fee share accumulators and sends the coins to the respective addresses.
 // This is used to clear the taker fee share accumulators at the end of each epoch, prior to distributing the rest of the taker fees.
 func (k Keeper) clearTakerFeeShareAccumulators(ctx sdk.Context) {
-	takerFeeSkimAccumulators := k.poolManager.GetAllTakerFeeShareAccumulators(ctx)
+	takerFeeSkimAccumulators, err := k.poolManager.GetAllTakerFeeShareAccumulators(ctx)
+	if err != nil {
+		ctx.Logger().Error("Error getting all taker fee share accumulators", "error", err)
+		return
+	}
 	for _, takerFeeSkimAccumulator := range takerFeeSkimAccumulators {
 		takerFeeShareAgreement, found := k.poolManager.GetTakerFeeShareAgreementFromDenom(ctx, takerFeeSkimAccumulator.Denom)
 		if !found {

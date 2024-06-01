@@ -30,7 +30,9 @@ func (k Keeper) GetAllTakerFeeShareAgreementsMap(ctx sdk.Context) (map[string]ty
 	takerFeeShareAgreementsMap := make(map[string]types.TakerFeeShareAgreement)
 	for ; iterator.Valid(); iterator.Next() {
 		takerFeeShareAgreement := types.TakerFeeShareAgreement{}
-		osmoutils.MustGet(store, iterator.Key(), &takerFeeShareAgreement)
+		if err := proto.Unmarshal(iterator.Value(), &takerFeeShareAgreement); err != nil {
+			return nil, err
+		}
 		takerFeeShareAgreementsMap[takerFeeShareAgreement.Denom] = takerFeeShareAgreement
 	}
 
@@ -39,7 +41,7 @@ func (k Keeper) GetAllTakerFeeShareAgreementsMap(ctx sdk.Context) (map[string]ty
 
 // GetAllTakerFeesShareAgreements creates a slice of all taker fee share agreements.
 // Used in the AllTakerFeeShareAgreementsRequest gRPC query.
-func (k Keeper) GetAllTakerFeesShareAgreements(ctx sdk.Context) []types.TakerFeeShareAgreement {
+func (k Keeper) GetAllTakerFeesShareAgreements(ctx sdk.Context) ([]types.TakerFeeShareAgreement, error) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, types.KeyTakerFeeShare)
 	defer iterator.Close()
@@ -47,11 +49,13 @@ func (k Keeper) GetAllTakerFeesShareAgreements(ctx sdk.Context) []types.TakerFee
 	takerFeeShareAgreements := []types.TakerFeeShareAgreement{}
 	for ; iterator.Valid(); iterator.Next() {
 		takerFeeShareAgreement := types.TakerFeeShareAgreement{}
-		osmoutils.MustGet(store, iterator.Key(), &takerFeeShareAgreement)
+		if err := proto.Unmarshal(iterator.Value(), &takerFeeShareAgreement); err != nil {
+			return nil, err
+		}
 		takerFeeShareAgreements = append(takerFeeShareAgreements, takerFeeShareAgreement)
 	}
 
-	return takerFeeShareAgreements
+	return takerFeeShareAgreements, nil
 }
 
 // SetTakerFeeShareAgreementsMapCached is used for initializing the cache for the taker fee share agreements.
@@ -173,18 +177,20 @@ func (k Keeper) IncreaseTakerFeeShareDenomsToAccruedValue(ctx sdk.Context, taker
 
 // GetAllTakerFeeShareAccumulators creates a slice of all taker fee share accumulators.
 // Used in the AllTakerFeeShareAccumulatorsRequest gRPC query.
-func (k Keeper) GetAllTakerFeeShareAccumulators(ctx sdk.Context) []types.TakerFeeSkimAccumulator {
+func (k Keeper) GetAllTakerFeeShareAccumulators(ctx sdk.Context) ([]types.TakerFeeSkimAccumulator, error) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := storetypes.KVStorePrefixIterator(store, types.TakerFeeSkimAccrualPrefix)
-	defer iterator.Close()
+	iter := storetypes.KVStorePrefixIterator(store, types.TakerFeeSkimAccrualPrefix)
+	defer iter.Close()
 
 	takerFeeAgreementDenomToCoins := make(map[string]sdk.Coins)
 	var denoms []string // Slice to keep track of the keys and ensure deterministic ordering
 
-	for ; iterator.Valid(); iterator.Next() {
+	for ; iter.Valid(); iter.Next() {
 		accruedValue := sdk.IntProto{}
-		osmoutils.MustGet(store, iterator.Key(), &accruedValue)
-		keyParts := strings.Split(string(iterator.Key()), types.KeySeparator)
+		if err := proto.Unmarshal(iter.Value(), &accruedValue); err != nil {
+			return nil, err
+		}
+		keyParts := strings.Split(string(iter.Key()), types.KeySeparator)
 		tierDenom := keyParts[1]
 		takerFeeDenom := keyParts[2]
 		accruedValueInt := accruedValue.Int
@@ -206,7 +212,7 @@ func (k Keeper) GetAllTakerFeeShareAccumulators(ctx sdk.Context) []types.TakerFe
 		})
 	}
 
-	return takerFeeSkimAccumulators
+	return takerFeeSkimAccumulators, nil
 }
 
 // DeleteAllTakerFeeShareAccumulatorsForTakerFeeShareDenom clears the TakerFeeShareAccumulator records for a specific taker fee share denom.
@@ -338,15 +344,17 @@ func (k Keeper) GetAllRegisteredAlloyedPools(ctx sdk.Context) ([]types.AlloyCont
 // GetAllRegisteredAlloyedPoolsByDenomMap creates the map used for the registered alloyed pools cache.
 func (k Keeper) GetAllRegisteredAlloyedPoolsByDenomMap(ctx sdk.Context) (map[string]types.AlloyContractTakerFeeShareState, error) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := storetypes.KVStorePrefixIterator(store, types.KeyRegisteredAlloyPool)
-	defer iterator.Close()
+	iter := storetypes.KVStorePrefixIterator(store, types.KeyRegisteredAlloyPool)
+	defer iter.Close()
 
 	registeredAlloyedPoolsMap := make(map[string]types.AlloyContractTakerFeeShareState)
-	for ; iterator.Valid(); iterator.Next() {
+	for ; iter.Valid(); iter.Next() {
 		registeredAlloyedPool := types.AlloyContractTakerFeeShareState{}
-		osmoutils.MustGet(store, iterator.Key(), &registeredAlloyedPool)
+		if err := proto.Unmarshal(iter.Value(), &registeredAlloyedPool); err != nil {
+			return nil, err
+		}
 
-		key := string(iterator.Key())
+		key := string(iter.Key())
 		parts := strings.Split(key, types.KeySeparator)
 		if len(parts) < 3 {
 			return nil, types.ErrInvalidKeyFormat

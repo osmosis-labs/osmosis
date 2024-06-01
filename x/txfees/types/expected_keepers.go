@@ -54,7 +54,7 @@ type PoolManager interface {
 	) (price osmomath.BigDec, err error)
 	UpdateTakerFeeTrackerForCommunityPoolByDenom(ctx sdk.Context, denom string, increasedAmt osmomath.Int) error
 	UpdateTakerFeeTrackerForStakersByDenom(ctx sdk.Context, denom string, increasedAmt osmomath.Int) error
-	GetAllTakerFeeShareAccumulators(ctx sdk.Context) []poolmanagertypes.TakerFeeSkimAccumulator
+	GetAllTakerFeeShareAccumulators(ctx sdk.Context) ([]poolmanagertypes.TakerFeeSkimAccumulator, error)
 	GetTakerFeeShareAgreementFromDenom(ctx sdk.Context, takerFeeShareDenom string) (poolmanagertypes.TakerFeeShareAgreement, bool)
 	DeleteAllTakerFeeShareAccumulatorsForTakerFeeShareDenom(ctx sdk.Context, takerFeeShareDenom string)
 }

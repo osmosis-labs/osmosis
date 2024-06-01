@@ -236,7 +236,8 @@ func (s *KeeperTestSuite) TestTakerFeeSkim() {
 			}
 			s.Require().NoError(err)
 
-			takerFeeShareAccumulators := s.App.PoolManagerKeeper.GetAllTakerFeeShareAccumulators(s.Ctx)
+			takerFeeShareAccumulators, err := s.App.PoolManagerKeeper.GetAllTakerFeeShareAccumulators(s.Ctx)
+			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedTakerFeeSkimAccumulators, takerFeeShareAccumulators)
 		})
 	}
