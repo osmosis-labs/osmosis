@@ -194,13 +194,30 @@ func (k Keeper) TakerFeeSkim(ctx sdk.Context, denomsInvolvedInRoute []string, to
 	// Sort the denoms involved in the route lexicographically.
 	osmoutils.SortSlice(denomsInvolvedInRoute)
 
-	// Check for individual denomShareAgreement and alloyedAssetShareAgreement denoms,
+	// Retrieve the share agreements for denoms.
+	denomShareAgreements, alloyedAssetShareAgreements := k.getTakerFeeShareAgreements(ctx, denomsInvolvedInRoute)
+
+	// Process denom share agreements if any exist.
+	if len(denomShareAgreements) > 0 {
+		return k.processDenomShareAgreements(ctx, denomShareAgreements, totalTakerFees)
+	}
+
+	// Process alloyed asset share agreements if no denom share agreements exist.
+	if len(alloyedAssetShareAgreements) > 0 {
+		return k.processAlloyedAssetShareAgreements(ctx, alloyedAssetShareAgreements, totalTakerFees)
+	}
+
+	return nil
+}
+
+// getTakerFeeShareAgreements checks for individual denomShareAgreement and alloyedAssetShareAgreement denoms.
+func (k Keeper) getTakerFeeShareAgreements(ctx sdk.Context, denomsInvolvedInRoute []string) ([]types.TakerFeeShareAgreement, []types.TakerFeeShareAgreement) {
 	denomShareAgreements := []types.TakerFeeShareAgreement{}
 	alloyedAssetShareAgreements := []types.TakerFeeShareAgreement{}
+
 	for _, denom := range denomsInvolvedInRoute {
 		// We first check if this denom has a taker fee share agreement.
 		takerFeeShareAgreement, found := k.GetTakerFeeShareAgreementFromDenom(ctx, denom)
-
 		if found {
 			// If the denom has a denomShareAgreement, add the denomShareAgreement to the denomShareAgreements slice.
 			denomShareAgreements = append(denomShareAgreements, takerFeeShareAgreement)
@@ -218,63 +235,67 @@ func (k Keeper) TakerFeeSkim(ctx sdk.Context, denomsInvolvedInRoute []string, to
 		}
 	}
 
-	// Filtering complete
+	return denomShareAgreements, alloyedAssetShareAgreements
+}
 
-	// If there are 1 or more denomShareAgreements, add up the percentage of the taker fees that should be skimmed off.
-	// If the total of taker fee share is greater than 1, return an error.
-	// Then, for each taker fee coin, calculate the amount to skim off and increase the accumulator for the denomShareAgreement denom / taker fee denom pair.
-	if len(denomShareAgreements) > 0 {
-		percentageOfTakerFeeToSkim := osmomath.ZeroDec()
-		for _, takerFeeShareAgreement := range denomShareAgreements {
-			// Add up the percentage of the taker fee that should be skimmed off.
-			percentageOfTakerFeeToSkim = percentageOfTakerFeeToSkim.Add(takerFeeShareAgreement.SkimPercent)
-		}
-		if percentageOfTakerFeeToSkim.GT(osmomath.OneDec()) {
-			return types.InvalidTakerFeeSharePercentageError{Percentage: percentageOfTakerFeeToSkim}
-		}
-		if percentageOfTakerFeeToSkim.LT(osmomath.ZeroDec()) {
-			return types.InvalidTakerFeeSharePercentageError{Percentage: percentageOfTakerFeeToSkim}
-		}
-		for _, takerFeeCoin := range totalTakerFees {
-			for _, takerFeeShareAgreement := range denomShareAgreements {
-				amountToSkim := osmomath.NewDecFromInt(takerFeeCoin.Amount).Mul(takerFeeShareAgreement.SkimPercent).TruncateInt()
-
-				// Increase the accumulator for the denomShareAgreement denom / taker fee denom pair.
-				err := k.IncreaseTakerFeeShareDenomsToAccruedValue(ctx, takerFeeShareAgreement.Denom, takerFeeCoin.Denom, amountToSkim)
-				if err != nil {
-					return err
-				}
-			}
-		}
-		return nil
+// processDenomShareAgreements processes denom share agreements by calculating the percentage of the taker fees that should be skimmed off and increasing the accumulator for the denomShareAgreement denom / taker fee denom pair.
+func (k Keeper) processDenomShareAgreements(ctx sdk.Context, denomShareAgreements []types.TakerFeeShareAgreement, totalTakerFees sdk.Coins) error {
+	percentageOfTakerFeeToSkim := osmomath.ZeroDec()
+	for _, agreement := range denomShareAgreements {
+		// Add up the percentage of the taker fee that should be skimmed off.
+		percentageOfTakerFeeToSkim = percentageOfTakerFeeToSkim.Add(agreement.SkimPercent)
 	}
 
-	// IFF there were no denomShareAgreement denoms and there are alloyedAssetShareAgreement denoms, we calculate the taker fee share for the alloyed asset for each underlying asset that has a taker fee share agreement.
-	if len(denomShareAgreements) == 0 && len(alloyedAssetShareAgreements) > 0 {
-		percentageOfTakerFeeToSkim := osmomath.ZeroDec()
-		for _, takerFeeShareAgreement := range alloyedAssetShareAgreements {
-			// Add up the percentage of the taker fee that should be skimmed off.
-			percentageOfTakerFeeToSkim = percentageOfTakerFeeToSkim.Add(takerFeeShareAgreement.SkimPercent)
-		}
-		if percentageOfTakerFeeToSkim.GT(osmomath.OneDec()) {
-			return types.InvalidTakerFeeSharePercentageError{Percentage: percentageOfTakerFeeToSkim}
-		}
-		if percentageOfTakerFeeToSkim.LT(osmomath.ZeroDec()) {
-			return types.InvalidTakerFeeSharePercentageError{Percentage: percentageOfTakerFeeToSkim}
-		}
-		for _, takerFeeCoin := range totalTakerFees {
-			for _, takerFeeShareAgreement := range alloyedAssetShareAgreements {
-				amountToSkim := osmomath.NewDecFromInt(takerFeeCoin.Amount).Mul(takerFeeShareAgreement.SkimPercent).TruncateInt()
-
-				// Increase the accumulator for the underlying denomShareAgreement denom / taker fee denom pair.
-				err := k.IncreaseTakerFeeShareDenomsToAccruedValue(ctx, takerFeeShareAgreement.Denom, takerFeeCoin.Denom, amountToSkim)
-				if err != nil {
-					return err
-				}
-			}
-		}
-		return nil
+	// Validate the total percentage of taker fees to skim.
+	if err := k.validatePercentage(percentageOfTakerFeeToSkim); err != nil {
+		return err
 	}
 
+	// For each taker fee coin, calculate the amount to skim off and increase the accumulator for the denomShareAgreement denom / taker fee denom pair.
+	for _, takerFeeCoin := range totalTakerFees {
+		for _, agreement := range denomShareAgreements {
+			amountToSkim := osmomath.NewDecFromInt(takerFeeCoin.Amount).Mul(agreement.SkimPercent).TruncateInt()
+			// Increase the accumulator for the denomShareAgreement denom / taker fee denom pair.
+			if err := k.IncreaseTakerFeeShareDenomsToAccruedValue(ctx, agreement.Denom, takerFeeCoin.Denom, amountToSkim); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// processAlloyedAssetShareAgreements processes alloyed asset share agreements by calculating the taker fee share for the alloyed asset for each underlying asset that has a taker fee share agreement.
+func (k Keeper) processAlloyedAssetShareAgreements(ctx sdk.Context, alloyedAssetShareAgreements []types.TakerFeeShareAgreement, totalTakerFees sdk.Coins) error {
+	percentageOfTakerFeeToSkim := osmomath.ZeroDec()
+	for _, agreement := range alloyedAssetShareAgreements {
+		// Add up the percentage of the taker fee that should be skimmed off.
+		percentageOfTakerFeeToSkim = percentageOfTakerFeeToSkim.Add(agreement.SkimPercent)
+	}
+
+	// Validate the total percentage of taker fees to skim.
+	if err := k.validatePercentage(percentageOfTakerFeeToSkim); err != nil {
+		return err
+	}
+
+	// For each taker fee coin, calculate the amount to skim off and increase the accumulator for the underlying denomShareAgreement denom / taker fee denom pair.
+	for _, takerFeeCoin := range totalTakerFees {
+		for _, agreement := range alloyedAssetShareAgreements {
+			amountToSkim := osmomath.NewDecFromInt(takerFeeCoin.Amount).Mul(agreement.SkimPercent).TruncateInt()
+			// Increase the accumulator for the underlying denomShareAgreement denom / taker fee denom pair.
+			if err := k.IncreaseTakerFeeShareDenomsToAccruedValue(ctx, agreement.Denom, takerFeeCoin.Denom, amountToSkim); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// validatePercentage validates the total percentage of taker fees to skim.
+func (k Keeper) validatePercentage(percentage osmomath.Dec) error {
+	if percentage.GT(osmomath.OneDec()) || percentage.LT(osmomath.ZeroDec()) {
+		return types.InvalidTakerFeeSharePercentageError{Percentage: percentage}
+	}
 	return nil
 }

@@ -243,6 +243,214 @@ func (s *KeeperTestSuite) TestTakerFeeSkim() {
 	}
 }
 
+func (s *KeeperTestSuite) TestGetTakerFeeShareAgreements() {
+	tests := map[string]struct {
+		setupFunc             func() []string
+		expectedDenomShares   []types.TakerFeeShareAgreement
+		expectedAlloyedShares []types.TakerFeeShareAgreement
+	}{
+		"one denomShareAgreement denom": {
+			setupFunc: func() []string {
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements)
+				return []string{denomA}
+			},
+			expectedDenomShares:   []types.TakerFeeShareAgreement{defaultTakerFeeShareAgreements[0]},
+			expectedAlloyedShares: []types.TakerFeeShareAgreement{},
+		},
+		"one alloyedAssetShareAgreement denom": {
+			setupFunc: func() []string {
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:2])
+				alloyedDenom := s.setupAndRegisterAlloyedPool([]string{denomA, denomB}, []uint16{1, 1})
+				return []string{alloyedDenom}
+			},
+			expectedDenomShares:   []types.TakerFeeShareAgreement{},
+			expectedAlloyedShares: modifySkimPercent(defaultTakerFeeShareAgreements[:2], []osmomath.Dec{osmomath.MustNewDecFromStr("0.5"), osmomath.MustNewDecFromStr("0.5")}),
+		},
+		"multiple denomShareAgreement denoms": {
+			setupFunc: func() []string {
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:2])
+				return []string{denomA, denomB}
+			},
+			expectedDenomShares:   defaultTakerFeeShareAgreements[:2],
+			expectedAlloyedShares: []types.TakerFeeShareAgreement{},
+		},
+		"multiple alloyedAssetShareAgreement denoms": {
+			setupFunc: func() []string {
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements)
+				alloyedDenom1 := s.setupAndRegisterAlloyedPool([]string{denomA, denomC}, []uint16{1, 1})
+				alloyedDenom2 := s.setupAndRegisterAlloyedPool([]string{denomB, denomC}, []uint16{1, 1})
+				return []string{alloyedDenom1, alloyedDenom2}
+			},
+			expectedDenomShares: []types.TakerFeeShareAgreement{},
+			expectedAlloyedShares: modifySkimPercent([]types.TakerFeeShareAgreement{
+				defaultTakerFeeShareAgreements[0], defaultTakerFeeShareAgreements[2], defaultTakerFeeShareAgreements[1], defaultTakerFeeShareAgreements[2],
+			}, []osmomath.Dec{
+				osmomath.MustNewDecFromStr("0.5"),
+				osmomath.MustNewDecFromStr("0.5"),
+				osmomath.MustNewDecFromStr("0.5"),
+				osmomath.MustNewDecFromStr("0.5"),
+			}),
+		},
+		"multiple denomShareAgreement denoms and multiple alloyedAssetShareAgreements": {
+			setupFunc: func() []string {
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:2])
+				alloyedDenom1 := s.setupAndRegisterAlloyedPool([]string{denomA, denomC}, []uint16{1, 1})
+				alloyedDenom2 := s.setupAndRegisterAlloyedPool([]string{denomB, denomC}, []uint16{1, 1})
+				return []string{denomA, denomB, alloyedDenom1, alloyedDenom2}
+			},
+			expectedDenomShares:   defaultTakerFeeShareAgreements[:2],
+			expectedAlloyedShares: []types.TakerFeeShareAgreement{},
+		},
+		"no agreements": {
+			setupFunc: func() []string {
+				return []string{denomA, denomB}
+			},
+			expectedDenomShares:   []types.TakerFeeShareAgreement{},
+			expectedAlloyedShares: []types.TakerFeeShareAgreement{},
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			denomsInvolvedInRoute := tc.setupFunc()
+
+			denomShares, alloyedShares := s.App.PoolManagerKeeper.GetTakerFeeShareAgreements(s.Ctx, denomsInvolvedInRoute)
+			s.Require().Equal(tc.expectedDenomShares, denomShares)
+			s.Require().Equal(tc.expectedAlloyedShares, alloyedShares)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestProcessDenomShareAgreements() {
+	tests := map[string]struct {
+		denomShareAgreements []types.TakerFeeShareAgreement
+		totalTakerFees       sdk.Coins
+		expectedAccumulators []types.TakerFeeSkimAccumulator
+		expectedError        error
+	}{
+		"valid denomShareAgreements": {
+			denomShareAgreements: []types.TakerFeeShareAgreement{
+				{Denom: denomA, SkimPercent: osmomath.MustNewDecFromStr("0.01")},
+			},
+			totalTakerFees: sdk.NewCoins(sdk.NewCoin(denomA, osmomath.NewInt(1000000000))),
+			expectedAccumulators: []types.TakerFeeSkimAccumulator{
+				{
+					Denom:            denomA,
+					SkimmedTakerFees: sdk.NewCoins(sdk.NewCoin(denomA, osmomath.NewInt(10000000))),
+				},
+			},
+			expectedError: nil,
+		},
+		"invalid denomShareAgreements with percentage > 1": {
+			denomShareAgreements: []types.TakerFeeShareAgreement{
+				{Denom: denomA, SkimPercent: osmomath.MustNewDecFromStr("1.01")},
+			},
+			totalTakerFees:       sdk.NewCoins(sdk.NewCoin(denomA, osmomath.NewInt(1000000000))),
+			expectedAccumulators: []types.TakerFeeSkimAccumulator{},
+			expectedError:        types.InvalidTakerFeeSharePercentageError{Percentage: osmomath.MustNewDecFromStr("1.01")},
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			err := s.App.PoolManagerKeeper.ProcessDenomShareAgreements(s.Ctx, tc.denomShareAgreements, tc.totalTakerFees)
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().Equal(tc.expectedError, err)
+				return
+			}
+			s.Require().NoError(err)
+
+			takerFeeShareAccumulators, err := s.App.PoolManagerKeeper.GetAllTakerFeeShareAccumulators(s.Ctx)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedAccumulators, takerFeeShareAccumulators)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestProcessAlloyedAssetShareAgreements() {
+	tests := map[string]struct {
+		alloyedAssetShareAgreements []types.TakerFeeShareAgreement
+		totalTakerFees              sdk.Coins
+		expectedAccumulators        []types.TakerFeeSkimAccumulator
+		expectedError               error
+	}{
+		"valid alloyedAssetShareAgreements": {
+			alloyedAssetShareAgreements: []types.TakerFeeShareAgreement{
+				{Denom: denomA, SkimPercent: osmomath.MustNewDecFromStr("0.01")},
+			},
+			totalTakerFees: sdk.NewCoins(sdk.NewCoin(denomA, osmomath.NewInt(1000000000))),
+			expectedAccumulators: []types.TakerFeeSkimAccumulator{
+				{
+					Denom:            denomA,
+					SkimmedTakerFees: sdk.NewCoins(sdk.NewCoin(denomA, osmomath.NewInt(10000000))),
+				},
+			},
+			expectedError: nil,
+		},
+		"invalid alloyedAssetShareAgreements with percentage > 1": {
+			alloyedAssetShareAgreements: []types.TakerFeeShareAgreement{
+				{Denom: denomA, SkimPercent: osmomath.MustNewDecFromStr("1.01")},
+			},
+			totalTakerFees:       sdk.NewCoins(sdk.NewCoin(denomA, osmomath.NewInt(1000000000))),
+			expectedAccumulators: []types.TakerFeeSkimAccumulator{},
+			expectedError:        types.InvalidTakerFeeSharePercentageError{Percentage: osmomath.MustNewDecFromStr("1.01")},
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			err := s.App.PoolManagerKeeper.ProcessAlloyedAssetShareAgreements(s.Ctx, tc.alloyedAssetShareAgreements, tc.totalTakerFees)
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().Equal(tc.expectedError, err)
+				return
+			}
+			s.Require().NoError(err)
+
+			takerFeeShareAccumulators, err := s.App.PoolManagerKeeper.GetAllTakerFeeShareAccumulators(s.Ctx)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedAccumulators, takerFeeShareAccumulators)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestValidatePercentage() {
+	tests := map[string]struct {
+		percentage    osmomath.Dec
+		expectedError error
+	}{
+		"valid percentage": {
+			percentage:    osmomath.MustNewDecFromStr("0.5"),
+			expectedError: nil,
+		},
+		"percentage greater than 1": {
+			percentage:    osmomath.MustNewDecFromStr("1.01"),
+			expectedError: types.InvalidTakerFeeSharePercentageError{Percentage: osmomath.MustNewDecFromStr("1.01")},
+		},
+		"negative percentage": {
+			percentage:    osmomath.MustNewDecFromStr("-0.01"),
+			expectedError: types.InvalidTakerFeeSharePercentageError{Percentage: osmomath.MustNewDecFromStr("-0.01")},
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			err := s.App.PoolManagerKeeper.ValidatePercentage(tc.percentage)
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().Equal(tc.expectedError, err)
+				return
+			}
+			s.Require().NoError(err)
+		})
+	}
+}
+
 func (s *KeeperTestSuite) setupAndRegisterAlloyedPool(denoms []string, ratios []uint16) string {
 	cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], denoms, ratios)
 	err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())

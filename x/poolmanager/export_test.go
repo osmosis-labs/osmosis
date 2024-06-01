@@ -80,3 +80,19 @@ func (k *Keeper) SetCacheTrackers(takerFeeShareAgreement map[string]types.TakerF
 func (k Keeper) GetAlloyedDenomFromPoolId(ctx sdk.Context, poolId uint64) (string, error) {
 	return k.getAlloyedDenomFromPoolId(ctx, poolId)
 }
+
+func (k Keeper) GetTakerFeeShareAgreements(ctx sdk.Context, denomsInvolvedInRoute []string) ([]types.TakerFeeShareAgreement, []types.TakerFeeShareAgreement) {
+	return k.getTakerFeeShareAgreements(ctx, denomsInvolvedInRoute)
+}
+
+func (k Keeper) ProcessDenomShareAgreements(ctx sdk.Context, denomShareAgreements []types.TakerFeeShareAgreement, totalTakerFees sdk.Coins) error {
+	return k.processDenomShareAgreements(ctx, denomShareAgreements, totalTakerFees)
+}
+
+func (k Keeper) ProcessAlloyedAssetShareAgreements(ctx sdk.Context, alloyedAssetShareAgreements []types.TakerFeeShareAgreement, totalTakerFees sdk.Coins) error {
+	return k.processAlloyedAssetShareAgreements(ctx, alloyedAssetShareAgreements, totalTakerFees)
+}
+
+func (k Keeper) ValidatePercentage(percentage osmomath.Dec) error {
+	return k.validatePercentage(percentage)
+}
