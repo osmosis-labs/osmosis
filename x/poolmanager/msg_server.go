@@ -116,6 +116,10 @@ func (server msgServer) SetTakerFeeShareAgreementForDenom(goCtx context.Context,
 		return nil, types.ErrUnauthorizedGov
 	}
 
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return nil, err
+	}
+
 	takerFeeShareAgreement := types.TakerFeeShareAgreement{
 		Denom:       msg.Denom,
 		SkimPercent: msg.SkimPercent,

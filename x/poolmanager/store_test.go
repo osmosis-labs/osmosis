@@ -2,6 +2,7 @@ package poolmanager_test
 
 import (
 	"fmt"
+	"math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -426,6 +427,28 @@ func (s *KeeperTestSuite) TestIncreaseTakerFeeShareDenomsToAccruedValue() {
 			takerFeeDenom:      denomB,
 			additiveValue:      oneHundred,
 			expectedValue:      threeHundred,
+			expectErr:          false,
+		},
+		"increase value with zero additive value": {
+			setupFunc: func() {
+				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomA, denomB, twoHundred)
+				s.Require().NoError(err)
+			},
+			takerFeeShareDenom: denomA,
+			takerFeeDenom:      denomB,
+			additiveValue:      osmomath.ZeroInt(),
+			expectedValue:      twoHundred,
+			expectErr:          false,
+		},
+		"increase value with very large additive value": {
+			setupFunc: func() {
+				err := s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomA, denomB, twoHundred)
+				s.Require().NoError(err)
+			},
+			takerFeeShareDenom: denomA,
+			takerFeeDenom:      denomB,
+			additiveValue:      osmomath.NewIntFromUint64(math.MaxUint64),
+			expectedValue:      osmomath.NewIntFromUint64(math.MaxUint64).Add(twoHundred),
 			expectErr:          false,
 		},
 	}
