@@ -1478,7 +1478,10 @@ func (s *KeeperTestSuite) TestRecalculateAndSetTakerFeeShareAlloyComposition() {
 
 func setTakerFeeShareAgreements(ctx sdk.Context, keeper *poolmanager.Keeper, agreements []types.TakerFeeShareAgreement) {
 	for _, agreement := range agreements {
-		keeper.SetTakerFeeShareAgreementForDenom(ctx, agreement)
+		err := keeper.SetTakerFeeShareAgreementForDenom(ctx, agreement)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
