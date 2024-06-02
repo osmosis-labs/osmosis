@@ -34,5 +34,5 @@ message AssetConfig {
 // ===================== ListAssetConfigsResponse
 message ListAssetConfigsResponse {
   // asset_configs is the list of asset configurations.
-  repeated AssetConfig asset_configs = 1;
+  repeated AssetConfig asset_configs = 1 [ (gogoproto.nullable) = false ];
 }

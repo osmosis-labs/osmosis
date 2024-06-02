@@ -13,7 +13,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	alloyedpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/cosmwasm/msg/v3"
+	v3 "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/cosmwasm/msg/v3"
 	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
@@ -431,7 +431,7 @@ func (k Keeper) queryAndCheckAlloyedDenom(ctx sdk.Context, contractAddr sdk.AccA
 		return "", err
 	}
 
-	var response alloyedpooltypes.ShareDenomResponse
+	var response v3.ShareDenomResponse
 	err = json.Unmarshal(respBz, &response)
 	if err != nil {
 		return "", err
@@ -463,44 +463,80 @@ func (k Keeper) queryAndCheckAlloyedDenom(ctx sdk.Context, contractAddr sdk.AccA
 // TakerFeeShareAgreement objects, each containing the denomination, skim percent, and skim address.
 // If the total alloyed liquidity is zero, it returns an error.
 func (k Keeper) snapshotTakerFeeShareAlloyComposition(ctx sdk.Context, contractAddr sdk.AccAddress) ([]types.TakerFeeShareAgreement, error) {
-	// Query for total pool liquidity
+	totalPoolLiquidity, err := k.queryTotalPoolLiquidity(ctx, contractAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	assetConfigs, err := k.queryAssetConfigs(ctx, contractAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	normalizationFactors, err := k.createNormalizationFactorsMap(assetConfigs)
+	if err != nil {
+		return nil, err
+	}
+
+	return k.calculateTakerFeeShareAgreements(ctx, totalPoolLiquidity, normalizationFactors)
+}
+
+// queryTotalPoolLiquidity queries the smart contract for the total pool liquidity.
+// It sends a query to the contract address and unmarshals the response into a slice of sdk.Coin.
+// Returns the total pool liquidity if successful, otherwise returns an error.
+func (k Keeper) queryTotalPoolLiquidity(ctx sdk.Context, contractAddr sdk.AccAddress) ([]sdk.Coin, error) {
 	queryBz := []byte(`{"get_total_pool_liquidity": {}}`)
 	respBz, err := k.wasmKeeper.QuerySmart(ctx, contractAddr, queryBz)
 	if err != nil {
-		return []types.TakerFeeShareAgreement{}, err
+		return nil, err
 	}
 
-	var liquidityResponse alloyedpooltypes.TotalPoolLiquidityResponse
-	err = json.Unmarshal(respBz, &liquidityResponse)
+	var liquidityResponse v3.TotalPoolLiquidityResponse
+	if err := json.Unmarshal(respBz, &liquidityResponse); err != nil {
+		return nil, err
+	}
+
+	return liquidityResponse.TotalPoolLiquidity, nil
+}
+
+// queryAssetConfigs queries the smart contract for the asset configurations.
+// It sends a query to the contract address and unmarshals the response into a slice of v3.AssetConfig.
+// Returns the asset configurations if successful, otherwise returns an error.
+func (k Keeper) queryAssetConfigs(ctx sdk.Context, contractAddr sdk.AccAddress) ([]v3.AssetConfig, error) {
+	queryBz := []byte(`{"list_asset_configs": {}}`)
+	respBz, err := k.wasmKeeper.QuerySmart(ctx, contractAddr, queryBz)
 	if err != nil {
-		return []types.TakerFeeShareAgreement{}, err
-	}
-	totalPoolLiquidity := liquidityResponse.TotalPoolLiquidity
-
-	// Query for asset configs
-	queryBz = []byte(`{"list_asset_configs": {}}`)
-	respBz, err = k.wasmKeeper.QuerySmart(ctx, contractAddr, queryBz)
-	if err != nil {
-		return []types.TakerFeeShareAgreement{}, err
+		return nil, err
 	}
 
-	var assetConfigsResponse alloyedpooltypes.ListAssetConfigsResponse
-	err = json.Unmarshal(respBz, &assetConfigsResponse)
-	if err != nil {
-		return []types.TakerFeeShareAgreement{}, err
+	var assetConfigsResponse v3.ListAssetConfigsResponse
+	if err := json.Unmarshal(respBz, &assetConfigsResponse); err != nil {
+		return nil, err
 	}
-	assetConfigs := assetConfigsResponse.AssetConfigs
 
-	// Create a map for quick lookup of normalization factors
+	return assetConfigsResponse.AssetConfigs, nil
+}
+
+// createNormalizationFactorsMap creates a map of normalization factors from the given asset configurations.
+// It iterates through the asset configurations and converts the normalization factor string to osmomath.Dec.
+// Returns the normalization factors map if successful, otherwise returns an error.
+func (k Keeper) createNormalizationFactorsMap(assetConfigs []v3.AssetConfig) (map[string]osmomath.Dec, error) {
 	normalizationFactors := make(map[string]osmomath.Dec)
 	for _, config := range assetConfigs {
 		factor, err := osmomath.NewDecFromStr(config.NormalizationFactor)
 		if err != nil {
-			return []types.TakerFeeShareAgreement{}, err
+			return nil, err
 		}
 		normalizationFactors[config.Denom] = factor
 	}
+	return normalizationFactors, nil
+}
 
+// calculateTakerFeeShareAgreements calculates the taker fee share agreements based on the total pool liquidity
+// and normalization factors. It iterates through the pool liquidity, normalizes the amounts, and calculates
+// the scaled skim percentages for each asset with a share agreement. Returns a slice of TakerFeeShareAgreement
+// objects if successful, otherwise returns an error.
+func (k Keeper) calculateTakerFeeShareAgreements(ctx sdk.Context, totalPoolLiquidity []sdk.Coin, normalizationFactors map[string]osmomath.Dec) ([]types.TakerFeeShareAgreement, error) {
 	totalAlloyedLiquidity := osmomath.ZeroDec()
 	var assetsWithShareAgreement []sdk.Coin
 	var takerFeeShareAgreements []types.TakerFeeShareAgreement
@@ -522,7 +558,7 @@ func (k Keeper) snapshotTakerFeeShareAlloyComposition(ctx sdk.Context, contractA
 	}
 
 	if totalAlloyedLiquidity.IsZero() {
-		return []types.TakerFeeShareAgreement{}, types.ErrTotalAlloyedLiquidityIsZero
+		return nil, types.ErrTotalAlloyedLiquidityIsZero
 	}
 
 	for i, coin := range assetsWithShareAgreement {

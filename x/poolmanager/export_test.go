@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	alloyedpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/cosmwasm/msg/v3"
 	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
@@ -95,4 +96,12 @@ func (k Keeper) ProcessAlloyedAssetShareAgreements(ctx sdk.Context, alloyedAsset
 
 func (k Keeper) ValidatePercentage(percentage osmomath.Dec) error {
 	return k.validatePercentage(percentage)
+}
+
+func (k Keeper) CreateNormalizationFactorsMap(assetConfigs []alloyedpooltypes.AssetConfig) (map[string]osmomath.Dec, error) {
+	return k.createNormalizationFactorsMap(assetConfigs)
+}
+
+func (k Keeper) CalculateTakerFeeShareAgreements(ctx sdk.Context, totalPoolLiquidity []sdk.Coin, normalizationFactors map[string]osmomath.Dec) ([]types.TakerFeeShareAgreement, error) {
+	return k.calculateTakerFeeShareAgreements(ctx, totalPoolLiquidity, normalizationFactors)
 }

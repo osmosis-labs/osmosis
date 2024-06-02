@@ -8,6 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	v3 "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/cosmwasm/msg/v3"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
 	"github.com/osmosis-labs/osmosis/v25/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
@@ -1404,6 +1405,106 @@ func (s *KeeperTestSuite) TestSnapshotTakerFeeShareAlloyComposition() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().Equal(tc.expectedComposition, actualComposition)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestCreateNormalizationFactorsMap() {
+	tests := map[string]struct {
+		assetConfigs []v3.AssetConfig
+		expected     map[string]osmomath.Dec
+		expectedErr  error
+	}{
+		"successful creation": {
+			assetConfigs: []v3.AssetConfig{
+				{Denom: "denomA", NormalizationFactor: "1"},
+				{Denom: "denomB", NormalizationFactor: "1000"},
+			},
+			expected: map[string]osmomath.Dec{
+				"denomA": osmomath.OneDec(),
+				"denomB": osmomath.MustNewDecFromStr("1000"),
+			},
+			expectedErr: nil,
+		},
+		"error in normalization factor": {
+			assetConfigs: []v3.AssetConfig{
+				{Denom: "denomA", NormalizationFactor: "invalid"},
+			},
+			expected:    nil,
+			expectedErr: fmt.Errorf("failed to set decimal string with base 10: invalid000000000000000000"),
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			actual, err := s.App.PoolManagerKeeper.CreateNormalizationFactorsMap(tc.assetConfigs)
+			if tc.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expectedErr.Error())
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expected, actual)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestCalculateTakerFeeShareAgreements() {
+	tests := map[string]struct {
+		totalPoolLiquidity   []sdk.Coin
+		normalizationFactors map[string]osmomath.Dec
+		setupFunc            func()
+		expected             []types.TakerFeeShareAgreement
+		expectedErr          error
+	}{
+		"successful calculation": {
+			totalPoolLiquidity: []sdk.Coin{
+				{Denom: denomA, Amount: oneHundred},
+				{Denom: denomB, Amount: twoHundred},
+			},
+			normalizationFactors: map[string]osmomath.Dec{
+				denomA: osmomath.OneDec(),
+				denomB: osmomath.MustNewDecFromStr("10"),
+			},
+			setupFunc: func() {
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:2])
+			},
+			expected: modifySkimPercent(defaultTakerFeeShareAgreements[:2], []osmomath.Dec{
+				osmomath.MustNewDecFromStr("100").Quo(osmomath.MustNewDecFromStr("2100")),
+				osmomath.MustNewDecFromStr("2000").Quo(osmomath.MustNewDecFromStr("2100")),
+			}),
+			expectedErr: nil,
+		},
+		"error: total alloyed liquidity is zero": {
+			totalPoolLiquidity: []sdk.Coin{
+				{Denom: denomA, Amount: osmomath.ZeroInt()},
+				{Denom: denomB, Amount: osmomath.ZeroInt()},
+			},
+			normalizationFactors: map[string]osmomath.Dec{
+				denomA: osmomath.OneDec(),
+				denomB: osmomath.OneDec(),
+			},
+			setupFunc: func() {
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:2])
+			},
+			expected:    nil,
+			expectedErr: types.ErrTotalAlloyedLiquidityIsZero,
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			tc.setupFunc()
+			actual, err := s.App.PoolManagerKeeper.CalculateTakerFeeShareAgreements(s.Ctx, tc.totalPoolLiquidity, tc.normalizationFactors)
+			if tc.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().Equal(tc.expectedErr.Error(), err.Error())
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expected, actual)
 			}
 		})
 	}
