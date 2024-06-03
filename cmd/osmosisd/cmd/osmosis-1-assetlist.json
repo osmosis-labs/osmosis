@@ -28,7 +28,7 @@
         "staking",
         "osmosis-main",
         "osmosis-info",
-        "osmosis-price:ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4:1263"
+        "osmosis-price:ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4:1464"
       ]
     },
     {
@@ -179,7 +179,7 @@
       "keywords": [
         "osmosis-main",
         "osmosis-info",
-        "osmosis-price:uosmo:1281"
+        "osmosis-price:ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4:1264"
       ]
     },
     {
@@ -296,7 +296,7 @@
       "logo_URIs": {
         "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/usdt.axl.svg"
       },
-      "coingecko_id": "bridged-tether-axelar",
+      "coingecko_id": "axelar-usdt",
       "keywords": [
         "osmosis-main",
         "osmosis-info",
@@ -361,7 +361,7 @@
       "keywords": [
         "osmosis-main",
         "osmosis-info",
-        "osmosis-price:uosmo:1066",
+        "osmosis-price:ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4:1260",
         "peg:collateralized"
       ]
     },
@@ -423,7 +423,7 @@
       "keywords": [
         "osmosis-main",
         "osmosis-info",
-        "osmosis-price:ibc/8242AD24008032E457D2E12D46588FD39FB54FB29680C6C7663D296B383C37C4:877"
+        "osmosis-price:ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858:877"
       ]
     },
     {
@@ -468,7 +468,7 @@
       "keywords": [
         "osmosis-main",
         "osmosis-info",
-        "osmosis-price:uosmo:1265"
+        "osmosis-price:uosmo:1400"
       ]
     },
     {
@@ -3230,7 +3230,7 @@
       ],
       "type_asset": "ics20",
       "base": "ibc/9F9B07EF9AD291167CF5700628145DE1DEB777C2CFC7907553B24446515F6D0E",
-      "name": "USD Coin (Gravity Bridge)",
+      "name": "USDC (Gravity Bridge)",
       "display": "gusdc",
       "symbol": "USDC.grv",
       "traces": [
@@ -3266,7 +3266,7 @@
       "logo_URIs": {
         "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/usdc.grv.svg"
       },
-      "coingecko_id": "bridged-usd-coin-gravity-bridge",
+      "coingecko_id": "gravity-bridge-usdc",
       "keywords": [
         "osmosis-main",
         "osmosis-info",
@@ -3787,7 +3787,7 @@
       "keywords": [
         "osmosis-main",
         "osmosis-info",
-        "osmosis-price:uosmo:1728"
+        "osmosis-price:ibc/4ABBEF4C8926DDDB320AE5188CFD63267ABBCEFC0583E4AE05D6E5AA2401DDAB:1163"
       ]
     },
     {
@@ -4635,6 +4635,7 @@
         }
       ],
       "logo_URIs": {
+        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/moonbeam/images/glmr.png",
         "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/moonbeam/images/glmr.svg"
       },
       "coingecko_id": "moonbeam",
@@ -5969,7 +5970,8 @@
         "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/secretnetwork/images/shdold.svg"
       },
       "keywords": [
-        "osmosis-price:uosmo:846"
+        "osmosis-price:uosmo:846",
+        "osmosis-unstable"
       ]
     },
     {
@@ -6648,7 +6650,7 @@
       },
       "coingecko_id": "arable-usd",
       "keywords": [
-        "osmosis-price:ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7:895"
+        "osmosis-price:ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858:895"
       ]
     },
     {
@@ -6854,7 +6856,7 @@
       "keywords": [
         "osmosis-main",
         "osmosis-info",
-        "osmosis-price:ibc/987C17B11ABC2B20019178ACE62929FE9840202CE79498E29FE8E5CB02B7C0A4:903"
+        "osmosis-price:ibc/987C17B11ABC2B20019178ACE62929FE9840202CE79498E29FE8E5CB02B7C0A4:1766"
       ]
     },
     {
@@ -7184,6 +7186,7 @@
       ]
     },
     {
+      "description": "The native EVM, governance and staking token of the Evmos Hub",
       "denom_units": [
         {
           "denom": "ibc/C5579A9595790017C600DD726276D978B9BF314CF82406CE342720A9C7911A01",
@@ -7207,7 +7210,7 @@
           "type": "liquid-stake",
           "counterparty": {
             "chain_name": "evmos",
-            "base_denom": "uaevmos"
+            "base_denom": "aevmos"
           },
           "provider": "Stride"
         },
@@ -7470,7 +7473,7 @@
       "keywords": [
         "osmosis-main",
         "osmosis-info",
-        "osmosis-price:ibc/1DCC8A6CB5689018431323953344A9F6CC4D0BFB261E88C9F7777372C10CD076:948"
+        "osmosis-price:ibc/1DCC8A6CB5689018431323953344A9F6CC4D0BFB261E88C9F7777372C10CD076:1767"
       ]
     },
     {
@@ -7559,7 +7562,7 @@
       "keywords": [
         "osmosis-main",
         "osmosis-info",
-        "osmosis-price:uosmo:952"
+        "osmosis-price:uosmo:1697"
       ]
     },
     {
@@ -9397,7 +9400,7 @@
       "keywords": [
         "osmosis-main",
         "osmosis-info",
-        "osmosis-price:uosmo:1039"
+        "osmosis-price:uosmo:1107"
       ]
     },
     {
@@ -9807,13 +9810,14 @@
         }
       ],
       "logo_URIs": {
+        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/polkadot/images/dot.png",
         "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/polkadot/images/dot.svg"
       },
       "coingecko_id": "polkadot",
       "keywords": [
         "osmosis-main",
         "osmosis-info",
-        "osmosis-price:ibc/4ABBEF4C8926DDDB320AE5188CFD63267ABBCEFC0583E4AE05D6E5AA2401DDAB:1144"
+        "osmosis-price:uosmo:1145"
       ]
     },
     {
@@ -11439,6 +11443,7 @@
         "wasm",
         "assets",
         "nft",
+        "XRPL",
         "osmosis-main",
         "osmosis-info",
         "osmosis-price:uosmo:1244"
@@ -11486,7 +11491,7 @@
       "keywords": [
         "osmosis-main",
         "osmosis-info",
-        "osmosis-price:uosmo:1248"
+        "osmosis-price:ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4:1247"
       ]
     },
     {
@@ -11946,7 +11951,6 @@
       "coingecko_id": "qwoyn",
       "keywords": [
         "gaming",
-        "osmosis-info",
         "osmosis-price:ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858:1295"
       ]
     },
@@ -12392,7 +12396,7 @@
       "keywords": [
         "osmosis-main",
         "osmosis-info",
-        "osmosis-price:uosmo:1645"
+        "osmosis-price:ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4:1646"
       ]
     },
     {
@@ -12461,7 +12465,7 @@
         "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/migaloo/images/ash.svg"
       },
       "keywords": [
-        "osmosis-price:ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC:1660"
+        "osmosis-price:ibc/0EF15DF2F02480ADE0BB6E85D9EBB5DAEA2836D3860E9F97F9AADE4F57A31AA0:1660"
       ]
     },
     {
@@ -12503,7 +12507,7 @@
         "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/migaloo/images/rac.svg"
       },
       "keywords": [
-        "osmosis-price:ibc/EDD6F0D66BCD49C1084FB2C35353B4ACD7B9191117CE63671B61320548F7C89D:1659"
+        "osmosis-price:ibc/0EF15DF2F02480ADE0BB6E85D9EBB5DAEA2836D3860E9F97F9AADE4F57A31AA0:1659"
       ]
     },
     {
@@ -14789,26 +14793,27 @@
         "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/bOSMO.png"
       },
       "keywords": [
-        "osmosis-unlisted"
+        "osmosis-main"
       ]
     },
     {
       "description": "PUNDIX token is the native token that functions within the Pundi X ecosystem, including PundiX Chain and XPOS.",
       "denom_units": [
         {
-          "denom": "ibc/2EB516F83C9FF44AB6826F269CA98A5622608C6C955E12112E58F23A324FEE07",
+          "denom": "ibc/46D8D1A6E2A80ECCB7CA6663086A2E749C508B68DA56A077CD26E6F4F9691EEE",
           "exponent": 0,
           "aliases": [
-            "ibc/55367B7B6572631B78A93C66EF9FDFCE87CDE372CC4ED7848DA78C1EB1DCDD78"
+            "eth0x0FD10b9899882a6f2fcb5c371E17e70FdEe00C38"
           ]
         },
         {
           "denom": "PUNDIX",
-          "exponent": 18
+          "exponent": 18,
+          "aliases": []
         }
       ],
       "type_asset": "ics20",
-      "base": "ibc/2EB516F83C9FF44AB6826F269CA98A5622608C6C955E12112E58F23A324FEE07",
+      "base": "ibc/46D8D1A6E2A80ECCB7CA6663086A2E749C508B68DA56A077CD26E6F4F9691EEE",
       "name": "Pundi X Token",
       "display": "PUNDIX",
       "symbol": "PUNDIX",
@@ -14818,33 +14823,18 @@
           "counterparty": {
             "chain_name": "fxcore",
             "base_denom": "eth0x0FD10b9899882a6f2fcb5c371E17e70FdEe00C38",
-            "channel_id": "channel-0"
+            "channel_id": "channel-19"
           },
           "chain": {
-            "channel_id": "channel-0",
-            "path": "transfer/channel-0/eth0x0FD10b9899882a6f2fcb5c371E17e70FdEe00C38"
-          }
-        },
-        {
-          "type": "ibc",
-          "counterparty": {
-            "chain_name": "pundix",
-            "base_denom": "ibc/55367B7B6572631B78A93C66EF9FDFCE87CDE372CC4ED7848DA78C1EB1DCDD78",
-            "channel_id": "channel-1"
-          },
-          "chain": {
-            "channel_id": "channel-12618",
-            "path": "transfer/channel-12618/transfer/channel-0/eth0x0FD10b9899882a6f2fcb5c371E17e70FdEe00C38"
+            "channel_id": "channel-2716",
+            "path": "transfer/channel-2716/eth0x0FD10b9899882a6f2fcb5c371E17e70FdEe00C38"
           }
         }
       ],
       "logo_URIs": {
         "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/ethereum/images/pundix.png"
       },
-      "coingecko_id": "pundi-x-2",
-      "keywords": [
-        "osmosis-unlisted"
-      ]
+      "coingecko_id": "pundi-x-2"
     },
     {
       "description": "The native fee, governance and staking token of the Tinkernet Parachain.",
@@ -14961,7 +14951,7 @@
       "keywords": [
         "osmosis-main",
         "osmosis-info",
-        "osmosis-price:uosmo:1696"
+        "osmosis-price:ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4:1651"
       ]
     },
     {
@@ -15004,8 +14994,9 @@
       },
       "coingecko_id": "dhealth",
       "keywords": [
-        "osmosis-price:uosmo:1746",
-        "osmosis-unlisted"
+        "osmosis-main",
+        "osmosis-info",
+        "osmosis-price:uosmo:1755"
       ]
     },
     {
@@ -15611,6 +15602,7 @@
         "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/eth.pica.svg"
       },
       "keywords": [
+        "osmosis-main",
         "osmosis-info",
         "osmosis-price:ibc/EA1D43981D5C9A1C4AAEA9C23BB1D4FA126BA9BC7020A25E0AE4AA841EA25DC5:1739"
       ]
@@ -15725,12 +15717,13 @@
         "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/fxs.pica.svg"
       },
       "keywords": [
+        "osmosis-main",
         "osmosis-info",
         "osmosis-price:uosmo:1719"
       ]
     },
     {
-      "description": "The first fractional-algorithmic stablecoin.",
+      "description": "The first fractional-algorithmic stablecoin by Frax Finance.",
       "denom_units": [
         {
           "denom": "ibc/9A8CBC029002DC5170E715F93FBF35011FFC9796371F59B1F3C3094AE1B453A9",
@@ -15806,7 +15799,7 @@
       ],
       "type_asset": "ics20",
       "base": "ibc/078AD6F581E8115CDFBD8FFA29D8C71AFE250CE952AFF80040CBC64868D44AD3",
-      "name": "Tether",
+      "name": "Tether (Ethereum)",
       "display": "usdt",
       "symbol": "USDT.pica",
       "traces": [
@@ -15914,6 +15907,7 @@
         "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/sfrax.pica.svg"
       },
       "keywords": [
+        "osmosis-main",
         "osmosis-info",
         "osmosis-price:ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4:1748"
       ]
@@ -16044,6 +16038,7 @@
         "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/sfrxeth.pica.svg"
       },
       "keywords": [
+        "osmosis-main",
         "osmosis-info",
         "osmosis-price:uosmo:1720"
       ]
@@ -16222,7 +16217,8 @@
       },
       "keywords": [
         "gaming",
-        "AI"
+        "AI",
+        "osmosis-unstable"
       ]
     },
     {
@@ -16334,7 +16330,11 @@
       ],
       "logo_URIs": {
         "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/neutron/images/WEIRD.png"
-      }
+      },
+      "keywords": [
+        "osmosis-info",
+        "osmosis-price:ibc/D3B574938631B0A1BA704879020C696E514CFADAA7643CDE4BD5EB010BDE327B:1776"
+      ]
     },
     {
       "description": "Uhm, Power Bottom",
@@ -16381,7 +16381,7 @@
       "symbol": "BWH",
       "traces": [],
       "logo_URIs": {
-        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/bwh.png"
+        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/BWH.png"
       },
       "keywords": [
         "osmosis-info",
@@ -16421,6 +16421,9 @@
           }
         }
       ],
+      "logo_URIs": {
+        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/juno/images/afa.png"
+      },
       "keywords": [
         "osmosis-info",
         "osmosis-price:ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4:1701"
@@ -16446,7 +16449,11 @@
       "traces": [],
       "logo_URIs": {
         "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/SHITMOS.png"
-      }
+      },
+      "keywords": [
+        "osmosis-info",
+        "osmosis-price:uosmo:1770"
+      ]
     },
     {
       "description": "Quicksilver Liquid Staked JUNO",
@@ -16638,6 +16645,552 @@
       "logo_URIs": {
         "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/quicksilver/images/qbld.png",
         "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/quicksilver/images/qbld.svg"
+      }
+    },
+    {
+      "description": "PEPE is a deflationary memecoin launched on Ethereum. ",
+      "denom_units": [
+        {
+          "denom": "ibc/5B5BFCC8A9F0D554A4245117F7798E85BE25B6C73DBFA2D6F369BD9DD6CACC6D",
+          "exponent": 0,
+          "aliases": [
+            "pepe-wei",
+            "ibc/6367C5AF2E2477FB13DD0C8CB0027FEDDF5AE947EE84C69FB75003E604E29D05"
+          ]
+        },
+        {
+          "denom": "pepe",
+          "exponent": 18
+        }
+      ],
+      "type_asset": "ics20",
+      "base": "ibc/5B5BFCC8A9F0D554A4245117F7798E85BE25B6C73DBFA2D6F369BD9DD6CACC6D",
+      "name": "Pepe",
+      "display": "pepe",
+      "symbol": "PEPE.pica",
+      "traces": [
+        {
+          "type": "ibc",
+          "counterparty": {
+            "chain_name": "ethereum",
+            "base_denom": "0x6982508145454Ce325dDbE47a25d4ec3d2311933",
+            "channel_id": "channel-2"
+          },
+          "chain": {
+            "channel_id": "channel-52",
+            "path": "transfer/channel-52/0x6982508145454ce325ddbe47a25d4ec3d2311933"
+          }
+        },
+        {
+          "type": "ibc",
+          "counterparty": {
+            "chain_name": "composable",
+            "base_denom": "ibc/6367C5AF2E2477FB13DD0C8CB0027FEDDF5AE947EE84C69FB75003E604E29D05",
+            "channel_id": "channel-3"
+          },
+          "chain": {
+            "channel_id": "channel-1279",
+            "path": "transfer/channel-1279/transfer/channel-52/0x6982508145454ce325ddbe47a25d4ec3d2311933"
+          }
+        }
+      ],
+      "logo_URIs": {
+        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/pepe.pica.png"
+      },
+      "keywords": [
+        "osmosis-unlisted"
+      ]
+    },
+    {
+      "description": "CRV is the governance token for Curve Finance.",
+      "denom_units": [
+        {
+          "denom": "ibc/4E606A3378A680C93967E9BEC9703FA75F5B2BE0316A79EE3FD25E5423B8C674",
+          "exponent": 0,
+          "aliases": [
+            "crv-wei",
+            "ibc/52C8C6197989684F891076F228F20CD1659AB6E1776E3B85E65CBBEC67DA5DED"
+          ]
+        },
+        {
+          "denom": "crv",
+          "exponent": 18
+        }
+      ],
+      "type_asset": "ics20",
+      "base": "ibc/4E606A3378A680C93967E9BEC9703FA75F5B2BE0316A79EE3FD25E5423B8C674",
+      "name": "Curve DAO",
+      "display": "crv",
+      "symbol": "CRV.pica",
+      "traces": [
+        {
+          "type": "ibc",
+          "counterparty": {
+            "chain_name": "ethereum",
+            "base_denom": "0xd533a949740bb3306d119cc777fa900ba034cd52",
+            "channel_id": "channel-2"
+          },
+          "chain": {
+            "channel_id": "channel-52",
+            "path": "transfer/channel-52/0xd533a949740bb3306d119cc777fa900ba034cd52"
+          }
+        },
+        {
+          "type": "ibc",
+          "counterparty": {
+            "chain_name": "composable",
+            "base_denom": "ibc/52C8C6197989684F891076F228F20CD1659AB6E1776E3B85E65CBBEC67DA5DED",
+            "channel_id": "channel-3"
+          },
+          "chain": {
+            "channel_id": "channel-1279",
+            "path": "transfer/channel-1279/transfer/channel-52/0xd533a949740bb3306d119cc777fa900ba034cd52"
+          }
+        }
+      ],
+      "logo_URIs": {
+        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/crv.pica.png"
+      },
+      "keywords": [
+        "osmosis-unlisted"
+      ]
+    },
+    {
+      "description": "A Liquid Restaking Token (LRT) and Strategy Manager for EigenLayer.",
+      "denom_units": [
+        {
+          "denom": "ibc/39AAE0F5F918B731BEF1E02E9BAED33C242805F668B0A941AC509FB569FE51CB",
+          "exponent": 0,
+          "aliases": [
+            "ezeth-wei",
+            "ibc/0247E0E2C174135AADF4EA172D97FF5C15A64689A403E83603EAE4F0616DD365"
+          ]
+        },
+        {
+          "denom": "ezeth",
+          "exponent": 18
+        }
+      ],
+      "type_asset": "ics20",
+      "base": "ibc/39AAE0F5F918B731BEF1E02E9BAED33C242805F668B0A941AC509FB569FE51CB",
+      "name": "Renzo Restaked ETH",
+      "display": "ezeth",
+      "symbol": "ezETH.pica",
+      "traces": [
+        {
+          "type": "liquid-stake",
+          "counterparty": {
+            "chain_name": "ethereum",
+            "base_denom": "wei"
+          },
+          "provider": "Renzo"
+        },
+        {
+          "type": "ibc",
+          "counterparty": {
+            "chain_name": "ethereum",
+            "base_denom": "0xbf5495efe5db9ce00f80364c8b423567e58d2110",
+            "channel_id": "channel-2"
+          },
+          "chain": {
+            "channel_id": "channel-52",
+            "path": "transfer/channel-52/0xbf5495efe5db9ce00f80364c8b423567e58d2110"
+          }
+        },
+        {
+          "type": "ibc",
+          "counterparty": {
+            "chain_name": "composable",
+            "base_denom": "ibc/0247E0E2C174135AADF4EA172D97FF5C15A64689A403E83603EAE4F0616DD365",
+            "channel_id": "channel-3"
+          },
+          "chain": {
+            "channel_id": "channel-1279",
+            "path": "transfer/channel-1279/transfer/channel-52/0xbf5495efe5db9ce00f80364c8b423567e58d2110"
+          }
+        }
+      ],
+      "logo_URIs": {
+        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/ezeth.pica.png"
+      },
+      "keywords": [
+        "osmosis-unlisted"
+      ]
+    },
+    {
+      "description": "Ethena USDe is a synthetic dollar protocol built on Ethereum.",
+      "denom_units": [
+        {
+          "denom": "ibc/BFFE212A23384C4EB055CF6F95A1F5EC1BE0F9BD286FAA66C3748F0444E67D63",
+          "exponent": 0,
+          "aliases": [
+            "usde-wei",
+            "ibc/FFD9EB71B4480ED4D73F7370A2AEBDB48447A0AAE27265F8060A957F0FF71983"
+          ]
+        },
+        {
+          "denom": "usde",
+          "exponent": 18
+        }
+      ],
+      "type_asset": "ics20",
+      "base": "ibc/BFFE212A23384C4EB055CF6F95A1F5EC1BE0F9BD286FAA66C3748F0444E67D63",
+      "name": "Ethena USDe",
+      "display": "usde",
+      "symbol": "USDe.pica",
+      "traces": [
+        {
+          "type": "synthetic",
+          "counterparty": {
+            "chain_name": "forex",
+            "base_denom": "USD"
+          },
+          "provider": "Ethena"
+        },
+        {
+          "type": "ibc",
+          "counterparty": {
+            "chain_name": "ethereum",
+            "base_denom": "0x4c9edd5852cd905f086c759e8383e09bff1e68b3",
+            "channel_id": "channel-2"
+          },
+          "chain": {
+            "channel_id": "channel-52",
+            "path": "transfer/channel-52/0x4c9edd5852cd905f086c759e8383e09bff1e68b3"
+          }
+        },
+        {
+          "type": "ibc",
+          "counterparty": {
+            "chain_name": "composable",
+            "base_denom": "ibc/FFD9EB71B4480ED4D73F7370A2AEBDB48447A0AAE27265F8060A957F0FF71983",
+            "channel_id": "channel-3"
+          },
+          "chain": {
+            "channel_id": "channel-1279",
+            "path": "transfer/channel-1279/transfer/channel-52/0x4c9edd5852cd905f086c759e8383e09bff1e68b3"
+          }
+        }
+      ],
+      "logo_URIs": {
+        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/usde.pica.png"
+      },
+      "keywords": [
+        "osmosis-unlisted"
+      ]
+    },
+    {
+      "description": "The native governance token of Ethena.",
+      "denom_units": [
+        {
+          "denom": "ibc/257FF64F160106F6EE43CEE7C761DA64C1346221895373CC810FFA1BFAC5A7CD",
+          "exponent": 0,
+          "aliases": [
+            "ena-wei",
+            "ibc/B089810D5A6316AD5E9C7808733DC4AB11C7BA3033221D28711FC7206BACB929"
+          ]
+        },
+        {
+          "denom": "ena",
+          "exponent": 18
+        }
+      ],
+      "type_asset": "ics20",
+      "base": "ibc/257FF64F160106F6EE43CEE7C761DA64C1346221895373CC810FFA1BFAC5A7CD",
+      "name": "Ethena",
+      "display": "ena",
+      "symbol": "ENA.pica",
+      "traces": [
+        {
+          "type": "ibc",
+          "counterparty": {
+            "chain_name": "ethereum",
+            "base_denom": "0x57e114b691db790c35207b2e685d4a43181e6061",
+            "channel_id": "channel-2"
+          },
+          "chain": {
+            "channel_id": "channel-52",
+            "path": "transfer/channel-52/0x57e114b691db790c35207b2e685d4a43181e6061"
+          }
+        },
+        {
+          "type": "ibc",
+          "counterparty": {
+            "chain_name": "composable",
+            "base_denom": "ibc/B089810D5A6316AD5E9C7808733DC4AB11C7BA3033221D28711FC7206BACB929",
+            "channel_id": "channel-3"
+          },
+          "chain": {
+            "channel_id": "channel-1279",
+            "path": "transfer/channel-1279/transfer/channel-52/0x57e114b691db790c35207b2e685d4a43181e6061"
+          }
+        }
+      ],
+      "logo_URIs": {
+        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/ena.pica.png"
+      },
+      "keywords": [
+        "osmosis-unlisted"
+      ]
+    },
+    {
+      "description": "eETH is a natively restaked liquid staking token on Ethereum.",
+      "denom_units": [
+        {
+          "denom": "ibc/8D0FFEA4EDB04E3C1738C9599B66AE49683E0540FC4C1214AC84534C200D818B",
+          "exponent": 0,
+          "aliases": [
+            "eeth-wei",
+            "ibc/34C23BA6BAA2EAE0199D85AD1E2E214F76B0BFAD42BF75542D15F71264EEB05B"
+          ]
+        },
+        {
+          "denom": "eeth",
+          "exponent": 18
+        }
+      ],
+      "type_asset": "ics20",
+      "base": "ibc/8D0FFEA4EDB04E3C1738C9599B66AE49683E0540FC4C1214AC84534C200D818B",
+      "name": "ether.fi Staked ETH",
+      "display": "eeth",
+      "symbol": "eETH.pica",
+      "traces": [
+        {
+          "type": "liquid-stake",
+          "counterparty": {
+            "chain_name": "ethereum",
+            "base_denom": "wei"
+          },
+          "provider": "EtherFi"
+        },
+        {
+          "type": "ibc",
+          "counterparty": {
+            "chain_name": "ethereum",
+            "base_denom": "0x35fa164735182de50811e8e2e824cfb9b6118ac2",
+            "channel_id": "channel-2"
+          },
+          "chain": {
+            "channel_id": "channel-52",
+            "path": "transfer/channel-52/0x35fa164735182de50811e8e2e824cfb9b6118ac2"
+          }
+        },
+        {
+          "type": "ibc",
+          "counterparty": {
+            "chain_name": "composable",
+            "base_denom": "ibc/34C23BA6BAA2EAE0199D85AD1E2E214F76B0BFAD42BF75542D15F71264EEB05B",
+            "channel_id": "channel-3"
+          },
+          "chain": {
+            "channel_id": "channel-1279",
+            "path": "transfer/channel-1279/transfer/channel-52/0x35fa164735182de50811e8e2e824cfb9b6118ac2"
+          }
+        }
+      ],
+      "logo_URIs": {
+        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/eeth.pica.png"
+      },
+      "keywords": [
+        "osmosis-unlisted"
+      ]
+    },
+    {
+      "description": "pxETH is built on top of the Pirex platform and forms the foundation of the Dinero protocol.",
+      "denom_units": [
+        {
+          "denom": "ibc/D09BB89B2187EF13EF006B44510749B0F02FD0B34F8BB55C70D812A1FF6148C7",
+          "exponent": 0,
+          "aliases": [
+            "pxeth-wei",
+            "ibc/36EF1EA47A09689C81D848B08E5240FA9FF13B17DB7DCF48B77D4D0D9B152821"
+          ]
+        },
+        {
+          "denom": "pxeth",
+          "exponent": 18
+        }
+      ],
+      "type_asset": "ics20",
+      "base": "ibc/D09BB89B2187EF13EF006B44510749B0F02FD0B34F8BB55C70D812A1FF6148C7",
+      "name": "Dinero Staked ETH",
+      "display": "pxeth",
+      "symbol": "pxETH.pica",
+      "traces": [
+        {
+          "type": "liquid-stake",
+          "counterparty": {
+            "chain_name": "ethereum",
+            "base_denom": "wei"
+          },
+          "provider": "Dinero"
+        },
+        {
+          "type": "ibc",
+          "counterparty": {
+            "chain_name": "ethereum",
+            "base_denom": "0x04c154b66cb340f3ae24111cc767e0184ed00cc6",
+            "channel_id": "channel-2"
+          },
+          "chain": {
+            "channel_id": "channel-52",
+            "path": "transfer/channel-52/0x04c154b66cb340f3ae24111cc767e0184ed00cc6"
+          }
+        },
+        {
+          "type": "ibc",
+          "counterparty": {
+            "chain_name": "composable",
+            "base_denom": "ibc/36EF1EA47A09689C81D848B08E5240FA9FF13B17DB7DCF48B77D4D0D9B152821",
+            "channel_id": "channel-3"
+          },
+          "chain": {
+            "channel_id": "channel-1279",
+            "path": "transfer/channel-1279/transfer/channel-52/0x04c154b66cb340f3ae24111cc767e0184ed00cc6"
+          }
+        }
+      ],
+      "logo_URIs": {
+        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/pxeth.pica.png"
+      },
+      "keywords": [
+        "osmosis-unlisted"
+      ]
+    },
+    {
+      "description": "A collateralized-debt-position (CDP) stablecoin by Curve DAO.",
+      "denom_units": [
+        {
+          "denom": "ibc/63551E7BB24008F0AFC1CB051A423A5104F781F035F8B1A191264B7086A0A0F6",
+          "exponent": 0,
+          "aliases": [
+            "crvusd-wei",
+            "ibc/C9D79BE8E3E75CA2DFDC722C77D7B179C39A4802D59019C790A825FDE34B724A"
+          ]
+        },
+        {
+          "denom": "crvusd",
+          "exponent": 18
+        }
+      ],
+      "type_asset": "ics20",
+      "base": "ibc/63551E7BB24008F0AFC1CB051A423A5104F781F035F8B1A191264B7086A0A0F6",
+      "name": "crvUSD",
+      "display": "crvusd",
+      "symbol": "crvUSD.pica",
+      "traces": [
+        {
+          "type": "synthetic",
+          "counterparty": {
+            "chain_name": "forex",
+            "base_denom": "USD"
+          },
+          "provider": "Curve Finance"
+        },
+        {
+          "type": "ibc",
+          "counterparty": {
+            "chain_name": "ethereum",
+            "base_denom": "0xf939e0a03fb07f59a73314e73794be0e57ac1b4e",
+            "channel_id": "channel-2"
+          },
+          "chain": {
+            "channel_id": "channel-52",
+            "path": "transfer/channel-52/0xf939e0a03fb07f59a73314e73794be0e57ac1b4e"
+          }
+        },
+        {
+          "type": "ibc",
+          "counterparty": {
+            "chain_name": "composable",
+            "base_denom": "ibc/C9D79BE8E3E75CA2DFDC722C77D7B179C39A4802D59019C790A825FDE34B724A",
+            "channel_id": "channel-3"
+          },
+          "chain": {
+            "channel_id": "channel-1279",
+            "path": "transfer/channel-1279/transfer/channel-52/0xf939e0a03fb07f59a73314e73794be0e57ac1b4e"
+          }
+        }
+      ],
+      "logo_URIs": {
+        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/crvUSD.pica.png"
+      },
+      "keywords": [
+        "osmosis-unlisted"
+      ]
+    },
+    {
+      "description": "Coin to support the real world in Wilhelmshall im Huy",
+      "denom_units": [
+        {
+          "denom": "factory/osmo1q77cw0mmlluxu0wr29fcdd0tdnh78gzhkvhe4n6ulal9qvrtu43qtd0nh8/wiha",
+          "exponent": 0
+        },
+        {
+          "denom": "WIHA",
+          "exponent": 6
+        }
+      ],
+      "address": "osmo1q77cw0mmlluxu0wr29fcdd0tdnh78gzhkvhe4n6ulal9qvrtu43qtd0nh8",
+      "base": "factory/osmo1q77cw0mmlluxu0wr29fcdd0tdnh78gzhkvhe4n6ulal9qvrtu43qtd0nh8/wiha",
+      "name": "WiliHall",
+      "display": "WIHA",
+      "symbol": "WIHA",
+      "traces": [],
+      "logo_URIs": {
+        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/WIHA.png"
+      },
+      "keywords": [
+        "osmosis-info",
+        "osmosis-price:uosmo:1779"
+      ]
+    },
+    {
+      "description": "For th",
+      "denom_units": [
+        {
+          "denom": "factory/osmo1q77cw0mmlluxu0wr29fcdd0tdnh78gzhkvhe4n6ulal9qvrtu43qtd0nh8/crazyhorse",
+          "exponent": 0
+        },
+        {
+          "denom": "CRAZYHORSE",
+          "exponent": 6
+        }
+      ],
+      "address": "osmo1q77cw0mmlluxu0wr29fcdd0tdnh78gzhkvhe4n6ulal9qvrtu43qtd0nh8",
+      "base": "factory/osmo1q77cw0mmlluxu0wr29fcdd0tdnh78gzhkvhe4n6ulal9qvrtu43qtd0nh8/crazyhorse",
+      "name": "HorseShoeBar",
+      "display": "CRAZYHORSE",
+      "symbol": "CRAZYHORSE",
+      "traces": [],
+      "logo_URIs": {
+        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/CrazyHorse.png"
+      },
+      "keywords": [
+        "osmosis-info",
+        "osmosis-price:uosmo:1772"
+      ]
+    },
+    {
+      "description": "Cosmus Cartol always get rich",
+      "denom_units": [
+        {
+          "denom": "factory/osmo1q77cw0mmlluxu0wr29fcdd0tdnh78gzhkvhe4n6ulal9qvrtu43qtd0nh8/coca",
+          "exponent": 0
+        },
+        {
+          "denom": "COCA",
+          "exponent": 6
+        }
+      ],
+      "address": "osmo1q77cw0mmlluxu0wr29fcdd0tdnh78gzhkvhe4n6ulal9qvrtu43qtd0nh8",
+      "base": "factory/osmo1q77cw0mmlluxu0wr29fcdd0tdnh78gzhkvhe4n6ulal9qvrtu43qtd0nh8/coca",
+      "name": "CosmusCartol",
+      "display": "COCA",
+      "symbol": "COCA",
+      "traces": [],
+      "logo_URIs": {
+        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/COCA.png"
       }
     }
   ]
