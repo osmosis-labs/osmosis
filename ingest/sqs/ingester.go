@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
@@ -13,20 +14,30 @@ var _ domain.Ingester = &sqsIngester{}
 // sqsIngester is a sidecar query server (SQS) implementation of Ingester.
 // It encapsulates all individual SQS ingesters.
 type sqsIngester struct {
-	poolsTransformer domain.PoolsTransformer
-	keepers          domain.SQSIngestKeepers
-	sqsGRPCClient    domain.SQSGRPClient
+	poolsTransformer    domain.PoolsTransformer
+	keepers             domain.SQSIngestKeepers
+	sqsGRPCClient       domain.SQSGRPClient
+	indexerPubSubClient indexerdomain.IndexerPubSubClient
 }
 
 // NewSidecarQueryServerIngester creates a new sidecar query server ingester.
 // poolsRepository is the storage for pools.
 // gammKeeper is the keeper for Gamm pools.
-func NewSidecarQueryServerIngester(poolsIngester domain.PoolsTransformer, appCodec codec.Codec, keepers domain.SQSIngestKeepers, sqsGRPCClient domain.SQSGRPClient) domain.Ingester {
+func NewSidecarQueryServerIngester(poolsIngester domain.PoolsTransformer, appCodec codec.Codec, keepers domain.SQSIngestKeepers, sqsGRPCClient domain.SQSGRPClient, indexerPubSubClient indexerdomain.IndexerPubSubClient) domain.Ingester {
 	return &sqsIngester{
-		poolsTransformer: poolsIngester,
-		keepers:          keepers,
-		sqsGRPCClient:    sqsGRPCClient,
+		poolsTransformer:    poolsIngester,
+		keepers:             keepers,
+		sqsGRPCClient:       sqsGRPCClient,
+		indexerPubSubClient: indexerPubSubClient,
 	}
+}
+
+func (i *sqsIngester) PublishBlock(ctx sdk.Context, height uint64, block indexerdomain.Block) error {
+	err := i.indexerPubSubClient.Publish(ctx, height, block)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // ProcessAllBlockData implements ingest.Ingester.

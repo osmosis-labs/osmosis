@@ -5,6 +5,7 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	indexerservice "github.com/osmosis-labs/osmosis/v25/ingest/indexer/service"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	poolstransformer "github.com/osmosis-labs/osmosis/v25/ingest/sqs/pools/transformer"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
@@ -69,8 +70,11 @@ func (c Config) Initialize(appCodec codec.Codec, keepers domain.SQSIngestKeepers
 	// Create sqs grpc client
 	sqsGRPCClient := service.NewGRPCCLient(c.GRPCIngestAddress, c.GRPCIngestMaxCallSizeBytes, appCodec)
 
+	// Create indexers pubsub client
+	pubSubClient := indexerservice.NewPubSubCLient("osmosis-data-team", "dev.block-topic")
+
 	// Create sqs ingester that encapsulates all ingesters.
-	sqsIngester := NewSidecarQueryServerIngester(poolsIngester, appCodec, keepers, sqsGRPCClient)
+	sqsIngester := NewSidecarQueryServerIngester(poolsIngester, appCodec, keepers, sqsGRPCClient, pubSubClient)
 
 	return sqsIngester, nil
 }
