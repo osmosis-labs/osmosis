@@ -145,5 +145,5 @@ type ValSetPreferenceKeeper interface {
 }
 
 type TwapKeeper interface {
-	GetMultiPoolArithmeticTwapToNow(ctx sdk.Context, route []*poolmanagertypes.SwapAmountInRoute, baseAssetDenom string, quoteAssetDenom string, startTime time.Time) (osmomath.Dec, error)
+	UnsafeGetMultiPoolArithmeticTwapToNow(ctx sdk.Context, route []*poolmanagertypes.SwapAmountInRoute, baseAssetDenom string, quoteAssetDenom string, startTime time.Time) (osmomath.Dec, error)
 }

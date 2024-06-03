@@ -147,13 +147,23 @@ func (k Keeper) GetBeginBlockAccumulatorRecord(ctx sdk.Context, poolId uint64, a
 	return k.getMostRecentRecord(ctx, poolId, asset0Denom, asset1Denom)
 }
 
-// GetMultiPoolArithmeticTwapToNow returns the price of two assets through multiple pools.
+// UnsafeGetMultiPoolArithmeticTwapToNow returns the TWAP price of two assets through multiple pools.
 // The price is calculated by taking the arithmetic TWAP of the two assets in each pool and multiplying
 // them together.
+//
 // Only pools with two assets are considered.
 // For each pool n, its base asset will be the quote asset of pool n-1. The first pool's base asset is specified
 // in baseAssetDenom and the last pool's quote asset is specified in quoteAssetDenom.
-func (k Keeper) GetMultiPoolArithmeticTwapToNow(
+//
+// N.B. This function is considered "unsafe" because it calculates the TWAP across multiple pools by multiplying
+// the TWAPs of individual pools, which is not technically correct. This is akin to calculating `average(a) * average(b)`
+// instead of `average(a * b)`. In general, `average(a * b)` is not necessarily equal to `average(a) * average(b)`.
+// This method can safely be used in instances where both of the following are true:
+// 1. The TWAP of all but one route have a stable pair. For instance, using on allBTC -> WBTC -> OSMO works because we
+// expect the TWAP of allBTC -> WBTC to be fairly stable.
+// 2. All assets involved are major assets that we can expected proto-rev cyclic arbs will handle arb opportunities. Therefore,
+// the result must be acceptatble within 1-3% error margin (roughly ~.3% * number of pools in path to close the arb).
+func (k Keeper) UnsafeGetMultiPoolArithmeticTwapToNow(
 	ctx sdk.Context,
 	route []*poolmanagertypes.SwapAmountInRoute,
 	baseAssetDenom string,
