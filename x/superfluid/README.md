@@ -716,8 +716,8 @@ superfluid staking than just LP shares. Each AssetType has a different
 algorithm used to get its "Osmo equivalent value".
 
 We represent different types of superfluid assets as different enums.
-Currently, enum `1` represent s Gamm shares and enum `2` Concentrated 
-liquidity positions. 
+Currently, enum `1` represents Gamm shares and enum `2` Concentrated
+liquidity positions.
 
 Enum value `0` is used for staking non-osmo tokens. These behave differently
 and their value is calculated based on the twap price of the token.
