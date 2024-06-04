@@ -1,10 +1,7 @@
 package twap
 
 import (
-	"errors"
 	"time"
-
-	errorsmod "cosmossdk.io/errors"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 
@@ -171,24 +168,24 @@ func (k Keeper) UnsafeGetMultiPoolArithmeticTwapToNow(
 	startTime time.Time,
 ) (osmomath.Dec, error) {
 	if len(route) == 0 {
-		return osmomath.Dec{}, errors.New("route cannot be empty")
+		return osmomath.Dec{}, types.ErrEmptyRoute
 	}
 	if route[len(route)-1].TokenOutDenom != quoteAssetDenom {
-		return osmomath.Dec{}, errors.New("last pool's quote asset must match the quote asset provided")
+		return osmomath.Dec{}, types.ErrMismatchedQuoteAsset
 	}
 
 	price := osmomath.NewDecFromInt(osmomath.OneInt())
 	baseAsset := baseAssetDenom
-	quoteAsset := route[0].TokenOutDenom
+
 	for _, pool := range route {
+		quoteAsset := pool.TokenOutDenom
 		twap, err := k.GetArithmeticTwapToNow(ctx, pool.PoolId, baseAsset, quoteAsset, startTime)
 		if err != nil {
-			return osmomath.Dec{}, errorsmod.Wrapf(err, "failed to get arithmetic twap for pool %d", pool.PoolId)
+			return osmomath.Dec{}, err
 		}
 		price = price.Mul(twap)
-		// Update the assets to the next pool's base and quote assets
+		// Update the base asset to the current quote asset for the next iteration
 		baseAsset = quoteAsset
-		quoteAsset = pool.TokenOutDenom
 	}
 
 	return price, nil
