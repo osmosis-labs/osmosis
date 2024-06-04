@@ -588,8 +588,8 @@ func ParseDenomPairTakerFee(arg string) ([]types.DenomPairTakerFee, error) {
 	finaldenomPairTakerFeeRecordsRecords := []types.DenomPairTakerFee{}
 	i := 0
 	for i < len(denomPairTakerFeeRecords) {
-		denom0 := denomPairTakerFeeRecords[i]
-		denom1 := denomPairTakerFeeRecords[i+1]
+		denomOfTokenIn := denomPairTakerFeeRecords[i]
+		denomOfTokenOut := denomPairTakerFeeRecords[i+1]
 
 		takerFeeStr := denomPairTakerFeeRecords[i+2]
 		takerFee, err := osmomath.NewDecFromStr(takerFeeStr)
@@ -598,9 +598,9 @@ func ParseDenomPairTakerFee(arg string) ([]types.DenomPairTakerFee, error) {
 		}
 
 		finaldenomPairTakerFeeRecordsRecords = append(finaldenomPairTakerFeeRecordsRecords, types.DenomPairTakerFee{
-			Denom0:   denom0,
-			Denom1:   denom1,
-			TakerFee: takerFee,
+			DenomOfTokenIn:  denomOfTokenIn,
+			DenomOfTokenOut: denomOfTokenOut,
+			TakerFee:        takerFee,
 		})
 
 		// increase counter by the next 3

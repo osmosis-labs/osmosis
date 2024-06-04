@@ -137,7 +137,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 
 	// Set the denom pair taker fees KVStore.
 	for _, denomPairTakerFee := range genState.DenomPairTakerFeeStore {
-		k.SetDenomPairTakerFee(ctx, denomPairTakerFee.Denom0, denomPairTakerFee.Denom1, denomPairTakerFee.TakerFee)
+		k.SetDenomPairTakerFee(ctx, denomPairTakerFee.DenomOfTokenIn, denomPairTakerFee.DenomOfTokenOut, denomPairTakerFee.TakerFee)
 	}
 }
 

@@ -55,7 +55,7 @@ func (p *DenomPairTakerFeeProposal) ValidateBasic() error {
 func (p DenomPairTakerFeeProposal) String() string {
 	recordsStr := ""
 	for _, record := range p.DenomPairTakerFee {
-		recordsStr = recordsStr + fmt.Sprintf("(Denom0: %s, Denom1: %s, TakerFee: %s) ", record.Denom0, record.Denom1, record.TakerFee.String())
+		recordsStr = recordsStr + fmt.Sprintf("(DenomOfTokenIn: %s, DenomOfTokenOut: %s, TakerFee: %s) ", record.DenomOfTokenIn, record.DenomOfTokenOut, record.TakerFee.String())
 	}
 
 	var b strings.Builder

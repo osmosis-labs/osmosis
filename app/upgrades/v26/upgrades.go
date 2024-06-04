@@ -63,6 +63,18 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		// We now want to treat denom pair taker fees as omni-directional. In other words, if the pair is set as `denom0: uosmo` and `denom1: usdc``, then the taker fee override is only
+		// applied if uosmo is the token in and usdc is the token out. In this example, if usdc is the token in and uosmo is the token out, then the default taker fee is applied.
+		// We therefore iterate over all existing taker fee overrides and create the opposite pair, treating all the existing overrides as bi-directional.
+		allTradingPairTakerFees, err := keepers.PoolManagerKeeper.GetAllTradingPairTakerFees(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, tradingPairTakerFee := range allTradingPairTakerFees {
+			// Create the opposite pair. This is why DenomOfTokenOut is in the DenomOfTokenIn position and vice versa.
+			keepers.PoolManagerKeeper.SetDenomPairTakerFee(ctx, tradingPairTakerFee.DenomOfTokenOut, tradingPairTakerFee.DenomOfTokenIn, tradingPairTakerFee.TakerFee)
+		}
+
 		return migrations, nil
 	}
 }
