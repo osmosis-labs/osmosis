@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -117,11 +115,9 @@ func (suite *SuperfluidEventsTestSuite) TestEmitRemoveSuperfluidAsset() {
 
 func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidDelegateEvent() {
 	testcases := map[string]struct {
-		ctx          sdk.Context
-		lockID       uint64
-		valAddr      string
-		newShares    math.LegacyDec
-		delegatedAmt math.Int
+		ctx     sdk.Context
+		lockID  uint64
+		valAddr string
 	}{
 		"basic valid": {
 			ctx:     suite.CreateTestContext(),
@@ -140,12 +136,6 @@ func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidDelegateEvent() {
 					types.TypeEvtSuperfluidDelegate,
 					sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", tc.lockID)),
 					sdk.NewAttribute(types.AttributeValidator, tc.valAddr),
-				),
-				sdk.NewEvent(
-					stakingtypes.EventTypeDelegate,
-					sdk.NewAttribute(stakingtypes.AttributeKeyValidator, tc.valAddr),
-					sdk.NewAttribute(sdk.AttributeKeyAmount, tc.delegatedAmt.String()),
-					sdk.NewAttribute(stakingtypes.AttributeKeyNewShares, tc.newShares.String()),
 				),
 			}
 

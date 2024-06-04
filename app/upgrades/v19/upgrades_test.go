@@ -145,7 +145,7 @@ func (s *UpgradeTestSuite) setupSuperfluidDelegation() (val sdk.ValAddress, lock
 	s.Require().NoError(err)
 
 	// now we superfluid delegate
-	_, _, err = s.App.SuperfluidKeeper.SuperfluidDelegate(s.Ctx, lock.Owner, lock.ID, superfluidVal.String())
+	err = s.App.SuperfluidKeeper.SuperfluidDelegate(s.Ctx, lock.Owner, lock.ID, superfluidVal.String())
 	s.Require().NoError(err)
 
 	return superfluidVal, denom
