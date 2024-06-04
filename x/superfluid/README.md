@@ -1073,7 +1073,7 @@ TODO - expand on this Uses `lockup` accumulator to find total amount of
 synthetic locks for a given `IntermediaryAccount` (Superfluid Asset +
 Validator pair)
 
-## Pool tokens vs non-pool Tokens
+## Pool tokens vs non-pool tokens
 
 The superfluid module treats pool tokens and non-pool tokens differently
 when calculating the staking power of a denom. This is because the pool tokens
