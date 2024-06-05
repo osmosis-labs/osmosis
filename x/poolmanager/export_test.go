@@ -56,3 +56,23 @@ func (k Keeper) TrackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.
 func (k Keeper) CalcAndChargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, sender sdk.AccAddress, exactIn bool) (sdk.Coin, error) {
 	return k.calcAndChargeTakerFee(ctx, tokenIn, tokenOutDenom, sender, exactIn)
 }
+
+func (k Keeper) RouteExactAmountInInternal(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	route []types.SwapAmountInRoute,
+	tokenIn sdk.Coin,
+	tokenOutMinAmount osmomath.Int,
+) (tokenOutAmount osmomath.Int, totalTakerFeesToCharge sdk.Coins, err error) {
+	return k.routeExactAmountInInternal(ctx, sender, route, tokenIn, tokenOutMinAmount)
+}
+
+func (k Keeper) RouteExactAmountOutInternal(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	route []types.SwapAmountOutRoute,
+	tokenInMaxAmount osmomath.Int,
+	tokenOut sdk.Coin,
+) (tokenInAmount osmomath.Int, totalTakerFeesToCharge sdk.Coins, err error) {
+	return k.routeExactAmountOutInternal(ctx, sender, route, tokenInMaxAmount, tokenOut)
+}
