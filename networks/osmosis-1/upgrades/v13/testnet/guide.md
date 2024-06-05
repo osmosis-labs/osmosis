@@ -1,6 +1,6 @@
 # v12 to v13 Testnet Upgrade Guide
 
-Countdown: <https://testnet.mintscan.io/osmosis-testnet/blocks/7759340>
+Countdown: <https://www.mintscan.io/osmosis-testnet/block/7759340>
 
 Height: 7759340
 
