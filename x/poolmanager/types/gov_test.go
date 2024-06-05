@@ -19,6 +19,11 @@ func TestDenomPairTakerFeeProposalMarshalUnmarshal(t *testing.T) {
 			TakerFee:      osmomath.MustNewDecFromStr("0.0013"),
 		},
 		{
+			TokenInDenom:  appparams.BaseCoinUnit,
+			TokenOutDenom: "uion",
+			TakerFee:      osmomath.MustNewDecFromStr("0.0013"),
+		},
+		{
 			TokenInDenom:  "stake",
 			TokenOutDenom: appparams.BaseCoinUnit,
 			TakerFee:      osmomath.MustNewDecFromStr("0.0016"),
