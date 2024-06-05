@@ -50,7 +50,7 @@ func (s *KeeperTestSuite) TestSplitRouteSwapExactAmountIn() {
 			tokenoutMinAmount: min_amount,
 
 			expectedSplitRouteSwapEvent: 1,
-			expectedMessageEvents:       10, // 4 pool creation + 6 events in SplitRouteExactAmountIn keeper methods
+			expectedMessageEvents:       9, // 4 pool creation + 5 events in SplitRouteExactAmountIn keeper methods
 		},
 		"error: empty route": {
 			routes:            []types.SwapAmountInSplitRoute{},
@@ -140,7 +140,7 @@ func (s *KeeperTestSuite) TestSplitRouteSwapExactAmountOut() {
 			tokenoutMaxAmount: max_amount,
 
 			expectedSplitRouteSwapEvent: 1,
-			expectedMessageEvents:       10, // 4 pool creation + 6 events in SplitRouteExactAmountOut keeper methods
+			expectedMessageEvents:       9, // 4 pool creation + 5 events in SplitRouteExactAmountOut keeper methods
 		},
 		"error: empty route": {
 			routes:            []types.SwapAmountOutSplitRoute{},
