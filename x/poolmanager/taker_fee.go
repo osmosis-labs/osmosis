@@ -140,13 +140,13 @@ func (k Keeper) calculateTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDen
 
 	// Calculate the token amount after the taker fee and the taker fee charged.
 	var tokenInAfterTakerFee sdk.Coin
-	var takerFeeCharged sdk.Coin
+	var takerFeeToCharge sdk.Coin
 	if exactIn {
-		tokenInAfterTakerFee, takerFeeCharged = CalcTakerFeeExactIn(tokenIn, takerFee)
+		tokenInAfterTakerFee, takerFeeToCharge = CalcTakerFeeExactIn(tokenIn, takerFee)
 	} else {
-		tokenInAfterTakerFee, takerFeeCharged = CalcTakerFeeExactOut(tokenIn, takerFee)
+		tokenInAfterTakerFee, takerFeeToCharge = CalcTakerFeeExactOut(tokenIn, takerFee)
 	}
-	return tokenInAfterTakerFee, takerFeeCharged, nil
+	return tokenInAfterTakerFee, takerFeeToCharge, nil
 }
 
 // chargeTakerFees charges the taker fees from the sender's account to the taker fee module account.

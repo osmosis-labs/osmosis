@@ -50,7 +50,7 @@ func (k *Keeper) GetPoolModuleAndPool(ctx sdk.Context, poolId uint64) (swapModul
 // next routed pool until the last pool is reached.
 // Transaction succeeds if final amount out is greater than tokenOutMinAmount defined
 // and no errors are encountered along the way.
-// After all swaps are executed, the taker fees are charged for all swaps in the route all at once.
+// Taker fees are charged once after all swaps are executed.
 func (k Keeper) RouteExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -91,7 +91,7 @@ func (k Keeper) routeExactAmountInInternal(
 	}
 
 	// Track the taker fees to charge for the entire swap, so we can charge it once at the very end.
-	totalTakerFeesToCharge = sdk.Coins{}
+	totalTakerFeesToCharge = sdk.NewCoins()
 
 	// Iterate through the route and execute a series of swaps through each pool.
 	for i, routeStep := range route {
@@ -151,11 +151,11 @@ func (k Keeper) SplitRouteExactAmountIn(
 		// from all multihop paths.
 		multihopStartTokenOutMinAmount = osmomath.ZeroInt()
 		totalOutAmount                 = osmomath.ZeroInt()
-		totalTakerFeesToCharge         = sdk.Coins{}
+		totalTakerFeesToCharge         = sdk.NewCoins()
 	)
 
 	for _, multihopRoute := range routes {
-		tokenOutAmount, takerFees, err := k.routeExactAmountInInternal(
+		tokenOutAmount, takerFeesToCharge, err := k.routeExactAmountInInternal(
 			ctx,
 			sender,
 			types.SwapAmountInRoutes(multihopRoute.Pools),
@@ -166,7 +166,7 @@ func (k Keeper) SplitRouteExactAmountIn(
 		}
 
 		totalOutAmount = totalOutAmount.Add(tokenOutAmount)
-		totalTakerFeesToCharge = totalTakerFeesToCharge.Add(takerFees...)
+		totalTakerFeesToCharge = totalTakerFeesToCharge.Add(takerFeesToCharge...)
 	}
 
 	if !totalOutAmount.IsPositive() {
@@ -220,7 +220,7 @@ func (k Keeper) SwapExactAmountIn(
 // as input to a pool to get a minimum amount of the desired token out, while tallying the taker fee.
 // This method should be used in the context of multi-hop swaps, where the total taker fees can be charged at the end of all the hops.
 // This method does NOT charge a taker fee, but instead returns the taker fee that should be charged.
-// The caller should tally all takerFeeCharged values from every call to this function, and charge them at the end of the multi-hop swap via the chargeTakerFees function.
+// The caller should tally all takerFeeToCharge values from every call to this function, and charge them at the end of the multi-hop swap via the chargeTakerFees function.
 func (k Keeper) SwapExactAmountTallyTakerFee(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -273,14 +273,14 @@ func (k Keeper) swapExactAmountInInternal(
 	}
 
 	var tokenInAfterSubTakerFee sdk.Coin
-	var takerFeeCharged sdk.Coin
+	var takerFeeToCharge sdk.Coin
 
 	// Optionally calculate and/or charge the taker fee
 	if calcTakerFee {
 		if chargeTakerFee {
 			tokenInAfterSubTakerFee, err = k.calcAndChargeTakerFee(ctx, tokenIn, tokenOutDenom, sender, true)
 		} else {
-			tokenInAfterSubTakerFee, takerFeeCharged, err = k.calculateTakerFee(ctx, tokenIn, tokenOutDenom, sender, true)
+			tokenInAfterSubTakerFee, takerFeeToCharge, err = k.calculateTakerFee(ctx, tokenIn, tokenOutDenom, sender, true)
 		}
 		if err != nil {
 			return osmomath.Int{}, sdk.Coin{}, err
@@ -298,7 +298,7 @@ func (k Keeper) swapExactAmountInInternal(
 	// Track volume for volume-splitting incentives
 	k.trackVolume(ctx, pool.GetId(), tokenIn)
 
-	return tokenOutAmount, takerFeeCharged, nil
+	return tokenOutAmount, takerFeeToCharge, nil
 }
 
 func (k Keeper) MultihopEstimateOutGivenExactAmountInNoTakerFee(
@@ -444,7 +444,7 @@ func (k Keeper) routeExactAmountOutInternal(
 	insExpected[0] = tokenInMaxAmount
 
 	// Track the taker fees to charge for the entire swap, so we can charge it once at the very end.
-	totalTakerFeesToCharge = sdk.Coins{}
+	totalTakerFeesToCharge = sdk.NewCoins()
 
 	// Iterate through each routed pool and execute their respective swaps.
 	for i, routeStep := range route {
@@ -534,11 +534,11 @@ func (k Keeper) SplitRouteExactAmountOut(
 		// on the total of in amount from all multihop paths.
 		multihopStartTokenInMaxAmount = intMaxValue
 		totalInAmount                 = osmomath.ZeroInt()
-		totalTakerFeesToCharge        = sdk.Coins{}
+		totalTakerFeesToCharge        = sdk.NewCoins()
 	)
 
 	for _, multihopRoute := range route {
-		tokenOutAmount, takerFees, err := k.routeExactAmountOutInternal(
+		tokenOutAmount, takerFeesToCharge, err := k.routeExactAmountOutInternal(
 			ctx,
 			sender,
 			types.SwapAmountOutRoutes(multihopRoute.Pools),
@@ -549,7 +549,7 @@ func (k Keeper) SplitRouteExactAmountOut(
 		}
 
 		totalInAmount = totalInAmount.Add(tokenOutAmount)
-		totalTakerFeesToCharge = totalTakerFeesToCharge.Add(takerFees...)
+		totalTakerFeesToCharge = totalTakerFeesToCharge.Add(takerFeesToCharge...)
 	}
 
 	if !totalInAmount.IsPositive() {
