@@ -122,7 +122,7 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 			}
 
 			// System under test.
-			tokenInAfterTakerFee, err := poolManager.ChargeTakerFee(s.Ctx, tc.tokenIn, tc.tokenOutDenom, s.TestAccs[tc.senderIndex], tc.exactIn)
+			tokenInAfterTakerFee, err := poolManager.CalcAndChargeTakerFee(s.Ctx, tc.tokenIn, tc.tokenOutDenom, s.TestAccs[tc.senderIndex], tc.exactIn)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)

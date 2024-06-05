@@ -62,6 +62,9 @@ func (k Keeper) RouteExactAmountIn(
 		return osmomath.Int{}, err
 	}
 
+	// Track the taker fees to charge for the entire swap, so we can charge it once at the very end.
+	totalTakerFeesToCharge := sdk.Coins{}
+
 	// Iterate through the route and execute a series of swaps through each pool.
 	for i, routeStep := range route {
 		// To prevent the multihop swap from being interrupted prematurely, we keep
@@ -71,14 +74,27 @@ func (k Keeper) RouteExactAmountIn(
 			_outMinAmount = tokenOutMinAmount
 		}
 
-		tokenOutAmount, err = k.SwapExactAmountIn(ctx, sender, routeStep.PoolId, tokenIn, routeStep.TokenOutDenom, _outMinAmount)
+		// Swap the exact amount in, tallying (but not charging) the taker fee.
+		tokenOutAmountInternal, takerFeeToChargeInternal, err := k.SwapExactAmountTallyTakerFee(ctx, sender, routeStep.PoolId, tokenIn, routeStep.TokenOutDenom, _outMinAmount)
 		if err != nil {
 			return osmomath.Int{}, err
 		}
 
+		// Add the taker fee to the total fees to charge
+		totalTakerFeesToCharge = totalTakerFeesToCharge.Add(takerFeeToChargeInternal)
+		tokenOutAmount = tokenOutAmountInternal
+
 		// Chain output of current pool as the input for the next routed pool
 		tokenIn = sdk.NewCoin(routeStep.TokenOutDenom, tokenOutAmount)
 	}
+
+	// Charge the taker fees for all the swaps in the route if there are any
+	if !totalTakerFeesToCharge.IsZero() {
+		if err := k.chargeTakerFees(ctx, totalTakerFeesToCharge, sender); err != nil {
+			return osmomath.Int{}, err
+		}
+	}
+
 	return tokenOutAmount, nil
 }
 
@@ -155,6 +171,9 @@ func (k Keeper) SplitRouteExactAmountIn(
 // The method succeeds when tokenOutAmount is greater than tokenOutMinAmount defined.
 // Errors otherwise. Also, errors if the pool id is invalid, if tokens do not belong to the pool with given
 // id or if sender does not have the swapped-in tokenIn.
+// This method should be used in the context of a single hop swap, since it charges the taker fee after the swap.
+// In the context of multi-hop swaps, it is more performant to utilize SwapExactAmountTallyTakerFee, and charge
+// the taker fee at the end of all the hops.
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -162,32 +181,25 @@ func (k Keeper) SwapExactAmountIn(
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	tokenOutMinAmount osmomath.Int,
-) (tokenOutAmount osmomath.Int, err error) {
-	swapModule, pool, err := k.GetPoolModuleAndPool(ctx, poolId)
-	if err != nil {
-		return osmomath.Int{}, err
-	}
+) (osmomath.Int, error) {
+	tokenOutAmount, _, err := k.swapExactAmountInInternal(ctx, sender, poolId, tokenIn, tokenOutDenom, tokenOutMinAmount, true, true)
+	return tokenOutAmount, err
+}
 
-	// Check if pool has swaps enabled.
-	if !pool.IsActive(ctx) {
-		return osmomath.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
-	}
-
-	tokenInAfterSubTakerFee, err := k.chargeTakerFee(ctx, tokenIn, tokenOutDenom, sender, true)
-	if err != nil {
-		return osmomath.Int{}, err
-	}
-
-	// routeStep to the pool-specific SwapExactAmountIn implementation.
-	tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenInAfterSubTakerFee, tokenOutDenom, tokenOutMinAmount, pool.GetSpreadFactor(ctx))
-	if err != nil {
-		return osmomath.Int{}, err
-	}
-
-	// Track volume for volume-splitting incentives
-	k.trackVolume(ctx, pool.GetId(), tokenIn)
-
-	return tokenOutAmount, nil
+// SwapExactAmountTallyTakerFee is an API for swapping an exact amount of tokens
+// as input to a pool to get a minimum amount of the desired token out, while tallying the taker fee.
+// This method should be used in the context of multi-hop swaps, where the total taker fees can be charged at the end of all the hops.
+// This method does NOT charge a taker fee, but instead returns the taker fee that should be charged.
+// The caller should tally all takerFeeCharged values from every call to this function, and charge them at the end of the multi-hop swap via the chargeTakerFees function.
+func (k Keeper) SwapExactAmountTallyTakerFee(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	poolId uint64,
+	tokenIn sdk.Coin,
+	tokenOutDenom string,
+	tokenOutMinAmount osmomath.Int,
+) (osmomath.Int, sdk.Coin, error) {
+	return k.swapExactAmountInInternal(ctx, sender, poolId, tokenIn, tokenOutDenom, tokenOutMinAmount, true, false)
 }
 
 // SwapExactAmountInNoTakerFee is an API for swapping an exact amount of tokens
@@ -202,27 +214,61 @@ func (k Keeper) SwapExactAmountInNoTakerFee(
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	tokenOutMinAmount osmomath.Int,
-) (tokenOutAmount osmomath.Int, err error) {
+) (osmomath.Int, error) {
+	tokenOutAmount, _, err := k.swapExactAmountInInternal(ctx, sender, poolId, tokenIn, tokenOutDenom, tokenOutMinAmount, false, false)
+	return tokenOutAmount, err
+}
+
+// swapExactAmountInInternal is a helper function that handles the common logic for swapping an exact amount of tokens
+// as input to a pool to get a minimum amount of the desired token out. It supports options for calculating and charging taker fees.
+func (k Keeper) swapExactAmountInInternal(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	poolId uint64,
+	tokenIn sdk.Coin,
+	tokenOutDenom string,
+	tokenOutMinAmount osmomath.Int,
+	calcTakerFee bool,
+	chargeTakerFee bool,
+) (osmomath.Int, sdk.Coin, error) {
+	// Get the pool module and pool instance
 	swapModule, pool, err := k.GetPoolModuleAndPool(ctx, poolId)
 	if err != nil {
-		return osmomath.Int{}, err
+		return osmomath.Int{}, sdk.Coin{}, err
 	}
 
 	// Check if pool has swaps enabled.
 	if !pool.IsActive(ctx) {
-		return osmomath.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
+		return osmomath.Int{}, sdk.Coin{}, fmt.Errorf("pool %d is not active", pool.GetId())
 	}
 
-	// routeStep to the pool-specific SwapExactAmountIn implementation.
-	tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, pool.GetSpreadFactor(ctx))
+	var tokenInAfterSubTakerFee sdk.Coin
+	var takerFeeCharged sdk.Coin
+
+	// Optionally calculate and/or charge the taker fee
+	if calcTakerFee {
+		if chargeTakerFee {
+			tokenInAfterSubTakerFee, err = k.calcAndChargeTakerFee(ctx, tokenIn, tokenOutDenom, sender, true)
+		} else {
+			tokenInAfterSubTakerFee, takerFeeCharged, err = k.calculateTakerFee(ctx, tokenIn, tokenOutDenom, sender, true)
+		}
+		if err != nil {
+			return osmomath.Int{}, sdk.Coin{}, err
+		}
+	} else {
+		tokenInAfterSubTakerFee = tokenIn
+	}
+
+	// Perform the swap using the pool-specific SwapExactAmountIn implementation
+	tokenOutAmount, err := swapModule.SwapExactAmountIn(ctx, sender, pool, tokenInAfterSubTakerFee, tokenOutDenom, tokenOutMinAmount, pool.GetSpreadFactor(ctx))
 	if err != nil {
-		return osmomath.Int{}, err
+		return osmomath.Int{}, sdk.Coin{}, err
 	}
 
 	// Track volume for volume-splitting incentives
 	k.trackVolume(ctx, pool.GetId(), tokenIn)
 
-	return tokenOutAmount, nil
+	return tokenOutAmount, takerFeeCharged, nil
 }
 
 func (k Keeper) MultihopEstimateOutGivenExactAmountInNoTakerFee(
@@ -340,6 +386,9 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	}
 	insExpected[0] = tokenInMaxAmount
 
+	// Track the taker fees to charge for the entire swap, so we can charge it once at the very end.
+	totalTakerFeesToCharge := sdk.Coins{}
+
 	// Iterates through each routed pool and executes their respective swaps. Note that all of the work to get the return
 	// value of this method is done when we calculate insExpected – this for loop primarily serves to execute the actual
 	// swaps on each pool.
@@ -375,10 +424,13 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		}
 
 		tokenIn := sdk.NewCoin(routeStep.TokenInDenom, curTokenInAmount)
-		tokenInAfterAddTakerFee, err := k.chargeTakerFee(ctx, tokenIn, _tokenOut.Denom, sender, false)
+		tokenInAfterAddTakerFee, takerFeeToCharge, err := k.calculateTakerFee(ctx, tokenIn, _tokenOut.Denom, sender, false)
 		if err != nil {
 			return osmomath.Int{}, err
 		}
+
+		// Track the total taker fees to charge at the end of all swaps
+		totalTakerFeesToCharge = totalTakerFeesToCharge.Add(takerFeeToCharge)
 
 		// Track volume for volume-splitting incentives
 		k.trackVolume(ctx, pool.GetId(), sdk.NewCoin(routeStep.TokenInDenom, tokenIn.Amount))
@@ -388,6 +440,13 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		// swaps.
 		if i == 0 {
 			tokenInAmount = tokenInAfterAddTakerFee.Amount
+		}
+	}
+
+	// Charge the taker fees for all the swaps in the route if there are any
+	if !totalTakerFeesToCharge.IsZero() {
+		if err := k.chargeTakerFees(ctx, totalTakerFeesToCharge, sender); err != nil {
+			return osmomath.Int{}, err
 		}
 	}
 

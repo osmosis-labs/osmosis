@@ -120,39 +120,67 @@ func (k Keeper) GetAllTradingPairTakerFees(ctx sdk.Context) ([]types.DenomPairTa
 	return takerFees, nil
 }
 
-// chargeTakerFee extracts the taker fee from the given tokenIn and sends it to the appropriate
-// module account. It returns the tokenIn after the taker fee has been extracted.
-// If the sender is in the taker fee reduced whitelisted, it returns the tokenIn without extracting the taker fee.
-// In the future, we might charge a lower taker fee as opposed to no fee at all.
-// TODO: Gas optimize this function, its expensive in both gas and CPU.
-func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, sender sdk.AccAddress, exactIn bool) (sdk.Coin, error) {
-	takerFeeModuleAccountName := txfeestypes.TakerFeeCollectorName
-
+// calculateTakerFee calculates the taker fee for a given token input and output denomination.
+// It returns the token amount after the taker fee is subtracted, the taker fee charged, and an error if any.
+// If the sender is in the reduced fee whitelist, no taker fee is applied.
+func (k Keeper) calculateTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, sender sdk.AccAddress, exactIn bool) (sdk.Coin, sdk.Coin, error) {
 	reducedFeeWhitelist := []string{}
 	k.paramSpace.Get(ctx, types.KeyReducedTakerFeeByWhitelist, &reducedFeeWhitelist)
 
 	// Determine if eligible to bypass taker fee.
 	if osmoutils.Contains(reducedFeeWhitelist, sender.String()) {
+		return tokenIn, sdk.Coin{}, nil
+	}
+
+	// Get the taker fee for the trading pair.
+	takerFee, err := k.GetTradingPairTakerFee(ctx, tokenIn.Denom, tokenOutDenom)
+	if err != nil {
+		return sdk.Coin{}, sdk.Coin{}, err
+	}
+
+	// Calculate the token amount after the taker fee and the taker fee charged.
+	var tokenInAfterTakerFee sdk.Coin
+	var takerFeeCharged sdk.Coin
+	if exactIn {
+		tokenInAfterTakerFee, takerFeeCharged = CalcTakerFeeExactIn(tokenIn, takerFee)
+	} else {
+		tokenInAfterTakerFee, takerFeeCharged = CalcTakerFeeExactOut(tokenIn, takerFee)
+	}
+	return tokenInAfterTakerFee, takerFeeCharged, nil
+}
+
+// chargeTakerFees charges the taker fees from the sender's account to the taker fee module account.
+func (k Keeper) chargeTakerFees(ctx sdk.Context, takerFees sdk.Coins, sender sdk.AccAddress) error {
+	takerFeeModuleAccountName := txfeestypes.TakerFeeCollectorName
+
+	// Send the taker fees from the sender's account to the taker fee module account.
+	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, takerFeeModuleAccountName, takerFees)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// calcAndChargeTakerFee calculates the taker fee and charges it from the sender's account.
+// It returns the token amount after the taker fee is subtracted and an error if any.
+func (k Keeper) calcAndChargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, sender sdk.AccAddress, exactIn bool) (sdk.Coin, error) {
+	// Calculate the taker fee.
+	tokenInAfterTakerFee, takerFeeCharged, err := k.calculateTakerFee(ctx, tokenIn, tokenOutDenom, sender, exactIn)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+
+	// If no taker fee is charged, return the original token amount.
+	if tokenIn.Equal(tokenInAfterTakerFee) {
 		return tokenIn, nil
 	}
 
-	takerFee, err := k.GetTradingPairTakerFee(ctx, tokenIn.Denom, tokenOutDenom)
+	// Charge the taker fee.
+	err = k.chargeTakerFees(ctx, sdk.NewCoins(takerFeeCharged), sender)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
 
-	var tokenInAfterTakerFee sdk.Coin
-	var takerFeeCoin sdk.Coin
-	if exactIn {
-		tokenInAfterTakerFee, takerFeeCoin = CalcTakerFeeExactIn(tokenIn, takerFee)
-	} else {
-		tokenInAfterTakerFee, takerFeeCoin = CalcTakerFeeExactOut(tokenIn, takerFee)
-	}
-
-	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, takerFeeModuleAccountName, sdk.NewCoins(takerFeeCoin))
-	if err != nil {
-		return sdk.Coin{}, err
-	}
 	return tokenInAfterTakerFee, nil
 }
 
