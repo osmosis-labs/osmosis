@@ -530,10 +530,9 @@ func (m *MsgSetDenomPairTakerFeeResponse) GetSuccess() bool {
 }
 
 type DenomPairTakerFee struct {
-	TakerFee cosmossdk_io_math.LegacyDec `protobuf:"bytes,3,opt,name=taker_fee,json=takerFee,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"taker_fee" yaml:"taker_fee"`
-	// New fields
-	DenomOfTokenIn  string `protobuf:"bytes,4,opt,name=denomOfTokenIn,proto3" json:"denomOfTokenIn,omitempty" yaml:"denomOfTokenIn"`
-	DenomOfTokenOut string `protobuf:"bytes,5,opt,name=denomOfTokenOut,proto3" json:"denomOfTokenOut,omitempty" yaml:"denomOfTokenOut"`
+	TakerFee        cosmossdk_io_math.LegacyDec `protobuf:"bytes,3,opt,name=taker_fee,json=takerFee,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"taker_fee" yaml:"taker_fee"`
+	DenomOfTokenIn  string                      `protobuf:"bytes,4,opt,name=denomOfTokenIn,proto3" json:"denomOfTokenIn,omitempty" yaml:"denomOfTokenIn"`
+	DenomOfTokenOut string                      `protobuf:"bytes,5,opt,name=denomOfTokenOut,proto3" json:"denomOfTokenOut,omitempty" yaml:"denomOfTokenOut"`
 }
 
 func (m *DenomPairTakerFee) Reset()         { *m = DenomPairTakerFee{} }
