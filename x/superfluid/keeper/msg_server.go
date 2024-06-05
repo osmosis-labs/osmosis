@@ -47,11 +47,16 @@ func (server msgServer) SuperfluidDelegate(goCtx context.Context, msg *types.Msg
 
 	err := server.keeper.SuperfluidDelegate(ctx, msg.Sender, msg.LockId, msg.ValAddr)
 
-	// NOTE: `EmitDelegationEvent` (x/staking module's delegation event) happens in keeper level
-	if err == nil {
-		events.EmitSuperfluidDelegateEvent(ctx, msg.LockId, msg.ValAddr)
+	if err != nil {
+		return &types.MsgSuperfluidDelegateResponse{}, err
 	}
-	return &types.MsgSuperfluidDelegateResponse{}, err
+
+	// NOTE: `EmitDelegationEvent` (x/staking module's delegation event) happens in keeper level
+	// This is to prevent API breaking changes for the `SuperfluidDelegate` method.
+	// cref: https://github.com/osmosis-labs/osmosis/pull/8286
+	events.EmitSuperfluidDelegateEvent(ctx, msg.LockId, msg.ValAddr)
+
+	return &types.MsgSuperfluidDelegateResponse{}, nil
 }
 
 // SuperfluidUndelegate undelegates currently superfluid delegated position.
@@ -63,10 +68,13 @@ func (server msgServer) SuperfluidUndelegate(goCtx context.Context, msg *types.M
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	err := server.keeper.SuperfluidUndelegate(ctx, msg.Sender, msg.LockId)
-	if err == nil {
-		events.EmitSuperfluidUndelegateEvent(ctx, msg.LockId)
+	if err != nil {
+		return &types.MsgSuperfluidUndelegateResponse{}, err
 	}
-	return &types.MsgSuperfluidUndelegateResponse{}, err
+
+	events.EmitSuperfluidUndelegateEvent(ctx, msg.LockId)
+
+	return &types.MsgSuperfluidUndelegateResponse{}, nil
 }
 
 // SuperfluidRedelegate is a method to redelegate superfluid staked asset into a different validator.
@@ -87,10 +95,13 @@ func (server msgServer) SuperfluidUnbondLock(goCtx context.Context, msg *types.M
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	err := server.keeper.SuperfluidUnbondLock(ctx, msg.LockId, msg.Sender)
-	if err == nil {
-		events.EmitSuperfluidUnbondLockEvent(ctx, msg.LockId)
+	if err != nil {
+		return &types.MsgSuperfluidUnbondLockResponse{}, err
 	}
-	return &types.MsgSuperfluidUnbondLockResponse{}, err
+
+	events.EmitSuperfluidUnbondLockEvent(ctx, msg.LockId)
+
+	return &types.MsgSuperfluidUnbondLockResponse{}, nil
 }
 
 // SuperfluidUndelegateAndUnbondLock undelegates and unbonds partial amount from a lock.
@@ -100,10 +111,12 @@ func (server msgServer) SuperfluidUndelegateAndUnbondLock(goCtx context.Context,
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	lockId, err := server.keeper.SuperfluidUndelegateAndUnbondLock(ctx, msg.LockId, msg.Sender, msg.Coin.Amount)
-	if err == nil {
-		events.EmitSuperfluidUndelegateAndUnbondLockEvent(ctx, msg.LockId)
+	if err != nil {
+		return &types.MsgSuperfluidUndelegateAndUnbondLockResponse{}, err
 	}
-	return &types.MsgSuperfluidUndelegateAndUnbondLockResponse{LockId: lockId}, err
+
+	events.EmitSuperfluidUndelegateAndUnbondLockEvent(ctx, msg.LockId)
+	return &types.MsgSuperfluidUndelegateAndUnbondLockResponse{LockId: lockId}, nil
 }
 
 // LockAndSuperfluidDelegate locks and superfluid delegates given tokens in a single message.
