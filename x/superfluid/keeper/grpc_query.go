@@ -711,7 +711,7 @@ func (q Querier) filterConcentratedPositionLocks(ctx sdk.Context, positions []mo
 
 		baseDenom := lock.Coins.GetDenomByIndex(0)
 		lockedCoins := sdk.NewCoin(baseDenom, lock.GetCoins().AmountOf(baseDenom))
-		equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokensExcludeNative(ctx, baseDenom, lockedCoins.Amount)
+		equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokensIfNonNative(ctx, baseDenom, lockedCoins.Amount)
 		if err != nil {
 			return nil, err
 		}
