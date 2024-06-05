@@ -124,7 +124,7 @@ func (ad AuthenticatorPostDecorator) PostHandle(
 		err = selectedAuthenticator.Authenticator.ConfirmExecution(ctx, authenticationRequest)
 		if err != nil {
 			return sdk.Context{},
-				errorsmod.Wrapf(err, "execution blocked by authenticator (account = %s, authenticator id = %d, msg index = %d, msg type url = %s)", account, selectedAuthenticator.Id, msgIndex, sdk.MsgTypeURL(msg))
+				errorsmod.Wrapf(err, "execution blocked by authenticator (account = %s, authenticator id = %d, msg index = %d, msg type url = %s)", account, selectedAuthenticatorId, msgIndex, sdk.MsgTypeURL(msg))
 		}
 
 		success = err == nil
