@@ -147,7 +147,7 @@ message MsgSetDenomPairTakerFeeResponse { bool success = 1; }
 message DenomPairTakerFee {
   // Reserve the old field numbers to prevent reuse
   // Field 1 used to be denom0 and field 2 used to be denom1,
-  // But now that we are using omni-directional trading pairs, we are using
+  // But now that we are using uni-directional trading pairs, we are using
   // denomOfTokenIn and denomOfTokenOut to prevent confusion.
   reserved 1, 2;
 
