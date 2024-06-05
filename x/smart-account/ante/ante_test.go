@@ -188,12 +188,15 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInSto
 }
 
 // TestSignatureVerificationOutOfGas tests that the ante handler exits early by running out of gas if the
-// fee payer has not been authenticated before consuming the 20_000 low gas limit (even if the specified limit is 300k)
+// fee payer has not been authenticated before consuming the parametrized max unauthenticated gas limit (even if the specified limit is 300k)
 // This is to ensure that the amount of compute a non-authenticated user can execute is limited.
 func (s *AuthenticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	osmoToken := "osmo"
 	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
+
+	maxUnauthenticatedGasLimit := s.OsmosisApp.SmartAccountKeeper.GetParams(s.Ctx).MaximumUnauthenticatedGas
+	specifiedGasLimit := uint64(300_000)
 
 	// Ensure the feepayers have funds
 	fees := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
@@ -219,7 +222,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	s.Require().NoError(err)
 	s.Require().Equal(sigId, uint64(1), "Adding authenticator returning incorrect id")
 
-	alwaysHigher := testutils.TestingAuthenticator{Approve: testutils.Always, GasConsumption: 500_000}
+	alwaysHigher := testutils.TestingAuthenticator{Approve: testutils.Always, GasConsumption: int(maxUnauthenticatedGasLimit + 1)}
 	s.OsmosisApp.AuthenticatorManager.RegisterAuthenticator(alwaysHigher)
 
 	excessGasId, err := s.OsmosisApp.SmartAccountKeeper.AddAuthenticator(
@@ -233,7 +236,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 
 	tx, _ := GenTx(s.Ctx, s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
-	}, feeCoins, 300_000, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{
+	}, feeCoins, specifiedGasLimit, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[0],
 	}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[1],
@@ -256,7 +259,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	tx, _ = GenTx(s.Ctx, s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg2,
 		testMsg1,
-	}, feeCoins, 300_000, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{
+	}, feeCoins, specifiedGasLimit, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{
 		s.TestPrivKeys[1],
 		s.TestPrivKeys[0],
 	}, []cryptotypes.PrivKey{
@@ -264,11 +267,11 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 		s.TestPrivKeys[1],
 	}, []uint64{sigId, excessGasId})
 
-	// This authentication should succeed and consume gas over the 20_000 limit (because the fee payer
-	// is authenticated in under 20k in the first message)
+	// This authentication should succeed and consume gas over the max unauthenticated gas limit (because the fee payer
+	// is authenticated in under max unauthenticated gas limit in the first message)
 	res, err := anteHandler(s.Ctx, tx, false)
 	s.Require().NoError(err)
-	s.Require().Greater(res.GasMeter().GasConsumed(), uint64(20_000))
+	s.Require().Greater(res.GasMeter().GasConsumed(), maxUnauthenticatedGasLimit)
 }
 
 func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {

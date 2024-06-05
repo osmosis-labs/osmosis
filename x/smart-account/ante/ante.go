@@ -211,6 +211,9 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			}
 
 			// Append the track closure to be called after every message is authenticated
+			// Note: pre-initialize type URL to avoid closure issues from passing a msg
+			// loop variable inside the closure.
+			currentMsgTypeURL := sdk.MsgTypeURL(msg)
 			tracks = append(tracks, func() error {
 				err := a11r.Track(ctx, authenticationRequest)
 				if err != nil {
@@ -218,7 +221,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 					// If it does fail, we log the error.
 					telemetry.IncrCounter(1, types.CounterKeyTrackFailed)
 					ad.smartAccountKeeper.Logger(ctx).Error(
-						"track failed", "account", account, "feePayer", feePayer, "msg", sdk.MsgTypeURL(msg), "authenticatorId", stringId, "error", err)
+						"track failed", "account", account, "feePayer", feePayer, "msg", currentMsgTypeURL, "authenticatorId", stringId, "error", err)
 
 					return errorsmod.Wrapf(err, "track failed (account = %s, authenticator id = %s, authenticator type, %s, msg index = %d)", account, stringId, a11r.Type(), msgIndex)
 				}

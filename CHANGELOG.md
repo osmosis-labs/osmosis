@@ -49,13 +49,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
-* [#8312](https://github.com/osmosis-labs/osmosis/pull/8312) Overwrite `flush_throttle_timeout` and `peer_gossip_sleep_duration` to 10ms and 50ms respectively
+## v25.0.3
+
+* [#8329](https://github.com/osmosis-labs/osmosis/pull/8329) Overwrite `flush_throttle_timeout` to 80ms instead of 10ms
 
 ## v25.0.2
 
 ### Osmosis
 
+* [#8312](https://github.com/osmosis-labs/osmosis/pull/8312) Overwrite `flush_throttle_timeout` and `peer_gossip_sleep_duration` to 10ms and 50ms respectively
 * [#8308](https://github.com/osmosis-labs/osmosis/pull/8308) Remove IBC rate limit and wasm hook times from mempool checkTx's
+
+### CometBFT
+
+* [#73](https://github.com/osmosis-labs/cometbft/pull/73) perf(consensus/blockexec): Add simplistic block validation cache
+* [#74](https://github.com/osmosis-labs/cometbft/pull/74) perf(consensus): Minor speedup to mark late vote metrics
+* [#75](https://github.com/osmosis-labs/cometbft/pull/75) perf(p2p): 4% speedup to readMsg by removing one allocation
+* [#76](https://github.com/osmosis-labs/cometbft/pull/76) perf(consensus): Add LRU caches for blockstore operations used in gossip
+* [#77](https://github.com/osmosis-labs/cometbft/pull/77) perf(consensus): Make every gossip thread use its own randomness instance, reducing mutex contention
 
 ## v25.0.1
 
@@ -65,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8128](https://github.com/osmosis-labs/osmosis/pull/8128) Cache the result for poolmanager.GetPoolModule
 * [#8253](https://github.com/osmosis-labs/osmosis/pull/8253) Update gogoproto to v1.4.11 and golang.org/x/exp to
 * [#8148](https://github.com/osmosis-labs/osmosis/pull/8148) Remove the deserialization time for GetDefaultTakerFee()
+* [#8231](https://github.com/osmosis-labs/osmosis/issues/8231) Deprecate authorized quote denom in CL module
 * [#8298](https://github.com/osmosis-labs/osmosis/pull/8298) Overwrite timeout commit from 1.5s to 1s
 
 ### CometBFT
@@ -72,7 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#61](https://github.com/osmosis-labs/cometbft/pull/61) refactor(p2p/connection): Slight refactor to sendManyPackets that helps highlight performance improvements (backport #2953) (#2978)
 * [#62](https://github.com/osmosis-labs/cometbft/pull/62) perf(consensus/blockstore): Remove validate basic call from LoadBlock
 * [#69](https://github.com/osmosis-labs/cometbft/pull/69) perf: Make mempool update async from block.Commit (#3008)
-* [#67](https://github.com/osmosis-labs/cometbft/pull/67) fix: TimeoutTicker returns wrong value/timeout pair when timeouts are…
+* [#67](https://github.com/osmosis-labs/cometbft/pull/67) fix: TimeoutTicker returns wrong value/timeout pair when timeouts are scheduled at the same time
 
 ### IBC-go
 

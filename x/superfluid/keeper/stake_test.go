@@ -160,7 +160,8 @@ func (s *KeeperTestSuite) TestSuperfluidDelegate() {
 
 func (s *KeeperTestSuite) TestValidateLockForSFDelegate() {
 	lockOwner := s.TestAccs[0]
-	params, _ := s.App.StakingKeeper.GetParams(s.Ctx)
+	params, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	s.Require().NoError(err)
 	bondDenom := params.BondDenom
 
 	tests := []struct {

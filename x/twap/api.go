@@ -1,10 +1,7 @@
 package twap
 
 import (
-	"errors"
 	"time"
-
-	errorsmod "cosmossdk.io/errors"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 
@@ -147,13 +144,23 @@ func (k Keeper) GetBeginBlockAccumulatorRecord(ctx sdk.Context, poolId uint64, a
 	return k.getMostRecentRecord(ctx, poolId, asset0Denom, asset1Denom)
 }
 
-// GetMultiPoolArithmeticTwapToNow returns the price of two assets through multiple pools.
+// UnsafeGetMultiPoolArithmeticTwapToNow returns the TWAP price of two assets through multiple pools.
 // The price is calculated by taking the arithmetic TWAP of the two assets in each pool and multiplying
 // them together.
+//
 // Only pools with two assets are considered.
 // For each pool n, its base asset will be the quote asset of pool n-1. The first pool's base asset is specified
 // in baseAssetDenom and the last pool's quote asset is specified in quoteAssetDenom.
-func (k Keeper) GetMultiPoolArithmeticTwapToNow(
+//
+// N.B. This function is considered "unsafe" because it calculates the TWAP across multiple pools by multiplying
+// the TWAPs of individual pools, which is not technically correct. This is akin to calculating `average(a) * average(b)`
+// instead of `average(a * b)`. In general, `average(a * b)` is not necessarily equal to `average(a) * average(b)`.
+// This method can safely be used in instances where both of the following are true:
+// 1. The TWAP of all but one route have a stable pair. For instance, using on allBTC -> WBTC -> OSMO works because we
+// expect the TWAP of allBTC -> WBTC to be fairly stable.
+// 2. All assets involved are major assets that we can expected proto-rev cyclic arbs will handle arb opportunities. Therefore,
+// the result must be acceptatble within 1-3% error margin (roughly ~.3% * number of pools in path to close the arb).
+func (k Keeper) UnsafeGetMultiPoolArithmeticTwapToNow(
 	ctx sdk.Context,
 	route []*poolmanagertypes.SwapAmountInRoute,
 	baseAssetDenom string,
@@ -161,24 +168,24 @@ func (k Keeper) GetMultiPoolArithmeticTwapToNow(
 	startTime time.Time,
 ) (osmomath.Dec, error) {
 	if len(route) == 0 {
-		return osmomath.Dec{}, errors.New("route cannot be empty")
+		return osmomath.Dec{}, types.ErrEmptyRoute
 	}
 	if route[len(route)-1].TokenOutDenom != quoteAssetDenom {
-		return osmomath.Dec{}, errors.New("last pool's quote asset must match the quote asset provided")
+		return osmomath.Dec{}, types.ErrMismatchedQuoteAsset
 	}
 
 	price := osmomath.NewDecFromInt(osmomath.OneInt())
 	baseAsset := baseAssetDenom
-	quoteAsset := route[0].TokenOutDenom
+
 	for _, pool := range route {
+		quoteAsset := pool.TokenOutDenom
 		twap, err := k.GetArithmeticTwapToNow(ctx, pool.PoolId, baseAsset, quoteAsset, startTime)
 		if err != nil {
-			return osmomath.Dec{}, errorsmod.Wrapf(err, "failed to get arithmetic twap for pool %d", pool.PoolId)
+			return osmomath.Dec{}, err
 		}
 		price = price.Mul(twap)
-		// Update the assets to the next pool's base and quote assets
+		// Update the base asset to the current quote asset for the next iteration
 		baseAsset = quoteAsset
-		quoteAsset = pool.TokenOutDenom
 	}
 
 	return price, nil
