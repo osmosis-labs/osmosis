@@ -59,7 +59,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 FROM ${RUNNER_IMAGE}
 
 ARG VALIDATOR_MNEMONIC="bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort"
-ARG VALIDATOR_ADDRESS="osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj"
+ARG VALIDATOR_ADDRESS="symphony1p7mp7r9f9f6sf2c95ht42ncm6ga96ha8xghdeg"
 
 COPY --from=builder /go/symphony/build/symphonyd /bin/symphonyd
 

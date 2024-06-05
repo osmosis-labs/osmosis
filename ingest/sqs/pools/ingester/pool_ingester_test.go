@@ -551,7 +551,7 @@ func (s *IngesterTestSuite) validatePoolConversion(expectedPool poolmanagertypes
 	s.Require().Equal(expectedPool.GetType(), actualPool.GetType())
 
 	// Validate TVL
-	s.Require().Equal(expectedTVL.String(), actualPool.GetTotalValueLockedNOTE().String())
+	s.Require().Equal(expectedTVL.String(), actualPool.GetTotalValueLockedUOSMO().String())
 	sqsPoolModel := actualPool.GetSQSPoolModel()
 	s.Require().Contains(sqsPoolModel.TotalValueLockedError, expectTVLErrorStr)
 

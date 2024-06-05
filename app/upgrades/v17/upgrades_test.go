@@ -336,7 +336,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 		{
 			"Test that the upgrade succeeds: testnet",
 			func(keepers *keepers.AppKeepers) (sdk.Coins, uint64) {
-				s.Ctx = s.Ctx.WithChainID("osmo-test-5")
+				s.Ctx = s.Ctx.WithChainID("symphony-testnet-1")
 
 				var lastPoolID uint64 // To keep track of the last assigned pool ID
 

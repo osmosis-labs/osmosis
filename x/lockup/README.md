@@ -488,7 +488,7 @@ osmosisd tx lockup lock-tokens 15527546134174465309gamm/pool/3 --duration="24h" 
 To lockup `25.527546134174465309gamm/pool/13` tokens for a `one week` bonding period from `WALLET_NAME` on the osmosis testnet:
 
 ```bash
-osmosisd tx lockup lock-tokens 25527546134174465309gamm/pool/13 --duration="168h" --from WALLET_NAME --chain-id osmo-test-4
+osmosisd tx lockup lock-tokens 25527546134174465309gamm/pool/13 --duration="168h" --from WALLET_NAME --chain-id osmo-testnet-4
 ```
 
 To lockup `35.527546134174465309 gamm/pool/197` tokens for a `two week` bonding period from `WALLET_NAME` on the osmosis mainnet:
@@ -606,7 +606,7 @@ locks:
     denom: gamm/pool/3
   duration: 24h
   end_time: "2021-12-18T23:32:58.900715388Z"
-  owner: osmo1xqhlshlhs5g0acqgrkafdemvf5kz4pp4c2x259
+  owner: symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7
 ```
 
 If querying the same `ADDRESS` with a timestamp 15 days from now `1641094282`:
@@ -625,14 +625,14 @@ locks:
     denom: gamm/pool/3
   duration: 604800.000006193s
   end_time: "0001-01-01T00:00:00Z"
-  owner: osmo1xqhlshlhs5g0acqgrkafdemvf5kz4pp4c2x259
+  owner: symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7
 - ID: "571839"
   coins:
   - amount: "15527546134174465309"
     denom: gamm/pool/3
   duration: 24h
   end_time: "2021-12-18T23:32:58.900715388Z"
-  owner: osmo1xqhlshlhs5g0acqgrkafdemvf5kz4pp4c2x259
+  owner: symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7
 ```
 :::
 
@@ -648,7 +648,7 @@ osmosisd query lockup account-locked-coins [address]
 :::: details Example
 
 ```bash
-osmosisd query lockup account-locked-coins osmo1xqhlshlhs5g0acqgrkafdemvf5kz4pp4c2x259
+osmosisd query lockup account-locked-coins symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7
 ```
 
 An example output:
@@ -688,7 +688,7 @@ osmosisd query lockup account-locked-longer-duration [address] [duration]
 Here is an example of querying an `ADDRESS` for all `1 day` or greater bonding periods:
 
 ```bash
-osmosisd query lockup account-locked-longer-duration osmo1xqhlshlhs5g0acqgrkafdemvf5kz4pp4c2x259 24h
+osmosisd query lockup account-locked-longer-duration symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7 24h
 ```
 
 An example output:
@@ -701,14 +701,14 @@ locks:
     denom: gamm/pool/3
   duration: 604800.000006193s
   end_time: "0001-01-01T00:00:00Z"
-  owner: osmo1xqhlshlhs5g0acqgrkafdemvf5kz4pp4c2x259
+  owner: symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7
 - ID: "571839"
   coins:
   - amount: "15527546134174465309"
     denom: gamm/pool/3
   duration: 24h
   end_time: "2021-12-18T23:32:58.900715388Z"
-  owner: osmo1xqhlshlhs5g0acqgrkafdemvf5kz4pp4c2x259
+  owner: symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7
 ```
 :::
 
@@ -726,7 +726,7 @@ osmosisd query lockup account-locked-longer-duration-denom [address] [duration] 
 Here is an example of an `ADDRESS` that is locked in both the `1 day` and `1 week` for both the gamm/pool/3 and gamm/pool/1, then queries the `ADDRESS` for all bonding periods equal to or greater than `1 day` for just the gamm/pool/3:
 
 ```bash
-osmosisd query lockup account-locked-longer-duration-denom osmo1xqhlshlhs5g0acqgrkafdemvf5kz4pp4c2x259 24h gamm/pool/3
+osmosisd query lockup account-locked-longer-duration-denom symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7 24h gamm/pool/3
 ```
 
 An example output:
@@ -739,14 +739,14 @@ locks:
     denom: gamm/pool/3
   duration: 24h
   end_time: "0001-01-01T00:00:00Z"
-  owner: osmo1xqhlshlhs5g0acqgrkafdemvf5kz4pp4c2x259
+  owner: symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7
 - ID: "572027"
   coins:
   - amount: "16120691802759484268"
     denom: gamm/pool/3
   duration: 604800.000006193s
   end_time: "0001-01-01T00:00:00Z"
-  owner: osmo1xqhlshlhs5g0acqgrkafdemvf5kz4pp4c2x259
+  owner: symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7
 ```
 
 As shown, the gamm/pool/3 is returned but not the gamm/pool/1 due to the denom filter.
@@ -766,7 +766,7 @@ osmosisd query lockup account-locked-longer-duration-not-unlocking [address] [du
 Here is an example of an `ADDRESS` that is locked in both the `1 day` and `1 week` gamm/pool/3, begins unlocking process for the `1 day` bond, and queries the `ADDRESS` for all bonding periods equal to or greater than `1 day` that are not unbonding:
 
 ```bash
-osmosisd query lockup account-locked-longer-duration-not-unlocking osmo1xqhlshlhs5g0acqgrkafdemvf5kz4pp4c2x259 24h
+osmosisd query lockup account-locked-longer-duration-not-unlocking symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7 24h
 ```
 
 An example output:
@@ -779,7 +779,7 @@ locks:
     denom: gamm/pool/3
   duration: 604800.000006193s
   end_time: "0001-01-01T00:00:00Z"
-  owner: osmo1xqhlshlhs5g0acqgrkafdemvf5kz4pp4c2x259
+  owner: symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7
 ```
 
 The `1 day` bond does not show since it is in the process of unbonding.
@@ -799,7 +799,7 @@ osmosisd query lockup account-locked-pasttime [address] [timestamp]
 Here is an example of an account that is locked in both the `1 day` and `1 week` gamm/pool/3. In this example, the UNIX time is currently `1639776682` and queries an `ADDRESS` for UNIX time two days later from the current time (which in this example would be `1639971082`)
 
 ```bash
-osmosisd query lockup account-locked-pasttime osmo1xqhlshlhs5g0acqgrkafdemvf5kz4pp4c2x259 1639971082
+osmosisd query lockup account-locked-pasttime symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7 1639971082
 ```
 
 The example output:
@@ -812,7 +812,7 @@ locks:
     denom: gamm/pool/3
   duration: 604800.000006193s
   end_time: "0001-01-01T00:00:00Z"
-  owner: osmo1xqhlshlhs5g0acqgrkafdemvf5kz4pp4c2x259
+  owner: symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7
 ```
 
 Note that the `1 day` lock ID did not display because, if the unbonding time began counting down from the time the command was executed, the bonding period would be complete before the two day window given by the UNIX timestamp input.
@@ -824,7 +824,7 @@ Note that the `1 day` lock ID did not display because, if the unbonding time beg
 Query the locked records of an account with the unlock time beyond timestamp (unix) and filter by a specific denom
 
 ```bash
-osmosisd query lockup account-locked-pasttime-denom osmo1xqhlshlhs5g0acqgrkafdemvf5kz4pp4c2x259 [timestamp] [denom]
+osmosisd query lockup account-locked-pasttime-denom symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7 [timestamp] [denom]
 ```
 
 ::: details Example
@@ -832,7 +832,7 @@ osmosisd query lockup account-locked-pasttime-denom osmo1xqhlshlhs5g0acqgrkafdem
 Here is an example of an account that is locked in both the `1 day` and `1 week` gamm/pool/3 and `1 day` and `1 week` gamm/pool/1. In this example, the UNIX time is currently `1639776682` and queries an `ADDRESS` for UNIX time two days later from the current time (which in this example would be `1639971082`) and filters for gamm/pool/3
 
 ```bash
-osmosisd query lockup account-locked-pasttime-denom osmo1xqhlshlhs5g0acqgrkafdemvf5kz4pp4c2x259 1639971082 gamm/pool/3
+osmosisd query lockup account-locked-pasttime-denom symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7 1639971082 gamm/pool/3
 ```
 
 The example output:
@@ -845,7 +845,7 @@ locks:
     denom: gamm/pool/3
   duration: 604800.000006193s
   end_time: "0001-01-01T00:00:00Z"
-  owner: osmo1xqhlshlhs5g0acqgrkafdemvf5kz4pp4c2x259
+  owner: symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7
 ```
 
 Note that the `1 day` lock ID did not display because, if the unbonding time began counting down from the time the command was executed, the bonding period would be complete before the two day window given by the UNIX timestamp input. Additionally, neither of the `1 day` or `1 week` lock IDs for gamm/pool/1 showed due to the denom filter.
@@ -865,7 +865,7 @@ osmosisd query lockup account-locked-pasttime [address] [timestamp]
 Here is an example of an account that is locked in both the `1 day` and `1 week` gamm/pool/3. In this example, the UNIX time is currently `1639776682` and queries an `ADDRESS` for UNIX time two days later from the current time (which in this example would be `1639971082`) AND is not unlocking:
 
 ```bash
-osmosisd query lockup account-locked-pasttime osmo1xqhlshlhs5g0acqgrkafdemvf5kz4pp4c2x259 1639971082
+osmosisd query lockup account-locked-pasttime symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7 1639971082
 ```
 
 The example output:
@@ -878,7 +878,7 @@ locks:
     denom: gamm/pool/3
   duration: 604800.000006193s
   end_time: "0001-01-01T00:00:00Z"
-  owner: osmo1xqhlshlhs5g0acqgrkafdemvf5kz4pp4c2x259
+  owner: symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7
 ```
 
 Note that the `1 day` lock ID did not display because, if the unbonding time began counting down from the time the command was executed, the bonding period would be complete before the two day window given by the UNIX timestamp input. Additionally, if ID 572027 were to begin the unlocking process, the query would have returned blank.
@@ -906,7 +906,7 @@ osmosisd query lockup account-unlocking-coins [address]
 ::: details Example
 
 ```bash
-osmosisd query lockup account-unlocking-coins osmo1xqhlshlhs5g0acqgrkafdemvf5kz4pp4c2x259
+osmosisd query lockup account-unlocking-coins symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7
 ```
 
 Example output:

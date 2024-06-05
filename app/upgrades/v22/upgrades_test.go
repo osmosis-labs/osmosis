@@ -34,8 +34,8 @@ func TestUpgradeTestSuite(t *testing.T) {
 func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Setup()
 
-	expectedTakerFeeForStakers := []sdk.Coin{sdk.NewCoin("uakt", osmomath.NewInt(3000)), sdk.NewCoin("uatom", osmomath.NewInt(1000)), sdk.NewCoin("note", osmomath.NewInt(2000))}
-	expectedTakerFeeForCommunityPool := []sdk.Coin{sdk.NewCoin("uakt", osmomath.NewInt(2000)), sdk.NewCoin("uatom", osmomath.NewInt(3000)), sdk.NewCoin("note", osmomath.NewInt(1000))}
+	expectedTakerFeeForStakers := []sdk.Coin{sdk.NewCoin("note", osmomath.NewInt(2000)), sdk.NewCoin("uakt", osmomath.NewInt(3000)), sdk.NewCoin("uatom", osmomath.NewInt(1000))}
+	expectedTakerFeeForCommunityPool := []sdk.Coin{sdk.NewCoin("note", osmomath.NewInt(1000)), sdk.NewCoin("uakt", osmomath.NewInt(2000)), sdk.NewCoin("uatom", osmomath.NewInt(3000))}
 	expectedTrackerStartHeight := int64(3)
 
 	// Set up old protorev tracker prior to upgrade
@@ -52,7 +52,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	// Set up cyclic arb tracker just to double check that it is not affected by the upgrade
 	s.App.ProtoRevKeeper.SetCyclicArbProfitTrackerStartHeight(s.Ctx, expectedTrackerStartHeight)
-	cyclicArbProfits := sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(9000)), sdk.NewCoin("Atom", osmomath.NewInt(3000)))
+	cyclicArbProfits := sdk.NewCoins(sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(9000)), sdk.NewCoin("Atom", osmomath.NewInt(3000)))
 	err := s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, cyclicArbProfits[0].Denom, cyclicArbProfits[0].Amount)
 	s.Require().NoError(err)
 	err = s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, cyclicArbProfits[1].Denom, cyclicArbProfits[1].Amount)

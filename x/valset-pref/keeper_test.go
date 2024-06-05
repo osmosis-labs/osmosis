@@ -422,8 +422,8 @@ func (s *KeeperTestSuite) SetupLocks(delegator sdk.AccAddress) []lockuptypes.Per
 	// Setup lock
 	coinsToLock := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10_000_000)}
 	melodyToLock := sdk.Coins{sdk.NewInt64Coin(appParams.BaseCoinUnit, 10_000_000)}
-	multipleCoinsToLock := sdk.Coins{coinsToLock[0], melodyToLock[0]}
-	s.FundAcc(delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000), sdk.NewInt64Coin(appParams.BaseCoinUnit, 100_000_000)})
+	multipleCoinsToLock := sdk.Coins{melodyToLock[0], coinsToLock[0]}
+	s.FundAcc(delegator, sdk.Coins{sdk.NewInt64Coin(appParams.BaseCoinUnit, 100_000_000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)})
 
 	// lock with melody
 	twoWeekDuration, err := time.ParseDuration("336h")

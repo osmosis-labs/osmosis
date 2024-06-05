@@ -82,28 +82,28 @@ import (
 	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
 
 	"github.com/osmosis-labs/osmosis/v23/app/keepers"
-        "github.com/osmosis-labs/osmosis/v23/app/upgrades"
-        v10 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v10"
-        v11 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v11"
-        v12 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v12"
-        v13 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v13"
-        v14 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v14"
-        v15 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v15"
-        v16 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v16"
-        v17 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v17"
-        v18 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v18"
-        v19 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v19"
-        v20 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v20"
-        v21 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v21"
-        v22 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v22"
-        v23 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v23"
-        v3 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v3"
-        v4 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v4"
-        v5 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v5"
-        v6 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v6"
-        v7 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v7"
-        v8 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v8"
-        v9 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v9"
+	"github.com/osmosis-labs/osmosis/v23/app/upgrades"
+	v10 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v10"
+	v11 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v11"
+	v12 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v12"
+	v13 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v13"
+	v14 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v14"
+	v15 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v15"
+	v16 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v16"
+	v17 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v17"
+	v18 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v18"
+	v19 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v19"
+	v20 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v20"
+	v21 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v21"
+	v22 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v22"
+	v23 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v23"
+	v3 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v3"
+	v4 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v4"
+	v5 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v5"
+	v6 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v6"
+	v7 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v7"
+	v8 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v8"
+	v9 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v9"
 	_ "github.com/osmosis-labs/osmosis/v23/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v23/ingest"
 	"github.com/osmosis-labs/osmosis/v23/x/mint"
@@ -583,18 +583,18 @@ func InitSymphonyAppForTestnet(app *SymphonyApp, newValAddr bytes.HexBytes, newV
 	//	sdk.NewInt64Coin("uion", 1000000000))
 	//
 	//localSymphonyAccounts := []sdk.AccAddress{
-	//	sdk.MustAccAddressFromBech32("osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj"),
+	//	sdk.MustAccAddressFromBech32("symphony1p7mp7r9f9f6sf2c95ht42ncm6ga96ha8xghdeg"),
 	//	sdk.MustAccAddressFromBech32("symphony1c605nvcw94rvvehrcdfj85qe09ulseyt0efhk7"),
 	//	sdk.MustAccAddressFromBech32("symphony1jpr5824frn5472qm73ckfe2c3rh6vrn4lvlgj7"),
 	//	sdk.MustAccAddressFromBech32("symphony1amr6zrvs0hymf62qd5mwvshx94ul8cgfu9jtxn"),
 	//	sdk.MustAccAddressFromBech32("symphony1egts9ayaqr6t54ahs62awmz5smuf764uu5f5xv"),
-	//	sdk.MustAccAddressFromBech32("osmo12rr534cer5c0vj53eq4y32lcwguyy7nndt0u2t"),
-	//	sdk.MustAccAddressFromBech32("osmo1nt33cjd5auzh36syym6azgc8tve0jlvklnq7jq"),
-	//	sdk.MustAccAddressFromBech32("osmo10qfrpash5g2vk3hppvu45x0g860czur8ff5yx0"),
-	//	sdk.MustAccAddressFromBech32("osmo1f4tvsdukfwh6s9swrc24gkuz23tp8pd3e9r5fa"),
-	//	sdk.MustAccAddressFromBech32("osmo1myv43sqgnj5sm4zl98ftl45af9cfzk7nhjxjqh"),
-	//	sdk.MustAccAddressFromBech32("osmo14gs9zqh8m49yy9kscjqu9h72exyf295afg6kgk"),
-	//	sdk.MustAccAddressFromBech32("osmo1jllfytsz4dryxhz5tl7u73v29exsf80vz52ucc")}
+	//	sdk.MustAccAddressFromBech32("symphony1450weujlqvtd0d5z59v388jmzwyk3e6qhlj5r5"),
+	//	sdk.MustAccAddressFromBech32("symphony12mdnm5yv5dfz37qsu0eu60x8qwxxl0x7sqqzn0"),
+	//	sdk.MustAccAddressFromBech32("symphony1ar8mfrrtkwlm62wgu88d0cfleng5gl8y062gsn"),
+	//	sdk.MustAccAddressFromBech32("symphony1kvgujs5yg9h6l6e265smwx99fmnnmc4af5v0ah"),
+	//	sdk.MustAccAddressFromBech32("symphony1ww5e3y7ptw8h3lc0cumxe5lmcu3m53dn7qyn4k"),
+	//	sdk.MustAccAddressFromBech32("symphony1tsehv6f0v7ce4gy7574thxnp6v8jx7jm4evkpe"),
+	//	sdk.MustAccAddressFromBech32("symphony1fg5d24fgmxgux2p8e6xm8vjdjza8xy3ju6ta6m")}
 	//
 	//// Fund localsymphony accounts
 	//for _, account := range localSymphonyAccounts {
@@ -780,27 +780,27 @@ func (app *SymphonyApp) ChainID() string {
 
 // configure store loader that checks if version == upgradeHeight and applies store upgrades
 func (app *SymphonyApp) setupUpgradeStoreLoaders() {
-        upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
-        if err != nil {
-                panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
-        }
+	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	if err != nil {
+		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
+	}
 
-        if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-                return
-        }
+	if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		return
+	}
 
-        currentHeight := app.CommitMultiStore().LastCommitID().Version
+	currentHeight := app.CommitMultiStore().LastCommitID().Version
 
-        if upgradeInfo.Height == currentHeight+1 {
-                app.customPreUpgradeHandler(upgradeInfo)
-        }
+	if upgradeInfo.Height == currentHeight+1 {
+		app.customPreUpgradeHandler(upgradeInfo)
+	}
 
-        for _, upgrade := range Upgrades {
-                if upgradeInfo.Name == upgrade.UpgradeName {
-                        storeUpgrades := upgrade.StoreUpgrades
-                        app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
-                }
-        }
+	for _, upgrade := range Upgrades {
+		if upgradeInfo.Name == upgrade.UpgradeName {
+			storeUpgrades := upgrade.StoreUpgrades
+			app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+		}
+	}
 }
 
 func (app *SymphonyApp) customPreUpgradeHandler(upgradeInfo upgradetypes.Plan) {
@@ -816,17 +816,17 @@ func (app *SymphonyApp) customPreUpgradeHandler(upgradeInfo upgradetypes.Plan) {
 }
 
 func (app *SymphonyApp) setupUpgradeHandlers() {
-        for _, upgrade := range Upgrades {
-                app.UpgradeKeeper.SetUpgradeHandler(
-                        upgrade.UpgradeName,
-                        upgrade.CreateUpgradeHandler(
-                                app.mm,
-                                app.configurator,
-                                app.BaseApp,
-                                &app.AppKeepers,
-                        ),
-                )
-        }
+	for _, upgrade := range Upgrades {
+		app.UpgradeKeeper.SetUpgradeHandler(
+			upgrade.UpgradeName,
+			upgrade.CreateUpgradeHandler(
+				app.mm,
+				app.configurator,
+				app.BaseApp,
+				&app.AppKeepers,
+			),
+		)
+	}
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server.

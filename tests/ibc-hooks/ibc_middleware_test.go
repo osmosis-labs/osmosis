@@ -218,26 +218,26 @@ func (suite *HooksTestSuite) TestDeriveIntermediateSender() {
 		{
 			channel:         "channel-0",
 			originalSender:  "cosmos1tfejvgp5yzd8ypvn9t0e2uv2kcjf2laa8upya8",
-			bech32Prefix:    "melody",
-			expectedAddress: "osmo1sguz3gtyl2tjsdulwxmtprd68xtd43yyep6g5c554utz642sr8rqcgw0q6",
+			bech32Prefix:    "symphony",
+			expectedAddress: "symphony1sguz3gtyl2tjsdulwxmtprd68xtd43yyep6g5c554utz642sr8rqxh2t62",
 		},
 		{
 			channel:         "channel-1",
 			originalSender:  "cosmos1tfejvgp5yzd8ypvn9t0e2uv2kcjf2laa8upya8",
-			bech32Prefix:    "melody",
-			expectedAddress: "osmo1svnare87kluww5hnltv24m4dg72hst0qqwm5xslsvnwd22gftcussaz5l7",
+			bech32Prefix:    "symphony",
+			expectedAddress: "symphony1svnare87kluww5hnltv24m4dg72hst0qqwm5xslsvnwd22gftcuswzxs9w",
 		},
 		{
 			channel:         "channel-0",
-			originalSender:  "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj",
-			bech32Prefix:    "melody",
-			expectedAddress: "osmo1vz8evs4ek3vnz4f8wy86nw9ayzn67y28vtxzjgxv6achc4pa8gesqldfz0",
+			originalSender:  "symphony1p7mp7r9f9f6sf2c95ht42ncm6ga96ha8xghdeg",
+			bech32Prefix:    "symphony",
+			expectedAddress: "symphony1suw0vj49rq0uhy09ahtjf83e70zfjy0hunxc7p9xjelnxsj03c5q8c3arc",
 		},
 		{
 			channel:         "channel-0",
-			originalSender:  "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj",
+			originalSender:  "symphony1p7mp7r9f9f6sf2c95ht42ncm6ga96ha8xghdeg",
 			bech32Prefix:    "cosmos",
-			expectedAddress: "cosmos1vz8evs4ek3vnz4f8wy86nw9ayzn67y28vtxzjgxv6achc4pa8ges4z434f",
+			expectedAddress: "cosmos1suw0vj49rq0uhy09ahtjf83e70zfjy0hunxc7p9xjelnxsj03c5qv6dpww",
 		},
 	}
 

@@ -87,19 +87,19 @@ edit_genesis () {
 
 add_genesis_accounts () {
 
-    symphonyd add-genesis-account osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj 100000000000note,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
+    symphonyd add-genesis-account symphony1p7mp7r9f9f6sf2c95ht42ncm6ga96ha8xghdeg 100000000000note,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
     # note such large amounts are set for e2e tests on FE 
     symphonyd add-genesis-account symphony1c605nvcw94rvvehrcdfj85qe09ulseyt0efhk7 9999999999999999999999999999999999999999999999999note,9999999999999999999999999999999999999999999999999uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
     symphonyd add-genesis-account symphony1jpr5824frn5472qm73ckfe2c3rh6vrn4lvlgj7 100000000000note,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
     symphonyd add-genesis-account symphony1amr6zrvs0hymf62qd5mwvshx94ul8cgfu9jtxn 100000000000note,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
     symphonyd add-genesis-account symphony1egts9ayaqr6t54ahs62awmz5smuf764uu5f5xv 100000000000note,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
-    symphonyd add-genesis-account osmo12rr534cer5c0vj53eq4y32lcwguyy7nndt0u2t 100000000000note,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
-    symphonyd add-genesis-account osmo1nt33cjd5auzh36syym6azgc8tve0jlvklnq7jq 100000000000note,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
-    symphonyd add-genesis-account osmo10qfrpash5g2vk3hppvu45x0g860czur8ff5yx0 100000000000note,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
-    symphonyd add-genesis-account osmo1f4tvsdukfwh6s9swrc24gkuz23tp8pd3e9r5fa 100000000000note,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
-    symphonyd add-genesis-account osmo1myv43sqgnj5sm4zl98ftl45af9cfzk7nhjxjqh 100000000000note,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
-    symphonyd add-genesis-account osmo14gs9zqh8m49yy9kscjqu9h72exyf295afg6kgk 100000000000note,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
-    symphonyd add-genesis-account osmo1jllfytsz4dryxhz5tl7u73v29exsf80vz52ucc 1000000000000note,1000000000000uion,1000000000000stake,1000000000000uusdc,1000000000000uweth --home $OSMOSIS_HOME
+    symphonyd add-genesis-account symphony1450weujlqvtd0d5z59v388jmzwyk3e6qhlj5r5 100000000000note,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
+    symphonyd add-genesis-account symphony12mdnm5yv5dfz37qsu0eu60x8qwxxl0x7sqqzn0 100000000000note,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
+    symphonyd add-genesis-account symphony1ar8mfrrtkwlm62wgu88d0cfleng5gl8y062gsn 100000000000note,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
+    symphonyd add-genesis-account symphony1kvgujs5yg9h6l6e265smwx99fmnnmc4af5v0ah 100000000000note,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
+    symphonyd add-genesis-account symphony1ww5e3y7ptw8h3lc0cumxe5lmcu3m53dn7qyn4k 100000000000note,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
+    symphonyd add-genesis-account symphony1tsehv6f0v7ce4gy7574thxnp6v8jx7jm4evkpe 100000000000note,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
+    symphonyd add-genesis-account symphony1fg5d24fgmxgux2p8e6xm8vjdjza8xy3ju6ta6m 1000000000000note,1000000000000uion,1000000000000stake,1000000000000uusdc,1000000000000uweth --home $OSMOSIS_HOME
 
     echo $MNEMONIC | symphonyd keys add $MONIKER --recover --keyring-backend=test --home $OSMOSIS_HOME
     echo $POOLSMNEMONIC | symphonyd keys add pools --recover --keyring-backend=test --home $OSMOSIS_HOME

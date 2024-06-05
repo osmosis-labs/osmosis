@@ -35,7 +35,7 @@ func GetUserPositions() (*osmocli.QueryDescriptor, *queryproto.UserPositionsRequ
 			Use:   "user-positions",
 			Short: "Query user's positions",
 			Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} user-positions osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj`,
+{{.CommandPrefix}} user-positions symphony1p7mp7r9f9f6sf2c95ht42ncm6ga96ha8xghdeg`,
 			Flags:               osmocli.FlagDesc{OptionalFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
 			CustomFlagOverrides: poolIdFlagOverride,
 		},

@@ -90,7 +90,7 @@ To utilize LocalOsmosis, follow these steps:
     make build
     ```
 
-2. **Add `osmosisd` to PATH:**
+2. **Add `symphonyd` to PATH:**
     ```bash
     export PATH="$PATH:$HOME/path_to_your_project/build"
     ```
@@ -112,7 +112,7 @@ To utilize LocalOsmosis, follow these steps:
 
 4. **Start localnet:**
     ```bash
-    osmosisd start --home=$HOME/.osmosisd/validator1
+    symphonyd start --home=$HOME/.symphonyd/validator1
     ```
 
 These steps ensure the proper setup and execution of LocalOsmosis for your use.

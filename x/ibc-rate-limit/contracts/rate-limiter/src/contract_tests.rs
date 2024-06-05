@@ -393,7 +393,7 @@ fn test_testnet_message() {
 
 #[test]
 fn test_tokenfactory_message() {
-    let json = r#"{"send_packet":{"packet":{"sequence":4,"source_port":"transfer","source_channel":"channel-0","destination_port":"transfer","destination_channel":"channel-1491","data":{"denom":"transfer/channel-0/factory/osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj/czar","amount":"100000000000000000","sender":"symphony1jpr5824frn5472qm73ckfe2c3rh6vrn4lvlgj7","receiver":"symphony1p822vyk8ylf3hpwh9qgv6p6dft7hedntyqyw7w"},"timeout_height":{},"timeout_timestamp":1668024476848430980}}}"#;
+    let json = r#"{"send_packet":{"packet":{"sequence":4,"source_port":"transfer","source_channel":"channel-0","destination_port":"transfer","destination_channel":"channel-1491","data":{"denom":"transfer/channel-0/factory/symphony1p7mp7r9f9f6sf2c95ht42ncm6ga96ha8xghdeg/czar","amount":"100000000000000000","sender":"symphony1jpr5824frn5472qm73ckfe2c3rh6vrn4lvlgj7","receiver":"symphony1p822vyk8ylf3hpwh9qgv6p6dft7hedntyqyw7w"},"timeout_height":{},"timeout_timestamp":1668024476848430980}}}"#;
     let _parsed: SudoMsg = serde_json_wasm::from_str(json).unwrap();
     //println!("{parsed:?}");
 }

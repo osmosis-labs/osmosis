@@ -280,7 +280,7 @@ This section contains information about debugging osmosis's `e2e` tests.
     ```
 
     This will execute the specified command and print the response to standard output. 
-    Example: `docker exec osmo-test-a-node-prune-nothing-snapshot osmosisd status` will print a node status of `osmo-test-a-node-prune-nothing-snapshot` container. 
+    Example: `docker exec symphony-testnet-a-node-prune-nothing-snapshot osmosisd status` will print a node status of `symphony-testnet-a-node-prune-nothing-snapshot` container. 
 
 2. Viewing docker container logs
 
