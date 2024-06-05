@@ -12,25 +12,25 @@ import (
 
 func TestFormatDenomTradePairKey(t *testing.T) {
 	tests := map[string]struct {
-		denomOfTokenIn  string
-		denomOfTokenOut string
-		expectedKey     string
+		tokenInDenom  string
+		tokenOutDenom string
+		expectedKey   string
 	}{
 		"happy path": {
-			denomOfTokenIn:  appparams.BaseCoinUnit,
-			denomOfTokenOut: "uion",
-			expectedKey:     "\x04|uosmo|uion",
+			tokenInDenom:  appparams.BaseCoinUnit,
+			tokenOutDenom: "uion",
+			expectedKey:   "\x04|uosmo|uion",
 		},
 		"reversed denoms no longer get reordered": {
-			denomOfTokenIn:  "uion",
-			denomOfTokenOut: appparams.BaseCoinUnit,
-			expectedKey:     "\x04|uion|uosmo",
+			tokenInDenom:  "uion",
+			tokenOutDenom: appparams.BaseCoinUnit,
+			expectedKey:   "\x04|uion|uosmo",
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			formatDenomTradePairKey := types.FormatDenomTradePairKey(tc.denomOfTokenIn, tc.denomOfTokenOut)
+			formatDenomTradePairKey := types.FormatDenomTradePairKey(tc.tokenInDenom, tc.tokenOutDenom)
 			stringFormatDenomTradePairKeyString := string(formatDenomTradePairKey)
 			require.Equal(t, tc.expectedKey, stringFormatDenomTradePairKeyString)
 		})

@@ -222,14 +222,14 @@ func (s *KeeperTestSuite) TestSetDenomPairTakerFee() {
 				Sender: adminAcc,
 				DenomPairTakerFee: []types.DenomPairTakerFee{
 					{
-						DenomOfTokenIn:  "denom0",
-						DenomOfTokenOut: "denom1",
-						TakerFee:        osmomath.MustNewDecFromStr("0.0013"),
+						TokenInDenom:  "denom0",
+						TokenOutDenom: "denom1",
+						TakerFee:      osmomath.MustNewDecFromStr("0.0013"),
 					},
 					{
-						DenomOfTokenIn:  "denom0",
-						DenomOfTokenOut: "denom2",
-						TakerFee:        osmomath.MustNewDecFromStr("0.0016"),
+						TokenInDenom:  "denom0",
+						TokenOutDenom: "denom2",
+						TakerFee:      osmomath.MustNewDecFromStr("0.0016"),
 					},
 				},
 			},
@@ -241,9 +241,9 @@ func (s *KeeperTestSuite) TestSetDenomPairTakerFee() {
 				Sender: adminAcc,
 				DenomPairTakerFee: []types.DenomPairTakerFee{
 					{
-						DenomOfTokenIn:  "denom0",
-						DenomOfTokenOut: "denom1",
-						TakerFee:        osmomath.MustNewDecFromStr("0.0013"),
+						TokenInDenom:  "denom0",
+						TokenOutDenom: "denom1",
+						TakerFee:      osmomath.MustNewDecFromStr("0.0013"),
 					},
 				},
 			},
@@ -255,9 +255,9 @@ func (s *KeeperTestSuite) TestSetDenomPairTakerFee() {
 				Sender: nonAdminAcc,
 				DenomPairTakerFee: []types.DenomPairTakerFee{
 					{
-						DenomOfTokenIn:  "denom0",
-						DenomOfTokenOut: "denom1",
-						TakerFee:        osmomath.MustNewDecFromStr("0.0013"),
+						TokenInDenom:  "denom0",
+						TokenOutDenom: "denom1",
+						TakerFee:      osmomath.MustNewDecFromStr("0.0013"),
 					},
 				},
 			},

@@ -587,14 +587,14 @@ func ParseDenomPairTakerFee(arg string) ([]types.DenomPairTakerFee, error) {
 	denomPairTakerFeeRecords := strings.Split(arg, ",")
 
 	if len(denomPairTakerFeeRecords)%3 != 0 {
-		return nil, fmt.Errorf("denomPairTakerFeeRecords must be a list of denomOfTokenIn, denomOfTokenOut, and takerFee separated by commas")
+		return nil, fmt.Errorf("denomPairTakerFeeRecords must be a list of tokenInDenom, tokenOutDenom, and takerFee separated by commas")
 	}
 
 	finaldenomPairTakerFeeRecordsRecords := []types.DenomPairTakerFee{}
 	i := 0
 	for i < len(denomPairTakerFeeRecords) {
-		denomOfTokenIn := denomPairTakerFeeRecords[i]
-		denomOfTokenOut := denomPairTakerFeeRecords[i+1]
+		tokenInDenom := denomPairTakerFeeRecords[i]
+		tokenOutDenom := denomPairTakerFeeRecords[i+1]
 
 		takerFeeStr := denomPairTakerFeeRecords[i+2]
 		takerFee, err := osmomath.NewDecFromStr(takerFeeStr)
@@ -603,9 +603,9 @@ func ParseDenomPairTakerFee(arg string) ([]types.DenomPairTakerFee, error) {
 		}
 
 		finaldenomPairTakerFeeRecordsRecords = append(finaldenomPairTakerFeeRecordsRecords, types.DenomPairTakerFee{
-			DenomOfTokenIn:  denomOfTokenIn,
-			DenomOfTokenOut: denomOfTokenOut,
-			TakerFee:        takerFee,
+			TokenInDenom:  tokenInDenom,
+			TokenOutDenom: tokenOutDenom,
+			TakerFee:      takerFee,
 		})
 
 		// increase counter by the next 3

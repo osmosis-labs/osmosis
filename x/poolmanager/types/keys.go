@@ -66,9 +66,9 @@ func FormatModuleRouteKey(poolId uint64) []byte {
 
 // FormatDenomTradePairKey serializes denom trade pair to bytes.
 // Denom trade pair order matters.
-func FormatDenomTradePairKey(denomOfTokenIn, denomOfTokenOut string) []byte {
+func FormatDenomTradePairKey(tokenInDenom, tokenOutDenom string) []byte {
 	var buffer bytes.Buffer
-	fmt.Fprintf(&buffer, "%s%s%s%s%s", DenomTradePairPrefix, KeySeparator, denomOfTokenIn, KeySeparator, denomOfTokenOut)
+	fmt.Fprintf(&buffer, "%s%s%s%s%s", DenomTradePairPrefix, KeySeparator, tokenInDenom, KeySeparator, tokenOutDenom)
 	return buffer.Bytes()
 }
 
@@ -89,22 +89,22 @@ func KeyPoolVolume(poolId uint64) []byte {
 }
 
 // ParseDenomTradePairKey parses the raw bytes of the DenomTradePairKey into a denom trade pair.
-func ParseDenomTradePairKey(key []byte) (denomOfTokenIn, denomOfTokenOut string, err error) {
+func ParseDenomTradePairKey(key []byte) (tokenInDenom, tokenOutDenom string, err error) {
 	keyStr := string(key)
 	parts := strings.Split(keyStr, KeySeparator)
 
-	denomOfTokenIn = parts[1]
-	denomOfTokenOut = parts[2]
+	tokenInDenom = parts[1]
+	tokenOutDenom = parts[2]
 
-	err = sdk.ValidateDenom(denomOfTokenIn)
+	err = sdk.ValidateDenom(tokenInDenom)
 	if err != nil {
 		return "", "", err
 	}
 
-	err = sdk.ValidateDenom(denomOfTokenOut)
+	err = sdk.ValidateDenom(tokenOutDenom)
 	if err != nil {
 		return "", "", err
 	}
 
-	return denomOfTokenIn, denomOfTokenOut, nil
+	return tokenInDenom, tokenOutDenom, nil
 }

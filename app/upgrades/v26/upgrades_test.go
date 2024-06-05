@@ -76,8 +76,8 @@ func (s *UpgradeTestSuite) PrepareTradingPairTakerFeeTest() {
 	s.App.PoolManagerKeeper.SetDenomPairTakerFee(s.Ctx, denomC, denomD, osmomath.MustNewDecFromStr("0.006"))
 
 	expectedTradingPairTakerFees := []poolmanagertypes.DenomPairTakerFee{
-		{DenomOfTokenIn: denomC, DenomOfTokenOut: denomD, TakerFee: osmomath.MustNewDecFromStr("0.006")},
-		{DenomOfTokenIn: denomA, DenomOfTokenOut: denomB, TakerFee: osmomath.MustNewDecFromStr("0.005")},
+		{TokenInDenom: denomC, TokenOutDenom: denomD, TakerFee: osmomath.MustNewDecFromStr("0.006")},
+		{TokenInDenom: denomA, TokenOutDenom: denomB, TakerFee: osmomath.MustNewDecFromStr("0.005")},
 	}
 
 	// Retrieve all trading pair taker fees, and check if they are as expected
@@ -89,10 +89,10 @@ func (s *UpgradeTestSuite) PrepareTradingPairTakerFeeTest() {
 
 func (s *UpgradeTestSuite) ExecuteTradingPairTakerFeeTest() {
 	expectedTradingPairTakerFees := []poolmanagertypes.DenomPairTakerFee{
-		{DenomOfTokenIn: denomD, DenomOfTokenOut: denomC, TakerFee: osmomath.MustNewDecFromStr("0.006")},
-		{DenomOfTokenIn: denomC, DenomOfTokenOut: denomD, TakerFee: osmomath.MustNewDecFromStr("0.006")},
-		{DenomOfTokenIn: denomB, DenomOfTokenOut: denomA, TakerFee: osmomath.MustNewDecFromStr("0.005")},
-		{DenomOfTokenIn: denomA, DenomOfTokenOut: denomB, TakerFee: osmomath.MustNewDecFromStr("0.005")},
+		{TokenInDenom: denomD, TokenOutDenom: denomC, TakerFee: osmomath.MustNewDecFromStr("0.006")},
+		{TokenInDenom: denomC, TokenOutDenom: denomD, TakerFee: osmomath.MustNewDecFromStr("0.006")},
+		{TokenInDenom: denomB, TokenOutDenom: denomA, TakerFee: osmomath.MustNewDecFromStr("0.005")},
+		{TokenInDenom: denomA, TokenOutDenom: denomB, TakerFee: osmomath.MustNewDecFromStr("0.005")},
 	}
 
 	// Retrieve all trading pair taker fees, and check if they are modified as expected

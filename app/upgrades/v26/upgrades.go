@@ -71,8 +71,8 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 		for _, tradingPairTakerFee := range allTradingPairTakerFees {
-			// Create the opposite pair. This is why DenomOfTokenOut is in the DenomOfTokenIn position and vice versa.
-			keepers.PoolManagerKeeper.SetDenomPairTakerFee(ctx, tradingPairTakerFee.DenomOfTokenOut, tradingPairTakerFee.DenomOfTokenIn, tradingPairTakerFee.TakerFee)
+			// Create the opposite pair. This is why TokenOutDenom is in the TokenInDenom position and vice versa.
+			keepers.PoolManagerKeeper.SetDenomPairTakerFee(ctx, tradingPairTakerFee.TokenOutDenom, tradingPairTakerFee.TokenInDenom, tradingPairTakerFee.TakerFee)
 		}
 
 		return migrations, nil
