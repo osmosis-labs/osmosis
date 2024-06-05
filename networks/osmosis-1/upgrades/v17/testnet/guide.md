@@ -5,7 +5,7 @@
 | Chain-id        | `osmo-test-5`                                                |
 | Upgrade Version | `v17.0.0-rc0`                                                |
 | Upgrade Height  | 2200500                                                      |
-| Countdown       | <https://testnet.mintscan.io/osmosis-testnet/blocks/2200500> |
+| Countdown       | <https://www.mintscan.io/osmosis-testnet/block/2200500> |
 
 ## Memory Requirements
 

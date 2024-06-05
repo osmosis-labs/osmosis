@@ -2,9 +2,9 @@
 
 ## Overview
 
-- **v20 Proposal**: [Proposal Page](https://testnet.mintscan.io/osmosis-testnet/proposals/113)
+- **v20 Proposal**: [Proposal Page](https://www.mintscan.io/osmosis-testnet/proposals/113)
 - **v20 Upgrade Block Height**: `3197200`
-- **v20 Upgrade Countdown**: [Block Countdown](https://testnet.mintscan.io/osmosis-testnet/blocks/3197200)
+- **v20 Upgrade Countdown**: [Block Countdown](https://www.mintscan.io/osmosis-testnet/block/3197200)
 
 ## Hardware Requirements
 
