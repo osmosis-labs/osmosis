@@ -82,10 +82,10 @@ func CreateUpgradeHandler(
 		newGovParams.MinDeposit = sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(10000000)))
 		newGovParams.MinDepositRatio = "0.010000000000000000"
 		newGovParams.Quorum = "0.200000000000000000"
-		newGovParams.Threshold = "0.500000000000000000"
-		newGovParams.VetoThreshold = "0.334000000000000000"
-		newGovParams.ProposalCancelRatio = "0.500000000000000000"
-		newGovParams.ProposalCancelDest = ""
+		// newGovParams.Threshold = "0.500000000000000000"
+		// newGovParams.VetoThreshold = "0.334000000000000000"
+		// newGovParams.ProposalCancelRatio = "0.500000000000000000"
+		// newGovParams.ProposalCancelDest = ""
 
 		err = keepers.GovKeeper.Params.Set(ctx, newGovParams)
 		if err != nil {
