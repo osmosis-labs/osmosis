@@ -75,11 +75,11 @@ func CreateUpgradeHandler(
 		newGovParams.BurnProposalDepositPrevote = false
 		newGovParams.BurnVoteQuorum = false
 		newGovParams.BurnVoteVeto = true
-		newGovParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(5000000000)))
+		newGovParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(50000000)))
 		newGovParams.ExpeditedThreshold = "0.667000000000000000"
 		newGovParams.ExpeditedVotingPeriod = &time3
 		newGovParams.MaxDepositPeriod = &time1
-		newGovParams.MinDeposit = sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(1600000000)))
+		newGovParams.MinDeposit = sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(10000000)))
 		newGovParams.MinDepositRatio = "0.010000000000000000"
 		newGovParams.Quorum = "0.200000000000000000"
 		newGovParams.Threshold = "0.500000000000000000"
