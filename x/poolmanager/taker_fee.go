@@ -171,7 +171,7 @@ func (k Keeper) calcAndChargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOu
 	}
 
 	// If no taker fee is charged, return the original token amount.
-	if takerFeeCharged.IsZero() {
+	if tokenIn.Equal(tokenInAfterTakerFee) {
 		return tokenIn, nil
 	}
 
