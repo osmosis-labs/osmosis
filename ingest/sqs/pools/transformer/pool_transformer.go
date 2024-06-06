@@ -239,7 +239,7 @@ func (pi *poolTransformer) convertPool(
 
 			// special transformation based on different cw pool
 			if cosmWasmPoolModel.IsAlloyTransmuter() {
-				err = pi.updateAlloyTrasmuterInfo(ctx, pool, cosmWasmPoolModel, &denoms)
+				err = pi.updateAlloyTrasmuterInfo(ctx, pool.GetId(), pool.GetAddress(), cosmWasmPoolModel, &denoms)
 			}
 		}
 	}
@@ -467,17 +467,18 @@ func (pi *poolTransformer) computeUSDCPoolLiquidityCapFromUOSMO(ctx sdk.Context,
 // - append the alloyed denom to pool denoms.
 func (pi *poolTransformer) updateAlloyTrasmuterInfo(
 	ctx sdk.Context,
-	pool poolmanagertypes.PoolI,
+	poolId uint64,
+	contractAddress sdk.AccAddress,
 	cosmWasmPoolModel *sqsdomain.CosmWasmPoolModel,
 	poolDenoms *[]string,
 ) error {
-	assetConfigs, err := pi.alloyedTransmuterListAssetConfig(ctx, pool.GetId(), pool.GetAddress())
+	assetConfigs, err := pi.alloyedTransmuterListAssetConfig(ctx, poolId, contractAddress)
 	if err != nil {
 		return err
 	}
 
 	// share denom of alloyed transmuter pool is an alloyed denom
-	alloyedDenom, err := pi.alloyedTransmuterGetShareDenom(ctx, pool.GetId(), pool.GetAddress())
+	alloyedDenom, err := pi.alloyedTransmuterGetShareDenom(ctx, poolId, contractAddress)
 	if err != nil {
 		return err
 	}

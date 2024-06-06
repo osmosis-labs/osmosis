@@ -37,6 +37,16 @@ func (pi *poolTransformer) ComputeUOSMOPoolLiquidityCap(ctx sdk.Context, balance
 	return pi.computeUOSMOPoolLiquidityCap(ctx, balances, priceInfoMap)
 }
 
+func (pi *poolTransformer) UpdateAlloyedTransmuterPool(
+	ctx sdk.Context,
+	poolId uint64,
+	contractAddress sdk.AccAddress,
+	cosmWasmPoolModel *sqsdomain.CosmWasmPoolModel,
+	poolDenoms *[]string,
+) error {
+	return pi.updateAlloyTrasmuterInfo(ctx, poolId, contractAddress, cosmWasmPoolModel, poolDenoms)
+}
+
 func FilterBalances(originalBalances sdk.Coins, poolDenomsMap map[string]struct{}) sdk.Coins {
 	return filterBalances(originalBalances, poolDenomsMap)
 }
