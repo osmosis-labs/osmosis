@@ -2,11 +2,14 @@ package v26
 
 import (
 	"context"
+	"time"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 
 	"github.com/osmosis-labs/osmosis/v25/app/keepers"
 	"github.com/osmosis-labs/osmosis/v25/app/upgrades"
@@ -59,11 +62,30 @@ func CreateUpgradeHandler(
 		// 	return nil, err
 		// }
 
+		time1 := time.Second * 1209600
+		time2 := time.Second * 432000
+		time3 := time.Second * 86400
+
 		newGovParams, err := keepers.GovKeeper.Params.Get(ctx)
 		if err != nil {
 			return nil, err
 		}
 		newGovParams.MinInitialDepositRatio = "0.250000000000000000"
+		newGovParams.VotingPeriod = &time2
+		newGovParams.BurnProposalDepositPrevote = false
+		newGovParams.BurnVoteQuorum = false
+		newGovParams.BurnVoteVeto = true
+		newGovParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(5000000000)))
+		newGovParams.ExpeditedThreshold = "0.667000000000000000"
+		newGovParams.ExpeditedVotingPeriod = &time3
+		newGovParams.MaxDepositPeriod = &time1
+		newGovParams.MinDeposit = sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(1600000000)))
+		newGovParams.MinDepositRatio = "0.010000000000000000"
+		newGovParams.Quorum = "0.200000000000000000"
+		newGovParams.Threshold = "0.500000000000000000"
+		newGovParams.VetoThreshold = "0.334000000000000000"
+		newGovParams.ProposalCancelRatio = "0.500000000000000000"
+		newGovParams.ProposalCancelDest = ""
 
 		err = keepers.GovKeeper.Params.Set(ctx, newGovParams)
 		if err != nil {
