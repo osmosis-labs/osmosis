@@ -63,8 +63,8 @@ func CreateUpgradeHandler(
 		// }
 
 		time1 := time.Second * 1209600
-		time2 := time.Second * 432000
-		time3 := time.Second * 86400
+		time2 := time.Second * 12
+		time3 := time.Second * 11
 
 		newGovParams, err := keepers.GovKeeper.Params.Get(ctx)
 		if err != nil {
