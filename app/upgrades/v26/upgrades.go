@@ -2,7 +2,6 @@ package v26
 
 import (
 	"context"
-	"time"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -11,10 +10,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v25/app/keepers"
 	"github.com/osmosis-labs/osmosis/v25/app/upgrades"
-
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-
-	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 const (
@@ -45,19 +40,31 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
-		// UNFORKING v2 TODO: I think there is just one new gov param that is not registered, which is why this is needed. Need to figure out what it is rather than re-setting all params.
-		// Set all gov params explicitly. E2E had issues when this was not done, so setting this here to ensure no issues on mainnet.
-		var newGovParams govv1.Params
-		if ctx.ChainID() == mainnetChainID || ctx.ChainID() == edgenetChainID {
-			newGovParams = govv1.NewParams(sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(1600000000))), sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(5000000000))), time.Second*1209600, time.Second*432000, time.Second*86400,
-				"0.200000000000000000", "0.500000000000000000", "0.667000000000000000", "0.334000000000000000", "0.250000000000000000", "0.500000000000000000", "", false, false, true, "0.010000000000000000")
-		} else if ctx.ChainID() == testnetChainID {
-			newGovParams = govv1.NewParams(sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(1600000000))), sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(5000000000))), time.Second*1209600, time.Second*432000, time.Second*86400,
-				"0.200000000000000000", "0.500000000000000000", "0.667000000000000000", "0.334000000000000000", "0.250000000000000000", "0.500000000000000000", "", false, false, true, "0.010000000000000000")
-		} else if ctx.ChainID() == e2eChainIDA || ctx.ChainID() == e2eChainIDB {
-			newGovParams = govv1.NewParams(sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(10000000))), sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(50000000))), time.Second*1209600, time.Second*12, time.Second*11,
-				"0.200000000000000000", "0.500000000000000000", "0.667000000000000000", "0.334000000000000000", "0.250000000000000000", "0.500000000000000000", "", false, false, true, "0.010000000000000000")
+		// // UNFORKING v2 TODO: I think there is just one new gov param that is not registered, which is why this is needed. Need to figure out what it is rather than re-setting all params.
+		// // Set all gov params explicitly. E2E had issues when this was not done, so setting this here to ensure no issues on mainnet.
+		// var newGovParams govv1.Params
+
+		// if ctx.ChainID() == mainnetChainID || ctx.ChainID() == edgenetChainID {
+		// 	newGovParams = govv1.NewParams(sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(1600000000))), sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(5000000000))), time.Second*1209600, time.Second*432000, time.Second*86400,
+		// 		"0.200000000000000000", "0.500000000000000000", "0.667000000000000000", "0.334000000000000000", "0.250000000000000000", "0.500000000000000000", "", false, false, true, "0.010000000000000000")
+		// } else if ctx.ChainID() == testnetChainID {
+		// 	newGovParams = govv1.NewParams(sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(1600000000))), sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(5000000000))), time.Second*1209600, time.Second*432000, time.Second*86400,
+		// 		"0.200000000000000000", "0.500000000000000000", "0.667000000000000000", "0.334000000000000000", "0.250000000000000000", "0.500000000000000000", "", false, false, true, "0.010000000000000000")
+		// } else if ctx.ChainID() == e2eChainIDA || ctx.ChainID() == e2eChainIDB {
+		// 	newGovParams = govv1.NewParams(sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(10000000))), sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(50000000))), time.Second*1209600, time.Second*12, time.Second*11,
+		// 		"0.200000000000000000", "0.500000000000000000", "0.667000000000000000", "0.334000000000000000", "0.250000000000000000", "0.500000000000000000", "", false, false, true, "0.010000000000000000")
+		// }
+		// err = keepers.GovKeeper.Params.Set(ctx, newGovParams)
+		// if err != nil {
+		// 	return nil, err
+		// }
+
+		newGovParams, err := keepers.GovKeeper.Params.Get(ctx)
+		if err != nil {
+			return nil, err
 		}
+		newGovParams.MinInitialDepositRatio = "0.250000000000000000"
+
 		err = keepers.GovKeeper.Params.Set(ctx, newGovParams)
 		if err != nil {
 			return nil, err
