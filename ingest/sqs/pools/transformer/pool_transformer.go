@@ -222,37 +222,24 @@ func (pi *poolTransformer) convertPool(
 			return nil, fmt.Errorf("pool (%d) with type (%d) requires `poolTransformer` to have `wasmKeeper` but got `nil`", pool.GetId(), pool.GetType())
 		}
 
-		bz := pi.wasmKeeper.QueryRaw(ctx, cwPool.GetAddress(), []byte("contract_info"))
-		if len(bz) == 0 {
+		contractInfo, err := pi.queryContractInfo(ctx, cwPool.GetAddress())
+		if err != nil {
 			// only log since cw pool contracts are not required to conform cw2
 			ctx.Logger().Info(
-				"contract_info not found for CosmWasm pool",
+				"CosmWasm pool does not conform cw2",
 				"pool_id", pool.GetId(),
 				"contract_address", pool.GetAddress(),
+				"err", err.Error(),
 			)
 		} else {
-			var contractInfo *sqsdomain.ContractInfo
-			cosmWasmPoolModel = &sqsdomain.CosmWasmPoolModel{}
+			// initialize the CosmWasmPoolModel with the contract info
+			cosmWasmPoolModel = &sqsdomain.CosmWasmPoolModel{
+				ContractInfo: contractInfo,
+			}
 
-			if err := json.Unmarshal(bz, &contractInfo); err != nil {
-				// only log since cw pool contracts are not required to conform cw2
-				ctx.Logger().Info(
-					"CosmWasm pool does not conform cw2",
-					"pool_id", pool.GetId(),
-					"contract_address", pool.GetAddress(),
-					"contract_info", string(bz),
-				)
-			} else {
-				cosmWasmPoolModel.ContractInfo = *contractInfo
-
-				// special transformation based on different cw pool
-				if cosmWasmPoolModel.IsAlloyTransmuter() {
-					err = pi.updateAlloyTrasmuterInfo(ctx, pool, cwPool, cosmWasmPoolModel, &denoms)
-				}
-
-				if err != nil {
-					return nil, err
-				}
+			// special transformation based on different cw pool
+			if cosmWasmPoolModel.IsAlloyTransmuter() {
+				err = pi.updateAlloyTrasmuterInfo(ctx, pool, cosmWasmPoolModel, &denoms)
 			}
 		}
 	}
@@ -474,18 +461,49 @@ func (pi *poolTransformer) computeUSDCPoolLiquidityCapFromUOSMO(ctx sdk.Context,
 	return poolLiquidityCapUOSMO, noPoolLiquidityCapError
 }
 
+// updateAlloyTrasmuterInfo updates cosmwasmPoolModel with alloyed transmuter specific info.
+// - It queries alloyed transmuter contract asset configs and share denom, the construct
+// `AlloyTransmuterData`. Share denom for alloyed transmuter is the alloyed denom.
+// - append the alloyed denom to pool denoms.
 func (pi *poolTransformer) updateAlloyTrasmuterInfo(
 	ctx sdk.Context,
 	pool poolmanagertypes.PoolI,
-	cwPool cosmwasmpooltypes.CosmWasmExtension,
 	cosmWasmPoolModel *sqsdomain.CosmWasmPoolModel,
-	denoms *[]string,
+	poolDenoms *[]string,
 ) error {
-	bz, err := pi.wasmKeeper.QuerySmart(ctx, cwPool.GetAddress(), []byte(`{"list_asset_configs":{}}`))
+	assetConfigs, err := pi.alloyedTransmuterListAssetConfig(ctx, pool.GetId(), pool.GetAddress())
 	if err != nil {
-		return fmt.Errorf(
+		return err
+	}
+
+	// share denom of alloyed transmuter pool is an alloyed denom
+	alloyedDenom, err := pi.alloyedTransmuterGetShareDenom(ctx, pool.GetId(), pool.GetAddress())
+	if err != nil {
+		return err
+	}
+
+	// append alloyed denom to denoms
+	*poolDenoms = append(*poolDenoms, alloyedDenom)
+
+	cosmWasmPoolModel.Data.AlloyTransmuter = &sqsdomain.AlloyTransmuterData{
+		AlloyedDenom: alloyedDenom,
+		AssetConfigs: assetConfigs,
+	}
+
+	return nil
+}
+
+// alloyedTransmuterListAssetConfig queries the asset configs of the alloyed transmuter contract.
+func (pi *poolTransformer) alloyedTransmuterListAssetConfig(
+	ctx sdk.Context,
+	poolId uint64,
+	contractAddress sdk.AccAddress,
+) ([]sqsdomain.TransmuterAssetConfig, error) {
+	bz, err := pi.wasmKeeper.QuerySmart(ctx, contractAddress, []byte(`{"list_asset_configs":{}}`))
+	if err != nil {
+		return nil, fmt.Errorf(
 			"error querying list_asset_configs for pool (%d) contrat_address (%s): %w",
-			pool.GetId(), pool.GetAddress(), err,
+			poolId, contractAddress, err,
 		)
 	}
 	var assetConfigsResponse struct {
@@ -493,17 +511,26 @@ func (pi *poolTransformer) updateAlloyTrasmuterInfo(
 	}
 
 	if err := json.Unmarshal(bz, &assetConfigsResponse); err != nil {
-		return fmt.Errorf(
+		return nil, fmt.Errorf(
 			"error unmarshalling asset_configs for pool (%d) contrat_address (%s): %w",
-			pool.GetId(), pool.GetAddress(), err,
+			poolId, contractAddress, err,
 		)
 	}
 
-	bz, err = pi.wasmKeeper.QuerySmart(ctx, cwPool.GetAddress(), []byte(`{"get_share_denom":{}}`))
+	return assetConfigsResponse.AssetConfigs, nil
+}
+
+// alloyedTransmuterGetShareDenom queries the share denom of the alloyed transmuter contract.
+func (pi *poolTransformer) alloyedTransmuterGetShareDenom(
+	ctx sdk.Context,
+	poolId uint64,
+	contractAddress sdk.AccAddress,
+) (string, error) {
+	bz, err := pi.wasmKeeper.QuerySmart(ctx, contractAddress, []byte(`{"get_share_denom":{}}`))
 	if err != nil {
-		return fmt.Errorf(
+		return "", fmt.Errorf(
 			"error querying get_share_denom for pool (%d) contrat_address (%s): %w",
-			pool.GetId(), pool.GetAddress(), err,
+			poolId, contractAddress, err,
 		)
 	}
 
@@ -512,19 +539,26 @@ func (pi *poolTransformer) updateAlloyTrasmuterInfo(
 	}
 
 	if err := json.Unmarshal(bz, &getShareDenomResponse); err != nil {
-		return fmt.Errorf(
+		return "", fmt.Errorf(
 			"error unmarshalling share_denom for pool (%d) contrat_address (%s): %w",
-			pool.GetId(), pool.GetAddress(), err,
+			poolId, contractAddress, err,
 		)
 	}
 
-	// append alloyed denom to denoms
-	*denoms = append(*denoms, getShareDenomResponse.ShareDenom)
+	return getShareDenomResponse.ShareDenom, nil
+}
 
-	cosmWasmPoolModel.Data.AlloyTransmuter = &sqsdomain.AlloyTransmuterData{
-		AlloyedDenom: getShareDenomResponse.ShareDenom,
-		AssetConfigs: assetConfigsResponse.AssetConfigs,
+// queryContractInfo queries the cw2 contract info from the given contract address.
+func (pi *poolTransformer) queryContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) (sqsdomain.ContractInfo, error) {
+	bz := pi.wasmKeeper.QueryRaw(ctx, contractAddress, []byte("contract_info"))
+	if len(bz) == 0 {
+		return sqsdomain.ContractInfo{}, fmt.Errorf("contract info not found")
+	} else {
+		var contractInfo sqsdomain.ContractInfo
+		if err := json.Unmarshal(bz, &contractInfo); err != nil {
+			return sqsdomain.ContractInfo{}, fmt.Errorf("error unmarshalling contract info: %w", err)
+		} else {
+			return contractInfo, nil
+		}
 	}
-
-	return nil
 }
