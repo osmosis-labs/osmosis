@@ -30,6 +30,10 @@ type sqsStreamingService struct {
 	nodeStatusChecker domain.NodeStatusChecker
 
 	shouldProcessAllBlockData bool
+
+	curTxIndex int
+
+	txDecoder sdk.TxDecoder
 }
 
 // New creates a new sqsStreamingService.
@@ -37,7 +41,7 @@ type sqsStreamingService struct {
 // sqsIngester is an ingester that ingests the block data into SQS.
 // poolTracker is a tracker that tracks the pools that were changed in the block.
 // nodeStatusChecker is a checker that checks if the node is syncing.
-func New(writeListeners map[storetypes.StoreKey][]storetypes.WriteListener, sqsIngester domain.Ingester, poolTracker domain.BlockPoolUpdateTracker, nodeStatusChecker domain.NodeStatusChecker) baseapp.StreamingService {
+func New(writeListeners map[storetypes.StoreKey][]storetypes.WriteListener, sqsIngester domain.Ingester, poolTracker domain.BlockPoolUpdateTracker, nodeStatusChecker domain.NodeStatusChecker, txDecoder sdk.TxDecoder) baseapp.StreamingService {
 	return &sqsStreamingService{
 		writeListeners:    writeListeners,
 		sqsIngester:       sqsIngester,
@@ -45,6 +49,10 @@ func New(writeListeners map[storetypes.StoreKey][]storetypes.WriteListener, sqsI
 		nodeStatusChecker: nodeStatusChecker,
 
 		shouldProcessAllBlockData: true,
+
+		curTxIndex: 0,
+
+		txDecoder: txDecoder,
 	}
 }
 
@@ -55,6 +63,9 @@ func (s *sqsStreamingService) Close() error {
 
 // ListenBeginBlock implements baseapp.StreamingService.
 func (s *sqsStreamingService) ListenBeginBlock(ctx context.Context, req types.RequestBeginBlock, res types.ResponseBeginBlock) error {
+
+	s.curTxIndex = 0
+
 	return nil
 }
 
@@ -65,6 +76,16 @@ func (s *sqsStreamingService) ListenCommit(ctx context.Context, res types.Respon
 
 // ListenDeliverTx implements baseapp.StreamingService.
 func (s *sqsStreamingService) ListenDeliverTx(ctx context.Context, req types.RequestDeliverTx, res types.ResponseDeliverTx) error {
+
+	tx, err := s.txDecoder(req.Tx)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("tx", tx)
+
+	s.curTxIndex += 1
+
 	return nil
 }
 
@@ -76,6 +97,13 @@ func (s *sqsStreamingService) ListenEndBlock(ctx context.Context, req types.Requ
 	}()
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	txBytes := sdkCtx.TxBytes()
+
+	fmt.Println(txBytes)
+
+	s.curTxIndex = 0
+
 	// Always return nil to avoid making this consensus breaking.
 	_ = s.processBlockRecoverError(sdkCtx)
 	return nil

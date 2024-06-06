@@ -324,7 +324,7 @@ func NewOsmosisApp(
 
 		// Create the SQS streaming service by setting up the write listeners,
 		// the SQS ingester, and the pool tracker.
-		sqsStreamingService := service.New(writeListeners, sqsIngester, poolTracker, nodeStatusChecker)
+		sqsStreamingService := service.New(writeListeners, sqsIngester, poolTracker, nodeStatusChecker, txConfig.TxDecoder())
 
 		// Register the SQS streaming service with the app.
 		app.SetStreamingService(sqsStreamingService)

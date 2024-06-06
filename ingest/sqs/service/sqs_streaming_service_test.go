@@ -110,7 +110,7 @@ func (s *SQSServiceTestSuite) TestProcessBlock() {
 			poolTracker.TrackCFMM(balancerPool)
 			s.Require().Equal(len(poolTracker.GetCFMMPools()), 1)
 
-			sqsStreamingServiceI := service.New(emptyWriteListeners, sqsIngesterMock, poolTracker, nodeStatusCheckerMock)
+			sqsStreamingServiceI := service.New(emptyWriteListeners, sqsIngesterMock, poolTracker, nodeStatusCheckerMock, nil)
 
 			// cast the interface to the concrete type for testing unexported concrete method.
 			sqsStreamingService, ok := sqsStreamingServiceI.(*service.SQSStreamingService)
@@ -207,7 +207,7 @@ func (s *SQSServiceTestSuite) TestProcessBlockRecoverError() {
 			poolTracker.TrackCFMM(balancerPool)
 			s.Require().Equal(len(poolTracker.GetCFMMPools()), 1)
 
-			sqsStreamingServiceI := service.New(emptyWriteListeners, sqsIngesterMock, poolTracker, nodeStatusCheckerMock)
+			sqsStreamingServiceI := service.New(emptyWriteListeners, sqsIngesterMock, poolTracker, nodeStatusCheckerMock, nil)
 
 			// cast the interface to the concrete type for testing unexported concrete method.
 			sqsStreamingService, ok := sqsStreamingServiceI.(*service.SQSStreamingService)
