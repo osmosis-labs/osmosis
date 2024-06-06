@@ -216,10 +216,10 @@ func (pi *poolTransformer) convertPool(
 
 		balances = cwPool.GetTotalPoolLiquidity(ctx)
 
-		// This must never happen, but if it does, and there is no checks, the query will fail silently
-		// so we panic here to make sure we catch this error
+		// This must never happen, but if it does, and there is no checks, the query will fail silently.
+		// We make sure to return an error here.
 		if pi.wasmKeeper == nil {
-			panic("wasmKeeper is nil")
+			return nil, fmt.Errorf("pool (%d) with type (%d) requires `poolTransformer` to have `wasmKeeper` but got `nil`", pool.GetId(), pool.GetType())
 		}
 
 		bz := pi.wasmKeeper.QueryRaw(ctx, cwPool.GetAddress(), []byte("contract_info"))
