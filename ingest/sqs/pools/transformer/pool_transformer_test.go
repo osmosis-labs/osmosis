@@ -492,7 +492,6 @@ func (s *PoolTransformerTestSuite) TestProcessBlock() {
 	s.Require().Equal(poolsData.CosmWasmPoolID, allPools[4].GetId())
 
 	// Validate taker fee for the custom pool
-	// TODO: GetTakerFee in the sqsdomain repo needs to be updated to no longer sort lexicographically
 	actualTakerFee := takerFeesMap.GetTakerFee(customTakerFeeConcentratedPool.GetToken0(), customTakerFeeConcentratedPool.GetToken1())
 	// Custom taker fee
 	s.Require().Equal(defaultCustomTakerFee, actualTakerFee)
