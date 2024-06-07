@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"time"
 
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
@@ -158,6 +160,9 @@ func (s *KeeperTestSuite) TestSuperfluidDelegate() {
 
 func (s *KeeperTestSuite) TestValidateLockForSFDelegate() {
 	lockOwner := s.TestAccs[0]
+	params, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	s.Require().NoError(err)
+	bondDenom := params.BondDenom
 
 	tests := []struct {
 		name                             string
@@ -246,7 +251,7 @@ func (s *KeeperTestSuite) TestValidateLockForSFDelegate() {
 				Duration: time.Hour * 24 * 21,
 				ID:       1,
 			},
-			superfluidAssetToSet: types.SuperfluidAsset{Denom: "foo", AssetType: types.SuperfluidAssetTypeNative, PricePoolId: 1},
+			superfluidAssetToSet: types.SuperfluidAsset{Denom: "foo", AssetType: types.SuperfluidAssetTypeNative, PriceRoute: []*poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: bondDenom}}},
 			expectedErr:          nil,
 		},
 		{
@@ -257,7 +262,7 @@ func (s *KeeperTestSuite) TestValidateLockForSFDelegate() {
 				Duration: time.Hour * 24 * 21,
 				ID:       1,
 			},
-			superfluidAssetToSet: types.SuperfluidAsset{Denom: "foo", AssetType: types.SuperfluidAssetTypeNative, PricePoolId: 1},
+			superfluidAssetToSet: types.SuperfluidAsset{Denom: "foo", AssetType: types.SuperfluidAssetTypeNative, PriceRoute: []*poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: bondDenom}}},
 			expectedErr:          errorsmod.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", "bar"),
 		},
 		{
@@ -846,7 +851,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 				bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
 				s.Require().NoError(err)
 				supplyBefore := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
-				osmoAmount, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokensExcludeNative(s.Ctx, intermediaryAcc.Denom, tc.unlockAmount)
+				osmoAmount, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokensIfNonNative(s.Ctx, intermediaryAcc.Denom, tc.unlockAmount)
 				s.Require().NoError(err)
 
 				unbondLockStartTime := startTime.Add(time.Hour)

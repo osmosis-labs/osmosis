@@ -5,7 +5,7 @@
 | Chain-id        | `osmo-test-4`                                                |
 | Upgrade Version | `v15.0.0-rc3-testnet`                                        |
 | Upgrade Height  | 9422500                                                      |
-| Countdown       | <https://testnet.mintscan.io/osmosis-testnet/blocks/9422500> |
+| Countdown       | <https://www.mintscan.io/osmosis-testnet/block/9422500> |
 
 ## Memory Requirements
 

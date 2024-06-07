@@ -175,8 +175,8 @@ Used in post-handler functions to enforce transaction rules like spending and tr
 
 ## Authenticator Manager
 
-The authenticator manager the chain to register authenticators and retrieve them by type. Each authenticator type
-represents the code to be executed.
+The authenticator manager allows the chain to register authenticators and retrieve them by type. Each authenticator 
+type represents the code to be executed.
 
 To determine which authenticators will be used for each account, this module's keeper stores a mapping
 between an account and a list of authenticators. A user can add or remove authenticators from their account using the
@@ -304,7 +304,7 @@ Contract storage should be used only when the authenticator needs to track any d
 
 ### Contract Interface
 
-The contract needs to implement 3 authenticator hooks which are called by the authenticator through sudo entrypoint, it needs to handle the following messages:
+The contract needs to implement 5 authenticator hooks which are called by the authenticator through sudo entrypoint, it needs to handle the following messages:
 
 ```rs
 #[cw_serde]
@@ -426,6 +426,10 @@ authenticator with the position of the sub-authenticator in the list. For exampl
 `AllOf(AnyOf(sig1, sig2), CosmwasmAuthenticator(contract1, params))` as it's authenticator, and it has a
 global id of 86, the cosmwasm authenticator will receive `86.1` as its authenticator id. If that instead was another
 composite authenticator, its first sub-authenticator would receive `86.1.0` as its authenticator id.
+
+In the general case, if we call a composite authenticator with id `a` and it has `n` sub-authenticators, the sub-authenticator
+at position `i` will receive the id `a.i`. If the sub-authenticator is itself a composite authenticator with `m` sub-authenticators,
+the sub-authenticator at position `j` will receive the id `a.i.j`.
 
 ### Composition Logic
 

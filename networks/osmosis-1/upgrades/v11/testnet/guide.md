@@ -1,8 +1,8 @@
 # v10 to v11 Testnet Upgrade Guide
 
-Osmosis v11 Gov Prop: <https://testnet.mintscan.io/osmosis-testnet/proposals/56843>
+Osmosis v11 Gov Prop: <https://www.mintscan.io/osmosis-testnet/proposals/56843>
 
-Countdown: <https://testnet.mintscan.io/osmosis-testnet/blocks/5865000>
+Countdown: <https://www.mintscan.io/osmosis-testnet/block/5865000>
 
 Height: 5865000
 

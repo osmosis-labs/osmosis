@@ -12,7 +12,7 @@ import (
 
 func (k Keeper) HandleDenomPairTakerFeeProposal(ctx sdk.Context, p *types.DenomPairTakerFeeProposal) error {
 	for _, denomPair := range p.DenomPairTakerFee {
-		k.SetDenomPairTakerFee(ctx, denomPair.Denom0, denomPair.Denom1, denomPair.TakerFee)
+		k.SetDenomPairTakerFee(ctx, denomPair.TokenInDenom, denomPair.TokenOutDenom, denomPair.TakerFee)
 	}
 	return nil
 }

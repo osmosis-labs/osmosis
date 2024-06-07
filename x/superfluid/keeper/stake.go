@@ -151,6 +151,16 @@ func (k Keeper) validateLockForSF(lock *lockuptypes.PeriodLock, sender string) e
 	return nil
 }
 
+func (k Keeper) ValidateNativeAsset(asset types.SuperfluidAsset) error {
+	if asset.AssetType == types.SuperfluidAssetTypeNative {
+		if len(asset.PriceRoute) == 0 ||
+			strings.TrimSpace(asset.PriceRoute[0].TokenOutDenom) == "" {
+			return errorsmod.Wrap(types.ErrNonSuperfluidAsset, "asset is not properly configured for superfluid staking: missing or empty price route")
+		}
+	}
+	return nil
+}
+
 // validateLockForSFDelegate runs the following sanity checks on the lock:
 // - the sender is the owner of the lock
 // - the lock is consisted of a single coin
@@ -173,8 +183,8 @@ func (k Keeper) validateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.Per
 	}
 
 	// ensure that the asset is properly configured
-	if asset.AssetType == types.SuperfluidAssetTypeNative && asset.PricePoolId == 0 {
-		return errorsmod.Wrap(types.ErrNonSuperfluidAsset, "asset is not properly configured for superfluid staking (no price pool id)")
+	if err := k.ValidateNativeAsset(asset); err != nil {
+		return err
 	}
 
 	// prevent unbonding lockups to be not able to be used for superfluid staking
@@ -601,7 +611,7 @@ func (k Keeper) IterateDelegations(context context.Context, delegator sdk.AccAdd
 		}
 
 		// get osmo-equivalent token amount
-		amount, err := k.GetSuperfluidOSMOTokensExcludeNative(ctx, interim.Denom, coin.Amount)
+		amount, err := k.GetSuperfluidOSMOTokensIfNonNative(ctx, interim.Denom, coin.Amount)
 		if err != nil {
 			ctx.Logger().Error("failed to get osmo equivalent of token", "Denom", interim.Denom, "Amount", coin.Amount, "Error", err)
 			return err
