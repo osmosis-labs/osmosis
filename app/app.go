@@ -579,8 +579,7 @@ func InitSymphonyAppForTestnet(app *SymphonyApp, newValAddr bytes.HexBytes, newV
 	//
 	//defaultCoins := sdk.NewCoins(
 	//	sdk.NewInt64Coin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", 1000000000000), // DAI
-	//	sdk.NewInt64Coin("note", 1000000000000),
-	//	sdk.NewInt64Coin("uion", 1000000000))
+	//	sdk.NewInt64Coin("note", 1000000000000))
 	//
 	//localSymphonyAccounts := []sdk.AccAddress{
 	//	sdk.MustAccAddressFromBech32("symphony1p7mp7r9f9f6sf2c95ht42ncm6ga96ha8xghdeg"),
@@ -611,8 +610,7 @@ func InitSymphonyAppForTestnet(app *SymphonyApp, newValAddr bytes.HexBytes, newV
 	//// Fund edgenet faucet
 	//faucetCoins := sdk.NewCoins(
 	//	sdk.NewInt64Coin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", 1000000000000000), // DAI
-	//	sdk.NewInt64Coin("note", 1000000000000000),
-	//	sdk.NewInt64Coin("uion", 1000000000000))
+	//	sdk.NewInt64Coin("note", 1000000000000000))
 	//err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, faucetCoins)
 	//if err != nil {
 	//	tmos.Exit(err.Error())

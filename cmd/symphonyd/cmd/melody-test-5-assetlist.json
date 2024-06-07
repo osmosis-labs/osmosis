@@ -18,7 +18,7 @@
         "base": "note",
         "name": "Symphony",
         "display": "melody",
-        "symbol": "OSMO",
+        "symbol": "MELODY",
         "traces": [],
         "logo_URIs": {
           "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/symphony/images/osmo.png",
@@ -30,33 +30,6 @@
           "staking",
           "symphony-info",
           "symphony-price:ibc/6F34E1BD664C36CE49ACC28E60D62559A5F96C4F9A6CCE4FC5A67B2852E24CFE:5"
-        ]
-      },
-      {
-        "denom_units": [
-          {
-            "denom": "uion",
-            "exponent": 0
-          },
-          {
-            "denom": "ion",
-            "exponent": 6
-          }
-        ],
-        "base": "uion",
-        "name": "Ion",
-        "display": "ion",
-        "symbol": "ION",
-        "traces": [],
-        "logo_URIs": {
-          "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/symphony/images/ion.png",
-          "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/symphony/images/ion.svg"
-        },
-        "coingecko_id": "ion",
-        "keywords": [
-          "memecoin",
-          "symphony-info",
-          "symphony-price:note:1"
         ]
       },
       {

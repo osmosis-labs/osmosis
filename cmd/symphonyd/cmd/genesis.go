@@ -260,22 +260,6 @@ func MainnetGenesisParams() GenesisParams {
 			Base:    appParams.BaseCoinUnit,
 			Display: appParams.HumanCoinUnit,
 		},
-		{
-			DenomUnits: []*banktypes.DenomUnit{
-				{
-					Denom:    "uion",
-					Exponent: 0,
-					Aliases:  nil,
-				},
-				{
-					Denom:    "ion",
-					Exponent: 6,
-					Aliases:  nil,
-				},
-			},
-			Base:    "uion",
-			Display: "ion",
-		},
 	}
 
 	genParams.StrategicReserveAccounts = []banktypes.Balance{

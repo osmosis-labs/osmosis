@@ -33,35 +33,6 @@
         ]
       },
       {
-        "denom_units": [
-          {
-            "denom": "uion",
-            "exponent": 0
-          },
-          {
-            "denom": "ion",
-            "exponent": 6
-          }
-        ],
-        "base": "uion",
-        "name": "Ion",
-        "display": "ion",
-        "symbol": "ION",
-        "traces": [],
-        "logo_URIs": {
-          "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/symphony/images/ion.png",
-          "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/symphony/images/ion.svg"
-        },
-        "coingecko_id": "ion",
-        "keywords": [
-          "memecoin",
-          "symphony-main",
-          "symphony-frontier",
-          "symphony-info",
-          "symphony-price:note:1013"
-        ]
-      },
-      {
         "description": "Circle's stablecoin on Axelar",
         "denom_units": [
           {
