@@ -99,10 +99,10 @@ func (suite *HooksTestSuite) TestPathValidation() {
 	msg := fmt.Sprintf(`{
 		"modify_bech32_prefixes": {
 		  "operations": [
-			{"operation": "set", "chain_name": "symphony", "prefix": "melody"},
-			{"operation": "set", "chain_name": "chainA", "prefix": "melody"},
-			{"operation": "set", "chain_name": "chainB", "prefix": "melody"},
-			{"operation": "set", "chain_name": "chainC", "prefix": "melody"}
+			{"operation": "set", "chain_name": "symphony", "prefix": "symphony"},
+			{"operation": "set", "chain_name": "chainA", "prefix": "symphony"},
+			{"operation": "set", "chain_name": "chainB", "prefix": "symphony"},
+			{"operation": "set", "chain_name": "chainC", "prefix": "symphony"}
 		  ]
 		}
 	  }

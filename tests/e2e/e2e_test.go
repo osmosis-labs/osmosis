@@ -549,7 +549,7 @@ func (s *IntegrationTestSuite) IBCWasmHooks() {
 	s.CallCheckBalance(chainANode, contractAddr, ibcDenom, transferAmount)
 
 	// sender wasm addr
-	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "melody")
+	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "symphony")
 
 	var response map[string]interface{}
 	s.Require().Eventually(func() bool {
