@@ -37,7 +37,7 @@ func (pi *poolTransformer) ComputeUOSMOPoolLiquidityCap(ctx sdk.Context, balance
 	return pi.computeUOSMOPoolLiquidityCap(ctx, balances, priceInfoMap)
 }
 
-func (pi *poolTransformer) UpdateAlloyedTransmuterPool(
+func (pi *poolTransformer) UpdateAlloyedTransmuterInfo(
 	ctx sdk.Context,
 	poolId uint64,
 	contractAddress sdk.AccAddress,

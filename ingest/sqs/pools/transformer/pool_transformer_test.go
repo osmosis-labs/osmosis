@@ -875,7 +875,7 @@ func (s *PoolTransformerTestSuite) TestUpdateAlloyedTransmuterPool() {
 	cosmWasmPoolModel := sqsdomain.CosmWasmPoolModel{}
 	poolDenoms := []string{apptesting.DefaultTransmuterDenomA, apptesting.DefaultTransmuterDenomB}
 
-	poolIngester.UpdateAlloyedTransmuterPool(s.Ctx, pool.GetId(), pool.GetAddress(), &cosmWasmPoolModel, &poolDenoms)
+	poolIngester.UpdateAlloyedTransmuterInfo(s.Ctx, pool.GetId(), pool.GetAddress(), &cosmWasmPoolModel, &poolDenoms)
 
 	alloyedDenom := fmt.Sprintf("factory/%s/alloyed/%s", pool.GetAddress(), apptesting.DefaultAlloyedSubDenom)
 
