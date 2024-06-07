@@ -9,11 +9,11 @@ import (
 	"github.com/osmosis-labs/sqs/sqsdomain"
 )
 
-// UpdateAlloyTrasmuterInfo updates cosmwasmPoolModel with alloyed transmuter specific info.
+// updateAlloyTrasmuterInfo updates cosmwasmPoolModel with alloyed transmuter specific info.
 // - It queries alloyed transmuter contract asset configs and share denom, the construct
 // `AlloyTransmuterData`. Share denom for alloyed transmuter is the alloyed denom.
 // - append the alloyed denom to pool denoms.
-func (pi *poolTransformer) UpdateAlloyTrasmuterInfo(
+func (pi *poolTransformer) updateAlloyTrasmuterInfo(
 	ctx sdk.Context,
 	poolId uint64,
 	contractAddress sdk.AccAddress,

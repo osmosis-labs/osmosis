@@ -48,3 +48,14 @@ func GetPoolDenomsMap(poolDenoms []string) map[string]struct{} {
 func (pi *poolTransformer) ComputeUSDCPoolLiquidityCapFromUOSMO(ctx sdk.Context, poolLiquidityCapUOSMO osmomath.Int) (osmomath.Int, string) {
 	return pi.computeUSDCPoolLiquidityCapFromUOSMO(ctx, poolLiquidityCapUOSMO)
 }
+
+func (pi *poolTransformer) UpdateAlloyTrasmuterInfo(ctx sdk.Context, poolId uint64, contractAddress sdk.AccAddress, cosmWasmPoolModel *sqsdomain.CosmWasmPoolModel, poolDenoms *[]string) error {
+	return pi.updateAlloyTrasmuterInfo(ctx, poolId, contractAddress, cosmWasmPoolModel, poolDenoms)
+}
+
+func (pi *poolTransformer) InitCosmWasmPoolModel(
+	ctx sdk.Context,
+	pool poolmanagertypes.PoolI,
+) sqsdomain.CosmWasmPoolModel {
+	return pi.initCosmWasmPoolModel(ctx, pool)
+}

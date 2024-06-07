@@ -222,25 +222,12 @@ func (pi *poolTransformer) convertPool(
 			return nil, fmt.Errorf("pool (%d) with type (%d) requires `poolTransformer` to have `wasmKeeper` but got `nil`", pool.GetId(), pool.GetType())
 		}
 
-		contractInfo, err := pi.queryContractInfo(ctx, cwPool.GetAddress())
-		if err != nil {
-			// only log since cw pool contracts are not required to conform cw2
-			ctx.Logger().Info(
-				"CosmWasm pool does not conform cw2",
-				"pool_id", pool.GetId(),
-				"contract_address", pool.GetAddress(),
-				"err", err.Error(),
-			)
-		} else {
-			// initialize the CosmWasmPoolModel with the contract info
-			cosmWasmPoolModel = &sqsdomain.CosmWasmPoolModel{
-				ContractInfo: contractInfo,
-			}
+		initedCosmWasmPoolModel := pi.initCosmWasmPoolModel(ctx, pool)
+		cosmWasmPoolModel = &initedCosmWasmPoolModel
 
-			// special transformation based on different cw pool
-			if cosmWasmPoolModel.IsAlloyTransmuter() {
-				err = pi.UpdateAlloyTrasmuterInfo(ctx, pool.GetId(), pool.GetAddress(), cosmWasmPoolModel, &denoms)
-			}
+		// special transformation based on different cw pool
+		if cosmWasmPoolModel.IsAlloyTransmuter() {
+			err = pi.updateAlloyTrasmuterInfo(ctx, pool.GetId(), pool.GetAddress(), cosmWasmPoolModel, &denoms)
 		}
 	}
 
@@ -472,6 +459,31 @@ func (pi *poolTransformer) queryContractInfo(ctx sdk.Context, contractAddress sd
 			return sqsdomain.ContractInfo{}, fmt.Errorf("error unmarshalling contract info: %w", err)
 		} else {
 			return contractInfo, nil
+		}
+	}
+}
+
+// initCosmWasmPoolModel initialize the CosmWasmPoolModel with the contract info of the given pool.
+// If the contract info is not found, it logs the error and continues since it's not required for the pool to conform cw2.
+func (pi *poolTransformer) initCosmWasmPoolModel(
+	ctx sdk.Context,
+	pool poolmanagertypes.PoolI,
+) sqsdomain.CosmWasmPoolModel {
+	contractInfo, err := pi.queryContractInfo(ctx, pool.GetAddress())
+	if err != nil {
+		// only log since cw pool contracts are not required to conform cw2
+		ctx.Logger().Info(
+			"CosmWasm pool does not conform cw2",
+			"pool_id", pool.GetId(),
+			"contract_address", pool.GetAddress(),
+			"err", err.Error(),
+		)
+
+		return sqsdomain.CosmWasmPoolModel{}
+	} else {
+		// initialize the CosmWasmPoolModel with the contract info
+		return sqsdomain.CosmWasmPoolModel{
+			ContractInfo: contractInfo,
 		}
 	}
 }
