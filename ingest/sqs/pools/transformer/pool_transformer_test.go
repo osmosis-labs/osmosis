@@ -783,7 +783,7 @@ func (s *PoolTransformerTestSuite) TestInitCosmWasmPoolModel() {
 		},
 	}, cwpm)
 
-	pool = s.PrepareAlloyedTransmuterPool(s.TestAccs[0], apptesting.AlloyedTransmuterInstantiateMsg{
+	pool = s.PrepareAlloyTransmuterPool(s.TestAccs[0], apptesting.AlloyTransmuterInstantiateMsg{
 		PoolAssetConfigs:                []apptesting.AssetConfig{{Denom: apptesting.DefaultTransmuterDenomA, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomANormFactor)}, {Denom: apptesting.DefaultTransmuterDenomB, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomBNormFactor)}},
 		AlloyedAssetSubdenom:            apptesting.DefaultAlloyedSubDenom,
 		AlloyedAssetNormalizationFactor: osmomath.NewInt(apptesting.DefaultAlloyedDenomNormFactor),

@@ -40,7 +40,7 @@ type AssetConfig struct {
 	NormalizationFactor osmomath.Int `json:"normalization_factor"`
 }
 
-type AlloyedTransmuterInstantiateMsg struct {
+type AlloyTransmuterInstantiateMsg struct {
 	PoolAssetConfigs                []AssetConfig `json:"pool_asset_configs"`
 	AlloyedAssetSubdenom            string        `json:"alloyed_asset_subdenom"`
 	AlloyedAssetNormalizationFactor osmomath.Int  `json:"alloyed_asset_normalization_factor"`
@@ -169,8 +169,8 @@ func (s *KeeperTestHelper) JoinTransmuterPool(lpAddress sdk.AccAddress, poolId u
 	cosmwasm.MustExecute[transmuter.JoinPoolExecuteMsgRequest, msg.EmptyStruct](s.Ctx, s.App.ContractKeeper, pool.GetContractAddress(), lpAddress, coins, request)
 }
 
-// PrepareAlloyedTransmuterPool prepares a transmuter pool with the given owner and instantiateMsg
-func (s *KeeperTestHelper) PrepareAlloyedTransmuterPool(owner sdk.AccAddress, instantiateMsg AlloyedTransmuterInstantiateMsg) cosmwasmpooltypes.CosmWasmExtension {
+// PrepareAlloyTransmuterPool prepares a transmuter pool with the given owner and instantiateMsg
+func (s *KeeperTestHelper) PrepareAlloyTransmuterPool(owner sdk.AccAddress, instantiateMsg AlloyTransmuterInstantiateMsg) cosmwasmpooltypes.CosmWasmExtension {
 	// Mint some assets to the account.
 	s.FundAcc(owner, DefaultAcctFunds)
 

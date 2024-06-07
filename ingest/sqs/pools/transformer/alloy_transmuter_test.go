@@ -17,7 +17,7 @@ func (s *PoolTransformerTestSuite) TestUpdateAlloyedTransmuterPool() {
 		sdk.NewCoin(apptesting.DefaultTransmuterDenomB, osmomath.NewInt(100000000)),
 	))
 
-	pool := s.PrepareAlloyedTransmuterPool(s.TestAccs[0], apptesting.AlloyedTransmuterInstantiateMsg{
+	pool := s.PrepareAlloyTransmuterPool(s.TestAccs[0], apptesting.AlloyTransmuterInstantiateMsg{
 		PoolAssetConfigs:                []apptesting.AssetConfig{{Denom: apptesting.DefaultTransmuterDenomA, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomANormFactor)}, {Denom: apptesting.DefaultTransmuterDenomB, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomBNormFactor)}},
 		AlloyedAssetSubdenom:            apptesting.DefaultAlloyedSubDenom,
 		AlloyedAssetNormalizationFactor: osmomath.NewInt(apptesting.DefaultAlloyedDenomNormFactor),
@@ -35,7 +35,7 @@ func (s *PoolTransformerTestSuite) TestUpdateAlloyedTransmuterPool() {
 	cosmWasmPoolModel := sqsdomain.CosmWasmPoolModel{}
 	poolDenoms := []string{apptesting.DefaultTransmuterDenomA, apptesting.DefaultTransmuterDenomB}
 
-	poolIngester.UpdateAlloyTrasmuterInfo(s.Ctx, pool.GetId(), pool.GetAddress(), &cosmWasmPoolModel, &poolDenoms)
+	poolIngester.UpdateAlloyTransmuterInfo(s.Ctx, pool.GetId(), pool.GetAddress(), &cosmWasmPoolModel, &poolDenoms)
 
 	alloyedDenom := fmt.Sprintf("factory/%s/alloyed/%s", pool.GetAddress(), apptesting.DefaultAlloyedSubDenom)
 

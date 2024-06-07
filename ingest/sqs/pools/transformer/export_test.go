@@ -49,8 +49,8 @@ func (pi *poolTransformer) ComputeUSDCPoolLiquidityCapFromUOSMO(ctx sdk.Context,
 	return pi.computeUSDCPoolLiquidityCapFromUOSMO(ctx, poolLiquidityCapUOSMO)
 }
 
-func (pi *poolTransformer) UpdateAlloyTrasmuterInfo(ctx sdk.Context, poolId uint64, contractAddress sdk.AccAddress, cosmWasmPoolModel *sqsdomain.CosmWasmPoolModel, poolDenoms *[]string) error {
-	return pi.updateAlloyTrasmuterInfo(ctx, poolId, contractAddress, cosmWasmPoolModel, poolDenoms)
+func (pi *poolTransformer) UpdateAlloyTransmuterInfo(ctx sdk.Context, poolId uint64, contractAddress sdk.AccAddress, cosmWasmPoolModel *sqsdomain.CosmWasmPoolModel, poolDenoms *[]string) error {
+	return pi.updateAlloyTransmuterInfo(ctx, poolId, contractAddress, cosmWasmPoolModel, poolDenoms)
 }
 
 func (pi *poolTransformer) InitCosmWasmPoolModel(

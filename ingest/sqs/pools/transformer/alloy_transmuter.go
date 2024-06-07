@@ -9,24 +9,24 @@ import (
 	"github.com/osmosis-labs/sqs/sqsdomain"
 )
 
-// updateAlloyTrasmuterInfo updates cosmwasmPoolModel with alloyed transmuter specific info.
+// updateAlloyTransmuterInfo updates cosmwasmPoolModel with alloyed transmuter specific info.
 // - It queries alloyed transmuter contract asset configs and share denom, the construct
 // `AlloyTransmuterData`. Share denom for alloyed transmuter is the alloyed denom.
 // - append the alloyed denom to pool denoms.
-func (pi *poolTransformer) updateAlloyTrasmuterInfo(
+func (pi *poolTransformer) updateAlloyTransmuterInfo(
 	ctx sdk.Context,
 	poolId uint64,
 	contractAddress sdk.AccAddress,
 	cosmWasmPoolModel *sqsdomain.CosmWasmPoolModel,
 	poolDenoms *[]string,
 ) error {
-	assetConfigs, err := alloyedTransmuterListAssetConfig(ctx, pi.wasmKeeper, poolId, contractAddress)
+	assetConfigs, err := alloyTransmuterListAssetConfig(ctx, pi.wasmKeeper, poolId, contractAddress)
 	if err != nil {
 		return err
 	}
 
-	// share denom of alloyed transmuter pool is an alloyed denom
-	alloyedDenom, err := alloyedTransmuterGetShareDenom(ctx, pi.wasmKeeper, poolId, contractAddress)
+	// share denom of alloy transmuter pool is an alloyed denom
+	alloyedDenom, err := alloyTransmuterGetShareDenom(ctx, pi.wasmKeeper, poolId, contractAddress)
 	if err != nil {
 		return err
 	}
@@ -42,8 +42,8 @@ func (pi *poolTransformer) updateAlloyTrasmuterInfo(
 	return nil
 }
 
-// alloyedTransmuterListAssetConfig queries the asset configs of the alloyed transmuter contract.
-func alloyedTransmuterListAssetConfig(
+// alloyTransmuterListAssetConfig queries the asset configs of the alloyed transmuter contract.
+func alloyTransmuterListAssetConfig(
 	ctx sdk.Context,
 	wasmKeeper domain.WasmKeeper,
 	poolId uint64,
@@ -70,8 +70,8 @@ func alloyedTransmuterListAssetConfig(
 	return assetConfigsResponse.AssetConfigs, nil
 }
 
-// alloyedTransmuterGetShareDenom queries the share denom of the alloyed transmuter contract.
-func alloyedTransmuterGetShareDenom(
+// alloyTransmuterGetShareDenom queries the share denom of the alloyed transmuter contract.
+func alloyTransmuterGetShareDenom(
 	ctx sdk.Context,
 	wasmKeeper domain.WasmKeeper,
 	poolId uint64,

@@ -227,7 +227,10 @@ func (pi *poolTransformer) convertPool(
 
 		// special transformation based on different cw pool
 		if cosmWasmPoolModel.IsAlloyTransmuter() {
-			err = pi.updateAlloyTrasmuterInfo(ctx, pool.GetId(), pool.GetAddress(), cosmWasmPoolModel, &denoms)
+			err = pi.updateAlloyTransmuterInfo(ctx, pool.GetId(), pool.GetAddress(), cosmWasmPoolModel, &denoms)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
