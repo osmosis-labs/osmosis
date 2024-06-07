@@ -7,12 +7,11 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting/assets"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
-	appParams "github.com/osmosis-labs/osmosis/v23/app/params"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -27,19 +26,19 @@ func TestToMap(t *testing.T) {
 		[]types.VoteForTally{
 			{
 				Voter:        sdk.ValAddress(secp256k1.GenPrivKey().PubKey().Address()),
-				Denom:        appParams.MicroKRWDenom,
+				Denom:        assets.MicroKRWDenom,
 				ExchangeRate: sdk.NewDec(1600),
 				Power:        100,
 			},
 			{
 				Voter:        sdk.ValAddress(secp256k1.GenPrivKey().PubKey().Address()),
-				Denom:        appParams.MicroKRWDenom,
+				Denom:        assets.MicroKRWDenom,
 				ExchangeRate: sdk.ZeroDec(),
 				Power:        100,
 			},
 			{
 				Voter:        sdk.ValAddress(secp256k1.GenPrivKey().PubKey().Address()),
-				Denom:        appParams.MicroKRWDenom,
+				Denom:        assets.MicroKRWDenom,
 				ExchangeRate: sdk.NewDec(1500),
 				Power:        100,
 			},
@@ -89,15 +88,15 @@ func TestToCrossRate(t *testing.T) {
 	for _, data := range data {
 		valAddr := sdk.ValAddress(secp256k1.GenPrivKey().PubKey().Address())
 		if !data.base.IsZero() {
-			pbBase = append(pbBase, types.NewVoteForTally(data.base, appParams.MicroKRWDenom, valAddr, 100))
+			pbBase = append(pbBase, types.NewVoteForTally(data.base, assets.MicroKRWDenom, valAddr, 100))
 		}
 
-		pbQuote = append(pbQuote, types.NewVoteForTally(data.quote, appParams.MicroKRWDenom, valAddr, 100))
+		pbQuote = append(pbQuote, types.NewVoteForTally(data.quote, assets.MicroKRWDenom, valAddr, 100))
 
 		if !data.base.IsZero() && !data.quote.IsZero() {
-			cb = append(cb, types.NewVoteForTally(data.base.Quo(data.quote), appParams.MicroKRWDenom, valAddr, 100))
+			cb = append(cb, types.NewVoteForTally(data.base.Quo(data.quote), assets.MicroKRWDenom, valAddr, 100))
 		} else {
-			cb = append(cb, types.NewVoteForTally(sdk.ZeroDec(), appParams.MicroKRWDenom, valAddr, 0))
+			cb = append(cb, types.NewVoteForTally(sdk.ZeroDec(), assets.MicroKRWDenom, valAddr, 0))
 		}
 	}
 
@@ -131,7 +130,7 @@ func TestPBPower(t *testing.T) {
 		power := sk.Validator(ctx, valAccAddrs[i]).GetConsensusPower(sdk.DefaultPowerReduction)
 		vote := types.NewVoteForTally(
 			sdk.ZeroDec(),
-			appParams.MicroSDRDenom,
+			assets.MicroSDRDenom,
 			valAccAddrs[i],
 			power,
 		)
@@ -150,7 +149,7 @@ func TestPBPower(t *testing.T) {
 	faceValAddr := sdk.ValAddress(pubKey.Address())
 	fakeVote := types.NewVoteForTally(
 		sdk.OneDec(),
-		appParams.MicroSDRDenom,
+		assets.MicroSDRDenom,
 		faceValAddr,
 		0,
 	)
@@ -221,7 +220,7 @@ func TestPBWeightedMedian(t *testing.T) {
 
 			vote := types.NewVoteForTally(
 				sdk.NewDec(input),
-				appParams.MicroSDRDenom,
+				assets.MicroSDRDenom,
 				valAddr,
 				power,
 			)
@@ -291,7 +290,7 @@ func TestPBStandardDeviation(t *testing.T) {
 
 			vote := types.NewVoteForTally(
 				sdk.NewDecWithPrec(int64(input*base), int64(types.OracleDecPrecision)),
-				appParams.MicroSDRDenom,
+				assets.MicroSDRDenom,
 				valAddr,
 				power,
 			)
@@ -310,12 +309,12 @@ func TestPBStandardDeviationOverflow(t *testing.T) {
 
 	pb := types.ExchangeRateBallot{types.NewVoteForTally(
 		sdk.ZeroDec(),
-		appParams.MicroSDRDenom,
+		assets.MicroSDRDenom,
 		valAddr,
 		2,
 	), types.NewVoteForTally(
 		exchangeRate,
-		appParams.MicroSDRDenom,
+		assets.MicroSDRDenom,
 		valAddr,
 		1,
 	)}

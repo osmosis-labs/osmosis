@@ -3,6 +3,7 @@ package types
 import (
 	"testing"
 
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting/assets"
 	appParams "github.com/osmosis-labs/osmosis/v23/app/params"
 
 	"github.com/stretchr/testify/require"
@@ -23,10 +24,10 @@ func TestMsgSwap(t *testing.T) {
 		askDenom    string
 		expectedErr string
 	}{
-		{addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.StakeDenom, ""},
-		{sdk.AccAddress{}, sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.StakeDenom, "Invalid trader address (empty address string is not allowed): invalid address"},
-		{addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.ZeroInt()), appParams.StakeDenom, "0note: invalid coins"},
-		{addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, overflowOfferAmt), appParams.StakeDenom, "100000000000000000000000000000000000000000000000000000000note: invalid coins"},
+		{addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), assets.StakeDenom, ""},
+		{sdk.AccAddress{}, sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), assets.StakeDenom, "Invalid trader address (empty address string is not allowed): invalid address"},
+		{addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.ZeroInt()), assets.StakeDenom, "0note: invalid coins"},
+		{addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, overflowOfferAmt), assets.StakeDenom, "100000000000000000000000000000000000000000000000000000000note: invalid coins"},
 		{addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.BaseCoinUnit, "note: recursive swap"},
 	}
 
@@ -55,11 +56,11 @@ func TestMsgSwapSend(t *testing.T) {
 		askDenom    string
 		expectedErr string
 	}{
-		{addrs[0], addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.StakeDenom, ""},
-		{addrs[0], sdk.AccAddress{}, sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.StakeDenom, "Invalid to address (empty address string is not allowed): invalid address"},
-		{sdk.AccAddress{}, addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.StakeDenom, "Invalid from address (empty address string is not allowed): invalid address"},
-		{addrs[0], addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.ZeroInt()), appParams.StakeDenom, "0note: invalid coins"},
-		{addrs[0], addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, overflowOfferAmt), appParams.StakeDenom, "100000000000000000000000000000000000000000000000000000000note: invalid coins"},
+		{addrs[0], addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), assets.StakeDenom, ""},
+		{addrs[0], sdk.AccAddress{}, sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), assets.StakeDenom, "Invalid to address (empty address string is not allowed): invalid address"},
+		{sdk.AccAddress{}, addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), assets.StakeDenom, "Invalid from address (empty address string is not allowed): invalid address"},
+		{addrs[0], addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.ZeroInt()), assets.StakeDenom, "0note: invalid coins"},
+		{addrs[0], addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, overflowOfferAmt), assets.StakeDenom, "100000000000000000000000000000000000000000000000000000000note: invalid coins"},
 		{addrs[0], addrs[0], sdk.NewCoin(appParams.BaseCoinUnit, sdk.OneInt()), appParams.BaseCoinUnit, "note: recursive swap"},
 	}
 

@@ -13,6 +13,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting/assets"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
@@ -156,18 +157,18 @@ func (s *KeeperTestSuite) TestExchangeRate() {
 	noteExchangeRate := sdk.NewDecWithPrec(3282384, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
 
 	// Set & get rates
-	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, appparams.MicroCNYDenom, cnyExchangeRate)
-	rate, err := s.App.OracleKeeper.GetMelodyExchangeRate(s.Ctx, appparams.MicroCNYDenom)
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.MicroCNYDenom, cnyExchangeRate)
+	rate, err := s.App.OracleKeeper.GetMelodyExchangeRate(s.Ctx, assets.MicroCNYDenom)
 	s.Require().NoError(err)
 	s.Require().Equal(cnyExchangeRate, rate)
 
-	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, appparams.MicroGBPDenom, gbpExchangeRate)
-	rate, err = s.App.OracleKeeper.GetMelodyExchangeRate(s.Ctx, appparams.MicroGBPDenom)
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.MicroGBPDenom, gbpExchangeRate)
+	rate, err = s.App.OracleKeeper.GetMelodyExchangeRate(s.Ctx, assets.MicroGBPDenom)
 	s.Require().NoError(err)
 	s.Require().Equal(gbpExchangeRate, rate)
 
-	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, appparams.MicroKRWDenom, krwExchangeRate)
-	rate, err = s.App.OracleKeeper.GetMelodyExchangeRate(s.Ctx, appparams.MicroKRWDenom)
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.MicroKRWDenom, krwExchangeRate)
+	rate, err = s.App.OracleKeeper.GetMelodyExchangeRate(s.Ctx, assets.MicroKRWDenom)
 	s.Require().NoError(err)
 	s.Require().Equal(krwExchangeRate, rate)
 
@@ -175,8 +176,8 @@ func (s *KeeperTestSuite) TestExchangeRate() {
 	rate, _ = s.App.OracleKeeper.GetMelodyExchangeRate(s.Ctx, appparams.BaseCoinUnit)
 	s.Require().Equal(sdk.OneDec(), rate)
 
-	s.App.OracleKeeper.DeleteMelodyExchangeRate(s.Ctx, appparams.MicroKRWDenom)
-	_, err = s.App.OracleKeeper.GetMelodyExchangeRate(s.Ctx, appparams.MicroKRWDenom)
+	s.App.OracleKeeper.DeleteMelodyExchangeRate(s.Ctx, assets.MicroKRWDenom)
+	_, err = s.App.OracleKeeper.GetMelodyExchangeRate(s.Ctx, assets.MicroKRWDenom)
 	s.Require().Error(err)
 
 	numExchangeRates := 0
@@ -196,18 +197,18 @@ func (s *KeeperTestSuite) TestIterateMelodyExchangeRates() {
 	melodyExchangeRate := sdk.NewDecWithPrec(3282384, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
 
 	// Set & get rates
-	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, appparams.MicroCNYDenom, cnyExchangeRate)
-	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, appparams.MicroGBPDenom, gbpExchangeRate)
-	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, appparams.MicroKRWDenom, krwExchangeRate)
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.MicroCNYDenom, cnyExchangeRate)
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.MicroGBPDenom, gbpExchangeRate)
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.MicroKRWDenom, krwExchangeRate)
 	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, appparams.BaseCoinUnit, melodyExchangeRate)
 
 	s.App.OracleKeeper.IterateNoteExchangeRates(s.Ctx, func(denom string, rate sdk.Dec) (stop bool) {
 		switch denom {
-		case appparams.MicroCNYDenom:
+		case assets.MicroCNYDenom:
 			s.Require().Equal(cnyExchangeRate, rate)
-		case appparams.MicroGBPDenom:
+		case assets.MicroGBPDenom:
 			s.Require().Equal(gbpExchangeRate, rate)
-		case appparams.MicroKRWDenom:
+		case assets.MicroKRWDenom:
 			s.Require().Equal(krwExchangeRate, rate)
 		case appparams.BaseCoinUnit:
 			s.Require().Equal(melodyExchangeRate, rate)
@@ -217,14 +218,14 @@ func (s *KeeperTestSuite) TestIterateMelodyExchangeRates() {
 }
 
 func (s *KeeperTestSuite) TestRewardPool() {
-	fees := sdk.NewCoins(sdk.NewCoin(appparams.MicroSDRDenom, sdk.NewInt(1000)))
+	fees := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, sdk.NewInt(1000)))
 	acc := s.App.AccountKeeper.GetModuleAccount(s.Ctx, types.ModuleName)
 	err := s.FundAccount(acc.GetAddress(), fees)
 	if err != nil {
 		panic(err) // never occurs
 	}
 
-	KFees := s.App.OracleKeeper.GetRewardPool(s.Ctx, appparams.MicroSDRDenom)
+	KFees := s.App.OracleKeeper.GetRewardPool(s.Ctx, assets.MicroSDRDenom)
 	s.Require().Equal(fees[0], KFees)
 }
 
@@ -243,8 +244,8 @@ func (s *KeeperTestSuite) TestParams() {
 	slashWindow := uint64(1000)
 	minValidPerWindow := sdk.NewDecWithPrec(1, 4)
 	whitelist := types.DenomList{
-		{Name: appparams.MicroSDRDenom, TobinTax: types.DefaultTobinTax},
-		{Name: appparams.MicroKRWDenom, TobinTax: types.DefaultTobinTax},
+		{Name: assets.MicroSDRDenom, TobinTax: types.DefaultTobinTax},
+		{Name: assets.MicroKRWDenom, TobinTax: types.DefaultTobinTax},
 	}
 
 	// Should really test validateParams, but skipping because obvious
@@ -422,9 +423,9 @@ func (s *KeeperTestSuite) TestAggregateVoteIterate() {
 
 func (s *KeeperTestSuite) TestTobinTaxGetSet() {
 	tobinTaxes := map[string]sdk.Dec{
-		appparams.MicroSDRDenom: sdk.NewDec(1),
-		appparams.MicroUSDDenom: sdk.NewDecWithPrec(1, 3),
-		appparams.StakeDenom:    sdk.NewDec(1),
+		assets.MicroSDRDenom: sdk.NewDec(1),
+		assets.MicroUSDDenom: sdk.NewDecWithPrec(1, 3),
+		assets.StakeDenom:    sdk.NewDec(1),
 	}
 
 	for denom, tobinTax := range tobinTaxes {

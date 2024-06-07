@@ -5,6 +5,7 @@ import (
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting/assets"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
@@ -20,7 +21,7 @@ var (
 
 	InitTokens    = sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
 	InitBaseCoins = sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, InitTokens))
-	InitUSDRCoins = sdk.NewCoins(sdk.NewCoin(appparams.MicroSDRDenom, InitTokens))
+	InitUSDRCoins = sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, InitTokens))
 
 	FaucetAccountName = tokenfactorytypes.ModuleName
 )
@@ -68,7 +69,7 @@ func (s *KeeperTestSuite) TestOsmosisPoolDeltaUpdate() {
 // TestReplenishPools tests that
 // each pools move towards base pool
 func (s *KeeperTestSuite) TestReplenishPools() {
-	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, appparams.StakeDenom, sdk.OneDec())
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.StakeDenom, sdk.OneDec())
 
 	basePool := s.App.MarketKeeper.BasePool(s.Ctx)
 	sPoolDelta := s.App.MarketKeeper.GetOsmosisPoolDelta(s.Ctx)

@@ -5,8 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting/assets"
 
 	"github.com/osmosis-labs/osmosis/v23/x/oracle/keeper"
 	"github.com/osmosis-labs/osmosis/v23/x/oracle/types"
@@ -24,7 +23,13 @@ func (s *KeeperTestSuite) setupServer() types.MsgServer {
 	params.VotePeriod = 1
 	params.SlashWindow = 100
 	params.RewardDistributionWindow = 100
+	params.Whitelist = types.DenomList{
+		{Name: assets.MicroSDRDenom, TobinTax: types.DefaultTobinTax},
+		{Name: assets.StakeDenom, TobinTax: types.DefaultTobinTax},
+	}
 	s.App.OracleKeeper.SetParams(s.Ctx, params)
+	s.App.OracleKeeper.SetTobinTax(s.Ctx, assets.MicroSDRDenom, types.DefaultTobinTax)
+	s.App.OracleKeeper.SetTobinTax(s.Ctx, assets.StakeDenom, types.DefaultTobinTax)
 	msgServer := keeper.NewMsgServerImpl(*s.App.OracleKeeper)
 
 	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(s.App.StakingKeeper)
@@ -45,7 +50,7 @@ func (s *KeeperTestSuite) TestMsgServer_FeederDelegation() {
 	msgServer := s.setupServer()
 
 	salt := "1"
-	hash := types.GetAggregateVoteHash(salt, randomExchangeRate.String()+appparams.MicroSDRDenom, ValAddrs[0])
+	hash := types.GetAggregateVoteHash(salt, randomExchangeRate.String()+assets.MicroSDRDenom, ValAddrs[0])
 
 	// Case 1: empty message
 	delegateFeedConsentMsg := types.MsgDelegateFeedConsent{}
@@ -63,12 +68,12 @@ func (s *KeeperTestSuite) TestMsgServer_FeederDelegation() {
 	s.Require().Error(err)
 
 	// Case 2.2: Normal Vote - without delegation
-	voteMsg := types.NewMsgAggregateExchangeRateVote(salt, randomExchangeRate.String()+appparams.MicroSDRDenom, Addrs[0], ValAddrs[0])
+	voteMsg := types.NewMsgAggregateExchangeRateVote(salt, randomExchangeRate.String()+assets.MicroSDRDenom, Addrs[0], ValAddrs[0])
 	_, err = msgServer.AggregateExchangeRateVote(sdk.WrapSDKContext(s.Ctx.WithBlockHeight(1)), voteMsg)
 	s.Require().NoError(err)
 
 	// Case 2.3: Normal Vote - with delegation fails
-	voteMsg = types.NewMsgAggregateExchangeRateVote(salt, randomExchangeRate.String()+appparams.MicroSDRDenom, Addrs[1], ValAddrs[0])
+	voteMsg = types.NewMsgAggregateExchangeRateVote(salt, randomExchangeRate.String()+assets.MicroSDRDenom, Addrs[1], ValAddrs[0])
 	_, err = msgServer.AggregateExchangeRateVote(sdk.WrapSDKContext(s.Ctx.WithBlockHeight(1)), voteMsg)
 	s.Require().Error(err)
 
@@ -88,12 +93,12 @@ func (s *KeeperTestSuite) TestMsgServer_FeederDelegation() {
 	s.Require().NoError(err)
 
 	// Case 4.3: Normal Vote - without delegation fails
-	voteMsg = types.NewMsgAggregateExchangeRateVote(salt, randomExchangeRate.String()+appparams.MicroSDRDenom, Addrs[2], ValAddrs[0])
+	voteMsg = types.NewMsgAggregateExchangeRateVote(salt, randomExchangeRate.String()+assets.MicroSDRDenom, Addrs[2], ValAddrs[0])
 	_, err = msgServer.AggregateExchangeRateVote(sdk.WrapSDKContext(s.Ctx.WithBlockHeight(2)), voteMsg)
 	s.Require().Error(err)
 
 	// Case 4.4: Normal Vote - with delegation succeeds
-	voteMsg = types.NewMsgAggregateExchangeRateVote(salt, randomExchangeRate.String()+appparams.MicroSDRDenom, Addrs[1], ValAddrs[0])
+	voteMsg = types.NewMsgAggregateExchangeRateVote(salt, randomExchangeRate.String()+assets.MicroSDRDenom, Addrs[1], ValAddrs[0])
 	_, err = msgServer.AggregateExchangeRateVote(sdk.WrapSDKContext(s.Ctx.WithBlockHeight(2)), voteMsg)
 	s.Require().NoError(err)
 }
@@ -102,10 +107,10 @@ func (s *KeeperTestSuite) TestMsgServer_AggregatePrevoteVote() {
 	msgServer := s.setupServer()
 
 	salt := "1"
-	exchangeRatesStr := fmt.Sprintf("1000.23%s,0.29%s", appparams.MicroUSDDenom, appparams.MicroSDRDenom)
-	otherExchangeRateStr := fmt.Sprintf("1000.12%s,0.29%s", appparams.MicroUSDDenom, appparams.MicroUSDDenom)
-	unintendedExchageRateStr := fmt.Sprintf("1000.23%s,0.29%s", appparams.MicroUSDDenom, appparams.MicroCNYDenom)
-	invalidExchangeRateStr := fmt.Sprintf("1000.23%s,0.29", appparams.MicroUSDDenom)
+	exchangeRatesStr := fmt.Sprintf("1000.23%s,0.29%s", assets.MicroUSDDenom, assets.MicroSDRDenom)
+	otherExchangeRateStr := fmt.Sprintf("1000.12%s,0.29%s", assets.MicroUSDDenom, assets.MicroUSDDenom)
+	unintendedExchageRateStr := fmt.Sprintf("1000.23%s,0.29%s", assets.MicroUSDDenom, assets.MicroCNYDenom)
+	invalidExchangeRateStr := fmt.Sprintf("1000.23%s,0.29", assets.MicroUSDDenom)
 
 	hash := types.GetAggregateVoteHash(salt, exchangeRatesStr, ValAddrs[0])
 

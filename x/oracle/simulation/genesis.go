@@ -9,8 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting/assets"
 
 	"github.com/osmosis-labs/osmosis/v23/x/oracle/types"
 )
@@ -112,10 +111,10 @@ func RandomizedGenState(simState *module.SimulationState) {
 			RewardBand:               rewardBand,
 			RewardDistributionWindow: rewardDistributionWindow,
 			Whitelist: types.DenomList{
-				{Name: appparams.MicroKRWDenom, TobinTax: types.DefaultTobinTax},
-				{Name: appparams.MicroSDRDenom, TobinTax: types.DefaultTobinTax},
-				{Name: appparams.MicroUSDDenom, TobinTax: types.DefaultTobinTax},
-				{Name: appparams.MicroMNTDenom, TobinTax: sdk.NewDecWithPrec(2, 2)},
+				{Name: assets.MicroKRWDenom, TobinTax: types.DefaultTobinTax},
+				{Name: assets.MicroSDRDenom, TobinTax: types.DefaultTobinTax},
+				{Name: assets.MicroUSDDenom, TobinTax: types.DefaultTobinTax},
+				{Name: assets.MicroMNTDenom, TobinTax: sdk.NewDecWithPrec(2, 2)},
 			},
 			SlashFraction:     slashFraction,
 			SlashWindow:       slashWindow,

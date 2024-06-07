@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"testing"
 
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting/assets"
 	"github.com/osmosis-labs/osmosis/v23/x/oracle/types"
 
 	"github.com/stretchr/testify/require"
@@ -44,7 +44,7 @@ func TestMsgAggregateExchangeRatePrevote(t *testing.T) {
 		sdk.AccAddress([]byte("addr1_______________")),
 	}
 
-	exchangeRates := sdk.DecCoins{sdk.NewDecCoinFromDec(appparams.MicroSDRDenom, sdk.OneDec()), sdk.NewDecCoinFromDec(appparams.MicroKRWDenom, sdk.NewDecWithPrec(32121, 1))}
+	exchangeRates := sdk.DecCoins{sdk.NewDecCoinFromDec(assets.MicroSDRDenom, sdk.OneDec()), sdk.NewDecCoinFromDec(assets.MicroKRWDenom, sdk.NewDecWithPrec(32121, 1))}
 	bz := types.GetAggregateVoteHash("1", exchangeRates.String(), sdk.ValAddress(addrs[0]))
 
 	tests := []struct {
