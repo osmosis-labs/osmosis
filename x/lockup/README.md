@@ -474,7 +474,7 @@ reference queues are removed.
 Bond tokens in a LP for a set duration
 
 ```sh
-osmosisd tx lockup lock-tokens [tokens] --duration --from --chain-id
+symphonyd tx lockup lock-tokens [tokens] --duration --from --chain-id
 ```
 
 ::: details Example
@@ -482,19 +482,19 @@ osmosisd tx lockup lock-tokens [tokens] --duration --from --chain-id
 To lockup `15.527546134174465309gamm/pool/3` tokens for a `one day` bonding period from `WALLET_NAME` on the osmosis mainnet:
 
 ```bash
-osmosisd tx lockup lock-tokens 15527546134174465309gamm/pool/3 --duration="24h" --from WALLET_NAME --chain-id osmosis-1
+symphonyd tx lockup lock-tokens 15527546134174465309gamm/pool/3 --duration="24h" --from WALLET_NAME --chain-id osmosis-1
 ```
 
 To lockup `25.527546134174465309gamm/pool/13` tokens for a `one week` bonding period from `WALLET_NAME` on the osmosis testnet:
 
 ```bash
-osmosisd tx lockup lock-tokens 25527546134174465309gamm/pool/13 --duration="168h" --from WALLET_NAME --chain-id osmo-testnet-4
+symphonyd tx lockup lock-tokens 25527546134174465309gamm/pool/13 --duration="168h" --from WALLET_NAME --chain-id osmo-testnet-4
 ```
 
 To lockup `35.527546134174465309 gamm/pool/197` tokens for a `two week` bonding period from `WALLET_NAME` on the osmosis mainnet:
 
 ```bash
-osmosisd tx lockup lock-tokens 35527546134174465309gamm/pool/197 --duration="336h" --from WALLET_NAME --chain-id osmosis-1
+symphonyd tx lockup lock-tokens 35527546134174465309gamm/pool/197 --duration="336h" --from WALLET_NAME --chain-id osmosis-1
 ```
 :::
 
@@ -504,7 +504,7 @@ osmosisd tx lockup lock-tokens 35527546134174465309gamm/pool/197 --duration="336
 Begin the unbonding process for tokens given their unique lock ID
 
 ```sh
-osmosisd tx lockup begin-unlock-by-id [id] --from --chain-id
+symphonyd tx lockup begin-unlock-by-id [id] --from --chain-id
 ```
 
 ::: details Example
@@ -512,7 +512,7 @@ osmosisd tx lockup begin-unlock-by-id [id] --from --chain-id
 To begin the unbonding time for all bonded tokens under id `75` from `WALLET_NAME` on the osmosis mainnet:
 
 ```bash
-osmosisd tx lockup begin-unlock-by-id 75 --from WALLET_NAME --chain-id osmosis-1
+symphonyd tx lockup begin-unlock-by-id 75 --from WALLET_NAME --chain-id osmosis-1
 ```
 :::
 ::: warning Note
@@ -524,7 +524,7 @@ The ID corresponds to the unique ID given to your lockup transaction (explained 
 Begin unbonding process for all bonded tokens in a wallet
 
 ```sh
-osmosisd tx lockup begin-unlock-tokens --from --chain-id
+symphonyd tx lockup begin-unlock-tokens --from --chain-id
 ```
 
 ::: details Example
@@ -533,7 +533,7 @@ To begin unbonding time for ALL pools and ALL bonded tokens in `WALLET_NAME` on 
 
 
 ```bash
-osmosisd tx lockup begin-unlock-tokens --from=WALLET_NAME --chain-id=osmosis-1 --yes
+symphonyd tx lockup begin-unlock-tokens --from=WALLET_NAME --chain-id=osmosis-1 --yes
 ```
 :::
 
@@ -593,7 +593,7 @@ In this example, the current UNIX time is `1639776682`, 2 days from now is appro
 An account's `ADDRESS` is locked in both the `1 day` and `1 week` gamm/pool/3. To query the `ADDRESS` with a timestamp 2 days from now `1639971082`:
 
 ```bash
-osmosisd query lockup account-locked-beforetime ADDRESS 1639971082
+symphonyd query lockup account-locked-beforetime ADDRESS 1639971082
 ```
 
 In this example will output the `1 day` lock but not the `1 week` lock:
@@ -612,7 +612,7 @@ locks:
 If querying the same `ADDRESS` with a timestamp 15 days from now `1641094282`:
 
 ```bash
-osmosisd query lockup account-locked-beforetime ADDRESS 1641094282
+symphonyd query lockup account-locked-beforetime ADDRESS 1641094282
 ```
 
 In this example will output both the `1 day` and `1 week` lock:
@@ -642,13 +642,13 @@ locks:
 Query an account's locked (bonded) LP tokens
 
 ```sh
-osmosisd query lockup account-locked-coins [address]
+symphonyd query lockup account-locked-coins [address]
 ```
 
 :::: details Example
 
 ```bash
-osmosisd query lockup account-locked-coins symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7
+symphonyd query lockup account-locked-coins symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7
 ```
 
 An example output:
@@ -680,7 +680,7 @@ You may also specify a --height flag to see bonded LP tokens at a specified heig
 Query an account's locked records that are greater than or equal to a specified lock duration
 
 ```sh
-osmosisd query lockup account-locked-longer-duration [address] [duration]
+symphonyd query lockup account-locked-longer-duration [address] [duration]
 ```
 
 ::: details Example
@@ -688,7 +688,7 @@ osmosisd query lockup account-locked-longer-duration [address] [duration]
 Here is an example of querying an `ADDRESS` for all `1 day` or greater bonding periods:
 
 ```bash
-osmosisd query lockup account-locked-longer-duration symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7 24h
+symphonyd query lockup account-locked-longer-duration symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7 24h
 ```
 
 An example output:
@@ -718,7 +718,7 @@ locks:
 Query an account's locked records for a denom that is locked equal to or greater than the specified duration AND match a specified denom
 
 ```sh
-osmosisd query lockup account-locked-longer-duration-denom [address] [duration] [denom]
+symphonyd query lockup account-locked-longer-duration-denom [address] [duration] [denom]
 ```
 
 ::: details Example
@@ -726,7 +726,7 @@ osmosisd query lockup account-locked-longer-duration-denom [address] [duration] 
 Here is an example of an `ADDRESS` that is locked in both the `1 day` and `1 week` for both the gamm/pool/3 and gamm/pool/1, then queries the `ADDRESS` for all bonding periods equal to or greater than `1 day` for just the gamm/pool/3:
 
 ```bash
-osmosisd query lockup account-locked-longer-duration-denom symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7 24h gamm/pool/3
+symphonyd query lockup account-locked-longer-duration-denom symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7 24h gamm/pool/3
 ```
 
 An example output:
@@ -758,7 +758,7 @@ As shown, the gamm/pool/3 is returned but not the gamm/pool/1 due to the denom f
 Query an account's locked records for a denom that is locked equal to or greater than the specified duration AND is not in the process of being unlocked
 
 ```sh
-osmosisd query lockup account-locked-longer-duration-not-unlocking [address] [duration]
+symphonyd query lockup account-locked-longer-duration-not-unlocking [address] [duration]
 ```
 
 ::: details Example
@@ -766,7 +766,7 @@ osmosisd query lockup account-locked-longer-duration-not-unlocking [address] [du
 Here is an example of an `ADDRESS` that is locked in both the `1 day` and `1 week` gamm/pool/3, begins unlocking process for the `1 day` bond, and queries the `ADDRESS` for all bonding periods equal to or greater than `1 day` that are not unbonding:
 
 ```bash
-osmosisd query lockup account-locked-longer-duration-not-unlocking symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7 24h
+symphonyd query lockup account-locked-longer-duration-not-unlocking symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7 24h
 ```
 
 An example output:
@@ -791,7 +791,7 @@ The `1 day` bond does not show since it is in the process of unbonding.
 Query the locked records of an account with the unlock time beyond timestamp (UNIX)
 
 ```bash
-osmosisd query lockup account-locked-pasttime [address] [timestamp]
+symphonyd query lockup account-locked-pasttime [address] [timestamp]
 ```
 
 ::: details Example
@@ -799,7 +799,7 @@ osmosisd query lockup account-locked-pasttime [address] [timestamp]
 Here is an example of an account that is locked in both the `1 day` and `1 week` gamm/pool/3. In this example, the UNIX time is currently `1639776682` and queries an `ADDRESS` for UNIX time two days later from the current time (which in this example would be `1639971082`)
 
 ```bash
-osmosisd query lockup account-locked-pasttime symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7 1639971082
+symphonyd query lockup account-locked-pasttime symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7 1639971082
 ```
 
 The example output:
@@ -824,7 +824,7 @@ Note that the `1 day` lock ID did not display because, if the unbonding time beg
 Query the locked records of an account with the unlock time beyond timestamp (unix) and filter by a specific denom
 
 ```bash
-osmosisd query lockup account-locked-pasttime-denom symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7 [timestamp] [denom]
+symphonyd query lockup account-locked-pasttime-denom symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7 [timestamp] [denom]
 ```
 
 ::: details Example
@@ -832,7 +832,7 @@ osmosisd query lockup account-locked-pasttime-denom symphony1xk9nc8xr4wus3lcam3c
 Here is an example of an account that is locked in both the `1 day` and `1 week` gamm/pool/3 and `1 day` and `1 week` gamm/pool/1. In this example, the UNIX time is currently `1639776682` and queries an `ADDRESS` for UNIX time two days later from the current time (which in this example would be `1639971082`) and filters for gamm/pool/3
 
 ```bash
-osmosisd query lockup account-locked-pasttime-denom symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7 1639971082 gamm/pool/3
+symphonyd query lockup account-locked-pasttime-denom symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7 1639971082 gamm/pool/3
 ```
 
 The example output:
@@ -857,7 +857,7 @@ Note that the `1 day` lock ID did not display because, if the unbonding time beg
 Query the locked records of an account with the unlock time beyond timestamp (unix) AND is not in the process of unlocking
 
 ```sh
-osmosisd query lockup account-locked-pasttime [address] [timestamp]
+symphonyd query lockup account-locked-pasttime [address] [timestamp]
 ```
 
 ::: details Example
@@ -865,7 +865,7 @@ osmosisd query lockup account-locked-pasttime [address] [timestamp]
 Here is an example of an account that is locked in both the `1 day` and `1 week` gamm/pool/3. In this example, the UNIX time is currently `1639776682` and queries an `ADDRESS` for UNIX time two days later from the current time (which in this example would be `1639971082`) AND is not unlocking:
 
 ```bash
-osmosisd query lockup account-locked-pasttime symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7 1639971082
+symphonyd query lockup account-locked-pasttime symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7 1639971082
 ```
 
 The example output:
@@ -890,7 +890,7 @@ Note that the `1 day` lock ID did not display because, if the unbonding time beg
 Query an address's LP shares that have completed the unlocking period and are ready to be withdrawn
 
 ```bash
-osmosisd query lockup account-unlockable-coins ADDRESS
+symphonyd query lockup account-unlockable-coins ADDRESS
 ```
 
 
@@ -900,13 +900,13 @@ osmosisd query lockup account-unlockable-coins ADDRESS
 Query an address's LP shares that are currently unlocking
 
 ```sh
-osmosisd query lockup account-unlocking-coins [address]
+symphonyd query lockup account-unlocking-coins [address]
 ```
 
 ::: details Example
 
 ```bash
-osmosisd query lockup account-unlocking-coins symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7
+symphonyd query lockup account-unlocking-coins symphony1xk9nc8xr4wus3lcam3cf78agyzhcu35lklylk7
 ```
 
 Example output:
@@ -924,7 +924,7 @@ coins:
 Query a lock record by its ID
 
 ```sh
-osmosisd query lockup lock-by-id [id]
+symphonyd query lockup lock-by-id [id]
 ```
 
 ::: details Example
@@ -934,7 +934,7 @@ Every time a user bonds tokens to an LP, a unique lock ID is created for that tr
 Here is an example viewing the lock record for ID 9:
 
 ```bash
-osmosisd query lockup lock-by-id 9
+symphonyd query lockup lock-by-id 9
 ```
 
 And its output:
@@ -959,13 +959,13 @@ In summary, this shows wallet `osmo16r39ghhwqjcwxa8q3yswlz8jhzldygy66vlm82` bond
 Query the balance of all LP shares (bonded and unbonded)
 
 ```sh
-osmosisd query lockup module-balance
+symphonyd query lockup module-balance
 ```
 
 ::: details Example
 
 ```bash
-osmosisd query lockup module-balance
+symphonyd query lockup module-balance
 ```
 
 An example output:
@@ -1013,13 +1013,13 @@ coins:
 Query the balance of all bonded LP shares
 
 ```sh
-osmosisd query lockup module-locked-amount
+symphonyd query lockup module-locked-amount
 ```
 
 ::: details Example
 
 ```bash
-osmosisd query lockup module-locked-amount
+symphonyd query lockup module-locked-amount
 ```
 
 An example output:
@@ -1073,7 +1073,7 @@ NOTE: This command seems to only work on gRPC and on CLI returns an EOF error.
 Output all locks into a json file
 
 ```sh
-osmosisd query lockup output-all-locks [max lock ID]
+symphonyd query lockup output-all-locks [max lock ID]
 ```
 
 :::: details Example
@@ -1081,7 +1081,7 @@ osmosisd query lockup output-all-locks [max lock ID]
 This example command outputs locks 1-1000 and saves to a json file:
 
 ```bash
-osmosisd query lockup output-all-locks 1000
+symphonyd query lockup output-all-locks 1000
 ```
 ::: warning Note
 If a lockup has been completed, the lockup status will show as "0" (or successful) and no further information will be available. To get further information on a completed lock, run the lock-by-id query.
@@ -1094,7 +1094,7 @@ If a lockup has been completed, the lockup status will show as "0" (or successfu
 Query locked amount for a specific denom in the duration provided
 
 ```sh
-osmosisd query lockup total-locked-of-denom [denom] --min-duration
+symphonyd query lockup total-locked-of-denom [denom] --min-duration
 ```
 
 :::: details Example
@@ -1102,7 +1102,7 @@ osmosisd query lockup total-locked-of-denom [denom] --min-duration
 This example command outputs the amount of `gamm/pool/2` LP shares that locked in the `2 week` bonding period:
 
 ```bash
-osmosisd query lockup total-locked-of-denom gamm/pool/2 --min-duration "336h"
+symphonyd query lockup total-locked-of-denom gamm/pool/2 --min-duration "336h"
 ```
 
 Which, at the time of this writing outputs `14106985399822075248947045` which is equivalent to `14106985.3998 gamm/pool/2`
@@ -1114,50 +1114,50 @@ NOTE: As of this writing, there is a bug that defaults the min duration to days 
 
 ```sh
 # 1 day 100stake lock-tokens command
-osmosisd tx lockup lock-tokens 200stake --duration="86400s" --from=validator --chain-id=testing --keyring-backend=test --yes
+symphonyd tx lockup lock-tokens 200stake --duration="86400s" --from=validator --chain-id=testing --keyring-backend=test --yes
 
 # 5s 100stake lock-tokens command
-osmosisd tx lockup lock-tokens 100stake --duration="5s" --from=validator --chain-id=testing --keyring-backend=test --yes
+symphonyd tx lockup lock-tokens 100stake --duration="5s" --from=validator --chain-id=testing --keyring-backend=test --yes
 
 # begin unlock tokens, NOTE: add more gas when unlocking more than two locks in a same command
-osmosisd tx lockup begin-unlock-tokens --from=validator --gas=500000 --chain-id=testing --keyring-backend=test --yes
+symphonyd tx lockup begin-unlock-tokens --from=validator --gas=500000 --chain-id=testing --keyring-backend=test --yes
 
 # unlock tokens, NOTE: add more gas when unlocking more than two locks in a same command
-osmosisd tx lockup unlock-tokens --from=validator --gas=500000 --chain-id=testing --keyring-backend=test --yes
+symphonyd tx lockup unlock-tokens --from=validator --gas=500000 --chain-id=testing --keyring-backend=test --yes
 
 # unlock specific period lock
-osmosisd tx lockup unlock-by-id 1 --from=validator --chain-id=testing --keyring-backend=test --yes
+symphonyd tx lockup unlock-by-id 1 --from=validator --chain-id=testing --keyring-backend=test --yes
 
 # account balance
-osmosisd query bank balances $(osmosisd keys show -a validator --keyring-backend=test)
+symphonyd query bank balances $(symphonyd keys show -a validator --keyring-backend=test)
 
 # query module balance
-osmosisd query lockup module-balance
+symphonyd query lockup module-balance
 
 # query locked amount
-osmosisd query lockup module-locked-amount
+symphonyd query lockup module-locked-amount
 
 # query lock by id
-osmosisd query lockup lock-by-id 1
+symphonyd query lockup lock-by-id 1
 
 # query account unlockable coins
-osmosisd query lockup account-unlockable-coins $(osmosisd keys show -a validator --keyring-backend=test)
+symphonyd query lockup account-unlockable-coins $(symphonyd keys show -a validator --keyring-backend=test)
 
 # query account locks by denom past time
-osmosisd query lockup account-locked-pasttime-denom $(osmosisd keys show -a validator --keyring-backend=test) 1611879610 stake
+symphonyd query lockup account-locked-pasttime-denom $(symphonyd keys show -a validator --keyring-backend=test) 1611879610 stake
 
 # query account locks past time
-osmosisd query lockup account-locked-pasttime $(osmosisd keys show -a validator --keyring-backend=test) 1611879610
+symphonyd query lockup account-locked-pasttime $(symphonyd keys show -a validator --keyring-backend=test) 1611879610
 
 # query account locks by denom with longer duration
-osmosisd query lockup account-locked-longer-duration-denom $(osmosisd keys show -a validator --keyring-backend=test) 5.1s stake
+symphonyd query lockup account-locked-longer-duration-denom $(symphonyd keys show -a validator --keyring-backend=test) 5.1s stake
 
 # query account locks with longer duration
-osmosisd query lockup account-locked-longer-duration $(osmosisd keys show -a validator --keyring-backend=test) 5.1s
+symphonyd query lockup account-locked-longer-duration $(symphonyd keys show -a validator --keyring-backend=test) 5.1s
 
 # query account locked coins
-osmosisd query lockup account-locked-coins $(osmosisd keys show -a validator --keyring-backend=test)
+symphonyd query lockup account-locked-coins $(symphonyd keys show -a validator --keyring-backend=test)
 
 # query account locks before time
-osmosisd query lockup account-locked-beforetime $(osmosisd keys show -a validator --keyring-backend=test) 1611879610
+symphonyd query lockup account-locked-beforetime $(symphonyd keys show -a validator --keyring-backend=test) 1611879610
 ```

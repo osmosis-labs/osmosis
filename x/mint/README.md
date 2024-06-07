@@ -163,7 +163,7 @@ query mint params
 List all current min parameters in json format by:
 
 ```bash
-osmosisd query mint params -o json | jq
+symphonyd query mint params -o json | jq
 ```
 
 An example of the output:
@@ -262,7 +262,7 @@ query mint epoch-provisions
 List the current epoch provisions:
 
 ```bash
-osmosisd query mint epoch-provisions
+symphonyd query mint epoch-provisions
 ```
 
 As of this writing, this number will be equal to the `genesis-epoch-provisions`. Once the `reduction_period_in_epochs` is reached, the `reduction_factor` will be initiated and reduce the amount of OSMO minted per epoch.

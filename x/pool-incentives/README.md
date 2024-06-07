@@ -100,7 +100,7 @@ type UpdatePoolIncentivesProposal struct {
 `DistrRecord`s.
 
 ```shell
-osmosisd tx gov submit-proposal update-pool-incentives [gaugeIds] [weights]
+symphonyd tx gov submit-proposal update-pool-incentives [gaugeIds] [weights]
 ```
 
 Proposals can be proposed in using the CLI command format above.\
@@ -108,7 +108,7 @@ For example, to designate 100 weight to gauge id 2 and 200 weight to
 gauge id 3, the following command can be used.
 
 ```shell
-osmosisd tx gov submit-proposal update-pool-incentives 2,3 100,200
+symphonyd tx gov submit-proposal update-pool-incentives 2,3 100,200
 ```
 
 ## Transactions
@@ -116,7 +116,7 @@ osmosisd tx gov submit-proposal update-pool-incentives 2,3 100,200
 ### replace-pool-incentives 
 
 ```sh
-osmosisd tx poolincentives replace-pool-incentives [gaugeIds] [weights] [flags]
+symphonyd tx poolincentives replace-pool-incentives [gaugeIds] [weights] [flags]
 ```
 
 ::: details Example 
@@ -124,7 +124,7 @@ osmosisd tx poolincentives replace-pool-incentives [gaugeIds] [weights] [flags]
 Fully replace records for pool incentives:
 
 ```bash
-osmosisd tx poolincentives replace-pool-incentives proposal.json --from --chain-id
+symphonyd tx poolincentives replace-pool-incentives proposal.json --from --chain-id
 ```
 
 The proposal.json would look as follows:
@@ -158,7 +158,7 @@ The proposal.json would look as follows:
 Update the weight of specified pool gauges in regards to their share of incentives (by creating a proposal)
 
 ```sh
-osmosisd tx poolincentives update-pool-incentives [gaugeIds] [weights] [flags] --from --chain-id
+symphonyd tx poolincentives update-pool-incentives [gaugeIds] [weights] [flags] --from --chain-id
 ```
 
 ::: details Example
@@ -166,7 +166,7 @@ osmosisd tx poolincentives update-pool-incentives [gaugeIds] [weights] [flags] -
 Update the pool incentives for `gauge_id` 0 and 1:
 
 ```bash
-osmosisd tx gov submit-proposal update-pool-incentives proposal.json --from WALLET_NAME --chain-id CHAIN_ID
+symphonyd tx gov submit-proposal update-pool-incentives proposal.json --from WALLET_NAME --chain-id CHAIN_ID
 ```
 
 The proposal.json would look as follows:
@@ -197,13 +197,13 @@ The proposal.json would look as follows:
 Query distribution info for all pool gauges
 
 ```sh
-osmosisd query poolincentives distr-info
+symphonyd query poolincentives distr-info
 ```
 
 ::: details Example
 
 ```bash
-osmosisd query poolincentives distr-info
+symphonyd query poolincentives distr-info
 ```
 
 An example output:
@@ -229,13 +229,13 @@ An example output:
 Query externally incentivized gauges (gauges distributing rewards on top of the normal OSMO rewards)
 
 ```sh
-osmosisd query pool-incentives external-incentivized-gauges
+symphonyd query pool-incentives external-incentivized-gauges
 ```
 
 ::: details Example
 
 ```bash
-osmosisd query pool-incentives external-incentivized-gauges
+symphonyd query pool-incentives external-incentivized-gauges
 ```
 
 An example output:
@@ -283,7 +283,7 @@ An example output:
 Query the gauge ids (by duration) by pool id
 
 ```sh
-osmosisd query poolincentives gauge-ids [pool-id] [flags]
+symphonyd query poolincentives gauge-ids [pool-id] [flags]
 ```
 
 ::: details Example
@@ -291,7 +291,7 @@ osmosisd query poolincentives gauge-ids [pool-id] [flags]
 Find out what the gauge IDs are for pool 1:
 
 ```bash
-osmosisd query poolincentives gauge-ids 1
+symphonyd query poolincentives gauge-ids 1
 ```
 
 An example output:
@@ -314,13 +314,13 @@ In this example, we see that gauge IDs 1,2, and 3 are for the one day, one week,
 Query all incentivized pools with their respective gauge IDs and lockup durations
 
 ```sh
-osmosisd query poolincentives incentivized-pools [flags]
+symphonyd query poolincentives incentivized-pools [flags]
 ```
 
 ::: details Example
 
 ```bash
-osmosisd query poolincentives incentivized-pools
+symphonyd query poolincentives incentivized-pools
 ```
 
 An example output:
@@ -345,13 +345,13 @@ An example output:
 Query incentivized lockup durations
 
 ```sh
-osmosisd query poolincentives lockable-durations [flags]
+symphonyd query poolincentives lockable-durations [flags]
 ```
 
 ::: details Example
 
 ```bash
-osmosisd query poolincentives lockable-durations
+symphonyd query poolincentives lockable-durations
 ```
 
 An example output:
@@ -370,13 +370,13 @@ lockable_durations:
 Query pool-incentives module parameters
 
 ```sh
-osmosisd query poolincentives params [flags]
+symphonyd query poolincentives params [flags]
 ```
 
 ::: details Example
 
 ```bash
-osmosisd query poolincentives params
+symphonyd query poolincentives params
 ```
 
 An example output:

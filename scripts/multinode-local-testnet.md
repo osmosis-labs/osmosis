@@ -31,11 +31,11 @@ Validator3: `tmux a -t validator3`
 Directories
 -----------
 
-Validator1: `$HOME/.osmosisd/validator1`
+Validator1: `$HOME/.symphonyd/validator1`
 
-Validator2: `$HOME/.osmosisd/validator2`
+Validator2: `$HOME/.symphonyd/validator2`
 
-Validator3: `$HOME/.osmosisd/validator3`
+Validator3: `$HOME/.symphonyd/validator3`
 
 Ports
 -----
@@ -52,14 +52,14 @@ particular node.
 Examples
 --------
 
-Validator2: `osmosisd status --node "tcp://localhost:26654"`
+Validator2: `symphonyd status --node "tcp://localhost:26654"`
 
-Validator3: `osmosisd status --node "tcp://localhost:26651"`
+Validator3: `symphonyd status --node "tcp://localhost:26651"`
 
 or
 
 Validator1:
-`osmosisd keys list --keyring-backend test --home $HOME/.osmosisd/validator1`
+`symphonyd keys list --keyring-backend test --home $HOME/.symphonyd/validator1`
 
 Validator2:
-`osmosisd keys list --keyring-backend test --home $HOME/.osmosisd/validator2`
+`symphonyd keys list --keyring-backend test --home $HOME/.symphonyd/validator2`
