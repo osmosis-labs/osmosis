@@ -149,7 +149,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		)
 		if err != nil {
 			return sdk.Context{},
-				errorsmod.Wrapf(err, "failed to get initialized authenticator (account = %s, authenticator id = %d, msg index = %d, msg type url = %s)", account, selectedAuthenticator.Id, msgIndex, sdk.MsgTypeURL(msg))
+				errorsmod.Wrapf(err, "failed to get initialized authenticator (account = %s, authenticator id = %d, msg index = %d, msg type url = %s)", account, selectedAuthenticatorId, msgIndex, sdk.MsgTypeURL(msg))
 		}
 
 		// Generate the authentication request data
