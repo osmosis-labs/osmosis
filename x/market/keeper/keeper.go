@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/osmosis-labs/osmosis/v23/x/market/types"
@@ -54,38 +53,4 @@ func NewKeeper(
 		BankKeeper:    bankKeeper,
 		OracleKeeper:  oracleKeeper,
 	}
-}
-
-// GetOsmosisPoolDelta returns the gap between the SymphonyPool and the SymphonyBasePool
-func (k Keeper) GetOsmosisPoolDelta(ctx sdk.Context) sdk.Dec {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.OsmosisPoolDeltaKey)
-	if bz == nil {
-		return sdk.ZeroDec()
-	}
-
-	dp := sdk.DecProto{}
-	k.cdc.MustUnmarshal(bz, &dp)
-	return dp.Dec
-}
-
-// SetOsmosisPoolDelta updates OsmosisPoolDelta which is gap between the SymphonyPool and the BasePool
-func (k Keeper) SetOsmosisPoolDelta(ctx sdk.Context, delta sdk.Dec) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&sdk.DecProto{Dec: delta})
-	store.Set(types.OsmosisPoolDeltaKey, bz)
-}
-
-// ReplenishPools replenishes each pool(Melody,Note) to BasePool
-func (k Keeper) ReplenishPools(ctx sdk.Context) {
-	poolDelta := k.GetOsmosisPoolDelta(ctx)
-
-	poolRecoveryPeriod := int64(k.PoolRecoveryPeriod(ctx))
-	poolRegressionAmt := poolDelta.QuoInt64(poolRecoveryPeriod)
-
-	// Replenish pools towards each base pool
-	// regressionAmt cannot make delta zero
-	poolDelta = poolDelta.Sub(poolRegressionAmt)
-
-	k.SetOsmosisPoolDelta(ctx, poolDelta)
 }

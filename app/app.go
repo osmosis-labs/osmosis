@@ -31,8 +31,7 @@ import (
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 
-	markettypes "github.com/osmosis-labs/osmosis/v23/x/market/types"
-	oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
+	//oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
 
 	"github.com/osmosis-labs/osmosis/v23/ingest/sqs"
 	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain"
@@ -125,10 +124,10 @@ var (
 
 	// module accounts that are allowed to receive tokens.
 	allowedReceivingModAcc = map[string]bool{
-		protorevtypes.ModuleName:      true,
-		oracletypes.ModuleName:        true,
-		markettypes.ModuleName:        true,
-		markettypes.ReserveModuleName: true,
+		protorevtypes.ModuleName: true,
+		// oracletypes.ModuleName:        true, TODO: yurii: enable oracle
+		// markettypes.ModuleName:        true, TODO: yurii: enable swaps
+		// markettypes.ReserveModuleName: true, TODO: yurii: enable swaps
 	}
 
 	// TODO: Refactor wasm items into a wasm.go file

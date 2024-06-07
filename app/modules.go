@@ -10,10 +10,6 @@ import (
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
-	"github.com/osmosis-labs/osmosis/v23/x/market"
-	markettypes "github.com/osmosis-labs/osmosis/v23/x/market/types"
-	"github.com/osmosis-labs/osmosis/v23/x/oracle"
-	oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
 
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
@@ -131,10 +127,10 @@ var moduleAccountPermissions = map[string][]string{
 	tokenfactorytypes.ModuleName:                  {authtypes.Minter, authtypes.Burner},
 	valsetpreftypes.ModuleName:                    {authtypes.Staking},
 	poolmanagertypes.ModuleName:                   nil,
-	markettypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
-	markettypes.ReserveModuleName:                 {authtypes.Minter, authtypes.Burner},
-	oracletypes.ModuleName:                        nil,
-	cosmwasmpooltypes.ModuleName:                  nil,
+	// markettypes.ModuleName:                        {authtypes.Minter, authtypes.Burner}, TODO: yurii: enable swaps
+	// markettypes.ReserveModuleName:                 {authtypes.Minter, authtypes.Burner}, TODO: yurii: enable swaps
+	// oracletypes.ModuleName:                        nil, TODO: yurii: enable oracle
+	cosmwasmpooltypes.ModuleName: nil,
 }
 
 // appModules return modules to initialize module manager.
@@ -173,8 +169,8 @@ func appModules(
 		app.RawIcs20TransferAppModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		poolmanager.NewAppModule(*app.PoolManagerKeeper, app.GAMMKeeper),
-		oracle.NewAppModule(appCodec, *app.OracleKeeper, app.AccountKeeper, app.BankKeeper),
-		market.NewAppModule(*app.MarketKeeper, app.AccountKeeper, app.BankKeeper, app.OracleKeeper),
+		// oracle.NewAppModule(appCodec, *app.OracleKeeper, app.AccountKeeper, app.BankKeeper), TODO: yurii: enable oracle
+		// market.NewAppModule(*app.MarketKeeper, app.AccountKeeper, app.BankKeeper, app.OracleKeeper), TODO: yurii: enable swaps
 		twapmodule.NewAppModule(*app.TwapKeeper),
 		concentratedliquidity.NewAppModule(appCodec, *app.ConcentratedLiquidityKeeper),
 		protorev.NewAppModule(appCodec, *app.ProtoRevKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper, app.GAMMKeeper),
@@ -262,8 +258,8 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		icatypes.ModuleName,
 		gammtypes.ModuleName,
 		poolmanagertypes.ModuleName,
-		markettypes.ModuleName,
-		oracletypes.ModuleName,
+		// markettypes.ModuleName, TODO: yurii: enable swaps
+		// oracletypes.ModuleName, TODO: yurii: enable oracle
 		protorevtypes.ModuleName,
 		twaptypes.ModuleName,
 		txfeestypes.ModuleName,

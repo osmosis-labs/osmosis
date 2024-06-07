@@ -38,8 +38,6 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
-	oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
-
 	marketkeeper "github.com/osmosis-labs/osmosis/v23/x/market/keeper"
 	markettypes "github.com/osmosis-labs/osmosis/v23/x/market/types"
 
@@ -512,27 +510,29 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.WasmKeeper = &wasmKeeper
 	appKeepers.CosmwasmPoolKeeper.SetWasmKeeper(appKeepers.WasmKeeper)
 
-	oracleKeeper := oraclekeeper.NewKeeper(
-		appCodec,
-		appKeepers.keys[oracletypes.StoreKey],
-		appKeepers.GetSubspace(oracletypes.ModuleName),
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.DistrKeeper,
-		appKeepers.StakingKeeper,
-		distrtypes.ModuleName,
-	)
-	appKeepers.OracleKeeper = &oracleKeeper
-
-	marketKeeper := marketkeeper.NewKeeper(
-		appCodec,
-		appKeepers.keys[markettypes.StoreKey],
-		appKeepers.GetSubspace(markettypes.ModuleName),
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.OracleKeeper,
-	)
-	appKeepers.MarketKeeper = &marketKeeper
+	// TODO: yurii: enable oracle
+	//oracleKeeper := oraclekeeper.NewKeeper(
+	//	appCodec,
+	//	appKeepers.keys[oracletypes.StoreKey],
+	//	appKeepers.GetSubspace(oracletypes.ModuleName),
+	//	appKeepers.AccountKeeper,
+	//	appKeepers.BankKeeper,
+	//	appKeepers.DistrKeeper,
+	//	appKeepers.StakingKeeper,
+	//	distrtypes.ModuleName,
+	//)
+	//appKeepers.OracleKeeper = &oracleKeeper
+	//
+	// TODO: yurii: enable swaps
+	//marketKeeper := marketkeeper.NewKeeper(
+	//	appCodec,
+	//	appKeepers.keys[markettypes.StoreKey],
+	//	appKeepers.GetSubspace(markettypes.ModuleName),
+	//	appKeepers.AccountKeeper,
+	//	appKeepers.BankKeeper,
+	//	appKeepers.OracleKeeper,
+	//)
+	//appKeepers.MarketKeeper = &marketKeeper
 
 	// Pass the contract keeper to all the structs (generally ICS4Wrappers for ibc middlewares) that need it
 	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
@@ -730,8 +730,8 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(protorevtypes.ModuleName)
 	paramsKeeper.Subspace(superfluidtypes.ModuleName)
 	paramsKeeper.Subspace(poolmanagertypes.ModuleName)
-	paramsKeeper.Subspace(oracletypes.ModuleName)
-	paramsKeeper.Subspace(markettypes.ModuleName)
+	// paramsKeeper.Subspace(oracletypes.ModuleName)
+	// paramsKeeper.Subspace(markettypes.ModuleName)
 	paramsKeeper.Subspace(gammtypes.ModuleName)
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
@@ -851,7 +851,7 @@ func KVStoreKeys() []string {
 		poolincentivestypes.StoreKey,
 		concentratedliquiditytypes.StoreKey,
 		poolmanagertypes.StoreKey,
-		oracletypes.StoreKey,
+		//oracletypes.StoreKey, TODO: yurii: enable oracle
 		markettypes.StoreKey,
 		authzkeeper.StoreKey,
 		txfeestypes.StoreKey,

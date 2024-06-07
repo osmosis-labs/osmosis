@@ -57,42 +57,6 @@ func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string
 		spread = tobinTax
 		return retDecCoin, spread, nil
 	}
-
-	basePool := k.BasePool(ctx)
-	minSpread := k.MinStabilitySpread(ctx)
-
-	// constant-product, which by construction is square of base(equilibrium) pool
-	cp := basePool.Mul(basePool)
-	sPoolDelta := k.GetOsmosisPoolDelta(ctx)
-	symphonyPool := basePool.Add(sPoolDelta)
-	notePool := cp.Quo(symphonyPool)
-
-	var offerPool sdk.Dec // base denom(usdr) unit
-	var askPool sdk.Dec   // base denom(usdr) unit
-	if offerCoin.Denom != appParams.BaseCoinUnit {
-		// Symphony->Note swap
-		offerPool = symphonyPool
-		askPool = notePool
-	} else {
-		// Note->Symphony swap
-		offerPool = notePool
-		askPool = symphonyPool
-	}
-
-	// Get cp(constant-product) based swap amount
-	// askBaseAmount = askPool - cp / (offerPool + offerBaseAmount)
-	// askBaseAmount is base denom(usdr) unit
-	askBaseAmount := askPool.Sub(cp.Quo(offerPool.Add(baseOfferDecCoin.Amount)))
-
-	// Both baseOffer and baseAsk are usdr units, so spread can be calculated by
-	// spread = (baseOfferAmt - baseAskAmt) / baseOfferAmt
-	baseOfferAmount := baseOfferDecCoin.Amount
-	spread = baseOfferAmount.Sub(askBaseAmount).Quo(baseOfferAmount)
-
-	if spread.LT(minSpread) {
-		spread = minSpread
-	}
-
 	return retDecCoin, spread, nil
 }
 

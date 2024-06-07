@@ -10,10 +10,4 @@ option go_package = "github.com/osmosis-labs/osmosis/v23/x/market/types";
 message GenesisState {
   // params defines all the parameters of the module.
   Params params = 1 [ (gogoproto.nullable) = false ];
-
-  // the gap between the OsmosisPool and the BasePool
-  bytes osmosis_pool_delta = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
-  ];
 }
