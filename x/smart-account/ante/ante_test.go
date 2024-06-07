@@ -274,6 +274,65 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	s.Require().Greater(res.GasMeter().GasConsumed(), maxUnauthenticatedGasLimit)
 }
 
+// TestFeePayerGasComsumption tests that the fee payer only gets charged gas for the transaction once.
+func (s *AuthenticatorAnteSuite) TestFeePayerGasComsumption() {
+	osmoToken := "osmo"
+	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
+	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
+
+	specifiedGasLimit := uint64(300_000)
+
+	// Ensure the feepayer has funds
+	fees := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
+	err := testutil.FundAccount(s.Ctx, s.OsmosisApp.BankKeeper, s.TestPrivKeys[0].PubKey().Address().Bytes(), fees)
+	s.Require().NoError(err)
+
+	// Create two messages to ensure that the fee payer code path is reached twice
+	testMsg1 := &banktypes.MsgSend{
+		FromAddress: sdk.MustBech32ifyAddressBytes(osmoToken, s.TestAccAddress[0]),
+		ToAddress:   sdk.MustBech32ifyAddressBytes(osmoToken, s.TestAccAddress[1]),
+		Amount:      coins,
+	}
+
+	testMsg2 := &banktypes.MsgSend{
+		FromAddress: sdk.MustBech32ifyAddressBytes(osmoToken, s.TestAccAddress[0]),
+		ToAddress:   sdk.MustBech32ifyAddressBytes(osmoToken, s.TestAccAddress[1]),
+		Amount:      coins,
+	}
+
+	// Add a signature verification authenticator to the account
+	sigId, err := s.OsmosisApp.SmartAccountKeeper.AddAuthenticator(
+		s.Ctx,
+		s.TestAccAddress[0],
+		"SignatureVerification",
+		s.TestPrivKeys[1].PubKey().Bytes(),
+	)
+	s.Require().NoError(err)
+	s.Require().Equal(sigId, uint64(1), "Adding authenticator returning incorrect id")
+
+	// Check balances before transaction
+	balances := s.OsmosisApp.BankKeeper.GetBalance(s.Ctx, sdk.AccAddress(s.TestPrivKeys[0].PubKey().Address()), osmoToken)
+	s.Require().Equal(fees[0], balances, "Fees incorrect before transaction")
+
+	tx, _ := GenTx(s.Ctx, s.EncodingConfig.TxConfig, []sdk.Msg{
+		testMsg1,
+		testMsg2,
+	}, feeCoins, specifiedGasLimit, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{
+		s.TestPrivKeys[0],
+	}, []cryptotypes.PrivKey{
+		s.TestPrivKeys[1],
+	}, []uint64{sigId, sigId})
+
+	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
+	_, err = anteHandler(s.Ctx, tx, false)
+	s.Require().NoError(err)
+
+	// Check balances after transaction
+	balances = s.OsmosisApp.BankKeeper.GetBalance(s.Ctx, sdk.AccAddress(s.TestPrivKeys[0].PubKey().Address()), osmoToken)
+	emptyFees := sdk.NewInt64Coin(osmoToken, 0)
+	s.Require().Equal(emptyFees, balances, "Fees incorrect after transaction")
+}
+
 func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 	osmoToken := "osmo"
 	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
