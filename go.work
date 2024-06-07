@@ -11,5 +11,3 @@ use ./x/ibc-hooks
 use ./x/epochs
 
 replace github.com/onsi/ginkgo => github.com/onsi/ginkgo v1.16.5
-
-replace github.com/osmosis-labs/sqs/sqsdomain => ../sqs/sqsdomain
