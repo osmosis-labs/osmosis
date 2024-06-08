@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	runtime.SetBlockProfileRate(100)
+	runtime.SetBlockProfileRate(1)
 
 	params.SetAddressPrefixes()
 	rootCmd, _ := cmd.NewRootCmd()
