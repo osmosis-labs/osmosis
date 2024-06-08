@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"runtime"
 
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 
@@ -11,6 +12,8 @@ import (
 )
 
 func main() {
+	runtime.SetBlockProfileRate(100)
+
 	params.SetAddressPrefixes()
 	rootCmd, _ := cmd.NewRootCmd()
 	if err := svrcmd.Execute(rootCmd, "OSMOSISD", osmosis.DefaultNodeHome); err != nil {
