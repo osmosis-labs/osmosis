@@ -51,8 +51,8 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     -X github.com/cosmos/cosmos-sdk/version.BuildTags=${BUILD_TAGS} \
     -w -s -linkmode=external -extldflags '-Wl,-z,muldefs -static'" \
     -trimpath \
-    -o /osmosis/build/osmosisd \
-    /osmosis/cmd/osmosisd/main.go
+    -o /symphony-osmosis/build/symphonyd \
+    /symphony-osmosis/cmd/symphonyd/main.go
 
 # --------------------------------------------------------
 # Runner
@@ -60,7 +60,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 
 FROM ${RUNNER_IMAGE}
 
-COPY --from=builder /osmosis/build/symphonyd /bin/symphonyd
+COPY --from=builder /symphony-osmosis/build/symphonyd /bin/symphonyd
 
 ENV HOME /osmosis
 WORKDIR $HOME
@@ -73,4 +73,3 @@ EXPOSE 1317
 # EXPOSE 6060
 
 ENTRYPOINT ["symphonyd"]
-n

@@ -1,12 +1,12 @@
-project_name: osmosisd
+project_name: symphonyd
 
 env:
   - CGO_ENABLED=1
 
 builds:
-  - id: osmosisd-darwin-amd64
-    main: ./cmd/osmosisd/main.go
-    binary: osmosisd
+  - id: symphonyd-darwin-amd64
+    main: ./cmd/symphonyd/main.go
+    binary: symphonyd
     hooks:
       pre:
         - wget https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvmstatic_darwin.a -O /lib/libwasmvmstatic_darwin.a
@@ -21,8 +21,8 @@ builds:
       - -mod=readonly
       - -trimpath
     ldflags:
-      - -X github.com/cosmos/cosmos-sdk/version.Name=osmosis
-      - -X github.com/cosmos/cosmos-sdk/version.AppName=osmosisd
+      - -X github.com/cosmos/cosmos-sdk/version.Name=symphony
+      - -X github.com/cosmos/cosmos-sdk/version.AppName=symphonyd
       - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }}
       - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
       - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,static_wasm
@@ -33,9 +33,9 @@ builds:
       - ledger
       - static_wasm
 
-  - id: osmosisd-darwin-arm64
-    main: ./cmd/osmosisd/main.go
-    binary: osmosisd
+  - id: symphonyd-darwin-arm64
+    main: ./cmd/symphonyd/main.go
+    binary: symphonyd
     hooks:
       pre:
         - wget https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvmstatic_darwin.a -O /lib/libwasmvmstatic_darwin.a
@@ -50,8 +50,8 @@ builds:
       - -mod=readonly
       - -trimpath
     ldflags:
-      - -X github.com/cosmos/cosmos-sdk/version.Name=osmosis
-      - -X github.com/cosmos/cosmos-sdk/version.AppName=osmosisd
+      - -X github.com/cosmos/cosmos-sdk/version.Name=symphony
+      - -X github.com/cosmos/cosmos-sdk/version.AppName=symphonyd
       - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }}
       - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
       - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,static_wasm
@@ -62,9 +62,9 @@ builds:
       - ledger
       - static_wasm
 
-  - id: osmosisd-linux-amd64
-    main: ./cmd/osmosisd
-    binary: osmosisd
+  - id: symphonyd-linux-amd64
+    main: ./cmd/symphonyd
+    binary: symphonyd
     hooks:
       pre:
         - wget https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.x86_64.a -O /usr/lib/x86_64-linux-gnu/libwasmvm_muslc.a
@@ -78,8 +78,8 @@ builds:
       - -mod=readonly
       - -trimpath
     ldflags:
-      - -X github.com/cosmos/cosmos-sdk/version.Name=osmosis
-      - -X github.com/cosmos/cosmos-sdk/version.AppName=osmosisd
+      - -X github.com/cosmos/cosmos-sdk/version.Name=symphony
+      - -X github.com/cosmos/cosmos-sdk/version.AppName=symphonyd
       - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }}
       - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
       - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,muslc,osusergo
@@ -92,9 +92,9 @@ builds:
       - muslc
       - osusergo
 
-  - id: osmosisd-linux-arm64
-    main: ./cmd/osmosisd
-    binary: osmosisd
+  - id: symphonyd-linux-arm64
+    main: ./cmd/symphonyd
+    binary: symphonyd
     hooks:
       pre:
         - wget https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.aarch64.a -O /usr/lib/aarch64-linux-gnu/libwasmvm_muslc.a
@@ -108,8 +108,8 @@ builds:
       - -mod=readonly
       - -trimpath
     ldflags:
-      - -X github.com/cosmos/cosmos-sdk/version.Name=osmosis 
-      - -X github.com/cosmos/cosmos-sdk/version.AppName=osmosisd 
+      - -X github.com/cosmos/cosmos-sdk/version.Name=symphony
+      - -X github.com/cosmos/cosmos-sdk/version.AppName=symphonyd
       - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }} 
       - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
       - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,muslc,osusergo
@@ -123,31 +123,31 @@ builds:
       - osusergo
 
 universal_binaries:
-  - id: osmosisd-darwin-universal
+  - id: symphonyd-darwin-universal
     ids:
-      - osmosisd-darwin-amd64
-      - osmosisd-darwin-arm64
+      - symphonyd-darwin-amd64
+      - symphonyd-darwin-arm64
     replace: false
 
 archives:
   - id: zipped
     builds:
-      # - osmosisd-darwin-universal
-      - osmosisd-linux-amd64
-      - osmosisd-linux-arm64
-      # - osmosisd-darwin-amd64
-      # - osmosisd-darwin-arm64
+      # - symphonyd-darwin-universal
+      - symphonyd-linux-amd64
+      - symphonyd-linux-arm64
+      # - symphonyd-darwin-amd64
+      # - symphonyd-darwin-arm64
     name_template: "{{.ProjectName}}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     format: tar.gz
     files:
       - none*
   - id: binaries
     builds:
-      # - osmosisd-darwin-universal
-      - osmosisd-linux-amd64
-      - osmosisd-linux-arm64
-      # - osmosisd-darwin-amd64
-      # - osmosisd-darwin-arm64
+      # - symphonyd-darwin-universal
+      - symphonyd-linux-amd64
+      - symphonyd-linux-arm64
+      # - symphonyd-darwin-amd64
+      # - symphonyd-darwin-arm64
     name_template: "{{.ProjectName}}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     format: binary
     files:
@@ -165,7 +165,7 @@ changelog:
 release:
   github:
     owner: osmosis-labs
-    name: osmosis
+    name: symphony
   replace_existing_draft: true
   header: |
     < DESCRIPTION OF RELEASE >
@@ -190,7 +190,7 @@ release:
 
     ## 🐳 Run with Docker
 
-    As an alternative to installing and running osmosisd on your system, you may run osmosisd in a Docker container.
+    As an alternative to installing and running symphonyd on your system, you may run symphonyd in a Docker container.
     The following Docker images are available in our registry:
 
     | Image Name                                   | Base                                 | Description                       |
