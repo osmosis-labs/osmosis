@@ -190,7 +190,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		// If authentication is successful, continue
 		if authErr == nil {
 			// Once the fee payer is authenticated, we can set the gas limit to its original value
-			if account.Equals(feePayer) && !feesPaid {
+			if !feesPaid && account.Equals(feePayer) {
 				originalGasMeter.ConsumeGas(payerGasMeter.GasConsumed(), "fee payer gas")
 
 				// Once the fee payer is authenticated, we can deduct the fee.
