@@ -763,7 +763,7 @@ func (s *PoolTransformerTestSuite) TestFilterBalances() {
 
 func (s *PoolTransformerTestSuite) TestInitCosmWasmPoolModel() {
 	s.Setup()
-	// Create OSMO / USDC pool and set the protorev route
+	// Create OSMO / USDC pool and
 	// Note that spot price is 1 OSMO = 2 USDC
 	usdcOsmoPoolID := s.PrepareBalancerPoolWithCoins(sdk.NewCoin(USDC, defaultAmount), sdk.NewCoin(UOSMO, halfDefaultAmount))
 

@@ -25,7 +25,7 @@ func (s *PoolTransformerTestSuite) TestUpdateAlloyedTransmuterPool() {
 		Moderator:                       s.TestAccs[1].String(),
 	})
 
-	// Create OSMO / USDC pool and set the protorev route
+	// Create OSMO / USDC pool
 	// Note that spot price is 1 OSMO = 2 USDC
 	usdcOsmoPoolID := s.PrepareBalancerPoolWithCoins(sdk.NewCoin(USDC, defaultAmount), sdk.NewCoin(UOSMO, halfDefaultAmount))
 
