@@ -23,11 +23,7 @@ type cosmwasmPoolWriteListener struct {
 	wasmkeeper  *wasmkeeper.Keeper
 }
 
-<<<<<<< HEAD
-func NewCosmwasmPool(poolTracker domain.BlockPoolUpdateTracker) storetypes.WriteListener {
-=======
 func NewCosmwasmPool(poolTracker domain.BlockPoolUpdateTracker, wasmkeeper *wasmkeeper.Keeper) *cosmwasmPoolWriteListener {
->>>>>>> e63b29c6 (SQS ingester for alloy transmuter (#8291))
 	return &cosmwasmPoolWriteListener{
 		poolTracker: poolTracker,
 		wasmkeeper:  wasmkeeper,
