@@ -9,6 +9,11 @@ import (
 	"github.com/osmosis-labs/sqs/sqsdomain"
 )
 
+const (
+	listAssetConfigsQueryString = `{"list_asset_configs":{}}`
+	getShareDenomQueryString    = `{"get_share_denom":{}}`
+)
+
 // updateAlloyTransmuterInfo updates cosmwasmPoolModel with alloyed transmuter specific info.
 // - It queries alloyed transmuter contract asset configs and share denom, the construct
 // `AlloyTransmuterData`. Share denom for alloyed transmuter is the alloyed denom.
@@ -49,7 +54,7 @@ func alloyTransmuterListAssetConfig(
 	poolId uint64,
 	contractAddress sdk.AccAddress,
 ) ([]sqsdomain.TransmuterAssetConfig, error) {
-	bz, err := wasmKeeper.QuerySmart(ctx, contractAddress, []byte(`{"list_asset_configs":{}}`))
+	bz, err := wasmKeeper.QuerySmart(ctx, contractAddress, []byte(listAssetConfigsQueryString))
 	if err != nil {
 		return nil, fmt.Errorf(
 			"error querying list_asset_configs for pool (%d) contrat_address (%s): %w",
@@ -77,7 +82,7 @@ func alloyTransmuterGetShareDenom(
 	poolId uint64,
 	contractAddress sdk.AccAddress,
 ) (string, error) {
-	bz, err := wasmKeeper.QuerySmart(ctx, contractAddress, []byte(`{"get_share_denom":{}}`))
+	bz, err := wasmKeeper.QuerySmart(ctx, contractAddress, []byte(getShareDenomQueryString))
 	if err != nil {
 		return "", fmt.Errorf(
 			"error querying get_share_denom for pool (%d) contrat_address (%s): %w",
