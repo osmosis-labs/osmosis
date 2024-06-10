@@ -458,7 +458,7 @@ func (pi *poolTransformer) computeUSDCPoolLiquidityCapFromUOSMO(ctx sdk.Context,
 func (pi *poolTransformer) queryContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) (sqsdomain.ContractInfo, error) {
 	bz := pi.wasmKeeper.QueryRaw(ctx, contractAddress, []byte("contract_info"))
 	if len(bz) == 0 {
-		return sqsdomain.ContractInfo{}, fmt.Errorf("contract info not found")
+		return sqsdomain.ContractInfo{}, fmt.Errorf("contract info not found: %s", contractAddress)
 	} else {
 		var contractInfo sqsdomain.ContractInfo
 		if err := json.Unmarshal(bz, &contractInfo); err != nil {
