@@ -903,6 +903,8 @@ github.com/cncf/xds/go v0.0.0-20220314180256-7f1daf1720fc/go.mod h1:eXthEFrGJvWH
 github.com/cncf/xds/go v0.0.0-20230105202645-06c439db220b/go.mod h1:eXthEFrGJvWHgFFCl3hGmgk+/aYT6PnTQLykKQRLhEs=
 github.com/cncf/xds/go v0.0.0-20230310173818-32f1caf87195/go.mod h1:eXthEFrGJvWHgFFCl3hGmgk+/aYT6PnTQLykKQRLhEs=
 github.com/cncf/xds/go v0.0.0-20230607035331-e9ce68804cb4/go.mod h1:eXthEFrGJvWHgFFCl3hGmgk+/aYT6PnTQLykKQRLhEs=
+github.com/cncf/xds/go v0.0.0-20231128003011-0fa0005c9caa h1:jQCWAUqqlij9Pgj2i/PB79y4KOPYVyFYdROxgaCwdTQ=
+github.com/cncf/xds/go v0.0.0-20231128003011-0fa0005c9caa/go.mod h1:x/1Gn8zydmfq8dk6e9PdstVsDgu9RuyIIJqAaF//0IM=
 github.com/cockroachdb/apd/v2 v2.0.2 h1:weh8u7Cneje73dDh+2tEVLUvyBc89iwepWCD8b8034E=
 github.com/cockroachdb/apd/v2 v2.0.2/go.mod h1:DDxRlzC2lo3/vSlmSoS7JkqbbrARPuFOGr0B9pvN3Gw=
 github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:zn76sxSg3SzpJ0PPJaLDCu+Bu0Lg3sKTORVIj19EIF8=
@@ -1018,6 +1020,8 @@ github.com/envoyproxy/protoc-gen-validate v0.6.7/go.mod h1:dyJXwwfPK2VSqiB9Klm1J
 github.com/envoyproxy/protoc-gen-validate v0.9.1/go.mod h1:OKNgG7TCp5pF4d6XftA0++PMirau2/yoOwVac3AbF2w=
 github.com/envoyproxy/protoc-gen-validate v0.10.0/go.mod h1:DRjgyB0I43LtJapqN6NiRwroiAU2PaFuvk/vjgh61ss=
 github.com/envoyproxy/protoc-gen-validate v0.10.1/go.mod h1:DRjgyB0I43LtJapqN6NiRwroiAU2PaFuvk/vjgh61ss=
+github.com/envoyproxy/protoc-gen-validate v1.0.4 h1:gVPz/FMfvh57HdSJQyvBtF00j8JU4zdyUgIUNhlgg0A=
+github.com/envoyproxy/protoc-gen-validate v1.0.4/go.mod h1:qys6tmnRsYrQqIhm2bvKZH4Blx/1gTIZ2UKVY1M+Yew=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/felixge/httpsnoop v1.0.1/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
 github.com/felixge/httpsnoop v1.0.4 h1:NFTV2Zj1bL4mc9sqWACXbQFVBBg2W3GPvqp8/ESS2Wg=
@@ -1484,8 +1488,8 @@ github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
 github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-1.0.20240530225441-b67e07aa07b5 h1:O2N09NT3CzQ/GEkJ9brQ4n6L3OhLyHuogV1O0NVku3Y=
 github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-1.0.20240530225441-b67e07aa07b5/go.mod h1:rGwApua/spoF01B3vkjQgfwZUO/8bp1N4tPqvX/0DI4=
-github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240530220620-f7b07381dde9 h1:0DvcOzsMlzlvc3/CoeXaEsYeavIBZ0wtlNoNHjIJq+8=
-github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240530220620-f7b07381dde9/go.mod h1:rTSeaAZY6pRS1ILB+7r0OWnIqYTqtzV6e+8JU9chEK0=
+github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240610193837-3796c6f854d1 h1:Q/2/mQ5vbc4VRLQ85INg4hM4O9wUIo7imFZIJDhsMbU=
+github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240610193837-3796c6f854d1/go.mod h1:rTSeaAZY6pRS1ILB+7r0OWnIqYTqtzV6e+8JU9chEK0=
 github.com/osmosis-labs/osmosis/osmomath v0.0.13-0.20240502181753-5ba797611f84 h1:h7fA83QzN1vVibEi+WpLNDxHwsDhc+t2kkRcfQ8jSF8=
 github.com/osmosis-labs/osmosis/osmomath v0.0.13-0.20240502181753-5ba797611f84/go.mod h1:eWYAcQOQLAfj2AVAXYzRJECpmSgGPXbXPsFFtI4SMhI=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.13 h1:+9EGL5dSL6JH2AD1TiJ+zhkqcwhtg8hPzAPvcjSpQeU=
