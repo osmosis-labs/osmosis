@@ -50,7 +50,7 @@ func (s *cosmwasmPoolWriteListener) OnWrite(storeKey storetypes.StoreKey, key []
 
 		// Create/modify the cwPool address to pool mapping
 		// This is used to check if a balance change is for a cwPool address, and if so, we can retrieve the pool from this mapping
-		var poolI poolmanagertypes.PoolI = &pool // TODO: wrap this pool with wasmkeeper
+		var poolI poolmanagertypes.PoolI = &pool
 		s.poolTracker.TrackCosmWasmPoolsAddressToPoolMap(poolI)
 	}
 	return nil
