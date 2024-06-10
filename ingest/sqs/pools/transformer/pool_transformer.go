@@ -222,10 +222,6 @@ func (pi *poolTransformer) convertPool(
 			return nil, fmt.Errorf("pool (%d) with type (%d) requires `poolTransformer` to have `wasmKeeper` but got `nil`", pool.GetId(), pool.GetType())
 		}
 
-		// --
-		// cosmWasmPoolModel = &sqsdomain.CosmWasmPoolModel{}
-		// --
-
 		initedCosmWasmPoolModel := pi.initCosmWasmPoolModel(ctx, pool)
 		cosmWasmPoolModel = &initedCosmWasmPoolModel
 
