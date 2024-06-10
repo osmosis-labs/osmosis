@@ -431,6 +431,7 @@ func (s *PoolTransformerTestSuite) TestProcessBlock() {
 	sqsKeepers := domain.SQSIngestKeepers{
 		GammKeeper:         s.App.GAMMKeeper,
 		ConcentratedKeeper: s.App.ConcentratedLiquidityKeeper,
+		WasmKeeper:         s.App.WasmKeeper,
 		BankKeeper:         s.App.BankKeeper,
 		ProtorevKeeper:     s.App.ProtoRevKeeper,
 		PoolManagerKeeper:  s.App.PoolManagerKeeper,
@@ -472,7 +473,6 @@ func (s *PoolTransformerTestSuite) TestProcessBlock() {
 	}
 
 	allPools, takerFeesMap, err := poolTransformer.Transform(s.Ctx, blockPools)
-	s.Require().NoError(err)
 	s.Require().NoError(err)
 
 	s.Require().Len(allPools, 2+2+1)
@@ -760,6 +760,46 @@ func (s *PoolTransformerTestSuite) TestFilterBalances() {
 	}
 }
 
+func (s *PoolTransformerTestSuite) TestInitCosmWasmPoolModel() {
+	s.Setup()
+	// Create OSMO / USDC pool and
+	// Note that spot price is 1 OSMO = 2 USDC
+	usdcOsmoPoolID := s.PrepareBalancerPoolWithCoins(sdk.NewCoin(USDC, defaultAmount), sdk.NewCoin(UOSMO, halfDefaultAmount))
+
+	// Initialize the pool ingester
+	poolIngester := s.initializePoolIngester(usdcOsmoPoolID)
+
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(
+		sdk.NewCoin(apptesting.DefaultTransmuterDenomA, osmomath.NewInt(100000000)),
+		sdk.NewCoin(apptesting.DefaultTransmuterDenomB, osmomath.NewInt(100000000)),
+	))
+
+	pool := s.PrepareCosmWasmPool()
+	cwpm := poolIngester.InitCosmWasmPoolModel(s.Ctx, pool)
+	s.Equal(sqsdomain.CosmWasmPoolModel{
+		ContractInfo: sqsdomain.ContractInfo{
+			Contract: "crates.io:transmuter",
+			Version:  "0.1.0",
+		},
+	}, cwpm)
+
+	pool = s.PrepareAlloyTransmuterPool(s.TestAccs[0], apptesting.AlloyTransmuterInstantiateMsg{
+		PoolAssetConfigs:                []apptesting.AssetConfig{{Denom: apptesting.DefaultTransmuterDenomA, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomANormFactor)}, {Denom: apptesting.DefaultTransmuterDenomB, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomBNormFactor)}},
+		AlloyedAssetSubdenom:            apptesting.DefaultAlloyedSubDenom,
+		AlloyedAssetNormalizationFactor: osmomath.NewInt(apptesting.DefaultAlloyedDenomNormFactor),
+		Admin:                           s.TestAccs[0].String(),
+		Moderator:                       s.TestAccs[1].String(),
+	})
+
+	cwpm = poolIngester.InitCosmWasmPoolModel(s.Ctx, pool)
+	s.Equal(sqsdomain.CosmWasmPoolModel{
+		ContractInfo: sqsdomain.ContractInfo{
+			Contract: "crates.io:transmuter",
+			Version:  "3.0.0",
+		},
+	}, cwpm)
+}
+
 // validatePoolConversion validates that the pool conversion is correct.
 // It asserts that
 // - the pool ID of the actual pool is equal to the expected pool ID.
@@ -801,6 +841,7 @@ func (s *PoolTransformerTestSuite) initializePoolIngester(defaultUSDCUOSMOPoolID
 		ProtorevKeeper:     s.App.ProtoRevKeeper,
 		PoolManagerKeeper:  s.App.PoolManagerKeeper,
 		CosmWasmPoolKeeper: s.App.CosmwasmPoolKeeper,
+		WasmKeeper:         s.App.WasmKeeper,
 	}
 
 	atomicIngester := poolstransformer.NewPoolTransformer(sqsKeepers, defaultUSDCUOSMOPoolID)
