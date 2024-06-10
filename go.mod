@@ -3,7 +3,7 @@ module github.com/osmosis-labs/osmosis/v25
 go 1.22.3
 
 require (
-	cosmossdk.io/api v0.7.4
+	cosmossdk.io/api v0.7.5
 	cosmossdk.io/client/v2 v2.0.0-beta.1
 	cosmossdk.io/core v0.12.0
 	cosmossdk.io/errors v1.0.1
@@ -14,7 +14,7 @@ require (
 	cosmossdk.io/x/circuit v0.1.1
 	cosmossdk.io/x/evidence v0.1.1
 	cosmossdk.io/x/tx v0.13.3
-	cosmossdk.io/x/upgrade v0.1.2
+	cosmossdk.io/x/upgrade v0.1.3
 	github.com/CosmWasm/wasmd v0.50.0
 	github.com/CosmWasm/wasmvm v1.5.2
 	github.com/cometbft/cometbft v0.38.7
