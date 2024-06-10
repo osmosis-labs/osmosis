@@ -306,6 +306,7 @@ func NewOsmosisApp(
 		sqsKeepers := domain.SQSIngestKeepers{
 			GammKeeper:         app.GAMMKeeper,
 			CosmWasmPoolKeeper: app.CosmwasmPoolKeeper,
+			WasmKeeper:         app.WasmKeeper,
 			BankKeeper:         app.BankKeeper,
 			ProtorevKeeper:     app.ProtoRevKeeper,
 			PoolManagerKeeper:  app.PoolManagerKeeper,
@@ -323,7 +324,7 @@ func NewOsmosisApp(
 		poolTracker := service.NewPoolTracker()
 
 		// Create write listeners for the SQS service.
-		writeListeners, storeKeyMap := getSQSServiceWriteListeners(app, appCodec, poolTracker)
+		writeListeners, storeKeyMap := getSQSServiceWriteListeners(app, appCodec, poolTracker, app.WasmKeeper)
 
 		// Note: address can be moved to config in the future if needed.
 		rpcAddress, ok := appOpts.Get(rpcAddressConfigName).(string)
@@ -590,7 +591,7 @@ func NewOsmosisApp(
 }
 
 // getSQSServiceWriteListeners returns the write listeners for the app that are specific to the SQS service.
-func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker) (map[storetypes.StoreKey][]domain.WriteListener, map[string]storetypes.StoreKey) {
+func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker, wasmkeeper *wasmkeeper.Keeper) (map[storetypes.StoreKey][]domain.WriteListener, map[string]storetypes.StoreKey) {
 	writeListeners := make(map[storetypes.StoreKey][]domain.WriteListener)
 	storeKeyMap := make(map[string]storetypes.StoreKey)
 
@@ -601,7 +602,7 @@ func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoo
 		writelistener.NewGAMM(blockPoolUpdateTracker, appCodec),
 	}
 	writeListeners[app.GetKey(cosmwasmpooltypes.StoreKey)] = []domain.WriteListener{
-		writelistener.NewCosmwasmPool(blockPoolUpdateTracker),
+		writelistener.NewCosmwasmPool(blockPoolUpdateTracker, wasmkeeper),
 	}
 	writeListeners[app.GetKey(banktypes.StoreKey)] = []domain.WriteListener{
 		writelistener.NewCosmwasmPoolBalance(blockPoolUpdateTracker),
