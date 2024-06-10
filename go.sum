@@ -1746,6 +1746,7 @@ github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240520015414-d958d4441808 h1:hzIn
 github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240520015414-d958d4441808/go.mod h1:wHS976L+EfqmcT3JyZGfXVJRaEMfnTqN5Ya0Yfn5qf4=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
+<<<<<<< HEAD
 github.com/osmosis-labs/osmosis/osmomath v0.0.13 h1:BqOlG9SxHn8D4RmCbeF4Cg4/2FUobFe+QNxflRTM4QA=
 github.com/osmosis-labs/osmosis/osmomath v0.0.13/go.mod h1:eEvmkFLKy1h+EKTr2rhFpmLu4solO3XG0jZt10VSCSI=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.13 h1:+9EGL5dSL6JH2AD1TiJ+zhkqcwhtg8hPzAPvcjSpQeU=
@@ -1765,6 +1766,18 @@ github.com/otiai10/curr v0.0.0-20150429015615-9b4961190c95/go.mod h1:9qAhocn7zKJ
 github.com/otiai10/curr v1.0.0/go.mod h1:LskTG5wDwr8Rs+nNQ+1LlxRjAtTZZjtJW4rMXl6j4vs=
 github.com/otiai10/mint v1.3.0/go.mod h1:F5AjcsTsWUqX+Na9fpHb52P8pcRX2CI6A3ctIT91xUo=
 github.com/otiai10/mint v1.3.1/go.mod h1:/yxELlJQ0ufhjUwhshSj+wFjZ78CnZ48/1wtmBH1OTc=
+=======
+github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240517165907-1625703bc16d h1:Wbf/4tR1ibsQWiBPBcAKS54eipmKGoC2bFp9rxxhnQQ=
+github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240517165907-1625703bc16d/go.mod h1:dztmzd8WPUjybmWJ0lj8aarBWvGC6IumV2gjpZNRQeQ=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240517165907-1625703bc16d h1:Li/X5jkq9jYBFAGYAeMmmo1BzrlxzgShwEsJgDK2jbw=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240517165907-1625703bc16d/go.mod h1:qcN+nYbl9Q6hGC7HsvORDKCYrX22PrNw7Y/9t55dBaM=
+github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240517165907-1625703bc16d h1:4LZdvTA+BdWWakwa0VA4ZXBNVEsFbiMUhHwl/WwyBN4=
+github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240517165907-1625703bc16d/go.mod h1:SgzJ247NQ6lDDXCHiTKjaq713TSedVQTLgB4E+zGbhg=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240517165907-1625703bc16d h1:NNjrEQ2TCF26WLn0zGzr/xptXyz4sVgrfYamWY69W1Q=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240517165907-1625703bc16d/go.mod h1:2yjCTFE7+dr2i/meQUPS4Rs5LskIDb5d8c4lePKhmxA=
+github.com/osmosis-labs/sqs/sqsdomain v0.18.4-0.20240606185034-267d0e5b17a6 h1:ptR8jCIFTWdp2dbGtUR6hqG0Z2jnT5Zvnb1OxgbE5r8=
+github.com/osmosis-labs/sqs/sqsdomain v0.18.4-0.20240606185034-267d0e5b17a6/go.mod h1:iAVSzNeuwApFY4nkPODGLp9dingcnUUh4FVSrfPIknY=
+>>>>>>> e63b29c6 (SQS ingester for alloy transmuter (#8291))
 github.com/pact-foundation/pact-go v1.0.4/go.mod h1:uExwJY4kCzNPcHRj+hCR/HBbOOIwwtUjcrb0b5/5kLM=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pascaldekloe/goe v0.1.0 h1:cBOtyMzM9HTpWjXfbbunk26uA6nG3a8n06Wieeh0MwY=

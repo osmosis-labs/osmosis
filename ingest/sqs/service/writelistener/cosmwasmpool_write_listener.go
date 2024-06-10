@@ -8,6 +8,8 @@ import (
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	cosmwasmpoolmodel "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/model"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
@@ -18,11 +20,17 @@ var _ storetypes.WriteListener = (*cosmwasmPoolWriteListener)(nil)
 
 type cosmwasmPoolWriteListener struct {
 	poolTracker domain.BlockPoolUpdateTracker
+	wasmkeeper  *wasmkeeper.Keeper
 }
 
+<<<<<<< HEAD
 func NewCosmwasmPool(poolTracker domain.BlockPoolUpdateTracker) storetypes.WriteListener {
+=======
+func NewCosmwasmPool(poolTracker domain.BlockPoolUpdateTracker, wasmkeeper *wasmkeeper.Keeper) *cosmwasmPoolWriteListener {
+>>>>>>> e63b29c6 (SQS ingester for alloy transmuter (#8291))
 	return &cosmwasmPoolWriteListener{
 		poolTracker: poolTracker,
+		wasmkeeper:  wasmkeeper,
 	}
 }
 
@@ -32,9 +40,14 @@ func NewCosmwasmPool(poolTracker domain.BlockPoolUpdateTracker) storetypes.Write
 func (s *cosmwasmPoolWriteListener) OnWrite(storeKey storetypes.StoreKey, key []byte, value []byte, delete bool) error {
 	// Track the cwPool that was just created/migrated
 	if len(key) > 0 && bytes.Equal(cosmwasmpooltypes.PoolsKey, key[:1]) {
-		var pool cosmwasmpoolmodel.CosmWasmPool
-		if err := pool.Unmarshal(value); err != nil {
+		var cosmWasmPool cosmwasmpoolmodel.CosmWasmPool
+		if err := cosmWasmPool.Unmarshal(value); err != nil {
 			return err
+		}
+
+		pool := cosmwasmpoolmodel.Pool{
+			CosmWasmPool: cosmWasmPool,
+			WasmKeeper:   s.wasmkeeper,
 		}
 
 		s.poolTracker.TrackCosmWasm(&pool)

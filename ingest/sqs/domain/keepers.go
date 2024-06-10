@@ -14,6 +14,7 @@ import (
 type SQSIngestKeepers struct {
 	GammKeeper         PoolKeeper
 	CosmWasmPoolKeeper CosmWasmPoolKeeper
+	WasmKeeper         WasmKeeper
 	BankKeeper         BankKeeper
 	ProtorevKeeper     ProtorevKeeper
 	PoolManagerKeeper  PoolManagerKeeper
@@ -28,6 +29,12 @@ type PoolKeeper interface {
 // CosmWasmPoolKeeper is an interface for getting CosmWasm pools from a keeper.
 type CosmWasmPoolKeeper interface {
 	GetPoolsWithWasmKeeper(ctx sdk.Context) ([]poolmanagertypes.PoolI, error)
+}
+
+// WasmKeeper is an interface for querying CosmWasm contract.
+type WasmKeeper interface {
+	QueryRaw(ctx context.Context, contractAddress sdk.AccAddress, key []byte) []byte
+	QuerySmart(ctx context.Context, contractAddress sdk.AccAddress, req []byte) ([]byte, error)
 }
 
 // BankKeeper is an interface for getting bank balances.
