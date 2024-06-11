@@ -97,7 +97,8 @@ func (ad AuthenticatorPostDecorator) PostHandle(
 		}
 
 		// We skip replay protection here as it was already checked on authenticate.
-		// TODO: We probably want to avoid calling this function again. Can we keep this in cache? maybe in transient store?
+		// TODO: Cache the authenticationRequest in the AnteHandler and reuse here.
+		// https://github.com/osmosis-labs/osmosis/issues/8371
 		authenticationRequest, err := authenticator.GenerateAuthenticationRequest(
 			ctx,
 			ad.cdc,
