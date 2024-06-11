@@ -126,6 +126,9 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	// tracks are used to make sure that we only write to the store after every message is successful
 	var tracks []func() error
 
+	// feesPaid is used to track when fee have been paid, this is to avoid the fee payer being charged twice
+	feesPaid := false
+
 	// Authenticate the accounts of all messages
 	for msgIndex, msg := range msgs {
 		signers, _, err := ad.cdc.GetMsgV1Signers(msg)
@@ -187,7 +190,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		// If authentication is successful, continue
 		if authErr == nil {
 			// Once the fee payer is authenticated, we can set the gas limit to its original value
-			if account.Equals(feePayer) {
+			if !feesPaid && account.Equals(feePayer) {
 				originalGasMeter.ConsumeGas(payerGasMeter.GasConsumed(), "fee payer gas")
 
 				// Once the fee payer is authenticated, we can deduct the fee.
@@ -208,6 +211,9 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 				// Reset the gas meter
 				ctx = ctx.WithGasMeter(originalGasMeter)
+
+				// Set the feesPaid variable to true
+				feesPaid = true
 			}
 
 			// Append the track closure to be called after every message is authenticated
