@@ -1,6 +1,7 @@
 package poolstransformer
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sort"
@@ -33,6 +34,7 @@ type poolTransformer struct {
 	gammKeeper         domain.PoolKeeper
 	concentratedKeeper domain.ConcentratedKeeper
 	cosmWasmKeeper     domain.CosmWasmPoolKeeper
+	wasmKeeper         domain.WasmKeeper
 	bankKeeper         domain.BankKeeper
 	protorevKeeper     domain.ProtorevKeeper
 	poolManagerKeeper  domain.PoolManagerKeeper
@@ -55,11 +57,12 @@ const (
 	// nolint: unused
 	routeIngestDisablePlaceholder = 0
 
-	usdcDenom   = "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4"
-	stATOMDenom = "ibc/C140AFD542AE77BD7DCC83F13FDD8C5E5BB8C4929785E6EC2F4C636F98F17901"
-	atomDenom   = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
-	usdtDenom   = "ibc/2108F2D81CBE328F371AD0CEF56691B18A86E08C3651504E42487D9EE92DDE9C"
-	oneOSMO     = 1_000_000
+	usdcDenom       = "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4"
+	stATOMDenom     = "ibc/C140AFD542AE77BD7DCC83F13FDD8C5E5BB8C4929785E6EC2F4C636F98F17901"
+	atomDenom       = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
+	usdtDenom       = "ibc/2108F2D81CBE328F371AD0CEF56691B18A86E08C3651504E42487D9EE92DDE9C"
+	oneOSMO         = 1_000_000
+	contractInfoKey = "contract_info"
 )
 
 var (
@@ -105,6 +108,7 @@ func NewPoolTransformer(keepers domain.SQSIngestKeepers, defaultUSDCUOSMOPoolID 
 		gammKeeper:         keepers.GammKeeper,
 		concentratedKeeper: keepers.ConcentratedKeeper,
 		cosmWasmKeeper:     keepers.CosmWasmPoolKeeper,
+		wasmKeeper:         keepers.WasmKeeper,
 		bankKeeper:         keepers.BankKeeper,
 		protorevKeeper:     keepers.ProtorevKeeper,
 		poolManagerKeeper:  keepers.PoolManagerKeeper,
@@ -191,6 +195,20 @@ func (pi *poolTransformer) convertPool(
 	}()
 
 	balances := pi.bankKeeper.GetAllBalances(ctx, pool.GetAddress())
+
+	// Convert pool denoms to map for faster lookup.
+	poolDenomsMap := getPoolDenomsMap(pool.GetPoolDenoms(ctx))
+
+	spreadFactor := pool.GetSpreadFactor(ctx)
+
+	// Get pool denoms. Although these can be inferred from balances, this is safer.
+	// If we used balances, for pools with no liquidity, we would not be able to get the denoms.
+	denoms, err := pi.poolManagerKeeper.RouteGetPoolDenoms(ctx, pool.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	var cosmWasmPoolModel *sqsdomain.CosmWasmPoolModel
 	if pool.GetType() == poolmanagertypes.CosmWasm {
 		cwPool, ok := pool.(cosmwasmpooltypes.CosmWasmExtension)
 		if !ok {
@@ -198,12 +216,24 @@ func (pi *poolTransformer) convertPool(
 		}
 
 		balances = cwPool.GetTotalPoolLiquidity(ctx)
+
+		// This must never happen, but if it does, and there is no checks, the query will fail silently.
+		// We make sure to return an error here.
+		if pi.wasmKeeper == nil {
+			return nil, fmt.Errorf("pool (%d) with type (%d) requires `poolTransformer` to have `wasmKeeper` but got `nil`", pool.GetId(), pool.GetType())
+		}
+
+		initedCosmWasmPoolModel := pi.initCosmWasmPoolModel(ctx, pool)
+		cosmWasmPoolModel = &initedCosmWasmPoolModel
+
+		// special transformation based on different cw pool
+		if cosmWasmPoolModel.IsAlloyTransmuter() {
+			err = pi.updateAlloyTransmuterInfo(ctx, pool.GetId(), pool.GetAddress(), cosmWasmPoolModel, &denoms)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
-
-	// Convert pool denoms to map for faster lookup.
-	poolDenomsMap := getPoolDenomsMap(pool.GetPoolDenoms(ctx))
-
-	spreadFactor := pool.GetSpreadFactor(ctx)
 
 	// Note that this must follow the call to GetPoolDenoms() and GetSpreadFactor.
 	// Otherwise, the CosmWasmPool model panics.
@@ -220,13 +250,6 @@ func (pi *poolTransformer) convertPool(
 
 	// Join error strings for pool liquidity cap.
 	poolLiquidityCapErrorStr = strings.Join([]string{poolLiquidityCapErrorStr, poolLiquidityCapUSDCErrorStr}, " ")
-
-	// Get pool denoms. Although these can be inferred from balances, this is safer.
-	// If we used balances, for pools with no liquidity, we would not be able to get the denoms.
-	denoms, err := pi.poolManagerKeeper.RouteGetPoolDenoms(ctx, pool.GetId())
-	if err != nil {
-		return nil, err
-	}
 
 	// Sort denoms for consistent ordering.
 	sort.Strings(denoms)
@@ -271,6 +294,7 @@ func (pi *poolTransformer) convertPool(
 			Balances:              filteredBalances,
 			PoolDenoms:            denoms,
 			SpreadFactor:          spreadFactor,
+			CosmWasmPoolModel:     cosmWasmPoolModel,
 		},
 		TickModel: tickModel,
 	}, nil
@@ -429,4 +453,44 @@ func (pi *poolTransformer) computeUSDCPoolLiquidityCapFromUOSMO(ctx sdk.Context,
 	}
 
 	return poolLiquidityCapUOSMO, noPoolLiquidityCapError
+}
+
+// queryContractInfo queries the cw2 contract info from the given contract address.
+func (pi *poolTransformer) queryContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) (sqsdomain.ContractInfo, error) {
+	bz := pi.wasmKeeper.QueryRaw(ctx, contractAddress, []byte(contractInfoKey))
+	if len(bz) == 0 {
+		return sqsdomain.ContractInfo{}, fmt.Errorf("contract info not found: %s", contractAddress)
+	} else {
+		var contractInfo sqsdomain.ContractInfo
+		if err := json.Unmarshal(bz, &contractInfo); err != nil {
+			return sqsdomain.ContractInfo{}, fmt.Errorf("error unmarshalling contract info: %w", err)
+		} else {
+			return contractInfo, nil
+		}
+	}
+}
+
+// initCosmWasmPoolModel initialize the CosmWasmPoolModel with the contract info of the given pool.
+// If the contract info is not found, it logs the error and continues since it's not required for the pool to conform cw2.
+func (pi *poolTransformer) initCosmWasmPoolModel(
+	ctx sdk.Context,
+	pool poolmanagertypes.PoolI,
+) sqsdomain.CosmWasmPoolModel {
+	contractInfo, err := pi.queryContractInfo(ctx, pool.GetAddress())
+	if err != nil {
+		// only log since cw pool contracts are not required to conform cw2
+		ctx.Logger().Info(
+			"CosmWasm pool does not conform cw2",
+			"pool_id", pool.GetId(),
+			"contract_address", pool.GetAddress(),
+			"err", err.Error(),
+		)
+
+		return sqsdomain.CosmWasmPoolModel{}
+	} else {
+		// initialize the CosmWasmPoolModel with the contract info
+		return sqsdomain.CosmWasmPoolModel{
+			ContractInfo: contractInfo,
+		}
+	}
 }
