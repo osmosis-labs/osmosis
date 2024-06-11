@@ -105,9 +105,8 @@ func (k Keeper) GetSelectedAuthenticatorData(
 	return authenticatorFromStore, nil
 }
 
-// GetInitializedAuthenticatorForAccount returns a single authenticator for the account
-// this function relies in GetSelectedAuthenticatorData, this function calls
-// Initialize on the specific authenticator
+// GetInitializedAuthenticatorForAccount returns a single authenticator for the account this function relies in GetSelectedAuthenticatorData,
+// and calls initialize on the specific authenticator after fetching it from the store
 func (k Keeper) GetInitializedAuthenticatorForAccount(
 	ctx sdk.Context,
 	account sdk.AccAddress,
