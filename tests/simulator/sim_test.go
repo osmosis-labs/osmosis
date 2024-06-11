@@ -25,7 +25,8 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	fullAppSimulation(b, false)
 }
 
-// UNFORKINGNOTE: Disabling simulator for now as discussed
+// TODO: Disabling simulator for now as discussed, stopped working after v0.47 upgrade.
+// SDK team is working on a more user friendly simulation package AFAIK.
 // func TestFullAppSimulation(t *testing.T) {
 // 	// -Enabled=true -NumBlocks=1000 -BlockSize=200 \
 // 	// -Period=1 -Commit=true -Seed=57 -v -timeout 24h
@@ -72,7 +73,8 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 	}
 }
 
-// UNFORKINGNOTE: Disabling simulator for now as discussed
+// TODO: Disabling simulator for now as discussed, stopped working after v0.47 upgrade.
+// SDK team is working on a more user friendly simulation package AFAIK.
 //
 // // TODO: Make another test for the fuzzer itself, which just has noOp txs
 // // and doesn't depend on the application.
