@@ -3,7 +3,6 @@ package keeper
 import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting/assets"
 	appParams "github.com/osmosis-labs/osmosis/v23/app/params"
 
 	"github.com/osmosis-labs/osmosis/v23/x/market/types"
@@ -20,15 +19,8 @@ func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string
 	if offerCoin.Denom == askDenom {
 		return sdk.DecCoin{}, sdk.ZeroDec(), errorsmod.Wrap(types.ErrRecursiveSwap, askDenom)
 	}
-
-	// Swap offer coin to base denom for simplicity of swap process
-	baseOfferDecCoin, err := k.ComputeInternalSwap(ctx, sdk.NewDecCoinFromCoin(offerCoin), assets.MicroSDRDenom)
-	if err != nil {
-		return sdk.DecCoin{}, sdk.Dec{}, err
-	}
-
 	// Get swap amount based on the oracle price
-	retDecCoin, err = k.ComputeInternalSwap(ctx, baseOfferDecCoin, askDenom)
+	retDecCoin, err = k.ComputeInternalSwap(ctx, sdk.NewDecCoinFromCoin(offerCoin), askDenom)
 	if err != nil {
 		return sdk.DecCoin{}, sdk.Dec{}, err
 	}
