@@ -512,9 +512,14 @@ func NewSetDenomPairTakerFeeCmd() *cobra.Command {
 
 Passing in set-denom-pair-taker-fee separated by commas would be parsed automatically to pairs of denomPairTakerFee records.
 Ex) set-denom-pair-taker-fee uion,uosmo,0.0016,stake,uosmo,0.005,uatom,uosmo,0.0015 ->
-[uion<>uosmo, takerFee 0.16%]
-[stake<>uosmo, takerFee 0.5%]
-[uatom<>uosmo, removes from state since its being set to the default takerFee value]
+
+[uion->uosmo, takerFee 0.16%]
+[stake->uosmo, takerFee 0.5%]
+[uatom->uosmo, removes from state since its being set to the default takerFee value]
+
+NOTE: Denom pair taker fees are now uni-directional, so if you want a new taker fee to be charged in both directions, you need to set two records.
+In other words, to set a taker fee for uosmo<->uion, you need to set it as follows:
+set-denom-pair-taker-fee uosmo,uion,0.0016,uion,uosmo,0.0016
 
 		`),
 		Args: cobra.ExactArgs(1),
@@ -582,14 +587,14 @@ func ParseDenomPairTakerFee(arg string) ([]types.DenomPairTakerFee, error) {
 	denomPairTakerFeeRecords := strings.Split(arg, ",")
 
 	if len(denomPairTakerFeeRecords)%3 != 0 {
-		return nil, fmt.Errorf("denomPairTakerFeeRecords must be a list of denom0, denom1, and takerFee separated by commas")
+		return nil, fmt.Errorf("denomPairTakerFeeRecords must be a list of tokenInDenom, tokenOutDenom, and takerFee separated by commas")
 	}
 
 	finaldenomPairTakerFeeRecordsRecords := []types.DenomPairTakerFee{}
 	i := 0
 	for i < len(denomPairTakerFeeRecords) {
-		denom0 := denomPairTakerFeeRecords[i]
-		denom1 := denomPairTakerFeeRecords[i+1]
+		tokenInDenom := denomPairTakerFeeRecords[i]
+		tokenOutDenom := denomPairTakerFeeRecords[i+1]
 
 		takerFeeStr := denomPairTakerFeeRecords[i+2]
 		takerFee, err := osmomath.NewDecFromStr(takerFeeStr)
@@ -598,9 +603,9 @@ func ParseDenomPairTakerFee(arg string) ([]types.DenomPairTakerFee, error) {
 		}
 
 		finaldenomPairTakerFeeRecordsRecords = append(finaldenomPairTakerFeeRecordsRecords, types.DenomPairTakerFee{
-			Denom0:   denom0,
-			Denom1:   denom1,
-			TakerFee: takerFee,
+			TokenInDenom:  tokenInDenom,
+			TokenOutDenom: tokenOutDenom,
+			TakerFee:      takerFee,
 		})
 
 		// increase counter by the next 3

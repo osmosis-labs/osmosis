@@ -80,9 +80,10 @@ func (k Keeper) SenderValidationSetDenomPairTakerFee(ctx sdk.Context, sender, de
 
 // GetTradingPairTakerFee returns the taker fee for the given trading pair.
 // If the trading pair does not exist, it returns the default taker fee.
-func (k Keeper) GetTradingPairTakerFee(ctx sdk.Context, denom0, denom1 string) (osmomath.Dec, error) {
+// The order of the trading pair matters.
+func (k Keeper) GetTradingPairTakerFee(ctx sdk.Context, tokenInDenom, tokenOutDenom string) (osmomath.Dec, error) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.FormatDenomTradePairKey(denom0, denom1)
+	key := types.FormatDenomTradePairKey(tokenInDenom, tokenOutDenom)
 
 	takerFee := &sdk.DecProto{}
 	found, err := osmoutils.Get(store, key, takerFee)
@@ -106,14 +107,14 @@ func (k Keeper) GetAllTradingPairTakerFees(ctx sdk.Context) ([]types.DenomPairTa
 	for ; iterator.Valid(); iterator.Next() {
 		takerFee := &sdk.DecProto{}
 		osmoutils.MustGet(store, iterator.Key(), takerFee)
-		denom0, denom1, err := types.ParseDenomTradePairKey(iterator.Key())
+		tokenInDenom, tokenOutDenom, err := types.ParseDenomTradePairKey(iterator.Key())
 		if err != nil {
 			return nil, err
 		}
 		takerFees = append(takerFees, types.DenomPairTakerFee{
-			Denom0:   denom0,
-			Denom1:   denom1,
-			TakerFee: takerFee.Dec,
+			TokenInDenom:  tokenInDenom,
+			TokenOutDenom: tokenOutDenom,
+			TakerFee:      takerFee.Dec,
 		})
 	}
 

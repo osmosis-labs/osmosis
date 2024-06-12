@@ -24,6 +24,9 @@ const (
 	AttributeKeyAuthenticatorId   = "authenticator_id"
 
 	AtrributeKeyIsSmartAccountActive = "is_smart_account_active"
+
+	AttributeKeyAccountSequenceAuthenticator = "authenticator_acc_seq"
+	AttributeKeySignatureAuthenticator       = "authenticator_signature"
 )
 
 var (

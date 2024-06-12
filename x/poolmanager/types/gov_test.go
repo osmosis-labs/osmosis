@@ -14,19 +14,24 @@ import (
 func TestDenomPairTakerFeeProposalMarshalUnmarshal(t *testing.T) {
 	records := []types.DenomPairTakerFee{
 		{
-			Denom0:   "uion",
-			Denom1:   appparams.BaseCoinUnit,
-			TakerFee: osmomath.MustNewDecFromStr("0.0013"),
+			TokenInDenom:  "uion",
+			TokenOutDenom: appparams.BaseCoinUnit,
+			TakerFee:      osmomath.MustNewDecFromStr("0.0013"),
 		},
 		{
-			Denom0:   "stake",
-			Denom1:   appparams.BaseCoinUnit,
-			TakerFee: osmomath.MustNewDecFromStr("0.0016"),
+			TokenInDenom:  appparams.BaseCoinUnit,
+			TokenOutDenom: "uion",
+			TakerFee:      osmomath.MustNewDecFromStr("0.0013"),
 		},
 		{
-			Denom0:   "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
-			Denom1:   appparams.BaseCoinUnit,
-			TakerFee: osmomath.MustNewDecFromStr("0.0017"),
+			TokenInDenom:  "stake",
+			TokenOutDenom: appparams.BaseCoinUnit,
+			TakerFee:      osmomath.MustNewDecFromStr("0.0016"),
+		},
+		{
+			TokenInDenom:  "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
+			TokenOutDenom: appparams.BaseCoinUnit,
+			TakerFee:      osmomath.MustNewDecFromStr("0.0017"),
 		},
 	}
 
@@ -66,23 +71,23 @@ func TestDenomPairTakerFeeProposalMarshalUnmarshal(t *testing.T) {
 
 func TestDenomPairTakerFeeProposal_ValidateBasic(t *testing.T) {
 	baseRecord := types.DenomPairTakerFee{
-		Denom0:   "uion",
-		Denom1:   appparams.BaseCoinUnit,
-		TakerFee: osmomath.MustNewDecFromStr("0.0013"),
+		TokenInDenom:  "uion",
+		TokenOutDenom: appparams.BaseCoinUnit,
+		TakerFee:      osmomath.MustNewDecFromStr("0.0013"),
 	}
 
 	withSameDenom := func(record types.DenomPairTakerFee) types.DenomPairTakerFee {
-		record.Denom1 = record.Denom0
+		record.TokenOutDenom = record.TokenInDenom
 		return record
 	}
 
-	withInvalidDenom0 := func(record types.DenomPairTakerFee) types.DenomPairTakerFee {
-		record.Denom0 = "0"
+	withInvalidTokenInDenom := func(record types.DenomPairTakerFee) types.DenomPairTakerFee {
+		record.TokenInDenom = "0"
 		return record
 	}
 
-	withInvalidDenom1 := func(record types.DenomPairTakerFee) types.DenomPairTakerFee {
-		record.Denom1 = "1"
+	withInvalidTokenOutDenom := func(record types.DenomPairTakerFee) types.DenomPairTakerFee {
+		record.TokenOutDenom = "1"
 		return record
 	}
 
@@ -112,13 +117,13 @@ func TestDenomPairTakerFeeProposal_ValidateBasic(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name:       "invalid denom0",
-			modifyFunc: withInvalidDenom0,
+			name:       "invalid TokenInDenom",
+			modifyFunc: withInvalidTokenInDenom,
 			expectPass: false,
 		},
 		{
-			name:       "invalid denom1",
-			modifyFunc: withInvalidDenom1,
+			name:       "invalid TokenOutDenom",
+			modifyFunc: withInvalidTokenOutDenom,
 			expectPass: false,
 		},
 		{

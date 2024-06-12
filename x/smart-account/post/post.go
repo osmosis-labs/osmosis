@@ -97,7 +97,8 @@ func (ad AuthenticatorPostDecorator) PostHandle(
 		}
 
 		// We skip replay protection here as it was already checked on authenticate.
-		// TODO: We probably want to avoid calling this function again. Can we keep this in cache? maybe in transient store?
+		// TODO: Cache the authenticationRequest in the AnteHandler and reuse here.
+		// https://github.com/osmosis-labs/osmosis/issues/8371
 		authenticationRequest, err := authenticator.GenerateAuthenticationRequest(
 			ctx,
 			ad.cdc,
@@ -124,7 +125,7 @@ func (ad AuthenticatorPostDecorator) PostHandle(
 		err = selectedAuthenticator.Authenticator.ConfirmExecution(ctx, authenticationRequest)
 		if err != nil {
 			return sdk.Context{},
-				errorsmod.Wrapf(err, "execution blocked by authenticator (account = %s, authenticator id = %d, msg index = %d, msg type url = %s)", account, selectedAuthenticator.Id, msgIndex, sdk.MsgTypeURL(msg))
+				errorsmod.Wrapf(err, "execution blocked by authenticator (account = %s, authenticator id = %d, msg index = %d, msg type url = %s)", account, selectedAuthenticatorId, msgIndex, sdk.MsgTypeURL(msg))
 		}
 
 		success = err == nil
