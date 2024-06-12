@@ -44,17 +44,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
-* [#8169](https://github.com/osmosis-labs/osmosis/pull/8169) Support non-pool assets in superfluid staking
+* [#8169](https://github.com/osmosis-labs/osmosis/pull/8169) [#8250](https://github.com/osmosis-labs/osmosis/pull/8250) [#8276](https://github.com/osmosis-labs/osmosis/pull/8276) [#8320](https://github.com/osmosis-labs/osmosis/pull/8320) Support non-pool assets in superfluid staking.
 * [#8274](https://github.com/osmosis-labs/osmosis/pull/8274) SDK v50 and Comet v0.38 upgrade
 * [#8310](https://github.com/osmosis-labs/osmosis/pull/8310) Taker fee share
+* [#8344](https://github.com/osmosis-labs/osmosis/pull/8344) Uni-directional trading pair taker fee overrides
+* [#8355](https://github.com/osmosis-labs/osmosis/pull/8355) [smartaccount] fix: fee payer charged on every message
 
 ### State Compatible
 
 ## v25.0.3
 
+* [#8329](https://github.com/osmosis-labs/osmosis/pull/8329) Overwrite `flush_throttle_timeout` to 80ms instead of 10ms
+
+## v25.0.2
+
 ### Osmosis
 
 * [#8312](https://github.com/osmosis-labs/osmosis/pull/8312) Overwrite `flush_throttle_timeout` and `peer_gossip_sleep_duration` to 10ms and 50ms respectively
+* [#8308](https://github.com/osmosis-labs/osmosis/pull/8308) Remove IBC rate limit and wasm hook times from mempool checkTx's
 
 ### CometBFT
 
@@ -63,12 +70,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#75](https://github.com/osmosis-labs/cometbft/pull/75) perf(p2p): 4% speedup to readMsg by removing one allocation
 * [#76](https://github.com/osmosis-labs/cometbft/pull/76) perf(consensus): Add LRU caches for blockstore operations used in gossip
 * [#77](https://github.com/osmosis-labs/cometbft/pull/77) perf(consensus): Make every gossip thread use its own randomness instance, reducing mutex contention
-
-## v25.0.2
-
-### Osmosis
-
-* [#8308](https://github.com/osmosis-labs/osmosis/pull/8308) Remove IBC rate limit and wasm hook times from mempool checkTx's
 
 ## v25.0.1
 

@@ -19,6 +19,7 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 	balancertypes "github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
 	minttypes "github.com/osmosis-labs/osmosis/v25/x/mint/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v25/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
 )
@@ -207,9 +208,35 @@ func (s *TestSuite) TestGammSuperfluid() {
 	remainingGammTokens := s.App.BankKeeper.GetBalance(s.Ctx, lpAddr, gammToken)
 	s.Require().Equal(totalGammTokens.Amount.Sub(gammDelegationAmount), remainingGammTokens.Amount)
 
+	queryDelegations := types.SuperfluidDelegationsByDelegatorRequest{DelegatorAddress: lpAddr.String()}
+	querier := keeper.NewQuerier(*s.App.SuperfluidKeeper)
+	res, err := querier.SuperfluidDelegationsByDelegator(s.Ctx, &queryDelegations)
+	s.Require().NoError(err)
+	s.Require().Len(res.SuperfluidDelegationRecords, 1)
+	s.Require().Equal(lpAddr.String(), res.SuperfluidDelegationRecords[0].DelegatorAddress)
+	s.Require().Equal(validator.GetOperator(), res.SuperfluidDelegationRecords[0].ValidatorAddress)
+	s.Require().Equal(gammToken, res.SuperfluidDelegationRecords[0].DelegationAmount.Denom)
+	s.Require().Equal(gammDelegationAmount, res.SuperfluidDelegationRecords[0].DelegationAmount.Amount)
+	s.Require().Equal(appparams.BaseCoinUnit, res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Denom)
+	riskFactor := s.App.SuperfluidKeeper.CalculateRiskFactor(s.Ctx, gammToken)
+	multiplier := s.App.SuperfluidKeeper.GetOsmoEquivalentMultiplier(s.Ctx, gammToken)
+	equivalentAmount := riskFactor.Mul(osmomath.NewDec(gammDelegationAmount.Int64())).Mul(multiplier)
+	fmt.Println("riskFactor", riskFactor)
+	fmt.Println("equivalentAmount", equivalentAmount)
+	fmt.Println("res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Amount", res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Amount)
+	fmt.Println("res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Amount.Int64()", res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Amount.Int64())
+	s.Require().Equal(equivalentAmount, osmomath.NewDec(res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Amount.Int64()))
+	s.Require().Equal(appparams.BaseCoinUnit, res.TotalEquivalentStakedAmount.Denom)
+	s.Require().Equal(equivalentAmount, osmomath.NewDec(res.TotalEquivalentStakedAmount.Amount.Int64()))
+	s.Require().Equal(appparams.BaseCoinUnit, res.TotalEquivalentNonOsmoStakedAmount.Denom)
+	s.Require().Equal(osmomath.NewDec(0), osmomath.NewDec(res.TotalEquivalentNonOsmoStakedAmount.Amount.Int64()))
+
 	////////
 	// TEST: Reward distribution
 	////////
+
+	// move time beyond the needed time for rewards to be distributed
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(49 * time.Hour))
 
 	// Check that the user has not received any rewards yet
 	bondDenomBalance := s.App.BankKeeper.GetBalance(s.Ctx, lpAddr, bondDenom)
@@ -238,12 +265,20 @@ func (s *TestSuite) TestGammSuperfluid() {
 		},
 		validatorRewards)
 	s.Require().NoError(err)
-	s.Require().Equal(1, len(validatorRewards.Rewards.Rewards))
-	// After unstaking we will check that those rewards were properly distributed to the delegator
+	s.Require().Equal(2, len(validatorRewards.Rewards.Rewards))
+
+	////////
+	// TEST:  Check delegation rewards were distributed
+	////////
+	bondDenomBalance = s.App.BankKeeper.GetBalance(s.Ctx, lpAddr, bondDenom)
+	s.Require().True(bondDenomBalance.Amount.GT(originalBondDenomBalance))
 
 	////////
 	// TEST: Voting. User can vote
 	////////
+
+	// Reset the voting period
+	s.App.GovKeeper.ActivateVotingPeriod(s.Ctx, s.proposal)
 
 	// check user can vote
 	voteMsg := &govtypes.MsgVote{
@@ -278,9 +313,8 @@ func (s *TestSuite) TestGammSuperfluid() {
 	s.Require().NoError(err)
 
 	// Check delegations
-	querier := keeper.NewQuerier(*s.App.SuperfluidKeeper)
-	queryDelegations := types.SuperfluidDelegationsByDelegatorRequest{DelegatorAddress: lpAddr.String()}
-	res, err := querier.SuperfluidDelegationsByDelegator(s.Ctx, &queryDelegations)
+	queryDelegations = types.SuperfluidDelegationsByDelegatorRequest{DelegatorAddress: lpAddr.String()}
+	res, err = querier.SuperfluidDelegationsByDelegator(s.Ctx, &queryDelegations)
 	s.Require().NoError(err)
 	s.Require().Len(res.SuperfluidDelegationRecords, 0)
 
@@ -306,12 +340,6 @@ func (s *TestSuite) TestGammSuperfluid() {
 	// check pool token balance after undelegation time passes. Should be back to original
 	balance = s.App.BankKeeper.GetBalance(s.Ctx, lpAddr, gammToken)
 	s.Require().Equal(totalGammTokens.Amount, balance.Amount)
-
-	////////
-	// TEST:  Check delegation rewards were distributed
-	////////
-	bondDenomBalance = s.App.BankKeeper.GetBalance(s.Ctx, lpAddr, bondDenom)
-	s.Require().True(bondDenomBalance.Amount.GT(originalBondDenomBalance))
 }
 
 func (s *TestSuite) TestNativeSuperfluid() {
@@ -320,6 +348,11 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	//
 
 	s.SetupTest()
+
+	// Set the mint denom to be osmo
+	params := s.App.MintKeeper.GetParams(s.Ctx)
+	params.MintDenom = appparams.BaseCoinUnit
+	s.App.MintKeeper.SetParams(s.Ctx, params)
 
 	// denoms
 	btcDenom := "factory/osmo1pfyxruwvtwk00y8z06dh2lqjdj82ldvy74wzm3/allBTC" // Asset to superfluid stake
@@ -365,12 +398,12 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	s.Require().Contains(err.Error(), "failed to get twap price")
 
 	// Creating a native type with a non-existing pool should fail
-	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{Denom: btcDenom, AssetType: types.SuperfluidAssetTypeNative, PricePoolId: nextPoolId + 10})
+	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{Denom: btcDenom, AssetType: types.SuperfluidAssetTypeNative, PriceRoute: []*poolmanagertypes.SwapAmountInRoute{{PoolId: nextPoolId + 10, TokenOutDenom: bondDenom}}})
 	s.Require().Error(err)
 	s.Require().Contains(err.Error(), "failed to get twap price")
 
 	// Add btcDenom as an allowed superfluid asset
-	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{Denom: btcDenom, AssetType: types.SuperfluidAssetTypeNative, PricePoolId: nextPoolId})
+	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{Denom: btcDenom, AssetType: types.SuperfluidAssetTypeNative, PriceRoute: []*poolmanagertypes.SwapAmountInRoute{{PoolId: nextPoolId, TokenOutDenom: bondDenom}}})
 	s.Require().NoError(err)
 
 	// Mint assets to the lockup module. This will ensure there are assets to distribute.
@@ -434,14 +467,24 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	s.Require().Equal(validator.GetOperator(), res.SuperfluidDelegationRecords[0].ValidatorAddress)
 	s.Require().Equal(btcDenom, res.SuperfluidDelegationRecords[0].DelegationAmount.Denom)
 	s.Require().Equal(btcStakeAmount, res.SuperfluidDelegationRecords[0].DelegationAmount.Amount)
-	s.Require().Equal("uosmo", res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Denom)
-	s.Require().Equal(osmomath.NewInt(0), res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Amount)
-	s.Require().Equal("uosmo", res.TotalEquivalentStakedAmount.Denom)
-	s.Require().Equal(osmomath.NewInt(0), res.TotalEquivalentStakedAmount.Amount)
+	s.Require().Equal(appparams.BaseCoinUnit, res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Denom)
+	riskFactor := s.App.SuperfluidKeeper.CalculateRiskFactor(s.Ctx, btcDenom)
+	twapStartTime := s.Ctx.BlockTime().Add(-5 * time.Minute)
+	price, err := s.App.TwapKeeper.UnsafeGetMultiPoolArithmeticTwapToNow(s.Ctx, []*poolmanagertypes.SwapAmountInRoute{{PoolId: nextPoolId, TokenOutDenom: bondDenom}}, btcDenom, bondDenom, twapStartTime)
+	equivalentAmount := riskFactor.Mul(osmomath.NewDec(btcStakeAmount.Int64())).Mul(price)
+	s.Require().NoError(err)
+	s.Require().Equal(equivalentAmount, osmomath.NewDec(res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Amount.Int64()))
+	s.Require().Equal(appparams.BaseCoinUnit, res.TotalEquivalentStakedAmount.Denom)
+	s.Require().Equal(equivalentAmount, osmomath.NewDec(res.TotalEquivalentStakedAmount.Amount.Int64()))
+	s.Require().Equal(appparams.BaseCoinUnit, res.TotalEquivalentNonOsmoStakedAmount.Denom)
+	s.Require().Equal(equivalentAmount, osmomath.NewDec(res.TotalEquivalentNonOsmoStakedAmount.Amount.Int64()))
 
 	//
 	// TEST: Reward distribution
 	//
+
+	// move time beyond the needed time for rewards to be distributed
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(44 * time.Hour))
 
 	// Check that the user has not received any rewards yet
 	bondDenomBalance := s.App.BankKeeper.GetBalance(s.Ctx, userAddr, bondDenom)
@@ -460,6 +503,7 @@ func (s *TestSuite) TestNativeSuperfluid() {
 
 	// Move to block 50 because rewards are only distributed every 50 blocks. Rewards will be available after unstaking
 	s.AdvanceToBlockNAndRunEpoch(50)
+	fmt.Println("time", s.Ctx.BlockTime())
 
 	// After a block that is not a multiple of 50, the rewards will be assigned to the validator
 	validatorRewards = new(distrtypes.QueryValidatorOutstandingRewardsResponse)
@@ -470,12 +514,21 @@ func (s *TestSuite) TestNativeSuperfluid() {
 		},
 		validatorRewards)
 	s.Require().NoError(err)
+	// Validators get uosmo
 	s.Require().Equal(1, len(validatorRewards.Rewards.Rewards))
-	// After unstaking we will check that those rewards were properly distributed to the delegator
+
+	////////
+	// TEST:  Check delegation rewards were distributed
+	////////
+	bondDenomBalance = s.App.BankKeeper.GetBalance(s.Ctx, userAddr, bondDenom)
+	s.Require().True(bondDenomBalance.Amount.GT(originalBondDenomBalance))
 
 	//
 	// TEST: Voting. Users should not be allowed to vote when superfluid staking native assets
 	//
+
+	// Reset the voting period
+	s.App.GovKeeper.ActivateVotingPeriod(s.Ctx, s.proposal)
 
 	// Send vote message
 	voteMsg := &govtypes.MsgVote{
@@ -524,7 +577,7 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	balance = s.App.BankKeeper.GetBalance(s.Ctx, userAddr, btcDenom)
 	s.Require().Equal(btcStakeAmount, balance.Amount)
 
-	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(undelegationResponse.SyntheticLocks[0].Duration + time.Second))
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(undelegationResponse.SyntheticLocks[0].Duration - time.Second))
 	// move forward to block 60 because we only check matured locks every 30 blocks
 	s.AdvanceToBlockNAndRunEpoch(60)
 
@@ -536,12 +589,6 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	// check the btc balance after undelegation time passes. Funds should be restored
 	balance = s.App.BankKeeper.GetBalance(s.Ctx, userAddr, btcDenom)
 	s.Require().Equal(totalBTCAmount, balance.Amount)
-
-	////////
-	// TEST:  Check delegation rewards were distributed
-	////////
-	bondDenomBalance = s.App.BankKeeper.GetBalance(s.Ctx, userAddr, bondDenom)
-	s.Require().True(bondDenomBalance.Amount.GT(originalBondDenomBalance))
 }
 
 func (s *TestSuite) AdvanceToBlockNAndRunEpoch(n int64) {

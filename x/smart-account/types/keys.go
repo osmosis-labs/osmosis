@@ -24,14 +24,20 @@ const (
 	AttributeKeyAuthenticatorId   = "authenticator_id"
 
 	AtrributeKeyIsSmartAccountActive = "is_smart_account_active"
+
+	AttributeKeyAccountSequenceAuthenticator = "authenticator_acc_seq"
+	AttributeKeySignatureAuthenticator       = "authenticator_signature"
 )
 
 var (
+	// Store prefix keys
 	KeyNextAccountAuthenticatorIdPrefix = []byte{0x01}
 	KeyAccountAuthenticatorsPrefix      = []byte{0x02}
-	KeyMaximumUnauthenticatedGas        = []byte("MaximumUnauthenticatedGas")
-	KeyIsSmartAccountActive             = []byte("IsSmartAccountActive")
-	KeyCircuitBreakerControllers        = []byte("CircuitBreakerControllers")
+
+	// Parameter keys
+	KeyMaximumUnauthenticatedGas = []byte("MaximumUnauthenticatedGas")
+	KeyIsSmartAccountActive      = []byte("IsSmartAccountActive")
+	KeyCircuitBreakerControllers = []byte("CircuitBreakerControllers")
 )
 
 func KeyAccount(account sdk.AccAddress) []byte {

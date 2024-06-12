@@ -518,9 +518,9 @@ Lets go through the lifecycle to better understand how taker fee works in a vari
 
 ### Example 1: Non OSMO taker fee
 
-A user makes a swap of USDC to OSMO. First, the protocol checks the KVStore to determine if the the denom pair has a taker fee override. If the pair exists in the KVStore, the taker fee override is used. If the pair does not exist, the defaultTakerFee is used.
+A user makes a swap of USDC to OSMO. First, the protocol checks the KVStore to determine if the the denom pair has a taker fee override. If the pair exists in the KVStore, the taker fee override is used. If the pair does not exist, the defaultTakerFee is used. It is important to note that the order of the denom pair now matters, so if a denom pair taker fee override exists for OSMO to USDC but not USDC to OSMO, the default taker fee will instead be used.
 
-In this example, defaultTakerFee is 0.02%. A USDC<>OSMO KVStore exists with an override of 0.01%. Therefore, 0.01% is used.
+In this example, defaultTakerFee is 0.02%. A USDC->OSMO KVStore exists with an override of 0.01%. Therefore, 0.01% is used.
 
 Now, imagine the amount in is 10000 USDC. This means that the amount of takerFee utilized is 0.01% of 10000, which is 1 USDC.
 

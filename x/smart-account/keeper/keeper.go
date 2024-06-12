@@ -155,8 +155,9 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 
 const FirstAuthenticatorId = 1
 
-// GetNextAuthenticatorId returns the next authenticator id
-func (k Keeper) GetNextAuthenticatorId(ctx sdk.Context) uint64 {
+// InitializeOrGetNextAuthenticatorId returns the next authenticator id.
+// If it is not set, it initializes it to 1.
+func (k Keeper) InitializeOrGetNextAuthenticatorId(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	nextAuthenticatorId := gogotypes.UInt64Value{}
 	found, err := osmoutils.Get(store, types.KeyNextAccountAuthenticatorId(), &nextAuthenticatorId)
@@ -185,7 +186,7 @@ func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authen
 	}
 
 	// Get the next global id value for authenticators from the store
-	id := k.GetNextAuthenticatorId(ctx)
+	id := k.InitializeOrGetNextAuthenticatorId(ctx)
 
 	// Each authenticator has a custom OnAuthenticatorAdded function
 	err := impl.OnAuthenticatorAdded(ctx, account, config, strconv.FormatUint(id, 10))

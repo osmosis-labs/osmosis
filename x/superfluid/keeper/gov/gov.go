@@ -22,8 +22,8 @@ func HandleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, ek type
 				return fmt.Errorf("concentrated LP share denom (%s) must have asset type %s", asset.Denom, types.SuperfluidAssetTypeConcentratedShare)
 			}
 		}
-		if asset.AssetType == types.SuperfluidAssetTypeNative && asset.PricePoolId == 0 {
-			return fmt.Errorf("native asset (%s) must have a price pool id", asset.Denom)
+		if err := k.ValidateNativeAsset(asset); err != nil {
+			return fmt.Errorf("native asset (%s) must have a price route", asset.Denom)
 		}
 		if err := k.AddNewSuperfluidAsset(ctx, asset); err != nil {
 			return err
@@ -40,7 +40,7 @@ func HandleRemoveSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, p *t
 			return err
 		}
 		dummyAsset := types.SuperfluidAsset{}
-		if asset == dummyAsset {
+		if asset.Equal(dummyAsset) {
 			return fmt.Errorf("superfluid asset %s doesn't exist", denom)
 		}
 		k.BeginUnwindSuperfluidAsset(ctx, 0, asset)

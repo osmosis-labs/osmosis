@@ -293,7 +293,7 @@ func (k Keeper) multihopEstimateOutGivenExactAmountInInternal(
 		actualTokenIn := tokenIn
 		// apply taker fee if applicable
 		if applyTakerFee {
-			takerFee, err := k.GetTradingPairTakerFee(ctx, routeStep.TokenOutDenom, tokenIn.Denom)
+			takerFee, err := k.GetTradingPairTakerFee(ctx, tokenIn.Denom, routeStep.TokenOutDenom)
 			if err != nil {
 				return osmomath.Int{}, err
 			}

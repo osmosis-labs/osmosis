@@ -577,14 +577,14 @@ func TestMsgSetDenomPairTakerFee(t *testing.T) {
 			Sender: addr1,
 			DenomPairTakerFee: []types.DenomPairTakerFee{
 				{
-					Denom0:   appparams.BaseCoinUnit,
-					Denom1:   "uatom",
-					TakerFee: osmomath.MustNewDecFromStr("0.003"),
+					TokenInDenom:  appparams.BaseCoinUnit,
+					TokenOutDenom: "uatom",
+					TakerFee:      osmomath.MustNewDecFromStr("0.003"),
 				},
 				{
-					Denom0:   appparams.BaseCoinUnit,
-					Denom1:   "uion",
-					TakerFee: osmomath.MustNewDecFromStr("0.006"),
+					TokenInDenom:  appparams.BaseCoinUnit,
+					TokenOutDenom: "uion",
+					TakerFee:      osmomath.MustNewDecFromStr("0.006"),
 				},
 			},
 		}
@@ -622,21 +622,21 @@ func TestMsgSetDenomPairTakerFee(t *testing.T) {
 		},
 		"invalid denom0": {
 			msg: createMsg(func(msg types.MsgSetDenomPairTakerFee) types.MsgSetDenomPairTakerFee {
-				msg.DenomPairTakerFee[0].Denom0 = ""
+				msg.DenomPairTakerFee[0].TokenInDenom = ""
 				return msg
 			}),
 			expectError: true,
 		},
 		"invalid denom1": {
 			msg: createMsg(func(msg types.MsgSetDenomPairTakerFee) types.MsgSetDenomPairTakerFee {
-				msg.DenomPairTakerFee[0].Denom1 = ""
+				msg.DenomPairTakerFee[0].TokenOutDenom = ""
 				return msg
 			}),
 			expectError: true,
 		},
 		"invalid denom0 = denom1": {
 			msg: createMsg(func(msg types.MsgSetDenomPairTakerFee) types.MsgSetDenomPairTakerFee {
-				msg.DenomPairTakerFee[0].Denom0 = msg.DenomPairTakerFee[0].Denom1
+				msg.DenomPairTakerFee[0].TokenInDenom = msg.DenomPairTakerFee[0].TokenOutDenom
 				return msg
 			}),
 			expectError: true,

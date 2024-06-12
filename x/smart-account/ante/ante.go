@@ -126,6 +126,9 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	// tracks are used to make sure that we only write to the store after every message is successful
 	var tracks []func() error
 
+	// feesPaid is used to track when fee have been paid, this is to avoid the fee payer being charged twice
+	feesPaid := false
+
 	// Authenticate the accounts of all messages
 	for msgIndex, msg := range msgs {
 		signers, _, err := ad.cdc.GetMsgV1Signers(msg)
@@ -149,7 +152,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		)
 		if err != nil {
 			return sdk.Context{},
-				errorsmod.Wrapf(err, "failed to get initialized authenticator (account = %s, authenticator id = %d, msg index = %d, msg type url = %s)", account, selectedAuthenticator.Id, msgIndex, sdk.MsgTypeURL(msg))
+				errorsmod.Wrapf(err, "failed to get initialized authenticator (account = %s, authenticator id = %d, msg index = %d, msg type url = %s)", account, selectedAuthenticatorId, msgIndex, sdk.MsgTypeURL(msg))
 		}
 
 		// Generate the authentication request data
@@ -187,7 +190,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		// If authentication is successful, continue
 		if authErr == nil {
 			// Once the fee payer is authenticated, we can set the gas limit to its original value
-			if account.Equals(feePayer) {
+			if !feesPaid && account.Equals(feePayer) {
 				originalGasMeter.ConsumeGas(payerGasMeter.GasConsumed(), "fee payer gas")
 
 				// Once the fee payer is authenticated, we can deduct the fee.
@@ -208,9 +211,15 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 				// Reset the gas meter
 				ctx = ctx.WithGasMeter(originalGasMeter)
+
+				// Set the feesPaid variable to true
+				feesPaid = true
 			}
 
 			// Append the track closure to be called after every message is authenticated
+			// Note: pre-initialize type URL to avoid closure issues from passing a msg
+			// loop variable inside the closure.
+			currentMsgTypeURL := sdk.MsgTypeURL(msg)
 			tracks = append(tracks, func() error {
 				err := a11r.Track(ctx, authenticationRequest)
 				if err != nil {
@@ -218,7 +227,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 					// If it does fail, we log the error.
 					telemetry.IncrCounter(1, types.CounterKeyTrackFailed)
 					ad.smartAccountKeeper.Logger(ctx).Error(
-						"track failed", "account", account, "feePayer", feePayer, "msg", sdk.MsgTypeURL(msg), "authenticatorId", stringId, "error", err)
+						"track failed", "account", account, "feePayer", feePayer, "msg", currentMsgTypeURL, "authenticatorId", stringId, "error", err)
 
 					return errorsmod.Wrapf(err, "track failed (account = %s, authenticator id = %s, authenticator type, %s, msg index = %d)", account, stringId, a11r.Type(), msgIndex)
 				}

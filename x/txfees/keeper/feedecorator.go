@@ -59,7 +59,6 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		}
 	}
 
-	// UNFORKINGTODO C: Added this logic so that we can create gentx's without having to pay a fee.
 	// If this is genesis height, don't check the fee.
 	// This is needed so that gentx's can be created without having to pay a fee (chicken/egg problem).
 	if ctx.BlockHeight() == 0 {
@@ -126,9 +125,7 @@ func (mfd MempoolFeeDecorator) getMinBaseGasPrice(ctx sdk.Context, baseDenom str
 		minBaseGasPrice = osmomath.MaxDec(minBaseGasPrice, mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, feeTx))
 	}
 	// If we are in genesis or are simulating a tx, then we actually override all of the above, to set it to 0.
-	// UNFORKINGTODO OQ: look into what we should use in place of ctx.IsGenesis() here
-	// if ctx.IsGenesis() || simulate {
-	if simulate {
+	if ctx.BlockHeight() == 0 || simulate {
 		minBaseGasPrice = osmomath.ZeroDec()
 	}
 	return minBaseGasPrice

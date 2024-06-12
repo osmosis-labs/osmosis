@@ -4,6 +4,8 @@ import (
 	"github.com/cometbft/cometbft/crypto/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -47,9 +49,9 @@ func (s *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 		AssetType: types.SuperfluidAssetTypeNative,
 	}
 	nativeAsset := types.SuperfluidAsset{
-		Denom:       "btc",
-		AssetType:   types.SuperfluidAssetTypeNative,
-		PricePoolId: 1,
+		Denom:      "btc",
+		AssetType:  types.SuperfluidAssetTypeNative,
+		PriceRoute: []*poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: "stake"}},
 	}
 	nativeAssetNoPrice := types.SuperfluidAsset{
 		Denom:     "btc",
