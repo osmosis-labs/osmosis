@@ -217,47 +217,95 @@ func (s *KeeperTestSuite) TestSetDenomPairTakerFee() {
 		expectedMessageEvents             int
 		expectedError                     bool
 	}{
-		"valid case: two pairs": {
+		"valid case: two pairs, single direction": {
 			denomPairTakerFeeMessage: types.MsgSetDenomPairTakerFee{
 				Sender: adminAcc,
 				DenomPairTakerFee: []types.DenomPairTakerFee{
 					{
-						Denom0:   "denom0",
-						Denom1:   "denom1",
-						TakerFee: osmomath.MustNewDecFromStr("0.0013"),
+						TokenInDenom:  "denom0",
+						TokenOutDenom: "denom1",
+						TakerFee:      osmomath.MustNewDecFromStr("0.0013"),
 					},
 					{
-						Denom0:   "denom0",
-						Denom1:   "denom2",
-						TakerFee: osmomath.MustNewDecFromStr("0.0016"),
+						TokenInDenom:  "denom0",
+						TokenOutDenom: "denom2",
+						TakerFee:      osmomath.MustNewDecFromStr("0.0016"),
 					},
 				},
 			},
 
 			expectedSetDenomPairTakerFeeEvent: 2,
 		},
-		"valid case: one pair": {
+		"valid case: two pairs, both directions": {
 			denomPairTakerFeeMessage: types.MsgSetDenomPairTakerFee{
 				Sender: adminAcc,
 				DenomPairTakerFee: []types.DenomPairTakerFee{
 					{
-						Denom0:   "denom0",
-						Denom1:   "denom1",
-						TakerFee: osmomath.MustNewDecFromStr("0.0013"),
+						TokenInDenom:  "denom0",
+						TokenOutDenom: "denom1",
+						TakerFee:      osmomath.MustNewDecFromStr("0.0013"),
+					},
+					{
+						TokenInDenom:  "denom1",
+						TokenOutDenom: "denom0",
+						TakerFee:      osmomath.MustNewDecFromStr("0.0014"),
+					},
+					{
+						TokenInDenom:  "denom0",
+						TokenOutDenom: "denom2",
+						TakerFee:      osmomath.MustNewDecFromStr("0.0016"),
+					},
+					{
+						TokenInDenom:  "denom2",
+						TokenOutDenom: "denom0",
+						TakerFee:      osmomath.MustNewDecFromStr("0.0015"),
+					},
+				},
+			},
+
+			expectedSetDenomPairTakerFeeEvent: 4,
+		},
+		"valid case: one pair, single direction": {
+			denomPairTakerFeeMessage: types.MsgSetDenomPairTakerFee{
+				Sender: adminAcc,
+				DenomPairTakerFee: []types.DenomPairTakerFee{
+					{
+						TokenInDenom:  "denom0",
+						TokenOutDenom: "denom1",
+						TakerFee:      osmomath.MustNewDecFromStr("0.0013"),
 					},
 				},
 			},
 
 			expectedSetDenomPairTakerFeeEvent: 1,
 		},
+		"valid case: one pair, both directions": {
+			denomPairTakerFeeMessage: types.MsgSetDenomPairTakerFee{
+				Sender: adminAcc,
+				DenomPairTakerFee: []types.DenomPairTakerFee{
+					{
+						TokenInDenom:  "denom0",
+						TokenOutDenom: "denom1",
+						TakerFee:      osmomath.MustNewDecFromStr("0.0013"),
+					},
+					{
+						TokenInDenom:  "denom1",
+						TokenOutDenom: "denom0",
+						TakerFee:      osmomath.MustNewDecFromStr("0.0013"),
+					},
+				},
+			},
+
+			expectedSetDenomPairTakerFeeEvent: 2,
+		},
 		"error: not admin account": {
 			denomPairTakerFeeMessage: types.MsgSetDenomPairTakerFee{
 				Sender: nonAdminAcc,
 				DenomPairTakerFee: []types.DenomPairTakerFee{
 					{
-						Denom0:   "denom0",
-						Denom1:   "denom1",
-						TakerFee: osmomath.MustNewDecFromStr("0.0013"),
+						TokenInDenom:  "denom0",
+						TokenOutDenom: "denom1",
+						TakerFee:      osmomath.MustNewDecFromStr("0.0013"),
 					},
 				},
 			},

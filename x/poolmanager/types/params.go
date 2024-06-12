@@ -230,16 +230,16 @@ func validateDenomPairTakerFees(pairs []DenomPairTakerFee) error {
 	}
 
 	for _, record := range pairs {
-		if record.Denom0 == record.Denom1 {
-			return fmt.Errorf("denom0 and denom1 must be different")
+		if record.TokenInDenom == record.TokenOutDenom {
+			return fmt.Errorf("TokenInDenom and TokenOutDenom must be different")
 		}
 
-		if sdk.ValidateDenom(record.Denom0) != nil {
-			return fmt.Errorf("denom0 is invalid: %s", sdk.ValidateDenom(record.Denom0))
+		if sdk.ValidateDenom(record.TokenInDenom) != nil {
+			return fmt.Errorf("TokenInDenom is invalid: %s", sdk.ValidateDenom(record.TokenInDenom))
 		}
 
-		if sdk.ValidateDenom(record.Denom1) != nil {
-			return fmt.Errorf("denom1 is invalid: %s", sdk.ValidateDenom(record.Denom1))
+		if sdk.ValidateDenom(record.TokenOutDenom) != nil {
+			return fmt.Errorf("TokenOutDenom is invalid: %s", sdk.ValidateDenom(record.TokenOutDenom))
 		}
 
 		takerFee := record.TakerFee
