@@ -339,6 +339,7 @@ func TestGetCmdSpotPrice(t *testing.T) {
 				PoolId:          1,
 				BaseAssetDenom:  appparams.BaseCoinUnit,
 				QuoteAssetDenom: "ibc/111",
+				WithSwapFee:     false,
 			},
 		},
 	}
