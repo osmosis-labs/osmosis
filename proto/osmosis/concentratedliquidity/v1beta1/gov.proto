@@ -53,7 +53,7 @@ message PoolRecord {
   uint64 tick_spacing = 3 [ (gogoproto.moretags) = "yaml:\"tick_spacing\"" ];
   // DEPRECATED
   string exponent_at_price_one = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"exponent_at_price_one\"",
     (gogoproto.nullable) = false,
     deprecated = true
