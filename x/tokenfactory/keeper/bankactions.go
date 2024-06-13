@@ -44,9 +44,8 @@ func (k Keeper) burnFrom(ctx sdk.Context, amount sdk.Coin, burnFrom string) erro
 		return err
 	}
 
-	err = k.BlockedAddr(ctx, addr)
-	if err != nil {
-		return err
+	if k.IsModuleAcc(ctx, addr) {
+		return types.ErrBurnFromModuleAccount
 	}
 
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx,
@@ -102,12 +101,7 @@ func (k Keeper) forceTransfer(ctx sdk.Context, amount sdk.Coin, fromAddr string,
 	return k.bankKeeper.SendCoins(ctx, fromSdkAddr, toSdkAddr, sdk.NewCoins(amount))
 }
 
-// BlockedAddr checks if a given address is restricted
-func (k Keeper) BlockedAddr(ctx sdk.Context, addr sdk.AccAddress) error {
-	for moduleName := range k.permAddrs {
-		if k.permAddrs[moduleName].GetAddress().Equals(addr) {
-			return types.ErrBurnFromModuleAccount
-		}
-	}
-	return nil
+// IsModuleAcc checks if a given address is restricted
+func (k Keeper) IsModuleAcc(ctx sdk.Context, addr sdk.AccAddress) bool {
+	return k.permAddrMap[addr.String()]
 }
