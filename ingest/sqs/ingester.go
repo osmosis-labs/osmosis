@@ -17,18 +17,18 @@ type sqsIngester struct {
 	poolsTransformer    domain.PoolsTransformer
 	keepers             domain.SQSIngestKeepers
 	sqsGRPCClient       domain.SQSGRPClient
+	// TODO: remove
 	indexerPubSubClient indexerdomain.PubSubClient
 }
 
 // NewSidecarQueryServerIngester creates a new sidecar query server ingester.
 // poolsRepository is the storage for pools.
 // gammKeeper is the keeper for Gamm pools.
-func NewSidecarQueryServerIngester(poolsIngester domain.PoolsTransformer, appCodec codec.Codec, keepers domain.SQSIngestKeepers, sqsGRPCClient domain.SQSGRPClient, indexerPubSubClient indexerdomain.PubSubClient) domain.Ingester {
+func NewSidecarQueryServerIngester(poolsIngester domain.PoolsTransformer, appCodec codec.Codec, keepers domain.SQSIngestKeepers, sqsGRPCClient domain.SQSGRPClient) domain.Ingester {
 	return &sqsIngester{
 		poolsTransformer:    poolsIngester,
 		keepers:             keepers,
 		sqsGRPCClient:       sqsGRPCClient,
-		indexerPubSubClient: indexerPubSubClient,
 	}
 }
 

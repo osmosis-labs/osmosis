@@ -1,6 +1,7 @@
 package writelistener_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -45,7 +46,8 @@ func (s *WriteListenerTestSuite) TestWriteListener_Bank() {
 		tc := tc
 		s.Run(tc.name, func() {
 
-			bankWriteListener := writelistener.NewBank()
+			// TODO: wire pub sub mock
+			bankWriteListener := writelistener.NewBank(context.TODO(), nil)
 
 			bankKVStore := s.App.GetKey(banktypes.ModuleName)
 

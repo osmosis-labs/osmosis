@@ -14,6 +14,9 @@ var _ baseapp.StreamingService = (*indexerStreamingService)(nil)
 // ind is a streaming service that processes block data and ingests it into the indexer
 type indexerStreamingService struct {
 	writeListeners map[storetypes.StoreKey][]storetypes.WriteListener
+
+	// isColdStart is a flag that indicates if the service is starting up.
+	isColdStart bool
 }
 
 // New creates a new sqsStreamingService.
@@ -22,7 +25,12 @@ type indexerStreamingService struct {
 // poolTracker is a tracker that tracks the pools that were changed in the block.
 // nodeStatusChecker is a checker that checks if the node is syncing.
 func New(writeListeners map[storetypes.StoreKey][]storetypes.WriteListener) baseapp.StreamingService {
-	return &indexerStreamingService{}
+	return &indexerStreamingService{
+
+		writeListeners: writeListeners,
+
+		isColdStart: true,
+	}
 }
 
 // Close implements baseapp.StreamingService.

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -36,7 +37,9 @@ import (
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 
+	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 	indexerservice "github.com/osmosis-labs/osmosis/v25/ingest/indexer/service"
+	indexerclient "github.com/osmosis-labs/osmosis/v25/ingest/indexer/service/client"
 	indexerwritelistener "github.com/osmosis-labs/osmosis/v25/ingest/indexer/service/writelistener"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
@@ -293,7 +296,8 @@ func NewOsmosisApp(
 	sqsConfig := sqs.NewConfigFromOptions(appOpts)
 
 	// Initialize the SQS ingester if it is enabled.
-	if sqsConfig.IsEnabled {
+	// TODO: disabled for local testing -> remove
+	if false {
 		sqsKeepers := domain.SQSIngestKeepers{
 			GammKeeper:         app.GAMMKeeper,
 			CosmWasmPoolKeeper: app.CosmwasmPoolKeeper,
@@ -334,8 +338,14 @@ func NewOsmosisApp(
 	// TODO: add node config similar to SQS.
 	if true {
 
+		// TODO: handle graceful shutdown
+		pubSubCtx := context.Background()
+
+		// Create indexers pubsub client
+		pubSubClient := indexerclient.NewPubSubCLient("osmosis-data-team", "dev.block-topic")
+
 		// Create write listeners for the indexer service.
-		writeListeners := getIndexerServiceWriteListeners(app, appCodec)
+		writeListeners := getIndexerServiceWriteListeners(pubSubCtx, app, pubSubClient, appCodec)
 
 		indexerStreamingService := indexerservice.New(writeListeners)
 
@@ -561,12 +571,12 @@ func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoo
 }
 
 // getIndexerServiceWriteListeners returns the write listeners for the app that are specific to the indexer service.
-func getIndexerServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec) map[storetypes.StoreKey][]storetypes.WriteListener {
+func getIndexerServiceWriteListeners(ctx context.Context, app *OsmosisApp, client indexerdomain.PubSubClient, appCodec codec.Codec) map[storetypes.StoreKey][]storetypes.WriteListener {
 	writeListeners := make(map[storetypes.StoreKey][]storetypes.WriteListener)
 
 	// Add write listeners for the bank module.
 	writeListeners[app.GetKey(banktypes.ModuleName)] = []storetypes.WriteListener{
-		indexerwritelistener.NewBank(),
+		indexerwritelistener.NewBank(ctx, client),
 	}
 
 	return writeListeners
