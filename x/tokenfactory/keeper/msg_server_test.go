@@ -104,6 +104,25 @@ func (s *KeeperTestSuite) TestBurnDenomMsg() {
 	}
 }
 
+func (s *KeeperTestSuite) TestBurnFromMsg() {
+	// Create a denom
+	s.CreateDefaultDenom()
+
+	s.Run(fmt.Sprintf("test burn from"), func() {
+		mintAmt := sdk.NewInt64Coin(s.defaultDenom, 10)
+
+		_, err := s.msgServer.Mint(sdk.WrapSDKContext(s.Ctx), types.NewMsgMint(s.TestAccs[0].String(), mintAmt))
+
+		govModAcc := s.App.AccountKeeper.GetModuleAccount(s.Ctx, govtypes.ModuleName)
+
+		err = s.App.BankKeeper.SendCoins(s.Ctx, s.TestAccs[0], govModAcc.GetAddress(), sdk.NewCoins(mintAmt))
+		s.Require().NoError(err)
+
+		_, err = s.msgServer.Burn(s.Ctx, types.NewMsgBurnFrom(s.TestAccs[0].String(), mintAmt, govModAcc.GetAddress().String()))
+		s.Require().ErrorContains(err, "burning from Module Account is not allowed")
+	})
+}
+
 func (s *KeeperTestSuite) TestForceTransferMsg() {
 	// Create a denom
 	s.CreateDefaultDenom()
