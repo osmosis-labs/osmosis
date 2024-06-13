@@ -43,7 +43,7 @@ require (
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.13
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240613014831-2df593b03c99
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240613014831-2df593b03c99
-	github.com/osmosis-labs/sqs/sqsdomain v0.18.3
+	github.com/osmosis-labs/sqs/sqsdomain v0.18.4-0.20240606185034-267d0e5b17a6
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/skip-mev/block-sdk/v2 v2.1.3
@@ -76,6 +76,7 @@ require (
 	cosmossdk.io/x/feegrant v0.1.0 // indirect
 	github.com/DataDog/datadog-go v3.2.0+incompatible // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
+	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/aws/aws-sdk-go v1.44.224 // indirect
