@@ -40,7 +40,8 @@ message Params {
   // orders at prices in terms of token1 (quote asset) that are easy to reason
   // about.
   repeated string authorized_quote_denoms = 4 [
-    (gogoproto.moretags) = "yaml:\"authorized_quote_denoms\"",
+    (gogoproto.moretags) =
+        "yaml:\"authorized_quote_denoms\",deprecated:\"true\"",
     deprecated = true
   ];
   repeated google.protobuf.Duration authorized_uptimes = 5 [

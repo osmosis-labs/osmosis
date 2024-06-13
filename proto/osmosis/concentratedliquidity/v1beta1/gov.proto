@@ -54,7 +54,7 @@ message PoolRecord {
   // DEPRECATED
   string exponent_at_price_one = 4 [
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.moretags) = "yaml:\"exponent_at_price_one\"",
+    (gogoproto.moretags) = "yaml:\"exponent_at_price_one\",deprecated:\"true\"",
     (gogoproto.nullable) = false,
     deprecated = true
   ];

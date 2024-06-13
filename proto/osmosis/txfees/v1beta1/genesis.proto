@@ -14,7 +14,8 @@ message GenesisState {
   repeated FeeToken feetokens = 2 [ (gogoproto.nullable) = false ];
 
   // DEPRECATED
-  TxFeesTracker txFeesTracker = 3 [ deprecated = true ];
+  TxFeesTracker txFeesTracker = 3
+      [ deprecated = true, (gogoproto.moretags) = "deprecated:\"true\"" ];
 
   // params is the container of txfees parameters.
   Params params = 4 [ (gogoproto.nullable) = false ];

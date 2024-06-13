@@ -200,7 +200,7 @@ message AllProtocolRevenue {
   ];
   // DEPRECATED
   osmosis.txfees.v1beta1.TxFeesTracker tx_fees_tracker = 2 [
-    (gogoproto.moretags) = "yaml:\"tx_fees_tracker\"",
+    (gogoproto.moretags) = "yaml:\"tx_fees_tracker\",deprecated:\"true\"",
     (gogoproto.nullable) = false,
     deprecated = true
   ];

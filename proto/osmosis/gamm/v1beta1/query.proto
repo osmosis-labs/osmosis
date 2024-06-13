@@ -266,8 +266,10 @@ message QuerySpotPriceRequest {
   string quote_asset_denom = 3
       [ (gogoproto.moretags) = "yaml:\"quote_asset_denom\"" ];
   // DEPRECATED
-  bool withSwapFee = 4
-      [ (gogoproto.moretags) = "yaml:\"with_swap_fee\"", deprecated = true ];
+  bool withSwapFee = 4 [
+    (gogoproto.moretags) = "yaml:\"with_swap_fee\",deprecated:\"true\"",
+    deprecated = true
+  ];
 }
 
 //=============================== PoolsWithFilter
