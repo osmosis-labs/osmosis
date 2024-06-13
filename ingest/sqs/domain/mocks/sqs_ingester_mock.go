@@ -45,6 +45,6 @@ func (s *SQSIngesterMock) ProcessChangedBlockData(ctx types.Context, changedPool
 	return s.ChangedBlockDataError
 }
 
-func (SQSIngesterMock) PublishBlock(ctx types.Context, height uint64, block indexerdomain.Block) error {
+func (SQSIngesterMock) PublishBlock(ctx types.Context, block indexerdomain.Block) error {
 	return nil
 }

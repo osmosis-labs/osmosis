@@ -24,7 +24,7 @@ type Ingester interface {
 	ProcessChangedBlockData(ctx sdk.Context, changedPools BlockPools) error
 
 	// PublishBlock publishes the block data to the indexer.
-	PublishBlock(ctx sdk.Context, height uint64, block indexerdomain.Block) error
+	PublishBlock(ctx sdk.Context, block indexerdomain.Block) error
 }
 
 // PoolsTransformer is an interface that defines the methods for the pool transformer

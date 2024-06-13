@@ -74,7 +74,7 @@ func (s *sqsStreamingService) ListenCommit(ctx context.Context, res types.Respon
 		BlockTime:   timeEndBlock,
 		GasConsumed: gasConsumed,
 	}
-	err := s.sqsIngester.PublishBlock(sdk.UnwrapSDKContext(ctx), height, block)
+	err := s.sqsIngester.PublishBlock(sdk.UnwrapSDKContext(ctx), block)
 	if err != nil {
 		return err
 	}
