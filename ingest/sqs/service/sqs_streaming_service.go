@@ -83,7 +83,7 @@ func (s *sqsStreamingService) ListenEndBlock(ctx context.Context, req types.Requ
 		BlockTime:   timeEndBlock,
 		GasConsumed: gasConsumed,
 	}
-	err := s.sqsIngester.PublishBlock(sdk.UnwrapSDKContext(ctx), height, block)
+	err := s.sqsIngester.PublishBlock(sdk.UnwrapSDKContext(ctx), block)
 	if err != nil {
 		return err
 	}

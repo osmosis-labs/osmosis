@@ -2,22 +2,11 @@ package domain
 
 import (
 	"context"
-	"time"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type Ingester interface {
-	ProcessBlock(ctx sdk.Context) error
-}
-
-type IndexerPubSubClient interface {
-	Publish(ctx context.Context, height uint64, block Block) error
-}
-
-type Block struct {
-	ChainId     string    `json:"chain_id"`
-	Height      uint64    `json:"height"`
-	BlockTime   time.Time `json:"timestamp"`
-	GasConsumed uint64    `json:"gas_consumed"`
+type PubSubClient interface {
+	PublishBlock(ctx context.Context, block Block) error
+	PublishTransaction(ctx context.Context, txn Transaction) error
+	PublishAsset(ctx context.Context, asset Asset) error
+	PublishPool(ctx context.Context, pool Pool) error
 }
