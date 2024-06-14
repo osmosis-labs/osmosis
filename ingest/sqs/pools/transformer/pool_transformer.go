@@ -236,6 +236,11 @@ func (pi *poolTransformer) convertPool(
 			if err != nil {
 				return nil, err
 			}
+		} else if cosmWasmPoolModel.IsOrderbook() {
+			err = pi.updateOrderbookInfo(ctx, pool.GetId(), pool.GetAddress(), cosmWasmPoolModel)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 

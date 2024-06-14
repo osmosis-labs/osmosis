@@ -53,6 +53,15 @@ func (pi *poolTransformer) UpdateAlloyTransmuterInfo(ctx sdk.Context, poolId uin
 	return pi.updateAlloyTransmuterInfo(ctx, poolId, contractAddress, cosmWasmPoolModel, poolDenoms)
 }
 
+func (pi *poolTransformer) UpdateOrderbookInfo(
+	ctx sdk.Context,
+	poolId uint64,
+	contractAddress sdk.AccAddress,
+	cosmWasmPoolModel *sqsdomain.CosmWasmPoolModel,
+) error {
+	return pi.updateOrderbookInfo(ctx, poolId, contractAddress, cosmWasmPoolModel)
+}
+
 func (pi *poolTransformer) InitCosmWasmPoolModel(
 	ctx sdk.Context,
 	pool poolmanagertypes.PoolI,

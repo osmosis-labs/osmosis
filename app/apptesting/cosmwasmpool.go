@@ -29,7 +29,9 @@ const (
 	TransmuterContractName        = "transmuter"
 	TransmuterMigrateContractName = "transmuter_migrate"
 	TransmuterV3ContractName      = "transmuter_v3"
-	DefaultCodeId                 = 1
+	OrderbookContractName         = "sumtree_orderbook"
+
+	DefaultCodeId = 1
 
 	osmosisRepository         = "osmosis"
 	osmosisRepoTransmuterPath = "x/cosmwasmpool/bytecode"
@@ -46,6 +48,11 @@ type AlloyTransmuterInstantiateMsg struct {
 	AlloyedAssetNormalizationFactor osmomath.Int  `json:"alloyed_asset_normalization_factor"`
 	Admin                           string        `json:"admin"`
 	Moderator                       string        `json:"moderator"`
+}
+
+type OrderbookInstantiateMsg struct {
+	BaseDenom  string `json:"base_denom"`
+	QuoteDenom string `json:"quote_denom"`
 }
 
 // PrepareCosmWasmPool sets up a cosmwasm pool with the default parameters.
@@ -176,6 +183,35 @@ func (s *KeeperTestHelper) PrepareAlloyTransmuterPool(owner sdk.AccAddress, inst
 
 	// Upload contract code and get the code id.
 	codeId := s.StoreCosmWasmPoolContractCode(TransmuterV3ContractName)
+
+	// Add code id to the whitelist.
+	s.App.CosmwasmPoolKeeper.WhitelistCodeId(s.Ctx, codeId)
+
+	// Generate instantiate message bytes.
+	instantiateMsgBz, err := json.Marshal(instantiateMsg)
+	s.Require().NoError(err)
+
+	// Generate msg create pool.
+	validCWPoolMsg := model.NewMsgCreateCosmWasmPool(codeId, owner, instantiateMsgBz)
+
+	// Create pool.
+	poolId, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, validCWPoolMsg)
+	s.Require().NoError(err)
+
+	// Get and return the pool.
+	pool, err := s.App.CosmwasmPoolKeeper.GetPoolById(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	return pool
+}
+
+// PrepareOrderbookPool prepares an orderbook pool with the given owner and instantiateMsg
+func (s *KeeperTestHelper) PrepareOrderbookPool(owner sdk.AccAddress, instantiateMsg OrderbookInstantiateMsg) cosmwasmpooltypes.CosmWasmExtension {
+	// Mint some assets to the account.
+	s.FundAcc(owner, DefaultAcctFunds)
+
+	// Upload contract code and get the code id.
+	codeId := s.StoreCosmWasmPoolContractCode(OrderbookContractName)
 
 	// Add code id to the whitelist.
 	s.App.CosmwasmPoolKeeper.WhitelistCodeId(s.Ctx, codeId)
