@@ -54,6 +54,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/x/poolmanager"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v25/x/protorev"
+	"github.com/osmosis-labs/osmosis/v25/x/tradingtiers"
 	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
@@ -178,6 +179,7 @@ type AppKeepers struct {
 	CosmwasmPoolKeeper           *cosmwasmpool.Keeper
 	SmartAccountKeeper           *smartaccountkeeper.Keeper
 	AuthenticatorManager         *authenticator.AuthenticatorManager
+	TradingTierKeeper            *tradingtiers.Keeper
 
 	// IBC modules
 	// transfer module
@@ -890,6 +892,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 			appKeepers.IncentivesKeeper.Hooks(),
 			appKeepers.MintKeeper.Hooks(),
 			appKeepers.ProtoRevKeeper.EpochHooks(),
+			appKeepers.PoolManagerKeeper.Hooks(),
 		),
 	)
 

@@ -185,7 +185,7 @@ func (k Keeper) SwapExactAmountIn(
 	}
 
 	// Track volume for volume-splitting incentives
-	k.trackVolume(ctx, pool.GetId(), tokenIn)
+	k.trackVolume(ctx, pool.GetId(), tokenIn, sender)
 
 	return tokenOutAmount, nil
 }
@@ -220,7 +220,7 @@ func (k Keeper) SwapExactAmountInNoTakerFee(
 	}
 
 	// Track volume for volume-splitting incentives
-	k.trackVolume(ctx, pool.GetId(), tokenIn)
+	k.trackVolume(ctx, pool.GetId(), tokenIn, sender)
 
 	return tokenOutAmount, nil
 }
@@ -381,7 +381,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		}
 
 		// Track volume for volume-splitting incentives
-		k.trackVolume(ctx, pool.GetId(), sdk.NewCoin(routeStep.TokenInDenom, tokenIn.Amount))
+		k.trackVolume(ctx, pool.GetId(), sdk.NewCoin(routeStep.TokenInDenom, tokenIn.Amount), sender)
 
 		// Sets the final amount of tokens that need to be input into the first pool. Even though this is the final return value for the
 		// whole method and will not change after the first iteration, we still iterate through the rest of the pools to execute their respective
@@ -677,7 +677,7 @@ func (k Keeper) TotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 //
 // CONTRACT: `volumeGenerated` corresponds to one of the denoms in the pool
 // CONTRACT: pool with `poolId` exists
-func (k Keeper) trackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.Coin) {
+func (k Keeper) trackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.Coin, sender sdk.AccAddress) {
 	// If the denom is already denominated in uosmo, we can just use it directly
 	OSMO, err := k.stakingKeeper.BondDenom(ctx)
 	if err != nil {
@@ -721,6 +721,13 @@ func (k Keeper) trackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.
 
 	// Add this new volume to the global tracked volume for the pool ID
 	k.addVolume(ctx, poolId, sdk.NewCoin(OSMO, volumeInOsmo))
+
+	// Add this new volume to the trading tier volume tracker, IFF the account has opted in to trading tier tracking.
+	err = k.trackTradingTierVolume(ctx, sender, volumeInOsmo, volumeGenerated.Denom)
+	if err != nil {
+		ctx.Logger().Error(fmt.Sprintf("error tracking trading tier volume: %s", err.Error()))
+		return
+	}
 }
 
 // addVolume adds the given volume to the global tracked volume for the given pool ID.
