@@ -341,13 +341,22 @@ func NewOsmosisApp(
 		// TODO: handle graceful shutdown
 		pubSubCtx := context.Background()
 
-		// Create indexers pubsub client
+		// Create indexers pubsub client.
 		pubSubClient := indexerclient.NewPubSubCLient("osmosis-data-team", "dev.block-topic")
 
-		// Create write listeners for the indexer service.
-		writeListeners := getIndexerServiceWriteListeners(pubSubCtx, app, pubSubClient, appCodec)
+		// Create cold start manager
+		coldStartManager := indexerdomain.NewColdStartManager()
 
-		indexerStreamingService := indexerservice.New(writeListeners)
+		// Create write listeners for the indexer service.
+		writeListeners := getIndexerServiceWriteListeners(pubSubCtx, app, pubSubClient, coldStartManager)
+
+		// Create keepers for the indexer service.
+		keepers := indexerdomain.Keepers{
+			BankKeeper: app.BankKeeper,
+		}
+
+		// Create the indexer streaming service.
+		indexerStreamingService := indexerservice.New(writeListeners, coldStartManager, pubSubClient, keepers)
 
 		// Register the SQS streaming service with the app.
 		app.SetStreamingService(indexerStreamingService)
@@ -571,12 +580,12 @@ func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoo
 }
 
 // getIndexerServiceWriteListeners returns the write listeners for the app that are specific to the indexer service.
-func getIndexerServiceWriteListeners(ctx context.Context, app *OsmosisApp, client indexerdomain.PubSubClient, appCodec codec.Codec) map[storetypes.StoreKey][]storetypes.WriteListener {
+func getIndexerServiceWriteListeners(ctx context.Context, app *OsmosisApp, client indexerdomain.PubSubClient, coldStartManager indexerdomain.ColdStartManager) map[storetypes.StoreKey][]storetypes.WriteListener {
 	writeListeners := make(map[storetypes.StoreKey][]storetypes.WriteListener)
 
 	// Add write listeners for the bank module.
 	writeListeners[app.GetKey(banktypes.ModuleName)] = []storetypes.WriteListener{
-		indexerwritelistener.NewBank(ctx, client),
+		indexerwritelistener.NewBank(ctx, client, coldStartManager),
 	}
 
 	return writeListeners

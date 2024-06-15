@@ -9,6 +9,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/service/writelistener"
 )
 
@@ -37,6 +38,8 @@ func (s *WriteListenerTestSuite) TestWriteListener_Bank() {
 		value    []byte
 		isDelete bool
 
+		coldStartManager domain.ColdStartManager
+
 		// TODO: add expected fields for the test.
 	}{
 		// TODO: add tests
@@ -47,7 +50,7 @@ func (s *WriteListenerTestSuite) TestWriteListener_Bank() {
 		s.Run(tc.name, func() {
 
 			// TODO: wire pub sub mock
-			bankWriteListener := writelistener.NewBank(context.TODO(), nil)
+			bankWriteListener := writelistener.NewBank(context.TODO(), nil, tc.coldStartManager)
 
 			bankKVStore := s.App.GetKey(banktypes.ModuleName)
 

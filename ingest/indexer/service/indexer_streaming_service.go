@@ -2,11 +2,15 @@ package service
 
 import (
 	"context"
+	"strings"
 	"sync"
 
 	"github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 )
 
 var _ baseapp.StreamingService = (*indexerStreamingService)(nil)
@@ -15,8 +19,12 @@ var _ baseapp.StreamingService = (*indexerStreamingService)(nil)
 type indexerStreamingService struct {
 	writeListeners map[storetypes.StoreKey][]storetypes.WriteListener
 
-	// isColdStart is a flag that indicates if the service is starting up.
-	isColdStart bool
+	// manages tracking of whether the node is code started
+	coldStartManager domain.ColdStartManager
+
+	client domain.PubSubClient
+
+	keepers domain.Keepers
 }
 
 // New creates a new sqsStreamingService.
@@ -24,12 +32,16 @@ type indexerStreamingService struct {
 // sqsIngester is an ingester that ingests the block data into SQS.
 // poolTracker is a tracker that tracks the pools that were changed in the block.
 // nodeStatusChecker is a checker that checks if the node is syncing.
-func New(writeListeners map[storetypes.StoreKey][]storetypes.WriteListener) baseapp.StreamingService {
+func New(writeListeners map[storetypes.StoreKey][]storetypes.WriteListener, coldStartManager domain.ColdStartManager, client domain.PubSubClient, keepers domain.Keepers) baseapp.StreamingService {
 	return &indexerStreamingService{
 
 		writeListeners: writeListeners,
 
-		isColdStart: true,
+		coldStartManager: coldStartManager,
+
+		client: client,
+
+		keepers: keepers,
 	}
 }
 
@@ -54,6 +66,40 @@ func (s *indexerStreamingService) ListenDeliverTx(ctx context.Context, req types
 }
 
 func (s *indexerStreamingService) ListenEndBlock(ctx context.Context, req types.RequestEndBlock, res types.ResponseEndBlock) error {
+
+	// If did not ingest initial data yet, ingest it now
+	if !s.coldStartManager.HasIngestedInitialData() {
+
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+		var err error
+
+		// Ingest the initial data
+		s.keepers.BankKeeper.IterateTotalSupplyWithOffsets(sdkCtx, func(coin sdk.Coin) bool {
+
+			// Skip CL pool shares
+			if strings.Contains(coin.Denom, "cl/pool") {
+				return false
+			}
+
+			// Publish the token supply
+			err = s.client.PublishTokenSupply(sdkCtx, domain.TokenSupply{
+				Denom:  coin.Denom,
+				Supply: coin.Amount,
+			})
+
+			// Skip any error silently but log it.
+			if err != nil {
+				// TODO: alert
+				sdkCtx.Logger().Error("failed to publish token supply", "error", err)
+			}
+
+			return false
+		})
+
+		// Mark that the initial data has been ingested
+		s.coldStartManager.MarkInitialDataIngested()
+	}
 
 	return nil
 }
