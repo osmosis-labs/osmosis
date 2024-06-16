@@ -10,3 +10,8 @@ type TokenSupply struct {
 	Denom  string
 	Supply osmomath.Int
 }
+
+type TokenSupplyOffset struct {
+	Denom        string
+	SupplyOffset osmomath.Int
+}

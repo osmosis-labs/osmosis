@@ -37,25 +37,45 @@ func NewBank(ctx context.Context, client indexerdomain.PubSubClient, coldStartMa
 
 // OnWrite implements types.WriteListener.
 func (s *bankWriteListener) OnWrite(storeKey storetypes.StoreKey, key []byte, value []byte, delete bool) error {
+	if s.coldStartManager.HasIngestedInitialData() {
+		return fmt.Errorf("cold start manager has already ingested initial data")
+	}
+
 	// If the cold start manager has ingested initial data and the key is not empty and the key is a supply key.
-	if s.coldStartManager.HasIngestedInitialData() && len(key) > 0 && bytes.Equal(banktypes.SupplyKey, key[:1]) {
-		// Track updated supplies.
-		var updatedSupply osmomath.Int
-		err := updatedSupply.Unmarshal(value)
-		if err != nil {
-			return fmt.Errorf("unable to unmarshal supply value %v", err)
+	if len(key) > 0 && bytes.Equal(banktypes.SupplyKey, key[:1]) {
+		denom := key[len(banktypes.SupplyKey):]
+		if err := s.publishSupply(denom, value); err != nil {
+			return err
 		}
+	}
 
-		tokenSupply := indexerdomain.TokenSupply{
-			// Denom is the key without the supply prefix.
-			Denom:  string(key[len(banktypes.SupplyKey):]),
-			Supply: updatedSupply,
+	// If the cold start manager has ingested initial data and the key is not empty and the key is a supply key.
+	if len(key) > 0 && bytes.Equal(banktypes.SupplyOffsetKey, key[:1]) {
+		denom := key[len(banktypes.SupplyOffsetKey):]
+		if err := s.publishSupply(denom, value); err != nil {
+			return err
 		}
+	}
+	return nil
+}
 
-		err = s.client.PublishTokenSupply(s.ctx, tokenSupply)
-		if err != nil {
-			return fmt.Errorf("unable to publish token supply %v", err)
-		}
+func (s *bankWriteListener) publishSupply(denom, updatedSupplyBytes []byte) error {
+	// Track updated supplies.
+	var updatedSupply osmomath.Int
+	err := updatedSupply.Unmarshal(updatedSupplyBytes)
+	if err != nil {
+		return fmt.Errorf("unable to unmarshal supply value %v", err)
+	}
+
+	tokenSupply := indexerdomain.TokenSupply{
+		// Denom is the key without the supply prefix.
+		Denom:  string(denom[len(banktypes.SupplyKey):]),
+		Supply: updatedSupply,
+	}
+
+	err = s.client.PublishTokenSupply(s.ctx, tokenSupply)
+	if err != nil {
+		return fmt.Errorf("unable to publish token supply %v", err)
 	}
 
 	return nil
