@@ -431,6 +431,21 @@ In the general case, if we call a composite authenticator with id `a` and it has
 at position `i` will receive the id `a.i`. If the sub-authenticator is itself a composite authenticator with `m` sub-authenticators,
 the sub-authenticator at position `j` will receive the id `a.i.j`.
 
+### Confirm Execution call order
+
+The call logic on confirm execution behaves the same way as the call logic on authenticate and is stateless, i.e.: it 
+does not have any information about which authenticators were called during the authenticate call. 
+
+This may lead to a situation where two authenticators inside an AnyOf (or a more complex composition logic) get called
+in a way that makes it so that after the transaction only one of the methods have been called on each.
+
+For example, if the user's authenticators are `AnyOf(A,B)`, you could have a case where Authenticate fails on A and 
+succeeds on B, whereas ConfirmExecution succeeds on A. There will then never be a call to ConfirmExecution on B.
+
+This is the expected behaviour and authenticator authors should be aware that *there is no guarantee that both methods
+will be called on their authenticator*. There is a proposal to improve this in the future tracked in 
+[#8373](https://github.com/osmosis-labs/osmosis/issues/8373)
+
 ### Composition Logic
 
 #### AllOf
