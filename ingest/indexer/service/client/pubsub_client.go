@@ -82,6 +82,10 @@ func (p *PubSubClient) PublishPool(ctx context.Context, pool indexerdomain.Pool)
 	return p.publish(ctx, pool)
 }
 
+func (p *PubSubClient) PublishTokenSupply(ctx context.Context, tokenSupply indexerdomain.TokenSupply) error {
+	return p.publish(ctx, tokenSupply)
+}
+
 // marshal marshals a message to bytes.
 func (p *PubSubClient) marshal(message any) ([]byte, error) {
 	data, err := json.Marshal(message)
