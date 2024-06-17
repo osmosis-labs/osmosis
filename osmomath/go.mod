@@ -102,7 +102,7 @@ replace (
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
 
 	// Branch: osmo/v0.47.5
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240617232016-1ac992582f9c
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240617233403-7bc6ee157d78
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.11
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
