@@ -52,6 +52,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
+* [#8398](https://github.com/osmosis-labs/osmosis/pull/8398) Lower JSON unmarshalling overhead in IBC packet logic.
+
 ## v25.0.3
 
 * [#8329](https://github.com/osmosis-labs/osmosis/pull/8329) Overwrite `flush_throttle_timeout` to 80ms instead of 10ms
