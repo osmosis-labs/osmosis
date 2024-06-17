@@ -18,7 +18,7 @@ type PubSubClient struct {
 }
 
 // NewPubSubCLient creates a new PubSubClient.
-func NewPubSubCLient(projectId string, topicId string) *PubSubClient {
+func NewPubSubCLient(projectId string, topicId string) indexerdomain.PubSubClient {
 	return &PubSubClient{
 		projectId: projectId,
 		topicId:   topicId,
@@ -80,6 +80,15 @@ func (p *PubSubClient) PublishAsset(ctx context.Context, asset indexerdomain.Ass
 // PublishPool implements PubSubClient.PublishPool
 func (p *PubSubClient) PublishPool(ctx context.Context, pool indexerdomain.Pool) error {
 	return p.publish(ctx, pool)
+}
+
+func (p *PubSubClient) PublishTokenSupply(ctx context.Context, tokenSupply indexerdomain.TokenSupply) error {
+	return p.publish(ctx, tokenSupply)
+}
+
+// PublishTokenSupplyOffset implements domain.PubSubClient.
+func (p *PubSubClient) PublishTokenSupplyOffset(ctx context.Context, tokenSupplyOffset indexerdomain.TokenSupply) error {
+	return p.publish(ctx, tokenSupplyOffset)
 }
 
 // marshal marshals a message to bytes.
