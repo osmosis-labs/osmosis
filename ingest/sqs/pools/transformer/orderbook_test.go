@@ -2,7 +2,6 @@ package poolstransformer_test
 
 import (
 	"encoding/json"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -68,10 +67,6 @@ func (s *PoolTransformerTestSuite) TestUpdateOrderbookInfo() {
 	s.NoError(err)
 
 	poolIngester.UpdateOrderbookInfo(s.Ctx, pool.GetId(), pool.GetAddress(), &cosmWasmPoolModel)
-
-	jsonData, err := json.MarshalIndent(cosmWasmPoolModel.Data, "", "  ")
-	s.NoError(err)
-	fmt.Println(string(jsonData))
 
 	// Check if the pool has been updated
 	s.Equal(sqsdomain.CWPoolData{
