@@ -46,7 +46,11 @@ func (s *PoolTransformerTestSuite) TestUpdateOrderbookInfo() {
 	// Check if the pool has been updated
 	s.Equal(sqsdomain.CWPoolData{
 		Orderbook: &sqsdomain.OrderbookData{
-			Ticks: []sqsdomain.TickIdAndState{},
+			QuoteDenom:  USDC,
+			BaseDenom:   UOSMO,
+			NextBidTick: -108000000,
+			NextAskTick: 182402823,
+			Ticks:       []sqsdomain.TickIdAndState{},
 		},
 	}, cosmWasmPoolModel.Data)
 
@@ -54,7 +58,7 @@ func (s *PoolTransformerTestSuite) TestUpdateOrderbookInfo() {
 	quantity := osmomath.NewInt(10000)
 	msg := ExecuteMsg{
 		PlaceLimit: &PlaceLimitMsg{
-			TickID:         0,
+			TickID:         9,
 			OrderDirection: "bid",
 			Quantity:       quantity,
 		},
@@ -71,9 +75,13 @@ func (s *PoolTransformerTestSuite) TestUpdateOrderbookInfo() {
 	// Check if the pool has been updated
 	s.Equal(sqsdomain.CWPoolData{
 		Orderbook: &sqsdomain.OrderbookData{
+			QuoteDenom:  USDC,
+			BaseDenom:   UOSMO,
+			NextBidTick: 9,
+			NextAskTick: 182402823,
 			Ticks: []sqsdomain.TickIdAndState{
 				{
-					TickId: 0,
+					TickId: 9,
 					TickState: sqsdomain.TickState{
 						AskValues: sqsdomain.TickValues{
 							TotalAmountOfLiquidity:      osmomath.ZeroBigDec(),
