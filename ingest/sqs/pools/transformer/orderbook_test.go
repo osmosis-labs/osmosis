@@ -74,32 +74,19 @@ func (s *PoolTransformerTestSuite) TestUpdateOrderbookInfo() {
 
 	// Check if the pool has been updated
 	s.Equal(sqsdomain.CWPoolData{
+		AlloyTransmuter: nil,
 		Orderbook: &sqsdomain.OrderbookData{
 			QuoteDenom:  USDC,
 			BaseDenom:   UOSMO,
 			NextBidTick: 9,
 			NextAskTick: 182402823,
-			Ticks: []sqsdomain.TickIdAndState{
-				{
-					TickId: 9,
-					TickState: sqsdomain.TickState{
-						AskValues: sqsdomain.TickValues{
-							TotalAmountOfLiquidity:      osmomath.ZeroBigDec(),
-							CumulativeTotalValue:        osmomath.ZeroBigDec(),
-							EffectiveTotalAmountSwapped: osmomath.ZeroBigDec(),
-							CumulativeRealizedCancels:   osmomath.ZeroBigDec(),
-							LastTickSyncEtas:            osmomath.ZeroBigDec(),
-						},
-						BidValues: sqsdomain.TickValues{
-							TotalAmountOfLiquidity:      osmomath.BigDecFromSDKInt(quantity),
-							CumulativeTotalValue:        osmomath.BigDecFromSDKInt(quantity),
-							EffectiveTotalAmountSwapped: osmomath.ZeroBigDec(),
-							CumulativeRealizedCancels:   osmomath.ZeroBigDec(),
-							LastTickSyncEtas:            osmomath.ZeroBigDec(),
-						},
-					},
+			Ticks: []sqsdomain.TickIdAndState{{
+				TickId: 9,
+				TickState: sqsdomain.TickState{
+					AskValues: sqsdomain.TickValues{TotalAmountOfLiquidity: osmomath.ZeroBigDec()},
+					BidValues: sqsdomain.TickValues{TotalAmountOfLiquidity: osmomath.BigDecFromSDKInt(quantity)},
 				},
-			},
+			}},
 		},
 	}, cosmWasmPoolModel.Data)
 }
