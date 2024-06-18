@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/sqs/sqsdomain"
+	sqscosmwasmpool "github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
@@ -49,7 +50,7 @@ func (pi *poolTransformer) ComputeUSDCPoolLiquidityCapFromUOSMO(ctx sdk.Context,
 	return pi.computeUSDCPoolLiquidityCapFromUOSMO(ctx, poolLiquidityCapUOSMO)
 }
 
-func (pi *poolTransformer) UpdateAlloyTransmuterInfo(ctx sdk.Context, poolId uint64, contractAddress sdk.AccAddress, cosmWasmPoolModel *sqsdomain.CosmWasmPoolModel, poolDenoms *[]string) error {
+func (pi *poolTransformer) UpdateAlloyTransmuterInfo(ctx sdk.Context, poolId uint64, contractAddress sdk.AccAddress, cosmWasmPoolModel *sqscosmwasmpool.CosmWasmPoolModel, poolDenoms *[]string) error {
 	return pi.updateAlloyTransmuterInfo(ctx, poolId, contractAddress, cosmWasmPoolModel, poolDenoms)
 }
 
@@ -57,7 +58,7 @@ func (pi *poolTransformer) UpdateOrderbookInfo(
 	ctx sdk.Context,
 	poolId uint64,
 	contractAddress sdk.AccAddress,
-	cosmWasmPoolModel *sqsdomain.CosmWasmPoolModel,
+	cosmWasmPoolModel *sqscosmwasmpool.CosmWasmPoolModel,
 ) error {
 	return pi.updateOrderbookInfo(ctx, poolId, contractAddress, cosmWasmPoolModel)
 }
@@ -65,6 +66,6 @@ func (pi *poolTransformer) UpdateOrderbookInfo(
 func (pi *poolTransformer) InitCosmWasmPoolModel(
 	ctx sdk.Context,
 	pool poolmanagertypes.PoolI,
-) sqsdomain.CosmWasmPoolModel {
+) sqscosmwasmpool.CosmWasmPoolModel {
 	return pi.initCosmWasmPoolModel(ctx, pool)
 }

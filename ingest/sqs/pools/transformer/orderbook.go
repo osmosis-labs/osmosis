@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
-	"github.com/osmosis-labs/sqs/sqsdomain"
+	sqscosmwasmpool "github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 )
 
 type allTicksResponse struct {
-	Ticks []sqsdomain.TickIdAndState `json:"ticks"`
+	Ticks []sqscosmwasmpool.OrderbookTickIdAndState `json:"ticks"`
 }
 
 type orderbook struct {
@@ -32,7 +32,7 @@ func (pi *poolTransformer) updateOrderbookInfo(
 	ctx sdk.Context,
 	poolId uint64,
 	contractAddress sdk.AccAddress,
-	cosmWasmPoolModel *sqsdomain.CosmWasmPoolModel,
+	cosmWasmPoolModel *sqscosmwasmpool.CosmWasmPoolModel,
 ) error {
 	orderbook, err := pi.orderbookOrderbookRaw(ctx, pi.wasmKeeper, poolId, contractAddress)
 	if err != nil {
@@ -44,7 +44,7 @@ func (pi *poolTransformer) updateOrderbookInfo(
 		return err
 	}
 
-	cosmWasmPoolModel.Data.Orderbook = &sqsdomain.OrderbookData{
+	cosmWasmPoolModel.Data.Orderbook = &sqscosmwasmpool.OrderbookData{
 		QuoteDenom:  orderbook.QuoteDenom,
 		BaseDenom:   orderbook.BaseDenom,
 		NextBidTick: orderbook.NextBidTick,
@@ -60,7 +60,7 @@ func (pi *poolTransformer) orderbookAllTicks(
 	wasmKeeper domain.WasmKeeper,
 	poolId uint64,
 	contractAddress sdk.AccAddress,
-) ([]sqsdomain.TickIdAndState, error) {
+) ([]sqscosmwasmpool.OrderbookTickIdAndState, error) {
 	bz, err := wasmKeeper.QuerySmart(ctx, contractAddress, []byte(allTicksQueryString))
 	if err != nil {
 		return nil, fmt.Errorf(

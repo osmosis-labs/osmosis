@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/sqs/sqsdomain"
+	sqscosmwasmpool "github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
 
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
 
@@ -208,7 +209,7 @@ func (pi *poolTransformer) convertPool(
 		return nil, err
 	}
 
-	var cosmWasmPoolModel *sqsdomain.CosmWasmPoolModel
+	var cosmWasmPoolModel *sqscosmwasmpool.CosmWasmPoolModel
 	if pool.GetType() == poolmanagertypes.CosmWasm {
 		cwPool, ok := pool.(cosmwasmpooltypes.CosmWasmExtension)
 		if !ok {
@@ -465,14 +466,14 @@ func (pi *poolTransformer) computeUSDCPoolLiquidityCapFromUOSMO(ctx sdk.Context,
 }
 
 // queryContractInfo queries the cw2 contract info from the given contract address.
-func (pi *poolTransformer) queryContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) (sqsdomain.ContractInfo, error) {
+func (pi *poolTransformer) queryContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) (sqscosmwasmpool.ContractInfo, error) {
 	bz := pi.wasmKeeper.QueryRaw(ctx, contractAddress, []byte(contractInfoKey))
 	if len(bz) == 0 {
-		return sqsdomain.ContractInfo{}, fmt.Errorf("contract info not found: %s", contractAddress)
+		return sqscosmwasmpool.ContractInfo{}, fmt.Errorf("contract info not found: %s", contractAddress)
 	} else {
-		var contractInfo sqsdomain.ContractInfo
+		var contractInfo sqscosmwasmpool.ContractInfo
 		if err := json.Unmarshal(bz, &contractInfo); err != nil {
-			return sqsdomain.ContractInfo{}, fmt.Errorf("error unmarshalling contract info: %w", err)
+			return sqscosmwasmpool.ContractInfo{}, fmt.Errorf("error unmarshalling contract info: %w", err)
 		} else {
 			return contractInfo, nil
 		}
@@ -484,7 +485,7 @@ func (pi *poolTransformer) queryContractInfo(ctx sdk.Context, contractAddress sd
 func (pi *poolTransformer) initCosmWasmPoolModel(
 	ctx sdk.Context,
 	pool poolmanagertypes.PoolI,
-) sqsdomain.CosmWasmPoolModel {
+) sqscosmwasmpool.CosmWasmPoolModel {
 	contractInfo, err := pi.queryContractInfo(ctx, pool.GetAddress())
 	if err != nil {
 		// only log since cw pool contracts are not required to conform cw2
@@ -495,10 +496,10 @@ func (pi *poolTransformer) initCosmWasmPoolModel(
 			"err", err.Error(),
 		)
 
-		return sqsdomain.CosmWasmPoolModel{}
+		return sqscosmwasmpool.CosmWasmPoolModel{}
 	} else {
 		// initialize the CosmWasmPoolModel with the contract info
-		return sqsdomain.CosmWasmPoolModel{
+		return sqscosmwasmpool.CosmWasmPoolModel{
 			ContractInfo: contractInfo,
 		}
 	}
