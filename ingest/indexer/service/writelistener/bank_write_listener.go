@@ -10,7 +10,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 )
 
@@ -23,10 +22,10 @@ type bankWriteListener struct {
 
 	client indexerdomain.Ingester
 
-	coldStartManager domain.ColdStartManager
+	coldStartManager indexerdomain.ColdStartManager
 }
 
-func NewBank(ctx context.Context, client indexerdomain.Ingester, coldStartManager domain.ColdStartManager) storetypes.WriteListener {
+func NewBank(ctx context.Context, client indexerdomain.Ingester, coldStartManager indexerdomain.ColdStartManager) storetypes.WriteListener {
 	return &bankWriteListener{
 		ctx:    ctx,
 		client: client,

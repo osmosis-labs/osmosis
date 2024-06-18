@@ -69,7 +69,6 @@ func (s *sqsStreamingService) ListenDeliverTx(ctx context.Context, req types.Req
 }
 
 func (s *sqsStreamingService) ListenEndBlock(ctx context.Context, req types.RequestEndBlock, res types.ResponseEndBlock) error {
-
 	// uCtx := sdk.UnwrapSDKContext(ctx)
 
 	// height := (uint64)(req.GetHeight())

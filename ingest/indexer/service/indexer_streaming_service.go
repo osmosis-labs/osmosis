@@ -66,17 +66,14 @@ func (s *indexerStreamingService) ListenDeliverTx(ctx context.Context, req types
 }
 
 func (s *indexerStreamingService) ListenEndBlock(ctx context.Context, req types.RequestEndBlock, res types.ResponseEndBlock) error {
-
 	// If did not ingest initial data yet, ingest it now
 	if !s.coldStartManager.HasIngestedInitialData() {
-
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 		var err error
 
 		// Ingest the initial data
 		s.keepers.BankKeeper.IterateTotalSupply(sdkCtx, func(coin sdk.Coin) bool {
-
 			// Skip CL pool shares
 			if strings.Contains(coin.Denom, "cl/pool") {
 				return false
