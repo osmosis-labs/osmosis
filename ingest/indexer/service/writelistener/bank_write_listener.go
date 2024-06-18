@@ -35,6 +35,12 @@ func NewBank(ctx context.Context, client indexerdomain.TokenSupplyPublisher, col
 }
 
 // OnWrite implements types.WriteListener.
+// OnWrite is called when a write operation is executed on the KVStore.
+// If the modified key is a supply key, the updated supply is published to the pubsub client.
+// If the modified key is a supply offset key, the updated supply offset is published to the pubsub client.
+// If the cold start manager has not ingested initial data, an error is returned.
+// For any other key, no action is taken.
+// delete parameter is ignored.
 func (s *bankWriteListener) OnWrite(storeKey storetypes.StoreKey, key []byte, value []byte, delete bool) error {
 	if !s.coldStartManager.HasIngestedInitialData() {
 		return indexerdomain.ErrColdStartManagerDidNotIngest
