@@ -20,12 +20,12 @@ type bankWriteListener struct {
 	// shared context to handle graceful shutdown in case of node stop.
 	ctx context.Context
 
-	client indexerdomain.Ingester
+	client indexerdomain.TokenSupplyPublisher
 
 	coldStartManager indexerdomain.ColdStartManager
 }
 
-func NewBank(ctx context.Context, client indexerdomain.Ingester, coldStartManager indexerdomain.ColdStartManager) storetypes.WriteListener {
+func NewBank(ctx context.Context, client indexerdomain.TokenSupplyPublisher, coldStartManager indexerdomain.ColdStartManager) storetypes.WriteListener {
 	return &bankWriteListener{
 		ctx:    ctx,
 		client: client,
@@ -35,14 +35,20 @@ func NewBank(ctx context.Context, client indexerdomain.Ingester, coldStartManage
 }
 
 // OnWrite implements types.WriteListener.
+// OnWrite is called when a write operation is executed on the KVStore.
+// If the modified key is a supply key, the updated supply is published to the pubsub client.
+// If the modified key is a supply offset key, the updated supply offset is published to the pubsub client.
+// If the cold start manager has not ingested initial data, an error is returned.
+// For any other key, no action is taken.
+// delete parameter is ignored.
 func (s *bankWriteListener) OnWrite(storeKey storetypes.StoreKey, key []byte, value []byte, delete bool) error {
-	if s.coldStartManager.HasIngestedInitialData() {
-		return fmt.Errorf("cold start manager has already ingested initial data")
+	if !s.coldStartManager.HasIngestedInitialData() {
+		return indexerdomain.ErrColdStartManagerDidNotIngest
 	}
 
 	// If the cold start manager has ingested initial data and the key is not empty and the key is a supply key.
 	if len(key) > 0 && bytes.Equal(banktypes.SupplyKey, key[:1]) {
-		denom := key[len(banktypes.SupplyKey):]
+		denom := string(key[len(banktypes.SupplyKey):])
 		if err := s.publishSupply(denom, value); err != nil {
 			return err
 		}
@@ -50,16 +56,17 @@ func (s *bankWriteListener) OnWrite(storeKey storetypes.StoreKey, key []byte, va
 
 	// If the cold start manager has ingested initial data and the key is not empty and the key is a supply key.
 	if len(key) > 0 && bytes.Equal(banktypes.SupplyOffsetKey, key[:1]) {
-		denom := key[len(banktypes.SupplyOffsetKey):]
+		denom := string(key[len(banktypes.SupplyOffsetKey):])
 		if err := s.publishSupplyOffset(denom, value); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
 // publishSupply publishes the updated supply to the pubsub client.
-func (s *bankWriteListener) publishSupply(denom, updatedSupplyBytes []byte) error {
+func (s *bankWriteListener) publishSupply(denom string, updatedSupplyBytes []byte) error {
 	// Track updated supplies.
 	var updatedSupply osmomath.Int
 	err := updatedSupply.Unmarshal(updatedSupplyBytes)
@@ -69,7 +76,7 @@ func (s *bankWriteListener) publishSupply(denom, updatedSupplyBytes []byte) erro
 
 	tokenSupply := indexerdomain.TokenSupply{
 		// Denom is the key without the supply prefix.
-		Denom:  string(denom[len(banktypes.SupplyKey):]),
+		Denom:  denom,
 		Supply: updatedSupply,
 	}
 
@@ -82,7 +89,7 @@ func (s *bankWriteListener) publishSupply(denom, updatedSupplyBytes []byte) erro
 }
 
 // publishSupplyOffset publishes the updated supply offset to the pubsub client.
-func (s *bankWriteListener) publishSupplyOffset(denom, updatedSupplyOffsetBytes []byte) error {
+func (s *bankWriteListener) publishSupplyOffset(denom string, updatedSupplyOffsetBytes []byte) error {
 	// Track updated supplies.
 	var updatedSupplyOffset osmomath.Int
 	err := updatedSupplyOffset.Unmarshal(updatedSupplyOffsetBytes)
@@ -92,7 +99,7 @@ func (s *bankWriteListener) publishSupplyOffset(denom, updatedSupplyOffsetBytes 
 
 	tokenSupplyOffset := indexerdomain.TokenSupplyOffset{
 		// Denom is the key without the supply offset prefix.
-		Denom:        string(denom[len(banktypes.SupplyOffsetKey):]),
+		Denom:        denom,
 		SupplyOffset: updatedSupplyOffset,
 	}
 
