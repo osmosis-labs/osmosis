@@ -175,7 +175,7 @@ replace (
 
 	// Branch: osmo/v0.47.5
 	// https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.47.5-v25-osmo-1
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240520015414-d958d4441808
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240618001903-9d78cb4da1aa
 	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.11
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
