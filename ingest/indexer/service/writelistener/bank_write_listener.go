@@ -10,7 +10,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 )
 
@@ -23,10 +22,10 @@ type bankWriteListener struct {
 
 	client indexerdomain.Ingester
 
-	coldStartManager domain.ColdStartManager
+	coldStartManager indexerdomain.ColdStartManager
 }
 
-func NewBank(ctx context.Context, client indexerdomain.Ingester, coldStartManager domain.ColdStartManager) storetypes.WriteListener {
+func NewBank(ctx context.Context, client indexerdomain.Ingester, coldStartManager indexerdomain.ColdStartManager) storetypes.WriteListener {
 	return &bankWriteListener{
 		ctx:    ctx,
 		client: client,
@@ -52,13 +51,14 @@ func (s *bankWriteListener) OnWrite(storeKey storetypes.StoreKey, key []byte, va
 	// If the cold start manager has ingested initial data and the key is not empty and the key is a supply key.
 	if len(key) > 0 && bytes.Equal(banktypes.SupplyOffsetKey, key[:1]) {
 		denom := key[len(banktypes.SupplyOffsetKey):]
-		if err := s.publishSupply(denom, value); err != nil {
+		if err := s.publishSupplyOffset(denom, value); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
+// publishSupply publishes the updated supply to the pubsub client.
 func (s *bankWriteListener) publishSupply(denom, updatedSupplyBytes []byte) error {
 	// Track updated supplies.
 	var updatedSupply osmomath.Int
@@ -74,6 +74,29 @@ func (s *bankWriteListener) publishSupply(denom, updatedSupplyBytes []byte) erro
 	}
 
 	err = s.client.PublishTokenSupply(s.ctx, tokenSupply)
+	if err != nil {
+		return fmt.Errorf("unable to publish token supply %v", err)
+	}
+
+	return nil
+}
+
+// publishSupplyOffset publishes the updated supply offset to the pubsub client.
+func (s *bankWriteListener) publishSupplyOffset(denom, updatedSupplyOffsetBytes []byte) error {
+	// Track updated supplies.
+	var updatedSupplyOffset osmomath.Int
+	err := updatedSupplyOffset.Unmarshal(updatedSupplyOffsetBytes)
+	if err != nil {
+		return fmt.Errorf("unable to unmarshal supply value %v", err)
+	}
+
+	tokenSupplyOffset := indexerdomain.TokenSupplyOffset{
+		// Denom is the key without the supply offset prefix.
+		Denom:        string(denom[len(banktypes.SupplyOffsetKey):]),
+		SupplyOffset: updatedSupplyOffset,
+	}
+
+	err = s.client.PublishTokenSupplyOffset(s.ctx, tokenSupplyOffset)
 	if err != nil {
 		return fmt.Errorf("unable to publish token supply %v", err)
 	}
