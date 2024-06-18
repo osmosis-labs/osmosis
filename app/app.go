@@ -38,9 +38,9 @@ import (
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
 
+	"github.com/osmosis-labs/osmosis/v25/ingest/indexer"
 	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 	indexerservice "github.com/osmosis-labs/osmosis/v25/ingest/indexer/service"
-	indexerclient "github.com/osmosis-labs/osmosis/v25/ingest/indexer/service/client"
 	indexerwritelistener "github.com/osmosis-labs/osmosis/v25/ingest/indexer/service/writelistener"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
@@ -350,20 +350,21 @@ func NewOsmosisApp(
 		streamingServices = append(streamingServices, sqsStreamingService)
 	}
 
-	// TODO: add node config similar to SQS.
-	if true {
+	// Initialize the config object for the indexer
+	indexerConfig := indexer.NewConfigFromOptions(appOpts)
+
+	// initialize indexer if enabled
+	if indexerConfig.IsEnabled {
+		indexerIngester := indexerConfig.Initialize()
 
 		// TODO: handle graceful shutdown
 		pubSubCtx := context.Background()
-
-		// Create indexers pubsub client.
-		pubSubClient := indexerclient.NewPubSubCLient("osmosis-data-team", "dev.block-topic")
 
 		// Create cold start manager
 		coldStartManager := indexerdomain.NewColdStartManager()
 
 		// Create write listeners for the indexer service.
-		writeListeners := getIndexerServiceWriteListeners(pubSubCtx, app, pubSubClient, coldStartManager)
+		writeListeners := getIndexerServiceWriteListeners(pubSubCtx, app, indexerIngester, coldStartManager)
 
 		// Create keepers for the indexer service.
 		keepers := indexerdomain.Keepers{
@@ -371,7 +372,7 @@ func NewOsmosisApp(
 		}
 
 		// Create the indexer streaming service.
-		indexerStreamingService := indexerservice.New(writeListeners, coldStartManager, pubSubClient, keepers)
+		indexerStreamingService := indexerservice.New(writeListeners, coldStartManager, indexerIngester, keepers)
 
 		// Register the SQS streaming service with the app.
 		streamingServices = append(streamingServices, indexerStreamingService)
@@ -656,7 +657,7 @@ func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoo
 }
 
 // getIndexerServiceWriteListeners returns the write listeners for the app that are specific to the indexer service.
-func getIndexerServiceWriteListeners(ctx context.Context, app *OsmosisApp, client indexerdomain.PubSubClient, coldStartManager indexerdomain.ColdStartManager) map[storetypes.StoreKey][]domain.WriteListener {
+func getIndexerServiceWriteListeners(ctx context.Context, app *OsmosisApp, client indexerdomain.Ingester, coldStartManager indexerdomain.ColdStartManager) map[storetypes.StoreKey][]domain.WriteListener {
 	writeListeners := make(map[storetypes.StoreKey][]domain.WriteListener)
 
 	// Add write listeners for the bank module.

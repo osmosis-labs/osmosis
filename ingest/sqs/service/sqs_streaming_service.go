@@ -12,7 +12,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 )
 
@@ -62,23 +61,6 @@ func (s *sqsStreamingService) ListenFinalizeBlock(goCtx context.Context, req typ
 }
 
 func (s *sqsStreamingService) ListenCommit(ctx context.Context, res types.ResponseCommit, changeSet []*storetypes.StoreKVPair) error {
-	uCtx := sdk.UnwrapSDKContext(ctx)
-
-	height := (uint64)(uCtx.BlockHeight())
-	timeEndBlock := uCtx.BlockTime().UTC()
-	chainId := uCtx.ChainID()
-	gasConsumed := uCtx.GasMeter().GasConsumed()
-	block := indexerdomain.Block{
-		ChainId:     chainId,
-		Height:      height,
-		BlockTime:   timeEndBlock,
-		GasConsumed: gasConsumed,
-	}
-	err := s.sqsIngester.PublishBlock(sdk.UnwrapSDKContext(ctx), block)
-	if err != nil {
-		return err
-	}
-
 	blockProcessStartTime := time.Now()
 	defer func() {
 		// Emit telemetry for the duration of processing the block.

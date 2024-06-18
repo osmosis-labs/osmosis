@@ -22,7 +22,7 @@ type indexerStreamingService struct {
 	// manages tracking of whether the node is code started
 	coldStartManager indexerdomain.ColdStartManager
 
-	client indexerdomain.PubSubClient
+	client indexerdomain.Ingester
 
 	keepers indexerdomain.Keepers
 }
@@ -32,7 +32,7 @@ type indexerStreamingService struct {
 // sqsIngester is an ingester that ingests the block data into SQS.
 // poolTracker is a tracker that tracks the pools that were changed in the block.
 // nodeStatusChecker is a checker that checks if the node is syncing.
-func New(writeListeners map[storetypes.StoreKey][]domain.WriteListener, coldStartManager indexerdomain.ColdStartManager, client indexerdomain.PubSubClient, keepers indexerdomain.Keepers) storetypes.ABCIListener {
+func New(writeListeners map[storetypes.StoreKey][]domain.WriteListener, coldStartManager indexerdomain.ColdStartManager, client indexerdomain.Ingester, keepers indexerdomain.Keepers) storetypes.ABCIListener {
 	return &indexerStreamingService{
 
 		writeListeners: writeListeners,

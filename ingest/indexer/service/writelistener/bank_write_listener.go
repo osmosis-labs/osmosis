@@ -20,12 +20,12 @@ type bankWriteListener struct {
 	// shared context to handle graceful shutdown in case of node stop.
 	ctx context.Context
 
-	client indexerdomain.PubSubClient
+	client indexerdomain.Ingester
 
 	coldStartManager indexerdomain.ColdStartManager
 }
 
-func NewBank(ctx context.Context, client indexerdomain.PubSubClient, coldStartManager indexerdomain.ColdStartManager) domain.WriteListener {
+func NewBank(ctx context.Context, client indexerdomain.Ingester, coldStartManager indexerdomain.ColdStartManager) domain.WriteListener {
 	return &bankWriteListener{
 		ctx:    ctx,
 		client: client,
