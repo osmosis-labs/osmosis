@@ -35,7 +35,6 @@ func NewPubSubCLient(projectId string, blockTopicId string, transactionTopicId s
 
 // publish publishes a message to the PubSub topic.
 func (p *PubSubClient) publish(ctx context.Context, message any, topicId string) error {
-
 	// Create PubSub client if it doesn't exist
 	if p.pubsubClient == nil {
 		client, err := pubsub.NewClient(ctx, p.projectId)
@@ -93,7 +92,7 @@ func (p *PubSubClient) PublishPool(ctx context.Context, pool indexerdomain.Pool)
 	return p.publish(ctx, pool, p.poolTopicId)
 }
 
-// PublishAsset implements PubSubClient.PublishTokenSupply
+// PublishTokenSupply implements domain.PubSubClient.
 func (p *PubSubClient) PublishTokenSupply(ctx context.Context, tokenSupply indexerdomain.TokenSupply) error {
 	// Check if project id and topic id are set
 	if p.projectId == "" || p.tokenSupplyTopicId == "" {

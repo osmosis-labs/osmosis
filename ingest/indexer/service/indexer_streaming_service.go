@@ -59,14 +59,12 @@ func (s *indexerStreamingService) ListenFinalizeBlock(ctx context.Context, req a
 func (s *indexerStreamingService) ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*storetypes.StoreKVPair) error {
 	// If did not ingest initial data yet, ingest it now
 	if !s.coldStartManager.HasIngestedInitialData() {
-
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 		var err error
 
 		// Ingest the initial data
-		s.keepers.BankKeeper.IterateTotalSupplyWithOffsets(sdkCtx, func(coin sdk.Coin) bool {
-
+		s.keepers.BankKeeper.IterateTotalSupply(sdkCtx, func(coin sdk.Coin) bool {
 			// Skip CL pool shares
 			if strings.Contains(coin.Denom, "cl/pool") {
 				return false
@@ -82,6 +80,17 @@ func (s *indexerStreamingService) ListenCommit(ctx context.Context, res abci.Res
 			if err != nil {
 				// TODO: alert
 				sdkCtx.Logger().Error("failed to publish token supply", "error", err)
+			}
+
+			supplyOffset := s.keepers.BankKeeper.GetSupplyOffset(sdkCtx, coin.Denom)
+
+			// If supply offset is non-zero, publish it.
+			if !supplyOffset.IsZero() {
+				// Publish the token supply offset
+				err = s.client.PublishTokenSupplyOffset(sdkCtx, indexerdomain.TokenSupplyOffset{
+					Denom:        coin.Denom,
+					SupplyOffset: supplyOffset,
+				})
 			}
 
 			return false
