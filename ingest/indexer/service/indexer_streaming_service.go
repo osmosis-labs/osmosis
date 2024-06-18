@@ -22,6 +22,8 @@ type indexerStreamingService struct {
 	// manages tracking of whether the node is code started
 	coldStartManager indexerdomain.ColdStartManager
 
+	storeKeyMap map[string]storetypes.StoreKey
+
 	client indexerdomain.Ingester
 
 	keepers indexerdomain.Keepers
@@ -32,7 +34,7 @@ type indexerStreamingService struct {
 // sqsIngester is an ingester that ingests the block data into SQS.
 // poolTracker is a tracker that tracks the pools that were changed in the block.
 // nodeStatusChecker is a checker that checks if the node is syncing.
-func New(writeListeners map[storetypes.StoreKey][]domain.WriteListener, coldStartManager indexerdomain.ColdStartManager, client indexerdomain.Ingester, keepers indexerdomain.Keepers) storetypes.ABCIListener {
+func New(writeListeners map[storetypes.StoreKey][]domain.WriteListener, coldStartManager indexerdomain.ColdStartManager, client indexerdomain.Ingester, storeKeyMap map[string]storetypes.StoreKey, keepers indexerdomain.Keepers) storetypes.ABCIListener {
 	return &indexerStreamingService{
 
 		writeListeners: writeListeners,
@@ -40,6 +42,8 @@ func New(writeListeners map[storetypes.StoreKey][]domain.WriteListener, coldStar
 		coldStartManager: coldStartManager,
 
 		client: client,
+
+		storeKeyMap: storeKeyMap,
 
 		keepers: keepers,
 	}
@@ -98,6 +102,14 @@ func (s *indexerStreamingService) ListenCommit(ctx context.Context, res abci.Res
 
 		// Mark that the initial data has been ingested
 		s.coldStartManager.MarkInitialDataIngested()
+	} else {
+		for _, kv := range changeSet {
+			for _, listener := range s.writeListeners[s.storeKeyMap[kv.StoreKey]] {
+				if err := listener.OnWrite(s.storeKeyMap[kv.StoreKey], kv.Key, kv.Value, kv.Delete); err != nil {
+					return err
+				}
+			}
+		}
 	}
 
 	return nil

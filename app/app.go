@@ -364,7 +364,7 @@ func NewOsmosisApp(
 		coldStartManager := indexerdomain.NewColdStartManager()
 
 		// Create write listeners for the indexer service.
-		writeListeners := getIndexerServiceWriteListeners(pubSubCtx, app, indexerIngester, coldStartManager)
+		writeListeners, storeKeyMap := getIndexerServiceWriteListeners(pubSubCtx, app, indexerIngester, coldStartManager)
 
 		// Create keepers for the indexer service.
 		keepers := indexerdomain.Keepers{
@@ -372,7 +372,7 @@ func NewOsmosisApp(
 		}
 
 		// Create the indexer streaming service.
-		indexerStreamingService := indexerservice.New(writeListeners, coldStartManager, indexerIngester, keepers)
+		indexerStreamingService := indexerservice.New(writeListeners, coldStartManager, indexerIngester, storeKeyMap, keepers)
 
 		// Register the SQS streaming service with the app.
 		streamingServices = append(streamingServices, indexerStreamingService)
@@ -657,15 +657,18 @@ func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoo
 }
 
 // getIndexerServiceWriteListeners returns the write listeners for the app that are specific to the indexer service.
-func getIndexerServiceWriteListeners(ctx context.Context, app *OsmosisApp, client indexerdomain.Ingester, coldStartManager indexerdomain.ColdStartManager) map[storetypes.StoreKey][]domain.WriteListener {
+func getIndexerServiceWriteListeners(ctx context.Context, app *OsmosisApp, client indexerdomain.Ingester, coldStartManager indexerdomain.ColdStartManager) (map[storetypes.StoreKey][]domain.WriteListener, map[string]storetypes.StoreKey) {
 	writeListeners := make(map[storetypes.StoreKey][]domain.WriteListener)
+	storeKeyMap := make(map[string]storetypes.StoreKey)
 
 	// Add write listeners for the bank module.
 	writeListeners[app.GetKey(banktypes.ModuleName)] = []domain.WriteListener{
 		indexerwritelistener.NewBank(ctx, client, coldStartManager),
 	}
 
-	return writeListeners
+	storeKeyMap[banktypes.ModuleName] = app.GetKey(banktypes.ModuleName)
+
+	return writeListeners, storeKeyMap
 }
 
 // we cache the reflectionService to save us time within tests.
