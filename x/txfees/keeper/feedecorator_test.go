@@ -237,7 +237,7 @@ func (s *KeeperTestSuite) TestMempoolFeeDecorator_AnteHandle_MsgTransfer() {
 			expectedErr: errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "memo is too large"),
 		},
 		{
-			name: "MsgTransfer with reciever too large",
+			name: "MsgTransfer with receiver too large",
 			msg: &transfertypes.MsgTransfer{
 				SourcePort:       "transfer",
 				SourceChannel:    "channel-0",
