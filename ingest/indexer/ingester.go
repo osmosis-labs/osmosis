@@ -13,7 +13,7 @@ type indexerIngester struct {
 }
 
 // NewIndexerIngester creates a new indexer ingester.
-func NewIndexerIngester(pubsubClient service.PubSubClient) domain.Ingester {
+func NewIndexerIngester(pubsubClient service.PubSubClient) domain.Publisher {
 	return &indexerIngester{
 		pubsubClient: pubsubClient,
 	}
