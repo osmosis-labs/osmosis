@@ -14,7 +14,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 )
 
@@ -71,22 +70,22 @@ func (s *sqsStreamingService) ListenDeliverTx(ctx context.Context, req types.Req
 
 func (s *sqsStreamingService) ListenEndBlock(ctx context.Context, req types.RequestEndBlock, res types.ResponseEndBlock) error {
 
-	uCtx := sdk.UnwrapSDKContext(ctx)
+	// uCtx := sdk.UnwrapSDKContext(ctx)
 
-	height := (uint64)(req.GetHeight())
-	timeEndBlock := uCtx.BlockTime().UTC()
-	chainId := uCtx.ChainID()
-	gasConsumed := uCtx.GasMeter().GasConsumed()
-	block := indexerdomain.Block{
-		ChainId:     chainId,
-		Height:      height,
-		BlockTime:   timeEndBlock,
-		GasConsumed: gasConsumed,
-	}
-	err := s.sqsIngester.PublishBlock(sdk.UnwrapSDKContext(ctx), block)
-	if err != nil {
-		return err
-	}
+	// height := (uint64)(req.GetHeight())
+	// timeEndBlock := uCtx.BlockTime().UTC()
+	// chainId := uCtx.ChainID()
+	// gasConsumed := uCtx.GasMeter().GasConsumed()
+	// block := indexerdomain.Block{
+	// 	ChainId:     chainId,
+	// 	Height:      height,
+	// 	BlockTime:   timeEndBlock,
+	// 	GasConsumed: gasConsumed,
+	// }
+	// err := s.sqsIngester.PublishBlock(sdk.UnwrapSDKContext(ctx), block)
+	// if err != nil {
+	// 	return err
+	// }
 
 	blockProcessStartTime := time.Now()
 	defer func() {

@@ -7,8 +7,6 @@ import (
 
 	"github.com/osmosis-labs/sqs/sqsdomain"
 
-	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
-
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
@@ -22,9 +20,6 @@ type Ingester interface {
 
 	// ProcessChangedBlockData processes only the pools that were changed in the block.
 	ProcessChangedBlockData(ctx sdk.Context, changedPools BlockPools) error
-
-	// PublishBlock publishes the block data to the indexer.
-	PublishBlock(ctx sdk.Context, block indexerdomain.Block) error
 }
 
 // PoolsTransformer is an interface that defines the methods for the pool transformer
