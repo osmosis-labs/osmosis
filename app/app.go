@@ -44,7 +44,6 @@ import (
 	indexerwritelistener "github.com/osmosis-labs/osmosis/v25/ingest/indexer/service/writelistener"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service/writelistener"
 
 	sqsservice "github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
@@ -345,7 +344,7 @@ func NewOsmosisApp(
 
 		// Create the SQS streaming service by setting up the write listeners,
 		// the SQS ingester, and the pool tracker.
-		sqsStreamingService := service.New(writeListeners, storeKeyMap, sqsIngester, poolTracker, nodeStatusChecker)
+		sqsStreamingService := sqsservice.New(writeListeners, storeKeyMap, sqsIngester, poolTracker, nodeStatusChecker)
 
 		streamingServices = append(streamingServices, sqsStreamingService)
 	}
