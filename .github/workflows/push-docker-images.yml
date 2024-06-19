@@ -34,6 +34,7 @@ on:
 
 env:
   DOCKER_REPOSITORY: osmolabs/osmosis
+  DOCKER_REPOSITORY_COSMOVISOR: osmolabs/osmosis-cosmovisor
   RUNNER_BASE_IMAGE_DISTROLESS: gcr.io/distroless/static-debian11
   RUNNER_BASE_IMAGE_NONROOT: gcr.io/distroless/static-debian11:nonroot
   RUNNER_BASE_IMAGE_ALPINE: alpine:3.17
@@ -157,10 +158,9 @@ jobs:
             GIT_COMMIT=${{ github.sha }}
             COSMOVISOR_VERSION=${{ env.COSMOVISOR_VERSION }}
           tags: |
-            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}-cosmovisor
-            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}-cosmovisor
-            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.PATCH_VERSION }}-cosmovisor
-
+            ${{ env.DOCKER_REPOSITORY_COSMOVISOR }}:${{ env.MAJOR_VERSION }}
+            ${{ env.DOCKER_REPOSITORY_COSMOVISOR }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}
+            ${{ env.DOCKER_REPOSITORY_COSMOVISOR }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.PATCH_VERSION }}
 
   push-iavl-docker-images:
     runs-on: buildjet-4vcpu-ubuntu-2204
