@@ -38,6 +38,7 @@ env:
   RUNNER_BASE_IMAGE_DISTROLESS: gcr.io/distroless/static-debian11
   RUNNER_BASE_IMAGE_NONROOT: gcr.io/distroless/static-debian11:nonroot
   RUNNER_BASE_IMAGE_ALPINE: alpine:3.17
+  COSMOVISOR_VERSION: v1.5.0
 
 jobs:
   push-docker-images:
