@@ -124,6 +124,7 @@ import (
 
 	blocksdkabci "github.com/skip-mev/block-sdk/abci"
 	"github.com/skip-mev/block-sdk/abci/checktx"
+	"github.com/skip-mev/block-sdk/block/utils"
 )
 
 const appName = "OsmosisApp"
@@ -465,10 +466,15 @@ func NewOsmosisApp(
 	// this ProcessProposal always returns ACCEPT.
 	app.SetProcessProposal(baseapp.NoOpProcessProposal())
 
+	cacheDecoder, err := utils.NewDefaultCacheTxDecoder(txConfig.TxDecoder())
+	if err != nil {
+		panic(err)
+	}
+
 	// check-tx
 	mevCheckTxHandler := checktx.NewMEVCheckTxHandler(
 		app,
-		txConfig.TxDecoder(),
+		cacheDecoder.TxDecoder(),
 		mevLane,
 		anteHandler,
 		app.BaseApp.CheckTx,
@@ -479,7 +485,7 @@ func NewOsmosisApp(
 	parityCheckTx := checktx.NewMempoolParityCheckTx(
 		app.Logger(),
 		lanedMempool,
-		txConfig.TxDecoder(),
+		cacheDecoder.TxDecoder(),
 		mevCheckTxHandler.CheckTx(),
 	)
 
