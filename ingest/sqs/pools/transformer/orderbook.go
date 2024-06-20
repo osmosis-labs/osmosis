@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	sqscosmwasmpool "github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
 )
@@ -14,8 +15,28 @@ const (
 	orderbookKey        = `orderbook`
 )
 
+// allTicksResponse is `all_ticks` query response.
 type allTicksResponse struct {
-	Ticks []sqscosmwasmpool.OrderbookTickIdAndState `json:"ticks"`
+	Ticks []orderbookTickIdAndState `json:"ticks"`
+}
+
+type orderbookTickIdAndState struct {
+	TickId    int64              `json:"tick_id"`
+	TickState orderbookTickState `json:"tick_state"`
+}
+
+// orderbookTickState represents the state of the orderbook tick in both bid and ask directions.
+type orderbookTickState struct {
+	// Values for the bid direction of the tick
+	BidValues orderbookTickValues `json:"bid_values"`
+	// Values for the ask direction of the tick
+	AskValues orderbookTickValues `json:"ask_values"`
+}
+
+// orderbookTickValues represents the values of the orderbook tick.
+// Other values are present in the response but omitted on purpose since it's not being used in sqs.
+type orderbookTickValues struct {
+	TotalAmountOfLiquidity osmomath.BigDec `json:"total_amount_of_liquidity"`
 }
 
 type orderbook struct {
@@ -60,7 +81,7 @@ func (pi *poolTransformer) orderbookAllTicks(
 	wasmKeeper domain.WasmKeeper,
 	poolId uint64,
 	contractAddress sdk.AccAddress,
-) ([]sqscosmwasmpool.OrderbookTickIdAndState, error) {
+) ([]sqscosmwasmpool.OrderbookTick, error) {
 	bz, err := wasmKeeper.QuerySmart(ctx, contractAddress, []byte(allTicksQueryString))
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -78,7 +99,19 @@ func (pi *poolTransformer) orderbookAllTicks(
 		)
 	}
 
-	return allTicksResponse.Ticks, nil
+	ticks := make([]sqscosmwasmpool.OrderbookTick, len(allTicksResponse.Ticks))
+
+	for i, tick := range allTicksResponse.Ticks {
+		ticks[i] = sqscosmwasmpool.OrderbookTick{
+			TickId: tick.TickId,
+			TickLiquidity: sqscosmwasmpool.OrderbookTickLiquidity{
+				BidLiquidity: tick.TickState.BidValues.TotalAmountOfLiquidity,
+				AskLiquidity: tick.TickState.AskValues.TotalAmountOfLiquidity,
+			},
+		}
+	}
+
+	return ticks, nil
 }
 
 func (pi *poolTransformer) orderbookOrderbookRaw(

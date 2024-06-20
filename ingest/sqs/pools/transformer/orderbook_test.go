@@ -50,7 +50,7 @@ func (s *PoolTransformerTestSuite) TestUpdateOrderbookInfo() {
 			BaseDenom:   UOSMO,
 			NextBidTick: -108000000,
 			NextAskTick: 182402823,
-			Ticks:       []sqscosmwasmpool.OrderbookTickIdAndState{},
+			Ticks:       []sqscosmwasmpool.OrderbookTick{},
 		},
 	}, cosmWasmPoolModel.Data)
 
@@ -80,11 +80,11 @@ func (s *PoolTransformerTestSuite) TestUpdateOrderbookInfo() {
 			BaseDenom:   UOSMO,
 			NextBidTick: 9,
 			NextAskTick: 182402823,
-			Ticks: []sqscosmwasmpool.OrderbookTickIdAndState{{
+			Ticks: []sqscosmwasmpool.OrderbookTick{{
 				TickId: 9,
-				TickState: sqscosmwasmpool.OrderbookTickState{
-					AskValues: sqscosmwasmpool.OrderbookTickValues{TotalAmountOfLiquidity: osmomath.ZeroBigDec()},
-					BidValues: sqscosmwasmpool.OrderbookTickValues{TotalAmountOfLiquidity: osmomath.BigDecFromSDKInt(quantity)},
+				TickLiquidity: sqscosmwasmpool.OrderbookTickLiquidity{
+					AskLiquidity: osmomath.ZeroBigDec(),
+					BidLiquidity: osmomath.BigDecFromSDKInt(quantity),
 				},
 			}},
 		},
