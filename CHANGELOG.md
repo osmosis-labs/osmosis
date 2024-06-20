@@ -51,6 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
+* [#8420](https://github.com/osmosis-labs/osmosis/pull/8420) Remove further unneeded IBC acknowledgements time from CheckTx/RecheckTx.
+
 ## v25.1.2
 
 * [#8415](https://github.com/osmosis-labs/osmosis/pull/8415) Reset cache on pool creation
