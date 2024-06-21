@@ -83,7 +83,6 @@ func (s *indexerStreamingService) publishBlock(ctx context.Context, req types.Re
 
 // ListenEndBlock implements baseapp.StreamingService.
 func (s *indexerStreamingService) ListenEndBlock(ctx context.Context, req types.RequestEndBlock, res types.ResponseEndBlock) error {
-
 	// Publish the block data
 	err := s.publishBlock(ctx, req)
 	if err != nil {
@@ -92,7 +91,6 @@ func (s *indexerStreamingService) ListenEndBlock(ctx context.Context, req types.
 
 	// If did not ingest initial data yet, ingest it now
 	if !s.coldStartManager.HasIngestedInitialData() {
-
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 		var err error
