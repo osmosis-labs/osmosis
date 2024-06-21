@@ -24,7 +24,7 @@ type indexerStreamingService struct {
 
 	storeKeyMap map[string]storetypes.StoreKey
 
-	client indexerdomain.Ingester
+	client indexerdomain.Publisher
 
 	keepers indexerdomain.Keepers
 }
@@ -34,7 +34,7 @@ type indexerStreamingService struct {
 // sqsIngester is an ingester that ingests the block data into SQS.
 // poolTracker is a tracker that tracks the pools that were changed in the block.
 // nodeStatusChecker is a checker that checks if the node is syncing.
-func New(writeListeners map[storetypes.StoreKey][]domain.WriteListener, coldStartManager indexerdomain.ColdStartManager, client indexerdomain.Ingester, storeKeyMap map[string]storetypes.StoreKey, keepers indexerdomain.Keepers) storetypes.ABCIListener {
+func New(writeListeners map[storetypes.StoreKey][]domain.WriteListener, coldStartManager indexerdomain.ColdStartManager, client indexerdomain.Publisher, storeKeyMap map[string]storetypes.StoreKey, keepers indexerdomain.Keepers) storetypes.ABCIListener {
 	return &indexerStreamingService{
 
 		writeListeners: writeListeners,
@@ -54,8 +54,29 @@ func (s *indexerStreamingService) Close() error {
 	return nil
 }
 
+// publishBlock publishes the block data to the indexer backend.
+func (s *indexerStreamingService) publishBlock(ctx context.Context, req abci.RequestFinalizeBlock) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	height := (uint64)(req.GetHeight())
+	timeEndBlock := sdkCtx.BlockTime().UTC()
+	chainId := sdkCtx.ChainID()
+	gasConsumed := sdkCtx.GasMeter().GasConsumed()
+	block := indexerdomain.Block{
+		ChainId:     chainId,
+		Height:      height,
+		BlockTime:   timeEndBlock,
+		GasConsumed: gasConsumed,
+	}
+	return s.client.PublishBlock(sdkCtx, block)
+}
+
 // ListenFinalizeBlock updates the streaming service with the latest FinalizeBlock messages
 func (s *indexerStreamingService) ListenFinalizeBlock(ctx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
+	// Publish the block data
+	err := s.publishBlock(ctx, req)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

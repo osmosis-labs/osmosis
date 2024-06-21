@@ -22,7 +22,7 @@ type PubSubClient struct {
 }
 
 // NewPubSubCLient creates a new PubSubClient.
-func NewPubSubCLient(projectId string, blockTopicId string, transactionTopicId string, poolTopicId string, tokenSupplyTopicId string, tokenSupplyOffsetTopicId string) indexerdomain.Ingester {
+func NewPubSubCLient(projectId string, blockTopicId string, transactionTopicId string, poolTopicId string, tokenSupplyTopicId string, tokenSupplyOffsetTopicId string) *PubSubClient {
 	return &PubSubClient{
 		projectId:                projectId,
 		blockTopicId:             blockTopicId,

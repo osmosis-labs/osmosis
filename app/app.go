@@ -270,12 +270,11 @@ func NewOsmosisApp(
 	app.homePath = homePath
 	dataDir := filepath.Join(homePath, "data")
 	wasmDir := filepath.Join(homePath, "wasm")
-	ibcWasmConfig :=
-		ibcwasmtypes.WasmConfig{
-			DataDir:               filepath.Join(homePath, "ibc_08-wasm"),
-			SupportedCapabilities: "iterator,stargate,abort",
-			ContractDebugMode:     false,
-		}
+	ibcWasmConfig := ibcwasmtypes.WasmConfig{
+		DataDir:               filepath.Join(homePath, "ibc_08-wasm"),
+		SupportedCapabilities: "iterator,stargate,abort",
+		ContractDebugMode:     false,
+	}
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
 	// Uncomment this for debugging contracts. In the future this could be made into a param passed by the tests
 	// wasmConfig.ContractDebugMode = true
@@ -353,7 +352,7 @@ func NewOsmosisApp(
 
 	// initialize indexer if enabled
 	if indexerConfig.IsEnabled {
-		indexerIngester := indexerConfig.Initialize()
+		indexerPublisher := indexerConfig.Initialize()
 
 		// TODO: handle graceful shutdown
 		pubSubCtx := context.Background()
@@ -362,7 +361,7 @@ func NewOsmosisApp(
 		coldStartManager := indexerdomain.NewColdStartManager()
 
 		// Create write listeners for the indexer service.
-		writeListeners, storeKeyMap := getIndexerServiceWriteListeners(pubSubCtx, app, indexerIngester, coldStartManager)
+		writeListeners, storeKeyMap := getIndexerServiceWriteListeners(pubSubCtx, app, indexerPublisher, coldStartManager)
 
 		// Create keepers for the indexer service.
 		keepers := indexerdomain.Keepers{
@@ -370,7 +369,7 @@ func NewOsmosisApp(
 		}
 
 		// Create the indexer streaming service.
-		indexerStreamingService := indexerservice.New(writeListeners, coldStartManager, indexerIngester, storeKeyMap, keepers)
+		indexerStreamingService := indexerservice.New(writeListeners, coldStartManager, indexerPublisher, storeKeyMap, keepers)
 
 		// Register the SQS streaming service with the app.
 		streamingServices = append(streamingServices, indexerStreamingService)
@@ -655,7 +654,7 @@ func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoo
 }
 
 // getIndexerServiceWriteListeners returns the write listeners for the app that are specific to the indexer service.
-func getIndexerServiceWriteListeners(ctx context.Context, app *OsmosisApp, client indexerdomain.Ingester, coldStartManager indexerdomain.ColdStartManager) (map[storetypes.StoreKey][]domain.WriteListener, map[string]storetypes.StoreKey) {
+func getIndexerServiceWriteListeners(ctx context.Context, app *OsmosisApp, client indexerdomain.Publisher, coldStartManager indexerdomain.ColdStartManager) (map[storetypes.StoreKey][]domain.WriteListener, map[string]storetypes.StoreKey) {
 	writeListeners := make(map[storetypes.StoreKey][]domain.WriteListener)
 	storeKeyMap := make(map[string]storetypes.StoreKey)
 
@@ -904,7 +903,8 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 		sdk.MustAccAddressFromBech32("osmo1f4tvsdukfwh6s9swrc24gkuz23tp8pd3e9r5fa"),
 		sdk.MustAccAddressFromBech32("osmo1myv43sqgnj5sm4zl98ftl45af9cfzk7nhjxjqh"),
 		sdk.MustAccAddressFromBech32("osmo14gs9zqh8m49yy9kscjqu9h72exyf295afg6kgk"),
-		sdk.MustAccAddressFromBech32("osmo1jllfytsz4dryxhz5tl7u73v29exsf80vz52ucc")}
+		sdk.MustAccAddressFromBech32("osmo1jllfytsz4dryxhz5tl7u73v29exsf80vz52ucc"),
+	}
 
 	// Fund localosmosis accounts
 	for _, account := range localOsmosisAccounts {
