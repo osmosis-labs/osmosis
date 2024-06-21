@@ -579,7 +579,7 @@ func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoo
 		sqswritelistener.NewGAMM(blockPoolUpdateTracker, appCodec),
 	}
 	writeListeners[app.GetKey(cosmwasmpooltypes.StoreKey)] = []storetypes.WriteListener{
-		sqswritelistener.NewCosmwasmPool(blockPoolUpdateTracker),
+		sqswritelistener.NewCosmwasmPool(blockPoolUpdateTracker, wasmkeeper),
 	}
 	writeListeners[app.GetKey(banktypes.StoreKey)] = []storetypes.WriteListener{
 		sqswritelistener.NewCosmwasmPoolBalance(blockPoolUpdateTracker),
