@@ -442,6 +442,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.StakingKeeper,
 		appKeepers.TxFeesKeeper,
 		appKeepers.TwapKeeper,
+		appKeepers.EpochsKeeper,
 	)
 	appKeepers.TradingTierKeeper = tradingTiersKeeper
 
@@ -471,6 +472,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.TradingTierKeeper.SetTwapKeeper(appKeepers.TwapKeeper)
 
 	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appKeepers.keys[epochstypes.StoreKey])
+	// TODO set trading tiers keeper
 
 	protorevKeeper := protorevkeeper.NewKeeper(
 		appCodec, appKeepers.keys[protorevtypes.StoreKey],

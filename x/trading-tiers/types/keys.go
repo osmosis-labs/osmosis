@@ -29,7 +29,7 @@ func FormatAccountDailyOsmoVolumeKey(epochNum int64, addr string) []byte {
 
 func FormatAccountDailyOsmoVolumeDayOnly(epochNum int64) []byte {
 	var buffer bytes.Buffer
-	fmt.Fprintf(&buffer, "%s%s%d%s%s", AccountDailyOsmoVolumePrefix, KeySeparator, epochNum)
+	fmt.Fprintf(&buffer, "%s%s%d", AccountDailyOsmoVolumePrefix, KeySeparator, epochNum)
 	return buffer.Bytes()
 }
 
