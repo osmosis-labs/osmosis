@@ -146,7 +146,7 @@ jobs:
             osmolabs/osmosis-e2e-init-chain:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.PATCH_VERSION }}
       # Cosmovisor image
       - name: Build and Push Cosmovisor Docker Images
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           file: Dockerfile.cosmovisor
           context: .
