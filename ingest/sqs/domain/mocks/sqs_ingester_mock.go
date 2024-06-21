@@ -3,7 +3,6 @@ package mocks
 import (
 	"github.com/cosmos/cosmos-sdk/types"
 
-	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
@@ -43,8 +42,4 @@ func (s *SQSIngesterMock) ProcessChangedBlockData(ctx types.Context, changedPool
 	s.IsProcessAllChangedDataCalled = true
 	s.LastChangedPoolsObserved = changedPools
 	return s.ChangedBlockDataError
-}
-
-func (SQSIngesterMock) PublishBlock(ctx types.Context, block indexerdomain.Block) error {
-	return nil
 }
