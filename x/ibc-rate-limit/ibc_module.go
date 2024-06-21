@@ -162,7 +162,8 @@ func (im *IBCModule) OnAcknowledgementPacket(
 	relayer sdk.AccAddress,
 ) error {
 	if ctx.IsCheckTx() || ctx.IsReCheckTx() {
-		return im.app.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
+		return nil
+		// return im.app.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
 	}
 	var ack channeltypes.Acknowledgement
 	if err := json.Unmarshal(acknowledgement, &ack); err != nil {

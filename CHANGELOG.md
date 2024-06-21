@@ -46,11 +46,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#8169](https://github.com/osmosis-labs/osmosis/pull/8169) Support non-pool assets in superfluid staking.
 * [#8169](https://github.com/osmosis-labs/osmosis/pull/8169) Support non-pool assets in superfluid staking
+* [#8169](https://github.com/osmosis-labs/osmosis/pull/8169) [#8250](https://github.com/osmosis-labs/osmosis/pull/8250) [#8276](https://github.com/osmosis-labs/osmosis/pull/8276) [#8320](https://github.com/osmosis-labs/osmosis/pull/8320) Support non-pool assets in superfluid staking
 * [#8274](https://github.com/osmosis-labs/osmosis/pull/8274) SDK v50 and Comet v0.38 upgrade
 
 ### State Compatible
 
 * [#8398](https://github.com/osmosis-labs/osmosis/pull/8398) Lower JSON unmarshalling overhead in IBC packet logic.
+* [#8420](https://github.com/osmosis-labs/osmosis/pull/8420) Remove further unneeded IBC acknowledgements time from CheckTx/RecheckTx.
+
+## v25.1.2
+
+* [#8415](https://github.com/osmosis-labs/osmosis/pull/8415) Reset cache on pool creation
 
 ## v25.1.1
 
