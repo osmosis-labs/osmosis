@@ -61,7 +61,7 @@ func getModuleHashesAtHeight(svrCtx *server.Context, appCreator servertypes.AppC
 	home := svrCtx.Config.RootDir
 	db, err := openDB(home, server.GetAppDBBackend(svrCtx.Viper))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error opening DB, make sure osmosisd is not running when calling this query: %w", err)
 	}
 	app := appCreator(svrCtx.Logger, db, nil, nil)
 	rms, ok := app.CommitMultiStore().(*rootmulti.Store)
