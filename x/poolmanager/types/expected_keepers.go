@@ -113,3 +113,7 @@ type StakingKeeper interface {
 type ProtorevKeeper interface {
 	GetPoolForDenomPair(ctx sdk.Context, baseDenom, denomToMatch string) (uint64, error)
 }
+
+type TradingTiersKeeper interface {
+	TrackTradingTierVolume(ctx sdk.Context, addr sdk.AccAddress, volumeGeneratedInt osmomath.Int, initialDenom string) error
+}

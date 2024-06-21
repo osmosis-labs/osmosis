@@ -3341,7 +3341,7 @@ func (suite *KeeperTestSuite) TestCreateMultihopExpectedSwapOuts() {
 // runMultipleTrackVolumes runs TrackVolume on the same pool multiple times
 func (s *KeeperTestSuite) runMultipleTrackVolumes(poolId uint64, volume sdk.Coin, times int64) {
 	for i := 0; i < int(times); i++ {
-		s.App.PoolManagerKeeper.TrackVolume(s.Ctx, poolId, volume)
+		s.App.PoolManagerKeeper.TrackVolume(s.Ctx, poolId, volume, s.TestAccs[0])
 	}
 }
 
