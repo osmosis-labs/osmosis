@@ -10,8 +10,8 @@ type TokenSupplyPublisher interface {
 	PublishTokenSupplyOffset(ctx context.Context, tokenSupplyOffset TokenSupplyOffset) error
 }
 
-// Ingester is an interface for ingesting & publishing various types of data.
-type Ingester interface {
+// Publisher is an interface for publishing various types of data.
+type Publisher interface {
 	TokenSupplyPublisher
 
 	PublishBlock(ctx context.Context, block Block) error

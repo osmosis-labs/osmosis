@@ -22,7 +22,7 @@ type indexerStreamingService struct {
 	// manages tracking of whether the node is code started
 	coldStartManager domain.ColdStartManager
 
-	client domain.Ingester
+	client domain.Publisher
 
 	keepers domain.Keepers
 }
@@ -32,7 +32,7 @@ type indexerStreamingService struct {
 // sqsIngester is an ingester that ingests the block data into SQS.
 // poolTracker is a tracker that tracks the pools that were changed in the block.
 // nodeStatusChecker is a checker that checks if the node is syncing.
-func New(writeListeners map[storetypes.StoreKey][]storetypes.WriteListener, coldStartManager domain.ColdStartManager, client domain.Ingester, keepers domain.Keepers) baseapp.StreamingService {
+func New(writeListeners map[storetypes.StoreKey][]storetypes.WriteListener, coldStartManager domain.ColdStartManager, client domain.Publisher, keepers domain.Keepers) baseapp.StreamingService {
 	return &indexerStreamingService{
 
 		writeListeners: writeListeners,
@@ -65,7 +65,30 @@ func (s *indexerStreamingService) ListenDeliverTx(ctx context.Context, req types
 	return nil
 }
 
+// publishBlock publishes the block data to the indexer.
+func (s *indexerStreamingService) publishBlock(ctx context.Context, req types.RequestEndBlock) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	height := (uint64)(req.GetHeight())
+	timeEndBlock := sdkCtx.BlockTime().UTC()
+	chainId := sdkCtx.ChainID()
+	gasConsumed := sdkCtx.GasMeter().GasConsumed()
+	block := domain.Block{
+		ChainId:     chainId,
+		Height:      height,
+		BlockTime:   timeEndBlock,
+		GasConsumed: gasConsumed,
+	}
+	return s.client.PublishBlock(sdkCtx, block)
+}
+
+// ListenEndBlock implements baseapp.StreamingService.
 func (s *indexerStreamingService) ListenEndBlock(ctx context.Context, req types.RequestEndBlock, res types.ResponseEndBlock) error {
+	// Publish the block data
+	err := s.publishBlock(ctx, req)
+	if err != nil {
+		return err
+	}
+
 	// If did not ingest initial data yet, ingest it now
 	if !s.coldStartManager.HasIngestedInitialData() {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)

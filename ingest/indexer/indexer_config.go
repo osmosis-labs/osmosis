@@ -53,7 +53,7 @@ func NewConfigFromOptions(opts servertypes.AppOptions) Config {
 }
 
 // Initialize initializes the indexer by creating a new PubSubClient and returning a new IndexerIngester.
-func (c Config) Initialize() domain.Ingester {
+func (c Config) Initialize() domain.Publisher {
 	pubSubClient := service.NewPubSubCLient(c.GCPProjectId, c.BlockTopicId, c.TransactionTopicId, c.PoolTopicId, c.TokenSupplyTopicId, c.TokenSupplyOffsetTopicId)
-	return NewIndexerIngester(*pubSubClient)
+	return NewIndexerPublisher(*pubSubClient)
 }

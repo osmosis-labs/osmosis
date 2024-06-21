@@ -8,19 +8,19 @@ import (
 )
 
 // indexerIngester is an implementation of domain.Ingester.
-type indexerIngester struct {
+type indexerPublisher struct {
 	pubsubClient service.PubSubClient
 }
 
 // NewIndexerIngester creates a new indexer ingester.
-func NewIndexerIngester(pubsubClient service.PubSubClient) domain.Ingester {
-	return &indexerIngester{
+func NewIndexerPublisher(pubsubClient service.PubSubClient) domain.Publisher {
+	return &indexerPublisher{
 		pubsubClient: pubsubClient,
 	}
 }
 
 // PublishBlock implements domain.Ingester.
-func (i *indexerIngester) PublishBlock(ctx context.Context, block domain.Block) error {
+func (i *indexerPublisher) PublishBlock(ctx context.Context, block domain.Block) error {
 	err := i.pubsubClient.PublishBlock(ctx, block)
 	if err != nil {
 		return err
@@ -29,7 +29,7 @@ func (i *indexerIngester) PublishBlock(ctx context.Context, block domain.Block) 
 }
 
 // PublishTransaction implements domain.Ingester.
-func (i *indexerIngester) PublishTransaction(ctx context.Context, txn domain.Transaction) error {
+func (i *indexerPublisher) PublishTransaction(ctx context.Context, txn domain.Transaction) error {
 	err := i.pubsubClient.PublishTransaction(ctx, txn)
 	if err != nil {
 		return err
@@ -38,7 +38,7 @@ func (i *indexerIngester) PublishTransaction(ctx context.Context, txn domain.Tra
 }
 
 // PublishPool implements domain.Ingester.
-func (i *indexerIngester) PublishPool(ctx context.Context, pool domain.Pool) error {
+func (i *indexerPublisher) PublishPool(ctx context.Context, pool domain.Pool) error {
 	err := i.pubsubClient.PublishPool(ctx, pool)
 	if err != nil {
 		return err
@@ -47,7 +47,7 @@ func (i *indexerIngester) PublishPool(ctx context.Context, pool domain.Pool) err
 }
 
 // PublishTokenSupply implements domain.Ingester.
-func (i *indexerIngester) PublishTokenSupply(ctx context.Context, tokenSupply domain.TokenSupply) error {
+func (i *indexerPublisher) PublishTokenSupply(ctx context.Context, tokenSupply domain.TokenSupply) error {
 	err := i.pubsubClient.PublishTokenSupply(ctx, tokenSupply)
 	if err != nil {
 		return err
@@ -56,7 +56,7 @@ func (i *indexerIngester) PublishTokenSupply(ctx context.Context, tokenSupply do
 }
 
 // PublishTokenSupplyOffset implements domain.Ingester.
-func (i *indexerIngester) PublishTokenSupplyOffset(ctx context.Context, tokenSupplyOffset domain.TokenSupplyOffset) error {
+func (i *indexerPublisher) PublishTokenSupplyOffset(ctx context.Context, tokenSupplyOffset domain.TokenSupplyOffset) error {
 	err := i.pubsubClient.PublishTokenSupplyOffset(ctx, tokenSupplyOffset)
 	if err != nil {
 		return err
