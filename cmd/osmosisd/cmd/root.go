@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"embed"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
@@ -48,6 +50,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
@@ -902,7 +905,7 @@ func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts s
 		baseAppOptions = append(baseAppOptions, baseapp.SetStoreLoader(upgradetypes.UpgradeStoreLoader(version, &v23.Upgrade.StoreUpgrades)))
 	}
 
-	return osmosis.NewOsmosisApp(
+	app := osmosis.NewOsmosisApp(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
@@ -910,6 +913,76 @@ func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts s
 		wasmOpts,
 		baseAppOptions...,
 	)
+
+	commitInfoForHeight16841116, err := app.CommitMultiStore().GetCommitInfo(16841116)
+	if err != nil {
+		panic(err)
+	}
+
+	// Create a new slice of StoreInfos for storing the modified hashes.
+	storeInfos := make([]storetypes.StoreInfo, len(commitInfoForHeight16841116.StoreInfos))
+
+	for i, storeInfo := range commitInfoForHeight16841116.StoreInfos {
+		// Convert the hash to a hexadecimal string.
+		hash := strings.ToUpper(hex.EncodeToString(storeInfo.CommitId.Hash))
+
+		// Create a new StoreInfo with the modified hash.
+		storeInfos[i] = storetypes.StoreInfo{
+			Name: storeInfo.Name,
+			CommitId: storetypes.CommitID{
+				Version: storeInfo.CommitId.Version,
+				Hash:    []byte(hash),
+			},
+		}
+	}
+
+	// Sort the storeInfos slice based on the module name.
+	sort.Slice(storeInfos, func(i, j int) bool {
+		return storeInfos[i].Name < storeInfos[j].Name
+	})
+
+	// Create a new CommitInfo with the modified StoreInfos.
+	commitInfoForHeight16841116 = &storetypes.CommitInfo{
+		Version:    commitInfoForHeight16841116.Version,
+		StoreInfos: storeInfos,
+	}
+	fmt.Println("MESSAGE 1: your node has app hashed. Compare each module's hashes with a node that did not app hash to determine the problematic module", "commitInfo", commitInfoForHeight16841116.String())
+
+	commitInfoForHeight16841115, err := app.CommitMultiStore().GetCommitInfo(16841115)
+	if err != nil {
+		panic(err)
+	}
+
+	// Create a new slice of StoreInfos for storing the modified hashes.
+	storeInfos = make([]storetypes.StoreInfo, len(commitInfoForHeight16841115.StoreInfos))
+
+	for i, storeInfo := range commitInfoForHeight16841115.StoreInfos {
+		// Convert the hash to a hexadecimal string.
+		hash := strings.ToUpper(hex.EncodeToString(storeInfo.CommitId.Hash))
+
+		// Create a new StoreInfo with the modified hash.
+		storeInfos[i] = storetypes.StoreInfo{
+			Name: storeInfo.Name,
+			CommitId: storetypes.CommitID{
+				Version: storeInfo.CommitId.Version,
+				Hash:    []byte(hash),
+			},
+		}
+	}
+
+	// Sort the storeInfos slice based on the module name.
+	sort.Slice(storeInfos, func(i, j int) bool {
+		return storeInfos[i].Name < storeInfos[j].Name
+	})
+
+	// Create a new CommitInfo with the modified StoreInfos.
+	commitInfoForHeight16841115 = &storetypes.CommitInfo{
+		Version:    commitInfoForHeight16841115.Version,
+		StoreInfos: storeInfos,
+	}
+	fmt.Println("MESSAGE 2: your node has app hashed. Compare each module's hashes with a node that did not app hash to determine the problematic module", "commitInfo", commitInfoForHeight16841115.String())
+
+	return app
 }
 
 // newTestnetApp starts by running the normal newApp method. From there, the app interface returned is modified in order
