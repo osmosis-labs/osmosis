@@ -297,8 +297,7 @@ func NewOsmosisApp(
 	sqsConfig := sqs.NewConfigFromOptions(appOpts)
 
 	// Initialize the SQS ingester if it is enabled.
-	// TODO: disabled for local testing -> remove
-	if false {
+	if sqsConfig.IsEnabled {
 		sqsKeepers := domain.SQSIngestKeepers{
 			GammKeeper:         app.GAMMKeeper,
 			CosmWasmPoolKeeper: app.CosmwasmPoolKeeper,
