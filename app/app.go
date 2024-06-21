@@ -128,6 +128,7 @@ import (
 
 	blocksdkabci "github.com/skip-mev/block-sdk/abci"
 	"github.com/skip-mev/block-sdk/abci/checktx"
+	"github.com/skip-mev/block-sdk/block/utils"
 )
 
 const appName = "OsmosisApp"
@@ -301,6 +302,7 @@ func NewOsmosisApp(
 		sqsKeepers := domain.SQSIngestKeepers{
 			GammKeeper:         app.GAMMKeeper,
 			CosmWasmPoolKeeper: app.CosmwasmPoolKeeper,
+			WasmKeeper:         app.WasmKeeper,
 			BankKeeper:         app.BankKeeper,
 			ProtorevKeeper:     app.ProtoRevKeeper,
 			PoolManagerKeeper:  app.PoolManagerKeeper,
@@ -318,7 +320,7 @@ func NewOsmosisApp(
 		poolTracker := sqsservice.NewPoolTracker()
 
 		// Create write listeners for the SQS service.
-		writeListeners := getSQSServiceWriteListeners(app, appCodec, poolTracker)
+		writeListeners := getSQSServiceWriteListeners(app, appCodec, poolTracker, app.WasmKeeper)
 
 		// Note: address can be moved to config in the future if needed.
 		rpcAddress, ok := appOpts.Get(rpcAddressConfigName).(string)
@@ -497,10 +499,15 @@ func NewOsmosisApp(
 	// this ProcessProposal always returns ACCEPT.
 	app.SetProcessProposal(baseapp.NoOpProcessProposal())
 
+	cacheDecoder, err := utils.NewDefaultCacheTxDecoder(txConfig.TxDecoder())
+	if err != nil {
+		panic(err)
+	}
+
 	// check-tx
 	mevCheckTxHandler := checktx.NewMEVCheckTxHandler(
 		app,
-		txConfig.TxDecoder(),
+		cacheDecoder.TxDecoder(),
 		mevLane,
 		anteHandler,
 		app.BaseApp.CheckTx,
@@ -511,7 +518,7 @@ func NewOsmosisApp(
 	parityCheckTx := checktx.NewMempoolParityCheckTx(
 		app.Logger(),
 		lanedMempool,
-		txConfig.TxDecoder(),
+		cacheDecoder.TxDecoder(),
 		mevCheckTxHandler.CheckTx(),
 	)
 
@@ -562,7 +569,7 @@ func NewOsmosisApp(
 }
 
 // getSQSServiceWriteListeners returns the write listeners for the app that are specific to the SQS service.
-func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker) map[storetypes.StoreKey][]storetypes.WriteListener {
+func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker, wasmkeeper *wasmkeeper.Keeper) map[storetypes.StoreKey][]storetypes.WriteListener {
 	writeListeners := make(map[storetypes.StoreKey][]storetypes.WriteListener)
 
 	writeListeners[app.GetKey(concentratedtypes.ModuleName)] = []storetypes.WriteListener{

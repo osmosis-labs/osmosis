@@ -18,8 +18,9 @@ import (
 
 type (
 	Keeper struct {
-		storeKey  storetypes.StoreKey
-		permAddrs map[string]authtypes.PermissionsForAddress
+		storeKey    storetypes.StoreKey
+		permAddrs   map[string]authtypes.PermissionsForAddress
+		permAddrMap map[string]bool
 
 		paramSpace paramtypes.Subspace
 
@@ -45,14 +46,18 @@ func NewKeeper(
 	}
 
 	permAddrs := make(map[string]authtypes.PermissionsForAddress)
+	permAddrMap := make(map[string]bool)
 	for name, perms := range maccPerms {
-		permAddrs[name] = authtypes.NewPermissionsForAddress(name, perms)
+		permsForAddr := authtypes.NewPermissionsForAddress(name, perms)
+		permAddrs[name] = permsForAddr
+		permAddrMap[permsForAddr.GetAddress().String()] = true
 	}
 
 	return Keeper{
-		storeKey:   storeKey,
-		paramSpace: paramSpace,
-		permAddrs:  permAddrs,
+		storeKey:    storeKey,
+		paramSpace:  paramSpace,
+		permAddrs:   permAddrs,
+		permAddrMap: permAddrMap,
 
 		accountKeeper:       accountKeeper,
 		bankKeeper:          bankKeeper,

@@ -33,10 +33,10 @@ require (
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.13
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.9
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.15
-	github.com/osmosis-labs/sqs/sqsdomain v0.18.4-0.20240525150306-5031af5f1640
+	github.com/osmosis-labs/sqs/sqsdomain v0.18.4-0.20240606185034-267d0e5b17a6
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
-	github.com/skip-mev/block-sdk v1.4.2
+	github.com/skip-mev/block-sdk v1.4.7
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
@@ -386,9 +386,9 @@ replace (
 	// https://github.com/osmosis-labs/wasmd/releases/tag/v0.45.0-osmo
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.45.0-osmo
 
-	// Using branch osmo/v0.37.4
-	// https://github.com/osmosis-labs/cometbft/releases/tag/v0.37.4-v25-osmo-5
-	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-5
+	// Using branch osmo-v25/v0.37.4
+	// https://github.com/osmosis-labs/cometbft/releases/tag/v0.37.4-v25-osmo-10
+	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-10
 
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
@@ -400,8 +400,6 @@ replace (
 	github.com/cosmos/iavl => github.com/cosmos/iavl v1.1.2-0.20240405172238-7f92c6b356ac
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-	github.com/osmosis-labs/sqs/sqsdomain => github.com/osmosis-labs/sqs/sqsdomain v0.18.4-0.20240525150306-5031af5f1640
-
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 
@@ -410,6 +408,7 @@ replace (
 // github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
 // github.com/osmosis-labs/osmosis/x/epochs => ./x/epochs
 // github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
+
 )
 
 // exclusion so we use v1.0.0

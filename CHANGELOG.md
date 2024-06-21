@@ -46,9 +46,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#8169](https://github.com/osmosis-labs/osmosis/pull/8169) Support non-pool assets in superfluid staking.
 * [#8169](https://github.com/osmosis-labs/osmosis/pull/8169) Support non-pool assets in superfluid staking
+* [#8169](https://github.com/osmosis-labs/osmosis/pull/8169) [#8250](https://github.com/osmosis-labs/osmosis/pull/8250) [#8276](https://github.com/osmosis-labs/osmosis/pull/8276) [#8320](https://github.com/osmosis-labs/osmosis/pull/8320) Support non-pool assets in superfluid staking
 * [#8274](https://github.com/osmosis-labs/osmosis/pull/8274) SDK v50 and Comet v0.38 upgrade
 
 ### State Compatible
+
+* [#8420](https://github.com/osmosis-labs/osmosis/pull/8420) Remove further unneeded IBC acknowledgements time from CheckTx/RecheckTx.
+
+## v25.1.2
+
+* [#8415](https://github.com/osmosis-labs/osmosis/pull/8415) Reset cache on pool creation
+
+## v25.1.1
+
+* [#8394](https://github.com/osmosis-labs/osmosis/pull/8394) Lower timeout commit from 1s to 600ms
+* [#8409](https://github.com/osmosis-labs/osmosis/pull/8409) Add mempool filter to combat IBC spam
+* [#8408](https://github.com/osmosis-labs/osmosis/pull/8408) Bump block sdk to lower recheck times by 25%
+
+## v25.1.0
+
+* [#8398](https://github.com/osmosis-labs/osmosis/pull/8398) Lower JSON unmarshalling overhead in IBC packet logic
 
 ## v25.0.3
 

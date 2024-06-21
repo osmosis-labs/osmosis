@@ -62,10 +62,10 @@ require (
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v1.1.2-0.20240405173644-e52f7630d3b7 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
-	github.com/cosmos/ledger-cosmos-go v0.12.4 // indirect
+	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
 	github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect
 	github.com/creachadair/taskgroup v0.4.2 // indirect
-	github.com/danieljoos/wincred v1.1.2 // indirect
+	github.com/danieljoos/wincred v1.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
@@ -112,7 +112,7 @@ require (
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
-	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d // indirect
+	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hdevalence/ed25519consensus v0.1.0 // indirect
@@ -204,9 +204,9 @@ replace (
 	// https://github.com/osmosis-labs/wasmd/releases/tag/v0.45.0-osmo
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.45.0-osmo
 
-	// Using branch osmo/v0.37.4
-	// https://github.com/osmosis-labs/cometbft/releases/tag/v0.37.4-v25-osmo-5
-	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-5
+	// Using branch osmo-v25/v0.37.4
+	// https://github.com/osmosis-labs/cometbft/releases/tag/v0.37.4-v25-osmo-10
+	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-10
 
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
