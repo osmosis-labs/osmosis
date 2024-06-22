@@ -29,7 +29,7 @@ func NewPubSubCLient(projectId string, blockTopicId string, transactionTopicId s
 		transactionTopicId:       transactionTopicId,
 		poolTopicId:              poolTopicId,
 		tokenSupplyTopicId:       tokenSupplyTopicId,
-		tokenSupplyOffsetTopicId: tokenSupplyTopicId,
+		tokenSupplyOffsetTopicId: tokenSupplyOffsetTopicId,
 	}
 }
 
