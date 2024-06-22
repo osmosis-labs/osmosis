@@ -29,7 +29,11 @@ func NewPubSubCLient(projectId string, blockTopicId string, transactionTopicId s
 		transactionTopicId:       transactionTopicId,
 		poolTopicId:              poolTopicId,
 		tokenSupplyTopicId:       tokenSupplyTopicId,
+<<<<<<< HEAD
 		tokenSupplyOffsetTopicId: tokenSupplyTopicId,
+=======
+		tokenSupplyOffsetTopicId: tokenSupplyOffsetTopicId,
+>>>>>>> 84caa891 (feat: DexScreener (main) (#8411))
 	}
 }
 

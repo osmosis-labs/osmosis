@@ -24,6 +24,20 @@ const (
 	groupOptName = "osmosis-indexer"
 )
 
+<<<<<<< HEAD
+=======
+// DefaultConfig defines the default config for the indexer client.
+var DefaultConfig = Config{
+	IsEnabled:                false,
+	GCPProjectId:             "",
+	BlockTopicId:             "",
+	TransactionTopicId:       "",
+	PoolTopicId:              "",
+	TokenSupplyTopicId:       "",
+	TokenSupplyOffsetTopicId: "",
+}
+
+>>>>>>> 84caa891 (feat: DexScreener (main) (#8411))
 // NewConfigFromOptions returns a new indexer config from the given options.
 func NewConfigFromOptions(opts servertypes.AppOptions) Config {
 	isEnabled := osmoutils.ParseBool(opts, groupOptName, "is-enabled", false)

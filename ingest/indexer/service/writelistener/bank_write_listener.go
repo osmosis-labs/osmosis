@@ -5,15 +5,26 @@ import (
 	"context"
 	"fmt"
 
+<<<<<<< HEAD
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
+=======
+	storetypes "cosmossdk.io/store/types"
+>>>>>>> 84caa891 (feat: DexScreener (main) (#8411))
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
+<<<<<<< HEAD
 )
 
 var _ storetypes.WriteListener = (*bankWriteListener)(nil)
+=======
+	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
+)
+
+var _ domain.WriteListener = (*bankWriteListener)(nil)
+>>>>>>> 84caa891 (feat: DexScreener (main) (#8411))
 
 type bankWriteListener struct {
 
@@ -25,7 +36,11 @@ type bankWriteListener struct {
 	coldStartManager indexerdomain.ColdStartManager
 }
 
+<<<<<<< HEAD
 func NewBank(ctx context.Context, client indexerdomain.TokenSupplyPublisher, coldStartManager indexerdomain.ColdStartManager) storetypes.WriteListener {
+=======
+func NewBank(ctx context.Context, client indexerdomain.TokenSupplyPublisher, coldStartManager indexerdomain.ColdStartManager) domain.WriteListener {
+>>>>>>> 84caa891 (feat: DexScreener (main) (#8411))
 	return &bankWriteListener{
 		ctx:    ctx,
 		client: client,

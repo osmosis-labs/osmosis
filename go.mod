@@ -4,7 +4,13 @@ go 1.21.8
 
 require (
 	cloud.google.com/go/pubsub v1.36.1
+<<<<<<< HEAD
 	cosmossdk.io/api v0.3.1
+=======
+	cosmossdk.io/api v0.7.5
+	cosmossdk.io/client/v2 v2.0.0-beta.1
+	cosmossdk.io/core v0.12.0
+>>>>>>> 84caa891 (feat: DexScreener (main) (#8411))
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/tools/rosetta v0.2.1
