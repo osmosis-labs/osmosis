@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8358](https://github.com/osmosis-labs/osmosis/pull/8358) Set MinDepositRatio gov param to 1 percent for sdk v50 upgrade
 * [#8344](https://github.com/osmosis-labs/osmosis/pull/8344) Uni-directional trading pair taker fee overrides
 * [#8355](https://github.com/osmosis-labs/osmosis/pull/8355) [smartaccount] fix: fee payer charged on every message
+* [#8393](https://github.com/osmosis-labs/osmosis/pull/8393) Enable optimistic execution
 
 ### State Compatible
 
