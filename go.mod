@@ -3,6 +3,7 @@ module github.com/osmosis-labs/osmosis/v25
 go 1.22.3
 
 require (
+	cloud.google.com/go/pubsub v1.36.1
 	cosmossdk.io/api v0.7.5
 	cosmossdk.io/client/v2 v2.0.0-beta.1
 	cosmossdk.io/core v0.12.0
