@@ -56,7 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Config
 
-* [#8398](https://github.com/osmosis-labs/osmosis/pull/8398) Fix osmosis-indexer config bug that read osmosis-sqs value 
+* [#8431](https://github.com/osmosis-labs/osmosis/pull/8431) Fix osmosis-indexer config bug that read osmosis-sqs value 
 
 ## v25.1.2
 
