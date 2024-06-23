@@ -54,6 +54,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#8420](https://github.com/osmosis-labs/osmosis/pull/8420) Remove further unneeded IBC acknowledgements time from CheckTx/RecheckTx.
 
+### Config
+
+* [#8431](https://github.com/osmosis-labs/osmosis/pull/8431) Fix osmosis-indexer config bug that read osmosis-sqs value 
+
 ## v25.1.2
 
 * [#8415](https://github.com/osmosis-labs/osmosis/pull/8415) Reset cache on pool creation
