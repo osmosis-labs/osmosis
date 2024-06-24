@@ -77,6 +77,7 @@ require (
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/aws/aws-sdk-go v1.44.224 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
+	github.com/biter777/countries v1.7.5 // indirect
 	github.com/bits-and-blooms/bitset v1.8.0 // indirect
 	github.com/bombsimon/wsl/v4 v4.2.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
@@ -388,7 +389,7 @@ replace (
 
 	// Using branch osmo-v25/v0.37.4
 	// https://github.com/osmosis-labs/cometbft/releases/tag/v0.37.4-v25-osmo-10
-	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-10
+	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.37.5-0.20240624221015-6da6cfe0d920
 
 	// v1.0.0-beta.3 is incompatible, so we use v1.0.0-beta.2
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
