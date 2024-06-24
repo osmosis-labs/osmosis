@@ -51,7 +51,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
-* [#8420](https://github.com/osmosis-labs/osmosis/pull/8420) Remove further unneeded IBC acknowledgements time from CheckTx/RecheckTx.
+## v25.1.3
+
+* [#8420](https://github.com/osmosis-labs/osmosis/pull/8420) Remove further unneeded IBC acknowledgements time from CheckTx/RecheckTx
+* [#8421](https://github.com/osmosis-labs/osmosis/pull/8421) Block sdk perf improvements by replacing checkTx with cached tx decoder
 
 ### Config
 
@@ -60,6 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## v25.1.2
 
 * [#8415](https://github.com/osmosis-labs/osmosis/pull/8415) Reset cache on pool creation
+* [#8417](https://github.com/osmosis-labs/osmosis/pull/8417) Comet bump to fix edge case with block part selection introduced in v25.1.1
 
 ## v25.1.1
 
