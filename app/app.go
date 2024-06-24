@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -37,10 +38,15 @@ import (
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
 
+	"github.com/osmosis-labs/osmosis/v25/ingest/indexer"
+	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
+	indexerservice "github.com/osmosis-labs/osmosis/v25/ingest/indexer/service"
+	indexerwritelistener "github.com/osmosis-labs/osmosis/v25/ingest/indexer/service/writelistener"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service/writelistener"
+
+	sqsservice "github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
@@ -264,12 +270,11 @@ func NewOsmosisApp(
 	app.homePath = homePath
 	dataDir := filepath.Join(homePath, "data")
 	wasmDir := filepath.Join(homePath, "wasm")
-	ibcWasmConfig :=
-		ibcwasmtypes.WasmConfig{
-			DataDir:               filepath.Join(homePath, "ibc_08-wasm"),
-			SupportedCapabilities: "iterator,stargate,abort",
-			ContractDebugMode:     false,
-		}
+	ibcWasmConfig := ibcwasmtypes.WasmConfig{
+		DataDir:               filepath.Join(homePath, "ibc_08-wasm"),
+		SupportedCapabilities: "iterator,stargate,abort",
+		ContractDebugMode:     false,
+	}
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
 	// Uncomment this for debugging contracts. In the future this could be made into a param passed by the tests
 	// wasmConfig.ContractDebugMode = true
@@ -301,6 +306,8 @@ func NewOsmosisApp(
 
 	sqsConfig := sqs.NewConfigFromOptions(appOpts)
 
+	streamingServices := []storetypes.ABCIListener{}
+
 	// Initialize the SQS ingester if it is enabled.
 	if sqsConfig.IsEnabled {
 		sqsKeepers := domain.SQSIngestKeepers{
@@ -321,7 +328,7 @@ func NewOsmosisApp(
 
 		// Create pool tracker that tracks pool updates
 		// made by the write listenetrs.
-		poolTracker := service.NewPoolTracker()
+		poolTracker := sqsservice.NewPoolTracker()
 
 		// Create write listeners for the SQS service.
 		writeListeners, storeKeyMap := getSQSServiceWriteListeners(app, appCodec, poolTracker, app.WasmKeeper)
@@ -331,20 +338,50 @@ func NewOsmosisApp(
 		if !ok {
 			panic(fmt.Sprintf("failed to retrieve %s from config.toml", rpcAddressConfigName))
 		}
-		nodeStatusChecker := service.NewNodeStatusChecker(rpcAddress)
+		nodeStatusChecker := sqsservice.NewNodeStatusChecker(rpcAddress)
 
 		// Create the SQS streaming service by setting up the write listeners,
 		// the SQS ingester, and the pool tracker.
-		sqsStreamingService := service.New(writeListeners, storeKeyMap, sqsIngester, poolTracker, nodeStatusChecker)
+		sqsStreamingService := sqsservice.New(writeListeners, storeKeyMap, sqsIngester, poolTracker, nodeStatusChecker)
+
+		streamingServices = append(streamingServices, sqsStreamingService)
+	}
+
+	// Initialize the config object for the indexer
+	indexerConfig := indexer.NewConfigFromOptions(appOpts)
+
+	// initialize indexer if enabled
+	if indexerConfig.IsEnabled {
+		indexerPublisher := indexerConfig.Initialize()
+
+		// TODO: handle graceful shutdown
+		pubSubCtx := context.Background()
+
+		// Create cold start manager
+		coldStartManager := indexerdomain.NewColdStartManager()
+
+		// Create write listeners for the indexer service.
+		writeListeners, storeKeyMap := getIndexerServiceWriteListeners(pubSubCtx, app, indexerPublisher, coldStartManager)
+
+		// Create keepers for the indexer service.
+		keepers := indexerdomain.Keepers{
+			BankKeeper: app.BankKeeper,
+		}
+
+		// Create the indexer streaming service.
+		indexerStreamingService := indexerservice.New(writeListeners, coldStartManager, indexerPublisher, storeKeyMap, keepers)
 
 		// Register the SQS streaming service with the app.
-		app.SetStreamingManager(
-			storetypes.StreamingManager{
-				ABCIListeners: []storetypes.ABCIListener{sqsStreamingService},
-				StopNodeOnErr: true,
-			},
-		)
+		streamingServices = append(streamingServices, indexerStreamingService)
 	}
+
+	// Register the SQS streaming service with the app.
+	app.SetStreamingManager(
+		storetypes.StreamingManager{
+			ABCIListeners: streamingServices,
+			StopNodeOnErr: false,
+		},
+	)
 
 	// TODO: There is a bug here, where we register the govRouter routes in InitNormalKeepers and then
 	// call setupHooks afterwards. Therefore, if a gov proposal needs to call a method and that method calls a
@@ -616,6 +653,21 @@ func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoo
 	return writeListeners, storeKeyMap
 }
 
+// getIndexerServiceWriteListeners returns the write listeners for the app that are specific to the indexer service.
+func getIndexerServiceWriteListeners(ctx context.Context, app *OsmosisApp, client indexerdomain.Publisher, coldStartManager indexerdomain.ColdStartManager) (map[storetypes.StoreKey][]domain.WriteListener, map[string]storetypes.StoreKey) {
+	writeListeners := make(map[storetypes.StoreKey][]domain.WriteListener)
+	storeKeyMap := make(map[string]storetypes.StoreKey)
+
+	// Add write listeners for the bank module.
+	writeListeners[app.GetKey(banktypes.ModuleName)] = []domain.WriteListener{
+		indexerwritelistener.NewBank(ctx, client, coldStartManager),
+	}
+
+	storeKeyMap[banktypes.ModuleName] = app.GetKey(banktypes.ModuleName)
+
+	return writeListeners, storeKeyMap
+}
+
 // we cache the reflectionService to save us time within tests.
 var cachedReflectionService *runtimeservices.ReflectionService = nil
 
@@ -851,7 +903,8 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 		sdk.MustAccAddressFromBech32("osmo1f4tvsdukfwh6s9swrc24gkuz23tp8pd3e9r5fa"),
 		sdk.MustAccAddressFromBech32("osmo1myv43sqgnj5sm4zl98ftl45af9cfzk7nhjxjqh"),
 		sdk.MustAccAddressFromBech32("osmo14gs9zqh8m49yy9kscjqu9h72exyf295afg6kgk"),
-		sdk.MustAccAddressFromBech32("osmo1jllfytsz4dryxhz5tl7u73v29exsf80vz52ucc")}
+		sdk.MustAccAddressFromBech32("osmo1jllfytsz4dryxhz5tl7u73v29exsf80vz52ucc"),
+	}
 
 	// Fund localosmosis accounts
 	for _, account := range localOsmosisAccounts {
