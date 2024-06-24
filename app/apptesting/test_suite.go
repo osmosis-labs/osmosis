@@ -81,6 +81,7 @@ type SupportedPoolAndGaugeInfo struct {
 	BalancerPoolID     uint64
 	StableSwapPoolID   uint64
 	CosmWasmPoolID     uint64
+	AlloyedPoolID      uint64
 
 	ConcentratedGaugeID uint64
 	BalancerGaugeID     uint64
@@ -184,12 +185,16 @@ func (s *KeeperTestHelper) PrepareAllSupportedPoolsCustomProject(projectName, tr
 		stableswapPoolID   = s.PrepareBasicStableswapPool()
 		cosmWasmPool       = s.PrepareCustomTransmuterPoolCustomProject(s.TestAccs[0], []string{DefaultTransmuterDenomA, DefaultTransmuterDenomB}, projectName, transmuterPath)
 		cosmWasmPoolID     = cosmWasmPool.GetId()
+		alloyedPool        = s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{DefaultTransmuterDenomA, DefaultTransmuterDenomB}, []uint16{1, 1})
+		alloyedPoolID      = alloyedPool.GetId()
 	)
+
 	return SupportedPoolAndGaugeInfo{
 		ConcentratedPoolID: concentratedPoolID,
 		BalancerPoolID:     balancerPoolID,
 		StableSwapPoolID:   stableswapPoolID,
 		CosmWasmPoolID:     cosmWasmPoolID,
+		AlloyedPoolID:      alloyedPoolID,
 
 		// Define expected gauge IDs:
 

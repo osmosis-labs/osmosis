@@ -34,7 +34,7 @@ func (s *KeeperTestSuite) TestSwapping() {
 					},
 				},
 				executeSwap: func() {
-					_, err := s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], 1, sdk.NewCoin("akash", osmomath.NewInt(100)), "Atom", osmomath.NewInt(1))
+					_, _, err := s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], 1, sdk.NewCoin("akash", osmomath.NewInt(100)), "Atom", osmomath.NewInt(1))
 					s.Require().NoError(err)
 				},
 			},

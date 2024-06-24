@@ -418,8 +418,8 @@ func (suite *KeeperTestSuite) TestGetInternalGaugeIDForPool() {
 			expectError: types.UnsupportedPoolTypeError{PoolID: poolInfo.CosmWasmPoolID, PoolType: poolmanagertypes.CosmWasm},
 		},
 		"pool with given ID does not exist": {
-			poolID:      poolInfo.CosmWasmPoolID + 1,
-			expectError: poolmanagertypes.FailedToFindRouteError{PoolId: poolInfo.CosmWasmPoolID + 1},
+			poolID:      poolInfo.AlloyedPoolID + 1,
+			expectError: poolmanagertypes.FailedToFindRouteError{PoolId: poolInfo.AlloyedPoolID + 1},
 		},
 	}
 

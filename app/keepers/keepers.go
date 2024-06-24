@@ -445,6 +445,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.DistrKeeper,
 		appKeepers.StakingKeeper,
 		appKeepers.ProtoRevKeeper,
+		appKeepers.WasmKeeper,
 	)
 	appKeepers.PoolManagerKeeper.SetStakingKeeper(appKeepers.StakingKeeper)
 	appKeepers.GAMMKeeper.SetPoolManager(appKeepers.PoolManagerKeeper)
@@ -598,6 +599,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.WasmKeeper = &wasmKeeper
 	appKeepers.CosmwasmPoolKeeper.SetWasmKeeper(appKeepers.WasmKeeper)
+	appKeepers.PoolManagerKeeper.SetWasmKeeper(appKeepers.WasmKeeper)
 
 	// Pass the contract keeper to all the structs (generally ICS4Wrappers for ibc middlewares) that need it
 	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)

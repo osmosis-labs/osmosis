@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	alloyedpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/cosmwasm/msg/v3"
 	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
@@ -53,6 +54,54 @@ func (k Keeper) TrackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.
 	k.trackVolume(ctx, poolId, volumeGenerated)
 }
 
-func (k Keeper) ChargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, sender sdk.AccAddress, exactIn bool) (sdk.Coin, error) {
+func (k Keeper) ChargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, sender sdk.AccAddress, exactIn bool) (sdk.Coin, sdk.Coin, error) {
 	return k.chargeTakerFee(ctx, tokenIn, tokenOutDenom, sender, exactIn)
+}
+
+func (k Keeper) QueryAndCheckAlloyedDenom(ctx sdk.Context, contractAddr sdk.AccAddress) (string, error) {
+	return k.queryAndCheckAlloyedDenom(ctx, contractAddr)
+}
+
+func (k Keeper) SnapshotTakerFeeShareAlloyComposition(ctx sdk.Context, contractAddr sdk.AccAddress) ([]types.TakerFeeShareAgreement, error) {
+	return k.snapshotTakerFeeShareAlloyComposition(ctx, contractAddr)
+}
+
+func (k Keeper) RecalculateAndSetTakerFeeShareAlloyComposition(ctx sdk.Context, poolId uint64) error {
+	return k.recalculateAndSetTakerFeeShareAlloyComposition(ctx, poolId)
+}
+
+func (k Keeper) GetCachedTrackers() (map[string]types.TakerFeeShareAgreement, map[string]types.AlloyContractTakerFeeShareState, []uint64) {
+	return k.getCacheTrackers()
+}
+
+func (k *Keeper) SetCacheTrackers(takerFeeShareAgreement map[string]types.TakerFeeShareAgreement, registeredAlloyPoolToState map[string]types.AlloyContractTakerFeeShareState, registeredAlloyedPoolId []uint64) {
+	k.setCacheTrackers(takerFeeShareAgreement, registeredAlloyPoolToState, registeredAlloyedPoolId)
+}
+
+func (k Keeper) GetAlloyedDenomFromPoolId(ctx sdk.Context, poolId uint64) (string, error) {
+	return k.getAlloyedDenomFromPoolId(ctx, poolId)
+}
+
+func (k Keeper) GetTakerFeeShareAgreements(ctx sdk.Context, denomsInvolvedInRoute []string) ([]types.TakerFeeShareAgreement, []types.TakerFeeShareAgreement) {
+	return k.getTakerFeeShareAgreements(ctx, denomsInvolvedInRoute)
+}
+
+func (k Keeper) ProcessDenomShareAgreements(ctx sdk.Context, denomShareAgreements []types.TakerFeeShareAgreement, totalTakerFees sdk.Coins) error {
+	return k.processDenomShareAgreements(ctx, denomShareAgreements, totalTakerFees)
+}
+
+func (k Keeper) ProcessAlloyedAssetShareAgreements(ctx sdk.Context, alloyedAssetShareAgreements []types.TakerFeeShareAgreement, totalTakerFees sdk.Coins) error {
+	return k.processAlloyedAssetShareAgreements(ctx, alloyedAssetShareAgreements, totalTakerFees)
+}
+
+func (k Keeper) ValidatePercentage(percentage osmomath.Dec) error {
+	return k.validatePercentage(percentage)
+}
+
+func (k Keeper) CreateNormalizationFactorsMap(assetConfigs []alloyedpooltypes.AssetConfig) (map[string]osmomath.Dec, error) {
+	return k.createNormalizationFactorsMap(assetConfigs)
+}
+
+func (k Keeper) CalculateTakerFeeShareAgreements(ctx sdk.Context, totalPoolLiquidity []sdk.Coin, normalizationFactors map[string]osmomath.Dec) ([]types.TakerFeeShareAgreement, error) {
+	return k.calculateTakerFeeShareAgreements(ctx, totalPoolLiquidity, normalizationFactors)
 }

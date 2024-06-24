@@ -71,7 +71,7 @@ type PoolManagerKeeper interface {
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
 		tokenOutMinAmount osmomath.Int,
-	) (tokenOutAmount osmomath.Int, err error)
+	) (tokenOutAmount osmomath.Int, takerFeeTotal sdk.Coin, err error)
 
 	RouteGetPoolDenoms(
 		ctx sdk.Context,

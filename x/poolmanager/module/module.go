@@ -132,6 +132,20 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 	return cdc.MustMarshalJSON(genState)
 }
 
+// BeginBlock performs cache initialization for the poolmanager module.
+func (am AppModule) BeginBlock(context context.Context) error {
+	ctx := sdk.UnwrapSDKContext(context)
+	am.k.BeginBlock(ctx)
+	return nil
+}
+
+// EndBlock performs alloy pool state updates for the poolmanager module.
+func (am AppModule) EndBlock(context context.Context) error {
+	ctx := sdk.UnwrapSDKContext(context)
+	am.k.EndBlock(ctx)
+	return nil
+}
+
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
