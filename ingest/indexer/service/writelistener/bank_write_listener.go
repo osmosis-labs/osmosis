@@ -49,16 +49,20 @@ func (s *bankWriteListener) OnWrite(storeKey storetypes.StoreKey, key []byte, va
 	// If the cold start manager has ingested initial data and the key is not empty and the key is a supply key.
 	if len(key) > 0 && bytes.Equal(banktypes.SupplyKey, key[:1]) {
 		denom := string(key[len(banktypes.SupplyKey):])
-		if err := s.publishSupply(denom, value); err != nil {
-			return err
+		if !indexerdomain.ShouldFilterDenom(denom) {
+			if err := s.publishSupply(denom, value); err != nil {
+				return err
+			}
 		}
 	}
 
-	// If the cold start manager has ingested initial data and the key is not empty and the key is a supply key.
+	// If the cold start manager has ingested initial data and the key is not empty and the key is a supply offset key.
 	if len(key) > 0 && bytes.Equal(banktypes.SupplyOffsetKey, key[:1]) {
 		denom := string(key[len(banktypes.SupplyOffsetKey):])
-		if err := s.publishSupplyOffset(denom, value); err != nil {
-			return err
+		if !indexerdomain.ShouldFilterDenom(denom) {
+			if err := s.publishSupplyOffset(denom, value); err != nil {
+				return err
+			}
 		}
 	}
 
