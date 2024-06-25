@@ -22,7 +22,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 )
 
-// forceprune gets cmd to convert any bech32 address to an osmo prefix.
+// ModuleHashByHeightQuery retrieves the module hashes at a given height.
 func moduleHashByHeightQuery(appCreator servertypes.AppCreator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "module-hash-by-height [height]",
