@@ -305,6 +305,20 @@
             ],
         },
         {
+            "name": "x/smart-account/ante",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/x/smart-account/ante",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "TestAuthenticatorAnteSuite/TestSpecificAuthenticator",
+                "-test.v"
+            ],
+        },
+        {
             "name": "ingest/sqs/router",
             "type": "go",
             "request": "launch",

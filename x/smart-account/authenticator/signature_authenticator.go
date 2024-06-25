@@ -89,7 +89,6 @@ func (sva SignatureVerification) ConfirmExecution(ctx sdk.Context, request Authe
 
 func (sva SignatureVerification) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error {
 	// We allow users to pass no data or a valid public key for signature verification.
-	// Users can pass no data if the public key is already contained in the auth store.
 	if len(config) != secp256k1.PubKeySize {
 		return fmt.Errorf("invalid secp256k1 public key size, expected %d, got %d", secp256k1.PubKeySize, len(config))
 	}

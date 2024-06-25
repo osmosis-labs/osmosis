@@ -35,7 +35,6 @@ var (
 		Params: types.Params{
 			AuthorizedTickSpacing:        []uint64{1, 10, 100, 1000},
 			AuthorizedSpreadFactors:      []osmomath.Dec{osmomath.MustNewDecFromStr("0.0001"), osmomath.MustNewDecFromStr("0.0003"), osmomath.MustNewDecFromStr("0.0005")},
-			AuthorizedQuoteDenoms:        []string{ETH, USDC},
 			BalancerSharesRewardDiscount: types.DefaultBalancerSharesDiscount,
 			AuthorizedUptimes:            types.DefaultAuthorizedUptimes,
 		},

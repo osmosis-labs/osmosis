@@ -351,6 +351,11 @@ func (s *TestSuite) TestNativeSuperfluid() {
 
 	s.SetupTest()
 
+	// Set the mint denom to be osmo
+	params := s.App.MintKeeper.GetParams(s.Ctx)
+	params.MintDenom = appparams.BaseCoinUnit
+	s.App.MintKeeper.SetParams(s.Ctx, params)
+
 	// denoms
 	btcDenom := "factory/osmo1pfyxruwvtwk00y8z06dh2lqjdj82ldvy74wzm3/allBTC" // Asset to superfluid stake
 	bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
@@ -467,7 +472,7 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	s.Require().Equal(appparams.BaseCoinUnit, res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Denom)
 	riskFactor := s.App.SuperfluidKeeper.CalculateRiskFactor(s.Ctx, btcDenom)
 	twapStartTime := s.Ctx.BlockTime().Add(-5 * time.Minute)
-	price, err := s.App.TwapKeeper.GetMultiPoolArithmeticTwapToNow(s.Ctx, []*poolmanagertypes.SwapAmountInRoute{{PoolId: nextPoolId, TokenOutDenom: bondDenom}}, btcDenom, bondDenom, twapStartTime)
+	price, err := s.App.TwapKeeper.UnsafeGetMultiPoolArithmeticTwapToNow(s.Ctx, []*poolmanagertypes.SwapAmountInRoute{{PoolId: nextPoolId, TokenOutDenom: bondDenom}}, btcDenom, bondDenom, twapStartTime)
 	equivalentAmount := riskFactor.Mul(osmomath.NewDec(btcStakeAmount.Int64())).Mul(price)
 	s.Require().NoError(err)
 	s.Require().Equal(equivalentAmount, osmomath.NewDec(res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Amount.Int64()))
@@ -511,8 +516,8 @@ func (s *TestSuite) TestNativeSuperfluid() {
 		},
 		validatorRewards)
 	s.Require().NoError(err)
-	// Validators get stake and uosmo. I think this is an issue with test setup
-	s.Require().Equal(2, len(validatorRewards.Rewards.Rewards))
+	// Validators get uosmo
+	s.Require().Equal(1, len(validatorRewards.Rewards.Rewards))
 
 	////////
 	// TEST:  Check delegation rewards were distributed

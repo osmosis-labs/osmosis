@@ -64,7 +64,7 @@ func (s *WriteListenerTestSuite) TestWriteListener_CosmWasm() {
 
 			poolTracker := service.NewPoolTracker()
 
-			cosmWasmPoolWriteListener := writelistener.NewCosmwasmPool(poolTracker)
+			cosmWasmPoolWriteListener := writelistener.NewCosmwasmPool(poolTracker, s.App.WasmKeeper)
 
 			cosmwasmPoolKVStore := s.App.GetKey(cosmwasmpooltypes.ModuleName)
 
@@ -79,7 +79,7 @@ func (s *WriteListenerTestSuite) TestWriteListener_CosmWasm() {
 				cosmWasmPools := poolTracker.GetCosmWasmPools()
 				s.Require().Len(cosmWasmPools, 1)
 
-				s.Require().Equal(&cosmWasmPoolModel.CosmWasmPool, cosmWasmPools[0])
+				s.Require().Equal(&cosmWasmPoolModel.CosmWasmPool, cosmWasmPools[0].AsSerializablePool())
 			} else {
 				cosmWasmPools := poolTracker.GetCosmWasmPools()
 				s.Require().Len(cosmWasmPools, 0)
@@ -102,7 +102,7 @@ func (s *WriteListenerTestSuite) TestWriteListener_CosmWasmBalance() {
 
 	// Trigger cwPool write listener actions at pool creation
 	poolTracker := service.NewPoolTracker()
-	cosmWasmPoolWriteListener := writelistener.NewCosmwasmPool(poolTracker)
+	cosmWasmPoolWriteListener := writelistener.NewCosmwasmPool(poolTracker, s.App.WasmKeeper)
 	cosmwasmPoolKVStore := s.App.GetKey(cosmwasmpooltypes.ModuleName)
 	err = cosmWasmPoolWriteListener.OnWrite(cosmwasmPoolKVStore, cosmwasmpooltypes.FormatPoolsPrefix(cosmWasmPoolModel.PoolId), concentratedPoolModelBz, false)
 	s.Require().NoError(err)
@@ -153,7 +153,7 @@ func (s *WriteListenerTestSuite) TestWriteListener_CosmWasmBalance() {
 				cosmWasmPools := poolTracker.GetCosmWasmPools()
 				s.Require().Len(cosmWasmPools, 1)
 
-				s.Require().Equal(&cosmWasmPoolModel.CosmWasmPool, cosmWasmPools[0])
+				s.Require().Equal(&cosmWasmPoolModel.CosmWasmPool, cosmWasmPools[0].AsSerializablePool())
 			} else {
 				cosmWasmPools := poolTracker.GetCosmWasmPools()
 				s.Require().Len(cosmWasmPools, 0)

@@ -19,6 +19,7 @@ import (
 	"github.com/cometbft/cometbft/libs/cli"
 	tmos "github.com/cometbft/cometbft/libs/os"
 	tmrand "github.com/cometbft/cometbft/libs/rand"
+	cmttypes "github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -201,7 +202,11 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 					genDoc = *genDocFromFile
 				}
 
+				genDoc.Consensus = &genutiltypes.ConsensusGenesis{}
+				genDoc.Consensus.Params = cmttypes.DefaultConsensusParams()
+
 				genDoc.ChainID = chainID
+
 				genDoc.Consensus.Validators = nil
 				genDoc.AppState = appState
 				if err = genutil.ExportGenesisFile(&genDoc, genFilePath); err != nil {

@@ -159,7 +159,8 @@ func (s *KeeperTestSuite) TestSuperfluidDelegate() {
 
 func (s *KeeperTestSuite) TestValidateLockForSFDelegate() {
 	lockOwner := s.TestAccs[0]
-	params, _ := s.App.StakingKeeper.GetParams(s.Ctx)
+	params, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	s.Require().NoError(err)
 	bondDenom := params.BondDenom
 
 	tests := []struct {
@@ -849,7 +850,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 				bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
 				s.Require().NoError(err)
 				supplyBefore := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
-				osmoAmount, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokensExcludeNonPool(s.Ctx, intermediaryAcc.Denom, tc.unlockAmount)
+				osmoAmount, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokensForPools(s.Ctx, intermediaryAcc.Denom, tc.unlockAmount)
 				s.Require().NoError(err)
 
 				unbondLockStartTime := startTime.Add(time.Hour)

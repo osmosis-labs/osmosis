@@ -1391,7 +1391,7 @@ func (s *KeeperTestSuite) calcOutGivenInAmountAsSeparatePoolSwaps(routes []types
 
 		spreadFactor := pool.GetSpreadFactor(cacheCtx)
 
-		takerFee, err := s.App.PoolManagerKeeper.GetTradingPairTakerFee(cacheCtx, hop.TokenOutDenom, nextTokenIn.Denom)
+		takerFee, err := s.App.PoolManagerKeeper.GetTradingPairTakerFee(cacheCtx, nextTokenIn.Denom, hop.TokenOutDenom)
 		s.Require().NoError(err)
 
 		nextTokenInAfterSubTakerFee, _ := poolmanager.CalcTakerFeeExactIn(nextTokenIn, takerFee)
@@ -1566,6 +1566,7 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 			if (tc.takerFee != osmomath.Dec{}) {
 				// If applicable, set taker fee. Note that denoms are reordered lexicographically before being stored.
 				poolmanagerKeeper.SetDenomPairTakerFee(s.Ctx, tc.poolCoins[0].Denom, tc.poolCoins[1].Denom, tc.takerFee)
+				poolmanagerKeeper.SetDenomPairTakerFee(s.Ctx, tc.poolCoins[1].Denom, tc.poolCoins[0].Denom, tc.takerFee)
 
 				multihopTokenOutAmount, err = poolmanagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], tc.poolId, tc.tokenIn, tc.tokenOutDenom, tc.tokenOutMinAmount)
 			} else {
@@ -2801,6 +2802,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 
 				// Set taker fee for pool/pair
 				k.SetDenomPairTakerFee(s.Ctx, pool.initialLiquidity[0].Denom, pool.initialLiquidity[1].Denom, pool.takerFee)
+				k.SetDenomPairTakerFee(s.Ctx, pool.initialLiquidity[1].Denom, pool.initialLiquidity[0].Denom, pool.takerFee)
 
 				// Fund sender with initial liquidity
 				// If not valid, we don't fund to trigger an error case.
@@ -3103,6 +3105,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 
 				// Set taker fee for pool/pair
 				k.SetDenomPairTakerFee(s.Ctx, pool.initialLiquidity[0].Denom, pool.initialLiquidity[1].Denom, pool.takerFee)
+				k.SetDenomPairTakerFee(s.Ctx, pool.initialLiquidity[1].Denom, pool.initialLiquidity[0].Denom, pool.takerFee)
 
 				// Fund sender with initial liquidity
 				// If not valid, we don't fund to trigger an error case.
@@ -3708,6 +3711,7 @@ func (s *KeeperTestSuite) TestTakerFee() {
 
 				// Set taker fee for pool/pair
 				k.SetDenomPairTakerFee(s.Ctx, pool.initialLiquidity[0].Denom, pool.initialLiquidity[1].Denom, nonZeroTakerFee)
+				k.SetDenomPairTakerFee(s.Ctx, pool.initialLiquidity[1].Denom, pool.initialLiquidity[0].Denom, nonZeroTakerFee)
 
 				// Set the denom pair as a pool route in protorev
 				s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, pool.initialLiquidity[0].Denom, pool.initialLiquidity[1].Denom, poolId)

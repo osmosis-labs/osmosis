@@ -161,7 +161,7 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		}
 		// Twap price is calculated from the last 5 minutes
 		startTime := ctx.BlockTime().Add(-5 * time.Minute) // TODO: make this configurable
-		price, err := k.twapk.GetMultiPoolArithmeticTwapToNow(ctx, asset.PriceRoute, asset.Denom, bondDenom, startTime)
+		price, err := k.twapk.UnsafeGetMultiPoolArithmeticTwapToNow(ctx, asset.PriceRoute, asset.Denom, bondDenom, startTime)
 		if err != nil {
 			return sdkerrors.Wrap(err, "failed to get twap price")
 		}

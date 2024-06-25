@@ -64,14 +64,14 @@ var (
 
 	testDenomPairTakerFees = []types.DenomPairTakerFee{
 		{
-			Denom0:   "uion",
-			Denom1:   appparams.BaseCoinUnit,
-			TakerFee: osmomath.MustNewDecFromStr("0.0016"),
+			TokenInDenom:  "uion",
+			TokenOutDenom: appparams.BaseCoinUnit,
+			TakerFee:      osmomath.MustNewDecFromStr("0.0016"),
 		},
 		{
-			Denom0:   "uatom",
-			Denom1:   appparams.BaseCoinUnit,
-			TakerFee: osmomath.MustNewDecFromStr("0.002"),
+			TokenInDenom:  "uatom",
+			TokenOutDenom: appparams.BaseCoinUnit,
+			TakerFee:      osmomath.MustNewDecFromStr("0.002"),
 		},
 	}
 )
@@ -156,10 +156,10 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 	s.Require().Equal(testPoolVolumes[0].PoolVolume, s.App.PoolManagerKeeper.GetTotalVolumeForPool(s.Ctx, testPoolVolumes[0].PoolId))
 	s.Require().Equal(testPoolVolumes[1].PoolVolume, s.App.PoolManagerKeeper.GetTotalVolumeForPool(s.Ctx, testPoolVolumes[1].PoolId))
 
-	takerFee, err := s.App.PoolManagerKeeper.GetTradingPairTakerFee(s.Ctx, testDenomPairTakerFees[0].Denom0, testDenomPairTakerFees[0].Denom1)
+	takerFee, err := s.App.PoolManagerKeeper.GetTradingPairTakerFee(s.Ctx, testDenomPairTakerFees[0].TokenInDenom, testDenomPairTakerFees[0].TokenOutDenom)
 	s.Require().NoError(err)
 	s.Require().Equal(testDenomPairTakerFees[0].TakerFee, takerFee)
-	takerFee, err = s.App.PoolManagerKeeper.GetTradingPairTakerFee(s.Ctx, testDenomPairTakerFees[1].Denom0, testDenomPairTakerFees[1].Denom1)
+	takerFee, err = s.App.PoolManagerKeeper.GetTradingPairTakerFee(s.Ctx, testDenomPairTakerFees[1].TokenInDenom, testDenomPairTakerFees[1].TokenOutDenom)
 	s.Require().NoError(err)
 	s.Require().Equal(testDenomPairTakerFees[1].TakerFee, takerFee)
 }

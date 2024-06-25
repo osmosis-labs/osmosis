@@ -37,7 +37,6 @@ func (msg *MsgAddAuthenticator) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgRemoveAuthenticator{}
 
 func (msg *MsgRemoveAuthenticator) ValidateBasic() error {
-	// TODO: call validate here
 	return validateSender(msg.Sender)
 }
 

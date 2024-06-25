@@ -164,7 +164,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 				// Check authorized denoms are set correctly.
 				params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
-				s.Require().EqualValues(params.AuthorizedQuoteDenoms, v16.AuthorizedQuoteDenoms)
+				// s.Require().EqualValues(params.AuthorizedQuoteDenoms, v16.AuthorizedQuoteDenoms)
 				s.Require().EqualValues(params.AuthorizedUptimes, v16.AuthorizedUptimes)
 
 				// Permissionless pool creation is disabled.
@@ -179,9 +179,10 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 				s.Require().Contains(icaHostAllowList.AllowMessages, sdk.MsgTypeURL(&cosmwasmtypes.MsgInstantiateContract{}))
 
 				// Validate that expedited quorum was set to 2/3
-				// UNFORKINGNOTE: GetTallyParams no longer exists, keeping commented for historical purposes
-				//expQuorum := s.App.GovKeeper.GetTallyParams(s.Ctx).ExpeditedQuorum
-				//s.Require().Equal(osmomath.NewDec(2).Quo(osmomath.NewDec(3)), expQuorum)
+
+				// GetTallyParams no longer exists, keeping commented for historical purposes
+				// expQuorum := s.App.GovKeeper.GetTallyParams(s.Ctx).ExpeditedQuorum
+				// s.Require().Equal(osmomath.NewDec(2).Quo(osmomath.NewDec(3)), expQuorum)
 
 				// Validate that cw pool module address is allowed to upload contract code
 				allowedAddresses := s.App.WasmKeeper.GetParams(s.Ctx).CodeUploadAccess.Addresses
