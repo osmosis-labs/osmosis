@@ -20,6 +20,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/params"
 	v23 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v23" // should be automated to be updated to current version every upgrade
+	"github.com/osmosis-labs/osmosis/v25/ingest/indexer"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs"
 
 	tmcfg "github.com/cometbft/cometbft/config"
@@ -614,6 +615,8 @@ func initAppConfig() (string, interface{}) {
 
 		SidecarQueryServerConfig sqs.Config `mapstructure:"osmosis-sqs"`
 
+		IndexerConfig indexer.Config `mapstructure:"osmosis-indexer"`
+
 		WasmConfig wasmtypes.WasmConfig `mapstructure:"wasm"`
 	}
 
@@ -636,9 +639,11 @@ func initAppConfig() (string, interface{}) {
 
 	sqsCfg := sqs.DefaultConfig
 
+	indexCfg := indexer.DefaultConfig
+
 	wasmCfg := wasmtypes.DefaultWasmConfig()
 
-	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg, SidecarQueryServerConfig: sqsCfg, WasmConfig: wasmCfg}
+	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg, SidecarQueryServerConfig: sqsCfg, IndexerConfig: indexCfg, WasmConfig: wasmCfg}
 
 	OsmosisAppTemplate := serverconfig.DefaultConfigTemplate + `
 ###############################################################################
@@ -674,6 +679,32 @@ is-enabled = "{{ .SidecarQueryServerConfig.IsEnabled }}"
 grpc-ingest-address = "{{ .SidecarQueryServerConfig.GRPCIngestAddress }}"
 # The maximum size of the GRPC message that can be received by the sqs service in bytes.
 grpc-ingest-max-call-size-bytes = "{{ .SidecarQueryServerConfig.GRPCIngestMaxCallSizeBytes }}"
+
+###############################################################################
+###              Osmosis Indexer Configuration                              ###
+###############################################################################
+[osmosis-indexer]
+
+# The indexer service is disabled by default.
+is-enabled = "{{ .IndexerConfig.IsEnabled }}"
+
+# The GCP project id to use for the indexer service.
+gcp-project-id = "{{ .IndexerConfig.GCPProjectId }}"
+
+# The topic id to use for the publishing block data
+block-topic-id = "{{ .IndexerConfig.BlockTopicId }}"
+
+# The topic id to use for the publishing transaction data
+transaction-topic-id = "{{ .IndexerConfig.TransactionTopicId }}"
+
+# The topic id to use for the publishing pool data
+pool-topic-id = "{{ .IndexerConfig.PoolTopicId }}"
+
+# The topic id to use for the publishing token supply data
+token-supply-topic-id = "{{ .IndexerConfig.TokenSupplyTopicId }}"
+
+# The topic id to use for the publishing token supply offset data
+token-supply-offset-topic-id = "{{ .IndexerConfig.TokenSupplyOffsetTopicId }}"
 
 ###############################################################################
 ###                            Wasm Configuration                           ###
