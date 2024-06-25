@@ -553,27 +553,9 @@ func (q Querier) TotalDelegationByValidatorForDenom(goCtx context.Context, req *
 func (q Querier) TotalSuperfluidDelegations(goCtx context.Context, _ *types.TotalSuperfluidDelegationsRequest) (*types.TotalSuperfluidDelegationsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	totalSuperfluidDelegated := osmomath.NewInt(0)
-
-	intermediaryAccounts := q.Keeper.GetAllIntermediaryAccounts(ctx)
-	for _, intermediaryAccount := range intermediaryAccounts {
-		valAddr, err := sdk.ValAddressFromBech32(intermediaryAccount.ValAddr)
-		if err != nil {
-			return nil, err
-		}
-
-		val, err := q.Keeper.sk.GetValidator(ctx, valAddr)
-		if err != nil {
-			return nil, stakingtypes.ErrNoValidatorFound
-		}
-
-		delegation, err := q.Keeper.sk.GetDelegation(ctx, intermediaryAccount.GetAccAddress(), valAddr)
-		if err != nil {
-			continue
-		}
-
-		syntheticOsmoAmt := delegation.Shares.Quo(val.DelegatorShares).MulInt(val.Tokens).RoundInt()
-		totalSuperfluidDelegated = totalSuperfluidDelegated.Add(syntheticOsmoAmt)
+	totalSuperfluidDelegated, err := q.Keeper.GetTotalSuperfluidDelegations(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	return &types.TotalSuperfluidDelegationsResponse{

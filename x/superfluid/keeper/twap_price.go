@@ -77,8 +77,6 @@ func (k Keeper) getSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount os
 		return osmomath.ZeroInt(), err
 	}
 
-	// TODO: This is the other potential place to modify the native asset's (i.e.: btc) osmo equivalent to ensure it
-	//   does not exceed 25% of all stake
 	return k.GetRiskAdjustedOsmoValue(ctx, decAmt.RoundInt(), denom), nil
 }
 

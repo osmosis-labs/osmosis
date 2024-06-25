@@ -298,7 +298,7 @@ func (s *TestSuite) TestGammSuperfluid() {
 
 	proposal, err := s.App.GovKeeper.Proposals.Get(s.Ctx, 1)
 	s.Require().NoError(err)
-	s.Require().Equal(govv1.StatusFailed, proposal.Status)
+	s.Require().Equal(govv1.StatusPassed, proposal.Status)
 	s.Require().Equal("5000000000", proposal.FinalTallyResult.YesCount)
 
 	////////
@@ -505,7 +505,6 @@ func (s *TestSuite) TestNativeSuperfluid() {
 
 	// Move to block 50 because rewards are only distributed every 50 blocks. Rewards will be available after unstaking
 	s.AdvanceToBlockNAndRunEpoch(50)
-	fmt.Println("time", s.Ctx.BlockTime())
 
 	// After a block that is not a multiple of 50, the rewards will be assigned to the validator
 	validatorRewards = new(distrtypes.QueryValidatorOutstandingRewardsResponse)

@@ -5,6 +5,7 @@ package keeper
 import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/osmosis-labs/osmosis/osmomath"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -118,4 +119,31 @@ func (k Keeper) GetAllDenomRiskFactors(ctx sdk.Context) []types.DenomRiskFactor 
 		denomRiskFactors = append(denomRiskFactors, denomRiskFactor)
 	}
 	return denomRiskFactors
+}
+
+func (k Keeper) StoreTotalNonPoolStaked(ctx sdk.Context, denom string, amount osmomath.Int) {
+	store := ctx.KVStore(k.storeKey)
+	key := smartaccounttypes.BuildKey(types.KeyPrefixNonPoolAmounts, []byte(denom))
+	osmoutils.MustSet(store, key, &sdk.IntProto{Int: amount})
+}
+
+func (k Keeper) GetTotalNonPoolStaked(ctx sdk.Context, denom string) (osmomath.Int, bool) {
+	store := ctx.KVStore(k.storeKey)
+	key := smartaccounttypes.BuildKey(types.KeyPrefixNonPoolAmounts, []byte(denom))
+	bz := store.Get(key)
+	if bz == nil {
+		return osmomath.ZeroInt(), false
+	}
+	var total sdk.IntProto
+	err := proto.Unmarshal(bz, &total)
+	if err != nil {
+		return osmomath.ZeroInt(), false
+	}
+	return total.Int, true
+}
+
+func (k Keeper) IncrementTotalNonPoolStaked(ctx sdk.Context, denom string, amount osmomath.Int) {
+	total, _ := k.GetTotalNonPoolStaked(ctx, denom)
+	total = total.Add(amount)
+	k.StoreTotalNonPoolStaked(ctx, denom, total)
 }

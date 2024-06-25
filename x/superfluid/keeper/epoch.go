@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"time"
 
 	sdkerrors "cosmossdk.io/errors"
@@ -168,10 +169,50 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		// TODO: Before setting the multiplier, we want to make sure that it doesn't go beyond the max allowed for native assets
 		//       To do this, we get the total amount of staked osmo, and check that total_staked_for_denom * multiplier does not exceed 25% of total_staked.
 		//       If it does, we adjust the multiplier/price accordingly
+
+		// TODO: The max rate should be per asset, not for all assets.
+		maxNonPoolRate, _ := osmomath.NewDecFromStr("0.25")
+		exceeds, percentage := k.checkNonPoolRateIsNotExceeded(ctx, asset.Denom, maxNonPoolRate)
+		if exceeds != nil {
+			k.Logger(ctx).Info("non-pool staked osmo exceeds 25% of total staked osmo. Adjusting price.", "percentage", percentage.String())
+			price = price.Mul(maxNonPoolRate).Quo(percentage)
+
+		}
 		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, price)
 	}
 
 	return nil
+}
+
+func (k Keeper) checkNonPoolRateIsNotExceeded(ctx sdk.Context, denom string, maxNonPoolRate osmomath.Dec) (error, osmomath.Dec) {
+	if IsPoolToken(denom) {
+		return nil, osmomath.ZeroDec()
+	}
+	bondDenom, err := k.sk.BondDenom(ctx)
+	if err != nil {
+		return err, osmomath.ZeroDec()
+	}
+
+	// get the total amount of staked osmo
+	bondedPool := k.sk.GetBondedPool(ctx)
+	totalStaked := k.bk.GetBalance(ctx, bondedPool.GetAddress(), bondDenom)
+	// get total superfluid-staked
+	totalNonPoolStaked, _ := k.GetTotalNonPoolStaked(ctx, denom)
+
+	// avoid division by zero
+	if totalStaked.Amount.IsZero() {
+		if !totalNonPoolStaked.IsZero() {
+			return sdkerrors.Wrapf(sdkerrors.ErrPanic, "total staked is zero, but total non-pool staked is not. This cannot be correct."), osmomath.ZeroDec()
+		}
+		return nil, osmomath.ZeroDec()
+	}
+
+	// get the relation of total superfluid to total staked  as a percentage
+	percentage := totalNonPoolStaked.ToLegacyDec().Quo(totalStaked.Amount.ToLegacyDec())
+	if percentage.GT(maxNonPoolRate) {
+		return sdkerrors.Wrapf(types.ErrNonPoolRateExceeded, "percentage: %s", percentage.String()), percentage
+	}
+	return nil, percentage
 }
 
 // updateConcentratedOsmoEquivalentMultiplier runs the logic for updating the OSMO equivalent multiplier for a concentrated liquidity pool.
