@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"strings"
 	"sync"
 
 	"github.com/cometbft/cometbft/abci/types"
@@ -97,8 +96,8 @@ func (s *indexerStreamingService) ListenEndBlock(ctx context.Context, req types.
 
 		// Ingest the initial data
 		s.keepers.BankKeeper.IterateTotalSupply(sdkCtx, func(coin sdk.Coin) bool {
-			// Skip CL pool shares
-			if strings.Contains(coin.Denom, "cl/pool") {
+			// Check if the denom should be filtered out and skip it if so
+			if indexerdomain.ShouldFilterDenom(coin.Denom) {
 				return false
 			}
 
