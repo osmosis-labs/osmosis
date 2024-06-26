@@ -97,7 +97,7 @@ func (s *indexerStreamingService) ListenEndBlock(ctx context.Context, req types.
 		// Ingest the initial data
 		s.keepers.BankKeeper.IterateTotalSupply(sdkCtx, func(coin sdk.Coin) bool {
 			// Check if the denom should be filtered out and skip it if so
-			if indexerdomain.ShouldFilterDenom(coin.Denom) {
+			if domain.ShouldFilterDenom(coin.Denom) {
 				return false
 			}
 
