@@ -16,7 +16,7 @@ type TokenSupplyOffset struct {
 	SupplyOffset osmomath.Int `json:"supply_offset"`
 }
 
-// shouldFilterDenom returns true if the given denom should be filtered out.
+// ShouldFilterDenom returns true if the given denom should be filtered out.
 func ShouldFilterDenom(denom string) bool {
 	return strings.Contains(denom, "cl/pool") || strings.Contains(denom, "gamm/pool")
 }
