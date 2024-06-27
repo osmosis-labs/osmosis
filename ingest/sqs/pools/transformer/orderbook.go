@@ -126,7 +126,7 @@ func (pi *poolTransformer) getOrderbookRaw(
 ) (orderbook, error) {
 	bz := wasmKeeper.QueryRaw(ctx, contractAddress, []byte(orderbookKey))
 
-	if bz == nil || len(bz) == 0 {
+	if len(bz) == 0 {
 		return orderbook{}, fmt.Errorf(
 			"error querying orderbook for pool (%d) contrat_address (%s): not found",
 			poolId, contractAddress,
