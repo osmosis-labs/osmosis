@@ -29,7 +29,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 #
 # Its recommended to run this script on a machine with a good amount of CPU cores, as the script
 # will submit transactions concurrently for each pool. The more cores, the faster the script will run. With a 16 vCPU machine,
-# and 65 pool entires, only the last 3 blocks had a 2 block delay.
+# and 65 pool entries, only the last 3 blocks had a 2 block delay.
 #
 # You should use one of the lo-test1 - lo-test10 KEYRING_NAME keys since they are seeded with OSMO from in-place-testnet.
 #
@@ -47,7 +47,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 #
 # Some TODOs:
 #
-# 1. Delete all unsigned tx files and singed tx files in the event of an error
+# 1. Delete all unsigned tx files and signed tx files in the event of an error
 # 2. Figure out some better concurrency strategy for creating and signing the txs
 # 3. Store all the tx hashes, and once complete, iterate over them all and ensure they are all successful and give a summary of the results
 
