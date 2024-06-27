@@ -211,9 +211,12 @@ func (pi *poolTransformer) convertPool(
 
 	var cosmWasmPoolModel *sqscosmwasmpool.CosmWasmPoolModel
 	if pool.GetType() == poolmanagertypes.CosmWasm {
+		poolId := pool.GetId()
+		poolAddress := pool.GetAddress()
+
 		cwPool, ok := pool.(cosmwasmpooltypes.CosmWasmExtension)
 		if !ok {
-			return nil, fmt.Errorf("pool (%d) with type (%d) is not a CosmWasmExtension", pool.GetId(), pool.GetType())
+			return nil, fmt.Errorf("pool (%d) with type (%d) is not a CosmWasmExtension", poolId, pool.GetType())
 		}
 
 		balances = cwPool.GetTotalPoolLiquidity(ctx)
@@ -225,7 +228,7 @@ func (pi *poolTransformer) convertPool(
 		// This must never happen, but if it does, and there is no checks, the query will fail silently.
 		// We make sure to return an error here.
 		if pi.wasmKeeper == nil {
-			return nil, fmt.Errorf("pool (%d) with type (%d) requires `poolTransformer` to have `wasmKeeper` but got `nil`", pool.GetId(), pool.GetType())
+			return nil, fmt.Errorf("pool (%d) with type (%d) requires `poolTransformer` to have `wasmKeeper` but got `nil`", poolId, pool.GetType())
 		}
 
 		initedCosmWasmPoolModel := pi.initCosmWasmPoolModel(ctx, pool)
@@ -233,12 +236,12 @@ func (pi *poolTransformer) convertPool(
 
 		// special transformation based on different cw pool
 		if cosmWasmPoolModel.IsAlloyTransmuter() {
-			err = pi.updateAlloyTransmuterInfo(ctx, pool.GetId(), pool.GetAddress(), cosmWasmPoolModel, &denoms)
+			err = pi.updateAlloyTransmuterInfo(ctx, poolId, poolAddress, cosmWasmPoolModel, &denoms)
 			if err != nil {
 				return nil, err
 			}
 		} else if cosmWasmPoolModel.IsOrderbook() {
-			err = pi.updateOrderbookInfo(ctx, pool.GetId(), pool.GetAddress(), cosmWasmPoolModel)
+			err = pi.updateOrderbookInfo(ctx, poolId, poolAddress, cosmWasmPoolModel)
 			if err != nil {
 				return nil, err
 			}
