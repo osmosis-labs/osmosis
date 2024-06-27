@@ -31,7 +31,7 @@ const (
 
 // DefaultConfig defines the default config for the sidecar query server.
 var DefaultConfig = Config{
-	IsEnabled: false,
+	IsEnabled: true,
 	// Default gRPC address is localhost:50051
 	GRPCIngestAddress: "localhost:50051",
 	// 50 MB by default. Our pool data is estimated to be at approximately 15MB.

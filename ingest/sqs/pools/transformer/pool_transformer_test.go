@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/sqs/sqsdomain"
+	sqscosmwasmpool "github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
@@ -777,8 +778,8 @@ func (s *PoolTransformerTestSuite) TestInitCosmWasmPoolModel() {
 
 	pool := s.PrepareCosmWasmPool()
 	cwpm := poolIngester.InitCosmWasmPoolModel(s.Ctx, pool)
-	s.Equal(sqsdomain.CosmWasmPoolModel{
-		ContractInfo: sqsdomain.ContractInfo{
+	s.Equal(sqscosmwasmpool.CosmWasmPoolModel{
+		ContractInfo: sqscosmwasmpool.ContractInfo{
 			Contract: "crates.io:transmuter",
 			Version:  "0.1.0",
 		},
@@ -793,8 +794,8 @@ func (s *PoolTransformerTestSuite) TestInitCosmWasmPoolModel() {
 	})
 
 	cwpm = poolIngester.InitCosmWasmPoolModel(s.Ctx, pool)
-	s.Equal(sqsdomain.CosmWasmPoolModel{
-		ContractInfo: sqsdomain.ContractInfo{
+	s.Equal(sqscosmwasmpool.CosmWasmPoolModel{
+		ContractInfo: sqscosmwasmpool.ContractInfo{
 			Contract: "crates.io:transmuter",
 			Version:  "3.0.0",
 		},

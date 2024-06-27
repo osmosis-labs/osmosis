@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	"github.com/osmosis-labs/sqs/sqsdomain"
+	sqscosmwasmpool "github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
 )
 
 func (s *PoolTransformerTestSuite) TestUpdateAlloyedTransmuterPool() {
@@ -32,7 +32,7 @@ func (s *PoolTransformerTestSuite) TestUpdateAlloyedTransmuterPool() {
 	// Initialize the pool ingester
 	poolIngester := s.initializePoolIngester(usdcOsmoPoolID)
 
-	cosmWasmPoolModel := sqsdomain.CosmWasmPoolModel{}
+	cosmWasmPoolModel := sqscosmwasmpool.CosmWasmPoolModel{}
 	poolDenoms := []string{apptesting.DefaultTransmuterDenomA, apptesting.DefaultTransmuterDenomB}
 
 	poolIngester.UpdateAlloyTransmuterInfo(s.Ctx, pool.GetId(), pool.GetAddress(), &cosmWasmPoolModel, &poolDenoms)
@@ -40,10 +40,10 @@ func (s *PoolTransformerTestSuite) TestUpdateAlloyedTransmuterPool() {
 	alloyedDenom := fmt.Sprintf("factory/%s/alloyed/%s", pool.GetAddress(), apptesting.DefaultAlloyedSubDenom)
 
 	// Check if the pool has been updated
-	s.Equal(sqsdomain.CWPoolData{
-		AlloyTransmuter: &sqsdomain.AlloyTransmuterData{
+	s.Equal(sqscosmwasmpool.CosmWasmPoolData{
+		AlloyTransmuter: &sqscosmwasmpool.AlloyTransmuterData{
 			AlloyedDenom: alloyedDenom,
-			AssetConfigs: []sqsdomain.TransmuterAssetConfig{
+			AssetConfigs: []sqscosmwasmpool.TransmuterAssetConfig{
 				{Denom: apptesting.DefaultTransmuterDenomA, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomANormFactor)},
 				{Denom: apptesting.DefaultTransmuterDenomB, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomBNormFactor)},
 				{Denom: alloyedDenom, NormalizationFactor: osmomath.NewInt(apptesting.DefaultAlloyedDenomNormFactor)}},
