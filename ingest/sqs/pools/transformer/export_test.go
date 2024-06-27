@@ -69,3 +69,7 @@ func (pi *poolTransformer) InitCosmWasmPoolModel(
 ) sqscosmwasmpool.CosmWasmPoolModel {
 	return pi.initCosmWasmPoolModel(ctx, pool)
 }
+
+func TickIndexById(ticks []sqscosmwasmpool.OrderbookTick, tickId int64) int {
+	return tickIndexById(ticks, tickId)
+}

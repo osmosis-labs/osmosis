@@ -3,6 +3,7 @@ package poolstransformer
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -55,7 +56,7 @@ func (pi *poolTransformer) updateOrderbookInfo(
 	contractAddress sdk.AccAddress,
 	cosmWasmPoolModel *sqscosmwasmpool.CosmWasmPoolModel,
 ) error {
-	orderbook, err := pi.orderbookOrderbookRaw(ctx, pi.wasmKeeper, poolId, contractAddress)
+	orderbook, err := pi.getOrderbookRaw(ctx, pi.wasmKeeper, poolId, contractAddress)
 	if err != nil {
 		return err
 	}
@@ -65,12 +66,15 @@ func (pi *poolTransformer) updateOrderbookInfo(
 		return err
 	}
 
+	nextBidTickIndex := tickIndexById(ticks, orderbook.NextBidTick)
+	nextAskTickIndex := tickIndexById(ticks, orderbook.NextAskTick)
+
 	cosmWasmPoolModel.Data.Orderbook = &sqscosmwasmpool.OrderbookData{
-		QuoteDenom:  orderbook.QuoteDenom,
-		BaseDenom:   orderbook.BaseDenom,
-		NextBidTick: orderbook.NextBidTick,
-		NextAskTick: orderbook.NextAskTick,
-		Ticks:       ticks,
+		QuoteDenom:       orderbook.QuoteDenom,
+		BaseDenom:        orderbook.BaseDenom,
+		NextBidTickIndex: nextBidTickIndex,
+		NextAskTickIndex: nextAskTickIndex,
+		Ticks:            ticks,
 	}
 
 	return nil
@@ -114,7 +118,7 @@ func (pi *poolTransformer) orderbookAllTicks(
 	return ticks, nil
 }
 
-func (pi *poolTransformer) orderbookOrderbookRaw(
+func (pi *poolTransformer) getOrderbookRaw(
 	ctx sdk.Context,
 	wasmKeeper domain.WasmKeeper,
 	poolId uint64,
@@ -139,4 +143,22 @@ func (pi *poolTransformer) orderbookOrderbookRaw(
 	}
 
 	return orderbook, nil
+}
+
+// tickIndexById find the index of the tick with the given tickId.
+// return -1 and no errors if not found. Since next bid and next ask
+// can be min/max tick id in case there is no bid/ask tick.
+func tickIndexById(ticks []sqscosmwasmpool.OrderbookTick, tickId int64) int {
+	// binary search for the tickId
+	index := sort.Search(len(ticks), func(i int) bool {
+		return ticks[i].TickId >= tickId
+	})
+
+	// if tickId is found, return the index
+	if index < len(ticks) && ticks[index].TickId == tickId {
+		return index
+	}
+
+	// else return -1
+	return -1
 }

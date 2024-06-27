@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	poolstransformer "github.com/osmosis-labs/osmosis/v25/ingest/sqs/pools/transformer"
 	sqscosmwasmpool "github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
 )
 
@@ -46,11 +47,11 @@ func (s *PoolTransformerTestSuite) TestUpdateOrderbookInfo() {
 	// Check if the pool has been updated
 	s.Equal(sqscosmwasmpool.CosmWasmPoolData{
 		Orderbook: &sqscosmwasmpool.OrderbookData{
-			QuoteDenom:  USDC,
-			BaseDenom:   UOSMO,
-			NextBidTick: -108000000,
-			NextAskTick: 182402823,
-			Ticks:       []sqscosmwasmpool.OrderbookTick{},
+			QuoteDenom:       USDC,
+			BaseDenom:        UOSMO,
+			NextBidTickIndex: -1,
+			NextAskTickIndex: -1,
+			Ticks:            []sqscosmwasmpool.OrderbookTick{},
 		},
 	}, cosmWasmPoolModel.Data)
 
@@ -76,10 +77,10 @@ func (s *PoolTransformerTestSuite) TestUpdateOrderbookInfo() {
 	s.Equal(sqscosmwasmpool.CosmWasmPoolData{
 		AlloyTransmuter: nil,
 		Orderbook: &sqscosmwasmpool.OrderbookData{
-			QuoteDenom:  USDC,
-			BaseDenom:   UOSMO,
-			NextBidTick: 9,
-			NextAskTick: 182402823,
+			QuoteDenom:       USDC,
+			BaseDenom:        UOSMO,
+			NextBidTickIndex: 0,
+			NextAskTickIndex: -1,
 			Ticks: []sqscosmwasmpool.OrderbookTick{{
 				TickId: 9,
 				TickLiquidity: sqscosmwasmpool.OrderbookTickLiquidity{
@@ -89,4 +90,36 @@ func (s *PoolTransformerTestSuite) TestUpdateOrderbookInfo() {
 			}},
 		},
 	}, cosmWasmPoolModel.Data)
+}
+
+func (s *PoolTransformerTestSuite) TestTickIndexById() {
+	ticks := []sqscosmwasmpool.OrderbookTick{
+		{TickId: -99, TickLiquidity: sqscosmwasmpool.OrderbookTickLiquidity{}},
+		{TickId: 1, TickLiquidity: sqscosmwasmpool.OrderbookTickLiquidity{}},
+		{TickId: 3, TickLiquidity: sqscosmwasmpool.OrderbookTickLiquidity{}},
+		{TickId: 7, TickLiquidity: sqscosmwasmpool.OrderbookTickLiquidity{}},
+		{TickId: 10, TickLiquidity: sqscosmwasmpool.OrderbookTickLiquidity{}},
+		{TickId: 15, TickLiquidity: sqscosmwasmpool.OrderbookTickLiquidity{}},
+	}
+
+	tests := []struct {
+		tickId   int64
+		expected int
+	}{
+		{tickId: -99, expected: 0},
+		{tickId: -98, expected: -1},
+		{tickId: -1, expected: -1},
+		{tickId: 1, expected: 1},
+		{tickId: 2, expected: -1},
+		{tickId: 3, expected: 2},
+		{tickId: 7, expected: 3},
+		{tickId: 10, expected: 4},
+		{tickId: 15, expected: 5},
+		{tickId: 20, expected: -1},
+	}
+
+	for _, tt := range tests {
+		index := poolstransformer.TickIndexById(ticks, tt.tickId)
+		s.Equal(tt.expected, index)
+	}
 }
