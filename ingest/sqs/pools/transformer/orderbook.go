@@ -69,14 +69,14 @@ func (pi *poolTransformer) updateOrderbookInfo(
 	nextBidTickIndex := tickIndexById(ticks, orderbook.NextBidTick)
 	nextAskTickIndex := tickIndexById(ticks, orderbook.NextAskTick)
 
-	bidAmountToExhaustLiquidity, err := sqscosmwasmpool.CalcAmountInToExhaustOrderbookLiquidity(sqscosmwasmpool.BID, nextAskTickIndex, ticks)
+	bidAmountToExhaustAskLiquidity, err := sqscosmwasmpool.CalcAmountInToExhaustOrderbookLiquidity(sqscosmwasmpool.BID, nextAskTickIndex, ticks)
 	if err != nil {
-		return fmt.Errorf("error calculating bid amount to exhaust liquidity: %w", err)
+		return fmt.Errorf("error calculating bid amount to exhaust ask liquidity: %w", err)
 	}
 
-	askAmountToExhaustLiquidity, err := sqscosmwasmpool.CalcAmountInToExhaustOrderbookLiquidity(sqscosmwasmpool.ASK, nextBidTickIndex, ticks)
+	askAmountToExhaustBidLiquidity, err := sqscosmwasmpool.CalcAmountInToExhaustOrderbookLiquidity(sqscosmwasmpool.ASK, nextBidTickIndex, ticks)
 	if err != nil {
-		return fmt.Errorf("error calculating ask amount to exhaust liquidity: %w", err)
+		return fmt.Errorf("error calculating ask amount to exhaust bid liquidity: %w", err)
 	}
 
 	cosmWasmPoolModel.Data.Orderbook = &sqscosmwasmpool.OrderbookData{
@@ -84,8 +84,8 @@ func (pi *poolTransformer) updateOrderbookInfo(
 		BaseDenom:                      orderbook.BaseDenom,
 		NextBidTickIndex:               nextBidTickIndex,
 		NextAskTickIndex:               nextAskTickIndex,
-		BidAmountToExhaustAskLiquidity: bidAmountToExhaustLiquidity,
-		AskAmountToExhaustBidLiquidity: askAmountToExhaustLiquidity,
+		BidAmountToExhaustAskLiquidity: bidAmountToExhaustAskLiquidity,
+		AskAmountToExhaustBidLiquidity: askAmountToExhaustBidLiquidity,
 		Ticks:                          ticks,
 	}
 
