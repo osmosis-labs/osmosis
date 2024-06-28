@@ -53,8 +53,8 @@ func (aoa AllOf) Initialize(config []byte) (Authenticator, error) {
 		return nil, errorsmod.Wrap(err, "failed to parse sub-authenticators initialization data")
 	}
 
-	if len(initDatas) == 0 {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no sub-authenticators provided")
+	if len(initDatas) <= 1 {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "allOf must have at least 2 sub-authenticators")
 	}
 
 	for _, initData := range initDatas {
