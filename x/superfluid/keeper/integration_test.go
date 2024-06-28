@@ -3,6 +3,7 @@ package keeper_test
 import (
 	gocontext "context"
 	"fmt"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"strconv"
 	"testing"
 	"time"
@@ -593,6 +594,151 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	// check the btc balance after undelegation time passes. Funds should be restored
 	balance = s.App.BankKeeper.GetBalance(s.Ctx, userAddr, btcDenom)
 	s.Require().Equal(totalBTCAmount, balance.Amount)
+}
+
+func (s *TestSuite) TestNativeSuperfluidLimits() {
+	//
+	// TEST: Setup
+	//
+
+	s.SetupTest()
+
+	// Set the mint denom to be osmo
+	params := s.App.MintKeeper.GetParams(s.Ctx)
+	params.MintDenom = appparams.BaseCoinUnit
+	s.App.MintKeeper.SetParams(s.Ctx, params)
+
+	// denoms
+	btcDenom := "factory/osmo1pfyxruwvtwk00y8z06dh2lqjdj82ldvy74wzm3/allBTC" // Asset to superfluid stake
+	bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
+	s.Require().NoError(err)
+
+	// accounts
+	// pool creator
+	lpKey := ed25519.GenPrivKey().PubKey()
+	poolAddr := sdk.AccAddress(lpKey.Address())
+	userKey := ed25519.GenPrivKey().PubKey()
+	userAddr := sdk.AccAddress(userKey.Address())
+
+	osmoPoolAmount := osmomath.NewInt(1_000_000_000_000)
+	btcPoolAmount := osmomath.NewInt(10_000_000_000)
+	// default bond denom
+
+	// mint necessary tokens
+	s.mintToAccount(btcPoolAmount, btcDenom, poolAddr)
+	s.mintToAccount(osmoPoolAmount.Mul(osmomath.NewInt(2)), bondDenom, poolAddr)
+	s.mintToAccount(osmomath.NewInt(100_000_000), bondDenom, userAddr)
+	totalBTCAmount := osmomath.NewInt(100_000_000)
+	s.mintToAccount(totalBTCAmount, btcDenom, userAddr)
+
+	nextPoolId := s.App.PoolManagerKeeper.GetNextPoolId(s.Ctx) // the pool id we'll create
+
+	// create an bondDenom/btcDenom pool. This is only used so that the native asset can have a price.
+	createPoolMsg := createPoolMsgGen(
+		poolAddr,
+		sdk.NewCoins(sdk.NewCoin(btcDenom, btcPoolAmount), sdk.NewCoin(bondDenom, osmoPoolAmount)),
+	)
+
+	_, err = s.RunMsg(createPoolMsg)
+	s.Require().NoError(err)
+
+	// move time forward and advance a few blocks to get twaps
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(20 * time.Minute))
+	s.AdvanceToBlockNAndRunEpoch(5)
+
+	// Mint assets to the lockup module. This will ensure there are assets to distribute.
+	err = s.App.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(bondDenom, osmomath.NewInt(1_000_000_000))))
+	s.Require().NoError(err)
+	err = s.App.BankKeeper.SendCoinsFromModuleToModule(s.Ctx, minttypes.ModuleName, authtypes.FeeCollectorName, sdk.NewCoins(sdk.NewCoin(bondDenom, osmomath.NewInt(1_000_000_000))))
+	s.Require().NoError(err)
+
+	// Add btcDenom as an allowed superfluid asset
+	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{Denom: btcDenom, AssetType: types.SuperfluidAssetTypeNative, PriceRoute: []*poolmanagertypes.SwapAmountInRoute{{PoolId: nextPoolId, TokenOutDenom: bondDenom}}})
+	s.Require().NoError(err)
+
+	//
+	// TEST: Delegation
+	//
+
+	// Delegate some osmo
+	validators, err := s.App.StakingKeeper.GetAllValidators(s.Ctx)
+	osmoStakeAmount := osmomath.NewInt(1_000_000)
+	stakeMsg := stakingtypes.MsgDelegate{
+		DelegatorAddress: userAddr.String(),
+		ValidatorAddress: validators[0].GetOperator(),
+		Amount:           sdk.NewCoin(bondDenom, osmoStakeAmount),
+	}
+	_, err = s.RunMsg(&stakeMsg)
+	s.Require().NoError(err)
+
+	// Calculate total stake and max btc stake for that value
+	bondedPool := s.App.StakingKeeper.GetBondedPool(s.Ctx)
+	totalStaked := s.App.BankKeeper.GetBalance(s.Ctx, bondedPool.GetAddress(), bondDenom)
+	fmt.Println("totalStaked", totalStaked)
+
+	////////
+	// TEST: Delegations that exceed the limit should fail
+	// TODO: this is actually not the requirement. We should allow it but limit the osmo equivalent
+	////////
+	delegations := s.QueryAllSuperfluidDelegations(btcDenom)
+	s.Require().Equal(0, len(delegations.SuperfluidDelegationRecords))
+
+	// superfluid stake btcDenom
+	btcStakeAmount := osmomath.NewInt(500_000)
+	s.Require().NoError(err)
+	validator := validators[0]
+	delegateMsg := &types.MsgLockAndSuperfluidDelegate{
+		Sender:  userAddr.String(),
+		Coins:   sdk.NewCoins(sdk.NewCoin(btcDenom, btcStakeAmount)),
+		ValAddr: validator.GetOperator(),
+	}
+	_, err = s.RunMsg(delegateMsg)
+	s.Require().Error(err)
+	s.Require().Contains(err.Error(), types.ErrNonPoolRateExceeded.Error())
+
+	// No superfluid delegations added
+	delegations = s.QueryAllSuperfluidDelegations(btcDenom)
+	s.Require().Equal(0, len(delegations.SuperfluidDelegationRecords))
+
+	// calculate the max amount of osmo allowed to stake
+	maxNonPoolRate, _ := osmomath.NewDecFromStr("0.25")
+	price := osmoPoolAmount.Quo(btcPoolAmount)
+	maxBTCEquivalent := osmoStakeAmount.ToLegacyDec().Mul(maxNonPoolRate).Quo(osmomath.NewDec(1).Sub(maxNonPoolRate))
+	btcStakeAmount = osmomath.NewInt(maxBTCEquivalent.Quo(price.ToLegacyDec()).RoundInt64())
+
+	////////
+	// TEST:  Delegate at the limit. Should be allowed
+	////////
+
+	delegateMsg = &types.MsgLockAndSuperfluidDelegate{
+		Sender:  userAddr.String(),
+		Coins:   sdk.NewCoins(sdk.NewCoin(btcDenom, btcStakeAmount)),
+		ValAddr: validator.GetOperator(),
+	}
+	_, err = s.RunMsg(delegateMsg)
+	s.Require().NoError(err)
+
+	delegations = s.QueryAllSuperfluidDelegations(btcDenom)
+	s.Require().Equal(1, len(delegations.SuperfluidDelegationRecords))
+
+	////////
+	// TEST:  Delegate at the limit and then change the price. The equivalent osmo should still be the same as before
+	////////
+}
+
+func (s *TestSuite) QueryAllSuperfluidDelegations(denom string) *types.SuperfluidDelegationsByValidatorDenomResponse {
+	delegations := new(types.SuperfluidDelegationsByValidatorDenomResponse)
+	validators, err := s.App.StakingKeeper.GetAllValidators(s.Ctx)
+	s.Require().NoError(err)
+	err = s.QueryHelper.Invoke(gocontext.Background(),
+		"/osmosis.superfluid.Query/SuperfluidDelegationsByValidatorDenom",
+		&types.SuperfluidDelegationsByValidatorDenomRequest{
+			ValidatorAddress: validators[0].GetOperator(),
+			Denom:            denom,
+		},
+		delegations)
+	s.Require().NoError(err)
+	return delegations
 }
 
 func (s *TestSuite) AdvanceToBlockNAndRunEpoch(n int64) {

@@ -271,9 +271,15 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 		return types.ErrOsmoEquivalentZeroNotAllowed
 	}
 
-	// TODO: (for reviewer) Are we covering all the places where someone can delegate/undelegate
-	// If dealing with a non-native asset, we track the amount being delegated. This is way we don't need to calculate
-	// that amount when checking the maximum allowed.
+	err = k.mintOsmoTokensAndDelegate(ctx, amount, acc)
+	if err != nil {
+		return err
+	}
+
+	// Now we need to check that the non-pool delegation rate is not exceeded.
+	//
+	// If dealing with a non-native asset, we track the amount being delegated when minting.
+	// This is way we don't need to calculate that amount when checking the maximum allowed.
 	maxNonPoolRate, _ := osmomath.NewDecFromStr("0.25")
 	if !IsPoolToken(acc.Denom) {
 		err, _ := k.checkNonPoolRateIsNotExceeded(ctx, acc.Denom, maxNonPoolRate)
@@ -282,7 +288,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 		}
 	}
 
-	return k.mintOsmoTokensAndDelegate(ctx, amount, acc)
+	return nil
 }
 
 // undelegateCommon is a helper function for SuperfluidUndelegate and superfluidUndelegateToConcentratedPosition.
@@ -508,7 +514,6 @@ func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount osmomath.I
 		}
 
 		// Track non-pool tokens
-		// TODO: (for reviewer) check that this is the only place where we need to track minting
 		if !IsPoolToken(intermediaryAccount.Denom) {
 			k.IncrementTotalNonPoolStaked(ctx, intermediaryAccount.Denom, osmoAmount)
 		}
@@ -562,8 +567,8 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 		}
 
 		// Track non-pool tokens
-		// TODO: (for reviewer) check that this is the only place where we need to track burning
 		if !IsPoolToken(intermediaryAcc.Denom) {
+			// decrement by incrementing the negative amount
 			k.IncrementTotalNonPoolStaked(ctx, intermediaryAcc.Denom, osmoAmount.Neg())
 		}
 
