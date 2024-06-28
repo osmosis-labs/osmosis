@@ -49,6 +49,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
+## v25.2.0
+
+* [#8455](https://github.com/osmosis-labs/osmosis/pull/8455) Further comet mempool improvements
+
 ## v25.1.3
 
 * [#8420](https://github.com/osmosis-labs/osmosis/pull/8420) Remove further unneeded IBC acknowledgements time from CheckTx/RecheckTx
