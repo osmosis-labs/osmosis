@@ -134,7 +134,7 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v4
       - name: Install toolchain
-        uses: dtolnay/rust-toolchain@1.69.0
+        uses: dtolnay/rust-toolchain@1.90.0
         with:
           target: wasm32-unknown-unknown
 
@@ -159,7 +159,7 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v4
       - name: Install toolchain
-        uses: dtolnay/rust-toolchain@1.69.0
+        uses: dtolnay/rust-toolchain@1.90.0
         with:
           components: rustfmt, clippy
 
