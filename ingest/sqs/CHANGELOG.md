@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 -[#8291](https://github.com/osmosis-labs/osmosis/pull/8291) SQS ingester for alloy transmuter
+-[#8389](https://github.com/osmosis-labs/osmosis/pull/8389) SQS ingester for orderbook
 
 
 ## [sqs-v1.0.0](https://github.com/osmosis-labs/osmosis/releases/tag/v1.0.0) - 2023-12-06
