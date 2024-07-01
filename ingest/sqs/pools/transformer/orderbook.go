@@ -175,5 +175,3 @@ func tickIndexById(ticks []sqscosmwasmpool.OrderbookTick, tickId int64) int {
 	// else return -1
 	return -1
 }
-
-// dirty
