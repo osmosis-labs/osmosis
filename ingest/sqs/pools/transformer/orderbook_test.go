@@ -10,6 +10,11 @@ import (
 	sqscosmwasmpool "github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
 )
 
+const (
+	// Tick Price = 2
+	LARGE_POSITIVE_TICK int64 = 1000000
+)
+
 type PlaceLimitMsg struct {
 	TickID         int64        `json:"tick_id"`
 	OrderDirection string       `json:"order_direction"` // 'bid' | 'ask'
@@ -47,11 +52,13 @@ func (s *PoolTransformerTestSuite) TestUpdateOrderbookInfo() {
 	// Check if the pool has been updated
 	s.Equal(sqscosmwasmpool.CosmWasmPoolData{
 		Orderbook: &sqscosmwasmpool.OrderbookData{
-			QuoteDenom:       USDC,
-			BaseDenom:        UOSMO,
-			NextBidTickIndex: -1,
-			NextAskTickIndex: -1,
-			Ticks:            []sqscosmwasmpool.OrderbookTick{},
+			QuoteDenom:                     USDC,
+			BaseDenom:                      UOSMO,
+			NextBidTickIndex:               -1,
+			NextAskTickIndex:               -1,
+			BidAmountToExhaustAskLiquidity: osmomath.ZeroBigDec(),
+			AskAmountToExhaustBidLiquidity: osmomath.ZeroBigDec(),
+			Ticks:                          []sqscosmwasmpool.OrderbookTick{},
 		},
 	}, cosmWasmPoolModel.Data)
 
@@ -59,7 +66,7 @@ func (s *PoolTransformerTestSuite) TestUpdateOrderbookInfo() {
 	quantity := osmomath.NewInt(10000)
 	msg := ExecuteMsg{
 		PlaceLimit: &PlaceLimitMsg{
-			TickID:         9,
+			TickID:         LARGE_POSITIVE_TICK,
 			OrderDirection: "bid",
 			Quantity:       quantity,
 		},
@@ -77,12 +84,14 @@ func (s *PoolTransformerTestSuite) TestUpdateOrderbookInfo() {
 	s.Equal(sqscosmwasmpool.CosmWasmPoolData{
 		AlloyTransmuter: nil,
 		Orderbook: &sqscosmwasmpool.OrderbookData{
-			QuoteDenom:       USDC,
-			BaseDenom:        UOSMO,
-			NextBidTickIndex: 0,
-			NextAskTickIndex: -1,
+			QuoteDenom:                     USDC,
+			BaseDenom:                      UOSMO,
+			NextBidTickIndex:               0,
+			NextAskTickIndex:               -1,
+			BidAmountToExhaustAskLiquidity: osmomath.ZeroBigDec(),
+			AskAmountToExhaustBidLiquidity: osmomath.BigDecFromSDKInt(quantity).Mul(osmomath.NewBigDec(2)),
 			Ticks: []sqscosmwasmpool.OrderbookTick{{
-				TickId: 9,
+				TickId: LARGE_POSITIVE_TICK,
 				TickLiquidity: sqscosmwasmpool.OrderbookTickLiquidity{
 					AskLiquidity: osmomath.ZeroBigDec(),
 					BidLiquidity: osmomath.BigDecFromSDKInt(quantity),
