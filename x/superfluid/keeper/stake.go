@@ -271,7 +271,24 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 		return types.ErrOsmoEquivalentZeroNotAllowed
 	}
 
-	return k.mintOsmoTokensAndDelegate(ctx, amount, acc)
+	err = k.mintOsmoTokensAndDelegate(ctx, amount, acc)
+	if err != nil {
+		return err
+	}
+
+	// Now we need to check that the non-pool delegation rate is not exceeded.
+	//
+	// If dealing with a non-native asset, we track the amount being delegated when minting.
+	// This is way we don't need to calculate that amount when checking the maximum allowed.
+	maxNonPoolRate, _ := osmomath.NewDecFromStr("0.25")
+	if !IsPoolToken(acc.Denom) {
+		err, _ := k.checkNonPoolRateIsNotExceeded(ctx, acc.Denom, maxNonPoolRate)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // undelegateCommon is a helper function for SuperfluidUndelegate and superfluidUndelegateToConcentratedPosition.
@@ -496,6 +513,11 @@ func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount osmomath.I
 			return err
 		}
 
+		// Track non-pool tokens
+		if !IsPoolToken(intermediaryAccount.Denom) {
+			k.IncrementTotalNonPoolStaked(ctx, intermediaryAccount.Denom, osmoAmount)
+		}
+
 		// make delegation from module account to the validator
 		// TODO: What happens here if validator is jailed, tombstoned, or unbonding
 		// For now, we don't worry since worst case it errors, in which case we revert mint.
@@ -543,6 +565,13 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 		if err != nil {
 			return err
 		}
+
+		// Track non-pool tokens
+		if !IsPoolToken(intermediaryAcc.Denom) {
+			// decrement by incrementing the negative amount
+			k.IncrementTotalNonPoolStaked(ctx, intermediaryAcc.Denom, osmoAmount.Neg())
+		}
+
 		bondDenom, err := k.sk.BondDenom(cacheCtx)
 		if err != nil {
 			return err
@@ -577,7 +606,7 @@ func (k Keeper) TotalBondedTokens(ctx context.Context) (osmomath.Int, error) {
 }
 
 // IterateDelegations implements govtypes.StakingKeeper
-// Iterates through staking keeper's delegations, and then all of the superfluid delegations.
+// Iterates through staking keeper's delegations, and then all the superfluid delegations backed by real osmo.
 func (k Keeper) IterateDelegations(context context.Context, delegator sdk.AccAddress, fn func(int64, stakingtypes.DelegationI) bool) error {
 	ctx := sdk.UnwrapSDKContext(context)
 	// call the callback with the non-superfluid delegations
@@ -611,7 +640,7 @@ func (k Keeper) IterateDelegations(context context.Context, delegator sdk.AccAdd
 		}
 
 		// get osmo-equivalent token amount
-		amount, err := k.GetSuperfluidOSMOTokensIfNonNative(ctx, interim.Denom, coin.Amount)
+		amount, err := k.GetSuperfluidOSMOTokensForPools(ctx, interim.Denom, coin.Amount)
 		if err != nil {
 			ctx.Logger().Error("failed to get osmo equivalent of token", "Denom", interim.Denom, "Amount", coin.Amount, "Error", err)
 			return err

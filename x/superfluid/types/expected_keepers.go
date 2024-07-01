@@ -85,6 +85,7 @@ type StakingKeeper interface {
 	GetDelegation(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation stakingtypes.Delegation, err error)
 	UnbondingTime(ctx context.Context) (time.Duration, error)
 	GetParams(ctx context.Context) (stakingtypes.Params, error)
+	GetBondedPool(ctx context.Context) (bondedPool sdk.ModuleAccountI)
 
 	IterateBondedValidatorsByPower(ctx context.Context, fn func(int64, stakingtypes.ValidatorI) bool) error
 	TotalBondedTokens(ctx context.Context) (osmomath.Int, error)

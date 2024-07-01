@@ -38,7 +38,7 @@ func (k Keeper) SetOsmoEquivalentMultiplier(ctx sdk.Context, epoch int64, denom 
 	prefixStore.Set([]byte(denom), bz)
 }
 
-func IsNonNative(denom string) bool {
+func IsPoolToken(denom string) bool {
 	if strings.HasPrefix(denom, cltypes.ConcentratedLiquidityTokenPrefix) {
 		return true
 	}
@@ -54,11 +54,11 @@ func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount os
 	return k.getSuperfluidOSMOTokens(ctx, denom, amount)
 }
 
-// GetSuperfluidOSMOTokensIfNonNative calculates the equivalent amount of OSMO tokens for a given amount of a specified denom.
+// GetSuperfluidOSMOTokensForPools calculates the equivalent amount of OSMO tokens for a given amount of a specified denom.
 // If the denom provided is a native token, it will return 0.
 // Currently, native tokens are defined as any token that does not have the prefix "gamm" or "concentrated_liquidity".
-func (k Keeper) GetSuperfluidOSMOTokensIfNonNative(ctx sdk.Context, denom string, amount osmomath.Int) (osmomath.Int, error) {
-	if !IsNonNative(denom) {
+func (k Keeper) GetSuperfluidOSMOTokensForPools(ctx sdk.Context, denom string, amount osmomath.Int) (osmomath.Int, error) {
+	if !IsPoolToken(denom) {
 		return osmomath.ZeroInt(), nil
 	}
 	return k.getSuperfluidOSMOTokens(ctx, denom, amount)

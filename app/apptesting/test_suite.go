@@ -472,8 +472,14 @@ func (s *KeeperTestHelper) RunMsg(msg sdk.Msg) (*sdk.Result, error) {
 	// cursed that we have to copy this internal logic from SDK
 	router := s.App.GetBaseApp().MsgServiceRouter()
 	if handler := router.Handler(msg); handler != nil {
+		// Use a cache context to only write if the handler is successful
+		cacheCtx, writeCache := s.Ctx.CacheContext()
 		// ADR 031 request type routing
-		return handler(s.Ctx, msg)
+		res, err := handler(cacheCtx, msg)
+		if err == nil {
+			writeCache()
+		}
+		return res, err
 	}
 	s.FailNow("msg %v could not be ran", msg)
 	s.hasUsedAbci = true

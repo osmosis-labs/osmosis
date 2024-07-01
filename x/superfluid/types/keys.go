@@ -30,4 +30,7 @@ var (
 
 	// KeyPrefixDenomRiskFactor defines prefix key for denom risk factor.
 	KeyPrefixDenomRiskFactor = []byte{0x07}
+
+	// KeyPrefixNonPoolAmounts defines prefix key for denom risk factor.
+	KeyPrefixNonPoolAmounts = []byte{0x07}
 )
