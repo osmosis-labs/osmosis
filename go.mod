@@ -30,17 +30,10 @@ require (
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.13
-<<<<<<< HEAD
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.14-0.20240625213605-e8c52ffbf17e
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.9
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.15
-	github.com/osmosis-labs/sqs/sqsdomain v0.18.4-0.20240606185034-267d0e5b17a6
-=======
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.13
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240517165907-1625703bc16d
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240517165907-1625703bc16d
 	github.com/osmosis-labs/sqs/sqsdomain v0.18.4-0.20240627025931-0926c532e04a
->>>>>>> 5fa31c62 (SQS support for Orderbook (#8389))
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/skip-mev/block-sdk v1.4.7
