@@ -1,4 +1,4 @@
-package service_test
+package pooltracker_test
 
 import (
 	"testing"
@@ -6,24 +6,25 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
+
+	"github.com/osmosis-labs/osmosis/v25/ingest/common/pooltracker"
 )
 
-type SQSServiceTestSuite struct {
+type PoolTrackerTestSuite struct {
 	apptesting.ConcentratedKeeperTestHelper
 }
 
-func TestSQSServiceTestSuite(t *testing.T) {
-	suite.Run(t, new(SQSServiceTestSuite))
+func TestPoolTrackerTestSuite(t *testing.T) {
+	suite.Run(t, new(PoolTrackerTestSuite))
 }
 
 // This is a sanity-check test ensuring that all pools are tracked and returned correctly.
-func (s *SQSServiceTestSuite) TestPoolTracker_Track() {
+func (s *PoolTrackerTestSuite) TestPoolTracker_Track() {
 	s.Setup()
 
 	allPools := s.PrepareAllSupportedPools()
 
-	poolTracker := service.NewPoolTracker()
+	poolTracker := pooltracker.NewMemory()
 
 	////////// Concetrated
 

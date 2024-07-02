@@ -1,9 +1,10 @@
 package writelistener_test
 
 import (
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service/writelistener"
+	"github.com/osmosis-labs/osmosis/v25/ingest/common/writelistener"
 	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+
+	"github.com/osmosis-labs/osmosis/v25/ingest/common/pooltracker"
 )
 
 // Tests that the concentrated write listener correctly tracks pool and tick updates.
@@ -84,7 +85,7 @@ func (s *WriteListenerTestSuite) TestWriteListener_CFMM() {
 		tc := tc
 		s.Run(tc.name, func() {
 
-			poolTracker := service.NewPoolTracker()
+			poolTracker := pooltracker.NewMemory()
 
 			gammWriteListener := writelistener.NewGAMM(poolTracker, s.App.AppCodec())
 

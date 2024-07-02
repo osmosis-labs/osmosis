@@ -1,13 +1,9 @@
 package sqs
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
-	poolstransformer "github.com/osmosis-labs/osmosis/v25/ingest/sqs/pools/transformer"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
 )
 
 // Config defines the config for the sidecar query server.
@@ -26,7 +22,7 @@ const (
 	// This is the pool ID that is used for converting between UOSMO and USDC
 	// for liquidity pricing.
 	// https://app.osmosis.zone/pool/1263
-	defaultUSDCUOSMOPool = 1263
+	DefaultUSDCUOSMOPool = 1263
 )
 
 // DefaultConfig defines the default config for the sidecar query server.
@@ -59,18 +55,4 @@ func NewConfigFromOptions(opts servertypes.AppOptions) Config {
 		GRPCIngestAddress:          grpcIngestAddress,
 		GRPCIngestMaxCallSizeBytes: grpcIngestMaxCallSizeBytes,
 	}
-}
-
-// Initialize initializes the sidecar query server and returns the ingester.
-func (c Config) Initialize(appCodec codec.Codec, keepers domain.SQSIngestKeepers) (domain.Ingester, error) {
-	// Create pools ingester
-	poolsIngester := poolstransformer.NewPoolTransformer(keepers, defaultUSDCUOSMOPool)
-
-	// Create sqs grpc client
-	sqsGRPCClient := service.NewGRPCCLient(c.GRPCIngestAddress, c.GRPCIngestMaxCallSizeBytes, appCodec)
-
-	// Create sqs ingester that encapsulates all ingesters.
-	sqsIngester := NewSidecarQueryServerIngester(poolsIngester, appCodec, keepers, sqsGRPCClient)
-
-	return sqsIngester, nil
 }

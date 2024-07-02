@@ -1,4 +1,4 @@
-package domain
+package commondomain
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,7 +11,7 @@ import (
 )
 
 // Chain keepers required for sqs ingest.
-type SQSIngestKeepers struct {
+type PoolExtracterKeepers struct {
 	GammKeeper         PoolKeeper
 	CosmWasmPoolKeeper CosmWasmPoolKeeper
 	WasmKeeper         WasmKeeper

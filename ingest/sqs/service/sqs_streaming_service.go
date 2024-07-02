@@ -14,6 +14,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
+	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/blockprocessor"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 )
 
@@ -23,9 +25,12 @@ var _ baseapp.StreamingService = (*sqsStreamingService)(nil)
 // It does so by either processing the entire block data or only the pools that were changed in the block.
 // The service uses a pool tracker to keep track of the pools that were changed in the block.
 type sqsStreamingService struct {
-	writeListeners map[storetypes.StoreKey][]storetypes.WriteListener
-	sqsIngester    domain.Ingester
-	poolTracker    domain.BlockPoolUpdateTracker
+	writeListeners              map[storetypes.StoreKey][]storetypes.WriteListener
+	grpcClient                  domain.SQSGRPClient
+	poolsExtracter              commondomain.PoolExtracter
+	poolsTransformer            domain.PoolsTransformer
+	poolTracker                 domain.BlockPoolUpdateTracker
+	blockProcessStrategyManager commondomain.BlockProcessStrategyManager
 
 	nodeStatusChecker domain.NodeStatusChecker
 
@@ -37,12 +42,14 @@ type sqsStreamingService struct {
 // sqsIngester is an ingester that ingests the block data into SQS.
 // poolTracker is a tracker that tracks the pools that were changed in the block.
 // nodeStatusChecker is a checker that checks if the node is syncing.
-func New(writeListeners map[storetypes.StoreKey][]storetypes.WriteListener, sqsIngester domain.Ingester, poolTracker domain.BlockPoolUpdateTracker, nodeStatusChecker domain.NodeStatusChecker) baseapp.StreamingService {
+func New(writeListeners map[storetypes.StoreKey][]storetypes.WriteListener, poolsExtracter commondomain.PoolExtracter, poolsTransformer domain.PoolsTransformer, poolTracker domain.BlockPoolUpdateTracker, grpcClient domain.SQSGRPClient, blockProcessStrategyManager commondomain.BlockProcessStrategyManager, nodeStatusChecker domain.NodeStatusChecker) baseapp.StreamingService {
 	return &sqsStreamingService{
-		writeListeners:    writeListeners,
-		sqsIngester:       sqsIngester,
-		poolTracker:       poolTracker,
-		nodeStatusChecker: nodeStatusChecker,
+		writeListeners:              writeListeners,
+		poolsExtracter:              poolsExtracter,
+		poolsTransformer:            poolsTransformer,
+		poolTracker:                 poolTracker,
+		nodeStatusChecker:           nodeStatusChecker,
+		blockProcessStrategyManager: blockProcessStrategyManager,
 
 		shouldProcessAllBlockData: true,
 	}
@@ -96,7 +103,7 @@ func (s *sqsStreamingService) processBlockRecoverError(ctx sdk.Context) (err err
 		if r := recover(); r != nil {
 			// Due to panic, we set shouldProcessAllBlockData to true to reprocess the entire block.
 			// Be careful when changing this behavior.
-			s.shouldProcessAllBlockData = true
+			s.blockProcessStrategyManager.MarkErrorObserved()
 
 			// Emit telemetry for the panic.
 			emitFailureTelemetry(ctx, r, domain.SQSProcessBlockPanicMetricName)
@@ -109,7 +116,7 @@ func (s *sqsStreamingService) processBlockRecoverError(ctx sdk.Context) (err err
 	if err := s.processBlock(ctx); err != nil {
 		// Due to error, we set shouldProcessAllBlockData to true to reprocess the entire block.
 		// Be careful when changing this behavior.
-		s.shouldProcessAllBlockData = true
+		s.blockProcessStrategyManager.MarkErrorObserved()
 
 		// Emit telemetry for the error.
 		emitFailureTelemetry(ctx, err, domain.SQSProcessBlockErrorMetricName)
@@ -149,52 +156,14 @@ func (s *sqsStreamingService) Stream(wg *sync.WaitGroup) error {
 //
 // Returns error if the block data processing fails.
 func (s *sqsStreamingService) processBlock(ctx sdk.Context) error {
-	// If cold start, we use SQS ingester to process the entire block.
-	if s.shouldProcessAllBlockData {
-		// Detect syncing
-		isNodesyncing, err := s.nodeStatusChecker.IsNodeSyncing(ctx)
-		if err != nil {
-			telemetry.IncrCounterWithLabels([]string{domain.SQSNodeSyncCheckErrorMetricName}, 1, []metrics.Label{
-				{Name: "err", Value: err.Error()},
-				{Name: "height", Value: fmt.Sprintf("%d", ctx.BlockHeight())},
-			})
-			return fmt.Errorf("failed to check if node is syncing: %w", err)
-		}
-		if isNodesyncing {
-			return fmt.Errorf("node is syncing, skipping block processing")
-		}
 
-		// Process the entire block if the node is caught up
-		cwPools, err := s.sqsIngester.ProcessAllBlockData(ctx)
-		if err != nil {
-			return err
-		}
+	blockProcessor := blockprocessor.NewBlockProcessor(s.blockProcessStrategyManager, s.grpcClient, s.poolsExtracter, s.poolsTransformer, s.nodeStatusChecker)
 
-		// Generate the initial cwPool address to pool mapping
-		for _, pool := range cwPools {
-			s.poolTracker.TrackCosmWasmPoolsAddressToPoolMap(pool)
-		}
-
-		// Successfully processed the block, no longer need to process full block data.
-		s.shouldProcessAllBlockData = false
-
-		return nil
+	if err := blockProcessor.ProcessBlock(ctx); err != nil {
+		return err
 	}
 
-	// If not cold start, we only process the pools that were changed this block.
-	concentratedPools := s.poolTracker.GetConcentratedPools()
-	concentratedPoolIDTickChange := s.poolTracker.GetConcentratedPoolIDTickChange()
-	cfmmPools := s.poolTracker.GetCFMMPools()
-	cosmWasmPools := s.poolTracker.GetCosmWasmPools()
-
-	changedBlockPools := domain.BlockPools{
-		ConcentratedPools:            concentratedPools,
-		ConcentratedPoolIDTickChange: concentratedPoolIDTickChange,
-		CosmWasmPools:                cosmWasmPools,
-		CFMMPools:                    cfmmPools,
-	}
-
-	return s.sqsIngester.ProcessChangedBlockData(ctx, changedBlockPools)
+	return nil
 }
 
 // emitFailureTelemetry emits telemetry for panics or errors

@@ -5,8 +5,9 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	sqscosmwasmpool "github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
+
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 )
 
 const (
@@ -50,7 +51,7 @@ func (pi *poolTransformer) updateAlloyTransmuterInfo(
 // alloyTransmuterListAssetConfig queries the asset configs of the alloyed transmuter contract.
 func alloyTransmuterListAssetConfig(
 	ctx sdk.Context,
-	wasmKeeper domain.WasmKeeper,
+	wasmKeeper commondomain.WasmKeeper,
 	poolId uint64,
 	contractAddress sdk.AccAddress,
 ) ([]sqscosmwasmpool.TransmuterAssetConfig, error) {
@@ -78,7 +79,7 @@ func alloyTransmuterListAssetConfig(
 // alloyTransmuterGetShareDenom queries the share denom of the alloyed transmuter contract.
 func alloyTransmuterGetShareDenom(
 	ctx sdk.Context,
-	wasmKeeper domain.WasmKeeper,
+	wasmKeeper commondomain.WasmKeeper,
 	poolId uint64,
 	contractAddress sdk.AccAddress,
 ) (string, error) {

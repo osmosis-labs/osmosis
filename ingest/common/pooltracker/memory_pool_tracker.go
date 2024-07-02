@@ -1,4 +1,4 @@
-package service
+package pooltracker
 
 import (
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
@@ -14,8 +14,8 @@ type poolBlockUpdateTracker struct {
 	cosmwasmPoolsAddressToPoolMap map[string]poolmanagertypes.PoolI
 }
 
-// NewPoolTracker creates a new poolBlockUpdateTracker.
-func NewPoolTracker() domain.BlockPoolUpdateTracker {
+// NewMemory creates a new memory pool tracker.
+func NewMemory() domain.BlockPoolUpdateTracker {
 	return &poolBlockUpdateTracker{
 		concentratedPools:             map[uint64]poolmanagertypes.PoolI{},
 		concentratedPoolIDTickChange:  map[uint64]struct{}{},
