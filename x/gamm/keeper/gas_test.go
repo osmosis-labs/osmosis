@@ -74,8 +74,6 @@ func (s *KeeperTestSuite) TestJoinPoolGas() {
 	))
 
 	firstJoinGas := s.measureJoinPoolGas(defaultAddr, poolId, minShareOutAmount, defaultCoins)
-	// UNFORKINGNOTE: This used to be capped at LessOrEqual to 100000, but unforking increased this value.
-	// UNFORKING v2 TODO: This increased again... why?
 	s.Assert().LessOrEqual(int(firstJoinGas), 150000)
 
 	for i := 1; i < startAveragingAt; i++ {
