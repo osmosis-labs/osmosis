@@ -5,6 +5,7 @@ import (
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain/mocks"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
@@ -15,7 +16,12 @@ var (
 	// The write listeners are irrelevant for the tests of the sqs service
 	// since the service does not use them directly other than storing and returning
 	// via getter. As a result, we wire empty write listeners for the tests.
+<<<<<<< HEAD
 	emptyWriteListeners = make(map[storetypes.StoreKey][]storetypes.WriteListener)
+=======
+	emptyWriteListeners = make(map[storetypes.StoreKey][]commondomain.WriteListener)
+	emptyStoreKeyMap    = make(map[string]storetypes.StoreKey)
+>>>>>>> 415f64ab (refactor(indexer): create ingest/common package (#8471))
 
 	// mockError is a mock error for testing.
 	mockError = errors.New("mock error")

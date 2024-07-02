@@ -5,13 +5,17 @@ import (
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 )
 
+<<<<<<< HEAD:ingest/sqs/service/writelistener/concentrated_write_listener.go
 var _ storetypes.WriteListener = (*concentratedPoolWriteListener)(nil)
+=======
+var _ commondomain.WriteListener = (*concentratedPoolWriteListener)(nil)
+>>>>>>> 415f64ab (refactor(indexer): create ingest/common package (#8471)):ingest/common/writelistener/concentrated_write_listener.go
 
 type concentratedPoolWriteListener struct {
 	poolTracker domain.BlockPoolUpdateTracker

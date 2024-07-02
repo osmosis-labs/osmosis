@@ -11,9 +11,17 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
+<<<<<<< HEAD
 )
 
 var _ storetypes.WriteListener = (*bankWriteListener)(nil)
+=======
+
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
+)
+
+var _ commondomain.WriteListener = (*bankWriteListener)(nil)
+>>>>>>> 415f64ab (refactor(indexer): create ingest/common package (#8471))
 
 type bankWriteListener struct {
 
@@ -25,7 +33,11 @@ type bankWriteListener struct {
 	coldStartManager indexerdomain.ColdStartManager
 }
 
+<<<<<<< HEAD
 func NewBank(ctx context.Context, client indexerdomain.TokenSupplyPublisher, coldStartManager indexerdomain.ColdStartManager) storetypes.WriteListener {
+=======
+func NewBank(ctx context.Context, client indexerdomain.TokenSupplyPublisher, coldStartManager indexerdomain.ColdStartManager) commondomain.WriteListener {
+>>>>>>> 415f64ab (refactor(indexer): create ingest/common package (#8471))
 	return &bankWriteListener{
 		ctx:    ctx,
 		client: client,

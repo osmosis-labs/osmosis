@@ -10,13 +10,18 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	cosmwasmpoolmodel "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/model"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
+<<<<<<< HEAD:ingest/sqs/service/writelistener/cosmwasmpool_write_listener.go
 var _ storetypes.WriteListener = (*cosmwasmPoolWriteListener)(nil)
+=======
+var _ commondomain.WriteListener = (*cosmwasmPoolWriteListener)(nil)
+>>>>>>> 415f64ab (refactor(indexer): create ingest/common package (#8471)):ingest/common/writelistener/cosmwasmpool_write_listener.go
 
 type cosmwasmPoolWriteListener struct {
 	poolTracker domain.BlockPoolUpdateTracker

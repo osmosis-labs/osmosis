@@ -6,9 +6,10 @@ import (
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	sqscosmwasmpool "github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 )
 
 const (
@@ -82,7 +83,7 @@ func (pi *poolTransformer) updateOrderbookInfo(
 
 func (pi *poolTransformer) orderbookAllTicks(
 	ctx sdk.Context,
-	wasmKeeper domain.WasmKeeper,
+	wasmKeeper commondomain.WasmKeeper,
 	poolId uint64,
 	contractAddress sdk.AccAddress,
 ) ([]sqscosmwasmpool.OrderbookTick, error) {
@@ -120,7 +121,7 @@ func (pi *poolTransformer) orderbookAllTicks(
 
 func (pi *poolTransformer) getOrderbookRaw(
 	ctx sdk.Context,
-	wasmKeeper domain.WasmKeeper,
+	wasmKeeper commondomain.WasmKeeper,
 	poolId uint64,
 	contractAddress sdk.AccAddress,
 ) (orderbook, error) {
