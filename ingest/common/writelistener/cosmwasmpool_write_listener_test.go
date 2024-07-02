@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	"github.com/osmosis-labs/osmosis/v25/ingest/common/writelistener"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service/writelistener"
 	"github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/model"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
 )

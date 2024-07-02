@@ -13,7 +13,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	poolstransformer "github.com/osmosis-labs/osmosis/v25/ingest/sqs/pools/transformer"
 	clqueryproto "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/client/queryproto"
 	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
@@ -429,7 +429,7 @@ func (s *PoolTransformerTestSuite) TestProcessBlock() {
 	customTakerFeeConcentratedPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], USDT, USDC, 1, osmomath.ZeroDec())
 	s.App.PoolManagerKeeper.SetDenomPairTakerFee(s.Ctx, customTakerFeeConcentratedPool.GetToken0(), customTakerFeeConcentratedPool.GetToken1(), defaultCustomTakerFee)
 
-	sqsKeepers := domain.SQSIngestKeepers{
+	sqsKeepers := commondomain.PoolExtracterKeepers{
 		GammKeeper:         s.App.GAMMKeeper,
 		ConcentratedKeeper: s.App.ConcentratedLiquidityKeeper,
 		WasmKeeper:         s.App.WasmKeeper,
@@ -459,7 +459,7 @@ func (s *PoolTransformerTestSuite) TestProcessBlock() {
 	usdcUosmoPoolID := s.CreateDefaultQuoteDenomUOSMOPool()
 	poolTransformer := poolstransformer.NewPoolTransformer(sqsKeepers, usdcUosmoPoolID)
 
-	blockPools := domain.BlockPools{
+	blockPools := commondomain.BlockPools{
 		ConcentratedPools: []poolmanagertypes.PoolI{
 			concentratedPool,
 			customTakerFeeConcentratedPool,
@@ -835,7 +835,7 @@ func (s *PoolTransformerTestSuite) validatePoolConversion(expectedPool poolmanag
 
 func (s *PoolTransformerTestSuite) initializePoolIngester(defaultUSDCUOSMOPoolID uint64) *poolstransformer.PoolTransformer {
 
-	sqsKeepers := domain.SQSIngestKeepers{
+	sqsKeepers := commondomain.PoolExtracterKeepers{
 		GammKeeper:         s.App.GAMMKeeper,
 		ConcentratedKeeper: s.App.ConcentratedLiquidityKeeper,
 		BankKeeper:         s.App.BankKeeper,

@@ -14,6 +14,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 )
 
@@ -23,7 +24,12 @@ var _ baseapp.StreamingService = (*sqsStreamingService)(nil)
 // It does so by either processing the entire block data or only the pools that were changed in the block.
 // The service uses a pool tracker to keep track of the pools that were changed in the block.
 type sqsStreamingService struct {
+<<<<<<< HEAD
 	writeListeners map[storetypes.StoreKey][]storetypes.WriteListener
+=======
+	writeListeners map[storetypes.StoreKey][]commondomain.WriteListener
+	storeKeyMap    map[string]storetypes.StoreKey
+>>>>>>> 415f64ab (refactor(indexer): create ingest/common package (#8471))
 	sqsIngester    domain.Ingester
 	poolTracker    domain.BlockPoolUpdateTracker
 
@@ -37,7 +43,11 @@ type sqsStreamingService struct {
 // sqsIngester is an ingester that ingests the block data into SQS.
 // poolTracker is a tracker that tracks the pools that were changed in the block.
 // nodeStatusChecker is a checker that checks if the node is syncing.
+<<<<<<< HEAD
 func New(writeListeners map[storetypes.StoreKey][]storetypes.WriteListener, sqsIngester domain.Ingester, poolTracker domain.BlockPoolUpdateTracker, nodeStatusChecker domain.NodeStatusChecker) baseapp.StreamingService {
+=======
+func New(writeListeners map[storetypes.StoreKey][]commondomain.WriteListener, storeKeyMap map[string]storetypes.StoreKey, sqsIngester domain.Ingester, poolTracker domain.BlockPoolUpdateTracker, nodeStatusChecker domain.NodeStatusChecker) storetypes.ABCIListener {
+>>>>>>> 415f64ab (refactor(indexer): create ingest/common package (#8471))
 	return &sqsStreamingService{
 		writeListeners:    writeListeners,
 		sqsIngester:       sqsIngester,
@@ -187,7 +197,7 @@ func (s *sqsStreamingService) processBlock(ctx sdk.Context) error {
 	cfmmPools := s.poolTracker.GetCFMMPools()
 	cosmWasmPools := s.poolTracker.GetCosmWasmPools()
 
-	changedBlockPools := domain.BlockPools{
+	changedBlockPools := commondomain.BlockPools{
 		ConcentratedPools:            concentratedPools,
 		ConcentratedPoolIDTickChange: concentratedPoolIDTickChange,
 		CosmWasmPools:                cosmWasmPools,

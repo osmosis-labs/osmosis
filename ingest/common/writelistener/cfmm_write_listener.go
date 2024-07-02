@@ -6,11 +6,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
 )
 
+<<<<<<< HEAD:ingest/sqs/service/writelistener/cfmm_write_listener.go
 var _ storetypes.WriteListener = (*cfmmPoolWriteListener)(nil)
+=======
+var _ commondomain.WriteListener = (*cfmmPoolWriteListener)(nil)
+>>>>>>> 415f64ab (refactor(indexer): create ingest/common package (#8471)):ingest/common/writelistener/cfmm_write_listener.go
 
 type cfmmPoolWriteListener struct {
 	poolTracker domain.BlockPoolUpdateTracker

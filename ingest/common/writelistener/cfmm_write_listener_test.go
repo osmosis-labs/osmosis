@@ -1,8 +1,8 @@
 package writelistener_test
 
 import (
+	"github.com/osmosis-labs/osmosis/v25/ingest/common/writelistener"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service/writelistener"
 	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
 )
 

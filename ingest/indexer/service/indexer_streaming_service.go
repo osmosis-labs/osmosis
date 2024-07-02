@@ -9,14 +9,24 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
+=======
+	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
+
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
+>>>>>>> 415f64ab (refactor(indexer): create ingest/common package (#8471))
 )
 
 var _ baseapp.StreamingService = (*indexerStreamingService)(nil)
 
 // ind is a streaming service that processes block data and ingests it into the indexer
 type indexerStreamingService struct {
+<<<<<<< HEAD
 	writeListeners map[storetypes.StoreKey][]storetypes.WriteListener
+=======
+	writeListeners map[storetypes.StoreKey][]commondomain.WriteListener
+>>>>>>> 415f64ab (refactor(indexer): create ingest/common package (#8471))
 
 	// manages tracking of whether the node is code started
 	coldStartManager domain.ColdStartManager
@@ -31,7 +41,11 @@ type indexerStreamingService struct {
 // sqsIngester is an ingester that ingests the block data into SQS.
 // poolTracker is a tracker that tracks the pools that were changed in the block.
 // nodeStatusChecker is a checker that checks if the node is syncing.
+<<<<<<< HEAD
 func New(writeListeners map[storetypes.StoreKey][]storetypes.WriteListener, coldStartManager domain.ColdStartManager, client domain.Publisher, keepers domain.Keepers) baseapp.StreamingService {
+=======
+func New(writeListeners map[storetypes.StoreKey][]commondomain.WriteListener, coldStartManager indexerdomain.ColdStartManager, client indexerdomain.Publisher, storeKeyMap map[string]storetypes.StoreKey, keepers indexerdomain.Keepers) storetypes.ABCIListener {
+>>>>>>> 415f64ab (refactor(indexer): create ingest/common package (#8471))
 	return &indexerStreamingService{
 
 		writeListeners: writeListeners,
@@ -135,7 +149,11 @@ func (s *indexerStreamingService) ListenEndBlock(ctx context.Context, req types.
 }
 
 // Listeners implements baseapp.StreamingService.
+<<<<<<< HEAD
 func (s *indexerStreamingService) Listeners() map[storetypes.StoreKey][]storetypes.WriteListener {
+=======
+func (s *indexerStreamingService) Listeners() map[storetypes.StoreKey][]commondomain.WriteListener {
+>>>>>>> 415f64ab (refactor(indexer): create ingest/common package (#8471))
 	return s.writeListeners
 }
 
