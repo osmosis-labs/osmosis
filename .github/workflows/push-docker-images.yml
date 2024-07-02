@@ -154,7 +154,7 @@ jobs:
           platforms: linux/amd64
           build-args: |
             GO_VERSION=${{ env.GO_VERSION }}
-            RUNNER_IMAGE=${{ env.RUNNER_BASE_IMAGE_DISTROLESS }}
+            RUNNER_IMAGE=${{ env.RUNNER_BASE_IMAGE_ALPINE }}
             GIT_VERSION=${{ env.VERSION }}
             GIT_COMMIT=${{ github.sha }}
             COSMOVISOR_VERSION=${{ env.COSMOVISOR_VERSION }}
