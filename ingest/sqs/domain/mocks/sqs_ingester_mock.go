@@ -3,6 +3,7 @@ package mocks
 import (
 	"github.com/cosmos/cosmos-sdk/types"
 
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
@@ -22,7 +23,7 @@ type SQSIngesterMock struct {
 	IsProcessAllChangedDataCalled bool
 	// LastChangedPoolsObserved is the last changed pools observed by the mock when
 	// ProcessChangedBlockData is called.
-	LastChangedPoolsObserved domain.BlockPools
+	LastChangedPoolsObserved commondomain.BlockPools
 	// If this is non-empty, ProcessAllBlockData(...) will panic with this message.
 	ProcessAllBlockDataPanicMsg string
 }
@@ -38,7 +39,7 @@ func (s *SQSIngesterMock) ProcessAllBlockData(ctx types.Context) ([]poolmanagert
 }
 
 // ProcessChangedBlockData implements domain.Ingester.
-func (s *SQSIngesterMock) ProcessChangedBlockData(ctx types.Context, changedPools domain.BlockPools) error {
+func (s *SQSIngesterMock) ProcessChangedBlockData(ctx types.Context, changedPools commondomain.BlockPools) error {
 	s.IsProcessAllChangedDataCalled = true
 	s.LastChangedPoolsObserved = changedPools
 	return s.ChangedBlockDataError

@@ -1,4 +1,4 @@
-package domain
+package commondomain
 
 import (
 	"context"
@@ -14,8 +14,8 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
-// Chain keepers required for sqs ingest.
-type SQSIngestKeepers struct {
+// Chain keepers required for extracting pool data.
+type PoolExtracterKeepers struct {
 	GammKeeper         PoolKeeper
 	CosmWasmPoolKeeper CosmWasmPoolKeeper
 	WasmKeeper         WasmKeeper
