@@ -5,7 +5,7 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	poolstransformer "github.com/osmosis-labs/osmosis/v25/ingest/sqs/pools/transformer"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"

@@ -10,7 +10,7 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
-	"github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	cosmwasmpoolmodel "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/model"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
