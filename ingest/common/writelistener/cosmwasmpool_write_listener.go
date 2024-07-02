@@ -10,13 +10,14 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
+	"github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	cosmwasmpoolmodel "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/model"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
-var _ domain.WriteListener = (*cosmwasmPoolWriteListener)(nil)
+var _ commondomain.WriteListener = (*cosmwasmPoolWriteListener)(nil)
 
 type cosmwasmPoolWriteListener struct {
 	poolTracker domain.BlockPoolUpdateTracker

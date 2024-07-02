@@ -9,14 +9,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
+
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 )
 
 var _ storetypes.ABCIListener = (*indexerStreamingService)(nil)
 
 // ind is a streaming service that processes block data and ingests it into the indexer
 type indexerStreamingService struct {
-	writeListeners map[storetypes.StoreKey][]domain.WriteListener
+	writeListeners map[storetypes.StoreKey][]commondomain.WriteListener
 
 	// manages tracking of whether the node is code started
 	coldStartManager indexerdomain.ColdStartManager
@@ -33,7 +34,7 @@ type indexerStreamingService struct {
 // sqsIngester is an ingester that ingests the block data into SQS.
 // poolTracker is a tracker that tracks the pools that were changed in the block.
 // nodeStatusChecker is a checker that checks if the node is syncing.
-func New(writeListeners map[storetypes.StoreKey][]domain.WriteListener, coldStartManager indexerdomain.ColdStartManager, client indexerdomain.Publisher, storeKeyMap map[string]storetypes.StoreKey, keepers indexerdomain.Keepers) storetypes.ABCIListener {
+func New(writeListeners map[storetypes.StoreKey][]commondomain.WriteListener, coldStartManager indexerdomain.ColdStartManager, client indexerdomain.Publisher, storeKeyMap map[string]storetypes.StoreKey, keepers indexerdomain.Keepers) storetypes.ABCIListener {
 	return &indexerStreamingService{
 
 		writeListeners: writeListeners,
@@ -136,7 +137,7 @@ func (s *indexerStreamingService) ListenCommit(ctx context.Context, res abci.Res
 }
 
 // Listeners implements baseapp.StreamingService.
-func (s *indexerStreamingService) Listeners() map[storetypes.StoreKey][]domain.WriteListener {
+func (s *indexerStreamingService) Listeners() map[storetypes.StoreKey][]commondomain.WriteListener {
 	return s.writeListeners
 }
 

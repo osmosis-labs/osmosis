@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
@@ -14,14 +15,14 @@ var _ domain.Ingester = &sqsIngester{}
 // It encapsulates all individual SQS ingesters.
 type sqsIngester struct {
 	poolsTransformer domain.PoolsTransformer
-	keepers          domain.SQSIngestKeepers
+	keepers          commondomain.PoolExtracterKeepers
 	sqsGRPCClient    domain.SQSGRPClient
 }
 
 // NewSidecarQueryServerIngester creates a new sidecar query server ingester.
 // poolsRepository is the storage for pools.
 // gammKeeper is the keeper for Gamm pools.
-func NewSidecarQueryServerIngester(poolsIngester domain.PoolsTransformer, appCodec codec.Codec, keepers domain.SQSIngestKeepers, sqsGRPCClient domain.SQSGRPClient) domain.Ingester {
+func NewSidecarQueryServerIngester(poolsIngester domain.PoolsTransformer, appCodec codec.Codec, keepers commondomain.PoolExtracterKeepers, sqsGRPCClient domain.SQSGRPClient) domain.Ingester {
 	return &sqsIngester{
 		poolsTransformer: poolsIngester,
 		keepers:          keepers,
@@ -52,7 +53,7 @@ func (i *sqsIngester) ProcessAllBlockData(ctx sdk.Context) ([]poolmanagertypes.P
 		return nil, err
 	}
 
-	blockPools := domain.BlockPools{
+	blockPools := commondomain.BlockPools{
 		ConcentratedPools: concentratedPools,
 		CosmWasmPools:     cosmWasmPools,
 		CFMMPools:         cfmmPools,
@@ -73,7 +74,7 @@ func (i *sqsIngester) ProcessAllBlockData(ctx sdk.Context) ([]poolmanagertypes.P
 }
 
 // ProcessChangedBlockData implements ingest.Ingester.
-func (i *sqsIngester) ProcessChangedBlockData(ctx sdk.Context, changedPools domain.BlockPools) error {
+func (i *sqsIngester) ProcessChangedBlockData(ctx sdk.Context, changedPools commondomain.BlockPools) error {
 	concentratedPoolIDTickChange := changedPools.ConcentratedPoolIDTickChange
 
 	// Copy over the pools that were changed in the block
