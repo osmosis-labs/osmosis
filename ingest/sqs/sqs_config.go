@@ -5,6 +5,7 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	poolstransformer "github.com/osmosis-labs/osmosis/v25/ingest/sqs/pools/transformer"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
@@ -31,7 +32,7 @@ const (
 
 // DefaultConfig defines the default config for the sidecar query server.
 var DefaultConfig = Config{
-	IsEnabled: false,
+	IsEnabled: true,
 	// Default gRPC address is localhost:50051
 	GRPCIngestAddress: "localhost:50051",
 	// 50 MB by default. Our pool data is estimated to be at approximately 15MB.
@@ -62,7 +63,7 @@ func NewConfigFromOptions(opts servertypes.AppOptions) Config {
 }
 
 // Initialize initializes the sidecar query server and returns the ingester.
-func (c Config) Initialize(appCodec codec.Codec, keepers domain.SQSIngestKeepers) (domain.Ingester, error) {
+func (c Config) Initialize(appCodec codec.Codec, keepers commondomain.PoolExtracterKeepers) (domain.Ingester, error) {
 	// Create pools ingester
 	poolsIngester := poolstransformer.NewPoolTransformer(keepers, defaultUSDCUOSMOPool)
 

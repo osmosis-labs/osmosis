@@ -44,12 +44,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
-* [#8169](https://github.com/osmosis-labs/osmosis/pull/8169) [#8250](https://github.com/osmosis-labs/osmosis/pull/8250) [#8276](https://github.com/osmosis-labs/osmosis/pull/8276) [#8320](https://github.com/osmosis-labs/osmosis/pull/8320) Support non-pool assets in superfluid staking.
+* [#8169](https://github.com/osmosis-labs/osmosis/pull/8169) [#8250](https://github.com/osmosis-labs/osmosis/pull/8250) [#8276](https://github.com/osmosis-labs/osmosis/pull/8276) [#8320](https://github.com/osmosis-labs/osmosis/pull/8320) Support non-pool assets in superfluid staking
 * [#8274](https://github.com/osmosis-labs/osmosis/pull/8274) SDK v50 and Comet v0.38 upgrade
-* [#8344](https://github.com/osmosis-labs/osmosis/pull/8344) Uni-directional trading pair taker fee overrides
-* [#8355](https://github.com/osmosis-labs/osmosis/pull/8355) [smartaccount] fix: fee payer charged on every message
 
 ### State Compatible
+
+## v25.2.0
+
+* [#8455](https://github.com/osmosis-labs/osmosis/pull/8455) Further comet mempool improvements
+
+## v25.1.3
+
+* [#8420](https://github.com/osmosis-labs/osmosis/pull/8420) Remove further unneeded IBC acknowledgements time from CheckTx/RecheckTx
+* [#8421](https://github.com/osmosis-labs/osmosis/pull/8421) Block sdk perf improvements by replacing checkTx with cached tx decoder
+
+### Config
+
+* [#8431](https://github.com/osmosis-labs/osmosis/pull/8431) Fix osmosis-indexer config bug that read osmosis-sqs value
+* [#8436](https://github.com/osmosis-labs/osmosis/pull/8436) Added default indexer config on `osmosisd init`
+
+## v25.1.2
+
+* [#8415](https://github.com/osmosis-labs/osmosis/pull/8415) Reset cache on pool creation
+* [#8417](https://github.com/osmosis-labs/osmosis/pull/8417) Comet bump to fix edge case with block part selection introduced in v25.1.1
+
+## v25.1.1
+
+* [#8394](https://github.com/osmosis-labs/osmosis/pull/8394) Lower timeout commit from 1s to 600ms
+* [#8409](https://github.com/osmosis-labs/osmosis/pull/8409) Add mempool filter to combat IBC spam
+* [#8408](https://github.com/osmosis-labs/osmosis/pull/8408) Bump block sdk to lower recheck times by 25%
+
+## v25.1.0
+
+* [#8398](https://github.com/osmosis-labs/osmosis/pull/8398) Lower JSON unmarshalling overhead in IBC packet logic
 
 ## v25.0.3
 

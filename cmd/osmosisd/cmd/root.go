@@ -28,6 +28,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/params"
 	v23 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v23" // should be automated to be updated to current version every upgrade
+	"github.com/osmosis-labs/osmosis/v25/ingest/indexer"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs"
 
 	"cosmossdk.io/log"
@@ -35,7 +36,6 @@ import (
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/libs/bytes"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
-	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/snapshot"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -144,7 +144,7 @@ var (
 		{
 			Section: "consensus",
 			Key:     "timeout_commit",
-			Value:   "1s",
+			Value:   "600ms",
 		},
 		{
 			Section: "consensus",
@@ -635,6 +635,8 @@ func initAppConfig() (string, interface{}) {
 
 		SidecarQueryServerConfig sqs.Config `mapstructure:"osmosis-sqs"`
 
+		IndexerConfig indexer.Config `mapstructure:"osmosis-indexer"`
+
 		WasmConfig wasmtypes.WasmConfig `mapstructure:"wasm"`
 	}
 
@@ -657,9 +659,11 @@ func initAppConfig() (string, interface{}) {
 
 	sqsCfg := sqs.DefaultConfig
 
+	indexCfg := indexer.DefaultConfig
+
 	wasmCfg := wasmtypes.DefaultWasmConfig()
 
-	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg, SidecarQueryServerConfig: sqsCfg, WasmConfig: wasmCfg}
+	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg, SidecarQueryServerConfig: sqsCfg, IndexerConfig: indexCfg, WasmConfig: wasmCfg}
 
 	OsmosisAppTemplate := serverconfig.DefaultConfigTemplate + `
 ###############################################################################
@@ -697,6 +701,32 @@ grpc-ingest-address = "{{ .SidecarQueryServerConfig.GRPCIngestAddress }}"
 grpc-ingest-max-call-size-bytes = "{{ .SidecarQueryServerConfig.GRPCIngestMaxCallSizeBytes }}"
 
 ###############################################################################
+###              Osmosis Indexer Configuration                              ###
+###############################################################################
+[osmosis-indexer]
+
+# The indexer service is disabled by default.
+is-enabled = "{{ .IndexerConfig.IsEnabled }}"
+
+# The GCP project id to use for the indexer service.
+gcp-project-id = "{{ .IndexerConfig.GCPProjectId }}"
+
+# The topic id to use for the publishing block data
+block-topic-id = "{{ .IndexerConfig.BlockTopicId }}"
+
+# The topic id to use for the publishing transaction data
+transaction-topic-id = "{{ .IndexerConfig.TransactionTopicId }}"
+
+# The topic id to use for the publishing pool data
+pool-topic-id = "{{ .IndexerConfig.PoolTopicId }}"
+
+# The topic id to use for the publishing token supply data
+token-supply-topic-id = "{{ .IndexerConfig.TokenSupplyTopicId }}"
+
+# The topic id to use for the publishing token supply offset data
+token-supply-offset-topic-id = "{{ .IndexerConfig.TokenSupplyOffsetTopicId }}"
+
+###############################################################################
 ###                            Wasm Configuration                           ###
 ###############################################################################
 ` + wasmtypes.DefaultConfigTemplate()
@@ -717,6 +747,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, t
 	rootCmd.AddCommand(
 		// genutilcli.InitCmd(tempApp.ModuleBasics, osmosis.DefaultNodeHome),
 		forceprune(),
+		moduleHashByHeightQuery(newApp),
 		InitCmd(tempApp.ModuleBasics, osmosis.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, osmosis.DefaultNodeHome, genutiltypes.DefaultMessageValidator, valOperAddressCodec),
 		ExportDeriveBalancesCmd(),
@@ -899,7 +930,7 @@ func newApp(logger log.Logger, db cosmosdb.DB, traceStore io.Writer, appOpts ser
 	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
 	if chainID == "" {
 		// fallback to genesis chain-id
-		appGenesis, err := tmtypes.GenesisDocFromFile(filepath.Join(homeDir, "config", "genesis.json"))
+		appGenesis, err := genutiltypes.AppGenesisFromFile(filepath.Join(homeDir, "config", "genesis.json"))
 		if err != nil {
 			panic(err)
 		}
