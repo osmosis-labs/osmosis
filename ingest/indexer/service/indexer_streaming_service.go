@@ -8,6 +8,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 
 	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
@@ -73,11 +74,36 @@ func (s *indexerStreamingService) publishBlock(ctx context.Context, req abci.Req
 // ListenFinalizeBlock updates the streaming service with the latest FinalizeBlock messages
 func (s *indexerStreamingService) ListenFinalizeBlock(ctx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
 	// Publish the block data
-	err := s.publishBlock(ctx, req)
+	var err error
+	err = s.publishBlock(ctx, req)
+	if err != nil {
+		return err
+	}
+	// Publish the transaction data
+	err = s.publishTxn(ctx, res)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+// publishTxn publishes the transaction data to the indexer backend.
+// TO DO: Tested if res.GetEvents() is the correct way to get the events in the SDK used in 'main'
+func (s *indexerStreamingService) publishTxn(ctx context.Context, res abci.ResponseFinalizeBlock) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	events := res.GetEvents()
+	if len(events) == 0 {
+		return nil
+	}
+	txn := domain.Transaction{
+		Height:    uint64(sdkCtx.BlockHeight()),
+		BlockTime: sdkCtx.BlockTime().UTC(),
+		Events:    make([]interface{}, len(events)),
+	}
+	for i, event := range events {
+		txn.Events[i] = event
+	}
+	return s.client.PublishTransaction(sdkCtx, txn)
 }
 
 // ListenCommit updates the steaming service with the latest Commit messages and state changes
