@@ -1,4 +1,4 @@
-package poolextracter
+package poolextractor
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -7,22 +7,22 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 )
 
-// poolExtracter is an abstraction that extracts pools from the chain.
-type poolExtracter struct {
-	keepers     commondomain.PoolExtracterKeepers
+// poolExtractor is an abstraction that extracts pools from the chain.
+type poolExtractor struct {
+	keepers     commondomain.PoolExtractorKeepers
 	poolTracker domain.BlockPoolUpdateTracker
 }
 
-// New creates a new pool extracter.
-func New(keepers commondomain.PoolExtracterKeepers, poolTracker domain.BlockPoolUpdateTracker) commondomain.PoolExtracter {
-	return &poolExtracter{
+// New creates a new pool extractor.
+func New(keepers commondomain.PoolExtractorKeepers, poolTracker domain.BlockPoolUpdateTracker) commondomain.PoolExtractor {
+	return &poolExtractor{
 		keepers:     keepers,
 		poolTracker: poolTracker,
 	}
 }
 
-// ExtractAll implements commondomain.PoolExtracter.
-func (p *poolExtracter) ExtractAll(ctx sdk.Context) (commondomain.BlockPools, error) {
+// ExtractAll implements commondomain.PoolExtractor.
+func (p *poolExtractor) ExtractAll(ctx sdk.Context) (commondomain.BlockPools, error) {
 	// Concentrated pools
 
 	concentratedPools, err := p.keepers.ConcentratedKeeper.GetPools(ctx)
@@ -58,8 +58,8 @@ func (p *poolExtracter) ExtractAll(ctx sdk.Context) (commondomain.BlockPools, er
 	return blockPools, nil
 }
 
-// ExtractChanged implements commondomain.PoolExtracter.
-func (p *poolExtracter) ExtractChanged(ctx sdk.Context) (commondomain.BlockPools, error) {
+// ExtractChanged implements commondomain.PoolExtractor.
+func (p *poolExtractor) ExtractChanged(ctx sdk.Context) (commondomain.BlockPools, error) {
 	// If not cold start, we only process the pools that were changed this block.
 	concentratedPools := p.poolTracker.GetConcentratedPools()
 	concentratedPoolIDTickChange := p.poolTracker.GetConcentratedPoolIDTickChange()

@@ -6,7 +6,7 @@ import (
 	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 )
 
-type PoolsExtracterMock struct {
+type PoolsExtractorMock struct {
 	// AllBlockDataError is the error to return when ProcessAllBlockData is called.
 	AllBlockDataError error
 	// ChangedBlockDataError is the error to return when ProcessChangedBlockData is called.
@@ -21,10 +21,10 @@ type PoolsExtracterMock struct {
 	BlockPools commondomain.BlockPools
 }
 
-var _ commondomain.PoolExtracter = &PoolsExtracterMock{}
+var _ commondomain.PoolExtractor = &PoolsExtractorMock{}
 
-// ExtractAll implements commondomain.PoolExtracter.
-func (p *PoolsExtracterMock) ExtractAll(ctx types.Context) (commondomain.BlockPools, error) {
+// ExtractAll implements commondomain.PoolExtractor.
+func (p *PoolsExtractorMock) ExtractAll(ctx types.Context) (commondomain.BlockPools, error) {
 	if p.ProcessAllBlockDataPanicMsg != "" {
 		panic(p.ProcessAllBlockDataPanicMsg)
 	}
@@ -33,8 +33,8 @@ func (p *PoolsExtracterMock) ExtractAll(ctx types.Context) (commondomain.BlockPo
 	return p.BlockPools, p.AllBlockDataError
 }
 
-// ExtractChanged implements commondomain.PoolExtracter.
-func (p *PoolsExtracterMock) ExtractChanged(ctx types.Context) (commondomain.BlockPools, error) {
+// ExtractChanged implements commondomain.PoolExtractor.
+func (p *PoolsExtractorMock) ExtractChanged(ctx types.Context) (commondomain.BlockPools, error) {
 	p.IsProcessAllChangedDataCalled = true
 	return p.BlockPools, p.ChangedBlockDataError
 }

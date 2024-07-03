@@ -1,4 +1,4 @@
-package poolextracter_test
+package poolextractor_test
 
 import (
 	"testing"
@@ -7,21 +7,21 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
-	"github.com/osmosis-labs/osmosis/v25/ingest/common/poolextracter"
+	"github.com/osmosis-labs/osmosis/v25/ingest/common/poolextractor"
 	"github.com/osmosis-labs/osmosis/v25/ingest/common/pooltracker"
 )
 
-type PoolExtracterTestSuite struct {
+type PoolExtractorTestSuite struct {
 	apptesting.ConcentratedKeeperTestHelper
 }
 
-func TestPoolExtracterTestSuite(t *testing.T) {
-	suite.Run(t, new(PoolExtracterTestSuite))
+func TestPoolExtractorTestSuite(t *testing.T) {
+	suite.Run(t, new(PoolExtractorTestSuite))
 }
 
-// TestExtracter tests that the appropriate pools are extracted
-// when calling ExtractAll and ExtractChanged methods of the extracter.
-func (s *PoolExtracterTestSuite) TestExtracter() {
+// TestExtractor tests that the appropriate pools are extracted
+// when calling ExtractAll and ExtractChanged methods of the extractor.
+func (s *PoolExtractorTestSuite) TestExtractor() {
 
 	s.Setup()
 
@@ -35,7 +35,7 @@ func (s *PoolExtracterTestSuite) TestExtracter() {
 	// Initialize a position on the concentrated pool
 	concentratedPoolWithPosition := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(apptesting.ETH, apptesting.USDC)
 
-	keepers := commondomain.PoolExtracterKeepers{
+	keepers := commondomain.PoolExtractorKeepers{
 		GammKeeper:         s.App.GAMMKeeper,
 		CosmWasmPoolKeeper: s.App.CosmwasmPoolKeeper,
 		WasmKeeper:         s.App.WasmKeeper,
@@ -54,11 +54,11 @@ func (s *PoolExtracterTestSuite) TestExtracter() {
 	// Track tick change for a concentraed pool.
 	poolTracker.TrackConcentratedPoolIDTickChange(concentratedPoolWithPosition.GetId())
 
-	// Initialize the extracter
-	extracter := poolextracter.New(keepers, poolTracker)
+	// Initialize the extractor
+	extractor := poolextractor.New(keepers, poolTracker)
 
 	// System under test #1
-	blockPools, err := extracter.ExtractAll(s.Ctx)
+	blockPools, err := extractor.ExtractAll(s.Ctx)
 	s.Require().NoError(err)
 
 	// Validate all pools are exracted
@@ -68,7 +68,7 @@ func (s *PoolExtracterTestSuite) TestExtracter() {
 
 	// System under test #2
 	// Extract the pools again but now only changed
-	blockPools, err = extracter.ExtractChanged(s.Ctx)
+	blockPools, err = extractor.ExtractChanged(s.Ctx)
 	s.Require().NoError(err)
 
 	// Validate only the changed pools are extracted

@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// PoolExtracter defines the interface for extracting pools.
-type PoolExtracter interface {
+// PoolExtractor defines the interface for extracting pools.
+type PoolExtractor interface {
 	// ExtractAll extracts all the pools available within the height associated
 	// with the context.
 	ExtractAll(ctx sdk.Context) (BlockPools, error)
