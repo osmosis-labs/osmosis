@@ -61,7 +61,7 @@ func (s *PoolExtractorTestSuite) TestExtractor() {
 	blockPools, err := extractor.ExtractAll(s.Ctx)
 	s.Require().NoError(err)
 
-	// Validate all pools are exracted
+	// Validate all pools are extracted
 	allPools := blockPools.GetAll()
 	// + 1 for an extra concentrated pool.
 	s.Require().Equal(len(allChainPools)+1, len(allPools))
