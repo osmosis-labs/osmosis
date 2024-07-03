@@ -35,7 +35,6 @@ func (p *PoolsExtracterMock) ExtractAll(ctx types.Context) (commondomain.BlockPo
 
 // ExtractChanged implements commondomain.PoolExtracter.
 func (p *PoolsExtracterMock) ExtractChanged(ctx types.Context) (commondomain.BlockPools, error) {
-
 	p.IsProcessAllChangedDataCalled = true
 	return p.BlockPools, p.ChangedBlockDataError
 }
