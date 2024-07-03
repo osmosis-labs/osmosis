@@ -16,6 +16,7 @@ var (
 	// since the service does not use them directly other than storing and returning
 	// via getter. As a result, we wire empty write listeners for the tests.
 	emptyWriteListeners = make(map[storetypes.StoreKey][]storetypes.WriteListener)
+	emptyStoreKeyMap    = make(map[string]storetypes.StoreKey)
 
 	// mockError is a mock error for testing.
 	mockError = errors.New("mock error")

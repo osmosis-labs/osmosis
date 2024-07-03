@@ -14,6 +14,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 )
 
@@ -187,7 +188,7 @@ func (s *sqsStreamingService) processBlock(ctx sdk.Context) error {
 	cfmmPools := s.poolTracker.GetCFMMPools()
 	cosmWasmPools := s.poolTracker.GetCosmWasmPools()
 
-	changedBlockPools := domain.BlockPools{
+	changedBlockPools := commondomain.BlockPools{
 		ConcentratedPools:            concentratedPools,
 		ConcentratedPoolIDTickChange: concentratedPoolIDTickChange,
 		CosmWasmPools:                cosmWasmPools,

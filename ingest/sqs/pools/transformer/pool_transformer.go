@@ -16,6 +16,7 @@ import (
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
@@ -32,13 +33,13 @@ import (
 // - If error in TVL calculation, TVL is set to the value that could be computed and the pool struct
 // has a flag to indicate that there was an error in TVL calculation.
 type poolTransformer struct {
-	gammKeeper         domain.PoolKeeper
-	concentratedKeeper domain.ConcentratedKeeper
-	cosmWasmKeeper     domain.CosmWasmPoolKeeper
-	wasmKeeper         domain.WasmKeeper
-	bankKeeper         domain.BankKeeper
-	protorevKeeper     domain.ProtorevKeeper
-	poolManagerKeeper  domain.PoolManagerKeeper
+	gammKeeper         commondomain.PoolKeeper
+	concentratedKeeper commondomain.ConcentratedKeeper
+	cosmWasmKeeper     commondomain.CosmWasmPoolKeeper
+	wasmKeeper         commondomain.WasmKeeper
+	bankKeeper         commondomain.BankKeeper
+	protorevKeeper     commondomain.ProtorevKeeper
+	poolManagerKeeper  commondomain.PoolManagerKeeper
 
 	// Pool ID that is used for converting between USDC and UOSMO.
 	defaultUSDCUOSMOPoolID uint64
@@ -104,7 +105,7 @@ var stablesOverwrite map[string]struct{} = map[string]struct{}{
 var _ domain.PoolsTransformer = &poolTransformer{}
 
 // NewPoolTransformer returns a new pool ingester.
-func NewPoolTransformer(keepers domain.SQSIngestKeepers, defaultUSDCUOSMOPoolID uint64) domain.PoolsTransformer {
+func NewPoolTransformer(keepers commondomain.PoolExtracterKeepers, defaultUSDCUOSMOPoolID uint64) domain.PoolsTransformer {
 	return &poolTransformer{
 		gammKeeper:         keepers.GammKeeper,
 		concentratedKeeper: keepers.ConcentratedKeeper,
@@ -119,7 +120,7 @@ func NewPoolTransformer(keepers domain.SQSIngestKeepers, defaultUSDCUOSMOPoolID 
 }
 
 // processPoolState processes the pool state. an
-func (pi *poolTransformer) Transform(ctx sdk.Context, blockPools domain.BlockPools) ([]sqsdomain.PoolI, sqsdomain.TakerFeeMap, error) {
+func (pi *poolTransformer) Transform(ctx sdk.Context, blockPools commondomain.BlockPools) ([]sqsdomain.PoolI, sqsdomain.TakerFeeMap, error) {
 	// Create a map from denom to its price.
 	priceInfoMap := make(map[string]osmomath.BigDec)
 
