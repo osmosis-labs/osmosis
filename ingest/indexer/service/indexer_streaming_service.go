@@ -83,11 +83,41 @@ func (s *indexerStreamingService) publishBlock(ctx context.Context, req types.Re
 // ListenEndBlock implements baseapp.StreamingService.
 func (s *indexerStreamingService) ListenEndBlock(ctx context.Context, req types.RequestEndBlock, res types.ResponseEndBlock) error {
 	// Publish the block data
-	err := s.publishBlock(ctx, req)
+	var err error
+	err = s.publishBlock(ctx, req)
+	if err != nil {
+		return err
+	}
+	// Publish the transaction data
+	err = s.publishTxn(ctx, res)
 	if err != nil {
 		return err
 	}
 
+<<<<<<< HEAD
+=======
+// publishTxn publishes the transaction data to the indexer backend.
+// TO DO: Tested if res.GetEvents() is the correct way to get the events in the SDK used in 'main'
+func (s *indexerStreamingService) publishTxn(ctx context.Context, res abci.ResponseFinalizeBlock) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	events := res.GetEvents()
+	if len(events) == 0 {
+		return nil
+	}
+	txn := indexerdomain.Transaction{
+		Height:    uint64(sdkCtx.BlockHeight()),
+		BlockTime: sdkCtx.BlockTime().UTC(),
+		Events:    make([]interface{}, len(events)),
+	}
+	for i, event := range events {
+		txn.Events[i] = event
+	}
+	return s.client.PublishTransaction(sdkCtx, txn)
+}
+
+// ListenCommit updates the steaming service with the latest Commit messages and state changes
+func (s *indexerStreamingService) ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*storetypes.StoreKVPair) error {
+>>>>>>> 8f766609 (feat: added txn ingester for indexer (#8473))
 	// If did not ingest initial data yet, ingest it now
 	if !s.coldStartManager.HasIngestedInitialData() {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
