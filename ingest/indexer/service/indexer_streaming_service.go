@@ -8,7 +8,6 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 
 	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
@@ -95,7 +94,7 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, res abci.Respo
 	if len(events) == 0 {
 		return nil
 	}
-	txn := domain.Transaction{
+	txn := indexerdomain.Transaction{
 		Height:    uint64(sdkCtx.BlockHeight()),
 		BlockTime: sdkCtx.BlockTime().UTC(),
 		Events:    make([]interface{}, len(events)),
