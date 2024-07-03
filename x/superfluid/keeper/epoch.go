@@ -166,16 +166,18 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		if err != nil {
 			return sdkerrors.Wrap(err, "failed to get twap price")
 		}
-		// TODO: Before setting the multiplier, we want to make sure that it doesn't go beyond the max allowed for native assets
-		//       To do this, we get the total amount of staked osmo, and check that total_staked_for_denom * multiplier does not exceed 25% of total_staked.
-		//       If it does, we adjust the multiplier/price accordingly
 
+		// Before setting the multiplier, we want to make sure that it doesn't go beyond the max allowed for native assets
+		// To do this, we get the total amount of staked osmo, and check that total_staked_for_denom * multiplier does not exceed 25% of total_staked.
+		// If it does, we adjust the multiplier/price accordingly
 		// TODO: The max rate should be per asset, not for all assets.
 		maxNonPoolRate, _ := osmomath.NewDecFromStr("0.25")
 		exceeds, percentage := k.checkNonPoolRateIsNotExceeded(ctx, asset.Denom, maxNonPoolRate)
+		fmt.Println(percentage)
 		if exceeds != nil {
 			k.Logger(ctx).Info("non-pool staked osmo exceeds 25% of total staked osmo. Adjusting price.", "percentage", percentage.String())
 			price = price.Mul(maxNonPoolRate).Quo(percentage)
+			fmt.Println("new price", price)
 
 		}
 		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, price)
@@ -207,8 +209,9 @@ func (k Keeper) checkNonPoolRateIsNotExceeded(ctx sdk.Context, denom string, max
 		return nil, osmomath.ZeroDec()
 	}
 
-	// get the relation of total superfluid to total staked  as a percentage
-	percentage := totalNonPoolStaked.ToLegacyDec().Quo(totalStaked.Amount.ToLegacyDec())
+	// get the relation of total superfluid to total osmo staked as a percentage
+	percentage := totalNonPoolStaked.ToLegacyDec().Quo(totalStaked.Amount.Sub(totalNonPoolStaked).ToLegacyDec())
+	fmt.Println("check, percentage", percentage)
 	if percentage.GT(maxNonPoolRate) {
 		return sdkerrors.Wrapf(types.ErrNonPoolRateExceeded, "percentage: %s", percentage.String()), percentage
 	}

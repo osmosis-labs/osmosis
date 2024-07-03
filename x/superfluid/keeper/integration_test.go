@@ -619,6 +619,10 @@ func (s *TestSuite) TestNativeSuperfluidLimits() {
 	poolAddr := sdk.AccAddress(lpKey.Address())
 	userKey := ed25519.GenPrivKey().PubKey()
 	userAddr := sdk.AccAddress(userKey.Address())
+	pool2Key := ed25519.GenPrivKey().PubKey()
+	pool2Addr := sdk.AccAddress(pool2Key.Address())
+	user2Key := ed25519.GenPrivKey().PubKey()
+	user2Addr := sdk.AccAddress(user2Key.Address())
 
 	osmoPoolAmount := osmomath.NewInt(1_000_000_000_000)
 	btcPoolAmount := osmomath.NewInt(10_000_000_000)
@@ -627,9 +631,12 @@ func (s *TestSuite) TestNativeSuperfluidLimits() {
 	// mint necessary tokens
 	s.mintToAccount(btcPoolAmount, btcDenom, poolAddr)
 	s.mintToAccount(osmoPoolAmount.Mul(osmomath.NewInt(2)), bondDenom, poolAddr)
+	s.mintToAccount(btcPoolAmount, btcDenom, pool2Addr)
+	s.mintToAccount(osmoPoolAmount.Mul(osmomath.NewInt(2)), bondDenom, pool2Addr)
 	s.mintToAccount(osmomath.NewInt(100_000_000), bondDenom, userAddr)
 	totalBTCAmount := osmomath.NewInt(100_000_000)
 	s.mintToAccount(totalBTCAmount, btcDenom, userAddr)
+	s.mintToAccount(totalBTCAmount, btcDenom, user2Addr)
 
 	nextPoolId := s.App.PoolManagerKeeper.GetNextPoolId(s.Ctx) // the pool id we'll create
 
@@ -662,6 +669,8 @@ func (s *TestSuite) TestNativeSuperfluidLimits() {
 
 	// Delegate some osmo
 	validators, err := s.App.StakingKeeper.GetAllValidators(s.Ctx)
+	validator := validators[0]
+
 	osmoStakeAmount := osmomath.NewInt(1_000_000)
 	stakeMsg := stakingtypes.MsgDelegate{
 		DelegatorAddress: userAddr.String(),
@@ -678,40 +687,46 @@ func (s *TestSuite) TestNativeSuperfluidLimits() {
 
 	////////
 	// TEST: Delegations that exceed the limit should fail
-	// TODO: this is actually not the requirement. We should allow it but limit the osmo equivalent
 	////////
-	delegations := s.QueryAllSuperfluidDelegations(btcDenom)
-	s.Require().Equal(0, len(delegations.SuperfluidDelegationRecords))
 
-	// superfluid stake btcDenom
-	btcStakeAmount := osmomath.NewInt(500_000)
+	// calculate the max amount of osmo allowed to stake
+	startTime := s.Ctx.BlockTime().Add(-5 * time.Minute)
+	price, err := s.App.TwapKeeper.GetArithmeticTwapToNow(s.Ctx, 1, btcDenom, bondDenom, startTime)
 	s.Require().NoError(err)
-	validator := validators[0]
+
+	maxNonPoolRate, _ := osmomath.NewDecFromStr("0.25")
+	maxBTCEquivalent := osmomath.NewDec(2).Mul(osmoStakeAmount.ToLegacyDec().Mul(maxNonPoolRate).QuoRoundUp(osmomath.NewDec(1).Sub(maxNonPoolRate)))
+	btcStakeAmount := osmomath.NewInt(maxBTCEquivalent.QuoRoundUp(price).RoundInt64()).AddRaw(1)
+
+	////////
+	// TEST:  Delegate at the limit.
+	////////
+
 	delegateMsg := &types.MsgLockAndSuperfluidDelegate{
 		Sender:  userAddr.String(),
 		Coins:   sdk.NewCoins(sdk.NewCoin(btcDenom, btcStakeAmount)),
 		ValAddr: validator.GetOperator(),
 	}
 	_, err = s.RunMsg(delegateMsg)
-	s.Require().Error(err)
-	s.Require().Contains(err.Error(), types.ErrNonPoolRateExceeded.Error())
+	s.Require().NoError(err)
 
-	// No superfluid delegations added
+	delegations := s.QueryAllSuperfluidDelegations(btcDenom)
+	s.Require().Equal(1, len(delegations.SuperfluidDelegationRecords))
+	equivalentStakedOsmo := delegations.SuperfluidDelegationRecords[0].EquivalentStakedAmount
+	fmt.Println("equivalent staked osmo (pre epoch)", equivalentStakedOsmo)
+
+	s.AdvanceToBlockNAndRunEpoch(10)
+
 	delegations = s.QueryAllSuperfluidDelegations(btcDenom)
-	s.Require().Equal(0, len(delegations.SuperfluidDelegationRecords))
-
-	// calculate the max amount of osmo allowed to stake
-	maxNonPoolRate, _ := osmomath.NewDecFromStr("0.25")
-	price := osmoPoolAmount.Quo(btcPoolAmount)
-	maxBTCEquivalent := osmoStakeAmount.ToLegacyDec().Mul(maxNonPoolRate).Quo(osmomath.NewDec(1).Sub(maxNonPoolRate))
-	btcStakeAmount = osmomath.NewInt(maxBTCEquivalent.Quo(price.ToLegacyDec()).RoundInt64())
+	s.Require().Equal(1, len(delegations.SuperfluidDelegationRecords))
+	equivalentStakedOsmo = delegations.SuperfluidDelegationRecords[0].EquivalentStakedAmount
+	fmt.Println("equivalent staked osmo (after epoch)", equivalentStakedOsmo)
 
 	////////
-	// TEST:  Delegate at the limit. Should be allowed
+	// TEST:  Delegate past the limit. Staked osmo should stay the same
 	////////
-
 	delegateMsg = &types.MsgLockAndSuperfluidDelegate{
-		Sender:  userAddr.String(),
+		Sender:  user2Addr.String(),
 		Coins:   sdk.NewCoins(sdk.NewCoin(btcDenom, btcStakeAmount)),
 		ValAddr: validator.GetOperator(),
 	}
@@ -719,11 +734,45 @@ func (s *TestSuite) TestNativeSuperfluidLimits() {
 	s.Require().NoError(err)
 
 	delegations = s.QueryAllSuperfluidDelegations(btcDenom)
-	s.Require().Equal(1, len(delegations.SuperfluidDelegationRecords))
+	s.Require().Equal(2, len(delegations.SuperfluidDelegationRecords))
+	newTotal := delegations.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Amount.Add(delegations.SuperfluidDelegationRecords[1].EquivalentStakedAmount.Amount)
+	fmt.Println("eq staked osmo (pre)", newTotal)
+
+	// TODO: The limits are exceeded until epoch happens. This is not ideal. Should we delegations to happen on epoch?
+	//       can we maybe "deactivate" delegations until the first epoch happens?
+	s.AdvanceToBlockNAndRunEpoch(20)
+
+	delegations = s.QueryAllSuperfluidDelegations(btcDenom)
+	s.Require().Equal(2, len(delegations.SuperfluidDelegationRecords))
+	newTotal = delegations.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Amount.Add(delegations.SuperfluidDelegationRecords[1].EquivalentStakedAmount.Amount)
+	fmt.Println("eq staked osmo (post)", newTotal)
 
 	////////
-	// TEST:  Delegate at the limit and then change the price. The equivalent osmo should still be the same as before
+	// TEST:  Raising the price of the staked asset and shouldn't create more osmo
 	////////
+
+	// Get current TWAP
+	startTime = s.Ctx.BlockTime().Add(-5 * time.Minute)
+	twap, err := s.App.TwapKeeper.GetArithmeticTwapToNow(s.Ctx, 1, bondDenom, btcDenom, startTime)
+	s.Require().NoError(err)
+	fmt.Println(twap)
+
+	// Mint osmo to poolAddr
+
+	// Double the amount of osmo in the pool
+	s.App.GAMMKeeper.JoinPoolNoSwap(s.Ctx, pool2Addr, 1, osmomath.NewInt(1), sdk.NewCoins(sdk.NewCoin(bondDenom, osmoPoolAmount)))
+
+	// Get new TWAP
+
+	// Delegate more BTC
+	// check delegation's osmo equivalent
+	// btc amount should have changed, but not osmo equivalent
+	// ensure the update code actually ran
+
+	////////
+	// TEST:  Reducing the price so that the staked amount is bellow the limit should decrease the minted osmo
+	////////
+
 }
 
 func (s *TestSuite) QueryAllSuperfluidDelegations(denom string) *types.SuperfluidDelegationsByValidatorDenomResponse {
@@ -744,7 +793,7 @@ func (s *TestSuite) QueryAllSuperfluidDelegations(denom string) *types.Superflui
 func (s *TestSuite) AdvanceToBlockNAndRunEpoch(n int64) {
 	for i := s.Ctx.BlockHeight(); i < n; i++ {
 		s.EndBlock()
-		s.BeginNewBlock(i%n == 0)
+		s.BeginNewBlock(i%(n-1) == 0)
 	}
 	s.EndBlock()
 	fmt.Printf("moved to block %d and ran epoch\n", s.Ctx.BlockHeight())

@@ -271,24 +271,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 		return types.ErrOsmoEquivalentZeroNotAllowed
 	}
 
-	err = k.mintOsmoTokensAndDelegate(ctx, amount, acc)
-	if err != nil {
-		return err
-	}
-
-	// Now we need to check that the non-pool delegation rate is not exceeded.
-	//
-	// If dealing with a non-native asset, we track the amount being delegated when minting.
-	// This is way we don't need to calculate that amount when checking the maximum allowed.
-	maxNonPoolRate, _ := osmomath.NewDecFromStr("0.25")
-	if !IsPoolToken(acc.Denom) {
-		err, _ := k.checkNonPoolRateIsNotExceeded(ctx, acc.Denom, maxNonPoolRate)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return k.mintOsmoTokensAndDelegate(ctx, amount, acc)
 }
 
 // undelegateCommon is a helper function for SuperfluidUndelegate and superfluidUndelegateToConcentratedPosition.
