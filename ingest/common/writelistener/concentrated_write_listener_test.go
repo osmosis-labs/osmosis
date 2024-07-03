@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v25/ingest/common/writelistener"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service/writelistener"
 	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 )

@@ -10,10 +10,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
+
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 )
 
-var _ domain.WriteListener = (*bankWriteListener)(nil)
+var _ commondomain.WriteListener = (*bankWriteListener)(nil)
 
 type bankWriteListener struct {
 
@@ -25,7 +26,7 @@ type bankWriteListener struct {
 	coldStartManager indexerdomain.ColdStartManager
 }
 
-func NewBank(ctx context.Context, client indexerdomain.TokenSupplyPublisher, coldStartManager indexerdomain.ColdStartManager) domain.WriteListener {
+func NewBank(ctx context.Context, client indexerdomain.TokenSupplyPublisher, coldStartManager indexerdomain.ColdStartManager) commondomain.WriteListener {
 	return &bankWriteListener{
 		ctx:    ctx,
 		client: client,
