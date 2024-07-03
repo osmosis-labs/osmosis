@@ -1,5 +1,9 @@
 package domain
 
+import "time"
+
 type Transaction struct {
-	// TBD
+	Height    uint64        `json:"height"`
+	BlockTime time.Time     `json:"timestamp"`
+	Events    []interface{} `json:"events"`
 }

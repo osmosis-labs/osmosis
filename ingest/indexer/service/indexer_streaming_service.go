@@ -61,6 +61,11 @@ func (s *indexerStreamingService) ListenCommit(ctx context.Context, res types.Re
 
 // ListenDeliverTx implements baseapp.StreamingService.
 func (s *indexerStreamingService) ListenDeliverTx(ctx context.Context, req types.RequestDeliverTx, res types.ResponseDeliverTx) error {
+	// Publish the transaction data
+	err := s.publishTxn(ctx, res)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -78,6 +83,24 @@ func (s *indexerStreamingService) publishBlock(ctx context.Context, req types.Re
 		GasConsumed: gasConsumed,
 	}
 	return s.client.PublishBlock(sdkCtx, block)
+}
+
+// publishTxn publishes the transaction data to the indexer.
+func (s *indexerStreamingService) publishTxn(ctx context.Context, res types.ResponseDeliverTx) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	events := res.GetEvents()
+	if len(events) == 0 {
+		return nil
+	}
+	txn := domain.Transaction{
+		Height:    uint64(sdkCtx.BlockHeight()),
+		BlockTime: sdkCtx.BlockTime().UTC(),
+		Events:    make([]interface{}, len(events)),
+	}
+	for i, event := range events {
+		txn.Events[i] = event
+	}
+	return s.client.PublishTransaction(sdkCtx, txn)
 }
 
 // ListenEndBlock implements baseapp.StreamingService.
