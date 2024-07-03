@@ -37,6 +37,7 @@ import (
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 
+	"github.com/osmosis-labs/osmosis/v25/ingest/common/writelistener"
 	"github.com/osmosis-labs/osmosis/v25/ingest/indexer"
 	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 	indexerservice "github.com/osmosis-labs/osmosis/v25/ingest/indexer/service"
@@ -44,12 +45,13 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	sqsservice "github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
-	sqswritelistener "github.com/osmosis-labs/osmosis/v25/ingest/sqs/service/writelistener"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
@@ -298,7 +300,7 @@ func NewOsmosisApp(
 
 	// Initialize the SQS ingester if it is enabled.
 	if sqsConfig.IsEnabled {
-		sqsKeepers := domain.SQSIngestKeepers{
+		sqsKeepers := commondomain.PoolExtracterKeepers{
 			GammKeeper:         app.GAMMKeeper,
 			CosmWasmPoolKeeper: app.CosmwasmPoolKeeper,
 			WasmKeeper:         app.WasmKeeper,
@@ -572,16 +574,16 @@ func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoo
 	writeListeners := make(map[storetypes.StoreKey][]storetypes.WriteListener)
 
 	writeListeners[app.GetKey(concentratedtypes.ModuleName)] = []storetypes.WriteListener{
-		sqswritelistener.NewConcentrated(blockPoolUpdateTracker),
+		writelistener.NewConcentrated(blockPoolUpdateTracker),
 	}
 	writeListeners[app.GetKey(gammtypes.StoreKey)] = []storetypes.WriteListener{
-		sqswritelistener.NewGAMM(blockPoolUpdateTracker, appCodec),
+		writelistener.NewGAMM(blockPoolUpdateTracker, appCodec),
 	}
 	writeListeners[app.GetKey(cosmwasmpooltypes.StoreKey)] = []storetypes.WriteListener{
-		sqswritelistener.NewCosmwasmPool(blockPoolUpdateTracker, wasmkeeper),
+		writelistener.NewCosmwasmPool(blockPoolUpdateTracker, wasmkeeper),
 	}
 	writeListeners[app.GetKey(banktypes.StoreKey)] = []storetypes.WriteListener{
-		sqswritelistener.NewCosmwasmPoolBalance(blockPoolUpdateTracker),
+		writelistener.NewCosmwasmPoolBalance(blockPoolUpdateTracker),
 	}
 	return writeListeners
 }
