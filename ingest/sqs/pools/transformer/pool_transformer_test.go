@@ -428,6 +428,7 @@ func (s *PoolTransformerTestSuite) TestProcessBlock() {
 	// Create a custom denom pair taker fee and set its taker fee to non-default
 	customTakerFeeConcentratedPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], USDT, USDC, 1, osmomath.ZeroDec())
 	s.App.PoolManagerKeeper.SetDenomPairTakerFee(s.Ctx, customTakerFeeConcentratedPool.GetToken0(), customTakerFeeConcentratedPool.GetToken1(), defaultCustomTakerFee)
+	s.App.PoolManagerKeeper.SetDenomPairTakerFee(s.Ctx, customTakerFeeConcentratedPool.GetToken1(), customTakerFeeConcentratedPool.GetToken0(), defaultCustomTakerFee)
 
 	sqsKeepers := commondomain.PoolExtractorKeepers{
 		GammKeeper:         s.App.GAMMKeeper,
