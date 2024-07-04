@@ -63,7 +63,7 @@ func NewConfigFromOptions(opts servertypes.AppOptions) Config {
 }
 
 // Initialize initializes the sidecar query server and returns the ingester.
-func (c Config) Initialize(appCodec codec.Codec, keepers commondomain.PoolExtracterKeepers) (domain.Ingester, error) {
+func (c Config) Initialize(appCodec codec.Codec, keepers commondomain.PoolExtractorKeepers) (domain.Ingester, error) {
 	// Create pools ingester
 	poolsIngester := poolstransformer.NewPoolTransformer(keepers, defaultUSDCUOSMOPool)
 

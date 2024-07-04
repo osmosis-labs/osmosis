@@ -429,7 +429,7 @@ func (s *PoolTransformerTestSuite) TestProcessBlock() {
 	customTakerFeeConcentratedPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], USDT, USDC, 1, osmomath.ZeroDec())
 	s.App.PoolManagerKeeper.SetDenomPairTakerFee(s.Ctx, customTakerFeeConcentratedPool.GetToken0(), customTakerFeeConcentratedPool.GetToken1(), defaultCustomTakerFee)
 
-	sqsKeepers := commondomain.PoolExtracterKeepers{
+	sqsKeepers := commondomain.PoolExtractorKeepers{
 		GammKeeper:         s.App.GAMMKeeper,
 		ConcentratedKeeper: s.App.ConcentratedLiquidityKeeper,
 		WasmKeeper:         s.App.WasmKeeper,
@@ -835,7 +835,7 @@ func (s *PoolTransformerTestSuite) validatePoolConversion(expectedPool poolmanag
 
 func (s *PoolTransformerTestSuite) initializePoolIngester(defaultUSDCUOSMOPoolID uint64) *poolstransformer.PoolTransformer {
 
-	sqsKeepers := commondomain.PoolExtracterKeepers{
+	sqsKeepers := commondomain.PoolExtractorKeepers{
 		GammKeeper:         s.App.GAMMKeeper,
 		ConcentratedKeeper: s.App.ConcentratedLiquidityKeeper,
 		BankKeeper:         s.App.BankKeeper,

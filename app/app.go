@@ -37,6 +37,7 @@ import (
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 
+	"github.com/osmosis-labs/osmosis/v25/ingest/common/pooltracker"
 	"github.com/osmosis-labs/osmosis/v25/ingest/common/writelistener"
 	"github.com/osmosis-labs/osmosis/v25/ingest/indexer"
 	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
@@ -300,7 +301,7 @@ func NewOsmosisApp(
 
 	// Initialize the SQS ingester if it is enabled.
 	if sqsConfig.IsEnabled {
-		sqsKeepers := commondomain.PoolExtracterKeepers{
+		sqsKeepers := commondomain.PoolExtractorKeepers{
 			GammKeeper:         app.GAMMKeeper,
 			CosmWasmPoolKeeper: app.CosmwasmPoolKeeper,
 			WasmKeeper:         app.WasmKeeper,
@@ -318,7 +319,7 @@ func NewOsmosisApp(
 
 		// Create pool tracker that tracks pool updates
 		// made by the write listenetrs.
-		poolTracker := sqsservice.NewPoolTracker()
+		poolTracker := pooltracker.NewMemory()
 
 		// Create write listeners for the SQS service.
 		writeListeners := getSQSServiceWriteListeners(app, appCodec, poolTracker, app.WasmKeeper)
