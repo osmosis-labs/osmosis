@@ -3,7 +3,7 @@ package mocks
 import (
 	"cosmossdk.io/store/types"
 
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 )
 
 type BlockUpdateProcessUtilsMock struct {
@@ -11,7 +11,7 @@ type BlockUpdateProcessUtilsMock struct {
 	LastSetChangeSet   []*types.StoreKVPair
 }
 
-var _ domain.BlockUpdateProcessUtilsI = &BlockUpdateProcessUtilsMock{}
+var _ commondomain.BlockUpdateProcessUtilsI = &BlockUpdateProcessUtilsMock{}
 
 // ProcessBlockChangeSet implements domain.BlockUpdateProcessUtilsI.
 func (b *BlockUpdateProcessUtilsMock) ProcessBlockChangeSet() error {

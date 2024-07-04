@@ -352,11 +352,11 @@ func NewOsmosisApp(
 
 		// Create the SQS streaming service by setting up the write listeners,
 		// the SQS ingester, and the pool tracker.
-		blockUpdatesProcessUtils := domain.BlockUpdateProcessUtils{
+		blockUpdatesProcessUtils := &commondomain.BlockUpdateProcessUtils{
 			WriteListeners: writeListeners,
 			StoreKeyMap:    storeKeyMap,
 		}
-		sqsStreamingService := sqsservice.New(&blockUpdatesProcessUtils, poolExtractor, poolsTransformer, poolTracker, sqsGRPCClient, blockProcessStrategyManager, nodeStatusChecker)
+		sqsStreamingService := sqsservice.New(blockUpdatesProcessUtils, poolExtractor, poolsTransformer, poolTracker, sqsGRPCClient, blockProcessStrategyManager, nodeStatusChecker)
 
 		streamingServices = append(streamingServices, sqsStreamingService)
 	}
@@ -383,7 +383,11 @@ func NewOsmosisApp(
 		}
 
 		// Create the indexer streaming service.
-		indexerStreamingService := indexerservice.New(writeListeners, coldStartManager, indexerPublisher, storeKeyMap, keepers)
+		blockUpdatesProcessUtils := &commondomain.BlockUpdateProcessUtils{
+			WriteListeners: writeListeners,
+			StoreKeyMap:    storeKeyMap,
+		}
+		indexerStreamingService := indexerservice.New(blockUpdatesProcessUtils, coldStartManager, indexerPublisher, storeKeyMap, keepers)
 
 		// Register the SQS streaming service with the app.
 		streamingServices = append(streamingServices, indexerStreamingService)
