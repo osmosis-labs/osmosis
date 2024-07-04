@@ -14,18 +14,18 @@ func (s *SQSBlockProcessorTestSuite) TestProcessBlock_FullBlockProcessStrategy()
 	tests := []struct {
 		name string
 
-		exractorBlockPools        commondomain.BlockPools
+		extractorBlockPools       commondomain.BlockPools
 		extractorAllDataError     error
 		transformAndLoadMockError error
 		isSyncingMockValue        bool
-		isSynchingMockError       error
+		isSyncingMockError        error
 
 		expectedError error
 	}{
 		{
 			name: "happy path",
 
-			exractorBlockPools:        emptyBlockPools,
+			extractorBlockPools:       emptyBlockPools,
 			extractorAllDataError:     nil,
 			transformAndLoadMockError: nil,
 			isSyncingMockValue:        false,
@@ -35,7 +35,7 @@ func (s *SQSBlockProcessorTestSuite) TestProcessBlock_FullBlockProcessStrategy()
 		{
 			name: "transformAndLoadFunc error",
 
-			exractorBlockPools:        emptyBlockPools,
+			extractorBlockPools:       emptyBlockPools,
 			extractorAllDataError:     nil,
 			transformAndLoadMockError: defaultError,
 			isSyncingMockValue:        false,
@@ -45,7 +45,7 @@ func (s *SQSBlockProcessorTestSuite) TestProcessBlock_FullBlockProcessStrategy()
 		{
 			name: "extractor error",
 
-			exractorBlockPools:        emptyBlockPools,
+			extractorBlockPools:       emptyBlockPools,
 			extractorAllDataError:     defaultError,
 			transformAndLoadMockError: nil,
 			isSyncingMockValue:        false,
@@ -55,17 +55,7 @@ func (s *SQSBlockProcessorTestSuite) TestProcessBlock_FullBlockProcessStrategy()
 		{
 			name: "error: syncing",
 
-			exractorBlockPools:        emptyBlockPools,
-			extractorAllDataError:     nil,
-			transformAndLoadMockError: nil,
-			isSyncingMockValue:        true,
-
-			expectedError: domain.ErrNodeIsSyncing,
-		},
-		{
-			name: "error: syncing",
-
-			exractorBlockPools:        emptyBlockPools,
+			extractorBlockPools:       emptyBlockPools,
 			extractorAllDataError:     nil,
 			transformAndLoadMockError: nil,
 			isSyncingMockValue:        true,
@@ -76,11 +66,11 @@ func (s *SQSBlockProcessorTestSuite) TestProcessBlock_FullBlockProcessStrategy()
 		{
 			name: "error: checking node sync status",
 
-			exractorBlockPools:        emptyBlockPools,
+			extractorBlockPools:       emptyBlockPools,
 			extractorAllDataError:     nil,
 			transformAndLoadMockError: nil,
 			isSyncingMockValue:        false,
-			isSynchingMockError:       defaultError,
+			isSyncingMockError:        defaultError,
 
 			expectedError: &domain.NodeSyncCheckError{
 				Err: defaultError,
@@ -90,12 +80,9 @@ func (s *SQSBlockProcessorTestSuite) TestProcessBlock_FullBlockProcessStrategy()
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-
-			s.Setup()
-
 			// Mock out pool extractor
 			poolsExtracter := &commonmocks.PoolsExtractorMock{
-				BlockPools:        tt.exractorBlockPools,
+				BlockPools:        tt.extractorBlockPools,
 				AllBlockDataError: tt.extractorAllDataError,
 			}
 
@@ -106,7 +93,7 @@ func (s *SQSBlockProcessorTestSuite) TestProcessBlock_FullBlockProcessStrategy()
 
 			nodeStatusCheckerMock := &mocks.NodeStatusCheckerMock{
 				IsSyncing:          tt.isSyncingMockValue,
-				IsNodeSyncingError: tt.isSynchingMockError,
+				IsNodeSyncingError: tt.isSyncingMockError,
 			}
 
 			// System under test
@@ -120,8 +107,8 @@ func (s *SQSBlockProcessorTestSuite) TestProcessBlock_FullBlockProcessStrategy()
 			s.Require().Equal(tt.expectedError, actualErr)
 
 			// Validate the transformAndLoadFunc mock
-			expectPreTransformError := tt.extractorAllDataError != nil || tt.isSynchingMockError != nil || tt.isSyncingMockValue
-			s.validateTransformAndLoadFuncMock(expectPreTransformError, tt.exractorBlockPools, transformAndLoadMock, uninitializedTransformer, uninitialzedGRPClient, tt.exractorBlockPools)
+			expectPreTransformError := tt.extractorAllDataError != nil || tt.isSyncingMockError != nil || tt.isSyncingMockValue
+			s.validateTransformAndLoadFuncMock(expectPreTransformError, tt.extractorBlockPools, transformAndLoadMock, uninitializedTransformer, uninitialzedGRPClient, tt.extractorBlockPools)
 		})
 	}
 }
