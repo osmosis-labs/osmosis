@@ -36,7 +36,6 @@ func NewPubSubCLient(projectId string, blockTopicId string, transactionTopicId s
 
 // publish publishes a message to the PubSub topic.
 func (p *PubSubClient) publish(ctx context.Context, message any, topicId string) error {
-
 	// Create PubSub client if it doesn't exist
 	if p.pubsubClient == nil {
 		client, err := pubsub.NewClient(ctx, p.projectId)
