@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"reflect"
+	"time"
 
 	"cloud.google.com/go/pubsub"
 
@@ -33,8 +35,55 @@ func NewPubSubCLient(projectId string, blockTopicId string, transactionTopicId s
 	}
 }
 
+// setIngestedAtField sets the IngestedAt field of a message to the given time.
+func (p *PubSubClient) setIngestedAt(message any, ingestedAt time.Time) error {
+	// Get the reflect.Value of the input variable
+	v := reflect.ValueOf(message)
+
+	// Ensure that v is a pointer, otherwise we can't set its fields
+	if v.Kind() != reflect.Ptr {
+		return errors.New("message must be a pointer")
+	}
+
+	// Dereference the pointer to get the actual struct
+	v = v.Elem()
+
+	// Ensure that v is a struct
+	if v.Kind() != reflect.Struct {
+		return errors.New("message must be a pointer to a struct")
+	}
+
+	// Get the field by name
+	field := v.FieldByName("IngestedAt")
+
+	// Ensure that the field exists and is settable
+	if !field.IsValid() {
+		return errors.New("field 'IngestedAt' does not exist")
+	}
+	if !field.CanSet() {
+		return errors.New("cannot set field 'IngestedAt'")
+	}
+	if field.Type() != reflect.TypeOf(ingestedAt) {
+		return errors.New("field 'IngestedAt' is not of type time.Time")
+	}
+
+	// Set the field value
+	field.Set(reflect.ValueOf(ingestedAt))
+
+	return nil
+}
+
 // publish publishes a message to the PubSub topic.
-func (p *PubSubClient) publish(ctx context.Context, message any, topicId string) error {
+func (p *PubSubClient) publish(ctx context.Context, messagePtr any, topicId string) error {
+	// Set the IngestedAt field of the message
+	err := p.setIngestedAt(messagePtr, time.Now().UTC())
+	if err != nil {
+		return err
+	}
+
+	// Dereference the pointer to get the actual struct
+	message := reflect.ValueOf(messagePtr).Elem()
+
 	// Create PubSub client if it doesn't exist
 	if p.pubsubClient == nil {
 		client, err := pubsub.NewClient(ctx, p.projectId)
@@ -45,7 +94,7 @@ func (p *PubSubClient) publish(ctx context.Context, message any, topicId string)
 	}
 
 	// Marshal message to bytes
-	msgBytes, err := p.marshal(message)
+	msgBytes, err := p.marshal(message.Interface())
 	if err != nil {
 		return err
 	}
@@ -71,7 +120,7 @@ func (p *PubSubClient) PublishBlock(ctx context.Context, block indexerdomain.Blo
 	if p.projectId == "" || p.blockTopicId == "" {
 		return errors.New("project id and block topic id must be set")
 	}
-	return p.publish(ctx, block, p.blockTopicId)
+	return p.publish(ctx, &block, p.blockTopicId)
 }
 
 // PublishTransaction implements PubSubClient.PublishTransaction
@@ -80,7 +129,7 @@ func (p *PubSubClient) PublishTransaction(ctx context.Context, txn indexerdomain
 	if p.projectId == "" || p.transactionTopicId == "" {
 		return errors.New("project id and transaction topic id must be set")
 	}
-	return p.publish(ctx, txn, p.transactionTopicId)
+	return p.publish(ctx, &txn, p.transactionTopicId)
 }
 
 // PublishPool implements PubSubClient.PublishPool
@@ -89,7 +138,7 @@ func (p *PubSubClient) PublishPool(ctx context.Context, pool indexerdomain.Pool)
 	if p.projectId == "" || p.poolTopicId == "" {
 		return errors.New("project id and pool topic id must be set")
 	}
-	return p.publish(ctx, pool, p.poolTopicId)
+	return p.publish(ctx, &pool, p.poolTopicId)
 }
 
 // PublishTokenSupply implements domain.PubSubClient.
@@ -98,7 +147,7 @@ func (p *PubSubClient) PublishTokenSupply(ctx context.Context, tokenSupply index
 	if p.projectId == "" || p.tokenSupplyTopicId == "" {
 		return errors.New("project id and token supply topic id must be set")
 	}
-	return p.publish(ctx, tokenSupply, p.tokenSupplyTopicId)
+	return p.publish(ctx, &tokenSupply, p.tokenSupplyTopicId)
 }
 
 // PublishTokenSupplyOffset implements domain.PubSubClient.
@@ -107,7 +156,7 @@ func (p *PubSubClient) PublishTokenSupplyOffset(ctx context.Context, tokenSupply
 	if p.projectId == "" || p.tokenSupplyOffsetTopicId == "" {
 		return errors.New("project id and token supply offset topic id must be set")
 	}
-	return p.publish(ctx, tokenSupplyOffset, p.tokenSupplyOffsetTopicId)
+	return p.publish(ctx, &tokenSupplyOffset, p.tokenSupplyOffsetTopicId)
 }
 
 // marshal marshals a message to bytes.
