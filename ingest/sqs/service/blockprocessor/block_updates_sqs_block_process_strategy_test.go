@@ -78,7 +78,7 @@ func (s *SQSBlockProcessorTestSuite) TestProcessBlock_UpdatesOnlyStrategy() {
 
 			s.Setup()
 
-			// Mock out pool extracter
+			// Mock out pool extractor
 			poolsExtracter := &commonmocks.PoolsExtractorMock{
 				BlockPools:            tt.exractorBlockPools,
 				ChangedBlockDataError: tt.extractChangedError,
@@ -115,7 +115,7 @@ func (s *SQSBlockProcessorTestSuite) TestProcessBlock_UpdatesOnlyStrategy() {
 // based on the expected inputs and outputs.
 // expectPreTransformError indicates if any component before the transformAndLoadFunc errored.
 func (s *SQSBlockProcessorTestSuite) validateTransformAndLoadFuncMock(expectPreTransformError bool, expectedBlockPools commondomain.BlockPools, transformAndLoadMock blockprocessor.TransformAndLoadFuncMock, expectedTransformer *mocks.PoolsTransformerMock, expectedSQSClient *mocks.GRPCClientMock, expectedPools commondomain.BlockPools) {
-	// If extracter errored, we do not expect transformer mock to be called
+	// If extractor errored, we do not expect transformer mock to be called
 	if expectPreTransformError {
 		// Note: nil indicates that the method was not called
 		s.Require().Nil(transformAndLoadMock.CalledWithTransformer)

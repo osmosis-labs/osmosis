@@ -329,7 +329,7 @@ func NewOsmosisApp(
 		// made by the write listenetrs.
 		poolTracker := pooltracker.NewMemory()
 
-		// Create pool extracter
+		// Create pool extractor
 		poolExtractor := poolextractor.New(sqsKeepers, poolTracker)
 
 		// Create pools ingester

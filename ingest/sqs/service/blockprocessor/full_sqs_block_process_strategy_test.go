@@ -93,7 +93,7 @@ func (s *SQSBlockProcessorTestSuite) TestProcessBlock_FullBlockProcessStrategy()
 
 			s.Setup()
 
-			// Mock out pool extracter
+			// Mock out pool extractor
 			poolsExtracter := &commonmocks.PoolsExtractorMock{
 				BlockPools:        tt.exractorBlockPools,
 				AllBlockDataError: tt.extractorAllDataError,
