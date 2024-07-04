@@ -103,10 +103,9 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, res abci.Respo
 
 // ListenCommit updates the steaming service with the latest Commit messages and state changes
 func (s *indexerStreamingService) ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*storetypes.StoreKVPair) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// If did not ingest initial data yet, ingest it now
 	if !s.coldStartManager.HasIngestedInitialData() {
-		sdkCtx := sdk.UnwrapSDKContext(ctx)
-
 		var err error
 
 		// Ingest the initial data
@@ -146,7 +145,13 @@ func (s *indexerStreamingService) ListenCommit(ctx context.Context, res abci.Res
 		s.coldStartManager.MarkInitialDataIngested()
 	} else {
 		s.blockUpdatesProcessUtils.SetChangeSet(changeSet)
-		s.blockUpdatesProcessUtils.ProcessBlockChangeSet()
+		// Avoid
+		if err := s.blockUpdatesProcessUtils.ProcessBlockChangeSet(); err != nil {
+			sdkCtx.Logger().Error("failed to process block change set in indexer ListenCommit", "error", err)
+
+			// Return error to stop processing blocks expecting manual intervention.
+			return err
+		}
 	}
 
 	return nil
