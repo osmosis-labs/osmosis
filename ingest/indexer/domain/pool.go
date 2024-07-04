@@ -1,5 +1,7 @@
 package domain
 
+import "time"
+
 type Pool struct {
-	// TBD
+	IngestedAt time.Time `json:"ingested_at"`
 }
