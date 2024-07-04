@@ -2,10 +2,15 @@ package service_test
 
 import (
 	"errors"
+	"testing"
 
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/stretchr/testify/suite"
+
+	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
+	"github.com/osmosis-labs/osmosis/v25/ingest/common/pooltracker"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain/mocks"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
@@ -30,6 +35,14 @@ var (
 		return nil
 	}
 )
+
+type SQSServiceTestSuite struct {
+	apptesting.ConcentratedKeeperTestHelper
+}
+
+func TestSQSServiceTestSuite(t *testing.T) {
+	suite.Run(t, new(SQSServiceTestSuite))
+}
 
 // This is a sanity-check test ensuring that all pools are tracked and returned correctly.
 func (s *SQSServiceTestSuite) TestProcessBlock() {
@@ -104,7 +117,7 @@ func (s *SQSServiceTestSuite) TestProcessBlock() {
 				IsNodeSyncingError: mockErrorFromFlag(tc.doesIsNodeSyncingError),
 			}
 
-			poolTracker := service.NewPoolTracker()
+			poolTracker := pooltracker.NewMemory()
 			// Get balancer pool from chain and track it, making the pool tracker
 			// have one pool.
 			balancerPool, err := s.App.GAMMKeeper.GetCFMMPool(s.Ctx, allPools.BalancerPoolID)
@@ -201,7 +214,7 @@ func (s *SQSServiceTestSuite) TestProcessBlockRecoverError() {
 			}
 			nodeStatusCheckerMock := &mocks.NodeStatusCheckerMock{}
 
-			poolTracker := service.NewPoolTracker()
+			poolTracker := pooltracker.NewMemory()
 			// Get balancer pool from chain and track it, making the pool tracker
 			// have one pool.
 			balancerPool, err := s.App.GAMMKeeper.GetCFMMPool(s.Ctx, allPools.BalancerPoolID)

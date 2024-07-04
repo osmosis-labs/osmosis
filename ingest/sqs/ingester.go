@@ -15,14 +15,14 @@ var _ domain.Ingester = &sqsIngester{}
 // It encapsulates all individual SQS ingesters.
 type sqsIngester struct {
 	poolsTransformer domain.PoolsTransformer
-	keepers          commondomain.PoolExtracterKeepers
+	keepers          commondomain.PoolExtractorKeepers
 	sqsGRPCClient    domain.SQSGRPClient
 }
 
 // NewSidecarQueryServerIngester creates a new sidecar query server ingester.
 // poolsRepository is the storage for pools.
 // gammKeeper is the keeper for Gamm pools.
-func NewSidecarQueryServerIngester(poolsIngester domain.PoolsTransformer, appCodec codec.Codec, keepers commondomain.PoolExtracterKeepers, sqsGRPCClient domain.SQSGRPClient) domain.Ingester {
+func NewSidecarQueryServerIngester(poolsIngester domain.PoolsTransformer, appCodec codec.Codec, keepers commondomain.PoolExtractorKeepers, sqsGRPCClient domain.SQSGRPClient) domain.Ingester {
 	return &sqsIngester{
 		poolsTransformer: poolsIngester,
 		keepers:          keepers,
