@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
 
 	"cloud.google.com/go/pubsub"
 
@@ -71,6 +72,7 @@ func (p *PubSubClient) PublishBlock(ctx context.Context, block indexerdomain.Blo
 	if p.projectId == "" || p.blockTopicId == "" {
 		return errors.New("project id and block topic id must be set")
 	}
+	block.IngestedAt = time.Now().UTC()
 	return p.publish(ctx, block, p.blockTopicId)
 }
 
@@ -80,6 +82,7 @@ func (p *PubSubClient) PublishTransaction(ctx context.Context, txn indexerdomain
 	if p.projectId == "" || p.transactionTopicId == "" {
 		return errors.New("project id and transaction topic id must be set")
 	}
+	txn.IngestedAt = time.Now().UTC()
 	return p.publish(ctx, txn, p.transactionTopicId)
 }
 
@@ -89,6 +92,7 @@ func (p *PubSubClient) PublishPool(ctx context.Context, pool indexerdomain.Pool)
 	if p.projectId == "" || p.poolTopicId == "" {
 		return errors.New("project id and pool topic id must be set")
 	}
+	pool.IngestedAt = time.Now().UTC()
 	return p.publish(ctx, pool, p.poolTopicId)
 }
 
@@ -98,6 +102,7 @@ func (p *PubSubClient) PublishTokenSupply(ctx context.Context, tokenSupply index
 	if p.projectId == "" || p.tokenSupplyTopicId == "" {
 		return errors.New("project id and token supply topic id must be set")
 	}
+	tokenSupply.IngestedAt = time.Now().UTC()
 	return p.publish(ctx, tokenSupply, p.tokenSupplyTopicId)
 }
 
@@ -107,6 +112,7 @@ func (p *PubSubClient) PublishTokenSupplyOffset(ctx context.Context, tokenSupply
 	if p.projectId == "" || p.tokenSupplyOffsetTopicId == "" {
 		return errors.New("project id and token supply offset topic id must be set")
 	}
+	tokenSupplyOffset.IngestedAt = time.Now().UTC()
 	return p.publish(ctx, tokenSupplyOffset, p.tokenSupplyOffsetTopicId)
 }
 
