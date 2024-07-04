@@ -51,7 +51,7 @@ func (suite *SQSBlockProcessorTestSuite) TestNewBlockProcessor() {
 			grpcClientMock := &mocks.GRPCClientMock{}
 			blockUpdatesProcessUtilsMock := &mocks.BlockUpdateProcessUtilsMock{}
 
-			// Intialize the block strategy manager
+			// Initialize the block strategy manager
 			blockStrategyManager := commondomain.NewBlockProcessStrategyManager()
 			if tt.mockInitialDataIngested {
 				blockStrategyManager.MarkInitialDataIngested()
