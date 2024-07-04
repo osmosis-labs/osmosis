@@ -38,6 +38,7 @@ import (
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
 
+	"github.com/osmosis-labs/osmosis/v25/ingest/common/poolextractor"
 	"github.com/osmosis-labs/osmosis/v25/ingest/common/pooltracker"
 	"github.com/osmosis-labs/osmosis/v25/ingest/common/writelistener"
 	"github.com/osmosis-labs/osmosis/v25/ingest/indexer"
@@ -46,6 +47,7 @@ import (
 	indexerwritelistener "github.com/osmosis-labs/osmosis/v25/ingest/indexer/service/writelistener"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
+	poolstransformer "github.com/osmosis-labs/osmosis/v25/ingest/sqs/pools/transformer"
 
 	sqsservice "github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
@@ -323,15 +325,20 @@ func NewOsmosisApp(
 			ConcentratedKeeper: app.ConcentratedLiquidityKeeper,
 		}
 
-		// Initialize the SQS ingester.
-		sqsIngester, err := sqsConfig.Initialize(appCodec, sqsKeepers)
-		if err != nil {
-			panic(err)
-		}
-
 		// Create pool tracker that tracks pool updates
 		// made by the write listenetrs.
 		poolTracker := pooltracker.NewMemory()
+
+		// Create pool extracter
+		poolExtractor := poolextractor.New(sqsKeepers, poolTracker)
+
+		// Create pools ingester
+		poolsTransformer := poolstransformer.NewPoolTransformer(sqsKeepers, sqs.DefaultUSDCUOSMOPool)
+
+		blockProcessStrategyManager := commondomain.NewBlockProcessStrategyManager()
+
+		// Create sqs grpc client
+		sqsGRPCClient := sqsservice.NewGRPCCLient(sqsConfig.GRPCIngestAddress, sqsConfig.GRPCIngestMaxCallSizeBytes, appCodec)
 
 		// Create write listeners for the SQS service.
 		writeListeners, storeKeyMap := getSQSServiceWriteListeners(app, appCodec, poolTracker, app.WasmKeeper)
@@ -345,7 +352,11 @@ func NewOsmosisApp(
 
 		// Create the SQS streaming service by setting up the write listeners,
 		// the SQS ingester, and the pool tracker.
-		sqsStreamingService := sqsservice.New(writeListeners, storeKeyMap, sqsIngester, poolTracker, nodeStatusChecker)
+		blockUpdatesProcessUtils := domain.BlockUpdateProcessUtils{
+			WriteListeners: writeListeners,
+			StoreKeyMap:    storeKeyMap,
+		}
+		sqsStreamingService := sqsservice.New(&blockUpdatesProcessUtils, poolExtractor, poolsTransformer, poolTracker, sqsGRPCClient, blockProcessStrategyManager, nodeStatusChecker)
 
 		streamingServices = append(streamingServices, sqsStreamingService)
 	}

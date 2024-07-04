@@ -222,8 +222,7 @@ func (pi *poolTransformer) convertPool(
 
 		balances = cwPool.GetTotalPoolLiquidity(ctx)
 
-		// Sort balances for consistency with `sdk.Coins` assumptions.
-		// For example, finding a denom by name using binary search requires coins to be sorted
+		// Sort balances for consistency.
 		balances.Sort()
 
 		// This must never happen, but if it does, and there is no checks, the query will fail silently.
