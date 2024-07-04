@@ -8,9 +8,9 @@ import (
 )
 
 // transformAndLoad transforms the pools and loads them into the SQS.
-func transformAndLoad(ctx sdk.Context, poolsTrasnformer domain.PoolsTransformer, sqsGRPCClient domain.SQSGRPClient, pools commondomain.BlockPools) error {
+func transformAndLoad(ctx sdk.Context, poolsTransformer domain.PoolsTransformer, sqsGRPCClient domain.SQSGRPClient, pools commondomain.BlockPools) error {
 	// Transform the pools
-	transformedPools, takerFeeMap, err := poolsTrasnformer.Transform(ctx, pools)
+	transformedPools, takerFeeMap, err := poolsTransformer.Transform(ctx, pools)
 	if err != nil {
 		return err
 	}
