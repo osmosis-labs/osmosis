@@ -11,7 +11,7 @@ import (
 )
 
 // Chain keepers required for extracting pool data.
-type PoolExtracterKeepers struct {
+type PoolExtractorKeepers struct {
 	GammKeeper         PoolKeeper
 	CosmWasmPoolKeeper CosmWasmPoolKeeper
 	WasmKeeper         WasmKeeper

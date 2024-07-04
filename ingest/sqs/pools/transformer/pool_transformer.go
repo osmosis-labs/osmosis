@@ -105,7 +105,7 @@ var stablesOverwrite map[string]struct{} = map[string]struct{}{
 var _ domain.PoolsTransformer = &poolTransformer{}
 
 // NewPoolTransformer returns a new pool ingester.
-func NewPoolTransformer(keepers commondomain.PoolExtracterKeepers, defaultUSDCUOSMOPoolID uint64) domain.PoolsTransformer {
+func NewPoolTransformer(keepers commondomain.PoolExtractorKeepers, defaultUSDCUOSMOPoolID uint64) domain.PoolsTransformer {
 	return &poolTransformer{
 		gammKeeper:         keepers.GammKeeper,
 		concentratedKeeper: keepers.ConcentratedKeeper,
