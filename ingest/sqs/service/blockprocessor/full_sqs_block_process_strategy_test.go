@@ -108,7 +108,7 @@ func (s *SQSBlockProcessorTestSuite) TestProcessBlock_FullBlockProcessStrategy()
 
 			// Validate the transformAndLoadFunc mock
 			expectPreTransformError := tt.extractorAllDataError != nil || tt.isSyncingMockError != nil || tt.isSyncingMockValue
-			s.validateTransformAndLoadFuncMock(expectPreTransformError, tt.extractorBlockPools, transformAndLoadMock, uninitializedTransformer, uninitialzedGRPClient, tt.extractorBlockPools)
+			s.validateTransformAndLoadFuncMock(expectPreTransformError, tt.extractorBlockPools, transformAndLoadMock, uninitializedTransformer, uninitialzedGRPClient)
 		})
 	}
 }

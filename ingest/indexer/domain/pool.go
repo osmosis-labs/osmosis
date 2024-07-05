@@ -1,7 +1,12 @@
 package domain
 
-import "time"
+import (
+	"time"
+
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+)
 
 type Pool struct {
-	IngestedAt time.Time `json:"ingested_at"`
+	ChainModel poolmanagertypes.PoolI `json:"chain_model"`
+	IngestedAt time.Time              `json:"ingested_at"`
 }

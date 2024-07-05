@@ -37,6 +37,7 @@ import (
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/common/poolextractor"
 	"github.com/osmosis-labs/osmosis/v25/ingest/common/pooltracker"
 	"github.com/osmosis-labs/osmosis/v25/ingest/common/writelistener"
@@ -47,14 +48,14 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	poolstransformer "github.com/osmosis-labs/osmosis/v25/ingest/sqs/pools/transformer"
+
+	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
 	sqsservice "github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-
-	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
@@ -326,7 +327,7 @@ func NewOsmosisApp(
 		blockProcessStrategyManager := commondomain.NewBlockProcessStrategyManager()
 
 		// Create sqs grpc client
-		sqsGRPCClient := sqsservice.NewGRPCCLient(sqsConfig.GRPCIngestAddress, sqsConfig.GRPCIngestMaxCallSizeBytes, appCodec)
+		sqsGRPCClient := service.NewGRPCCLient(sqsConfig.GRPCIngestAddress, sqsConfig.GRPCIngestMaxCallSizeBytes, appCodec)
 
 		// Create write listeners for the SQS service.
 		writeListeners := getSQSServiceWriteListeners(app, appCodec, poolTracker, app.WasmKeeper)
@@ -357,18 +358,35 @@ func NewOsmosisApp(
 		pubSubCtx := context.Background()
 
 		// Create cold start manager
-		coldStartManager := indexerdomain.NewColdStartManager()
+		blockProcessStrategyManager := commondomain.NewBlockProcessStrategyManager()
+
+		// Create pool tracker that tracks pool updates
+		// made by the write listenetrs.
+		poolTracker := pooltracker.NewMemory()
 
 		// Create write listeners for the indexer service.
-		writeListeners := getIndexerServiceWriteListeners(pubSubCtx, app, indexerIngester, coldStartManager)
+		writeListeners := getIndexerServiceWriteListeners(pubSubCtx, app, appCodec, poolTracker, app.WasmKeeper, indexerIngester, blockProcessStrategyManager)
 
 		// Create keepers for the indexer service.
 		keepers := indexerdomain.Keepers{
-			BankKeeper: app.BankKeeper,
+			BankKeeper:        app.BankKeeper,
+			PoolManagerKeeper: app.PoolManagerKeeper,
+		}
+
+		poolKeepers := commondomain.PoolExtractorKeepers{
+			GammKeeper:         app.GAMMKeeper,
+			CosmWasmPoolKeeper: app.CosmwasmPoolKeeper,
+			WasmKeeper:         app.WasmKeeper,
+			BankKeeper:         app.BankKeeper,
+			ProtorevKeeper:     app.ProtoRevKeeper,
+			PoolManagerKeeper:  app.PoolManagerKeeper,
+			ConcentratedKeeper: app.ConcentratedLiquidityKeeper,
 		}
 
 		// Create the indexer streaming service.
-		indexerStreamingService := indexerservice.New(writeListeners, coldStartManager, indexerIngester, keepers)
+		poolExtractor := poolextractor.New(poolKeepers, poolTracker)
+
+		indexerStreamingService := indexerservice.New(writeListeners, blockProcessStrategyManager, indexerIngester, poolExtractor, keepers)
 
 		// Register the SQS streaming service with the app.
 		app.SetStreamingService(indexerStreamingService)
@@ -579,6 +597,36 @@ func NewOsmosisApp(
 
 // getSQSServiceWriteListeners returns the write listeners for the app that are specific to the SQS service.
 func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker, wasmkeeper *wasmkeeper.Keeper) map[storetypes.StoreKey][]storetypes.WriteListener {
+	return getPoolWriteListeners(app, appCodec, blockPoolUpdateTracker, wasmkeeper)
+}
+
+// getIndexerServiceWriteListeners returns the write listeners for the app that are specific to the indexer service.
+func getIndexerServiceWriteListeners(ctx context.Context, app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker, wasmkeeper *wasmkeeper.Keeper, client indexerdomain.Publisher, blockProcessStrategyManager commondomain.BlockProcessStrategyManager) map[storetypes.StoreKey][]storetypes.WriteListener {
+	writeListeners := make(map[storetypes.StoreKey][]storetypes.WriteListener)
+
+	// Add write listeners for the bank module.
+	writeListeners[app.GetKey(banktypes.ModuleName)] = []storetypes.WriteListener{
+		indexerwritelistener.NewBank(ctx, client, blockProcessStrategyManager),
+	}
+
+	poolWriteListeners := getPoolWriteListeners(app, appCodec, blockPoolUpdateTracker, wasmkeeper)
+
+	// Merge the pool write listeners into the write listeners.
+	for key, listeners := range poolWriteListeners {
+		listeners := listeners
+
+		if _, ok := writeListeners[key]; !ok {
+			writeListeners[key] = listeners
+		} else {
+			writeListeners[key] = append(writeListeners[key], listeners...)
+		}
+	}
+
+	return writeListeners
+}
+
+// getPoolWriteListeners returns the write listeners for the app that are specific to monitoring the pools.
+func getPoolWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker, wasmkeeper *wasmkeeper.Keeper) map[storetypes.StoreKey][]storetypes.WriteListener {
 	writeListeners := make(map[storetypes.StoreKey][]storetypes.WriteListener)
 
 	writeListeners[app.GetKey(concentratedtypes.ModuleName)] = []storetypes.WriteListener{
@@ -593,18 +641,6 @@ func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoo
 	writeListeners[app.GetKey(banktypes.StoreKey)] = []storetypes.WriteListener{
 		writelistener.NewCosmwasmPoolBalance(blockPoolUpdateTracker),
 	}
-	return writeListeners
-}
-
-// getIndexerServiceWriteListeners returns the write listeners for the app that are specific to the indexer service.
-func getIndexerServiceWriteListeners(ctx context.Context, app *OsmosisApp, client indexerdomain.Publisher, coldStartManager indexerdomain.ColdStartManager) map[storetypes.StoreKey][]storetypes.WriteListener {
-	writeListeners := make(map[storetypes.StoreKey][]storetypes.WriteListener)
-
-	// Add write listeners for the bank module.
-	writeListeners[app.GetKey(banktypes.ModuleName)] = []storetypes.WriteListener{
-		indexerwritelistener.NewBank(ctx, client, coldStartManager),
-	}
-
 	return writeListeners
 }
 

@@ -5,14 +5,12 @@ import (
 	"testing"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/sqs/sqsdomain"
 
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain/mocks"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
 
@@ -26,7 +24,6 @@ var (
 	// since the service does not use them directly other than storing and returning
 	// via getter. As a result, we wire empty write listeners for the tests.
 	emptyWriteListeners = make(map[storetypes.StoreKey][]storetypes.WriteListener)
-	emptyStoreKeyMap    = make(map[string]storetypes.StoreKey)
 
 	// mockError is a mock error for testing.
 	mockError = errors.New("mock error")
@@ -142,7 +139,7 @@ func (s *SQSServiceTestSuite) TestProcessBlockRecoverError() {
 
 			blockProcessStrategyManager := commondomain.NewBlockProcessStrategyManager()
 
-			sqsStreamingService := service.New(nil, poolExtractorMock, poolTransformerMock, poolTracker, grpcClientMock, blockProcessStrategyManager, nodeStatusCheckerMock)
+			sqsStreamingService := service.New(emptyWriteListeners, poolExtractorMock, poolTransformerMock, poolTracker, grpcClientMock, blockProcessStrategyManager, nodeStatusCheckerMock)
 
 			// System under test.
 			err = sqsStreamingService.ProcessBlockRecoverError(s.Ctx)

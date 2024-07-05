@@ -11,6 +11,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain/mocks"
@@ -141,11 +142,11 @@ func (s *WriteListenerTestSuite) TestWriteListener_Bank() {
 			s.Setup()
 
 			// Initialize cold start manager
-			coldStartManager := domain.NewColdStartManager()
+			blockProcessStrategyManager := commondomain.NewBlockProcessStrategyManager()
 
 			// Mark initial data ingested if the test case has cold started.
 			if tc.hasColdStarted {
-				coldStartManager.MarkInitialDataIngested()
+				blockProcessStrategyManager.MarkInitialDataIngested()
 			}
 
 			// Initialize token supply publisher mock
@@ -155,7 +156,7 @@ func (s *WriteListenerTestSuite) TestWriteListener_Bank() {
 			}
 
 			// Initialize bank write listener
-			bankWriteListener := writelistener.NewBank(context.TODO(), tokenSupplyPublisherMock, coldStartManager)
+			bankWriteListener := writelistener.NewBank(context.TODO(), tokenSupplyPublisherMock, blockProcessStrategyManager)
 
 			bankKVStore := s.App.GetKey(banktypes.ModuleName)
 

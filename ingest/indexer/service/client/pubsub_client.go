@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"cloud.google.com/go/pubsub"
@@ -19,11 +20,12 @@ type PubSubClient struct {
 	poolTopicId              string
 	tokenSupplyTopicId       string
 	tokenSupplyOffsetTopicId string
+	pairTopicId              string
 	pubsubClient             *pubsub.Client
 }
 
 // NewPubSubCLient creates a new PubSubClient.
-func NewPubSubCLient(projectId string, blockTopicId string, transactionTopicId string, poolTopicId string, tokenSupplyTopicId string, tokenSupplyOffsetTopicId string) *PubSubClient {
+func NewPubSubCLient(projectId, blockTopicId, transactionTopicId, poolTopicId, tokenSupplyTopicId, tokenSupplyOffsetTopicId, pairTopicID string) *PubSubClient {
 	return &PubSubClient{
 		projectId:                projectId,
 		blockTopicId:             blockTopicId,
@@ -31,6 +33,7 @@ func NewPubSubCLient(projectId string, blockTopicId string, transactionTopicId s
 		poolTopicId:              poolTopicId,
 		tokenSupplyTopicId:       tokenSupplyTopicId,
 		tokenSupplyOffsetTopicId: tokenSupplyTopicId,
+		pairTopicId:              pairTopicID,
 	}
 }
 
@@ -114,6 +117,21 @@ func (p *PubSubClient) PublishTokenSupplyOffset(ctx context.Context, tokenSupply
 	}
 	tokenSupplyOffset.IngestedAt = time.Now().UTC()
 	return p.publish(ctx, tokenSupplyOffset, p.tokenSupplyOffsetTopicId)
+}
+
+// PublishPair implements PubSubClient.PublishPair
+func (p *PubSubClient) PublishPair(ctx context.Context, pair indexerdomain.Pair) error {
+	// Check if project id and topic id are set
+	if p.projectId == "" || p.pairTopicId == "" {
+		return errors.New("project id and pool topic id must be set")
+	}
+
+	if pair.IdxDenom0 == pair.IdxDenom1 {
+		return fmt.Errorf("Publishing pool pairs with the same denom indexes %v", pair)
+	}
+
+	pair.IngestedAt = time.Now().UTC()
+	return p.publish(ctx, pair, p.pairTopicId)
 }
 
 // marshal marshals a message to bytes.

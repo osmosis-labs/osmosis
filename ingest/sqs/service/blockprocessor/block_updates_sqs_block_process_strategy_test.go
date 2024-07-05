@@ -30,8 +30,6 @@ func (s *SQSBlockProcessorTestSuite) TestProcessBlock_UpdatesOnlyStrategy() {
 		exractorBlockPools        commondomain.BlockPools
 		extractChangedError       error
 		transformAndLoadMockError error
-		processChangeSetError     error
-
 		expectedError error
 	}{
 		{
@@ -90,8 +88,8 @@ func (s *SQSBlockProcessorTestSuite) TestProcessBlock_UpdatesOnlyStrategy() {
 			s.Require().Equal(tt.expectedError, actualErr)
 
 			// Validate the transformAndLoadFunc mock
-			expectPreTransformError := tt.extractChangedError != nil || tt.processChangeSetError != nil
-			s.validateTransformAndLoadFuncMock(expectPreTransformError, tt.exractorBlockPools, transformAndLoadMock, uninitializedTransformer, uninitialzedGRPClient, tt.exractorBlockPools)
+			expectPreTransformError := tt.extractChangedError != nil
+			s.validateTransformAndLoadFuncMock(expectPreTransformError, tt.exractorBlockPools, transformAndLoadMock, uninitializedTransformer, uninitialzedGRPClient)
 		})
 	}
 }
@@ -99,7 +97,7 @@ func (s *SQSBlockProcessorTestSuite) TestProcessBlock_UpdatesOnlyStrategy() {
 // validateTransformAndLoadFuncMock validates the transformAndLoadFunc mock
 // based on the expected inputs and outputs.
 // expectPreTransformError indicates if any component before the transformAndLoadFunc errored.
-func (s *SQSBlockProcessorTestSuite) validateTransformAndLoadFuncMock(expectPreTransformError bool, expectedBlockPools commondomain.BlockPools, transformAndLoadMock blockprocessor.TransformAndLoadFuncMock, expectedTransformer *mocks.PoolsTransformerMock, expectedSQSClient *mocks.GRPCClientMock, expectedPools commondomain.BlockPools) {
+func (s *SQSBlockProcessorTestSuite) validateTransformAndLoadFuncMock(expectPreTransformError bool, expectedBlockPools commondomain.BlockPools, transformAndLoadMock blockprocessor.TransformAndLoadFuncMock, expectedTransformer *mocks.PoolsTransformerMock, expectedSQSClient *mocks.GRPCClientMock) {
 	// If extractor errored, we do not expect transformer mock to be called
 	if expectPreTransformError {
 		// Note: nil indicates that the method was not called

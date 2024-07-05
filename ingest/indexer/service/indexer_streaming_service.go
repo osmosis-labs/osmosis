@@ -9,7 +9,9 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
+	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/service/blockprocessor"
 )
 
 var _ baseapp.StreamingService = (*indexerStreamingService)(nil)
@@ -18,12 +20,15 @@ var _ baseapp.StreamingService = (*indexerStreamingService)(nil)
 type indexerStreamingService struct {
 	writeListeners map[storetypes.StoreKey][]storetypes.WriteListener
 
-	// manages tracking of whether the node is code started
-	coldStartManager domain.ColdStartManager
+	// manages tracking of whether all the data should be processed or only the changed in the block
+	blockProcessStrategyManager commondomain.BlockProcessStrategyManager
 
 	client domain.Publisher
 
 	keepers domain.Keepers
+
+	// extracts the pools from chain state
+	poolExtractor commondomain.PoolExtractor
 }
 
 // New creates a new sqsStreamingService.
@@ -31,12 +36,14 @@ type indexerStreamingService struct {
 // sqsIngester is an ingester that ingests the block data into SQS.
 // poolTracker is a tracker that tracks the pools that were changed in the block.
 // nodeStatusChecker is a checker that checks if the node is syncing.
-func New(writeListeners map[storetypes.StoreKey][]storetypes.WriteListener, coldStartManager domain.ColdStartManager, client domain.Publisher, keepers domain.Keepers) baseapp.StreamingService {
+func New(writeListeners map[storetypes.StoreKey][]storetypes.WriteListener, blockProcessStrategyManager commondomain.BlockProcessStrategyManager, client domain.Publisher, poolExtractor commondomain.PoolExtractor, keepers domain.Keepers) baseapp.StreamingService {
 	return &indexerStreamingService{
 
 		writeListeners: writeListeners,
 
-		coldStartManager: coldStartManager,
+		blockProcessStrategyManager: blockProcessStrategyManager,
+
+		poolExtractor: poolExtractor,
 
 		client: client,
 
@@ -111,47 +118,14 @@ func (s *indexerStreamingService) ListenEndBlock(ctx context.Context, req types.
 		return err
 	}
 
-	// If did not ingest initial data yet, ingest it now
-	if !s.coldStartManager.HasIngestedInitialData() {
-		sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-		var err error
+	// Create block processor
+	blockProcessor := blockprocessor.NewBlockProcessor(s.blockProcessStrategyManager, s.client, s.poolExtractor, s.keepers)
 
-		// Ingest the initial data
-		s.keepers.BankKeeper.IterateTotalSupply(sdkCtx, func(coin sdk.Coin) bool {
-			// Check if the denom should be filtered out and skip it if so
-			if domain.ShouldFilterDenom(coin.Denom) {
-				return false
-			}
-
-			// Publish the token supply
-			err = s.client.PublishTokenSupply(sdkCtx, domain.TokenSupply{
-				Denom:  coin.Denom,
-				Supply: coin.Amount,
-			})
-
-			// Skip any error silently but log it.
-			if err != nil {
-				// TODO: alert
-				sdkCtx.Logger().Error("failed to publish token supply", "error", err)
-			}
-
-			supplyOffset := s.keepers.BankKeeper.GetSupplyOffset(sdkCtx, coin.Denom)
-
-			// If supply offset is non-zero, publish it.
-			if !supplyOffset.IsZero() {
-				// Publish the token supply offset
-				err = s.client.PublishTokenSupplyOffset(sdkCtx, domain.TokenSupplyOffset{
-					Denom:        coin.Denom,
-					SupplyOffset: supplyOffset,
-				})
-			}
-
-			return false
-		})
-
-		// Mark that the initial data has been ingested
-		s.coldStartManager.MarkInitialDataIngested()
+	// Process block.
+	if err := blockProcessor.ProcessBlock(sdkCtx); err != nil {
+		return err
 	}
 
 	return nil
