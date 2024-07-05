@@ -1,10 +1,11 @@
 use crate::msg::{PathMsg, QuotaMsg};
-use crate::state::{Flow, Path, RateLimit, GOVMODULE, IBCMODULE, RATE_LIMIT_TRACKERS};
+use crate::state::quota::Quota;
+use crate::state::{flow::Flow, path::Path, rate_limit::RateLimit, storage::{GOVMODULE, IBCMODULE, RATE_LIMIT_TRACKERS}};
 use crate::ContractError;
 use cosmwasm_std::{Addr, DepsMut, Response, Timestamp};
 
 pub fn add_new_paths(
-    deps: DepsMut,
+    deps: &mut DepsMut,
     path_msgs: Vec<PathMsg>,
     now: Timestamp,
 ) -> Result<(), ContractError> {
@@ -28,19 +29,12 @@ pub fn add_new_paths(
 }
 
 pub fn try_add_path(
-    deps: DepsMut,
-    sender: Addr,
+    deps: &mut DepsMut,
     channel_id: String,
     denom: String,
     quotas: Vec<QuotaMsg>,
     now: Timestamp,
 ) -> Result<Response, ContractError> {
-    // codenit: should we make a function for checking this authorization?
-    let ibc_module = IBCMODULE.load(deps.storage)?;
-    let gov_module = GOVMODULE.load(deps.storage)?;
-    if sender != ibc_module && sender != gov_module {
-        return Err(ContractError::Unauthorized {});
-    }
     add_new_paths(deps, vec![PathMsg::new(&channel_id, &denom, quotas)], now)?;
 
     Ok(Response::new()
@@ -50,17 +44,10 @@ pub fn try_add_path(
 }
 
 pub fn try_remove_path(
-    deps: DepsMut,
-    sender: Addr,
+    deps: &mut DepsMut,
     channel_id: String,
     denom: String,
 ) -> Result<Response, ContractError> {
-    let ibc_module = IBCMODULE.load(deps.storage)?;
-    let gov_module = GOVMODULE.load(deps.storage)?;
-    if sender != ibc_module && sender != gov_module {
-        return Err(ContractError::Unauthorized {});
-    }
-
     let path = Path::new(&channel_id, &denom);
     RATE_LIMIT_TRACKERS.remove(deps.storage, path.into());
     Ok(Response::new()
@@ -71,18 +58,12 @@ pub fn try_remove_path(
 
 // Reset specified quote_id for the given channel_id
 pub fn try_reset_path_quota(
-    deps: DepsMut,
-    sender: Addr,
+    deps: &mut DepsMut,
     channel_id: String,
     denom: String,
     quota_id: String,
     now: Timestamp,
 ) -> Result<Response, ContractError> {
-    let gov_module = GOVMODULE.load(deps.storage)?;
-    if sender != gov_module {
-        return Err(ContractError::Unauthorized {});
-    }
-
     let path = Path::new(&channel_id, &denom);
     RATE_LIMIT_TRACKERS.update(deps.storage, path.into(), |maybe_rate_limit| {
         match maybe_rate_limit {
@@ -108,6 +89,40 @@ pub fn try_reset_path_quota(
         .add_attribute("channel_id", channel_id))
 }
 
+pub fn edit_path_quota(
+    deps: &mut DepsMut,
+    channel_id: String,
+    denom: String,
+    quota: QuotaMsg
+) -> Result<(), ContractError> {
+    let path = Path::new(&channel_id, &denom);
+    RATE_LIMIT_TRACKERS.update(deps.storage, path.into(), |maybe_rate_limit| {
+        match maybe_rate_limit {
+            None => Err(ContractError::QuotaNotFound {
+                quota_id: quota.name,
+                channel_id: channel_id.clone(),
+                denom: denom.clone(),
+            }),
+            Some(mut limits) => {
+                limits.iter_mut().for_each(|limit| {
+                    if limit.quota.name.eq(&quota.name) {
+                        // TODO: is this the current way of handling channel_value when editing the quota?
+
+                        // cache the current channel_value 
+                        let channel_value = limit.quota.channel_value;
+                        // update the quota
+                        limit.quota = From::from(&quota);
+                        // copy the channel_value
+                        limit.quota.channel_value = channel_value;
+                    }
+                });
+                Ok(limits)
+            }
+        }
+    })?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
@@ -116,10 +131,11 @@ mod tests {
     use crate::contract::{execute, query};
     use crate::helpers::tests::verify_query_response;
     use crate::msg::{ExecuteMsg, QueryMsg, QuotaMsg};
-    use crate::state::{RateLimit, GOVMODULE, IBCMODULE};
+    use crate::state::rbac::Roles;
+    use crate::state::{rate_limit::RateLimit, storage::{GOVMODULE, IBCMODULE}};
 
-    const IBC_ADDR: &str = "IBC_MODULE";
-    const GOV_ADDR: &str = "GOV_MODULE";
+    const IBC_ADDR: &str = "osmo1vz5e6tzdjlzy2f7pjvx0ecv96h8r4m2y92thdm";
+    const GOV_ADDR: &str = "osmo1tzz5zf2u68t00un2j4lrrnkt2ztd46kfzfp58r";
 
     #[test] // Tests AddPath and RemovePath messages
     fn management_add_and_remove_path() {
@@ -130,6 +146,13 @@ mod tests {
         GOVMODULE
             .save(deps.as_mut().storage, &Addr::unchecked(GOV_ADDR))
             .unwrap();
+
+        // grant role to IBC_ADDR
+        crate::rbac::grant_role(
+            &mut deps.as_mut(),
+            IBC_ADDR.to_string(),
+            vec![Roles::AddRateLimit, Roles::RemoveRateLimit]
+        ).unwrap();
 
         let msg = ExecuteMsg::AddPath {
             channel_id: format!("channel"),

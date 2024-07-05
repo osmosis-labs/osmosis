@@ -1,11 +1,13 @@
 #![cfg(test)]
-use crate::{helpers::RateLimitingContract, msg::ExecuteMsg, test_msg_send, ContractError};
-use cosmwasm_std::{Addr, Coin, Empty, Timestamp, Uint128, Uint256};
-use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use std::any::Any;
 
+use crate::{helpers::RateLimitingContract, msg::{ExecuteMsg, QueryMsg}, state::{rate_limit::RateLimit, rbac::Roles}, test_msg_send, ContractError};
+use cosmwasm_std::{to_binary, Addr, Coin, Empty, Timestamp, Uint128, Uint256};
+use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+use cosmwasm_std::Querier;
 use crate::{
     msg::{InstantiateMsg, PathMsg, QuotaMsg},
-    state::tests::{RESET_TIME_DAILY, RESET_TIME_MONTHLY, RESET_TIME_WEEKLY},
+    state::flow::tests::{RESET_TIME_DAILY, RESET_TIME_MONTHLY, RESET_TIME_WEEKLY},
 };
 
 pub fn contract_template() -> Box<dyn Contract<Empty>> {
@@ -19,8 +21,8 @@ pub fn contract_template() -> Box<dyn Contract<Empty>> {
 }
 
 const USER: &str = "USER";
-const IBC_ADDR: &str = "IBC_MODULE";
-const GOV_ADDR: &str = "GOV_MODULE";
+const IBC_ADDR: &str = "osmo1vz5e6tzdjlzy2f7pjvx0ecv96h8r4m2y92thdm";
+const GOV_ADDR: &str = "osmo1tzz5zf2u68t00un2j4lrrnkt2ztd46kfzfp58r";
 const NATIVE_DENOM: &str = "nosmo";
 
 fn mock_app() -> App {
@@ -414,4 +416,506 @@ fn add_paths_later() {
     // Executing the same message again should fail, as it is now rate limited
     let cosmos_msg = cw_rate_limit_contract.sudo(msg);
     app.sudo(cosmos_msg).unwrap_err();
+}
+
+
+#[test]
+fn test_execute_add_path() {
+    let quotas = vec![
+        QuotaMsg::new("daily", RESET_TIME_DAILY, 1, 1),
+        QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 5, 5),
+        QuotaMsg::new("monthly", RESET_TIME_MONTHLY, 5, 5),
+    ];
+
+    let (mut app, cw_rate_limit_contract) = proper_instantiate(vec![PathMsg {
+        channel_id: format!("any"),
+        denom: format!("denom"),
+        quotas,
+    }]);
+
+    let management_msg = ExecuteMsg::AddPath {
+        channel_id: format!("new_channel_id"),
+        denom: format!("new_denom"),
+        quotas: vec![QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 1, 1)],
+    };
+
+    let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
+    // non gov cant invoke
+    assert!(app.execute(Addr::unchecked("foobar"), cosmos_msg.clone()).is_err());
+    // gov addr can invoke
+    app.execute(Addr::unchecked(GOV_ADDR), cosmos_msg.clone()).unwrap();
+
+
+    // Sending 1% to use the daily allowance
+    let msg = test_msg_send!(
+        channel_id: format!("new_channel_id"),
+        denom: format!("new_denom"),
+        channel_value: 101_u32.into(),
+        funds: 1_u32.into()
+    );
+    let cosmos_msg = cw_rate_limit_contract.sudo(msg.clone());
+    app.sudo(cosmos_msg).unwrap();
+
+    let response: Vec<crate::state::rate_limit::RateLimit> = app.wrap().query_wasm_smart(cw_rate_limit_contract.addr(), &QueryMsg::GetQuotas {
+        channel_id: "new_channel_id".to_string(),
+        denom: "new_denom".to_string()
+    }).unwrap();
+    assert_eq!(response.len(), 1);
+    assert_eq!(response[0].flow.outflow, Uint256::one());
+    assert_eq!(response[0].quota.channel_value, Some(Uint256::from_u128(101)));
+
+}
+#[test]
+fn test_execute_remove_path() {
+    let quotas = vec![
+        QuotaMsg::new("daily", RESET_TIME_DAILY, 1, 1),
+        QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 5, 5),
+        QuotaMsg::new("monthly", RESET_TIME_MONTHLY, 5, 5),
+    ];
+
+    let (mut app, cw_rate_limit_contract) = proper_instantiate(vec![PathMsg {
+        channel_id: format!("any"),
+        denom: format!("denom"),
+        quotas,
+    }]);
+
+    let management_msg = ExecuteMsg::RemovePath {
+        channel_id: "any".to_string(),
+        denom: "denom".to_string(),
+    };
+    let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
+    // non gov cant invoke
+    assert!(app.execute(Addr::unchecked("foobar"), cosmos_msg.clone()).is_err());
+    // gov addr can invoke
+    app.execute(Addr::unchecked(GOV_ADDR), cosmos_msg.clone()).unwrap();
+
+    // rate limits should be removed
+    assert!(app.wrap().query_wasm_smart::<crate::state::rate_limit::RateLimit>(cw_rate_limit_contract.addr(), &QueryMsg::GetQuotas {
+        channel_id: "any".to_string(),
+        denom: "denom".to_string()
+    }).is_err());
+
+}
+
+#[test]
+fn test_execute_reset_path_quota() {
+    let quotas = vec![
+        QuotaMsg::new("daily", RESET_TIME_DAILY, 1, 1),
+        QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 5, 5),
+        QuotaMsg::new("monthly", RESET_TIME_MONTHLY, 5, 5),
+    ];
+
+    let (mut app, cw_rate_limit_contract) = proper_instantiate(vec![PathMsg {
+        channel_id: format!("any"),
+        denom: format!("denom"),
+        quotas,
+    }]);
+
+    // Sending 1% to use the daily allowance
+    let msg = test_msg_send!(
+        channel_id: format!("channel"),
+        denom: format!("denom"),
+        channel_value: 101_u32.into(),
+        funds: 1_u32.into()
+    );
+    let cosmos_msg = cw_rate_limit_contract.sudo(msg.clone());
+    app.sudo(cosmos_msg).unwrap();
+
+    let management_msg = ExecuteMsg::ResetPathQuota {
+        channel_id: "any".to_string(),
+        denom: "denom".to_string(),
+        quota_id: "daily".to_string()
+    };
+    let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
+    // non gov cant invoke
+    assert!(app.execute(Addr::unchecked("foobar"), cosmos_msg.clone()).is_err());
+    // gov addr can invoke
+    app.execute(Addr::unchecked(GOV_ADDR), cosmos_msg.clone()).unwrap();
+    
+    let response =  app.wrap().query_wasm_smart::<Vec<crate::state::rate_limit::RateLimit>>(cw_rate_limit_contract.addr(), &QueryMsg::GetQuotas {
+        channel_id: "any".to_string(),
+        denom: "denom".to_string()
+    }).unwrap();
+
+    // daily quota should be reset
+    let daily_quota = response.iter().find(|rate_limit| rate_limit.quota.name.eq("daily")).unwrap();
+    assert_eq!(daily_quota.flow.inflow, Uint256::zero());
+    assert_eq!(daily_quota.flow.outflow, Uint256::zero());
+
+    // weekly and monthly should not be reset
+    let weekly_quota = response.iter().find(|rate_limit| rate_limit.quota.name.eq("weekly")).unwrap();
+    assert_eq!(weekly_quota.flow.inflow, Uint256::zero());
+    assert_eq!(weekly_quota.flow.outflow, Uint256::one());
+
+    let  monthly_quota = response.iter().find(|rate_limit| rate_limit.quota.name.eq("monthly")).unwrap();
+    assert_eq!(monthly_quota.flow.inflow, Uint256::zero());
+    assert_eq!(monthly_quota.flow.outflow, Uint256::one());
+}
+
+#[test]
+fn test_execute_grant_and_revoke_role() {
+    let quotas = vec![
+        QuotaMsg::new("daily", RESET_TIME_DAILY, 1, 1),
+        QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 5, 5),
+        QuotaMsg::new("monthly", RESET_TIME_MONTHLY, 5, 5),
+    ];
+
+    let (mut app, cw_rate_limit_contract) = proper_instantiate(vec![PathMsg {
+        channel_id: format!("any"),
+        denom: format!("denom"),
+        quotas,
+    }]);
+
+
+    let management_msg = ExecuteMsg::GrantRole {
+        signer: "foobar".to_string(),
+        roles: vec![Roles::GrantRole]
+    };
+    let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
+    // non gov cant invoke
+    assert!(app.execute(Addr::unchecked("foobar"), cosmos_msg.clone()).is_err());
+    // gov addr can invoke
+    app.execute(Addr::unchecked(GOV_ADDR), cosmos_msg.clone()).unwrap();
+
+    let response = app.wrap().query_wasm_smart::<Vec<Roles>>(
+        cw_rate_limit_contract.addr(),
+        &QueryMsg::GetRoles {
+            owner: "foobar".to_string()
+        }
+    ).unwrap();
+    assert_eq!(response.len(), 1);
+    assert_eq!(response[0], Roles::GrantRole);
+
+    // test foobar can grant a role
+    let management_msg = ExecuteMsg::GrantRole {
+        signer: "foobarbaz".to_string(),
+        roles: vec![Roles::GrantRole]
+    };
+    let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
+    app.execute(Addr::unchecked("foobar"), cosmos_msg.clone()).unwrap();
+
+    let response = app.wrap().query_wasm_smart::<Vec<Roles>>(
+        cw_rate_limit_contract.addr(),
+        &QueryMsg::GetRoles {
+            owner: "foobarbaz".to_string()
+        }
+    ).unwrap();
+    assert_eq!(response.len(), 1);
+    assert_eq!(response[0], Roles::GrantRole);
+
+
+    // test role revocation
+
+    let management_msg = ExecuteMsg::RevokeRole {
+        signer: "foobar".to_string(),
+        roles: vec![Roles::GrantRole]
+    };
+    let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
+    app.execute(Addr::unchecked(GOV_ADDR), cosmos_msg.clone()).unwrap();
+
+    // foobar should no longer have roles
+    assert!(app.wrap().query_wasm_smart::<Vec<Roles>>(
+        cw_rate_limit_contract.addr(),
+        &QueryMsg::GetRoles { owner: "foobar".to_string() }
+    ).is_err());
+
+}
+
+#[test]
+fn test_execute_edit_path_quota() {
+    let quotas = vec![
+        QuotaMsg::new("daily", RESET_TIME_DAILY, 1, 1),
+        QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 5, 5),
+        QuotaMsg::new("monthly", RESET_TIME_MONTHLY, 5, 5),
+    ];
+
+    let (mut app, cw_rate_limit_contract) = proper_instantiate(vec![PathMsg {
+        channel_id: format!("any"),
+        denom: format!("denom"),
+        quotas,
+    }]);
+
+    // Sending 1% to use the daily allowance
+    let msg = test_msg_send!(
+        channel_id: format!("channel"),
+        denom: format!("denom"),
+        channel_value: 101_u32.into(),
+        funds: 1_u32.into()
+    );
+    let cosmos_msg = cw_rate_limit_contract.sudo(msg.clone());
+    app.sudo(cosmos_msg).unwrap();
+
+
+
+    let management_msg = ExecuteMsg::EditPathQuota {
+        channel_id: "any".to_string(),
+        denom: "denom".to_string(),
+        quota: QuotaMsg {
+            send_recv: (81, 58),
+            name: "monthly".to_string(),
+            duration: RESET_TIME_MONTHLY
+        }
+    };
+    let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
+    // non gov cant invoke
+    assert!(app.execute(Addr::unchecked("foobar"), cosmos_msg.clone()).is_err());
+    // gov addr can invoke
+    app.execute(Addr::unchecked(GOV_ADDR), cosmos_msg.clone()).unwrap();
+
+    let response = app.wrap().query_wasm_smart::<Vec<RateLimit>>(
+        cw_rate_limit_contract.addr(),
+        &QueryMsg::GetQuotas {
+            channel_id: "any".to_string(),
+            denom: "denom".to_string()
+        }
+    ).unwrap();
+    let monthly_quota = response.iter().find(|rate_limit| rate_limit.quota.name.eq("monthly")).unwrap();
+    assert_eq!(monthly_quota.quota.max_percentage_send, 81);
+    assert_eq!(monthly_quota.quota.max_percentage_recv, 58);
+}
+#[test]
+fn test_execute_remove_message() {
+    
+    // this test case also covers timelock delay set, as a non zero timelock
+    // will force the message to be queued, thus allowing queue removal
+
+    let quotas = vec![
+        QuotaMsg::new("daily", RESET_TIME_DAILY, 1, 1),
+        QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 5, 5),
+        QuotaMsg::new("monthly", RESET_TIME_MONTHLY, 5, 5),
+    ];
+
+    let (mut app, cw_rate_limit_contract) = proper_instantiate(vec![PathMsg {
+        channel_id: format!("any"),
+        denom: format!("denom"),
+        quotas,
+    }]);
+
+
+
+    let management_msg = ExecuteMsg::GrantRole {
+        signer: "foobar".to_string(),
+        roles: vec![Roles::GrantRole]
+    };
+    let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
+    // non gov cant invoke
+    assert!(app.execute(Addr::unchecked("foobar"), cosmos_msg.clone()).is_err());
+    // gov addr can invoke
+    app.execute(Addr::unchecked(GOV_ADDR), cosmos_msg.clone()).unwrap();
+
+    // set a timelock delay for foobar
+    let management_msg = ExecuteMsg::SetTimelockDelay {
+        signer: "foobar".to_string(),
+        hours: 1
+    };
+
+    let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
+    // non gov cant invoke as insufficient permissions
+    assert!(app.execute(Addr::unchecked("foobar"), cosmos_msg.clone()).is_err());
+    // gov addr can invoke
+    app.execute(Addr::unchecked(GOV_ADDR), cosmos_msg.clone()).unwrap();
+
+    // message submitter by foobar should not be queued
+    let management_msg = ExecuteMsg::GrantRole {
+        signer: "foobarbaz".to_string(),
+        roles: vec![Roles::GrantRole]
+    };
+    let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
+    app.execute(Addr::unchecked("foobar"), cosmos_msg.clone()).unwrap();
+    let response = app.wrap().query_wasm_smart::<Vec<String>>(
+            cw_rate_limit_contract.addr(),
+            &QueryMsg::GetMessageIds
+        ).unwrap();
+    assert_eq!(
+        response.len(),
+        1
+    );
+
+    // remove the message
+    let management_msg = ExecuteMsg::RemoveMessage {
+        message_id: response[0].clone(),
+    };
+    let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
+    app.execute(Addr::unchecked(GOV_ADDR), cosmos_msg.clone()).unwrap();
+
+    // no messges should be present
+    assert_eq!(app.wrap().query_wasm_smart::<Vec<String>>(
+        cw_rate_limit_contract.addr(),
+        &QueryMsg::GetMessageIds
+    ).unwrap().len(), 0);
+}
+
+#[test]
+fn test_execute_process_messages() {
+    let quotas = vec![
+        QuotaMsg::new("daily", RESET_TIME_DAILY, 1, 1),
+        QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 5, 5),
+        QuotaMsg::new("monthly", RESET_TIME_MONTHLY, 5, 5),
+    ];
+
+    let (mut app, cw_rate_limit_contract) = proper_instantiate(vec![PathMsg {
+        channel_id: format!("any"),
+        denom: format!("denom"),
+        quotas,
+    }]);
+
+
+    // allocate GrantRole and RevokeRole to `foobar`
+    let management_msg = ExecuteMsg::GrantRole {
+        signer: "foobar".to_string(),
+        roles: vec![Roles::GrantRole, Roles::RevokeRole]
+    };
+
+    let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
+    // non gov cant invoke
+    assert!(app.execute(Addr::unchecked("foobar"), cosmos_msg.clone()).is_err());
+    // gov addr can invoke
+    app.execute(Addr::unchecked(GOV_ADDR), cosmos_msg.clone()).unwrap();
+
+    // set a timelock delay for foobar
+    let management_msg = ExecuteMsg::SetTimelockDelay {
+        signer: "foobar".to_string(),
+        hours: 1
+    };
+
+    let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
+    // non gov cant invoke as insufficient permissions
+    assert!(app.execute(Addr::unchecked("foobar"), cosmos_msg.clone()).is_err());
+    // gov addr can invoke
+    app.execute(Addr::unchecked(GOV_ADDR), cosmos_msg.clone()).unwrap();
+
+    // message submitted by foobar should be queued
+    // allocate GrantRole to foobarbaz
+    let management_msg = ExecuteMsg::GrantRole {
+        signer: "foobarbaz".to_string(),
+        roles: vec![Roles::GrantRole]
+    };
+    let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
+    app.execute(Addr::unchecked("foobar"), cosmos_msg.clone()).unwrap();
+    let response = app.wrap().query_wasm_smart::<Vec<String>>(
+            cw_rate_limit_contract.addr(),
+            &QueryMsg::GetMessageIds
+        ).unwrap();
+    assert_eq!(
+        response.len(),
+        1
+    );
+
+    // any address should be able to trigger queue message processing
+    let management_msg = ExecuteMsg::ProcessMessages {
+        count: Some(1),
+        message_ids: None
+    };
+    let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
+    app.execute(Addr::unchecked("veryrandomaddress"), cosmos_msg).unwrap();
+
+    // insufficient time has passed so queue should still be 1
+    assert_eq!(app.wrap().query_wasm_smart::<Vec<String>>(
+        cw_rate_limit_contract.addr(),
+        &QueryMsg::GetMessageIds
+    ).unwrap().len(), 1);
+
+    // advance time
+    app.update_block(|block| {
+        block.height += 100;
+        block.time = block.time.plus_seconds(3601)
+    });
+
+    // any address should be able to trigger queue message processing
+    let management_msg = ExecuteMsg::ProcessMessages {
+        count: Some(1),
+       message_ids: None
+    };
+    let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
+    app.execute(Addr::unchecked("veryrandomaddress"), cosmos_msg).unwrap();
+
+    // no messges should be present as time passed and message was executed
+    assert_eq!(app.wrap().query_wasm_smart::<Vec<String>>(
+        cw_rate_limit_contract.addr(),
+        &QueryMsg::GetMessageIds
+    ).unwrap().len(), 0);
+
+    // foobarbaz should have the GrantRole permission
+    let response = app.wrap().query_wasm_smart::<Vec<Roles>>(
+        cw_rate_limit_contract.addr(),
+        &QueryMsg::GetRoles {
+            owner: "foobarbaz".to_string()
+        }
+    ).unwrap();
+    assert_eq!(response.len(), 1);
+    assert_eq!(response[0], Roles::GrantRole);
+
+    app.update_block(|block| {
+        block.height += 1;
+        block.time = block.time.plus_seconds(3600);
+    });
+
+    let management_msg = ExecuteMsg::RevokeRole {
+        signer: "foobarbaz".to_string(),
+        roles: vec![Roles::GrantRole]
+    };
+    let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
+    app.execute(Addr::unchecked("foobar"), cosmos_msg.clone()).unwrap();
+
+    let message_ids = app.wrap().query_wasm_smart::<Vec<String>>(
+        cw_rate_limit_contract.addr(),
+        &QueryMsg::GetMessageIds
+    ).unwrap();
+    assert_eq!(message_ids.len(), 1);
+
+    app.update_block(|block| {
+        block.height += 1;
+    });
+
+    let management_msg = ExecuteMsg::ProcessMessages {
+        count: Some(1),
+        message_ids: None
+    };
+    let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
+    app.execute(Addr::unchecked("foobar"), cosmos_msg.clone()).unwrap();
+
+    // insufficient time has passed so queue length is still 1
+    let response = app.wrap().query_wasm_smart::<Vec<Roles>>(
+        cw_rate_limit_contract.addr(),
+        &QueryMsg::GetRoles {
+            owner: "foobarbaz".to_string()
+        }
+    ).unwrap();
+    assert_eq!(response.len(), 1);
+
+    // advance time
+    app.update_block(|block| {
+        block.height += 100;
+        block.time = block.time.plus_seconds(3601);
+    });
+
+    let management_msg = ExecuteMsg::ProcessMessages {
+        count: None,
+        message_ids: Some(message_ids.clone())
+    };
+    let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
+    app.execute(Addr::unchecked("foobar"), cosmos_msg.clone()).unwrap();
+    
+    // sufficient time has passed, empty queue
+    let message_ids = app.wrap().query_wasm_smart::<Vec<String>>(
+        cw_rate_limit_contract.addr(),
+        &QueryMsg::GetMessageIds
+    ).unwrap();
+    assert_eq!(message_ids.len(), 0);
+
+    // no rolles allocated, storage key should be removed
+    assert!(app.wrap().query_wasm_smart::<Vec<Roles>>(
+        cw_rate_limit_contract.addr(),
+        &QueryMsg::GetRoles {
+            owner: "foobarbaz".to_string()
+        }
+    ).is_err());
+
+    // error should be returned when all params are None
+    let management_msg = ExecuteMsg::ProcessMessages {
+        count: None,
+       message_ids: None
+    };
+    let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
+    assert!(app.execute(Addr::unchecked("foobar"), cosmos_msg.clone()).is_err());
 }

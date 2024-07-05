@@ -1,17 +1,18 @@
 #![cfg(test)]
 
 use crate::packet::Packet;
+use crate::state::rbac::Roles;
 use crate::{contract::*, test_msg_recv, test_msg_send, ContractError};
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-use cosmwasm_std::{from_binary, Addr, Attribute, Uint256};
+use cosmwasm_std::{from_binary, Addr, Attribute, MessageInfo, Uint256};
 
 use crate::helpers::tests::verify_query_response;
-use crate::msg::{InstantiateMsg, PathMsg, QueryMsg, QuotaMsg, SudoMsg};
-use crate::state::tests::RESET_TIME_WEEKLY;
-use crate::state::{RateLimit, GOVMODULE, IBCMODULE, RATE_LIMIT_TRACKERS};
-
-const IBC_ADDR: &str = "IBC_MODULE";
-const GOV_ADDR: &str = "GOV_MODULE";
+use crate::msg::{InstantiateMsg, MigrateMsg, PathMsg, QueryMsg, QuotaMsg, SudoMsg};
+use crate::state::flow::tests::RESET_TIME_WEEKLY;
+use crate::state::storage::{GOVMODULE, IBCMODULE, RATE_LIMIT_TRACKERS, RBAC_PERMISSIONS};
+use crate::state::rate_limit::RateLimit;
+const IBC_ADDR: &str = "osmo1vz5e6tzdjlzy2f7pjvx0ecv96h8r4m2y92thdm";
+const GOV_ADDR: &str = "osmo1tzz5zf2u68t00un2j4lrrnkt2ztd46kfzfp58r";
 
 #[test] // Tests we ccan instantiate the contract and that the owners are set correctly
 fn proper_instantiation() {
@@ -31,6 +32,11 @@ fn proper_instantiation() {
     // The ibc and gov modules are properly stored
     assert_eq!(IBCMODULE.load(deps.as_ref().storage).unwrap(), IBC_ADDR);
     assert_eq!(GOVMODULE.load(deps.as_ref().storage).unwrap(), GOV_ADDR);
+
+    let permissions = RBAC_PERMISSIONS.load(&mut deps.storage, GOV_ADDR.to_string()).unwrap();
+    for permission in Roles::all_roles() {
+        assert!(permissions.contains(&permission));
+    }
 }
 
 #[test] // Tests that when a packet is transferred, the peropper allowance is consummed
@@ -396,4 +402,50 @@ fn test_tokenfactory_message() {
     let json = r#"{"send_packet":{"packet":{"sequence":4,"source_port":"transfer","source_channel":"channel-0","destination_port":"transfer","destination_channel":"channel-1491","data":{"denom":"transfer/channel-0/factory/osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj/czar","amount":"100000000000000000","sender":"osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks","receiver":"osmo1c584m4lq25h83yp6ag8hh4htjr92d954vklzja"},"timeout_height":{},"timeout_timestamp":1668024476848430980}}}"#;
     let _parsed: SudoMsg = serde_json_wasm::from_str(json).unwrap();
     //println!("{parsed:?}");
+}
+
+
+#[test] // Tests we ccan instantiate the contract and that the owners are set correctly
+fn proper_migrate() {
+    let mut deps = mock_dependencies();
+    let mut env = mock_env();
+
+    crate::contract::instantiate(
+        deps.as_mut(),
+        env,
+        MessageInfo {
+            sender: Addr::unchecked("osmo16tumts0kckpfp9fk7e3rnx9ahzn70dyyqfypgh"),
+            funds: vec![]
+        },
+        InstantiateMsg {
+            gov_module: Addr::unchecked(GOV_ADDR),
+            ibc_module: Addr::unchecked(IBC_ADDR),
+            paths: vec![]
+        }
+
+    ).unwrap();
+
+    // test that instantiate set the correct gov module address and RBAC permissions
+    let permissions = RBAC_PERMISSIONS.load(&mut deps.storage, GOV_ADDR.to_string()).unwrap();
+    for permission in Roles::all_roles() {
+        assert!(permissions.contains(&permission));
+    }
+    assert_eq!(GOVMODULE.load(deps.as_ref().storage).unwrap(), GOV_ADDR);
+
+    // revoke all roles from the gov contract, instantiation should re-asssign
+    crate::rbac::revoke_role(
+        &mut deps.as_mut(),
+        GOV_ADDR.to_string(),
+        Roles::all_roles()
+    ).unwrap();
+
+    
+    migrate(deps.as_mut(), mock_env(), MigrateMsg {}).unwrap();
+
+    // ensure migration assigned all the roles
+    let permissions = RBAC_PERMISSIONS.load(&mut deps.storage, GOV_ADDR.to_string()).unwrap();
+    for permission in Roles::all_roles() {
+        assert!(permissions.contains(&permission));
+    }
+
 }

@@ -26,4 +26,6 @@ pub enum ContractError {
         channel_id: String,
         denom: String,
     },
+    #[error("{0}")]
+    InvalidParameters(String)
 }

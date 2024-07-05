@@ -1,4 +1,4 @@
-use crate::state::FlowType;
+use crate::state::flow::FlowType;
 use cosmwasm_std::{Addr, Deps, StdError, Uint256};
 use osmosis_std_derive::CosmwasmExt;
 use schemars::JsonSchema;

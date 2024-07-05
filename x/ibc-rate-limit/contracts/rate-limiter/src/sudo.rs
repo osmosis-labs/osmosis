@@ -2,7 +2,7 @@ use cosmwasm_std::{DepsMut, Response, Timestamp, Uint256};
 
 use crate::{
     packet::Packet,
-    state::{FlowType, Path, RateLimit, RATE_LIMIT_TRACKERS},
+    state::{flow::FlowType, path::Path, rate_limit::RateLimit, storage::RATE_LIMIT_TRACKERS},
     ContractError,
 };
 

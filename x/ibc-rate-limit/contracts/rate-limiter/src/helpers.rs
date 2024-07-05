@@ -39,7 +39,7 @@ impl RateLimitingContract {
 pub mod tests {
     use cosmwasm_std::{Timestamp, Uint256};
 
-    use crate::state::RateLimit;
+    use crate::state::rate_limit::RateLimit;
 
     pub fn verify_query_response(
         value: &RateLimit,

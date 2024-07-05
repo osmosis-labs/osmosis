@@ -6,7 +6,9 @@ mod error;
 pub mod msg;
 mod state;
 
+pub mod rbac;
 pub mod packet;
+pub mod message_queue;
 
 // Functions
 mod execute;
