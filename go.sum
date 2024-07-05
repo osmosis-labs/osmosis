@@ -906,8 +906,6 @@ github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240517165907-1625703bc16d h1
 github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240517165907-1625703bc16d/go.mod h1:SgzJ247NQ6lDDXCHiTKjaq713TSedVQTLgB4E+zGbhg=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240517165907-1625703bc16d h1:NNjrEQ2TCF26WLn0zGzr/xptXyz4sVgrfYamWY69W1Q=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240517165907-1625703bc16d/go.mod h1:2yjCTFE7+dr2i/meQUPS4Rs5LskIDb5d8c4lePKhmxA=
-github.com/osmosis-labs/sqs/sqsdomain v0.18.4-0.20240627025931-0926c532e04a h1:qQT+2XtJye41ULiYl81KSAQ4UQSJO+ZN2HX3CYUqRBs=
-github.com/osmosis-labs/sqs/sqsdomain v0.18.4-0.20240627025931-0926c532e04a/go.mod h1:PInk1hZ2DQ0Kd9tHSafPgXdavdyXQyNysVF4FNzo1eU=
 github.com/osmosis-labs/sqs/sqsdomain v0.18.4-0.20240628061338-6194c204c5c8 h1:EdOXZ45+7lgb74BATKTV48TjsNjs3G9DwUZg6kGs0vU=
 github.com/osmosis-labs/sqs/sqsdomain v0.18.4-0.20240628061338-6194c204c5c8/go.mod h1:PInk1hZ2DQ0Kd9tHSafPgXdavdyXQyNysVF4FNzo1eU=
 github.com/pact-foundation/pact-go v1.0.4/go.mod h1:uExwJY4kCzNPcHRj+hCR/HBbOOIwwtUjcrb0b5/5kLM=
@@ -979,8 +977,8 @@ github.com/rogpeppe/go-internal v1.9.0/go.mod h1:WtVeX8xhTBvf0smdhujwtBcq4Qrzq/f
 github.com/rogpeppe/go-internal v1.12.0 h1:exVL4IDcn6na9z1rAb56Vxr+CgyK3nn3O+epU5NdKM8=
 github.com/rogpeppe/go-internal v1.12.0/go.mod h1:E+RYuTGaKKdloAfM02xzb0FW3Paa99yedzYV+kq4uf4=
 github.com/rs/cors v1.7.0/go.mod h1:gFx+x8UowdsKA9AchylcLynDq+nNFfI8FkUZdN/jGCU=
-github.com/rs/cors v1.10.1 h1:L0uuZVXIKlI1SShY2nhFfo44TYvDPQ1w4oFkUJNfhyo=
-github.com/rs/cors v1.10.1/go.mod h1:XyqrcTp5zjWr1wsJ8PIRZssZ8b/WMcMf71DJnit4EMU=
+github.com/rs/cors v1.11.0 h1:0B9GE/r9Bc2UxRMMtymBkHTenPkHDv0CW4Y98GBY+po=
+github.com/rs/cors v1.11.0/go.mod h1:XyqrcTp5zjWr1wsJ8PIRZssZ8b/WMcMf71DJnit4EMU=
 github.com/rs/xid v1.5.0/go.mod h1:trrq9SKmegXys3aeAKXMUTdJsYXVwGY3RLcfgqegfbg=
 github.com/rs/zerolog v1.32.0 h1:keLypqrlIjaFsbmJOBdB/qvyF8KEtCWHwobLp5l/mQ0=
 github.com/rs/zerolog v1.32.0/go.mod h1:/7mN4D5sKwJLZQ2b/znpjC3/GQWY/xaDXUM0kKWRHss=
