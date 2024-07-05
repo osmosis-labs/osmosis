@@ -15,7 +15,7 @@ type blockUpdatesSQSBlockProcessStrategy struct {
 
 	transformAndLoadFunc transformAndLoadFunc
 
-	blockUpdateProcessUtils domain.BlockUpdateProcessUtilsI
+	blockUpdateProcessUtils commondomain.BlockUpdateProcessUtilsI
 }
 
 // IsFullBlockProcessor implements commondomain.BlockProcessor.

@@ -13,7 +13,7 @@ type (
 	TransformAndLoadFunc                = transformAndLoadFunc
 )
 
-func NewBlockUpdatesSQSBlockProcessStrategy(blockUpdateProcessUtils domain.BlockUpdateProcessUtilsI, sqsGRPCClient domain.SQSGRPClient, poolsTransformer domain.PoolsTransformer, poolExtractor commondomain.PoolExtractor, transformAndLoadFunc transformAndLoadFunc) *BlockUpdatesSQSBlockProcessStrategy {
+func NewBlockUpdatesSQSBlockProcessStrategy(blockUpdateProcessUtils commondomain.BlockUpdateProcessUtilsI, sqsGRPCClient domain.SQSGRPClient, poolsTransformer domain.PoolsTransformer, poolExtractor commondomain.PoolExtractor, transformAndLoadFunc transformAndLoadFunc) *BlockUpdatesSQSBlockProcessStrategy {
 	return &blockUpdatesSQSBlockProcessStrategy{
 		sqsGRPCClient: sqsGRPCClient,
 
