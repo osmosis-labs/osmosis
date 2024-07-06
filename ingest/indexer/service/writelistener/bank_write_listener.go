@@ -43,7 +43,7 @@ func NewBank(ctx context.Context, client indexerdomain.TokenSupplyPublisher, blo
 // delete parameter is ignored.
 func (s *bankWriteListener) OnWrite(storeKey storetypes.StoreKey, key []byte, value []byte, delete bool) error {
 	if s.blockProcessStrategyManager.ShouldPushAllData() {
-		return indexerdomain.ErrColdStartManagerDidNotIngest
+		return indexerdomain.ErrDidNotIngestAllData
 	}
 
 	// If the cold start manager has ingested initial data and the key is not empty and the key is a supply key.

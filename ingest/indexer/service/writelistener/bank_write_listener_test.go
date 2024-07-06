@@ -94,14 +94,14 @@ func (s *WriteListenerTestSuite) TestWriteListener_Bank() {
 			key:   append(banktypes.SupplyKey, []byte(defaultDenom)...),
 			value: oneIntBytes,
 
-			expectedError: domain.ErrColdStartManagerDidNotIngest,
+			expectedError: domain.ErrDidNotIngestAllData,
 		},
 		{
 			name:  "did not publish supply offset key before cold start",
 			key:   append(banktypes.SupplyOffsetKey, []byte(defaultDenom)...),
 			value: oneIntBytes,
 
-			expectedError: domain.ErrColdStartManagerDidNotIngest,
+			expectedError: domain.ErrDidNotIngestAllData,
 		},
 		{
 			name:  "published nothing due to misc key",
