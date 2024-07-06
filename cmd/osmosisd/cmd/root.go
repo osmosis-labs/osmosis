@@ -706,6 +706,9 @@ token-supply-topic-id = "{{ .IndexerConfig.TokenSupplyTopicId }}"
 # The topic id to use for the publishing token supply offset data
 token-supply-offset-topic-id = "{{ .IndexerConfig.TokenSupplyOffsetTopicId }}"
 
+# The topic id to use for publishing pair metadata
+pair-topic-id = "{{ .IndexerConfig.PairTopicId }}"
+
 ###############################################################################
 ###                            Wasm Configuration                           ###
 ###############################################################################
