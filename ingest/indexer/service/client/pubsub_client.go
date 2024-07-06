@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"time"
 
 	"cloud.google.com/go/pubsub"
@@ -124,10 +123,6 @@ func (p *PubSubClient) PublishPair(ctx context.Context, pair indexerdomain.Pair)
 	// Check if project id and topic id are set
 	if p.projectId == "" || p.pairTopicId == "" {
 		return errors.New("project id and pool topic id must be set")
-	}
-
-	if pair.IdxDenom0 == pair.IdxDenom1 {
-		return fmt.Errorf("Publishing pool pairs with the same denom indexes %v", pair)
 	}
 
 	pair.IngestedAt = time.Now().UTC()
