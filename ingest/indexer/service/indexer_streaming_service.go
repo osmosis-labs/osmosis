@@ -97,7 +97,7 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 
 		// Gas data
 		gasWanted := res.TxResults[txnIndex].GasWanted
-		gasUsed := res.TxResults[txnIndex].GasWanted
+		gasUsed := res.TxResults[txnIndex].GasUsed
 
 		// Fee data
 		feeTx, _ := tx.(sdk.FeeTx)
