@@ -351,24 +351,40 @@ func NewOsmosisApp(
 
 	// initialize indexer if enabled
 	if indexerConfig.IsEnabled {
-		indexerIngester := indexerConfig.Initialize()
+		indexerPublisher := indexerConfig.Initialize()
 
 		// TODO: handle graceful shutdown
 		pubSubCtx := context.Background()
 
 		// Create cold start manager
-		coldStartManager := indexerdomain.NewColdStartManager()
+		blockProcessStrategyManager := commondomain.NewBlockProcessStrategyManager()
+
+		// Create pool tracker that tracks pool updates
+		// made by the write listenetrs.
+		poolTracker := pooltracker.NewMemory()
 
 		// Create write listeners for the indexer service.
-		writeListeners := getIndexerServiceWriteListeners(pubSubCtx, app, indexerIngester, coldStartManager)
+		writeListeners := getIndexerServiceWriteListeners(pubSubCtx, app, appCodec, poolTracker, app.WasmKeeper, indexerPublisher, blockProcessStrategyManager)
 
 		// Create keepers for the indexer service.
 		keepers := indexerdomain.Keepers{
-			BankKeeper: app.BankKeeper,
+			BankKeeper:        app.BankKeeper,
+			PoolManagerKeeper: app.PoolManagerKeeper,
+		}
+
+		poolKeepers := commondomain.PoolExtractorKeepers{
+			GammKeeper:         app.GAMMKeeper,
+			CosmWasmPoolKeeper: app.CosmwasmPoolKeeper,
+			WasmKeeper:         app.WasmKeeper,
+			BankKeeper:         app.BankKeeper,
+			ProtorevKeeper:     app.ProtoRevKeeper,
+			PoolManagerKeeper:  app.PoolManagerKeeper,
+			ConcentratedKeeper: app.ConcentratedLiquidityKeeper,
 		}
 
 		// Create the indexer streaming service.
-		indexerStreamingService := indexerservice.New(writeListeners, coldStartManager, indexerIngester, keepers)
+		poolExtractor := poolextractor.New(poolKeepers, poolTracker)
+		indexerStreamingService := indexerservice.New(writeListeners, blockProcessStrategyManager, indexerPublisher, poolExtractor, keepers)
 
 		// Register the SQS streaming service with the app.
 		app.SetStreamingService(indexerStreamingService)
@@ -579,6 +595,11 @@ func NewOsmosisApp(
 
 // getSQSServiceWriteListeners returns the write listeners for the app that are specific to the SQS service.
 func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker, wasmkeeper *wasmkeeper.Keeper) map[storetypes.StoreKey][]storetypes.WriteListener {
+	return getPoolWriteListeners(app, appCodec, blockPoolUpdateTracker, wasmkeeper)
+}
+
+// getPoolWriteListeners returns the write listeners for the app that are specific to monitoring the pools.
+func getPoolWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker, wasmkeeper *wasmkeeper.Keeper) map[storetypes.StoreKey][]storetypes.WriteListener {
 	writeListeners := make(map[storetypes.StoreKey][]storetypes.WriteListener)
 
 	writeListeners[app.GetKey(concentratedtypes.ModuleName)] = []storetypes.WriteListener{
@@ -597,12 +618,12 @@ func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoo
 }
 
 // getIndexerServiceWriteListeners returns the write listeners for the app that are specific to the indexer service.
-func getIndexerServiceWriteListeners(ctx context.Context, app *OsmosisApp, client indexerdomain.Publisher, coldStartManager indexerdomain.ColdStartManager) map[storetypes.StoreKey][]storetypes.WriteListener {
-	writeListeners := make(map[storetypes.StoreKey][]storetypes.WriteListener)
+func getIndexerServiceWriteListeners(ctx context.Context, app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker, wasmkeeper *wasmkeeper.Keeper, client indexerdomain.Publisher, blockProcessStrategyManager commondomain.BlockProcessStrategyManager) map[storetypes.StoreKey][]storetypes.WriteListener {
+	writeListeners := getPoolWriteListeners(app, appCodec, blockPoolUpdateTracker, wasmkeeper)
 
 	// Add write listeners for the bank module.
 	writeListeners[app.GetKey(banktypes.ModuleName)] = []storetypes.WriteListener{
-		indexerwritelistener.NewBank(ctx, client, coldStartManager),
+		indexerwritelistener.NewBank(ctx, client, blockProcessStrategyManager),
 	}
 
 	return writeListeners
