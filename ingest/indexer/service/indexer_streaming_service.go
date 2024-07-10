@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
@@ -33,6 +34,8 @@ type indexerStreamingService struct {
 	poolExtractor commondomain.PoolExtractor
 
 	txDecoder sdk.TxDecoder
+
+	logger log.Logger
 }
 
 // New creates a new sqsStreamingService.
@@ -40,7 +43,7 @@ type indexerStreamingService struct {
 // sqsIngester is an ingester that ingests the block data into SQS.
 // poolTracker is a tracker that tracks the pools that were changed in the block.
 // nodeStatusChecker is a checker that checks if the node is syncing.
-func New(blockUpdatesProcessUtils commondomain.BlockUpdateProcessUtilsI, blockProcessStrategyManager commondomain.BlockProcessStrategyManager, client domain.Publisher, storeKeyMap map[string]storetypes.StoreKey, poolExtractor commondomain.PoolExtractor, keepers domain.Keepers, txDecoder sdk.TxDecoder) storetypes.ABCIListener {
+func New(blockUpdatesProcessUtils commondomain.BlockUpdateProcessUtilsI, blockProcessStrategyManager commondomain.BlockProcessStrategyManager, client domain.Publisher, storeKeyMap map[string]storetypes.StoreKey, poolExtractor commondomain.PoolExtractor, keepers domain.Keepers, txDecoder sdk.TxDecoder, logger log.Logger) storetypes.ABCIListener {
 	return &indexerStreamingService{
 		blockProcessStrategyManager: blockProcessStrategyManager,
 
@@ -53,6 +56,8 @@ func New(blockUpdatesProcessUtils commondomain.BlockUpdateProcessUtilsI, blockPr
 		blockUpdatesProcessUtils: blockUpdatesProcessUtils,
 
 		txDecoder: txDecoder,
+
+		logger: logger,
 	}
 }
 
@@ -145,11 +150,13 @@ func (s *indexerStreamingService) ListenFinalizeBlock(ctx context.Context, req a
 	var err error
 	err = s.publishBlock(ctx, req)
 	if err != nil {
+		s.logger.Error("Error publishing block data by indexer", err)
 		return err
 	}
 	// Iterate through the transactions in the block and publish them
 	err = s.publishTxn(ctx, req, res)
 	if err != nil {
+		s.logger.Error("Error publishing transaction data by indexer", err)
 		return err
 	}
 	return nil
