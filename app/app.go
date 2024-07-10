@@ -403,7 +403,7 @@ func NewOsmosisApp(
 			StoreKeyMap:    storeKeyMap,
 		}
 		poolExtractor := poolextractor.New(poolKeepers, poolTracker)
-		indexerStreamingService := indexerservice.New(blockUpdatesProcessUtils, blockProcessStrategyManager, indexerPublisher, storeKeyMap, poolExtractor, keepers)
+		indexerStreamingService := indexerservice.New(blockUpdatesProcessUtils, blockProcessStrategyManager, indexerPublisher, storeKeyMap, poolExtractor, keepers, app.GetTxConfig().TxDecoder(), logger)
 
 		// Register the SQS streaming service with the app.
 		streamingServices = append(streamingServices, indexerStreamingService)
