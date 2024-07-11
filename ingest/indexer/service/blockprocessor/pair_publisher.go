@@ -6,6 +6,8 @@ import (
 	"sort"
 	"sync"
 
+	"sync/atomic"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -57,7 +59,13 @@ func (p PairPublisher) PublishPoolPairs(ctx sdk.Context, pools []poolmanagertype
 			spreadFactor := pool.GetSpreadFactor(ctx)
 			poolID := pool.GetId()
 
-			resultChan := make(chan error, len(denoms)*(len(denoms)-1)/2)
+			// Wait for all the pairs to be published
+			publishPairWg := sync.WaitGroup{}
+			// Initial empty error string
+			// We accumulate errors from concurrent publish
+			// goroutines.
+			errStr := atomic.Value{}
+			errStr.Store("")
 
 			for i, denomI := range denoms {
 				// Skip unsupported denoms.
@@ -103,36 +111,42 @@ func (p PairPublisher) PublishPoolPairs(ctx sdk.Context, pools []poolmanagertype
 						FeeBps:    takerFee.Add(spreadFactor).MulInt64(10000).TruncateInt().Uint64(),
 					}
 
+					publishPairWg.Add(1)
+
 					// Publish the pair in a goroutine
 					// to avoid blocking the loop
 					go func(pair domain.Pair) {
+						defer publishPairWg.Done()
+
 						if pair.IdxDenom0 == pair.IdxDenom1 {
-							resultChan <- fmt.Errorf("denom0 and denom1 index are the same for pair %v", pair)
+							curErrStr := errStr.Load()
+							errStr.Store(fmt.Sprintf("%s, denom0 and denom1 index are the same for pair %v", curErrStr, pair))
 							return
 						}
 
-						// Publish the pool
-						err := p.client.PublishPair(ctx, pair)
-
-						resultChan <- err
+						// Publish the pool pair.
+						if err := p.client.PublishPair(ctx, pair); err != nil {
+							curErrStr := errStr.Load()
+							errStr.Store(fmt.Sprintf("%s, %s", curErrStr, err.Error()))
+						}
 					}(pair)
 				}
 			}
 
-			// Accumulate publishing errors in a string
-			errStr := ""
+			// Wait for all the pairs to be published
+			publishPairWg.Wait()
 
-			// Wait for all the publish results
-			for i := 0; i < len(denoms)*(len(denoms)-1)/2; i++ {
-				err := <-resultChan
-				if err != nil {
-					errStr += err.Error() + ", "
-				}
+			// Load the final error string
+			finalErrorStr, ok := errStr.Load().(string)
+			if !ok {
+				result <- errors.New("failed to parse error when processing pairs")
+				return
 			}
 
 			// Return the accumulated errors
-			if errStr != "" {
-				result <- errors.New(errStr)
+			if finalErrorStr != "" {
+				result <- errors.New(finalErrorStr)
+				return
 			}
 
 			result <- nil
