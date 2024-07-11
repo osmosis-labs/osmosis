@@ -34,6 +34,10 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdAllGroupsWithGauge)
 	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdGroupByGroupGaugeID)
 	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdCurrentWeightByGroupGaugeID)
+	cmd.AddCommand(
+		osmocli.GetParams[*types.ParamsRequest](
+			types.ModuleName, types.NewQueryClient),
+	)
 	cmd.AddCommand(GetCmdRewardsEst())
 
 	return cmd
