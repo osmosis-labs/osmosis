@@ -3,19 +3,10 @@ package domain
 import (
 	"time"
 
-<<<<<<< HEAD
-type Transaction struct {
-	Height     uint64        `json:"height"`
-	BlockTime  time.Time     `json:"timestamp"`
-	Events     []interface{} `json:"events"`
-	IngestedAt time.Time     `json:"ingested_at"`
-=======
 	"github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// map data type is unsupported by the dataflow / apache beam
-// thus using struct to represent the data
 type EventWrapper struct {
 	Index int         `json:"event_index"`
 	Event types.Event `json:"event"`
@@ -32,5 +23,4 @@ type Transaction struct {
 	TransactionIndexId int            `json:"tx_index_id"`
 	Events             []EventWrapper `json:"events"`
 	IngestedAt         time.Time      `json:"ingested_at"`
->>>>>>> c994c001 (Revised txn ingester for iterating txns in main branch (#8495))
 }

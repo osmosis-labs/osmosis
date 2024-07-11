@@ -384,11 +384,7 @@ func NewOsmosisApp(
 
 		// Create the indexer streaming service.
 		poolExtractor := poolextractor.New(poolKeepers, poolTracker)
-<<<<<<< HEAD
-		indexerStreamingService := indexerservice.New(writeListeners, blockProcessStrategyManager, indexerPublisher, poolExtractor, keepers)
-=======
-		indexerStreamingService := indexerservice.New(blockUpdatesProcessUtils, blockProcessStrategyManager, indexerPublisher, storeKeyMap, poolExtractor, keepers, app.GetTxConfig().TxDecoder(), logger)
->>>>>>> c994c001 (Revised txn ingester for iterating txns in main branch (#8495))
+		indexerStreamingService := indexerservice.New(writeListeners, blockProcessStrategyManager, indexerPublisher, poolExtractor, keepers, app.GetTxConfig().TxDecoder(), logger)
 
 		// Register the SQS streaming service with the app.
 		app.SetStreamingService(indexerStreamingService)
