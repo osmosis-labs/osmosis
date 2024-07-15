@@ -3,7 +3,6 @@ package blockprocessor
 import (
 	"errors"
 	"fmt"
-	"sort"
 	"sync"
 
 	"sync/atomic"
@@ -52,9 +51,6 @@ func (p PairPublisher) PublishPoolPairs(ctx sdk.Context, pools []poolmanagertype
 	for _, pool := range pools {
 		go func(pool poolmanagertypes.PoolI) {
 			denoms := pool.GetPoolDenoms(ctx)
-
-			// Sort for order consistency
-			sort.Strings(denoms)
 
 			spreadFactor := pool.GetSpreadFactor(ctx)
 			poolID := pool.GetId()
