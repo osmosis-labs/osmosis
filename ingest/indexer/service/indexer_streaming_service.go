@@ -72,7 +72,6 @@ func (s *indexerStreamingService) Close() error {
 
 // ListenBeginBlock implements baseapp.StreamingService.
 func (s *indexerStreamingService) ListenBeginBlock(ctx context.Context, req types.RequestBeginBlock, res types.ResponseBeginBlock) error {
-	s.txnIndexId++
 	return nil
 }
 
