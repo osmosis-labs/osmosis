@@ -85,20 +85,20 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 type AppModule struct {
 	AppModuleBasic
 
-	k          poolmanager.Keeper
+	k          *poolmanager.Keeper
 	gammKeeper types.PoolModuleI
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), poolmanager.NewMsgServerImpl(&am.k))
-	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: pmclient.NewQuerier(am.k)})
-	queryprotov2.RegisterQueryServer(cfg.QueryServer(), grpcv2.Querier{Q: pmclient.NewV2Querier(am.k)})
+	types.RegisterMsgServer(cfg.MsgServer(), poolmanager.NewMsgServerImpl(am.k))
+	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: pmclient.NewQuerier(*am.k)})
+	queryprotov2.RegisterQueryServer(cfg.QueryServer(), grpcv2.Querier{Q: pmclient.NewV2Querier(*am.k)})
 }
 
 func NewAppModule(poolmanagerKeeper poolmanager.Keeper, gammKeeper types.PoolModuleI) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
-		k:              poolmanagerKeeper,
+		k:              &poolmanagerKeeper,
 		gammKeeper:     gammKeeper,
 	}
 }
