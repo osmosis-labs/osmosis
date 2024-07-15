@@ -3,7 +3,6 @@ package blockprocessor
 import (
 	"errors"
 	"fmt"
-	"sort"
 	"sync"
 
 	"sync/atomic"
