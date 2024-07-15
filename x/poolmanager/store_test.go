@@ -1365,8 +1365,8 @@ func (s *KeeperTestSuite) TestSnapshotTakerFeeShareAlloyComposition() {
 				return cwPool
 			},
 			expectedComposition: modifySkimPercent(defaultTakerFeeShareAgreements[:2], []osmomath.Dec{
-				osmomath.MustNewDecFromStr("100").Quo(osmomath.MustNewDecFromStr("100000000000100")),
 				osmomath.MustNewDecFromStr("100000000000000").Quo(osmomath.MustNewDecFromStr("100000000000100")),
+				osmomath.MustNewDecFromStr("100").Quo(osmomath.MustNewDecFromStr("100000000000100")),
 			}),
 			expectedError: nil,
 		},
@@ -1387,9 +1387,9 @@ func (s *KeeperTestSuite) TestSnapshotTakerFeeShareAlloyComposition() {
 				SkimPercent: osmomath.MustNewDecFromStr("0.03"),
 				SkimAddress: "osmo1k5t7xrevz5fhvs5zg5jtpnht2mzv539008uc3",
 			}), []osmomath.Dec{
-				osmomath.MustNewDecFromStr("100").Quo(osmomath.MustNewDecFromStr("100000000000200")),
-				osmomath.MustNewDecFromStr("100000000000000").Quo(osmomath.MustNewDecFromStr("100000000000200")),
-				osmomath.MustNewDecFromStr("100").Quo(osmomath.MustNewDecFromStr("100000000000200")),
+				osmomath.MustNewDecFromStr("100000000000000").Quo(osmomath.MustNewDecFromStr("200000000000100")),
+				osmomath.MustNewDecFromStr("100").Quo(osmomath.MustNewDecFromStr("200000000000100")),
+				osmomath.MustNewDecFromStr("100000000000000").Quo(osmomath.MustNewDecFromStr("200000000000100")),
 			}),
 			expectedError: nil,
 		},
@@ -1472,8 +1472,8 @@ func (s *KeeperTestSuite) TestCalculateTakerFeeShareAgreements() {
 				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:2])
 			},
 			expected: modifySkimPercent(defaultTakerFeeShareAgreements[:2], []osmomath.Dec{
-				osmomath.MustNewDecFromStr("100").Quo(osmomath.MustNewDecFromStr("2100")),
-				osmomath.MustNewDecFromStr("2000").Quo(osmomath.MustNewDecFromStr("2100")),
+				osmomath.MustNewDecFromStr("1000").Quo(osmomath.MustNewDecFromStr("1200")),
+				osmomath.MustNewDecFromStr("200").Quo(osmomath.MustNewDecFromStr("1200")),
 			}),
 			expectedErr: nil,
 		},
