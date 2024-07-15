@@ -545,7 +545,7 @@ func (k Keeper) calculateTakerFeeShareAgreements(ctx sdk.Context, totalPoolLiqui
 
 	for _, coin := range totalPoolLiquidity {
 		normalizationFactor := normalizationFactors[coin.Denom]
-		normalizedAmount := coin.Amount.ToLegacyDec().Mul(normalizationFactor)
+		normalizedAmount := coin.Amount.ToLegacyDec().Quo(normalizationFactor)
 		totalAlloyedLiquidity = totalAlloyedLiquidity.Add(normalizedAmount)
 
 		takerFeeShareAgreement, found := k.GetTakerFeeShareAgreementFromDenom(ctx, coin.Denom)
@@ -563,7 +563,7 @@ func (k Keeper) calculateTakerFeeShareAgreements(ctx sdk.Context, totalPoolLiqui
 
 	for i, coin := range assetsWithShareAgreement {
 		normalizationFactor := normalizationFactors[coin.Denom]
-		normalizedAmount := coin.Amount.ToLegacyDec().Mul(normalizationFactor)
+		normalizedAmount := coin.Amount.ToLegacyDec().Quo(normalizationFactor)
 		scaledSkim := normalizedAmount.Quo(totalAlloyedLiquidity).Mul(skimPercents[i])
 		takerFeeShareAgreements = append(takerFeeShareAgreements, types.TakerFeeShareAgreement{
 			Denom:       coin.Denom,
