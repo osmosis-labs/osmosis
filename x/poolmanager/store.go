@@ -575,9 +575,8 @@ func (k Keeper) calculateTakerFeeShareAgreements(ctx sdk.Context, totalPoolLiqui
 	return takerFeeShareAgreements, nil
 }
 
-// recalculateAndSetTakerFeeShareAlloyComposition recalculates the taker fee share composition for a given pool
-// and updates the store and cache with the new values. It retrieves the registered alloyed pool, calculates
-// the new taker fee share agreements, and updates the store and cache with the new state.
+// recalculateAndSetTakerFeeShareAlloyComposition recalculates the taker fee share composition for a given pool.
+// It retrieves the registered alloyed pool, calculates the new taker fee share agreements, and updates the store and cache with the new state.
 func (k *Keeper) recalculateAndSetTakerFeeShareAlloyComposition(ctx sdk.Context, poolId uint64) error {
 	registeredAlloyedPoolPrior, err := k.GetRegisteredAlloyedPoolFromPoolId(ctx, poolId)
 	if err != nil {

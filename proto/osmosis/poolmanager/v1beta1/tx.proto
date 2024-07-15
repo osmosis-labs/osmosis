@@ -152,6 +152,7 @@ message MsgSetDenomPairTakerFeeResponse { bool success = 1; }
 message MsgSetTakerFeeShareAgreementForDenom {
   option (amino.name) =
       "osmosis/poolmanager/set-taker-fee-share-agreement-for-denom";
+  option (cosmos.msg.v1.signer) = "sender";
 
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
 
@@ -180,6 +181,7 @@ message MsgSetTakerFeeShareAgreementForDenomResponse {}
 // ===================== MsgSetRegisteredAlloyedPool
 message MsgSetRegisteredAlloyedPool {
   option (amino.name) = "osmosis/poolmanager/set-registered-alloyed-pool";
+  option (cosmos.msg.v1.signer) = "sender";
 
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
 
