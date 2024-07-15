@@ -40,6 +40,9 @@ jobs:
         with:
           fetch-depth: 0
       -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       -
@@ -74,7 +77,7 @@ jobs:
           file: Dockerfile
           context: .
           push: true
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           build-args: |
             GO_VERSION=${{ env.GO_VERSION }}
             RUNNER_IMAGE=${{ env.RUNNER_BASE_IMAGE_ALPINE }}
@@ -89,12 +92,11 @@ jobs:
           file: tests/e2e/initialization/init.Dockerfile
           context: .
           push: true
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           build-args: |
             E2E_SCRIPT_NAME=chain
           tags: |
             ${{ env.OSMOSIS_INIT_CHAIN_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
-
       -
         name: Build and Push Cosmovisor Docker Images
         uses: docker/build-push-action@v5
@@ -102,7 +104,7 @@ jobs:
           file: Dockerfile.cosmovisor
           context: .
           push: true
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           build-args: |
             GO_VERSION=${{ env.GO_VERSION }}
             RUNNER_IMAGE=${{ env.RUNNER_BASE_IMAGE_ALPINE }}
@@ -111,6 +113,7 @@ jobs:
             COSMOVISOR_VERSION=${{ env.COSMOVISOR_VERSION }}
           tags: |
             ${{ env.OSMOSIS_DEV_IMAGE_COSMOVISOR_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
+<<<<<<< HEAD
 
   push-docker-images-arm:
     runs-on: buildjet-2vcpu-ubuntu-2204-arm
@@ -175,3 +178,5 @@ jobs:
             E2E_SCRIPT_NAME=chain
           tags: |
             ${{ env.OSMOSIS_INIT_CHAIN_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
+=======
+>>>>>>> 58e7042c (Fix race condition on osmosis dev images push (#8511))
