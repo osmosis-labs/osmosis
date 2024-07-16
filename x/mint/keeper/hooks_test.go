@@ -8,7 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	symphonyapp "github.com/osmosis-labs/osmosis/v23/app"
+	osmoapp "github.com/osmosis-labs/osmosis/v23/app"
 	"github.com/osmosis-labs/osmosis/v23/x/mint/keeper"
 	"github.com/osmosis-labs/osmosis/v23/x/mint/types"
 
@@ -17,6 +17,7 @@ import (
 
 const (
 	// Most values here are taken from mainnet genesis to mimic real-world behavior:
+	// https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
 	defaultGenesisEpochProvisions = "821917808219.178082191780821917"
 	defaultEpochIdentifier        = "day"
 	// actual value taken from mainnet for sanity checking calculations.
@@ -364,7 +365,7 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 				MintingRewardsDistributionStartEpoch: tc.mintStartEpoch,
 			}
 
-			app := symphonyapp.Setup(false)
+			app := osmoapp.Setup(false)
 			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 			mintKeeper := app.MintKeeper
@@ -435,7 +436,7 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 //
 // Ref: https://github.com/osmosis-labs/osmosis/issues/1917
 func (s *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParameters() {
-	app := symphonyapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	mintKeeper := app.MintKeeper
 	accountKeeper := app.AccountKeeper
@@ -457,63 +458,63 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParameters()
 		},
 		WeightedDeveloperRewardsReceivers: []types.WeightedAddress{
 			{
-				Address: "symphony1u7ryvx794sy5yqwezfryygsce84q287ts98n66",
+				Address: "symphony14kjcwdwcqsujkdt8n5qwpd8x8ty2rys5rjrdjj",
 				Weight:  osmomath.NewDecWithPrec(2887, 4),
 			},
 			{
-				Address: "symphony1zrmuw4xux344w4k9pw93qs8d0d7kc0fnhxw4wd",
+				Address: "symphony1gw445ta0aqn26suz2rg3tkqfpxnq2hs224d7gq",
 				Weight:  osmomath.NewDecWithPrec(229, 3),
 			},
 			{
-				Address: "symphony1t9vjrxn6cwdkuf990sncq7akqsz26feaz5euxt",
+				Address: "symphony13lt0hzc6u3htsk7z5rs6vuurmgg4hh2ecgxqkf",
 				Weight:  osmomath.NewDecWithPrec(1625, 4),
 			},
 			{
-				Address: "symphony172qywhy2qxcnkvr6vcal23ntz645h20qe5880r",
+				Address: "symphony1kvc3he93ygc0us3ycslwlv2gdqry4ta73vk9hu",
 				Weight:  osmomath.NewDecWithPrec(109, 3),
 			},
 			{
-				Address: "symphony195ds5rrxcqcwflj692e6gmykhl9vu0r0qs7tt5",
+				Address: "symphony19qgldlsk7hdv3ddtwwpvzff30pxqe9phq9evxf",
 				Weight:  osmomath.NewDecWithPrec(995, 3).Quo(osmomath.NewDec(10)), // 0.0995
 			},
 			{
-				Address: "symphony1f2jp2q4qq0f8nlmp0v3ah96h3kqjj0vheprf7q",
+				Address: "symphony19fs55cx4594een7qr8tglrjtt5h9jrxg458htd",
 				Weight:  osmomath.NewDecWithPrec(6, 1).Quo(osmomath.NewDec(10)), // 0.06
 			},
 			{
-				Address: "symphony1k27t46ehr7y80ktrtmn9grmc9wkw27ds9hq005",
+				Address: "symphony1ssp6px3fs3kwreles3ft6c07mfvj89a544yj9k",
 				Weight:  osmomath.NewDecWithPrec(15, 2).Quo(osmomath.NewDec(10)), // 0.015
 			},
 			{
-				Address: "symphony1dhtgp9726rx5zv9079xz2wz43pec484akwktn5",
+				Address: "symphony1c5yu8498yzqte9cmfv5zcgtl07lhpjrj0skqdx",
 				Weight:  osmomath.NewDecWithPrec(1, 1).Quo(osmomath.NewDec(10)), // 0.01
 			},
 			{
-				Address: "symphony1fqqucy9y2adaapyjze5g0hv40vp6rt2kt0cjts",
+				Address: "symphony1yhj3r9t9vw7qgeg22cehfzj7enwgklw5k5v7lj",
 				Weight:  osmomath.NewDecWithPrec(75, 2).Quo(osmomath.NewDec(100)), // 0.0075
 			},
 			{
-				Address: "symphony192953mpz44nn76vgmknt75vspsnv2k6d9dyc4w",
+				Address: "symphony18nzmtyn5vy5y45dmcdnta8askldyvehx66lqgm",
 				Weight:  osmomath.NewDecWithPrec(7, 1).Quo(osmomath.NewDec(100)), // 0.007
 			},
 			{
-				Address: "symphony1jcchx5enuex05al39y25gl6hyerwj74unntaqx",
+				Address: "symphony1z2x9z58cg96ujvhvu6ga07yv9edq2mvkxpgwmc",
 				Weight:  osmomath.NewDecWithPrec(5, 1).Quo(osmomath.NewDec(100)), // 0.005
 			},
 			{
-				Address: "symphony1pt2knp6s8exw7j28gjgmwr2wvw4suc3w8ncunl",
+				Address: "symphony1tvf3373skua8e6480eyy38avv8mw3hnt8jcxg9",
 				Weight:  osmomath.NewDecWithPrec(25, 2).Quo(osmomath.NewDec(100)), // 0.0025
 			},
 			{
-				Address: "symphony1c4zx9pmtn3j4a2eus2mmpclpllpqzgzezte7yz",
+				Address: "symphony1zs0txy03pv5crj2rvty8wemd3zhrka2ne8u05n",
 				Weight:  osmomath.NewDecWithPrec(25, 2).Quo(osmomath.NewDec(100)), // 0.0025
 			},
 			{
-				Address: "symphony1d6fwytjdlwzg7hg26zpzrl4y3f5ykft9xetlmk",
+				Address: "symphony1djgf9p53n7m5a55hcn6gg0cm5mue4r5g3fadee",
 				Weight:  osmomath.NewDecWithPrec(1, 1).Quo(osmomath.NewDec(100)), // 0.001
 			},
 			{
-				Address: "symphony1gmyrqx37tvpmqpkvga6ex4jtv0920hfa3pndqz",
+				Address: "symphony1488zldkrn8xcjh3z40v2mexq7d088qkna8ceze",
 				Weight:  osmomath.NewDecWithPrec(8, 1).Quo(osmomath.NewDec(1000)), // 0.0008
 			},
 		},

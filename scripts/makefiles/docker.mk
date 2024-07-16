@@ -14,8 +14,8 @@ docker-help:
 	@echo ""
 	@echo "Available Commands:"
 	@echo "  build                Build Docker image"
-	@echo "  build-distroless     Build distroless Docker image"
 	@echo "  build-alpine         Build alpine Docker image"
+	@echo "  build-distroless     Build distroless Docker image"
 	@echo "  build-nonroot        Build nonroot Docker image"
 docker: docker-help
 

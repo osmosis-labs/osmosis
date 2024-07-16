@@ -3,6 +3,8 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/stableswap"
@@ -494,8 +496,14 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 		txPoolPointsRemaining := uint64(100)
 		blockPoolPointsRemaining := uint64(100)
 
+		initialDeveloperAccBalance := s.App.AppKeepers.BankKeeper.GetBalance(s.Ctx, devAccount, test.arbDenom)
+		initialCommunityPoolBalance := s.App.AppKeepers.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName))
+		initialBurnAccBalance := s.App.AppKeepers.BankKeeper.GetAllBalances(s.Ctx, types.DefaultNullAddress)
+
+		cacheCtx, write := s.Ctx.CacheContext()
+
 		err := s.App.ProtoRevKeeper.ExecuteTrade(
-			s.Ctx,
+			cacheCtx,
 			test.param.route,
 			test.param.inputCoin,
 			pool,
@@ -504,6 +512,7 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 		)
 
 		if test.expectPass {
+			write()
 			s.Require().NoError(err)
 
 			// Check the protorev statistics
@@ -523,9 +532,46 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 			s.Require().NoError(err)
 			s.Require().Equal(test.expectedNumOfTrades, totalNumberOfTrades)
 
-			// Check the dev account was paid the correct amount
+			// Check the dev account was not paid anything, as epoch has not happened yet
+			developerAccBalanceAfterTrade := s.App.AppKeepers.BankKeeper.GetBalance(s.Ctx, devAccount, test.arbDenom)
+			s.Require().Equal(initialDeveloperAccBalance, developerAccBalanceAfterTrade)
+
+			// Check that the burn address was not paid anything
+			burnAccBalance := s.App.AppKeepers.BankKeeper.GetAllBalances(s.Ctx, types.DefaultNullAddress)
+			s.Require().Equal(initialBurnAccBalance, burnAccBalance)
+
+			// Check that the community pool was not paid anything
+			communityPoolAddress := s.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
+			communityPoolBalance := s.App.AppKeepers.BankKeeper.GetAllBalances(s.Ctx, communityPoolAddress)
+			s.Require().Equal(initialCommunityPoolBalance, communityPoolBalance)
+
+			// Get the protorev module account balance
+			protorevModuleAcc := s.App.AccountKeeper.GetModuleAddress(types.ModuleName)
+			remainingProtorevAccBal := s.App.AppKeepers.BankKeeper.GetAllBalances(s.Ctx, protorevModuleAcc)
+
+			// Run the epoch hook
+			s.App.ProtoRevKeeper.AfterEpochEnd(s.Ctx, "day", 1)
+
+			// Check the dev account was paid the correct amount after epoch
 			developerAccBalance := s.App.AppKeepers.BankKeeper.GetBalance(s.Ctx, devAccount, test.arbDenom)
 			s.Require().Equal(test.param.expectedProfit.MulRaw(types.ProfitSplitPhase1).QuoRaw(100), developerAccBalance.Amount)
+			remainingProtorevAccBal = remainingProtorevAccBal.Sub(developerAccBalance)
+
+			// If the arb denom is osmo, check that the remaining profit was sent to the burn address
+			if test.arbDenom == types.SymphonyDenomination {
+				burnAccBalance := s.App.AppKeepers.BankKeeper.GetAllBalances(s.Ctx, types.DefaultNullAddress)
+				s.Require().Equal(remainingProtorevAccBal, burnAccBalance)
+				remainingProtorevAccBal = remainingProtorevAccBal.Sub(burnAccBalance...)
+			} else {
+				// If the arb denom is not osmo, check that the burn address is the same as before
+				burnAccBalance := s.App.AppKeepers.BankKeeper.GetAllBalances(s.Ctx, types.DefaultNullAddress)
+				s.Require().Equal(initialBurnAccBalance, burnAccBalance)
+			}
+
+			// Check that the community pool was paid the correct amount after epoch
+			communityPoolBalance = s.App.AppKeepers.BankKeeper.GetAllBalances(s.Ctx, communityPoolAddress)
+			actualCommunityPoolBalance := communityPoolBalance.Sub(initialCommunityPoolBalance...)
+			s.Require().Equal(remainingProtorevAccBal, actualCommunityPoolBalance)
 
 		} else {
 			s.Require().Error(err)
@@ -643,8 +689,8 @@ func (s *KeeperTestSuite) TestIterateRoutes() {
 // Test logic that compares proftability of routes with different assets
 func (s *KeeperTestSuite) TestConvertProfits() {
 	type param struct {
-		inputCoin           sdk.Coin
-		profit              osmomath.Int
+		inputCoin          sdk.Coin
+		profit             osmomath.Int
 		expectedNoteProfit osmomath.Int
 	}
 
@@ -656,8 +702,8 @@ func (s *KeeperTestSuite) TestConvertProfits() {
 		{
 			name: "Convert atom to note",
 			param: param{
-				inputCoin:           sdk.NewCoin("Atom", osmomath.NewInt(100)),
-				profit:              osmomath.NewInt(10),
+				inputCoin:          sdk.NewCoin("Atom", osmomath.NewInt(100)),
+				profit:             osmomath.NewInt(10),
 				expectedNoteProfit: osmomath.NewInt(8),
 			},
 			expectPass: true,
@@ -665,8 +711,8 @@ func (s *KeeperTestSuite) TestConvertProfits() {
 		{
 			name: "Convert juno to note (random denom)",
 			param: param{
-				inputCoin:           sdk.NewCoin("juno", osmomath.NewInt(100)),
-				profit:              osmomath.NewInt(10),
+				inputCoin:          sdk.NewCoin("juno", osmomath.NewInt(100)),
+				profit:             osmomath.NewInt(10),
 				expectedNoteProfit: osmomath.NewInt(9),
 			},
 			expectPass: true,
@@ -674,8 +720,8 @@ func (s *KeeperTestSuite) TestConvertProfits() {
 		{
 			name: "Convert denom without pool to note",
 			param: param{
-				inputCoin:           sdk.NewCoin("random", osmomath.NewInt(100)),
-				profit:              osmomath.NewInt(10),
+				inputCoin:          sdk.NewCoin("random", osmomath.NewInt(100)),
+				profit:             osmomath.NewInt(10),
 				expectedNoteProfit: osmomath.NewInt(10),
 			},
 			expectPass: false,

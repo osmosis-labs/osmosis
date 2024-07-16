@@ -2,8 +2,10 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/stableswap"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
@@ -660,7 +662,7 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 					// Prepare a balancer pool with coins
 					poolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("note", osmomath.NewInt(10)), sdk.NewCoin("juno", osmomath.NewInt(10)))
 
-					// Delete all pools for the base denom note so that all tests start with a clean slate
+					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
 					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "note")
 
 					return poolId, poolId
@@ -677,7 +679,7 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 					// Prepare a concentrated liquidity pool with coins
 					poolId := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("note", "stake").GetId()
 
-					// Delete all pools for the base denom note so that all tests start with a clean slate
+					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
 					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "note")
 
 					return poolId, poolId
@@ -694,7 +696,7 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 					// Create a concentrated liquidity pool with more liquidity
 					clPoolId := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("note", "stake").GetId()
 
-					// Delete all pools for the base denom note so that all tests start with a clean slate
+					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
 					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "note")
 
 					preparedPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("note", osmomath.NewInt(10)), sdk.NewCoin("stake", osmomath.NewInt(10)))
@@ -717,7 +719,7 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 					// Create a concentrated liquidity pool with more liquidity
 					clPoolId := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("note", "stake").GetId()
 
-					// Delete all pools for the base denom note so that all tests start with a clean slate
+					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
 					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "note")
 
 					// Prepare a balancer pool with more liquidity
@@ -741,7 +743,7 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 					// Prepare a balancer pool with more liquidity
 					balancerPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("note", osmomath.NewInt(2000000000000000000)), sdk.NewCoin("stake", osmomath.NewInt(1000000000000000000)))
 
-					// Delete all pools for the base denom note so that all tests start with a clean slate
+					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
 					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "note")
 
 					// Prepare a concentrated liquidity pool with less liquidity, should be stored since nothing is stored
@@ -765,7 +767,7 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 					// Prepare a balancer pool with less liquidity
 					balancerPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("note", osmomath.NewInt(500000000000000000)), sdk.NewCoin("stake", osmomath.NewInt(1000000000000000000)))
 
-					// Delete all pools for the base denom note so that all tests start with a clean slate
+					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
 					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "note")
 
 					// Prepare a concentrated liquidity pool with less liquidity, should be stored since nothing is stored
@@ -791,7 +793,7 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 						sdk.NewCoin("note", osmomath.Int(osmomath.NewUintFromString("999999999999999999999999999999999999999"))),
 						sdk.NewCoin("stake", osmomath.Int(osmomath.NewUintFromString("999999999999999999999999999999999999999"))))
 
-					// Delete all pools for the base denom note so that all tests start with a clean slate
+					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
 					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "note")
 
 					// Prepare a balancer pool with normal liquidity
@@ -812,7 +814,7 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 					// Prepare a balancer pool with normal liquidity
 					poolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("note", osmomath.NewInt(10)), sdk.NewCoin("stake", osmomath.NewInt(10)))
 
-					// Delete all pools for the base denom note so that all tests start with a clean slate
+					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
 					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "note")
 
 					// Prepare a balancer pool with liquidity levels that will overflow when multiplied
@@ -845,6 +847,113 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 				s.Require().NoError(err)
 				s.Require().Equal(expectedStoredPoolId, storedPoolId)
 			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestAfterEpochEnd() {
+	tests := []struct {
+		name       string
+		arbProfits sdk.Coins
+	}{
+		{
+			name:       "osmo denom only",
+			arbProfits: sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(100000000))),
+		},
+		{
+			name: "osmo denom and another base denom",
+			arbProfits: sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(100000000)),
+				sdk.NewCoin("juno", osmomath.NewInt(100000000))),
+		},
+		{
+			name: "osmo denom, another base denom, and a non base denom",
+			arbProfits: sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(100000000)),
+				sdk.NewCoin("juno", osmomath.NewInt(100000000)),
+				sdk.NewCoin("eth", osmomath.NewInt(100000000))),
+		},
+		{
+			name:       "no profits",
+			arbProfits: sdk.Coins{},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			// Set base denoms
+			baseDenoms := []types.BaseDenom{
+				{
+					Denom:    types.SymphonyDenomination,
+					StepSize: osmomath.NewInt(1_000_000),
+				},
+				{
+					Denom:    "juno",
+					StepSize: osmomath.NewInt(1_000_000),
+				},
+			}
+			s.App.ProtoRevKeeper.SetBaseDenoms(s.Ctx, baseDenoms)
+
+			// Set protorev developer account
+			devAccount := apptesting.CreateRandomAccounts(1)[0]
+			s.App.ProtoRevKeeper.SetDeveloperAccount(s.Ctx, devAccount)
+
+			err := s.App.BankKeeper.MintCoins(s.Ctx, types.ModuleName, tc.arbProfits)
+			s.Require().NoError(err)
+
+			communityPoolBalancePre := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName))
+
+			// System under test
+			err = s.App.ProtoRevKeeper.AfterEpochEnd(s.Ctx, "day", 1)
+
+			expectedDevProfit := sdk.Coins{}
+			expectedOsmoBurn := sdk.Coins{}
+			arbProfitsBaseDenoms := sdk.Coins{}
+			arbProfitsNonBaseDenoms := sdk.Coins{}
+
+			// Split the profits into base and non base denoms
+			for _, coin := range tc.arbProfits {
+				isBaseDenom := false
+				for _, baseDenom := range baseDenoms {
+					if coin.Denom == baseDenom.Denom {
+						isBaseDenom = true
+						break
+					}
+				}
+				if isBaseDenom {
+					arbProfitsBaseDenoms = append(arbProfitsBaseDenoms, coin)
+				} else {
+					arbProfitsNonBaseDenoms = append(arbProfitsNonBaseDenoms, coin)
+				}
+			}
+			profitSplit := types.ProfitSplitPhase1
+			for _, arbProfit := range arbProfitsBaseDenoms {
+				devProfitAmount := arbProfit.Amount.MulRaw(profitSplit).QuoRaw(100)
+				expectedDevProfit = append(expectedDevProfit, sdk.NewCoin(arbProfit.Denom, devProfitAmount))
+			}
+
+			// Get the developer account balance
+			devAccountBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, devAccount)
+			s.Require().Equal(expectedDevProfit, devAccountBalance)
+
+			// Get the burn address balance
+			burnAddressBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, types.DefaultNullAddress)
+			if arbProfitsBaseDenoms.AmountOf(types.SymphonyDenomination).IsPositive() {
+				expectedOsmoBurn = sdk.NewCoins(sdk.NewCoin(types.SymphonyDenomination, arbProfitsBaseDenoms.AmountOf(types.SymphonyDenomination).Sub(expectedDevProfit.AmountOf(types.SymphonyDenomination))))
+				s.Require().Equal(expectedOsmoBurn, burnAddressBalance)
+			} else {
+				s.Require().Equal(sdk.Coins{}, burnAddressBalance)
+			}
+
+			// Get the community pool balance
+			communityPoolBalancePost := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName))
+			actualCommunityPool := communityPoolBalancePost.Sub(communityPoolBalancePre...)
+			expectedCommunityPool := arbProfitsBaseDenoms.Sub(expectedDevProfit...).Sub(expectedOsmoBurn...)
+			s.Require().Equal(expectedCommunityPool, actualCommunityPool)
+
+			// The protorev module account should only contain the non base denoms if there are any
+			protorevModuleAccount := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(types.ModuleName))
+			s.Require().Equal(arbProfitsNonBaseDenoms, protorevModuleAccount)
 		})
 	}
 }

@@ -45,3 +45,4 @@ lint-setup-pre-commit:
 	@echo "Installing pre-commit hook..."
 	@ln -sf ../../scripts/hooks/pre-commit.sh .git/hooks/pre-commit
 	@echo "Pre-commit hook installed successfully"
+	

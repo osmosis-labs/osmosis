@@ -58,9 +58,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#7619](https://github.com/osmosis-labs/osmosis/pull/7619) Slight speedup/gas improvement to CL GetTotalPoolLiquidity queries
 * [#7622](https://github.com/osmosis-labs/osmosis/pull/7622) Create/remove tick events.
 * [#7623](https://github.com/osmosis-labs/osmosis/pull/7623) Add query for querying all before send hooks
-* [#7625](https://github.com/osmosis-labs/osmosis/pull/7625) Remove duplicate CL accumulator update logic.
+* [#7622](https://github.com/osmosis-labs/osmosis/pull/7622) Remove duplicate CL accumulator update logic.
 * [#7665](https://github.com/osmosis-labs/osmosis/pull/7665) feat(x/protorev): Use Transient store to store swap backruns.
+* [#7685](https://github.com/osmosis-labs/osmosis/pull/7685) Speedup CL actions by only marshalling for CL hooks if they will be used.
 * [#7503](https://github.com/osmosis-labs/osmosis/pull/7503) Add IBC wasm light clients module
+* [#7689](https://github.com/osmosis-labs/osmosis/pull/7689) Make CL price estimations not cause state writes (speed and gas improvements)
 
 ## v23.0.5 & v23.0.5-iavl-v1
 
@@ -106,8 +108,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#7181](https://github.com/osmosis-labs/osmosis/pull/7181) Improve errors for out of gas
 * [#7357](https://github.com/osmosis-labs/osmosis/pull/7357) Fix: Ensure rate limits are not applied to packets that aren't ics20s
-* [#7409](https://github.com/osmosis-labs/osmosis/pull/7409) Scaling factor for pool uptime accumulator to avoid truncation
-* [#7250](https://github.com/osmosis-labs/osmosis/pull/7250) Further filter spam gauges from epoch distribution.
 
 ### State Compatible
 
@@ -116,14 +116,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Bug Fixes
 
 * [#7360](https://github.com/osmosis-labs/osmosis/pull/7360) fix: use gov type for SetScalingFactorController
+* [#7341](https://github.com/osmosis-labs/osmosis/pull/7341) fix: support CosmWasm pools in ListPoolsByDenom method
 
 ### Misc Improvements
 
 * [#7360](https://github.com/osmosis-labs/osmosis/pull/7360) Bump cometbft-db from 0.8.0 to 0.10.0
-  
 * [#7376](https://github.com/osmosis-labs/osmosis/pull/7376) Add uptime validation logic for `NoLock` (CL) gauges and switch CL gauge to pool ID links to be duration-based
 * [#7385](https://github.com/osmosis-labs/osmosis/pull/7385) Add missing protobuf interface
-
+* [#7409](https://github.com/osmosis-labs/osmosis/pull/7409) Scaling factor for pool uptime accumulator to avoid truncation
 * [#7417](https://github.com/osmosis-labs/osmosis/pull/7417) Update CL gauges to use gauge duration as uptime, falling back to default if unauthorized or invalid
 * [#7419](https://github.com/osmosis-labs/osmosis/pull/7419) Use new module param for internal incentive uptimes
 * [#7427](https://github.com/osmosis-labs/osmosis/pull/7427) Prune TWAP records over multiple blocks, instead of all at once at epoch
@@ -149,10 +149,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Misc Improvements
 
 * [#7266](https://github.com/osmosis-labs/osmosis/pull/7266) Remove an iterator call in updating TWAP records
-
-### Misc Improvements
-
-* [#7374](https://github.com/osmosis-labs/osmosis/pull/7374) In place testnet creation CLI.
 
 ## v22.0.1
 
@@ -206,15 +202,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## v21.2.2
 ### Features
 * [#7238](https://github.com/osmosis-labs/osmosis/pull/7238) re-add clawback vesting command
-* [#7253](https://github.com/osmosis-labs/osmosis/pull/7253) feat: extended app hash logs 
-
+* [#7253](https://github.com/osmosis-labs/osmosis/pull/7253) feat: extended app hash logs
 
 ### Bug Fixes
 * [#7233](https://github.com/osmosis-labs/osmosis/pull/7233) fix: config overwrite ignores app.toml values
 * [#7246](https://github.com/osmosis-labs/osmosis/pull/7246) fix: config overwrite fails with exit code 1 if wrong permissions
 
 ### Misc Improvements
-* [#7254](https://github.com/osmosis-labs/osmosis/pull/7254) chore: remove cl test modules 
+* [#7254](https://github.com/osmosis-labs/osmosis/pull/7254) chore: remove cl test modules
 * [#7269](https://github.com/osmosis-labs/osmosis/pull/7269) chore: go mod dependency updates
 * [#7126](https://github.com/osmosis-labs/osmosis/pull/7126) refactor: using coins.Denoms() from sdk instead of osmoutils
 * [#7127](https://github.com/osmosis-labs/osmosis/pull/7127) refactor: replace MinCoins with sdk coins.Min()
@@ -294,7 +289,6 @@ Epoch optimizations are in this release, see a subset of PR links in v21.1.3 sec
 
 * [#6805](https://github.com/osmosis-labs/osmosis/pull/6805) return bucket index of the current tick from LiquidityPerTickRange query
 * [#6530](https://github.com/osmosis-labs/osmosis/pull/6530) Improve error message when CL LP fails due to slippage bound hit.
-
 
 ### Bug Fixes
 
@@ -391,7 +385,6 @@ Epoch optimizations are in this release, see a subset of PR links in v21.1.3 sec
 * [#6487](https://github.com/osmosis-labs/osmosis/pull/6487) make PoolModuleI CalculateSpotPrice API return BigDec
 * [#6511](https://github.com/osmosis-labs/osmosis/pull/6511) remove redundant param from CreateGaugeRefKeys in incentives
 * [#6510](https://github.com/osmosis-labs/osmosis/pull/6510) remove redundant ctx param from DeleteAllKeysFromPrefix in osmoutils
-
 
 ## v19.1.0
 
@@ -597,7 +590,7 @@ and control over token transfers.
   * [#5375](https://github.com/osmosis-labs/osmosis/pull/5373) Add query and cli for lock reward receiver
   * [#4757](https://github.com/osmosis-labs/osmosis/pull/4752) Pagination for all intermediary accounts
   * [#5066](https://github.com/osmosis-labs/osmosis/pull/5066) Fixed bad stargate query declaration
-  * [#4868](https://github.com/osmosis-labs/osmosis/pull/4868) Remove wasmEnabledProposals []wasm.ProposalType from NewOsmosisApp
+  * [#4868](https://github.com/osmosis-labs/osmosis/pull/4868) Remove wasmEnabledProposals []wasm.ProposalType from NewSymphonyApp
   * [#4791](https://github.com/osmosis-labs/osmosis/pull/4791) feat(osmoutils): cosmwasm query and message wrappers
   * [#4549](https://github.com/osmosis-labs/osmosis/pull/4549) added single pool query
   * [#4659](https://github.com/osmosis-labs/osmosis/pull/4659) feat: implement AllPools query in x/poolmanager
@@ -903,7 +896,7 @@ which acts as a fuzz testing tool tailored for the SDK state machine.
 * [#2390](https://github.com/osmosis-labs/osmosis/pull/2390) x/mint remove unused mintCoins parameter from AfterDistributeMintedCoin
 * [#2418](https://github.com/osmosis-labs/osmosis/pull/2418) x/mint remove SetInitialSupplyOffsetDuringMigration from keeper
 * [#2417](https://github.com/osmosis-labs/osmosis/pull/2417) x/mint unexport keeper `SetLastReductionEpochNum`, `getLastReductionEpochNum`, `CreateDeveloperVestingModuleAccount`, and `MintCoins`
-* [#2587](https://github.com/osmosis-labs/osmosis/pull/2587) remove encoding config argument from NewOsmosisApp
+* [#2587](https://github.com/osmosis-labs/osmosis/pull/2587) remove encoding config argument from NewSymphonyApp
 x
 
 ### Features

@@ -37,7 +37,7 @@ edit_genesis () {
     dasel put string -f $GENESIS '.app_state.gov.deposit_params.min_deposit.[0].denom' 'note'
 
     # Update epochs module
-    dasel put string -f $GENESIS '.app_state.epochs.epochs.[1].duration' "60s"
+    dasel put -t string -f $GENESIS '.app_state.epochs.epochs.[1].duration' -v "60s"
 
     # Update poolincentives module
     dasel put string -f $GENESIS '.app_state.poolincentives.lockable_durations.[0]' "120s"
@@ -46,11 +46,11 @@ edit_genesis () {
     dasel put string -f $GENESIS '.app_state.poolincentives.params.minted_denom' "note"
 
     # Update incentives module
-    dasel put string -f $GENESIS '.app_state.incentives.lockable_durations.[0]' "1s"
-    dasel put string -f $GENESIS '.app_state.incentives.lockable_durations.[1]' "120s"
-    dasel put string -f $GENESIS '.app_state.incentives.lockable_durations.[2]' "180s"
-    dasel put string -f $GENESIS '.app_state.incentives.lockable_durations.[3]' "240s"
-    dasel put string -f $GENESIS '.app_state.incentives.params.distr_epoch_identifier' "day"
+    dasel put -t string -f $GENESIS '.app_state.incentives.lockable_durations.[0]' -v "1s"
+    dasel put -t string -f $GENESIS '.app_state.incentives.lockable_durations.[1]' -v "120s"
+    dasel put -t string -f $GENESIS '.app_state.incentives.lockable_durations.[2]' -v "180s"
+    dasel put -t string -f $GENESIS '.app_state.incentives.lockable_durations.[3]' -v "240s"
+    dasel put -t string -f $GENESIS '.app_state.incentives.params.distr_epoch_identifier' -v "day"
 
     # Update mint module
     dasel put string -f $GENESIS '.app_state.mint.params.mint_denom' "note"
@@ -63,7 +63,7 @@ edit_genesis () {
     dasel put string -f $GENESIS '.app_state.txfees.basedenom' "note"
 
     # Update wasm permission (Nobody or Everybody)
-    dasel put string -f $GENESIS '.app_state.wasm.params.code_upload_access.permission' "Everybody"
+    dasel put -t string -f $GENESIS '.app_state.wasm.params.code_upload_access.permission' -v "Everybody"
 }
 
 add_genesis_accounts () {
@@ -92,10 +92,10 @@ add_genesis_accounts () {
 
 edit_config () {
     # Remove seeds
-    dasel put string -f $CONFIG_FOLDER/config.toml '.p2p.seeds' ''
+    dasel put -t string -f $CONFIG_FOLDER/config.toml '.p2p.seeds' -v ''
 
     # Expose the rpc
-    dasel put string -f $CONFIG_FOLDER/config.toml '.rpc.laddr' "tcp://0.0.0.0:26657"
+    dasel put -t string -f $CONFIG_FOLDER/config.toml '.rpc.laddr' -v "tcp://0.0.0.0:26657"
 }
 
 if [[ ! -d $CONFIG_FOLDER ]]

@@ -689,24 +689,9 @@ func (k Keeper) distributeInternal(
 		}
 	} else {
 		// This is a standard lock distribution flow that assumes that we have locks associated with the gauge.
-		if len(locks) == 0 {
-			return nil, nil
-		}
-
-		// In this case, remove redundant cases.
-		// Namely: gauge empty OR gauge coins undistributable.
-		if remainCoins.Empty() {
-			ctx.Logger().Debug(fmt.Sprintf("gauge debug, this gauge is empty, why is it being ran %d. Balancer code", gauge.Id))
-			err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
-			return totalDistrCoins, err
-		}
-
-		// Remove some spam gauges, is state compatible.
-		// If they're to pool 1 they can't distr at this small of a quantity.
-		if remainCoins.Len() == 1 && remainCoins[0].Amount.LTE(osmomath.NewInt(10)) && gauge.DistributeTo.Denom == "gamm/pool/1" && remainCoins[0].Denom != "note" {
-			ctx.Logger().Debug(fmt.Sprintf("gauge debug, this gauge is perceived spam, skipping %d", gauge.Id))
-			err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
-			return totalDistrCoins, err
+		isSpam, totaltotalDistrCoins, err := k.skipSpamGaugeDistribute(ctx, locks, gauge, totalDistrCoins, remainCoins)
+		if isSpam {
+			return totaltotalDistrCoins, err
 		}
 
 		// This is a standard lock distribution flow that assumes that we have locks associated with the gauge.
@@ -767,6 +752,28 @@ func (k Keeper) distributeInternal(
 
 	err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
 	return totalDistrCoins, err
+}
+
+func (k Keeper) skipSpamGaugeDistribute(ctx sdk.Context, locks []*lockuptypes.PeriodLock, gauge types.Gauge, totalDistrCoins sdk.Coins, remainCoins sdk.Coins) (bool, sdk.Coins, error) {
+	if len(locks) == 0 {
+		return true, nil, nil
+	}
+
+	// In this case, remove redundant cases.
+	// Namely: gauge empty OR gauge coins undistributable.
+	if remainCoins.Empty() {
+		ctx.Logger().Debug(fmt.Sprintf("gauge debug, this gauge is empty, why is it being ran %d. Balancer code", gauge.Id))
+		err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
+		return true, totalDistrCoins, err
+	}
+
+	// Remove some spam gauges that are not worth distributing. (We ignore the denom stake because of tests.)
+	if remainCoins.Len() == 1 && remainCoins[0].Amount.LTE(osmomath.NewInt(100)) && remainCoins[0].Denom != "stake" {
+		ctx.Logger().Debug(fmt.Sprintf("gauge debug, this gauge is perceived spam, skipping %d", gauge.Id))
+		err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
+		return true, totalDistrCoins, err
+	}
+	return false, totalDistrCoins, nil
 }
 
 // faster coins.AmountOf if we know that coins must contain the denom.

@@ -18,16 +18,16 @@ import (
 )
 
 const (
-	mainnetChainID = "symphony-1"
+	mainnetChainID = "osmosis-1"
 	// Edgenet is to function exactly the samas mainnet, and expected
 	// to be state-exported from mainnet state.
 	edgenetChainID = "edgenet"
 	// Testnet will have its own state. Contrary to mainnet, we would
 	// like to migrate all testnet pools at once.
-	testnetChainID = "symphony-testnet-1"
+	testnetChainID = "osmo-test-5"
 	// E2E chain IDs which we expect to migrate all pools similar to testnet.
-	e2eChainIDA = "symphony-test-a"
-	e2eChainIDB = "symphony-test-b"
+	e2eChainIDA = "osmo-test-a"
+	e2eChainIDB = "osmo-test-b"
 )
 
 func CreateUpgradeHandler(

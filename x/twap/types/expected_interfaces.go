@@ -19,4 +19,5 @@ type PoolManagerInterface interface {
 		quoteAssetDenom string,
 		baseAssetDenom string,
 	) (price osmomath.BigDec, err error)
+	GetNextPoolId(ctx sdk.Context) uint64
 }

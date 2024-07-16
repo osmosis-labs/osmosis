@@ -18,7 +18,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/stableswap"
 
-	symphonyapp "github.com/osmosis-labs/osmosis/v23/app"
+	SymphonyApp "github.com/osmosis-labs/osmosis/v23/app"
 )
 
 type KeeperTestSuite struct {
@@ -97,7 +97,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	err := s.App.ProtoRevKeeper.SetBaseDenoms(s.Ctx, baseDenomPriorities)
 	s.Require().NoError(err)
 
-	encodingConfig := symphonyapp.MakeEncodingConfig()
+	encodingConfig := SymphonyApp.MakeEncodingConfig()
 	s.clientCtx = client.Context{}.
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
@@ -1121,9 +1121,9 @@ func (s *KeeperTestSuite) setUpTokenPairRoutes() {
 	atomBitcoin := types.NewTrade(4, "bitcoin", "Atom")
 
 	// Stableswap Route
-	noteUSDC := types.NewTrade(0, types.SymphonyDenomination, "usdc")
+	uosmoUSDC := types.NewTrade(0, types.SymphonyDenomination, "usdc")
 	usdcBUSD := types.NewTrade(40, "usdc", "busd")
-	busdNOTE := types.NewTrade(30, "busd", types.SymphonyDenomination)
+	busdUOSMO := types.NewTrade(30, "busd", types.SymphonyDenomination)
 
 	// Atom Route
 	atomIBC1 := types.NewTrade(31, "Atom", "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC")
@@ -1164,7 +1164,7 @@ func (s *KeeperTestSuite) setUpTokenPairRoutes() {
 			ArbRoutes: []types.Route{
 				{
 					StepSize: standardStepSize,
-					Trades:   []types.Trade{noteUSDC, usdcBUSD, busdNOTE},
+					Trades:   []types.Trade{uosmoUSDC, usdcBUSD, busdUOSMO},
 				},
 			},
 		},

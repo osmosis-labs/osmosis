@@ -21,6 +21,8 @@ Each version is identified by a specific id, name, tag, block height and softwar
 | `v18` |           | `v18.0.0` | 11155350       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v18.0.0/) | [588](https://www.mintscan.io/osmosis/proposals/588) |
 | `v19` |           | `v19.2.0` | 11317300       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v19.2.0/) | [606](https://www.mintscan.io/osmosis/proposals/606) |
 | `v20` | Silicon   | `v20.2.1` | 12028900       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v20.2.1/) | [658](https://www.mintscan.io/osmosis/proposals/658) |
+| `v21` |           | `v21.1.4` | 12834100       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v21.1.4/) | [696](https://www.mintscan.io/osmosis/proposals/696) |
+| `v22` |           | `v22.0.1` | 13325950       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v22.0.1/) | [714](https://www.mintscan.io/osmosis/proposals/714) |
 
 ## Upgrade binaries
 
@@ -188,6 +190,28 @@ Each version is identified by a specific id, name, tag, block height and softwar
 }
 ```
 
+### v21.1.4
+
+```json
+{
+  "binaries": {
+    "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v21.1.4/osmosisd-21.1.4-linux-amd64?checksum=sha256:518fd61873622d505640ab08edb788e307e6beb4f52476fab77661dd96860416",
+    "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v21.1.4/osmosisd-21.1.4-linux-arm64?checksum=sha256:cdbc163f4f045718e1464a82ada4d9d2511dc8c6c3fea11044cb8e675b6f86f7"
+  }
+}
+```
+
+### v22.0.1
+
+```json
+{
+  "binaries": {
+    "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v22.0.1/osmosisd-22.0.1-linux-amd64?checksum=sha256:427588cbdd82752e6b31383493637029358f4550fcc71b81182334de2a54a20c",
+    "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v22.0.1/osmosisd-22.0.1-linux-arm64?checksum=sha256:3f50785becdd9e180cbe41b3eb97f8e6d16d0d4329c69a31cab5e0e1b5901c35"
+  }
+}
+```
+
 ## Replay from Genesis using Cosmovisor
 
 Assuming that your osmosis home it's already initialized with the desired genesis and configuration,
@@ -277,6 +301,8 @@ versions_info=(
     "v18:https://github.com/osmosis-labs/osmosis/releases/download/v18.0.0/osmosisd-18.0.0-linux-amd64?checksum=sha256:d83b4122e3ff9c428c8d6dcfe89718f5229f80e9976dbab2deefeb68dceb0f38"
     "v19:https://github.com/osmosis-labs/osmosis/releases/download/v19.2.0/osmosisd-19.2.0-linux-arm64?checksum=sha256:d933b893d537422164a25bf161d7f269a59ea26d37f398cdb7dd575a9ec33ed2"
     "v20:https://github.com/osmosis-labs/osmosis/releases/download/v20.2.1/osmosisd-20.2.1-linux-amd64?checksum=sha256:4e60a870861ca17819fbcb49fff981b5731ec1121d7cbab43987c5f04ff099fa"
+    "v21:https://github.com/osmosis-labs/osmosis/releases/download/v21.1.4/osmosisd-21.1.4-linux-amd64?checksum=sha256:518fd61873622d505640ab08edb788e307e6beb4f52476fab77661dd96860416"
+    "v22:https://github.com/osmosis-labs/osmosis/releases/download/v22.0.1/osmosisd-22.0.1-linux-amd64?checksum=sha256:427588cbdd82752e6b31383493637029358f4550fcc71b81182334de2a54a20c"
 )
 
 # Create the cosmovisor directory

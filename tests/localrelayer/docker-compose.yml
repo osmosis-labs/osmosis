@@ -7,8 +7,8 @@ services:
       context: ../../
       dockerfile: Dockerfile
       args:
-        RUNNER_IMAGE: alpine:3.17
-        GO_VERSION: "1.20"
+        RUNNER_IMAGE: alpine:3.19
+        GO_VERSION: "1.21"
     volumes:
       - ./scripts/setup_chain.sh:/symphony/setup.sh
       - $HOME/.symphonyd-local-a/:/symphony/.symphonyd/
@@ -58,8 +58,8 @@ services:
       context: ../../
       dockerfile: Dockerfile
       args:
-        RUNNER_IMAGE: alpine:3.17
-        GO_VERSION: "1.20"
+        RUNNER_IMAGE: alpine:3.19
+        GO_VERSION: "1.21"
     volumes:
       - ./scripts/setup_chain.sh:/symphony/setup.sh
       - $HOME/.symphonyd-local-b/:/symphony/.symphonyd/

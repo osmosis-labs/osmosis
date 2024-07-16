@@ -10,11 +10,11 @@ import (
 
 	"github.com/cometbft/cometbft/libs/log"
 
-	math "github.com/osmosis-labs/osmosis/osmomath"
+	osmomath "github.com/osmosis-labs/osmosis/osmomath"
 )
 
 /*
-   This is the logic for the Symphony implementation for EIP-1559 fee market,
+   This is the logic for the Osmosis implementation for EIP-1559 fee market,
 	 the goal of this code is to prevent spam by charging more for transactions when the network is busy.
 
 	 This logic does two things:
@@ -96,7 +96,7 @@ type EipState struct {
 	lastBlockHeight         int64
 	totalGasWantedThisBlock int64
 	BackupFilePath          string
-	CurBaseFee              math.Dec `json:"cur_base_fee"`
+	CurBaseFee              osmomath.Dec `json:"cur_base_fee"`
 }
 
 // CurEipState is a global variable used in the BeginBlock, EndBlock and
@@ -140,7 +140,7 @@ func (e *EipState) deliverTxCode(ctx sdk.Context, tx sdk.FeeTx) {
 	e.totalGasWantedThisBlock += int64(tx.GetGas())
 }
 
-// updateBaseFee updates of a base fee in Symphony.
+// updateBaseFee updates of a base fee in Osmosis.
 // It employs the following equation to calculate the new base fee:
 //
 //	baseFeeMultiplier = 1 + (gasUsed - targetGas) / targetGas * maxChangeRate
@@ -175,13 +175,13 @@ func (e *EipState) updateBaseFee(height int64) {
 
 // GetCurBaseFee returns a clone of the CurBaseFee to avoid overwriting the initial value in
 // the EipState, we use this in the AnteHandler to Check transactions
-func (e *EipState) GetCurBaseFee() math.Dec {
+func (e *EipState) GetCurBaseFee() osmomath.Dec {
 	return e.CurBaseFee.Clone()
 }
 
 // GetCurRecheckBaseFee returns a clone of the CurBaseFee / RecheckFeeConstant to account for
 // rechecked transactions in the feedecorator ante handler
-func (e *EipState) GetCurRecheckBaseFee() math.Dec {
+func (e *EipState) GetCurRecheckBaseFee() osmomath.Dec {
 	baseFee := e.CurBaseFee.Clone()
 
 	// At higher base fees, we apply a smaller re-check factor.
@@ -219,7 +219,7 @@ func (e EipState) tryPersist() {
 
 // tryLoad reads eip1559 state from disk and initializes the CurEipState to
 // the previous state when a node is restarted
-func (e *EipState) tryLoad(logger log.Logger) math.Dec {
+func (e *EipState) tryLoad(logger log.Logger) osmomath.Dec {
 	rwMtx.Lock()
 	defer rwMtx.Unlock()
 	bz, err := os.ReadFile(e.BackupFilePath)

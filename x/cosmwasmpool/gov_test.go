@@ -147,6 +147,10 @@ func (s *CWPoolGovSuite) TestMigrateCosmwasmPools() {
 		preUploadCodeIdPlaceholder  uint64 = 1000
 		zeroCodeId                  uint64 = 0
 		defaultPoolCountToPreCreate uint64 = 3
+
+		// We create a code id for each pool. Since we provide code to upload in this test,
+		// we expect the code id to be one greater than the default pool count.
+		expectedNewCodeId uint64 = defaultPoolCountToPreCreate + 1
 	)
 
 	type MigrateMsg struct{}
@@ -181,7 +185,7 @@ func (s *CWPoolGovSuite) TestMigrateCosmwasmPools() {
 			byteCode:             emptyByteCode,
 			migrateMsg:           emptyMigrateMsg,
 
-			expectedCodeId: validCodeId,
+			expectedCodeId: expectedNewCodeId,
 		},
 		{
 			name:                                     "happy path with code id to upload",
@@ -192,7 +196,7 @@ func (s *CWPoolGovSuite) TestMigrateCosmwasmPools() {
 			migrateMsg:                               emptyMigrateMsg,
 			shouldWhitelistCWPoolModuleAccountUpload: true,
 
-			expectedCodeId: validCodeId,
+			expectedCodeId: expectedNewCodeId,
 		},
 		{
 			name:                                     "error: contract without migration entrypoint",
@@ -297,6 +301,15 @@ func (s *CWPoolGovSuite) TestMigrateCosmwasmPools() {
 
 			// Check that the code id is whitelisted.
 			s.Require().True(cosmwasmPoolKeeper.IsWhitelisted(s.Ctx, tc.expectedCodeId))
+
+			s.Require().NotEqual(0, len(tc.poolIdsToMigrate))
+			for _, poolID := range tc.poolIdsToMigrate {
+				// Check that the pool is migrated.
+				pool, err := cosmwasmPoolKeeper.GetPoolById(s.Ctx, poolID)
+				s.Require().NoError(err)
+
+				s.Require().Equal(tc.expectedCodeId, pool.GetCodeId())
+			}
 
 			// Validate that the event is emitted.
 			s.AssertEventEmitted(s.Ctx, types.TypeEvtMigratedCosmwasmPoolCode, 1)

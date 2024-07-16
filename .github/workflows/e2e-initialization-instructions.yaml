@@ -1,13 +1,13 @@
 # Workflow: E2E Initialization Instructions
 #
-# Guides contributors when changes are made to the 'tests/e2e/initialization' module. 
+# Guides contributors when changes are made to the 'tests/e2e/initialization' module.
 # Provides backporting and follow-up instructions in the PR comments.
 #
-# Triggers: 
+# Triggers:
 # - Pull Request Opened, Synchronized, Reopened
 # - Path: 'tests/e2e/initialization/**' (any file in the initialization directory or subdirectories)
 #
-# Secrets: 
+# Secrets:
 # GITHUB_TOKEN: Created automatically by GitHub, used for commenting on the PR
 
 name: E2E Initialization Instructions
@@ -19,10 +19,10 @@ on:
       - synchronize
       - reopened
     paths:
-      - 'tests/e2e/initialization/**'
+      - "tests/e2e/initialization/**"
 
-permissions: 
-  pull-requests: write 
+permissions:
+  pull-requests: write
 
 jobs:
   comment:
@@ -30,16 +30,14 @@ jobs:
       pull-requests: write
     runs-on: ubuntu-latest
     steps:
-      - 
-        name: Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
-      - 
-        name: Comment on PR
+      - name: Comment on PR
         uses: thollander/actions-comment-pull-request@v2
         with:
           message: |
-            **Important Notice** 
-            
+            **Important Notice**
+
             This PR includes modifications to the `tests/e2e/initialization` module.
             Please follow the instructions below:
 
@@ -48,7 +46,7 @@ jobs:
             3. Merge the backported changes.
             4. The image will be built and uploaded to Docker Hub [here](https://hub.docker.com/r/osmolabs/osmosis-e2e-init-chain/tags).
             5. Grab the latest image and update it in the PR to the main branch replacing the `previousVersionInitTag` in the `osmosis/tests/e2e/containers/config.go`
-            
+
             Please let us know if you need any help.
           mode: upsert
           comment_tag: instructions

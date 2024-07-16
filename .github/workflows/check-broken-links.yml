@@ -2,8 +2,8 @@ name: Check Broken Links
 
 on:
   schedule:
-    - cron: '0 10 1,15 * *' # Run on 1st and 15th days of every month at 10:00 UTC
-  workflow_dispatch:   # Allow manual triggering of the workflow
+    - cron: "0 10 1,15 * *" # Run on 1st and 15th days of every month at 10:00 UTC
+  workflow_dispatch: # Allow manual triggering of the workflow
 
 jobs:
   check_links:
@@ -25,7 +25,7 @@ jobs:
 
       - name: Link Checker
         id: lychee
-        uses: lycheeverse/lychee-action@v1.9.1
+        uses: lycheeverse/lychee-action@v1.9.3
         with:
           args: --exclude-loopback --verbose --no-progress './**/*.md' './**/*.html'
         env:
@@ -33,7 +33,7 @@ jobs:
 
       - name: Create Issue From File
         if: env.lychee_exit_code != 0
-        uses: peter-evans/create-issue-from-file@v4
+        uses: peter-evans/create-issue-from-file@v5
         with:
           title: Broken Links Detected
           content-filepath: ./lychee/out.md

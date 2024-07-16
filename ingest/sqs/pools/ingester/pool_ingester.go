@@ -27,7 +27,7 @@ import (
 // It implements ingest.Ingester.
 // It reads all pools from the state and writes them to the pools repository.
 // As part of that, it instruments each pool with chain native balances and
-// MELODY based TVL.
+// OSMO based TVL.
 // NOTE:
 // - TVL is calculated using spot price. TODO: use TWAP (https://app.clickup.com/t/86a182835)
 // - TVL does not account for token precision. TODO: use assetlist for pulling token precision data
@@ -48,16 +48,16 @@ type poolIngester struct {
 }
 
 // denomRoutingInfo encapsulates the routing information for a pool.
-// It has a pool ID of the pool that is paired with MELODY.
-// It has a spot price from that pool with MELODY as the base asset.
+// It has a pool ID of the pool that is paired with OSMO.
+// It has a spot price from that pool with OSMO as the base asset.
 type denomRoutingInfo struct {
 	PoolID uint64
 	Price  osmomath.BigDec
 }
 
 const (
-	NOTE          = "note"
-	notePrecision = 6
+	UOSMO          = "note"
+	uosmoPrecision = 6
 
 	noTokenPrecisionErrorFmtStr   = "error getting token precision %s"
 	spotPriceErrorFmtStr          = "error calculating spot price for denom %s, %s"
@@ -68,27 +68,27 @@ const (
 	// nolint: unused
 	routeIngestDisablePlaceholder = 0
 
-	// https://app.symphony.zone/pool/1263
+	// https://app.osmosis.zone/pool/1263
 	usdcPool    = 1263
 	usdcDenom   = "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4"
 	stATOMDenom = "ibc/C140AFD542AE77BD7DCC83F13FDD8C5E5BB8C4929785E6EC2F4C636F98F17901"
 	atomDenom   = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
 	usdtDenom   = "ibc/2108F2D81CBE328F371AD0CEF56691B18A86E08C3651504E42487D9EE92DDE9C"
-	oneMELODY     = 1_000_000
+	oneOSMO     = 1_000_000
 )
 
 var (
-	notePrecisionBigDec = osmomath.NewBigDec(notePrecision)
+	uosmoPrecisionBigDec = osmomath.NewBigDec(uosmoPrecision)
 
-	oneMelodyInt    = osmomath.NewInt(oneMELODY)
-	oneMelodyBigDec = osmomath.NewBigDec(oneMELODY)
+	oneOsmoInt    = osmomath.NewInt(oneOSMO)
+	oneOsmoBigDec = osmomath.NewBigDec(oneOSMO)
 
-	oneMelodyCoin = sdk.NewCoin(NOTE, oneMelodyInt)
+	oneOsmoCoin = sdk.NewCoin(UOSMO, oneOsmoInt)
 )
 
-// These are the routes that we use for pricing certain tokens against MELODY
+// These are the routes that we use for pricing certain tokens against OSMO
 // for determining TVL.
-var noteRoutesFromDenom map[string][]poolmanagertypes.SwapAmountOutRoute = map[string][]poolmanagertypes.SwapAmountOutRoute{
+var uosmoRoutesFromDenom map[string][]poolmanagertypes.SwapAmountOutRoute = map[string][]poolmanagertypes.SwapAmountOutRoute{
 	// stATOM
 	stATOMDenom: {
 		{
@@ -251,7 +251,7 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx repository.Tx) erro
 // 	for denomPair := range denomPairToTakerFeeMap {
 // 		denomPair := denomPair
 // 		// router
-// 		router := routerusecase.NewRouter([]uint64{}, pi.routerConfig.MaxPoolsPerRoute, pi.routerConfig.MaxRoutes, pi.routerConfig.MaxSplitRoutes, pi.routerConfig.MaxSplitIterations, pi.routerConfig.MinMELODYLiquidity, pi.logger)
+// 		router := routerusecase.NewRouter([]uint64{}, pi.routerConfig.MaxPoolsPerRoute, pi.routerConfig.MaxRoutes, pi.routerConfig.MaxSplitRoutes, pi.routerConfig.MaxSplitIterations, pi.routerConfig.MinOSMOLiquidity, pi.logger)
 // 		router = routerusecase.WithSortedPools(router, pools)
 
 // 		go func(denomPair domain.DenomPair) {
@@ -291,7 +291,7 @@ func (pi *poolIngester) processPoolState(ctx sdk.Context, tx repository.Tx) erro
 // }
 
 // convertPool converts a pool to the standard SQS pool type.
-// It instruments the pool with chain native balances and MELODY based TVL.
+// It instruments the pool with chain native balances and OSMO based TVL.
 // If error occurs in TVL estimation, it is silently skipped and the error flag
 // set to true in the pool model.
 // Note:
@@ -325,7 +325,7 @@ func (pi *poolIngester) convertPool(
 		balances = cwPool.GetTotalPoolLiquidity(ctx)
 	}
 
-	melodyPoolTVL := osmomath.ZeroInt()
+	osmoPoolTVL := osmomath.ZeroInt()
 
 	poolDenoms := pool.GetPoolDenoms(ctx)
 	poolDenomsMap := map[string]struct{}{}
@@ -361,13 +361,13 @@ func (pi *poolIngester) convertPool(
 		// update filtered balances only with pool tokens
 		filteredBalances = filteredBalances.Add(balance)
 
-		if balance.Denom == NOTE {
-			melodyPoolTVL = melodyPoolTVL.Add(balance.Amount)
+		if balance.Denom == UOSMO {
+			osmoPoolTVL = osmoPoolTVL.Add(balance.Amount)
 			continue
 		}
 
-		// Spot price with note as base asset.
-		var noteBaseAssetSpotPrice osmomath.BigDec
+		// Spot price with uosmo as base asset.
+		var uosmoBaseAssetSpotPrice osmomath.BigDec
 
 		// Check if routable poolID already exists for the denom
 		routingInfo, ok := denomToRoutingInfoMap[balance.Denom]
@@ -380,29 +380,29 @@ func (pi *poolIngester) convertPool(
 			}
 
 			// Attempt to get a single-hop pool from on-chain routes.
-			poolForDenomPair, err := pi.protorevKeeper.GetPoolForDenomPair(ctx, NOTE, balance.Denom)
+			poolForDenomPair, err := pi.protorevKeeper.GetPoolForDenomPair(ctx, UOSMO, balance.Denom)
 			if err == nil {
-				// If on-chain route is present, calculate spot price with note.
-				noteBaseAssetSpotPrice, err = pi.poolManagerKeeper.RouteCalculateSpotPrice(ctx, poolForDenomPair, balance.Denom, NOTE)
+				// If on-chain route is present, calculate spot price with uosmo.
+				uosmoBaseAssetSpotPrice, err = pi.poolManagerKeeper.RouteCalculateSpotPrice(ctx, poolForDenomPair, balance.Denom, UOSMO)
 				if err != nil {
 					errorInTVLStr = fmt.Sprintf(spotPriceErrorFmtStr, balance.Denom, err)
 					ctx.Logger().Debug(errorInTVLStr)
 					continue
 				}
 			} else {
-				ctx.Logger().Debug("error getting MELODY-based pool from Skip route", "denom", balance.Denom, "error", err)
+				ctx.Logger().Debug("error getting OSMO-based pool from Skip route", "denom", balance.Denom, "error", err)
 
-				// Check if there exists a route from current denom to note.
-				routes, hasRouteOverwrite := noteRoutesFromDenom[balance.Denom]
+				// Check if there exists a route from current denom to uosmo.
+				routes, hasRouteOverwrite := uosmoRoutesFromDenom[balance.Denom]
 
 				// Check if this is a stablecoin
 				_, isStableCoin := stablesOverwrite[balance.Denom]
 
 				if hasRouteOverwrite {
-					ctx.Logger().Debug("note routes are present", "denom", balance.Denom)
+					ctx.Logger().Debug("uosmo routes are present", "denom", balance.Denom)
 
-					// Estimate how many tokens in we get for 1 MELODY
-					denomAmtIn, err := pi.poolManagerKeeper.MultihopEstimateInGivenExactAmountOut(ctx, routes, oneMelodyCoin)
+					// Estimate how many tokens in we get for 1 OSMO
+					denomAmtIn, err := pi.poolManagerKeeper.MultihopEstimateInGivenExactAmountOut(ctx, routes, oneOsmoCoin)
 					if err != nil {
 						ctx.Logger().Debug("error computing multihop from route overwrite", "denom", balance.Denom, "error", err)
 						errorInTVLStr = fmt.Sprintf(multiHopSpotPriceErrorFmtStr, err)
@@ -416,10 +416,10 @@ func (pi *poolIngester) convertPool(
 						continue
 					}
 
-					noteBaseAssetSpotPrice = oneMelodyBigDec.QuoMut(denomBigDecAmtIn)
+					uosmoBaseAssetSpotPrice = oneOsmoBigDec.QuoMut(denomBigDecAmtIn)
 				} else if isStableCoin {
 					// We (very) naively assume that stablecoin has the same price as USDC for TVL ranking of pools in the router.
-					noteBaseAssetSpotPrice, err = pi.poolManagerKeeper.RouteCalculateSpotPrice(ctx, usdcPool, usdcDenom, NOTE)
+					uosmoBaseAssetSpotPrice, err = pi.poolManagerKeeper.RouteCalculateSpotPrice(ctx, usdcPool, usdcDenom, UOSMO)
 					if err != nil {
 						errorInTVLStr = fmt.Sprintf(spotPriceErrorFmtStr, balance.Denom, err)
 						ctx.Logger().Debug(errorInTVLStr)
@@ -441,23 +441,23 @@ func (pi *poolIngester) convertPool(
 			}
 
 			// Scale on-chain spot price to the correct token precision.
-			precisionMultiplier := notePrecisionBigDec.Quo(osmomath.NewBigDec(int64(basePrecison)))
+			precisionMultiplier := uosmoPrecisionBigDec.Quo(osmomath.NewBigDec(int64(basePrecison)))
 
-			noteBaseAssetSpotPrice = noteBaseAssetSpotPrice.Mul(precisionMultiplier)
+			uosmoBaseAssetSpotPrice = uosmoBaseAssetSpotPrice.Mul(precisionMultiplier)
 
-			if noteBaseAssetSpotPrice.IsZero() {
+			if uosmoBaseAssetSpotPrice.IsZero() {
 				errorInTVLStr = "failed to calculate spot price due to it becoming zero from truncations " + balance.Denom
 				continue
 			}
 
 			routingInfo = denomRoutingInfo{
 				PoolID: poolForDenomPair,
-				Price:  noteBaseAssetSpotPrice,
+				Price:  uosmoBaseAssetSpotPrice,
 			}
 		}
 
 		tvlAddition := osmomath.BigDecFromSDKInt(balance.Amount).QuoMut(routingInfo.Price).Dec().TruncateInt()
-		melodyPoolTVL = melodyPoolTVL.Add(tvlAddition)
+		osmoPoolTVL = osmoPoolTVL.Add(tvlAddition)
 	}
 
 	// Get pool denoms. Although these can be inferred from balances, this is safer.
@@ -505,7 +505,7 @@ func (pi *poolIngester) convertPool(
 	return &sqsdomain.PoolWrapper{
 		ChainModel: pool,
 		SQSModel: sqsdomain.SQSPool{
-			TotalValueLockedUSDC:  melodyPoolTVL,
+			TotalValueLockedUSDC:  osmoPoolTVL,
 			TotalValueLockedError: errorInTVLStr,
 			Balances:              filteredBalances,
 			PoolDenoms:            denoms,

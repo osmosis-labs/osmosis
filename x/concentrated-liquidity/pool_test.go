@@ -523,7 +523,7 @@ func (s *KeeperTestSuite) TestDecreaseConcentratedPoolTickSpacing() {
 			s.SetupTest()
 			owner := s.TestAccs[0]
 
-			// Create MELODY <> USDC pool with tick spacing of 100
+			// Create OSMO <> USDC pool with tick spacing of 100
 			concentratedPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(ETH, USDC)
 
 			// Create a position in the pool that is divisible by the tick spacing

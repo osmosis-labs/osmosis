@@ -101,3 +101,8 @@ func (p CosmWasmPool) SetWasmKeeper(wasmKeeper types.WasmKeeper) {
 func (p *CosmWasmPool) GetPoolDenoms(ctx sdk.Context) []string {
 	panic("CosmWasmPool.GetPoolDenoms not implemented")
 }
+
+// SetCodeId implements types.CosmWasmExtension.
+func (p *CosmWasmPool) SetCodeId(codeId uint64) {
+	p.CodeId = codeId
+}

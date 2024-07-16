@@ -11,7 +11,7 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	symphonyibctesting "github.com/osmosis-labs/osmosis/v23/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v23/tests/osmosisibctesting"
 )
 
 // Instantiate the cw20 and cw20-ics20 contract
@@ -36,8 +36,8 @@ func (suite *HooksTestSuite) SetupCW20(chainName Chain) (sdk.AccAddress, sdk.Acc
 func (suite *HooksTestSuite) TransferCW20Tokens(path *ibctesting.Path, cw20Addr, cw20ics20Addr, receiver sdk.AccAddress, amount, memo string) (*sdk.Result, []byte) {
 	chainB := suite.GetChain(ChainB)
 
-	symphonyApp := chainB.GetSymphonyApp()
-	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(symphonyApp.WasmKeeper)
+	SymphonyApp := chainB.GetSymphonyApp()
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(SymphonyApp.WasmKeeper)
 
 	if len(memo) == 0 {
 		memo = "\"\""
@@ -74,14 +74,14 @@ func (suite *HooksTestSuite) TransferCW20Tokens(path *ibctesting.Path, cw20Addr,
 	return result, ack
 }
 
-func (suite *HooksTestSuite) setupCW20PoolAndRoutes(chain *symphonyibctesting.TestChain, swaprouterAddr sdk.AccAddress, cw20IbcDenom string, amount osmomath.Int) {
-	symphonyAppA := chain.GetSymphonyApp()
+func (suite *HooksTestSuite) setupCW20PoolAndRoutes(chain *osmosisibctesting.TestChain, swaprouterAddr sdk.AccAddress, cw20IbcDenom string, amount osmomath.Int) {
+	SymphonyAppA := chain.GetSymphonyApp()
 	poolId := suite.CreateIBCPoolOnChain(ChainA, cw20IbcDenom, sdk.DefaultBondDenom, amount)
 
 	// create a swap route for that token / poolId in both directions
 	msg := fmt.Sprintf(`{"set_route":{"input_denom":"%s","output_denom":"%s","pool_route":[{"pool_id":"%v","token_out_denom":"%s"}]}}`,
 		cw20IbcDenom, sdk.DefaultBondDenom, poolId, sdk.DefaultBondDenom)
-	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(symphonyAppA.WasmKeeper)
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(SymphonyAppA.WasmKeeper)
 	_, err := contractKeeper.Execute(chain.GetContext(), swaprouterAddr, chain.SenderAccount.GetAddress(), []byte(msg), sdk.NewCoins())
 	suite.Require().NoError(err)
 	msg = fmt.Sprintf(`{"set_route":{"input_denom":"%s","output_denom":"%s","pool_route":[{"pool_id":"%v","token_out_denom":"%s"}]}}`,
@@ -90,7 +90,7 @@ func (suite *HooksTestSuite) setupCW20PoolAndRoutes(chain *symphonyibctesting.Te
 	suite.Require().NoError(err)
 }
 
-func (suite *HooksTestSuite) getCW20Balance(chain *symphonyibctesting.TestChain, cw20Addr, addr sdk.AccAddress) osmomath.Int {
+func (suite *HooksTestSuite) getCW20Balance(chain *osmosisibctesting.TestChain, cw20Addr, addr sdk.AccAddress) osmomath.Int {
 	queryMsg := fmt.Sprintf(`{"balance":{"address":"%s"}}`, addr)
 	res := chain.QueryContractJson(&suite.Suite, cw20Addr, []byte(queryMsg))
 	balance, ok := osmomath.NewIntFromString(res.Get("balance").String())
@@ -121,7 +121,7 @@ func (suite *HooksTestSuite) TestCW20ICS20() {
 
 	suite.coordinator.Setup(path)
 
-	symphonyAppB := chainB.GetSymphonyApp()
+	SymphonyAppB := chainB.GetSymphonyApp()
 
 	// Send some cwtoken tokens from B to A via the new path
 	amount := osmomath.NewInt(defaultPoolAmount)
@@ -132,11 +132,11 @@ func (suite *HooksTestSuite) TestCW20ICS20() {
 
 	// Check that the receiver doesn't have any sdk.DefaultBondDenom
 	stakeAB := suite.GetIBCDenom(ChainA, ChainB, sdk.DefaultBondDenom) // IBC denom for stake in B
-	balanceStakeReceiver := symphonyAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), suite.chainB.SenderAccount.GetAddress(), stakeAB)
+	balanceStakeReceiver := SymphonyAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), suite.chainB.SenderAccount.GetAddress(), stakeAB)
 	suite.Require().Equal(int64(0), balanceStakeReceiver.Amount.Int64())
 
 	// Transfer the tokens with a memo for XCS
-	swapMsg := fmt.Sprintf(`{"symphony_swap":{"output_denom":"%s","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"chainB/%s", "on_failed_delivery": "do_nothing", "next_memo":{}}}`,
+	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":"%s","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"chainB/%s", "on_failed_delivery": "do_nothing", "next_memo":{}}}`,
 		sdk.DefaultBondDenom,
 		chainB.SenderAccount.GetAddress(),
 	)
@@ -151,14 +151,14 @@ func (suite *HooksTestSuite) TestCW20ICS20() {
 	suite.Require().NoError(err)
 	suite.RelayPacket(packet, AtoB)
 
-	balanceStakeReceiver = symphonyAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), suite.chainB.SenderAccount.GetAddress(), stakeAB)
+	balanceStakeReceiver = SymphonyAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), suite.chainB.SenderAccount.GetAddress(), stakeAB)
 	suite.Require().Greater(balanceStakeReceiver.Amount.Int64(), int64(0))
 
 	// Now swap on the other direction
 	receiver2 := chainB.SenderAccounts[1].SenderAccount.GetAddress() // Using a different receiver that has no cw20s
 	cw20Balance := suite.getCW20Balance(chainB, cw20Addr, receiver2)
 
-	swapMsg = fmt.Sprintf(`{"symphony_swap":{"output_denom":"%s","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"chainB-cw20/%s", "on_failed_delivery": "do_nothing", "next_memo":{}}}`,
+	swapMsg = fmt.Sprintf(`{"osmosis_swap":{"output_denom":"%s","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"chainB-cw20/%s", "on_failed_delivery": "do_nothing", "next_memo":{}}}`,
 		cw20IbcDenom,
 		receiver2,
 	)
@@ -172,7 +172,7 @@ func (suite *HooksTestSuite) TestCW20ICS20() {
 	suite.RelayPacket(packet, AtoCW20)
 
 	// Check that the receiver has 10 less ibc'd stake than before
-	balanceStakeReceiver2 := symphonyAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), suite.chainB.SenderAccount.GetAddress(), stakeAB)
+	balanceStakeReceiver2 := SymphonyAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), suite.chainB.SenderAccount.GetAddress(), stakeAB)
 	suite.Require().Equal(int64(10), balanceStakeReceiver.Amount.Sub(balanceStakeReceiver2.Amount).Int64())
 
 	// Check that the receiver has more cw20 tokens than before

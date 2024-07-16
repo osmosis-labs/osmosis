@@ -15,6 +15,10 @@ var (
 	// All the settings manager's controls have limits, so it can't lead to a chain halt, excess processing time or prevention of swaps.
 	DefaultAdminAccount = "symphony1vl3s0njph7uq9ar6vq6tdgy252tj0n0eeaz4zr"
 
+	// DefaultNullAddress is the default value for the null account. ProtoRev arbitrage profits denominated in OSMO are sent to this account
+	// as of V24. This address is equivalent to osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030.
+	DefaultNullAddress = sdk.AccAddress([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
+
 	ParamStoreKeyEnableModule = []byte("EnableProtoRevModule")
 	ParamStoreKeyAdminAccount = []byte("AdminAccount")
 )

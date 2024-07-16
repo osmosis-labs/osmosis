@@ -2,6 +2,7 @@ package ibc_rate_limit_test
 
 import (
 	"fmt"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"strconv"
 	"strings"
 	"testing"
@@ -19,7 +20,7 @@ import (
 	txfeetypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
 
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	osmosisibctesting "github.com/osmosis-labs/osmosis/v23/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v23/tests/osmosisibctesting"
 	"github.com/osmosis-labs/osmosis/v23/x/ibc-rate-limit/types"
 )
 
@@ -123,7 +124,7 @@ func CalculateChannelValue(ctx sdk.Context, denom string, bankKeeper bankkeeper.
 	//  using the whole supply for efficiency until there's a solution for
 	//  https://github.com/cosmos/ibc-go/issues/2664
 
-	// For non-native (ibc) tokens, return the supply if the token in symphony
+	// For non-native (ibc) tokens, return the supply if the token in osmosis
 	//if strings.HasPrefix(denom, "ibc/") {
 	//	return bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
 	//}
@@ -269,8 +270,8 @@ func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
 }
 
 func (suite *MiddlewareTestSuite) initializeEscrow() (totalEscrow, expectedSed osmomath.Int) {
-	symphonyApp := suite.chainA.GetSymphonyApp()
-	supply := symphonyApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
+	SymphonyApp := suite.chainA.GetSymphonyApp()
+	supply := SymphonyApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 
 	// Move some funds from chainA to chainB so that there is something in escrow
 	// Each user has 10% of the supply, so we send most of the funds from one user to chainA
@@ -303,10 +304,10 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 		denom = denomTrace.IBCDenom()
 	}
 
-	symphonyApp := suite.chainA.GetSymphonyApp()
+	SymphonyApp := suite.chainA.GetSymphonyApp()
 
 	// This is the first one. Inside the tests. It works as expected.
-	channelValue := CalculateChannelValue(suite.chainA.GetContext(), denom, symphonyApp.BankKeeper)
+	channelValue := CalculateChannelValue(suite.chainA.GetContext(), denom, SymphonyApp.BankKeeper)
 
 	// The amount to be sent is send 2.5% (quota is 5%)
 	quota := channelValue.QuoRaw(int64(100 / quotaPercentage))
@@ -399,9 +400,9 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 		sendDenom = denomTrace.IBCDenom()
 	}
 
-	symphonyApp := suite.chainA.GetSymphonyApp()
+	SymphonyApp := suite.chainA.GetSymphonyApp()
 
-	channelValue := CalculateChannelValue(suite.chainA.GetContext(), localDenom, symphonyApp.BankKeeper)
+	channelValue := CalculateChannelValue(suite.chainA.GetContext(), localDenom, SymphonyApp.BankKeeper)
 
 	// The amount to be sent is 2% (quota is 4%)
 	quota := channelValue.QuoRaw(int64(100 / quotaPercentage))
@@ -466,11 +467,11 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// Get the escrowed amount
-	symphonyApp := suite.chainA.GetSymphonyApp()
+	SymphonyApp := suite.chainA.GetSymphonyApp()
 	// ToDo: This is what we eventually want here, but using the full supply temporarily for performance reasons. See CalculateChannelValue
 	// escrowAddress := transfertypes.GetEscrowAddress("transfer", "channel-0")
-	// escrowed := symphonyApp.BankKeeper.GetBalance(suite.chainA.GetContext(), escrowAddress, sdk.DefaultBondDenom)
-	escrowed := symphonyApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
+	// escrowed := SymphonyApp.BankKeeper.GetBalance(suite.chainA.GetContext(), escrowAddress, sdk.DefaultBondDenom)
+	escrowed := SymphonyApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 	quota := escrowed.Amount.QuoRaw(100) // 1% of the escrowed amount
 
 	// Use the whole quota
@@ -536,9 +537,29 @@ func (suite *MiddlewareTestSuite) TestUnsetRateLimitingContract() {
 	// Unset the contract param
 	params, err := types.NewParams("")
 	suite.Require().NoError(err)
-	symphonyApp := suite.chainA.GetSymphonyApp()
-	paramSpace, ok := symphonyApp.AppKeepers.ParamsKeeper.GetSubspace(types.ModuleName)
+	SymphonyApp := suite.chainA.GetSymphonyApp()
+	paramSpace, ok := SymphonyApp.AppKeepers.ParamsKeeper.GetSubspace(types.ModuleName)
 	suite.Require().True(ok)
 	// N.B.: this panics if validation fails.
 	paramSpace.SetParamSet(suite.chainA.GetContext(), &params)
+}
+
+// Test rate limits are reverted if a "send" fails
+func (suite *MiddlewareTestSuite) TestNonICS20() {
+	suite.initializeEscrow()
+	// Setup contract
+	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/rate_limiter.wasm")
+	quotas := suite.BuildChannelQuota("weekly", "channel-0", sdk.DefaultBondDenom, 604800, 1, 1)
+	addr := suite.chainA.InstantiateRLContract(&suite.Suite, quotas)
+	suite.chainA.RegisterRateLimitingContract(addr)
+
+	SymphonyApp := suite.chainA.GetSymphonyApp()
+
+	data := []byte("{}")
+	_, err := SymphonyApp.RateLimitingICS4Wrapper.SendPacket(suite.chainA.GetContext(), capabilitytypes.NewCapability(1), "wasm.osmo1873ls0d60tg7hk00976teq9ywhzv45u3hk2urw8t3eau9eusa4eqtun9xn", "channel-0", clienttypes.NewHeight(0, 0), 1, data)
+
+	suite.Require().Error(err)
+	// This will error out, but not because of rate limiting
+	suite.Require().NotContains(err.Error(), "rate limit")
+	suite.Require().Contains(err.Error(), "channel not found")
 }

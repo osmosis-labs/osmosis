@@ -42,7 +42,7 @@ func (k Keeper) AfterEpochStartBeginBlock(ctx sdk.Context) {
 	// Update all LP tokens multipliers for the upcoming epoch.
 	// This affects staking reward distribution until the next epochs rewards.
 	// Exclusive of current epoch's rewards, inclusive of next epoch's rewards.
-	ctx.Logger().Info("Update all melody equivalency multipliers")
+	ctx.Logger().Info("Update all osmo equivalency multipliers")
 	for _, asset := range k.GetAllSuperfluidAssets(ctx) {
 		err := k.UpdateOsmoEquivalentMultipliers(ctx, asset, curEpoch)
 		if err != nil {
@@ -74,17 +74,15 @@ func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context, accs []t
 		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 			_, err := k.ck.WithdrawDelegationRewards(cacheCtx, addr, valAddr)
 			if errors.Is(err, distributiontypes.ErrEmptyDelegationDistInfo) {
-				ctx.Logger().Debug("no swaps occurred in this pool between last epoch and this epoch")
+				ctx.Logger().Debug("no delegations for this (pool, validator) pair, skipping...")
+				// TODO: Remove this account from IntermediaryAccounts that we iterate over
 				return nil
 			} else if err != nil {
 				return err
 			}
-			return err
-		})
 
-		// Send delegation rewards to gauges
-		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
-			// Note! We only send the bond denom (melody), to avoid attack vectors where people
+			// Send delegation rewards to gauges
+			// Note! We only send the bond denom (osmo), to avoid attack vectors where people
 			// send many different denoms to the intermediary account, and make a resource exhaustion attack on end block.
 			balance := k.bk.GetBalance(cacheCtx, addr, bondDenom)
 			if balance.IsZero() {
@@ -116,7 +114,7 @@ func (k Keeper) distributeSuperfluidGauges(ctx sdk.Context) {
 
 func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.SuperfluidAsset, newEpochNumber int64) error {
 	if asset.AssetType == types.SuperfluidAssetTypeLPShare {
-		// LP_token_Melody_equivalent = MELODY_amount_on_pool / LP_token_supply
+		// LP_token_Osmo_equivalent = OSMO_amount_on_pool / LP_token_supply
 		poolId := gammtypes.MustGetPoolIdFromShareDenom(asset.Denom)
 		pool, err := k.gk.GetPoolAndPoke(ctx, poolId)
 		if err != nil {
@@ -126,18 +124,18 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 			return err
 		}
 
-		// get MELODY amount
+		// get OSMO amount
 		bondDenom := k.sk.BondDenom(ctx)
-		melodyPoolAsset := pool.GetTotalPoolLiquidity(ctx).AmountOf(bondDenom)
-		if melodyPoolAsset.IsZero() {
-			err := fmt.Errorf("pool %d has zero MELODY amount", poolId)
-			// Pool has unexpectedly removed Melody from its assets.
+		osmoPoolAsset := pool.GetTotalPoolLiquidity(ctx).AmountOf(bondDenom)
+		if osmoPoolAsset.IsZero() {
+			err := fmt.Errorf("pool %d has zero OSMO amount", poolId)
+			// Pool has unexpectedly removed Osmo from its assets.
 			k.Logger(ctx).Error(err.Error())
 			k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
 			return err
 		}
 
-		multiplier := k.calculateMelodyBackingPerShare(pool, melodyPoolAsset)
+		multiplier := k.calculateMelodyBackingPerShare(pool, osmoPoolAsset)
 		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, multiplier)
 	} else if asset.AssetType == types.SuperfluidAssetTypeConcentratedShare {
 		// https://github.com/osmosis-labs/osmosis/issues/6229
@@ -152,14 +150,14 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 	return nil
 }
 
-// updateConcentratedOsmoEquivalentMultiplier runs the logic for updating the MELODY equivalent multiplier for a concentrated liquidity pool.
+// updateConcentratedOsmoEquivalentMultiplier runs the logic for updating the OSMO equivalent multiplier for a concentrated liquidity pool.
 func (k Keeper) updateConcentratedOsmoEquivalentMultiplier(ctx sdk.Context, asset types.SuperfluidAsset, newEpochNumber int64) error {
-	// LP_token_Melody_equivalent = MELODY_amount_on_pool / LP_token_supply
+	// LP_token_Osmo_equivalent = OSMO_amount_on_pool / LP_token_supply
 	poolId := cltypes.MustGetPoolIdFromShareDenom(asset.Denom)
 	pool, err := k.clk.GetConcentratedPoolById(ctx, poolId)
 	if err != nil {
 		k.Logger(ctx).Error(err.Error())
-		// Pool has unexpectedly removed Melody from its assets.
+		// Pool has unexpectedly removed Osmo from its assets.
 		k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
 		return err
 	}
@@ -187,18 +185,18 @@ func (k Keeper) updateConcentratedOsmoEquivalentMultiplier(ctx sdk.Context, asse
 	}
 	assets := sdk.NewCoins(asset0, asset1)
 
-	// get MELODY amount from underlying assets
-	melodyPoolAsset := assets.AmountOf(bondDenom)
-	if melodyPoolAsset.IsZero() {
-		// Pool has unexpectedly removed MELODY from its assets.
-		err := errors.New("pool has unexpectedly removed MELODY as one of its underlying assets")
+	// get OSMO amount from underlying assets
+	osmoPoolAsset := assets.AmountOf(bondDenom)
+	if osmoPoolAsset.IsZero() {
+		// Pool has unexpectedly removed OSMO from its assets.
+		err := errors.New("pool has unexpectedly removed OSMO as one of its underlying assets")
 		k.Logger(ctx).Error(err.Error())
 		k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
 		return err
 	}
 
 	// calculate multiplier and set it
-	multiplier := melodyPoolAsset.ToLegacyDec().Quo(fullRangeLiquidity)
+	multiplier := osmoPoolAsset.ToLegacyDec().Quo(fullRangeLiquidity)
 	k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, multiplier)
 
 	return nil

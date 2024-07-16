@@ -21,6 +21,8 @@ type BankKeeper interface {
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
 	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) error
+	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 }
 
 // GAMMKeeper defines the Gamm contract that must be fulfilled when
@@ -39,7 +41,7 @@ type PoolManagerKeeper interface {
 		tokenIn sdk.Coin,
 		tokenOutMinAmount osmomath.Int) (tokenOutAmount osmomath.Int, err error)
 
-	MultihopEstimateOutGivenExactAmountIn(
+	MultihopEstimateOutGivenExactAmountInNoTakerFee(
 		ctx sdk.Context,
 		routes []poolmanagertypes.SwapAmountInRoute,
 		tokenIn sdk.Coin,
@@ -80,4 +82,10 @@ type ConcentratedLiquidityKeeper interface {
 		tokenInDenom string,
 		maxTicksCrossed uint64,
 	) (maxTokenIn, resultingTokenOut sdk.Coin, err error)
+}
+
+// DistributionKeeper defines the distribution contract that must be fulfilled when
+// creating a x/protorev keeper.
+type DistributionKeeper interface {
+	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }

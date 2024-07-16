@@ -218,9 +218,6 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 				clPool2TwapRecordHistoricalPoolIndexPreUpgrade, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(s.Ctx, lastPoolIdMinusOne)
 				s.Require().NoError(err)
 
-				clPoolsTwapRecordHistoricalTimeIndexPreUpgrade, err := keepers.TwapKeeper.GetAllHistoricalTimeIndexedTWAPs(s.Ctx)
-				s.Require().NoError(err)
-
 				// Run upgrade handler.
 				dummyUpgrade(s)
 				s.Require().NotPanics(func() {
@@ -239,15 +236,11 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 				clPool2TwapRecordHistoricalPoolIndexPostUpgrade, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(s.Ctx, lastPoolIdMinusOne)
 				s.Require().NoError(err)
 
-				clPoolsTwapRecordHistoricalTimeIndexPostUpgrade, err := keepers.TwapKeeper.GetAllHistoricalTimeIndexedTWAPs(s.Ctx)
-				s.Require().NoError(err)
-
 				// check that all TWAP records aren't empty
 				s.Require().NotEmpty(clPool1TwapRecordPostUpgrade)
 				s.Require().NotEmpty(clPool1TwapRecordHistoricalPoolIndexPostUpgrade)
 				s.Require().NotEmpty(clPool2TwapRecordPostUpgrade)
 				s.Require().NotEmpty(clPool2TwapRecordHistoricalPoolIndexPostUpgrade)
-				s.Require().NotEmpty(clPoolsTwapRecordHistoricalTimeIndexPostUpgrade)
 
 				for _, data := range []struct {
 					pre, post []types.TwapRecord
@@ -259,15 +252,6 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 				} {
 					for i := range data.post {
 						assertTwapFlipped(s, data.pre[i], data.post[i])
-					}
-				}
-
-				for i := range clPoolsTwapRecordHistoricalTimeIndexPostUpgrade {
-					record := clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i]
-					if record.PoolId == lastPoolIdMinusOne || record.PoolId == lastPoolIdMinusTwo {
-						assertTwapFlipped(s, clPoolsTwapRecordHistoricalTimeIndexPreUpgrade[i], record)
-					} else if record.PoolId == lastPoolID {
-						assertEqual(s, clPoolsTwapRecordHistoricalTimeIndexPreUpgrade[i], record)
 					}
 				}
 

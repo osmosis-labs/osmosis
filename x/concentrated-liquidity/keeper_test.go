@@ -188,8 +188,8 @@ func (s *KeeperTestSuite) validateTickUpdates(poolId uint64, lowerTick int64, up
 	s.Require().Equal(expectedUpperSpreadRewardGrowthOppositeDirectionOfLastTraversal.String(), upperTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal.String())
 }
 
-func (s *KeeperTestSuite) initializeTick(ctx sdk.Context, currentTick int64, tickIndex int64, initialLiquidity osmomath.Dec, spreadRewardGrowthOppositeDirectionOfTraversal sdk.DecCoins, uptimeTrackers []model.UptimeTracker, isLower bool) {
-	_, err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(ctx, validPoolId, currentTick, tickIndex, initialLiquidity, isLower)
+func (s *KeeperTestSuite) initializeTick(ctx sdk.Context, tickIndex int64, initialLiquidity osmomath.Dec, spreadRewardGrowthOppositeDirectionOfTraversal sdk.DecCoins, uptimeTrackers []model.UptimeTracker, isLower bool) {
+	_, err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(ctx, validPoolId, tickIndex, initialLiquidity, isLower)
 	s.Require().NoError(err)
 
 	tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(ctx, validPoolId, tickIndex)
@@ -235,7 +235,7 @@ func (s *KeeperTestSuite) addLiquidityToUptimeAccumulators(ctx sdk.Context, pool
 //   - If lowerTick <= currentTick < upperTick, we add to just the global accumulators.
 //
 //   - If lowerTick < upperTick <= currentTick, we add to the upper tick's trackers, but not the lower's.
-func (s *KeeperTestSuite) addUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, currentTick, lowerTick, upperTick int64, uptimeGrowthToAdd []sdk.DecCoins) {
+func (s *KeeperTestSuite) addUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, currentTick, lowerTick, upperTick int64, uptimeGrowthToAdd []sdk.DecCoins) {
 	s.Require().True(lowerTick <= upperTick)
 
 	// Add spread rewards and incentives to the pool
@@ -251,7 +251,7 @@ func (s *KeeperTestSuite) addUptimeGrowthInsideRange(ctx sdk.Context, poolId uin
 		newLowerUptimeTrackerValues, err := osmoutils.AddDecCoinArrays(cl.GetUptimeTrackerValues(lowerTickInfo.UptimeTrackers.List), scaledGrowth)
 		s.Require().NoError(err)
 
-		s.initializeTick(ctx, currentTick, lowerTick, lowerTickInfo.LiquidityGross, lowerTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal, wrapUptimeTrackers(newLowerUptimeTrackerValues), true)
+		s.initializeTick(ctx, lowerTick, lowerTickInfo.LiquidityGross, lowerTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal, wrapUptimeTrackers(newLowerUptimeTrackerValues), true)
 	} else if upperTick <= currentTick {
 		// Add to upper tick uptime trackers
 		upperTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(ctx, poolId, upperTick)
@@ -261,7 +261,7 @@ func (s *KeeperTestSuite) addUptimeGrowthInsideRange(ctx sdk.Context, poolId uin
 		newUpperUptimeTrackerValues, err := osmoutils.AddDecCoinArrays(cl.GetUptimeTrackerValues(upperTickInfo.UptimeTrackers.List), scaledGrowth)
 		s.Require().NoError(err)
 
-		s.initializeTick(ctx, currentTick, upperTick, upperTickInfo.LiquidityGross, upperTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal, wrapUptimeTrackers(newUpperUptimeTrackerValues), false)
+		s.initializeTick(ctx, upperTick, upperTickInfo.LiquidityGross, upperTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal, wrapUptimeTrackers(newUpperUptimeTrackerValues), false)
 	}
 
 	// In all cases, global uptime accums need to be updated. If lowerTick <= currentTick < upperTick,
@@ -284,7 +284,7 @@ func (s *KeeperTestSuite) addUptimeGrowthInsideRange(ctx sdk.Context, poolId uin
 //   - If lowerTick < upperTick <= currentTick, we add to both lowerTick and upperTick's uptime trackers,
 //     the former to put the growth below the tick range and the latter to keep both ticks consistent (since
 //     lowerTick's uptime trackers are a subset of upperTick's in this case).
-func (s *KeeperTestSuite) addUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, currentTick, lowerTick, upperTick int64, uptimeGrowthToAdd []sdk.DecCoins) {
+func (s *KeeperTestSuite) addUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, currentTick, lowerTick, upperTick int64, uptimeGrowthToAdd []sdk.DecCoins) {
 	s.Require().True(lowerTick <= upperTick)
 
 	// Add spread rewards and incentives to the pool
@@ -300,7 +300,7 @@ func (s *KeeperTestSuite) addUptimeGrowthOutsideRange(ctx sdk.Context, poolId ui
 		newLowerUptimeTrackerValues, err := osmoutils.AddDecCoinArrays(cl.GetUptimeTrackerValues(lowerTickInfo.UptimeTrackers.List), growthCopy)
 		s.Require().NoError(err)
 
-		s.initializeTick(ctx, currentTick, lowerTick, lowerTickInfo.LiquidityGross, lowerTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal, wrapUptimeTrackers(newLowerUptimeTrackerValues), true)
+		s.initializeTick(ctx, lowerTick, lowerTickInfo.LiquidityGross, lowerTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal, wrapUptimeTrackers(newLowerUptimeTrackerValues), true)
 
 		// Add to upper tick uptime trackers
 		upperTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(ctx, poolId, upperTick)
@@ -310,7 +310,7 @@ func (s *KeeperTestSuite) addUptimeGrowthOutsideRange(ctx sdk.Context, poolId ui
 		newUpperUptimeTrackerValues, err := osmoutils.AddDecCoinArrays(cl.GetUptimeTrackerValues(upperTickInfo.UptimeTrackers.List), growthCopy)
 		s.Require().NoError(err)
 
-		s.initializeTick(ctx, currentTick, upperTick, upperTickInfo.LiquidityGross, upperTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal, wrapUptimeTrackers(newUpperUptimeTrackerValues), false)
+		s.initializeTick(ctx, upperTick, upperTickInfo.LiquidityGross, upperTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal, wrapUptimeTrackers(newUpperUptimeTrackerValues), false)
 	} else if currentTick < upperTick {
 		// Add to lower tick's uptime trackers
 		lowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(ctx, poolId, lowerTick)
@@ -320,7 +320,7 @@ func (s *KeeperTestSuite) addUptimeGrowthOutsideRange(ctx sdk.Context, poolId ui
 		newLowerUptimeTrackerValues, err := osmoutils.AddDecCoinArrays(cl.GetUptimeTrackerValues(lowerTickInfo.UptimeTrackers.List), growthCopy)
 		s.Require().NoError(err)
 
-		s.initializeTick(ctx, currentTick, lowerTick, lowerTickInfo.LiquidityGross, lowerTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal, wrapUptimeTrackers(newLowerUptimeTrackerValues), true)
+		s.initializeTick(ctx, lowerTick, lowerTickInfo.LiquidityGross, lowerTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal, wrapUptimeTrackers(newLowerUptimeTrackerValues), true)
 	}
 
 	// In all cases, global uptime accums need to be updated. If currentTick < lowerTick,
@@ -374,7 +374,9 @@ func (s *KeeperTestSuite) crossTickAndChargeSpreadReward(poolId uint64, tickInde
 	nextTickInfo, err := s.Clk.GetTickInfo(s.Ctx, poolId, tickIndexToCross)
 	s.Require().NoError(err)
 
-	feeAccum, uptimeAccums, err := s.Clk.GetSwapAccumulators(s.Ctx, poolId)
+	feeAccum, err := s.Clk.GetSpreadRewardAccumulator(s.Ctx, poolId)
+	s.Require().NoError(err)
+	uptimeAccums, err := s.Clk.GetUptimeAccumulators(s.Ctx, poolId)
 	s.Require().NoError(err)
 
 	// Cross the tick to update it.

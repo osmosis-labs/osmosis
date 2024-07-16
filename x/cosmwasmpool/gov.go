@@ -122,6 +122,10 @@ func (k Keeper) migrateCosmwasmPools(ctx sdk.Context, poolIds []uint64, newCodeI
 		if err != nil {
 			return err
 		}
+
+		// Update code ID to the updated one in state
+		cwPool.SetCodeId(newCodeId)
+		k.SetPool(ctx, cwPool)
 	}
 
 	// Whitelist new code id. No-op if already whitelisted.

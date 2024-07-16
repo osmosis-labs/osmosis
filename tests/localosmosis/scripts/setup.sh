@@ -53,7 +53,7 @@ edit_genesis () {
     dasel put string -f $GENESIS '.app_state.gov.deposit_params.min_deposit.[0].denom' 'note'
 
     # Update epochs module
-    dasel put string -f $GENESIS '.app_state.epochs.epochs.[1].duration' "60s"
+    dasel put -t string -f $GENESIS '.app_state.epochs.epochs.[1].duration' -v "60s"
 
     # Update poolincentives module
     dasel put string -f $GENESIS '.app_state.poolincentives.lockable_durations.[0]' "120s"
@@ -62,11 +62,11 @@ edit_genesis () {
     dasel put string -f $GENESIS '.app_state.poolincentives.params.minted_denom' "note"
 
     # Update incentives module
-    dasel put string -f $GENESIS '.app_state.incentives.lockable_durations.[0]' "1s"
-    dasel put string -f $GENESIS '.app_state.incentives.lockable_durations.[1]' "120s"
-    dasel put string -f $GENESIS '.app_state.incentives.lockable_durations.[2]' "180s"
-    dasel put string -f $GENESIS '.app_state.incentives.lockable_durations.[3]' "240s"
-    dasel put string -f $GENESIS '.app_state.incentives.params.distr_epoch_identifier' "hour"
+    dasel put -t string -f $GENESIS '.app_state.incentives.lockable_durations.[0]' -v "1s"
+    dasel put -t string -f $GENESIS '.app_state.incentives.lockable_durations.[1]' -v "120s"
+    dasel put -t string -f $GENESIS '.app_state.incentives.lockable_durations.[2]' -v "180s"
+    dasel put -t string -f $GENESIS '.app_state.incentives.lockable_durations.[3]' -v "240s"
+    dasel put -t string -f $GENESIS '.app_state.incentives.params.distr_epoch_identifier' -v "hour"
 
     # Update mint module
     dasel put string -f $GENESIS '.app_state.mint.params.mint_denom' "note"
@@ -79,10 +79,10 @@ edit_genesis () {
     dasel put string -f $GENESIS '.app_state.txfees.basedenom' "note"
 
     # Update wasm permission (Nobody or Everybody)
-    dasel put string -f $GENESIS '.app_state.wasm.params.code_upload_access.permission' "Everybody"
+    dasel put -t string -f $GENESIS '.app_state.wasm.params.code_upload_access.permission' -v "Everybody"
 
     # Update concentrated-liquidity (enable pool creation)
-    dasel put bool -f $GENESIS '.app_state.concentratedliquidity.params.is_permissionless_pool_creation_enabled' true
+    dasel put -t bool -f $GENESIS '.app_state.concentratedliquidity.params.is_permissionless_pool_creation_enabled' -v true
 }
 
 add_genesis_accounts () {
@@ -111,33 +111,33 @@ add_genesis_accounts () {
 edit_config () {
 
     # Remove seeds
-    dasel put string -f $CONFIG_FOLDER/config.toml '.p2p.seeds' ''
+    dasel put -t string -f $CONFIG_FOLDER/config.toml '.p2p.seeds' -v ''
 
     # Expose the rpc
-    dasel put string -f $CONFIG_FOLDER/config.toml '.rpc.laddr' "tcp://0.0.0.0:26657"
+    dasel put -t string -f $CONFIG_FOLDER/config.toml '.rpc.laddr' -v "tcp://0.0.0.0:26657"
     
     # Expose pprof for debugging
     # To make the change enabled locally, make sure to add 'EXPOSE 6060' to the root Dockerfile
     # and rebuild the image.
-    dasel put string -f $CONFIG_FOLDER/config.toml '.rpc.pprof_laddr' "0.0.0.0:6060"
+    dasel put -t string -f $CONFIG_FOLDER/config.toml '.rpc.pprof_laddr' -v "0.0.0.0:6060"
 }
 
 enable_cors () {
 
     # Enable cors on RPC
-    dasel put string -f $CONFIG_FOLDER/config.toml -v "*" '.rpc.cors_allowed_origins.[]'
-    dasel put string -f $CONFIG_FOLDER/config.toml -v "Accept-Encoding" '.rpc.cors_allowed_headers.[]'
-    dasel put string -f $CONFIG_FOLDER/config.toml -v "DELETE" '.rpc.cors_allowed_methods.[]'
-    dasel put string -f $CONFIG_FOLDER/config.toml -v "OPTIONS" '.rpc.cors_allowed_methods.[]'
-    dasel put string -f $CONFIG_FOLDER/config.toml -v "PATCH" '.rpc.cors_allowed_methods.[]'
-    dasel put string -f $CONFIG_FOLDER/config.toml -v "PUT" '.rpc.cors_allowed_methods.[]'
+    dasel put -t string -f $CONFIG_FOLDER/config.toml -v "*" '.rpc.cors_allowed_origins.[]'
+    dasel put -t string -f $CONFIG_FOLDER/config.toml -v "Accept-Encoding" '.rpc.cors_allowed_headers.[]'
+    dasel put -t string -f $CONFIG_FOLDER/config.toml -v "DELETE" '.rpc.cors_allowed_methods.[]'
+    dasel put -t string -f $CONFIG_FOLDER/config.toml -v "OPTIONS" '.rpc.cors_allowed_methods.[]'
+    dasel put -t string -f $CONFIG_FOLDER/config.toml -v "PATCH" '.rpc.cors_allowed_methods.[]'
+    dasel put -t string -f $CONFIG_FOLDER/config.toml -v "PUT" '.rpc.cors_allowed_methods.[]'
 
     # Enable unsafe cors and swagger on the api
-    dasel put bool -f $CONFIG_FOLDER/app.toml -v "true" '.api.swagger'
-    dasel put bool -f $CONFIG_FOLDER/app.toml -v "true" '.api.enabled-unsafe-cors'
+    dasel put -t bool -f $CONFIG_FOLDER/app.toml -v "true" '.api.swagger'
+    dasel put -t bool -f $CONFIG_FOLDER/app.toml -v "true" '.api.enabled-unsafe-cors'
 
     # Enable cors on gRPC Web
-    dasel put bool -f $CONFIG_FOLDER/app.toml -v "true" '.grpc-web.enable-unsafe-cors'
+    dasel put -t bool -f $CONFIG_FOLDER/app.toml -v "true" '.grpc-web.enable-unsafe-cors'
 
     # Enable SQS & route caching
     dasel put string -f $CONFIG_FOLDER/app.toml -v "true" '.symphony-sqs.is-enabled'

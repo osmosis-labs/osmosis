@@ -5,11 +5,19 @@ import (
 	"math"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v23/x/twap"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
+)
+
+var (
+	twoAssetPoolCoins  = sdk.NewCoins(sdk.NewInt64Coin(denom0, 1000000000), sdk.NewInt64Coin(denom1, 1000000000))
+	muliAssetPoolCoins = sdk.NewCoins(sdk.NewInt64Coin(denom0, 1000000000), sdk.NewInt64Coin(denom1, 1000000000), sdk.NewInt64Coin(denom2, 1000000000))
 )
 
 // TestTrackChangedPool takes a list of poolIds as test cases, and runs one list per block.
@@ -509,27 +517,54 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 
 			expectedKeptRecords: []types.TwapRecord{},
 		},
-		"base time; across pool 3; 4 records; 3 before lastKeptTime; only 1 deleted due to limit set to 1": {
+		"base time; across pool 3 and pool 5; pool 3: 4 total records; 3 before lastKeptTime; 2 in queue due to pool with larger ID hitting limit. pool 5: 24 total records; 12 before lastKeptTime; 9 deleted and 15 kept, 3 in queue due to prune limit": {
 			recordsToPreSet: []types.TwapRecord{
+				pool3BaseSecMin3Ms, // base time - 3ms; in queue for deletion
+				pool3BaseSecMin2Ms, // base time - 2ms; in queue for deletion
 				pool3BaseSecMin1Ms, // base time - 1ms; kept since newest before lastKeptTime
 				pool3BaseSecBaseMs, // base time; kept since at lastKeptTime
-				pool3BaseSecMin3Ms, // base time - 3ms; in queue for deletion
-				pool3BaseSecMin2Ms, // base time - 2ms; deleted
+
+				pool5Min2SBaseMsAB, pool5Min2SBaseMsAC, // base time - 2s; deleted
+				pool5Min2SBaseMsBC,                                         // base time - 2s; in queue for deletion
+				pool5Min1SBaseMsAB, pool5Min1SBaseMsAC, pool5Min1SBaseMsBC, // base time - 1s; ; deleted
+				pool5BaseSecBaseMsAB, pool5BaseSecBaseMsAC, pool5BaseSecBaseMsBC, // base time; kept since at lastKeptTime
+				pool5Plus1SBaseMsAB, pool5Plus1SBaseMsAC, pool5Plus1SBaseMsBC, // base time + 1s; kept since older than lastKeptTime
+
+				pool5Min2SMin1MsAB, pool5Min2SMin1MsAC, // base time - 2s - 1ms; deleted
+				pool5Min2SMin1MsBC,                     // base time - 2s - 1ms; in queue for deletion
+				pool5Min1SMin1MsAB, pool5Min1SMin1MsAC, // base time - 1s - 1ms; deleted
+				pool5Min1SMin1MsBC,                                               // base time - 1s - 1ms; in queue for deletion
+				pool5BaseSecMin1MsAB, pool5BaseSecMin1MsAC, pool5BaseSecMin1MsBC, // base time - 1ms; kept since newest before lastKeptTime
+				pool5Plus1SMin1MsAB, pool5Plus1SMin1MsAC, pool5Plus1SMin1MsBC, // base time + 1s - 1ms; kept since older than lastKeptTime
 			},
 
 			lastKeptTime: baseTime,
 
-			expectedKeptRecords: []types.TwapRecord{pool3BaseSecMin3Ms, pool3BaseSecMin1Ms, pool3BaseSecBaseMs},
+			expectedKeptRecords: []types.TwapRecord{
+				pool3BaseSecMin3Ms, // in queue for deletion
+				pool3BaseSecMin2Ms, // in queue for deletion
+				pool3BaseSecMin1Ms,
+				pool5BaseSecMin1MsAB, pool5BaseSecMin1MsAC, pool5BaseSecMin1MsBC,
+				pool3BaseSecBaseMs,
+				pool5BaseSecBaseMsAB, pool5BaseSecBaseMsAC, pool5BaseSecBaseMsBC,
+				pool5Plus1SMin1MsAB, pool5Plus1SMin1MsAC, pool5Plus1SMin1MsBC,
+				pool5Plus1SBaseMsAB, pool5Plus1SBaseMsAC, pool5Plus1SBaseMsBC,
+				pool5Min2SMin1MsBC, // in queue for deletion
+				pool5Min2SBaseMsBC, // in queue for deletion
+				pool5Min1SMin1MsBC, // in queue for deletion
+			},
 
-			overwriteLimit: 1,
+			overwriteLimit: 9, // 5 total records in queue to be deleted due to limit
 		},
 	}
 	for name, tc := range tests {
 		s.Run(name, func() {
 			s.SetupTest()
+			poolCoins := []sdk.Coins{twoAssetPoolCoins, muliAssetPoolCoins, twoAssetPoolCoins, twoAssetPoolCoins, muliAssetPoolCoins}
+			s.prepPoolsAndRemoveRecords(poolCoins)
+
 			s.preSetRecords(tc.recordsToPreSet)
 
-			ctx := s.Ctx
 			twapKeeper := s.twapkeeper
 
 			if tc.overwriteLimit != 0 {
@@ -541,12 +576,12 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 			}
 
 			state := types.PruningState{
-				IsPruning:    true,
-				LastKeptTime: tc.lastKeptTime,
-				LastKeySeen:  types.FormatHistoricalTimeIndexTWAPKey(tc.lastKeptTime, 0, "", ""),
+				IsPruning:      true,
+				LastKeptTime:   tc.lastKeptTime,
+				LastSeenPoolId: s.App.PoolManagerKeeper.GetNextPoolId(s.Ctx) - 1,
 			}
 
-			err := twapKeeper.PruneRecordsBeforeTimeButNewest(ctx, state)
+			err := twapKeeper.PruneRecordsBeforeTimeButNewest(s.Ctx, state)
 			s.Require().NoError(err)
 
 			s.validateExpectedRecords(tc.expectedKeptRecords)
@@ -556,6 +591,11 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 
 // TestPruneRecordsBeforeTimeButNewestPerBlock tests TWAP record pruning logic over multiple blocks.
 func (s *TestSuite) TestPruneRecordsBeforeTimeButNewestPerBlock() {
+	s.SetupTest()
+
+	poolCoins := []sdk.Coins{twoAssetPoolCoins, muliAssetPoolCoins, twoAssetPoolCoins, twoAssetPoolCoins, muliAssetPoolCoins}
+	s.prepPoolsAndRemoveRecords(poolCoins)
+
 	// N.B.: the records follow the following naming convention:
 	// <pool id><delta from base time in seconds><delta from base time in milliseconds>
 	// These are manually created to be able to refer to them by name
@@ -585,8 +625,7 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewestPerBlock() {
 		pool5BaseSecMin1MsAB, pool5BaseSecMin1MsAC, pool5BaseSecMin1MsBC,
 		pool5Plus1SMin1MsAB, pool5Plus1SMin1MsAC, pool5Plus1SMin1MsBC := s.CreateTestRecordsFromTimeInPool(baseTime.Add(-time.Millisecond), 5)
 
-	s.SetupTest()
-
+	// 48 records
 	recordsToPreSet := []types.TwapRecord{
 		pool3BaseSecMin3Ms, // base time - 3ms; kept since older
 		pool3BaseSecMin2Ms, // base time - 2ms; kept since older
@@ -620,13 +659,13 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewestPerBlock() {
 	}
 	s.preSetRecords(recordsToPreSet)
 
-	twap.NumRecordsToPrunePerBlock = 6 // 3 records max will be pruned per block
+	twap.NumRecordsToPrunePerBlock = 3 // 3 records max will be pruned per block
 	lastKeptTime := baseTime.Add(-time.Second).Add(2 * -time.Millisecond)
 
 	state := types.PruningState{
-		IsPruning:    true,
-		LastKeptTime: lastKeptTime,
-		LastKeySeen:  types.FormatHistoricalTimeIndexTWAPKey(lastKeptTime, 0, "", ""),
+		IsPruning:      true,
+		LastKeptTime:   lastKeptTime,
+		LastSeenPoolId: s.App.PoolManagerKeeper.GetNextPoolId(s.Ctx) - 1,
 	}
 
 	// Block 1
@@ -637,15 +676,8 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewestPerBlock() {
 	newPruningState := s.twapkeeper.GetPruningState(s.Ctx)
 	s.Require().Equal(true, newPruningState.IsPruning)
 	s.Require().Equal(lastKeptTime, newPruningState.LastKeptTime)
-	timeS, poolId, asset0, asset1, err := types.ParseFieldsFromHistoricalTimeKey(newPruningState.LastKeySeen)
-	s.Require().NoError(err)
 
-	// The last key seen is the third record we delete, since we prune 3 records per block.
-	s.Require().Equal(pool5Min2SMin1MsAB.Time.Format("2006-01-02T15:04:05.000000000"), timeS)
-	s.Require().Equal(pool5Min2SMin1MsAB.PoolId, poolId)
-	s.Require().Equal(pool5Min2SMin1MsAB.Asset0Denom, asset0)
-	s.Require().Equal(pool5Min2SMin1MsAB.Asset1Denom, asset1)
-
+	// 46 records
 	expectedKeptRecords := []types.TwapRecord{
 		pool1Min2SMin3Ms,                                           // base time - 2s - 3ms; in queue to be deleted
 		pool1Min2SMin2Ms,                                           // base time - 2s - 2ms; in queue to be deleted
@@ -677,12 +709,12 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewestPerBlock() {
 	err = s.twapkeeper.PruneRecordsBeforeTimeButNewest(s.Ctx, newPruningState)
 	s.Require().NoError(err)
 
-	// Pruning state should show now show pruning is false
+	// Pruning state should still be true because pool 3 brought us to the pruning limit, despite no more records needing to be pruned.
 	newPruningState = s.twapkeeper.GetPruningState(s.Ctx)
-	s.Require().Equal(false, newPruningState.IsPruning)
+	s.Require().Equal(true, newPruningState.IsPruning)
 
+	// 42 records
 	expectedKeptRecords = []types.TwapRecord{
-		pool1Min2SMin1Ms,                                           // mistakenly kept, is fine though
 		pool1Min2SBaseMs,                                           // base time - 2s; kept since newest before lastKeptTime
 		pool5Min2SBaseMsAB, pool5Min2SBaseMsAC, pool5Min2SBaseMsBC, // base time - 2s; kept since newest before lastKeptTime
 		pool2Min1SMin3MsAB, pool2Min1SMin3MsAC, pool2Min1SMin3MsBC, // base time - 1s - 3ms; kept since newest before lastKeptTime
@@ -705,6 +737,17 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewestPerBlock() {
 		pool5Plus1SBaseMsAB, pool5Plus1SBaseMsAC, pool5Plus1SBaseMsBC, // base time + 1s; kept since older
 	}
 
+	s.validateExpectedRecords(expectedKeptRecords)
+
+	// Block 3
+	err = s.twapkeeper.PruneRecordsBeforeTimeButNewest(s.Ctx, newPruningState)
+	s.Require().NoError(err)
+
+	// Pruning state should now be false since we've iterated through all the records.
+	newPruningState = s.twapkeeper.GetPruningState(s.Ctx)
+	s.Require().Equal(false, newPruningState.IsPruning)
+
+	// Records don't change from last block since there were no more records to prune.
 	s.validateExpectedRecords(expectedKeptRecords)
 }
 
@@ -868,5 +911,24 @@ func (s *TestSuite) TestGetAllHistoricalPoolIndexedTWAPsForPooId() {
 			// Assertions.
 			s.Equal(test.expectedRecords, actualRecords)
 		})
+	}
+}
+
+// prepPoolsAndRemoveRecords creates pool and then removes the records that get created
+// at time of pool creation. This method is used to simplify tests. Pruning logic
+// now requires we pull the underlying denoms from pools as well as the last pool ID.
+// This method lets us create these state entries while keeping the existing test structure.
+func (s *TestSuite) prepPoolsAndRemoveRecords(poolCoins []sdk.Coins) {
+	for _, coins := range poolCoins {
+		s.CreatePoolFromTypeWithCoins(poolmanagertypes.Balancer, coins)
+	}
+
+	twapStoreKey := s.App.AppKeepers.GetKey(types.StoreKey)
+	store := s.Ctx.KVStore(twapStoreKey)
+	iter := sdk.KVStoreReversePrefixIterator(store, []byte(types.HistoricalTWAPPoolIndexPrefix))
+	defer iter.Close()
+	for iter.Valid() {
+		store.Delete(iter.Key())
+		iter.Next()
 	}
 }

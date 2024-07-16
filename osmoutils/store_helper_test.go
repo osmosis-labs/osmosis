@@ -63,7 +63,7 @@ func (suite *TestSuite) SetupTest() {
 		suite.authStoreKey,
 		authtypes.ProtoBaseAccount,
 		maccPerms,
-		"osmo",
+		"melody",
 		authtypes.NewModuleAddress(authtypes.ModuleName).String())
 }
 

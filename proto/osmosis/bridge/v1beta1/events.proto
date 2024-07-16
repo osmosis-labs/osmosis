@@ -1,0 +1,53 @@
+syntax = "proto3";
+package osmosis.bridge.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "osmosis/bridge/v1beta1/bridge.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v23/x/bridge/types";
+
+message EventInboundTransfer {
+  // Sender is a sender's address
+  string sender = 1;
+  // DestAddr is a destination Osmosis address
+  string dest_addr = 2;
+  // Asset contains a source chain and a target denom
+  Asset asset = 3 [ (gogoproto.nullable) = false ];
+  // Amount of coins to transfer
+  string amount = 4 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message EventOutboundTransfer {
+  // Sender is a sender's address
+  string sender = 1;
+  // DestAddr is a destination Osmosis address
+  string dest_addr = 2;
+  // Asset contains a source chain and a target denom
+  Asset asset = 3 [ (gogoproto.nullable) = false ];
+  // Amount of coins to transfer
+  string amount = 4 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message EventUpdateParams {
+  repeated string new_signers = 1;
+  repeated string created_signers = 2;
+  repeated string deleted_signers = 3;
+
+  repeated AssetWithStatus new_assets = 4 [ (gogoproto.nullable) = false ];
+  repeated AssetWithStatus created_assets = 5 [ (gogoproto.nullable) = false ];
+  repeated AssetWithStatus deleted_assets = 6 [ (gogoproto.nullable) = false ];
+}
+
+message EventChangeAssetStatus {
+  // Sender is a sender's address
+  string sender = 1;
+  // NewAssetStatus is a pair of the asset and its new status
+  AssetWithStatus old_asset_status = 2 [ (gogoproto.nullable) = false ];
+  AssetWithStatus new_asset_status = 3 [ (gogoproto.nullable) = false ];
+}

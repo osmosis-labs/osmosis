@@ -58,6 +58,8 @@ import (
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
 	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v7/keeper"
+	ibcwasmkeeper "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/keeper"
+	ibcwasmtypes "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
 	icahost "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/keeper"
 	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
@@ -146,6 +148,7 @@ type AppKeepers struct {
 	ICAHostKeeper                *icahostkeeper.Keeper
 	ICQKeeper                    *icqkeeper.Keeper
 	TransferKeeper               *ibctransferkeeper.Keeper
+	IBCWasmClientKeeper          *ibcwasmkeeper.Keeper
 	EvidenceKeeper               *evidencekeeper.Keeper
 	GAMMKeeper                   *gammkeeper.Keeper
 	TwapKeeper                   *twap.Keeper
@@ -196,6 +199,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	wasmConfig wasmtypes.WasmConfig,
 	wasmOpts []wasmkeeper.Option,
 	blockedAddress map[string]bool,
+	ibcWasmConfig ibcwasmtypes.WasmConfig,
 ) {
 	legacyAmino := encodingConfig.Amino
 	// Add 'normal' keepers
@@ -275,6 +279,18 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		nil,
 	)
 	appKeepers.IBCHooksKeeper = hooksKeeper
+
+	// We are using a separate VM here
+	ibcWasmClientKeeper := ibcwasmkeeper.NewKeeperWithConfig(
+		appCodec,
+		appKeepers.keys[ibcwasmtypes.StoreKey],
+		appKeepers.IBCKeeper.ClientKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		ibcWasmConfig,
+		bApp.GRPCQueryRouter(),
+	)
+
+	appKeepers.IBCWasmClientKeeper = &ibcWasmClientKeeper
 
 	appKeepers.WireICS20PreWasmKeeper(appCodec, bApp, appKeepers.IBCHooksKeeper)
 
@@ -389,6 +405,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	protorevKeeper := protorevkeeper.NewKeeper(
 		appCodec, appKeepers.keys[protorevtypes.StoreKey],
+		appKeepers.tkeys[protorevtypes.TransientStoreKey],
 		appKeepers.GetSubspace(protorevtypes.ModuleName),
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
@@ -396,6 +413,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.EpochsKeeper,
 		appKeepers.PoolManagerKeeper,
 		appKeepers.ConcentratedLiquidityKeeper,
+		appKeepers.DistrKeeper,
 	)
 	appKeepers.ProtoRevKeeper = &protorevKeeper
 	appKeepers.PoolManagerKeeper.SetProtorevKeeper(appKeepers.ProtoRevKeeper)
@@ -842,6 +860,7 @@ func KVStoreKeys() []string {
 		upgradetypes.StoreKey,
 		evidencetypes.StoreKey,
 		ibctransfertypes.StoreKey,
+		ibcwasmtypes.StoreKey,
 		capabilitytypes.StoreKey,
 		gammtypes.StoreKey,
 		twaptypes.StoreKey,

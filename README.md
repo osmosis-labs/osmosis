@@ -17,35 +17,11 @@ Code](https://img.shields.io/tokei/lines/github/osmosis-labs/osmosis?style=flat-
 Super-Linter](https://img.shields.io/github/actions/workflow/status/osmosis-labs/osmosis/lint.yml?style=flat-square&label=Lint)](https://github.com/marketplace/actions/super-linter)
 [![Discord](https://badgen.net/badge/icon/discord?icon=discord&label)](https://discord.gg/osmosis)
 
-Osmosis is a fair-launched, customizable automated market maker for
-interchain assets that allows the creation and management of
-non-custodial, self-balancing, interchain token index similar to one of
-Balancer.
+As the largest DEX in the Cosmos, Osmosis is a source of liquidity for over 50 sovereign blockchains connected via IBC. Pioneering in its approach, Osmosis offers a dynamic trading and liquidity provision experience, integrating non-IBC assets from other ecosystems, including: Bitcoin, Ethereum, Solana, Avalanche, and Polkadot. Initially adopting Balancer-style pools, Osmosis now also features a concentrated liquidity model that is orders of magnitude more capital efficient, meaning that significantly less liquidity is required to handle the same amount of trading volume with minimal slippage.
 
-Inspired by [Balancer](http://balancer.finance/whitepaper) and Sunny
-Aggarwal's '[DAOfying Uniswap Automated Market Maker
-Pools](https://www.sunnya97.com/blog/daoifying-uniswap-automated-market-maker-pools)',
-the goal for Osmosis is to provide the best-in-class tools that extend
-the use of AMMs within the Cosmos ecosystem beyond traditional token
-swap-type use cases. Bonding curves, while having found their primary
-use case in decentralized exchange mechanisms, its potential use case can be
-further extended through the customizability that Osmosis offers.
-Through the customizability offered by Osmosis such as custom-curve AMMs,
-dynamic adjustments of spread factors, multi-token liquidity pools--the AMM
-can offer decentralized formation of token fundraisers, interchain
-staking, options market, and more for the Cosmos ecosystem.
+As a true Layer 1 appchain, Osmosis has greater control over the full blockchain stack than traditional smart contract DEXs, which must follow the code of the parent chain that it is built on. This fine-grained control has enabled, for example, the development of Superfluid Staking, an extension of Proof of Stake that allows assets at the application layer to be staked to secure the chain. The customizability of appchains also allows implementing features like the Protocol Revenue module, which enables Osmosis to conduct on-chain cyclic arbitrage on behalf of OSMO stakers, balancing prices across pools while generating real yield revenue from this volume. Additionally, as a sovereign appchain, Osmosis governance can vote on upgrades to the protocol. One example of this was the introduction of a Taker Fee, which switched on the collection of exchange fees to generate a diverse yield from Osmosis volume and distribute it to OSMO stakers.
 
-Whereas most Cosmos zones have focused their incentive scheme on the
-delegators, Osmosis attempts to align the interests of multiple
-stakeholders of the ecosystem such as LPs, DAO members, as well as
-delegators. One mechanism that is introduced is how staked liquidity
-providers have sovereign ownership over their pools, and through the
-pool governance process allow them to adjust the parameters depending on
-the pool's competition and market conditions. Osmosis is a sovereign
-Cosmos zone that derives its sovereignty not only from its
-application-specific blockchain architecture but also the collective
-sovereignty of the LPs that has aligned interest to different tokens
-that they are providing liquidity for.
+Osmosis is bringing the centralized exchange experience to the decentralized world by building a cross-chain DEX and trading suite that aims to interconnect all chains via IBC. To reach this goal, Osmosis hosts an ever-expanding suite of DeFi applications, including: lending/borrowing, margin trading, strategy vaults, perpetuals, fiat on-ramping, NFTs, stablecoins, etc.—all of the functionalities that centralized exchanges offer, and more, but in the trust-minimized environment of decentralized finance.
 
 ## System Requirements
 

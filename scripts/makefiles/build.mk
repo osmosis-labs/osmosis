@@ -11,14 +11,14 @@ build-help:
 	@echo "Available Commands:"
 	@echo "  all                              Build all targets"
 	@echo "  check-version                    Check Go version"
-	@echo "  dev-install                      Install development build"
+	@echo "  contract-tests-hooks             Build contract tests hooks"
 	@echo "  dev-build                        Build development version"
+	@echo "  dev-install                      Install development build"
 	@echo "  install-with-autocomplete        Install with autocomplete support"
+	@echo "  linux                            Build for Linux"
 	@echo "  reproducible                     Build reproducible binaries"
 	@echo "  reproducible-amd64               Build reproducible amd64 binary"
 	@echo "  reproducible-arm64               Build reproducible arm64 binary"
-	@echo "  linux                            Build for Linux"
-	@echo "  contract-tests-hooks             Build contract tests hooks"
 
 build-check-version:
 	@echo "Go version: $(GO_MAJOR_VERSION).$(GO_MINOR_VERSION)"

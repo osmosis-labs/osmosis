@@ -8,13 +8,13 @@ deps-help:
 	@echo "  make deps-[command]"
 	@echo ""
 	@echo "Available Commands:"
-	@echo "  go-mod-cache             Download go modules to local cache"
-	@echo "  go.sum                   Ensure dependencies have not been modified"
-	@echo "  draw                     Create a dependency graph"
 	@echo "  clean                    Remove artifacts"
 	@echo "  distclean                Remove vendor directory"
-	@echo "  update-sdk-version       Update SDK version"
+	@echo "  draw                     Create a dependency graph"
+	@echo "  go-mod-cache             Download go modules to local cache"
+	@echo "  go.sum                   Ensure dependencies have not been modified"
 	@echo "  tidy-workspace           Tidy workspace"
+	@echo "  update-sdk-version       Update SDK version"
 deps: deps-help
 
 deps-go-mod-cache: go.sum

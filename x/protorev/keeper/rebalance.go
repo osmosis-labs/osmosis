@@ -31,7 +31,7 @@ func (k Keeper) IterateRoutes(ctx sdk.Context, routes []RouteMetaData, remaining
 			continue
 		}
 
-		// If the profit is greater than zero, then we convert the profits to note and compare profits in terms of note
+		// If the profit is greater than zero, then we convert the profits to uosmo and compare profits in terms of uosmo
 		if profit.GT(zeroInt) {
 			profit, err := k.ConvertProfits(ctx, inputCoin, profit)
 			if err != nil {
@@ -51,7 +51,7 @@ func (k Keeper) IterateRoutes(ctx sdk.Context, routes []RouteMetaData, remaining
 	return maxProfitInputCoin, maxProfit, optimalRoute
 }
 
-// ConvertProfits converts the profit denom to note to allow for a fair comparison of profits
+// ConvertProfits converts the profit denom to uosmo to allow for a fair comparison of profits
 //
 // NOTE: This does not check the underlying pool before swapping so this may go over the MaxTicksCrossed.
 func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit osmomath.Int) (osmomath.Int, error) {
@@ -59,7 +59,7 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit osmom
 		return profit, nil
 	}
 
-	// Get highest liquidity pool ID for the input coin and note
+	// Get highest liquidity pool ID for the input coin and uosmo
 	conversionPoolID, err := k.GetPoolForDenomPair(ctx, types.SymphonyDenomination, inputCoin.Denom)
 	if err != nil {
 		return profit, err
@@ -76,8 +76,8 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit osmom
 		return profit, err
 	}
 
-	// Calculate the amount of note that we can get if we swapped the
-	// profited amount of the original asset through the highest note liquidity pool
+	// Calculate the amount of uosmo that we can get if we swapped the
+	// profited amount of the original asset through the highest uosmo liquidity pool
 	conversionTokenOut, err := swapModule.CalcOutAmtGivenIn(
 		ctx,
 		conversionPool,
@@ -89,7 +89,7 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit osmom
 		return profit, err
 	}
 
-	// return the profit denominated in note
+	// return the profit denominated in uosmo
 	return conversionTokenOut.Amount, nil
 }
 
@@ -98,7 +98,7 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit osmom
 // and then subtracting the amount in from the amount out to get the profit
 func (k Keeper) EstimateMultihopProfit(ctx sdk.Context, inputDenom string, amount osmomath.Int, route poolmanagertypes.SwapAmountInRoutes) (sdk.Coin, osmomath.Int, error) {
 	tokenIn := sdk.Coin{Denom: inputDenom, Amount: amount}
-	amtOut, err := k.poolmanagerKeeper.MultihopEstimateOutGivenExactAmountIn(ctx, route, tokenIn)
+	amtOut, err := k.poolmanagerKeeper.MultihopEstimateOutGivenExactAmountInNoTakerFee(ctx, route, tokenIn)
 	if err != nil {
 		return sdk.Coin{}, osmomath.ZeroInt(), err
 	}
@@ -376,11 +376,6 @@ func (k Keeper) ExecuteTrade(ctx sdk.Context, route poolmanagertypes.SwapAmountI
 	// Update the module statistics stores
 	if err = k.UpdateStatistics(ctx, route, inputCoin.Denom, profit); err != nil {
 		return err
-	}
-
-	// Send the developer fee to the developer address
-	if err := k.SendDeveloperFee(ctx, sdk.NewCoin(inputCoin.Denom, profit)); err != nil {
-		ctx.Logger().Error("failed to send developer fee: " + err.Error())
 	}
 
 	// Create and emit the backrun event and add it to the context

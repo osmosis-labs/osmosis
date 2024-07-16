@@ -466,6 +466,20 @@ func (s *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 	}
 }
 
+func (s *KeeperTestSuite) TestOutOfGasError() {
+	s.SetupTest()
+	poolId := s.PrepareBalancerPool()
+
+	pool, err := s.App.GAMMKeeper.GetPool(s.Ctx, poolId)
+	s.Require().NoError(err)
+	foocoin := sdk.NewCoin("foo", osmomath.NewInt(10))
+	spreadFactor := pool.GetSpreadFactor(s.Ctx)
+	ctx := s.Ctx.WithGasMeter(sdk.NewGasMeter(10))
+	_, err = s.App.GAMMKeeper.SwapExactAmountIn(ctx, s.TestAccs[0], pool, foocoin, "bar", osmomath.ZeroInt(), spreadFactor)
+	s.Require().Error(err)
+	s.Require().Contains(err.Error(), "lack of gas")
+}
+
 // UNFORKINGNOTE: This test really wasn't testing anything important
 // With the unfork, we can no longer utilize mocks when calling SetPools, since
 // the interface needs to be registered with codec, and the mocks aren't wired to do that.

@@ -28,6 +28,8 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	ibcwasmkeeper "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/keeper"
+	ibcwasmtypes "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 
@@ -96,6 +98,7 @@ import (
 	v21 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v21"
 	v22 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v22"
 	v23 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v23"
+	v24 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v24"
 	v3 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v3"
 	v4 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v4"
 	v5 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v5"
@@ -148,7 +151,7 @@ var (
 
 	_ runtime.AppI = (*SymphonyApp)(nil)
 
-	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade, v21.Upgrade, v22.Upgrade, v23.Upgrade}
+	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade, v21.Upgrade, v22.Upgrade, v23.Upgrade, v24.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 )
 
@@ -236,6 +239,12 @@ func NewSymphonyApp(
 	app.homePath = homePath
 	dataDir := filepath.Join(homePath, "data")
 	wasmDir := filepath.Join(homePath, "wasm")
+	ibcWasmConfig :=
+		ibcwasmtypes.WasmConfig{
+			DataDir:               filepath.Join(homePath, "ibc_08-wasm"),
+			SupportedCapabilities: "iterator",
+			ContractDebugMode:     false,
+		}
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
 	// Uncomment this for debugging contracts. In the future this could be made into a param passed by the tests
 	// wasmConfig.ContractDebugMode = true
@@ -262,6 +271,7 @@ func NewSymphonyApp(
 		wasmConfig,
 		wasmOpts,
 		app.BlockedAddrs(),
+		ibcWasmConfig,
 	)
 
 	// Initialize the ingest manager for propagating data to external sinks.
@@ -397,6 +407,13 @@ func NewSymphonyApp(
 		if err != nil {
 			panic(fmt.Errorf("failed to register snapshot extension: %s", err))
 		}
+
+		err = manager.RegisterExtensions(
+			ibcwasmkeeper.NewWasmSnapshotter(app.CommitMultiStore(), app.IBCWasmClientKeeper),
+		)
+		if err != nil {
+			panic(fmt.Errorf("failed to register snapshot extension: %s", err))
+		}
 	}
 
 	if loadLatest {
@@ -408,6 +425,10 @@ func NewSymphonyApp(
 
 		// Initialize pinned codes in wasmvm as they are not persisted there
 		if err := app.WasmKeeper.InitializePinnedCodes(ctx); err != nil {
+			tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
+		}
+
+		if err := ibcwasmkeeper.InitializePinnedCodes(ctx, appCodec); err != nil {
 			tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
 		}
 	}

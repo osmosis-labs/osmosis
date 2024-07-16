@@ -22,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -32,7 +31,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	symphonyApp "github.com/osmosis-labs/osmosis/v23/app"
+	SymphonyApp "github.com/osmosis-labs/osmosis/v23/app"
 	"github.com/osmosis-labs/osmosis/v23/tests/e2e/util"
 )
 
@@ -121,7 +120,7 @@ func (n *internalNode) createAppConfig(nodeConfig *NodeConfig) {
 	appConfig.BaseConfig.PruningKeepRecent = nodeConfig.PruningKeepRecent
 	appConfig.BaseConfig.PruningInterval = nodeConfig.PruningInterval
 	appConfig.API.Enable = true
-	appConfig.MinGasPrices = fmt.Sprintf("%s%s", MinGasPrice, MelodyDenom)
+	appConfig.MinGasPrices = fmt.Sprintf("%s%s", MinGasPrice, OsmoDenom)
 	appConfig.StateSync.SnapshotInterval = nodeConfig.SnapshotInterval
 	appConfig.StateSync.SnapshotKeepRecent = nodeConfig.SnapshotKeepRecent
 	appConfig.GRPC.Address = "0.0.0.0:9090"
@@ -170,8 +169,7 @@ func (n *internalNode) createConsensusKey() error {
 }
 
 func (n *internalNode) createKeyFromMnemonic(name, mnemonic string) error {
-	cfg := testutil.MakeTestEncodingConfig()
-	kb, err := keyring.New(keyringAppName, keyring.BackendTest, n.configDir(), nil, cfg.Codec)
+	kb, err := keyring.New(keyringAppName, keyring.BackendTest, n.configDir(), nil, util.Cdc)
 	if err != nil {
 		return err
 	}
@@ -277,7 +275,7 @@ func (n *internalNode) init() error {
 		return err
 	}
 
-	appState, err := json.MarshalIndent(symphonyApp.ModuleBasics.DefaultGenesis(util.Cdc), "", " ")
+	appState, err := json.MarshalIndent(SymphonyApp.ModuleBasics.DefaultGenesis(util.Cdc), "", " ")
 	if err != nil {
 		return fmt.Errorf("failed to JSON encode app genesis state: %w", err)
 	}
