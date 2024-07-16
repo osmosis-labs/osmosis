@@ -458,7 +458,7 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParameters()
 		},
 		WeightedDeveloperRewardsReceivers: []types.WeightedAddress{
 			{
-				Address: "symphony14kjcwdwcqsujkdt8n5qwpd8x8ty2rys5rjrdjj",
+				Address: "symphony14kjcwdwcqsujkdt8n5qwpd8x8ty2rys5u3sjkx",
 				Weight:  osmomath.NewDecWithPrec(2887, 4),
 			},
 			{

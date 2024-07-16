@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	symphonyapp "github.com/osmosis-labs/osmosis/v23/app"
+	symphonyApp "github.com/osmosis-labs/osmosis/v23/app"
 
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
@@ -31,7 +31,7 @@ func (s *KeeperTestSuite) SetupTest(isCheckTx bool) {
 	s.Setup()
 	s.queryClient = types.NewQueryClient(s.QueryHelper)
 
-	encodingConfig := symphonyapp.MakeEncodingConfig()
+	encodingConfig := symphonyApp.MakeEncodingConfig()
 	s.clientCtx = client.Context{}.
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
@@ -39,7 +39,7 @@ func (s *KeeperTestSuite) SetupTest(isCheckTx bool) {
 		WithCodec(encodingConfig.Marshaler)
 
 	// We set the base denom here in order for highest liquidity routes to get generated.
-	// This is used in the tx fees epoch hook to swap the non MELODY to other tokens.
+	// This is used in the tx fees epoch hook to swap the non OSMO to other tokens.
 	baseDenom, err := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
 	s.Require().NoError(err)
 

@@ -36,7 +36,7 @@ func TestGenesisStateValidate(t *testing.T) {
 }
 
 func TestNullAccount(t *testing.T) {
-	strAddress, err := sdk.AccAddressFromBech32("symphony1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030")
+	strAddress, err := sdk.AccAddressFromBech32("osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030")
 	require.NoError(t, err)
 	require.True(t, types.DefaultNullAddress.Equals(strAddress))
 }

@@ -18,7 +18,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/stableswap"
 
-	SymphonyApp "github.com/osmosis-labs/osmosis/v23/app"
+	symphonyApp "github.com/osmosis-labs/osmosis/v23/app"
 )
 
 type KeeperTestSuite struct {
@@ -97,7 +97,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	err := s.App.ProtoRevKeeper.SetBaseDenoms(s.Ctx, baseDenomPriorities)
 	s.Require().NoError(err)
 
-	encodingConfig := SymphonyApp.MakeEncodingConfig()
+	encodingConfig := symphonyApp.MakeEncodingConfig()
 	s.clientCtx = client.Context{}.
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).

@@ -6,8 +6,8 @@ type ImageConfig struct {
 	InitRepository string
 	InitTag        string
 
-	SymphonyRepository string
-	SymphonyTag        string
+	OsmosisRepository string
+	OsmosisTag        string
 
 	RelayerRepository string
 	RelayerTag        string
@@ -15,19 +15,19 @@ type ImageConfig struct {
 
 //nolint:deadcode
 const (
-	// Current Git branch symphony repo/version. It is meant to be built locally.
+	// Current Git branch osmosis repo/version. It is meant to be built locally.
 	// It is used when skipping upgrade by setting OSMOSIS_E2E_SKIP_UPGRADE to true).
 	// This image should be pre-built with `make e2e-docker-build-debug` either in CI or locally.
-	CurrentBranchMelodyRepository = "symphony"
-	CurrentBranchMelodyTag        = "debug"
-	// Pre-upgrade symphony repo/tag to pull.
+	CurrentBranchOsmoRepository = "osmosis"
+	CurrentBranchOsmoTag        = "debug"
+	// Pre-upgrade osmosis repo/tag to pull.
 	// It should be uploaded to Docker Hub. OSMOSIS_E2E_SKIP_UPGRADE should be unset
 	// for this functionality to be used.
-	previousVersionMelodyRepository = "osmolabs/symphony"
-	previousVersionMelodyTag        = "22.0.0-alpine"
-	// Pre-upgrade repo/tag for symphony initialization (this should be one version below upgradeVersion)
-	previousVersionInitRepository = "osmolabs/symphony-e2e-init-chain"
-	previousVersionInitTag        = "22.0.0"
+	previousVersionOsmoRepository = "osmolabs/osmosis"
+	previousVersionOsmoTag        = "23.0.0-rc1-alpine"
+	// Pre-upgrade repo/tag for osmosis initialization (this should be one version below upgradeVersion)
+	previousVersionInitRepository = "osmolabs/osmosis-e2e-init-chain"
+	previousVersionInitTag        = "23.0.0-rc1-temp"
 	// Hermes repo/version for relayer
 	relayerRepository = "informalsystems/hermes"
 	relayerTag        = "1.5.1"
@@ -46,8 +46,8 @@ func NewImageConfig(isUpgrade, isFork bool) ImageConfig {
 		// If upgrade is not tested, we do not need InitRepository and InitTag
 		// because we directly call the initialization logic without
 		// the need for Docker.
-		config.SymphonyRepository = CurrentBranchMelodyRepository
-		config.SymphonyTag = CurrentBranchMelodyTag
+		config.OsmosisRepository = CurrentBranchOsmoRepository
+		config.OsmosisTag = CurrentBranchOsmoTag
 		return config
 	}
 
@@ -61,16 +61,16 @@ func NewImageConfig(isUpgrade, isFork bool) ImageConfig {
 		// Normally, validators switch the binaries pre-fork height
 		// Then, once the fork height is reached, the state breaking-logic
 		// is run.
-		config.SymphonyRepository = CurrentBranchMelodyRepository
-		config.SymphonyTag = CurrentBranchMelodyTag
+		config.OsmosisRepository = CurrentBranchOsmoRepository
+		config.OsmosisTag = CurrentBranchOsmoTag
 	} else {
 		// Upgrades are run at the time when upgrade height is reached
 		// and are submitted via a governance proposal. Therefore, we
-		// must start running the previous Symphony version. Then, the node
+		// must start running the previous Osmosis version. Then, the node
 		// should auto-upgrade, at which point we can restart the updated
-		// Symphony validator container.
-		config.SymphonyRepository = previousVersionMelodyRepository
-		config.SymphonyTag = previousVersionMelodyTag
+		// Osmosis validator container.
+		config.OsmosisRepository = previousVersionOsmoRepository
+		config.OsmosisTag = previousVersionOsmoTag
 	}
 
 	return config
