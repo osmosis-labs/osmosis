@@ -68,15 +68,19 @@ func (k *Keeper) setTakerFeeShareAgreementsMapCached(ctx sdk.Context) error {
 	return nil
 }
 
-// GetTakerFeeShareAgreementFromDenom retrieves a specific taker fee share agreement from the store.
-// Used in the TakerFeeShareAgreementFromDenomRequest gRPC query.
-// UNSAFE to use in a hook in a different module, since hooks don't contain the populated cache.
-func (k Keeper) GetTakerFeeShareAgreementFromDenom(takerFeeShareDenom string) (types.TakerFeeShareAgreement, bool) {
+// getTakerFeeShareAgreementFromDenom retrieves a specific taker fee share agreement from the store.
+func (k Keeper) getTakerFeeShareAgreementFromDenom(takerFeeShareDenom string) (types.TakerFeeShareAgreement, bool) {
 	takerFeeShareAgreement, found := k.cachedTakerFeeShareAgreementMap[takerFeeShareDenom]
 	if !found {
 		return types.TakerFeeShareAgreement{}, false
 	}
 	return takerFeeShareAgreement, true
+}
+
+// GetTakerFeeShareAgreementFromDenomUNSAFE is used to expose an internal method to gRPC query. This method should not be used in other modules, since the cache is not populated in those keepers.
+// Used in the TakerFeeShareAgreementFromDenomRequest gRPC query.
+func (k Keeper) GetTakerFeeShareAgreementFromDenomUNSAFE(takerFeeShareDenom string) (types.TakerFeeShareAgreement, bool) {
+	return k.getTakerFeeShareAgreementFromDenom(takerFeeShareDenom)
 }
 
 // GetTakerFeeShareAgreementFromDenom retrieves a specific taker fee share agreement from the store, bypassing cache.
@@ -314,10 +318,8 @@ func (k *Keeper) setRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error 
 	return nil
 }
 
-// GetRegisteredAlloyedPoolFromDenom retrieves a specific registered alloyed pool from the store via the alloyed denom.
-// Used in the RegisteredAlloyedPoolFromDenomRequest gRPC query.
-// UNSAFE to use in a hook in a different module, since hooks don't contain the populated cache.
-func (k Keeper) GetRegisteredAlloyedPoolFromDenom(alloyedDenom string) (types.AlloyContractTakerFeeShareState, bool) {
+// getRegisteredAlloyedPoolFromDenom retrieves a specific registered alloyed pool from the store via the alloyed denom.
+func (k Keeper) getRegisteredAlloyedPoolFromDenom(alloyedDenom string) (types.AlloyContractTakerFeeShareState, bool) {
 	registeredAlloyedPool, found := k.cachedRegisteredAlloyPoolByAlloyDenomMap[alloyedDenom]
 	if !found {
 		return types.AlloyContractTakerFeeShareState{}, false
@@ -325,19 +327,29 @@ func (k Keeper) GetRegisteredAlloyedPoolFromDenom(alloyedDenom string) (types.Al
 	return registeredAlloyedPool, true
 }
 
-// GetRegisteredAlloyedPoolFromPoolId retrieves a specific registered alloyed pool from the store via the pool id.
-// Used in the RegisteredAlloyedPoolFromPoolIdRequest gRPC query.
-// UNSAFE to use in a hook in a different module, since hooks don't contain the populated cache.
-func (k Keeper) GetRegisteredAlloyedPoolFromPoolId(ctx sdk.Context, poolId uint64) (types.AlloyContractTakerFeeShareState, error) {
+// GetRegisteredAlloyedPoolFromDenomUNSAFE is used to expose an internal method to gRPC query. This method should not be used in other modules, since the cache is not populated in those keepers.
+// Used in the RegisteredAlloyedPoolFromDenomRequest gRPC query.
+func (k Keeper) GetRegisteredAlloyedPoolFromDenomUNSAFE(alloyedDenom string) (types.AlloyContractTakerFeeShareState, bool) {
+	return k.getRegisteredAlloyedPoolFromDenom(alloyedDenom)
+}
+
+// getRegisteredAlloyedPoolFromPoolId retrieves a specific registered alloyed pool from the store via the pool id.
+func (k Keeper) getRegisteredAlloyedPoolFromPoolId(ctx sdk.Context, poolId uint64) (types.AlloyContractTakerFeeShareState, error) {
 	alloyedDenom, err := k.getAlloyedDenomFromPoolId(ctx, poolId)
 	if err != nil {
 		return types.AlloyContractTakerFeeShareState{}, err
 	}
-	registeredAlloyedPool, found := k.GetRegisteredAlloyedPoolFromDenom(alloyedDenom)
+	registeredAlloyedPool, found := k.getRegisteredAlloyedPoolFromDenom(alloyedDenom)
 	if !found {
 		return types.AlloyContractTakerFeeShareState{}, types.NoRegisteredAlloyedPoolError{PoolId: poolId}
 	}
 	return registeredAlloyedPool, nil
+}
+
+// GetRegisteredAlloyedPoolFromPoolIdUNSAFE is used to expose an internal method to gRPC query. This method should not be used in other modules, since the cache is not populated in those keepers.
+// Used in the RegisteredAlloyedPoolFromPoolIdRequest gRPC query.
+func (k Keeper) GetRegisteredAlloyedPoolFromPoolIdUNSAFE(ctx sdk.Context, poolId uint64) (types.AlloyContractTakerFeeShareState, error) {
+	return k.getRegisteredAlloyedPoolFromPoolId(ctx, poolId)
 }
 
 // GetAllRegisteredAlloyedPools creates a slice of all registered alloyed pools.
@@ -568,7 +580,7 @@ func (k Keeper) calculateTakerFeeShareAgreements(totalPoolLiquidity []sdk.Coin, 
 		normalizedAmount := coin.Amount.ToLegacyDec().Quo(normalizationFactor)
 		totalAlloyedLiquidity = totalAlloyedLiquidity.Add(normalizedAmount)
 
-		takerFeeShareAgreement, found := k.GetTakerFeeShareAgreementFromDenom(coin.Denom)
+		takerFeeShareAgreement, found := k.getTakerFeeShareAgreementFromDenom(coin.Denom)
 		if !found {
 			continue
 		}
@@ -598,7 +610,7 @@ func (k Keeper) calculateTakerFeeShareAgreements(totalPoolLiquidity []sdk.Coin, 
 // recalculateAndSetTakerFeeShareAlloyComposition recalculates the taker fee share composition for a given pool.
 // It retrieves the registered alloyed pool, calculates the new taker fee share agreements, and updates the store and cache with the new state.
 func (k *Keeper) recalculateAndSetTakerFeeShareAlloyComposition(ctx sdk.Context, poolId uint64) error {
-	registeredAlloyedPoolPrior, err := k.GetRegisteredAlloyedPoolFromPoolId(ctx, poolId)
+	registeredAlloyedPoolPrior, err := k.getRegisteredAlloyedPoolFromPoolId(ctx, poolId)
 	if err != nil {
 		return err
 	}
@@ -659,7 +671,3 @@ func (k Keeper) getAlloyedDenomFromPoolId(ctx sdk.Context, poolId uint64) (strin
 	}
 	return "", types.NoRegisteredAlloyedPoolError{PoolId: poolId}
 }
-
-// GetAllTakerFeeShareAccumulators(ctx sdk.Context) ([]poolmanagertypes.TakerFeeSkimAccumulator, error)
-// GetTakerFeeShareAgreementFromDenom(ctx sdk.Context, takerFeeShareDenom string) (poolmanagertypes.TakerFeeShareAgreement, bool)
-// DeleteAllTakerFeeShareAccumulatorsForTakerFeeShareDenom(ctx sdk.Context, takerFeeShareDenom string)

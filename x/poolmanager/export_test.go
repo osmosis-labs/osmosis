@@ -137,3 +137,15 @@ func (k Keeper) GetAllRegisteredAlloyedPoolsIdArray(ctx sdk.Context) ([]uint64, 
 func (k *Keeper) SetAllRegisteredAlloyedPoolIdArrayCached(ctx sdk.Context) error {
 	return k.setAllRegisteredAlloyedPoolIdArrayCached(ctx)
 }
+
+func (k Keeper) GetTakerFeeShareAgreementFromDenom(takerFeeShareDenom string) (types.TakerFeeShareAgreement, bool) {
+	return k.getTakerFeeShareAgreementFromDenom(takerFeeShareDenom)
+}
+
+func (k Keeper) GetRegisteredAlloyedPoolFromDenom(alloyedDenom string) (types.AlloyContractTakerFeeShareState, bool) {
+	return k.getRegisteredAlloyedPoolFromDenom(alloyedDenom)
+}
+
+func (k Keeper) GetRegisteredAlloyedPoolFromPoolId(ctx sdk.Context, poolId uint64) (types.AlloyContractTakerFeeShareState, error) {
+	return k.getRegisteredAlloyedPoolFromPoolId(ctx, poolId)
+}

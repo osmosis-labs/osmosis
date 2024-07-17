@@ -416,7 +416,7 @@ func (q Querier) AllTakerFeeShareAgreements(ctx sdk.Context, req queryproto.AllT
 }
 
 func (q Querier) TakerFeeShareAgreementFromDenom(ctx sdk.Context, req queryproto.TakerFeeShareAgreementFromDenomRequest) (*queryproto.TakerFeeShareAgreementFromDenomResponse, error) {
-	takerFeeShareAgreement, found := q.K.GetTakerFeeShareAgreementFromDenom(req.Denom)
+	takerFeeShareAgreement, found := q.K.GetTakerFeeShareAgreementFromDenomUNSAFE(req.Denom)
 	if !found {
 		return nil, status.Error(codes.NotFound, "taker fee share agreement not found")
 	}
@@ -448,7 +448,7 @@ func (q Querier) AllTakerFeeShareAccumulators(ctx sdk.Context, req queryproto.Al
 }
 
 func (q Querier) RegisteredAlloyedPoolFromDenom(ctx sdk.Context, req queryproto.RegisteredAlloyedPoolFromDenomRequest) (*queryproto.RegisteredAlloyedPoolFromDenomResponse, error) {
-	contractState, found := q.K.GetRegisteredAlloyedPoolFromDenom(req.Denom)
+	contractState, found := q.K.GetRegisteredAlloyedPoolFromDenomUNSAFE(req.Denom)
 	if !found {
 		return nil, status.Error(codes.NotFound, "pool not found")
 	}
@@ -459,7 +459,7 @@ func (q Querier) RegisteredAlloyedPoolFromDenom(ctx sdk.Context, req queryproto.
 }
 
 func (q Querier) RegisteredAlloyedPoolFromPoolId(ctx sdk.Context, req queryproto.RegisteredAlloyedPoolFromPoolIdRequest) (*queryproto.RegisteredAlloyedPoolFromPoolIdResponse, error) {
-	contractState, err := q.K.GetRegisteredAlloyedPoolFromPoolId(ctx, req.PoolId)
+	contractState, err := q.K.GetRegisteredAlloyedPoolFromPoolIdUNSAFE(ctx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "pool not found")
 	}

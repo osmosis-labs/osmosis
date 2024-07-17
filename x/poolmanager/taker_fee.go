@@ -218,7 +218,7 @@ func (k Keeper) getTakerFeeShareAgreements(denomsInvolvedInRoute []string) ([]ty
 
 	for _, denom := range denomsInvolvedInRoute {
 		// We first check if this denom has a taker fee share agreement.
-		takerFeeShareAgreement, found := k.GetTakerFeeShareAgreementFromDenom(denom)
+		takerFeeShareAgreement, found := k.getTakerFeeShareAgreementFromDenom(denom)
 		if found {
 			// If the denom has a denomShareAgreement, add the denomShareAgreement to the denomShareAgreements slice.
 			denomShareAgreements = append(denomShareAgreements, takerFeeShareAgreement)
@@ -229,7 +229,7 @@ func (k Keeper) getTakerFeeShareAgreements(denomsInvolvedInRoute []string) ([]ty
 
 			// Check if the denom is an alloyedAssetShareAgreement denom.
 			// If it is, add the alloyedAssetShareAgreement to the alloyedAssetShareAgreements slice.
-			cachedAlloyContractState, found := k.GetRegisteredAlloyedPoolFromDenom(denom)
+			cachedAlloyContractState, found := k.getRegisteredAlloyedPoolFromDenom(denom)
 			if found {
 				alloyedAssetShareAgreements = append(alloyedAssetShareAgreements, cachedAlloyContractState.TakerFeeShareAgreements...)
 			}
