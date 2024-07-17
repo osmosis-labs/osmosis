@@ -144,12 +144,51 @@ endif
 ###                            Build & Install                              ###
 ###############################################################################
 
+update-deps:
+	@if [ -n "$(SDK_HASH)" ]; then \
+		echo "Updating cosmos-sdk to hash $(SDK_HASH)"; \
+		SDK_VERSION=$$(go get github.com/osmosis-labs/cosmos-sdk@$(SDK_HASH) 2>&1 | sed -n 's/.*github.com\/osmosis-labs\/cosmos-sdk@\([^ :]*\).*/\1/p'); \
+		echo "Extracted SDK version: $${SDK_VERSION}"; \
+		sed -i.bak "s|github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk .*|github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk $${SDK_VERSION}|" go.mod; \
+	fi
+	@if [ -n "$(COMET_HASH)" ]; then \
+		echo "Updating cometbft to hash $(COMET_HASH)"; \
+		COMET_VERSION=$$(go get github.com/osmosis-labs/cometbft@$(COMET_HASH) 2>&1 | sed -n 's/.*github.com\/osmosis-labs\/cometbft@\([^ :]*\).*/\1/p'); \
+		echo "Extracted Comet version: $${COMET_VERSION}"; \
+		sed -i.bak "s|github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft .*|github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft $${COMET_VERSION}|" go.mod; \
+	fi
+	@if [ -n "$(SDK_HASH)" ] || [ -n "$(COMET_HASH)" ]; then \
+		go mod tidy; \
+	fi
+
 build: build-check-version go.sum
+	@if [ -n "$(SDK_HASH)" ] || [ -n "$(COMET_HASH)" ]; then \
+		cp go.mod go.mod.backup; \
+		cp go.sum go.sum.backup; \
+		$(MAKE) update-deps; \
+	fi
 	mkdir -p $(BUILDDIR)/
-	GOWORK=off go build -mod=readonly  $(BUILD_FLAGS) -o $(BUILDDIR)/ $(GO_MODULE)/cmd/osmosisd
+	GOWORK=off go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ $(GO_MODULE)/cmd/osmosisd
+	@if [ -n "$(SDK_HASH)" ] || [ -n "$(COMET_HASH)" ]; then \
+		mv go.mod.backup go.mod; \
+		mv go.sum.backup go.sum; \
+		rm -f go.mod.bak; \
+		go mod tidy; \
+	fi
 
 install: build-check-version go.sum
+	@if [ -n "$(SDK_HASH)" ] || [ -n "$(COMET_HASH)" ]; then \
+		cp go.mod go.mod.backup; \
+		cp go.sum go.sum.backup; \
+		$(MAKE) update-deps; \
+	fi
 	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
+	@if [ -n "$(SDK_HASH)" ] || [ -n "$(COMET_HASH)" ]; then \
+		mv go.mod.backup go.mod; \
+		mv go.sum.backup go.sum; \
+		rm -f go.mod.bak; \
+		go mod tidy; \
+	fi
 
 ###############################################################################
 ###                                Gen                                      ###
@@ -195,4 +234,4 @@ endif
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \
 	test test-all test-build test-cover test-unit test-race benchmark \
-	release release-dry-run release-snapshot
+	release release-dry-run release-snapshot update-deps

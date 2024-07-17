@@ -1,0 +1,39 @@
+# This workflow triggers a pprof automation on new tag creation in the repository
+
+name: Trigger pprof automation
+
+# Controls when the workflow will run
+on:
+  push:
+    tags:
+      - '**'  # This workflow will trigger on any new tag push
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Triggers a repository dispatch event to initiate pprof automation
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          repository: ${{ secrets.PPROF_REPO }}  # Target repository for dispatch
+          event-type: new_tag_created  # Custom event type for dispatch
+          client-payload: >  # JSON payload with information for the triggered event
+            {
+              "triggered_by": "${{ github.repository }}",  # Repository that triggered the dispatch
+              "on_push_event": "true",  # Indicating that this was triggered by a push event
+              "commit_sha": "${{ github.sha }}",  # Commit SHA of the push
+              "branch": "${{ github.ref }}",  # Reference (branch or tag) of the push
+              "tag": "${{ github.ref_name }}",  # Name of the tag that triggered the push
+              "profile_type": "head",  # Profile type for pprof automation
+              "binary_version": "${{ github.ref_name }}",  # Binary version corresponding to the tag
+              "profile_duration": "7200",  # Duration of profiling in seconds
+              "osmosis_sdk_fork_hash": "",
+              "osmosis_comet_fork_hash": ""
+            }

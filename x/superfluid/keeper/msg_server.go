@@ -47,7 +47,11 @@ func (server msgServer) SuperfluidDelegate(goCtx context.Context, msg *types.Msg
 
 	err := server.keeper.SuperfluidDelegate(ctx, msg.Sender, msg.LockId, msg.ValAddr)
 	if err == nil {
-		events.EmitSuperfluidDelegateEvent(ctx, msg.LockId, msg.ValAddr)
+		lock, err := server.keeper.lk.GetLockByID(ctx, msg.LockId)
+		if err != nil {
+			return &types.MsgSuperfluidDelegateResponse{}, err
+		}
+		events.EmitSuperfluidDelegateEvent(ctx, msg.LockId, msg.ValAddr, lock.Coins)
 	}
 	return &types.MsgSuperfluidDelegateResponse{}, err
 }
@@ -62,7 +66,11 @@ func (server msgServer) SuperfluidUndelegate(goCtx context.Context, msg *types.M
 
 	err := server.keeper.SuperfluidUndelegate(ctx, msg.Sender, msg.LockId)
 	if err == nil {
-		events.EmitSuperfluidUndelegateEvent(ctx, msg.LockId)
+		lock, err := server.keeper.lk.GetLockByID(ctx, msg.LockId)
+		if err != nil {
+			return &types.MsgSuperfluidUndelegateResponse{}, err
+		}
+		events.EmitSuperfluidUndelegateEvent(ctx, msg.LockId, lock.Coins)
 	}
 	return &types.MsgSuperfluidUndelegateResponse{}, err
 }
