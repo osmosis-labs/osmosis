@@ -50,6 +50,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
+* [#8504](https://github.com/osmosis-labs/osmosis/pull/8504) Add missing module params query to CLI
+
 ## v25.2.0
 
 * [#8455](https://github.com/osmosis-labs/osmosis/pull/8455) Further comet mempool improvements
