@@ -340,6 +340,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		bApp.MsgServiceRouter(),
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
+	icaHostKeeper.WithQueryRouter(bApp.GRPCQueryRouter())
 	appKeepers.ICAHostKeeper = &icaHostKeeper
 
 	icaControllerKeeper := icacontrollerkeeper.NewKeeper(

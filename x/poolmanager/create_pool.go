@@ -154,6 +154,7 @@ func (k Keeper) getNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 func (k *Keeper) SetPoolRoute(ctx sdk.Context, poolId uint64, poolType types.PoolType) {
 	store := ctx.KVStore(k.storeKey)
 	osmoutils.MustSet(store, types.FormatModuleRouteKey(poolId), &types.ModuleRoute{PoolType: poolType})
+	k.cachedPoolModules.Delete(poolId)
 }
 
 type poolModuleCacheValue struct {

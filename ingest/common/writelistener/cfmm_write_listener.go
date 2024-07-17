@@ -6,11 +6,12 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
 )
 
-var _ domain.WriteListener = (*cfmmPoolWriteListener)(nil)
+var _ commondomain.WriteListener = (*cfmmPoolWriteListener)(nil)
 
 type cfmmPoolWriteListener struct {
 	poolTracker domain.BlockPoolUpdateTracker
