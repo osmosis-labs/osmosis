@@ -231,15 +231,15 @@ func (k *Keeper) SetWasmKeeper(wasmKeeper types.WasmKeeper) {
 func (k *Keeper) BeginBlock(ctx sdk.Context) {
 	// Set the caches if they are empty.
 	if len(k.cachedTakerFeeShareAgreementMap) == 0 || len(k.cachedRegisteredAlloyPoolByAlloyDenomMap) == 0 || len(k.cachedRegisteredAlloyedPoolIdArray) == 0 {
-		err := k.SetTakerFeeShareAgreementsMapCached(ctx)
+		err := k.setTakerFeeShareAgreementsMapCached(ctx)
 		if err != nil {
 			ctx.Logger().Error(fmt.Errorf("%w", types.ErrSetTakerFeeShareAgreementsMapCached).Error())
 		}
-		err = k.SetAllRegisteredAlloyedPoolsByDenomCached(ctx)
+		err = k.setAllRegisteredAlloyedPoolsByDenomCached(ctx)
 		if err != nil {
 			ctx.Logger().Error(fmt.Errorf("%w", types.ErrSetAllRegisteredAlloyedPoolsByDenomCached).Error())
 		}
-		err = k.SetAllRegisteredAlloyedPoolIdArrayCached(ctx)
+		err = k.setAllRegisteredAlloyedPoolIdArrayCached(ctx)
 		if err != nil {
 			ctx.Logger().Error(fmt.Errorf("%w", types.ErrSetAllRegisteredAlloyedPoolsIdArrayCached).Error())
 		}

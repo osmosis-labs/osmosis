@@ -144,7 +144,7 @@ func (server msgServer) SetRegisteredAlloyedPool(goCtx context.Context, msg *typ
 		return nil, types.ErrUnauthorizedGov
 	}
 
-	err := server.keeper.SetRegisteredAlloyedPool(ctx, msg.PoolId)
+	err := server.keeper.setRegisteredAlloyedPool(ctx, msg.PoolId)
 	if err != nil {
 		return nil, err
 	}

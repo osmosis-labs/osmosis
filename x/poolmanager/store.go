@@ -21,8 +21,8 @@ import (
 // Taker Fee Share Agreements
 //
 
-// GetAllTakerFeeShareAgreementsMap creates the map used for the taker fee share agreements cache.
-func (k Keeper) GetAllTakerFeeShareAgreementsMap(ctx sdk.Context) (map[string]types.TakerFeeShareAgreement, error) {
+// getAllTakerFeeShareAgreementsMap creates the map used for the taker fee share agreements cache.
+func (k Keeper) getAllTakerFeeShareAgreementsMap(ctx sdk.Context) (map[string]types.TakerFeeShareAgreement, error) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, types.KeyTakerFeeShare)
 	defer iterator.Close()
@@ -58,9 +58,9 @@ func (k Keeper) GetAllTakerFeesShareAgreements(ctx sdk.Context) ([]types.TakerFe
 	return takerFeeShareAgreements, nil
 }
 
-// SetTakerFeeShareAgreementsMapCached is used for initializing the cache for the taker fee share agreements.
-func (k *Keeper) SetTakerFeeShareAgreementsMapCached(ctx sdk.Context) error {
-	takerFeeShareAgreement, err := k.GetAllTakerFeeShareAgreementsMap(ctx)
+// setTakerFeeShareAgreementsMapCached is used for initializing the cache for the taker fee share agreements.
+func (k *Keeper) setTakerFeeShareAgreementsMapCached(ctx sdk.Context) error {
+	takerFeeShareAgreement, err := k.getAllTakerFeeShareAgreementsMap(ctx)
 	if err != nil {
 		return err
 	}
@@ -70,11 +70,29 @@ func (k *Keeper) SetTakerFeeShareAgreementsMapCached(ctx sdk.Context) error {
 
 // GetTakerFeeShareAgreementFromDenom retrieves a specific taker fee share agreement from the store.
 // Used in the TakerFeeShareAgreementFromDenomRequest gRPC query.
-func (k Keeper) GetTakerFeeShareAgreementFromDenom(ctx sdk.Context, takerFeeShareDenom string) (types.TakerFeeShareAgreement, bool) {
+// UNSAFE to use in a hook in a different module, since hooks don't contain the populated cache.
+func (k Keeper) GetTakerFeeShareAgreementFromDenom(takerFeeShareDenom string) (types.TakerFeeShareAgreement, bool) {
 	takerFeeShareAgreement, found := k.cachedTakerFeeShareAgreementMap[takerFeeShareDenom]
 	if !found {
 		return types.TakerFeeShareAgreement{}, false
 	}
+	return takerFeeShareAgreement, true
+}
+
+// GetTakerFeeShareAgreementFromDenom retrieves a specific taker fee share agreement from the store, bypassing cache.
+func (k Keeper) GetTakerFeeShareAgreementFromDenomNoCache(ctx sdk.Context, takerFeeShareDenom string) (types.TakerFeeShareAgreement, bool) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.FormatTakerFeeShareAgreementKey(takerFeeShareDenom)
+	bz := store.Get(key)
+	if bz == nil {
+		return types.TakerFeeShareAgreement{}, false
+	}
+
+	var takerFeeShareAgreement types.TakerFeeShareAgreement
+	if err := proto.Unmarshal(bz, &takerFeeShareAgreement); err != nil {
+		return types.TakerFeeShareAgreement{}, false
+	}
+
 	return takerFeeShareAgreement, true
 }
 
@@ -160,8 +178,8 @@ func (k Keeper) SetTakerFeeShareDenomsToAccruedValue(ctx sdk.Context, takerFeeSh
 	return nil
 }
 
-// IncreaseTakerFeeShareDenomsToAccruedValue increases (adds to, not replace) the accrued value for a specific taker fee share denomination and taker fee charged denomination in the store.
-func (k Keeper) IncreaseTakerFeeShareDenomsToAccruedValue(ctx sdk.Context, takerFeeShareDenom string, takerFeeChargedDenom string, additiveValue osmomath.Int) error {
+// increaseTakerFeeShareDenomsToAccruedValue increases (adds to, not replace) the accrued value for a specific taker fee share denomination and taker fee charged denomination in the store.
+func (k Keeper) increaseTakerFeeShareDenomsToAccruedValue(ctx sdk.Context, takerFeeShareDenom string, takerFeeChargedDenom string, additiveValue osmomath.Int) error {
 	accruedValueBefore, err := k.GetTakerFeeShareDenomsToAccruedValue(ctx, takerFeeShareDenom, takerFeeChargedDenom)
 	if err != nil {
 		if _, ok := err.(types.NoAccruedValueError); ok {
@@ -231,9 +249,9 @@ func (k Keeper) DeleteAllTakerFeeShareAccumulatorsForTakerFeeShareDenom(ctx sdk.
 // Registered Alloyed Pool States
 //
 
-// SetRegisteredAlloyedPool sets a specific registered alloyed pool in the store.
+// setRegisteredAlloyedPool sets a specific registered alloyed pool in the store.
 // Used in the MsgRegisterAlloyedPool, by the gov address only.
-func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error {
+func (k *Keeper) setRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error {
 	store := ctx.KVStore(k.storeKey)
 
 	cwPool, err := k.GetPool(ctx, poolId)
@@ -298,7 +316,8 @@ func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error 
 
 // GetRegisteredAlloyedPoolFromDenom retrieves a specific registered alloyed pool from the store via the alloyed denom.
 // Used in the RegisteredAlloyedPoolFromDenomRequest gRPC query.
-func (k Keeper) GetRegisteredAlloyedPoolFromDenom(ctx sdk.Context, alloyedDenom string) (types.AlloyContractTakerFeeShareState, bool) {
+// UNSAFE to use in a hook in a different module, since hooks don't contain the populated cache.
+func (k Keeper) GetRegisteredAlloyedPoolFromDenom(alloyedDenom string) (types.AlloyContractTakerFeeShareState, bool) {
 	registeredAlloyedPool, found := k.cachedRegisteredAlloyPoolByAlloyDenomMap[alloyedDenom]
 	if !found {
 		return types.AlloyContractTakerFeeShareState{}, false
@@ -308,12 +327,13 @@ func (k Keeper) GetRegisteredAlloyedPoolFromDenom(ctx sdk.Context, alloyedDenom 
 
 // GetRegisteredAlloyedPoolFromPoolId retrieves a specific registered alloyed pool from the store via the pool id.
 // Used in the RegisteredAlloyedPoolFromPoolIdRequest gRPC query.
+// UNSAFE to use in a hook in a different module, since hooks don't contain the populated cache.
 func (k Keeper) GetRegisteredAlloyedPoolFromPoolId(ctx sdk.Context, poolId uint64) (types.AlloyContractTakerFeeShareState, error) {
 	alloyedDenom, err := k.getAlloyedDenomFromPoolId(ctx, poolId)
 	if err != nil {
 		return types.AlloyContractTakerFeeShareState{}, err
 	}
-	registeredAlloyedPool, found := k.GetRegisteredAlloyedPoolFromDenom(ctx, alloyedDenom)
+	registeredAlloyedPool, found := k.GetRegisteredAlloyedPoolFromDenom(alloyedDenom)
 	if !found {
 		return types.AlloyContractTakerFeeShareState{}, types.NoRegisteredAlloyedPoolError{PoolId: poolId}
 	}
@@ -342,7 +362,7 @@ func (k Keeper) GetAllRegisteredAlloyedPools(ctx sdk.Context) ([]types.AlloyCont
 }
 
 // GetAllRegisteredAlloyedPoolsByDenomMap creates the map used for the registered alloyed pools cache.
-func (k Keeper) GetAllRegisteredAlloyedPoolsByDenomMap(ctx sdk.Context) (map[string]types.AlloyContractTakerFeeShareState, error) {
+func (k Keeper) getAllRegisteredAlloyedPoolsByDenomMap(ctx sdk.Context) (map[string]types.AlloyContractTakerFeeShareState, error) {
 	store := ctx.KVStore(k.storeKey)
 	iter := storetypes.KVStorePrefixIterator(store, types.KeyRegisteredAlloyPool)
 	defer iter.Close()
@@ -366,9 +386,9 @@ func (k Keeper) GetAllRegisteredAlloyedPoolsByDenomMap(ctx sdk.Context) (map[str
 	return registeredAlloyedPoolsMap, nil
 }
 
-// SetAllRegisteredAlloyedPoolsByDenomCached initializes the cache for the registered alloyed pools.
-func (k *Keeper) SetAllRegisteredAlloyedPoolsByDenomCached(ctx sdk.Context) error {
-	registeredAlloyPools, err := k.GetAllRegisteredAlloyedPoolsByDenomMap(ctx)
+// setAllRegisteredAlloyedPoolsByDenomCached initializes the cache for the registered alloyed pools.
+func (k *Keeper) setAllRegisteredAlloyedPoolsByDenomCached(ctx sdk.Context) error {
+	registeredAlloyPools, err := k.getAllRegisteredAlloyedPoolsByDenomMap(ctx)
 	if err != nil {
 		return err
 	}
@@ -380,8 +400,8 @@ func (k *Keeper) SetAllRegisteredAlloyedPoolsByDenomCached(ctx sdk.Context) erro
 // Registered Alloyed Pool Ids
 //
 
-// GetAllRegisteredAlloyedPoolsIdArray creates the array used for the registered alloyed pools id array cache.
-func (k Keeper) GetAllRegisteredAlloyedPoolsIdArray(ctx sdk.Context) ([]uint64, error) {
+// getAllRegisteredAlloyedPoolsIdArray creates the array used for the registered alloyed pools id array cache.
+func (k Keeper) getAllRegisteredAlloyedPoolsIdArray(ctx sdk.Context) ([]uint64, error) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, types.KeyRegisteredAlloyPool)
 	defer iterator.Close()
@@ -406,9 +426,9 @@ func (k Keeper) GetAllRegisteredAlloyedPoolsIdArray(ctx sdk.Context) ([]uint64, 
 	return registeredAlloyedPoolsIdArray, nil
 }
 
-// SetAllRegisteredAlloyedPoolIdArrayCached initializes the cache for the registered alloyed pools id array.
-func (k *Keeper) SetAllRegisteredAlloyedPoolIdArrayCached(ctx sdk.Context) error {
-	registeredAlloyPoolIds, err := k.GetAllRegisteredAlloyedPoolsIdArray(ctx)
+// setAllRegisteredAlloyedPoolIdArrayCached initializes the cache for the registered alloyed pools id array.
+func (k *Keeper) setAllRegisteredAlloyedPoolIdArrayCached(ctx sdk.Context) error {
+	registeredAlloyPoolIds, err := k.getAllRegisteredAlloyedPoolsIdArray(ctx)
 	if err != nil {
 		return err
 	}
@@ -478,7 +498,7 @@ func (k Keeper) snapshotTakerFeeShareAlloyComposition(ctx sdk.Context, contractA
 		return nil, err
 	}
 
-	return k.calculateTakerFeeShareAgreements(ctx, totalPoolLiquidity, normalizationFactors)
+	return k.calculateTakerFeeShareAgreements(totalPoolLiquidity, normalizationFactors)
 }
 
 // queryTotalPoolLiquidity queries the smart contract for the total pool liquidity.
@@ -536,7 +556,7 @@ func (k Keeper) createNormalizationFactorsMap(assetConfigs []v3.AssetConfig) (ma
 // and normalization factors. It iterates through the pool liquidity, normalizes the amounts, and calculates
 // the scaled skim percentages for each asset with a share agreement. Returns a slice of TakerFeeShareAgreement
 // objects if successful, otherwise returns an error.
-func (k Keeper) calculateTakerFeeShareAgreements(ctx sdk.Context, totalPoolLiquidity []sdk.Coin, normalizationFactors map[string]osmomath.Dec) ([]types.TakerFeeShareAgreement, error) {
+func (k Keeper) calculateTakerFeeShareAgreements(totalPoolLiquidity []sdk.Coin, normalizationFactors map[string]osmomath.Dec) ([]types.TakerFeeShareAgreement, error) {
 	totalAlloyedLiquidity := osmomath.ZeroDec()
 	var assetsWithShareAgreement []sdk.Coin
 	var takerFeeShareAgreements []types.TakerFeeShareAgreement
@@ -548,7 +568,7 @@ func (k Keeper) calculateTakerFeeShareAgreements(ctx sdk.Context, totalPoolLiqui
 		normalizedAmount := coin.Amount.ToLegacyDec().Quo(normalizationFactor)
 		totalAlloyedLiquidity = totalAlloyedLiquidity.Add(normalizedAmount)
 
-		takerFeeShareAgreement, found := k.GetTakerFeeShareAgreementFromDenom(ctx, coin.Denom)
+		takerFeeShareAgreement, found := k.GetTakerFeeShareAgreementFromDenom(coin.Denom)
 		if !found {
 			continue
 		}
@@ -639,3 +659,7 @@ func (k Keeper) getAlloyedDenomFromPoolId(ctx sdk.Context, poolId uint64) (strin
 	}
 	return "", types.NoRegisteredAlloyedPoolError{PoolId: poolId}
 }
+
+// GetAllTakerFeeShareAccumulators(ctx sdk.Context) ([]poolmanagertypes.TakerFeeSkimAccumulator, error)
+// GetTakerFeeShareAgreementFromDenom(ctx sdk.Context, takerFeeShareDenom string) (poolmanagertypes.TakerFeeShareAgreement, bool)
+// DeleteAllTakerFeeShareAccumulatorsForTakerFeeShareDenom(ctx sdk.Context, takerFeeShareDenom string)

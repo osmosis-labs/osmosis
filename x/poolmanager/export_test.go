@@ -82,8 +82,8 @@ func (k Keeper) GetAlloyedDenomFromPoolId(ctx sdk.Context, poolId uint64) (strin
 	return k.getAlloyedDenomFromPoolId(ctx, poolId)
 }
 
-func (k Keeper) GetTakerFeeShareAgreements(ctx sdk.Context, denomsInvolvedInRoute []string) ([]types.TakerFeeShareAgreement, []types.TakerFeeShareAgreement) {
-	return k.getTakerFeeShareAgreements(ctx, denomsInvolvedInRoute)
+func (k Keeper) GetTakerFeeShareAgreements(denomsInvolvedInRoute []string) ([]types.TakerFeeShareAgreement, []types.TakerFeeShareAgreement) {
+	return k.getTakerFeeShareAgreements(denomsInvolvedInRoute)
 }
 
 func (k Keeper) ProcessDenomShareAgreements(ctx sdk.Context, denomShareAgreements []types.TakerFeeShareAgreement, totalTakerFees sdk.Coins) error {
@@ -103,5 +103,37 @@ func (k Keeper) CreateNormalizationFactorsMap(assetConfigs []alloyedpooltypes.As
 }
 
 func (k Keeper) CalculateTakerFeeShareAgreements(ctx sdk.Context, totalPoolLiquidity []sdk.Coin, normalizationFactors map[string]osmomath.Dec) ([]types.TakerFeeShareAgreement, error) {
-	return k.calculateTakerFeeShareAgreements(ctx, totalPoolLiquidity, normalizationFactors)
+	return k.calculateTakerFeeShareAgreements(totalPoolLiquidity, normalizationFactors)
+}
+
+func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error {
+	return k.setRegisteredAlloyedPool(ctx, poolId)
+}
+
+func (k *Keeper) SetTakerFeeShareAgreementsMapCached(ctx sdk.Context) error {
+	return k.setTakerFeeShareAgreementsMapCached(ctx)
+}
+
+func (k Keeper) GetAllTakerFeeShareAgreementsMap(ctx sdk.Context) (map[string]types.TakerFeeShareAgreement, error) {
+	return k.getAllTakerFeeShareAgreementsMap(ctx)
+}
+
+func (k Keeper) IncreaseTakerFeeShareDenomsToAccruedValue(ctx sdk.Context, takerFeeShareDenom string, takerFeeChargedDenom string, additiveValue osmomath.Int) error {
+	return k.increaseTakerFeeShareDenomsToAccruedValue(ctx, takerFeeShareDenom, takerFeeChargedDenom, additiveValue)
+}
+
+func (k Keeper) GetAllRegisteredAlloyedPoolsByDenomMap(ctx sdk.Context) (map[string]types.AlloyContractTakerFeeShareState, error) {
+	return k.getAllRegisteredAlloyedPoolsByDenomMap(ctx)
+}
+
+func (k *Keeper) SetAllRegisteredAlloyedPoolsByDenomCached(ctx sdk.Context) error {
+	return k.setAllRegisteredAlloyedPoolsByDenomCached(ctx)
+}
+
+func (k Keeper) GetAllRegisteredAlloyedPoolsIdArray(ctx sdk.Context) ([]uint64, error) {
+	return k.getAllRegisteredAlloyedPoolsIdArray(ctx)
+}
+
+func (k *Keeper) SetAllRegisteredAlloyedPoolIdArrayCached(ctx sdk.Context) error {
+	return k.setAllRegisteredAlloyedPoolIdArrayCached(ctx)
 }

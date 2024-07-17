@@ -282,7 +282,7 @@ func (s *KeeperTestSuite) TestSetTakerFeeShareAgreementForDenom() {
 			s.SetupTest()
 			tc.setupFunc()
 
-			takerFeeShareAgreements, found := s.App.PoolManagerKeeper.GetTakerFeeShareAgreementFromDenom(s.Ctx, tc.denomToRequest)
+			takerFeeShareAgreements, found := s.App.PoolManagerKeeper.GetTakerFeeShareAgreementFromDenom(tc.denomToRequest)
 			if tc.expectedFound {
 				s.Require().True(found)
 				s.Require().Equal(tc.expectedTakerFeeShareAgreement, takerFeeShareAgreements)
@@ -773,7 +773,7 @@ func (s *KeeperTestSuite) TestGetRegisteredAlloyedPoolFromDenom() {
 
 			s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
 
-			shareState, found := s.App.PoolManagerKeeper.GetRegisteredAlloyedPoolFromDenom(s.Ctx, tc.denom)
+			shareState, found := s.App.PoolManagerKeeper.GetRegisteredAlloyedPoolFromDenom(tc.denom)
 			s.Require().Equal(tc.expectFound, found)
 			if tc.expectFound {
 				expectedShareState := types.AlloyContractTakerFeeShareState{

@@ -315,7 +315,7 @@ func (s *KeeperTestSuite) TestGetTakerFeeShareAgreements() {
 			s.SetupTest()
 			denomsInvolvedInRoute := tc.setupFunc()
 
-			denomShares, alloyedShares := s.App.PoolManagerKeeper.GetTakerFeeShareAgreements(s.Ctx, denomsInvolvedInRoute)
+			denomShares, alloyedShares := s.App.PoolManagerKeeper.GetTakerFeeShareAgreements(denomsInvolvedInRoute)
 			s.Require().Equal(tc.expectedDenomShares, denomShares)
 			s.Require().Equal(tc.expectedAlloyedShares, alloyedShares)
 		})

@@ -196,7 +196,7 @@ func (k Keeper) TakerFeeSkim(ctx sdk.Context, denomsInvolvedInRoute []string, to
 	osmoutils.SortSlice(denomsInvolvedInRoute)
 
 	// Retrieve the share agreements for denoms.
-	denomShareAgreements, alloyedAssetShareAgreements := k.getTakerFeeShareAgreements(ctx, denomsInvolvedInRoute)
+	denomShareAgreements, alloyedAssetShareAgreements := k.getTakerFeeShareAgreements(denomsInvolvedInRoute)
 
 	// Process denom share agreements if any exist.
 	if len(denomShareAgreements) > 0 {
@@ -212,13 +212,13 @@ func (k Keeper) TakerFeeSkim(ctx sdk.Context, denomsInvolvedInRoute []string, to
 }
 
 // getTakerFeeShareAgreements checks for individual denomShareAgreement and alloyedAssetShareAgreement denoms.
-func (k Keeper) getTakerFeeShareAgreements(ctx sdk.Context, denomsInvolvedInRoute []string) ([]types.TakerFeeShareAgreement, []types.TakerFeeShareAgreement) {
+func (k Keeper) getTakerFeeShareAgreements(denomsInvolvedInRoute []string) ([]types.TakerFeeShareAgreement, []types.TakerFeeShareAgreement) {
 	denomShareAgreements := []types.TakerFeeShareAgreement{}
 	alloyedAssetShareAgreements := []types.TakerFeeShareAgreement{}
 
 	for _, denom := range denomsInvolvedInRoute {
 		// We first check if this denom has a taker fee share agreement.
-		takerFeeShareAgreement, found := k.GetTakerFeeShareAgreementFromDenom(ctx, denom)
+		takerFeeShareAgreement, found := k.GetTakerFeeShareAgreementFromDenom(denom)
 		if found {
 			// If the denom has a denomShareAgreement, add the denomShareAgreement to the denomShareAgreements slice.
 			denomShareAgreements = append(denomShareAgreements, takerFeeShareAgreement)
@@ -229,7 +229,7 @@ func (k Keeper) getTakerFeeShareAgreements(ctx sdk.Context, denomsInvolvedInRout
 
 			// Check if the denom is an alloyedAssetShareAgreement denom.
 			// If it is, add the alloyedAssetShareAgreement to the alloyedAssetShareAgreements slice.
-			cachedAlloyContractState, found := k.GetRegisteredAlloyedPoolFromDenom(ctx, denom)
+			cachedAlloyContractState, found := k.GetRegisteredAlloyedPoolFromDenom(denom)
 			if found {
 				alloyedAssetShareAgreements = append(alloyedAssetShareAgreements, cachedAlloyContractState.TakerFeeShareAgreements...)
 			}
@@ -267,7 +267,7 @@ func (k Keeper) processShareAgreements(ctx sdk.Context, shareAgreements []types.
 		for _, agreement := range shareAgreements {
 			amountToSkim := osmomath.NewDecFromInt(takerFeeCoin.Amount).Mul(agreement.SkimPercent).TruncateInt()
 			// Increase the accumulator for the underlying denomShareAgreement denom / taker fee denom pair.
-			if err := k.IncreaseTakerFeeShareDenomsToAccruedValue(ctx, agreement.Denom, takerFeeCoin.Denom, amountToSkim); err != nil {
+			if err := k.increaseTakerFeeShareDenomsToAccruedValue(ctx, agreement.Denom, takerFeeCoin.Denom, amountToSkim); err != nil {
 				return err
 			}
 		}

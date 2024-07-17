@@ -314,7 +314,7 @@ func (k Keeper) clearTakerFeeShareAccumulators(ctx sdk.Context) {
 		return
 	}
 	for _, takerFeeSkimAccumulator := range takerFeeSkimAccumulators {
-		takerFeeShareAgreement, found := k.poolManager.GetTakerFeeShareAgreementFromDenom(ctx, takerFeeSkimAccumulator.Denom)
+		takerFeeShareAgreement, found := k.poolManager.GetTakerFeeShareAgreementFromDenomNoCache(ctx, takerFeeSkimAccumulator.Denom)
 		if !found {
 			ctx.Logger().Error(fmt.Sprintf("Error getting taker fee share from denom: %s", takerFeeSkimAccumulator.Denom))
 			continue
