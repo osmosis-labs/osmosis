@@ -97,14 +97,15 @@ func (p PairPublisher) PublishPoolPairs(ctx sdk.Context, pools []poolmanagertype
 						mu.Unlock()
 					}
 
-					// Create pair
+					// Create pair struct and publish it
 					pair := domain.Pair{
-						PoolID:    poolID,
-						Denom0:    denomI,
-						IdxDenom0: uint8(i),
-						Denom1:    denoms[j],
-						IdxDenom1: uint8(j),
-						FeeBps:    takerFee.Add(spreadFactor).MulInt64(10000).TruncateInt().Uint64(),
+						PoolID:     poolID,
+						MultiAsset: domain.IsMultiDenom(denoms),
+						Denom0:     denomI,
+						IdxDenom0:  uint8(i),
+						Denom1:     denoms[j],
+						IdxDenom1:  uint8(j),
+						FeeBps:     takerFee.Add(spreadFactor).MulInt64(10000).TruncateInt().Uint64(),
 					}
 
 					publishPairWg.Add(1)
