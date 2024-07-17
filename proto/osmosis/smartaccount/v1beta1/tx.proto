@@ -1,4 +1,6 @@
 syntax = "proto3";
+import "amino/amino.proto";
+
 package osmosis.smartaccount.v1beta1;
 
 option go_package = "github.com/osmosis-labs/osmosis/v25/x/smart-account/types";
@@ -17,6 +19,7 @@ service Msg {
 
 // MsgAddAuthenticatorRequest defines the Msg/AddAuthenticator request type.
 message MsgAddAuthenticator {
+  option (amino.name) = "osmosis/smart-account/add-authenticator";
   string sender = 1;
   string type = 2;
   bytes data = 3;
@@ -28,6 +31,7 @@ message MsgAddAuthenticatorResponse { bool success = 1; }
 // MsgRemoveAuthenticatorRequest defines the Msg/RemoveAuthenticator request
 // type.
 message MsgRemoveAuthenticator {
+  option (amino.name) = "osmosis/smart-account/remove-authenticator";
   string sender = 1;
   uint64 id = 2;
 }
