@@ -5,8 +5,9 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
-	"github.com/osmosis-labs/sqs/sqsdomain"
+	sqscosmwasmpool "github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
+
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 )
 
 const (
@@ -22,7 +23,7 @@ func (pi *poolTransformer) updateAlloyTransmuterInfo(
 	ctx sdk.Context,
 	poolId uint64,
 	contractAddress sdk.AccAddress,
-	cosmWasmPoolModel *sqsdomain.CosmWasmPoolModel,
+	cosmWasmPoolModel *sqscosmwasmpool.CosmWasmPoolModel,
 	poolDenoms *[]string,
 ) error {
 	assetConfigs, err := alloyTransmuterListAssetConfig(ctx, pi.wasmKeeper, poolId, contractAddress)
@@ -39,7 +40,7 @@ func (pi *poolTransformer) updateAlloyTransmuterInfo(
 	// append alloyed denom to denoms
 	*poolDenoms = append(*poolDenoms, alloyedDenom)
 
-	cosmWasmPoolModel.Data.AlloyTransmuter = &sqsdomain.AlloyTransmuterData{
+	cosmWasmPoolModel.Data.AlloyTransmuter = &sqscosmwasmpool.AlloyTransmuterData{
 		AlloyedDenom: alloyedDenom,
 		AssetConfigs: assetConfigs,
 	}
@@ -50,10 +51,10 @@ func (pi *poolTransformer) updateAlloyTransmuterInfo(
 // alloyTransmuterListAssetConfig queries the asset configs of the alloyed transmuter contract.
 func alloyTransmuterListAssetConfig(
 	ctx sdk.Context,
-	wasmKeeper domain.WasmKeeper,
+	wasmKeeper commondomain.WasmKeeper,
 	poolId uint64,
 	contractAddress sdk.AccAddress,
-) ([]sqsdomain.TransmuterAssetConfig, error) {
+) ([]sqscosmwasmpool.TransmuterAssetConfig, error) {
 	bz, err := wasmKeeper.QuerySmart(ctx, contractAddress, []byte(listAssetConfigsQueryString))
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -62,7 +63,7 @@ func alloyTransmuterListAssetConfig(
 		)
 	}
 	var assetConfigsResponse struct {
-		AssetConfigs []sqsdomain.TransmuterAssetConfig `json:"asset_configs"`
+		AssetConfigs []sqscosmwasmpool.TransmuterAssetConfig `json:"asset_configs"`
 	}
 
 	if err := json.Unmarshal(bz, &assetConfigsResponse); err != nil {
@@ -78,7 +79,7 @@ func alloyTransmuterListAssetConfig(
 // alloyTransmuterGetShareDenom queries the share denom of the alloyed transmuter contract.
 func alloyTransmuterGetShareDenom(
 	ctx sdk.Context,
-	wasmKeeper domain.WasmKeeper,
+	wasmKeeper commondomain.WasmKeeper,
 	poolId uint64,
 	contractAddress sdk.AccAddress,
 ) (string, error) {

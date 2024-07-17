@@ -7,4 +7,5 @@ type Block struct {
 	Height      uint64    `json:"height"`
 	BlockTime   time.Time `json:"timestamp"`
 	GasConsumed uint64    `json:"gas_consumed"`
+	IngestedAt  time.Time `json:"ingested_at"`
 }

@@ -17,6 +17,7 @@ type Config struct {
 	PoolTopicId              string `mapstructure:"pool-topic-id"`
 	TokenSupplyTopicId       string `mapstructure:"token-supply-topic-id"`
 	TokenSupplyOffsetTopicId string `mapstructure:"token-supply-offset-topic-id"`
+	PairTopicId              string `mapstructure:"pair-offset-topic-id"`
 }
 
 // groupOptName is the name of the indexer options group.
@@ -51,6 +52,7 @@ func NewConfigFromOptions(opts servertypes.AppOptions) Config {
 	poolTopicId := osmoutils.ParseString(opts, groupOptName, "pool-topic-id")
 	tokenSupplyTopicId := osmoutils.ParseString(opts, groupOptName, "token-supply-topic-id")
 	tokenSupplyOffsetTopicId := osmoutils.ParseString(opts, groupOptName, "token-supply-offset-topic-id")
+	pairTopicID := osmoutils.ParseString(opts, groupOptName, "pair-topic-id")
 
 	return Config{
 		IsEnabled:                isEnabled,
@@ -60,11 +62,12 @@ func NewConfigFromOptions(opts servertypes.AppOptions) Config {
 		PoolTopicId:              poolTopicId,
 		TokenSupplyTopicId:       tokenSupplyTopicId,
 		TokenSupplyOffsetTopicId: tokenSupplyOffsetTopicId,
+		PairTopicId:              pairTopicID,
 	}
 }
 
 // Initialize initializes the indexer by creating a new PubSubClient and returning a new IndexerIngester.
 func (c Config) Initialize() domain.Publisher {
-	pubSubClient := service.NewPubSubCLient(c.GCPProjectId, c.BlockTopicId, c.TransactionTopicId, c.PoolTopicId, c.TokenSupplyTopicId, c.TokenSupplyOffsetTopicId)
+	pubSubClient := service.NewPubSubCLient(c.GCPProjectId, c.BlockTopicId, c.TransactionTopicId, c.PoolTopicId, c.TokenSupplyTopicId, c.TokenSupplyOffsetTopicId, c.PairTopicId)
 	return NewIndexerPublisher(*pubSubClient)
 }

@@ -48,7 +48,7 @@ func onSubAuthenticatorsAdded(ctx sdk.Context, account sdk.AccAddress, data []by
 		return errorsmod.Wrapf(err, "failed to unmarshal sub-authenticator init data")
 	}
 
-	if len(initDatas) == 0 {
+	if len(initDatas) <= 1 {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no sub-authenticators provided")
 	}
 

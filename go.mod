@@ -3,7 +3,7 @@ module github.com/osmosis-labs/osmosis/v25
 go 1.22.3
 
 require (
-	cloud.google.com/go/pubsub v1.36.1
+	cloud.google.com/go/pubsub v1.40.0
 	cosmossdk.io/api v0.7.5
 	cosmossdk.io/client/v2 v2.0.0-beta.1
 	cosmossdk.io/core v0.12.0
@@ -18,7 +18,7 @@ require (
 	cosmossdk.io/x/upgrade v0.1.3
 	github.com/CosmWasm/wasmd v0.50.0
 	github.com/CosmWasm/wasmvm v1.5.2
-	github.com/cometbft/cometbft v0.38.7
+	github.com/cometbft/cometbft v0.38.9
 	github.com/cometbft/cometbft-db v0.12.0
 	github.com/cosmos/cosmos-db v1.0.2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -27,9 +27,9 @@ require (
 	github.com/cosmos/gogoproto v1.5.0
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8 v8.0.2
 	github.com/cosmos/ibc-apps/modules/async-icq/v8 v8.0.0
-	github.com/cosmos/ibc-go/modules/capability v1.0.0
+	github.com/cosmos/ibc-go/modules/capability v1.0.1
 	github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.1.1-ibc-go-v7.3-wasmvm-v1.5
-	github.com/cosmos/ibc-go/v8 v8.2.1
+	github.com/cosmos/ibc-go/v8 v8.3.2
 	github.com/cosmos/rosetta v0.50.7
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
@@ -44,7 +44,7 @@ require (
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.13
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240517165907-1625703bc16d
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240517165907-1625703bc16d
-	github.com/osmosis-labs/sqs/sqsdomain v0.18.4-0.20240606185034-267d0e5b17a6
+	github.com/osmosis-labs/sqs/sqsdomain v0.18.4-0.20240628061338-6194c204c5c8
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/skip-mev/block-sdk/v2 v2.1.3
@@ -57,8 +57,8 @@ require (
 	github.com/tidwall/gjson v1.17.1
 	go.uber.org/multierr v1.11.0
 	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
-	google.golang.org/genproto/googleapis/api v0.0.0-20240318140521-94a12d6c2237
-	google.golang.org/grpc v1.64.0
+	google.golang.org/genproto/googleapis/api v0.0.0-20240617180043-68d350f18fd4
+	google.golang.org/grpc v1.65.0
 	google.golang.org/protobuf v1.34.2
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -67,11 +67,12 @@ require (
 )
 
 require (
-	cloud.google.com/go v0.112.1 // indirect
-	cloud.google.com/go/compute v1.25.1 // indirect
-	cloud.google.com/go/compute/metadata v0.2.3 // indirect
-	cloud.google.com/go/iam v1.1.6 // indirect
-	cloud.google.com/go/storage v1.38.0 // indirect
+	cloud.google.com/go v0.115.0 // indirect
+	cloud.google.com/go/auth v0.6.0 // indirect
+	cloud.google.com/go/auth/oauth2adapt v0.2.2 // indirect
+	cloud.google.com/go/compute/metadata v0.3.0 // indirect
+	cloud.google.com/go/iam v1.1.8 // indirect
+	cloud.google.com/go/storage v1.41.0 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/x/feegrant v0.1.0 // indirect
@@ -109,11 +110,11 @@ require (
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/google/btree v1.1.2 // indirect
-	github.com/google/flatbuffers v1.12.1 // indirect
+	github.com/google/flatbuffers v23.5.26+incompatible // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
-	github.com/googleapis/gax-go/v2 v2.12.2 // indirect
+	github.com/googleapis/gax-go/v2 v2.12.5 // indirect
 	github.com/goware/urlx v0.3.2 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-getter v1.7.4 // indirect
@@ -145,12 +146,11 @@ require (
 	go.opentelemetry.io/otel v1.24.0 // indirect
 	go.opentelemetry.io/otel/metric v1.24.0 // indirect
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
-	golang.org/x/oauth2 v0.18.0 // indirect
+	golang.org/x/oauth2 v0.21.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	google.golang.org/api v0.169.0 // indirect
-	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240401170217-c3f982113cda // indirect
+	google.golang.org/api v0.186.0 // indirect
+	google.golang.org/genproto v0.0.0-20240617180043-68d350f18fd4 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240617180043-68d350f18fd4 // indirect
 	gotest.tools/v3 v3.5.1 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
@@ -187,7 +187,7 @@ require (
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang/glog v1.2.0 // indirect
+	github.com/golang/glog v1.2.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
@@ -231,7 +231,7 @@ require (
 	github.com/prometheus/common v0.52.2 // indirect
 	github.com/prometheus/procfs v0.13.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
-	github.com/rs/cors v1.10.1 // indirect
+	github.com/rs/cors v1.11.0 // indirect
 	github.com/rs/zerolog v1.32.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
@@ -247,14 +247,14 @@ require (
 	github.com/zondax/hid v0.9.2 // indirect
 	go.etcd.io/bbolt v1.4.0-alpha.0.0.20240404170359-43604f3112c5 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	golang.org/x/crypto v0.23.0 // indirect
+	golang.org/x/crypto v0.24.0 // indirect
 	golang.org/x/mod v0.17.0 // indirect
-	golang.org/x/net v0.25.0 // indirect
+	golang.org/x/net v0.26.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.20.0 // indirect
-	golang.org/x/term v0.20.0 // indirect
-	golang.org/x/text v0.15.0 // indirect
-	golang.org/x/tools v0.21.0 // indirect
+	golang.org/x/sys v0.21.0 // indirect
+	golang.org/x/term v0.21.0 // indirect
+	golang.org/x/text v0.16.0 // indirect
+	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	nhooyr.io/websocket v1.8.10 // indirect
 )
@@ -283,7 +283,7 @@ replace (
 
 	// UNFORKING v2 TOOD: Need to manually define these until we tag, it keeps trying to "upgrade" which actually downgrades us to the old sdk submodules logic
 	github.com/osmosis-labs/osmosis/osmomath => github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240517165907-1625703bc16d
-	github.com/osmosis-labs/osmosis/osmoutils => github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240517165907-1625703bc16d
+	github.com/osmosis-labs/osmosis/osmoutils => github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240624163106-4c70b0253af8
 	github.com/osmosis-labs/osmosis/x/epochs => github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240517165907-1625703bc16d
 	github.com/osmosis-labs/osmosis/x/ibc-hooks => github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240517165907-1625703bc16d
 
@@ -295,7 +295,6 @@ replace (
 // github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
 // github.com/osmosis-labs/osmosis/x/epochs => ./x/epochs
 // github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
-
 )
 
 // exclusion so we use v1.0.0

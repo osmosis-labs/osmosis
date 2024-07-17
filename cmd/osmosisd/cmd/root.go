@@ -36,7 +36,6 @@ import (
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/libs/bytes"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
-	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/snapshot"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -727,6 +726,9 @@ token-supply-topic-id = "{{ .IndexerConfig.TokenSupplyTopicId }}"
 # The topic id to use for the publishing token supply offset data
 token-supply-offset-topic-id = "{{ .IndexerConfig.TokenSupplyOffsetTopicId }}"
 
+# The topic id to use for publishing pair metadata
+pair-topic-id = "{{ .IndexerConfig.PairTopicId }}"
+
 ###############################################################################
 ###                            Wasm Configuration                           ###
 ###############################################################################
@@ -748,6 +750,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, t
 	rootCmd.AddCommand(
 		// genutilcli.InitCmd(tempApp.ModuleBasics, osmosis.DefaultNodeHome),
 		forceprune(),
+		moduleHashByHeightQuery(newApp),
 		InitCmd(tempApp.ModuleBasics, osmosis.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, osmosis.DefaultNodeHome, genutiltypes.DefaultMessageValidator, valOperAddressCodec),
 		ExportDeriveBalancesCmd(),
@@ -930,7 +933,7 @@ func newApp(logger log.Logger, db cosmosdb.DB, traceStore io.Writer, appOpts ser
 	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
 	if chainID == "" {
 		// fallback to genesis chain-id
-		appGenesis, err := tmtypes.GenesisDocFromFile(filepath.Join(homeDir, "config", "genesis.json"))
+		appGenesis, err := genutiltypes.AppGenesisFromFile(filepath.Join(homeDir, "config", "genesis.json"))
 		if err != nil {
 			panic(err)
 		}
