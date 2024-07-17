@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
 
 	"github.com/cometbft/cometbft/libs/log"
 
@@ -124,13 +125,26 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 	proportions := params.DistributionProportions
 
 	// allocate staking incentives into fee collector account to be moved to on next begin blocker by staking module account.
-	_, err := k.distributeToModule(ctx, k.feeCollectorName, mintedCoin, proportions.Staking)
+	stakingIncentivesAmount, err := k.distributeToModule(ctx, k.feeCollectorName, mintedCoin, proportions.Staking)
+	if err != nil {
+		return err
+	}
+
+	// allocate pool allocation ratio to pool-incentives module account.
+	poolIncentivesAmount, err := k.distributeToModule(ctx, poolincentivestypes.ModuleName, mintedCoin, proportions.PoolIncentives)
 	if err != nil {
 		return err
 	}
 
 	// allocate dev rewards to respective accounts from developer vesting module account.
-	_, err = k.distributeDeveloperRewards(ctx, mintedCoin, proportions.DeveloperRewards, params.WeightedDeveloperRewardsReceivers)
+	devRewardAmount, err := k.distributeDeveloperRewards(ctx, mintedCoin, proportions.DeveloperRewards, params.WeightedDeveloperRewardsReceivers)
+	if err != nil {
+		return err
+	}
+
+	// subtract from original provision to ensure no coins left over after the allocations
+	communityPoolAmount := mintedCoin.Amount.Sub(stakingIncentivesAmount).Sub(poolIncentivesAmount).Sub(devRewardAmount)
+	err = k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(params.MintDenom, communityPoolAmount)), k.accountKeeper.GetModuleAddress(types.ModuleName))
 	if err != nil {
 		return err
 	}
