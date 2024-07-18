@@ -15,7 +15,7 @@ const (
 	BAR   = "bar"
 	BAZ   = "baz"
 	FOO   = "foo"
-	NOTE = "note"
+	NOTE  = "note"
 	STAKE = "stake"
 )
 

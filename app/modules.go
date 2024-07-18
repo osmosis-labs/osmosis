@@ -134,7 +134,7 @@ var moduleAccountPermissions = map[string][]string{
 	// markettypes.ModuleName:                        {authtypes.Minter, authtypes.Burner}, TODO: yurii: enable swaps
 	// markettypes.ReserveModuleName:                 {authtypes.Minter, authtypes.Burner}, TODO: yurii: enable swaps
 	// oracletypes.ModuleName:
-	cosmwasmpooltypes.ModuleName:             nil,
+	cosmwasmpooltypes.ModuleName: nil,
 }
 
 // appModules return modules to initialize module manager.

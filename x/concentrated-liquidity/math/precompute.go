@@ -11,8 +11,8 @@ var (
 	powersOfTen    []osmomath.Dec
 	negPowersOfTen []osmomath.Dec
 
-	mathBigOneDec = osmomath.NewBigDec(1)
-	mathBigTenDec = osmomath.NewBigDec(10)
+	mathBigOneDec     = osmomath.NewBigDec(1)
+	mathBigTenDec     = osmomath.NewBigDec(10)
 	bigPowersOfTen    []osmomath.BigDec
 	bigNegPowersOfTen []osmomath.BigDec
 

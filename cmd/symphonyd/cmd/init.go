@@ -90,10 +90,10 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			// An easy way to run a lightweight seed node is to use tenderseed: github.com/binaryholdings/tenderseed
 
 			seeds := []string{
-				"21d7539792ee2e0d650b199bf742c56ae0cf499e@162.55.132.230:2000",                             // Notional
-				"44ff091135ef2c69421eacfa136860472ac26e60@65.21.141.212:2000",                              // Notional
-				"ec4d3571bf709ab78df61716e47b5ac03d077a1a@65.108.43.26:2000",                               // Notional
-				"4cb8e1e089bdf44741b32638591944dc15b7cce3@65.108.73.18:2000",                               // Notional
+				"21d7539792ee2e0d650b199bf742c56ae0cf499e@162.55.132.230:2000",                              // Notional
+				"44ff091135ef2c69421eacfa136860472ac26e60@65.21.141.212:2000",                               // Notional
+				"ec4d3571bf709ab78df61716e47b5ac03d077a1a@65.108.43.26:2000",                                // Notional
+				"4cb8e1e089bdf44741b32638591944dc15b7cce3@65.108.73.18:2000",                                // Notional
 				"f515a8599b40f0e84dfad935ba414674ab11a668@symphony.blockpane.com:26656",                     // [ block pane ]
 				"6bcdbcfd5d2c6ba58460f10dbcfde58278212833@symphony.artifact-staking.io:26656",               // Artifact Staking
 				"24841abfc8fbd401d8c86747eec375649a2e8a7e@symphony.pbcups.org:26656",                        // Pbcups
