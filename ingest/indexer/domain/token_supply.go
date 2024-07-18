@@ -23,3 +23,8 @@ type TokenSupplyOffset struct {
 func ShouldFilterDenom(denom string) bool {
 	return strings.Contains(denom, "cl/pool") || strings.Contains(denom, "gamm/pool")
 }
+
+// IsMultiDenom returns true if the given denoms has >2 denoms
+func IsMultiDenom(denoms []string) bool {
+	return len(denoms) > 2
+}
