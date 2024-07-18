@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -56,7 +57,7 @@ func (server msgServer) UndelegateFromValidatorSet(goCtx context.Context, msg *t
 	// 	return nil, err
 	// }
 
-	return &types.MsgUndelegateFromValidatorSetResponse{}, fmt.Errorf("not implemented, utilize UndelegateFromRebalancedValidatorSet instead")
+	return &types.MsgUndelegateFromValidatorSetResponse{}, errors.New("not implemented, utilize UndelegateFromRebalancedValidatorSet instead")
 }
 
 // UndelegateFromRebalancedValidatorSet undelegates {coin} amount from the validator set, utilizing a user's current delegations
@@ -84,7 +85,7 @@ func (server msgServer) RedelegateValidatorSet(goCtx context.Context, msg *types
 	// get existing delegation if there is no valset set, else get valset
 	existingSet, err := server.keeper.GetDelegationPreferences(ctx, msg.Delegator)
 	if err != nil {
-		return nil, fmt.Errorf("user has no delegation")
+		return nil, errors.New("user has no delegation")
 	}
 
 	// Message 1: override the validator set preference set entry
