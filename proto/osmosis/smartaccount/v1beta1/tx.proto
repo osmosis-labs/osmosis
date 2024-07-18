@@ -19,9 +19,9 @@ service Msg {
 
 // MsgAddAuthenticatorRequest defines the Msg/AddAuthenticator request type.
 message MsgAddAuthenticator {
-  option (amino.name) = "osmosis/smart-account/add-authenticator";
+  option (amino.name) = "osmosis/smartaccount/add-authenticator";
   string sender = 1;
-  string type = 2;
+  string authenticator_type = 2;
   bytes data = 3;
 }
 
@@ -31,7 +31,7 @@ message MsgAddAuthenticatorResponse { bool success = 1; }
 // MsgRemoveAuthenticatorRequest defines the Msg/RemoveAuthenticator request
 // type.
 message MsgRemoveAuthenticator {
-  option (amino.name) = "osmosis/smart-account/remove-authenticator";
+  option (amino.name) = "osmosis/smartaccount/remove-authenticator";
   string sender = 1;
   uint64 id = 2;
 }
