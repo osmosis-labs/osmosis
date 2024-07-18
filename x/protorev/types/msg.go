@@ -275,7 +275,7 @@ func (msg MsgSetBaseDenoms) ValidateBasic() error {
 		return errorsmod.Wrap(err, "invalid admin address (must be bech32)")
 	}
 
-	// Check that there is at least one base denom and that first denom is osmo
+	// Check that there is at least one base denom and that first denom is melody
 	if err := ValidateBaseDenoms(msg.BaseDenoms); err != nil {
 		return err
 	}

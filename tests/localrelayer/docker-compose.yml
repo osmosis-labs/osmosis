@@ -1,8 +1,8 @@
 version: "3"
 
 services:
-  localosmosis-a:
-    image: local:osmosis
+  localsymphony-a:
+    image: local:symphony
     build:
       context: ../../
       dockerfile: Dockerfile
@@ -10,12 +10,12 @@ services:
         RUNNER_IMAGE: alpine:3.19
         GO_VERSION: "1.21"
     volumes:
-      - ./scripts/setup_chain.sh:/osmosis/setup.sh
-      - $HOME/.osmosisd-local-a/:/osmosis/.osmosisd/
+      - ./scripts/setup_chain.sh:/symphony/setup.sh
+      - $HOME/.symphonyd-local-a/:/symphony/.symphonyd/
     entrypoint:
-      - /osmosis/setup.sh
+      - /symphony/setup.sh
     environment:
-      - CHAIN_ID=localosmosis-a
+      - CHAIN_ID=localsymphony-a
       - VALIDATOR_MONIKER=validator-a
       - VALIDATOR_MNEMONIC=family album bird seek tilt color pill danger message abuse manual tent almost ridge boost blast high comic core quantum spoon coconut oyster remove
       - FAUCET_MNEMONIC=increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great
@@ -25,22 +25,22 @@ services:
       - 1317:1317
       - 9090:9090
     networks:
-      - localosmosis
+      - localsymphony
 
   faucet-a:
     command:
       - start
-      - localosmosis-a:26657
+      - localsymphony-a:26657
     image: confio/faucet:0.28.11
     environment:
       FAUCET_CONCURRENCY: 1
       FAUCET_MNEMONIC: "increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great"
       FAUCET_PORT: 8000
-      FAUCET_GAS_PRICE: 0.025uosmo
+      FAUCET_GAS_PRICE: 0.025note
       FAUCET_PATH_PATTERN: "m/44'/118'/0'/0/a"
-      FAUCET_ADDRESS_PREFIX: osmo
-      FAUCET_TOKENS: uosmo,uion
-      FAUCET_CREDIT_AMOUNT_UOSMO: 10000000 # 10 osmo
+      FAUCET_ADDRESS_PREFIX: melody
+      FAUCET_TOKENS: note,uion
+      FAUCET_CREDIT_AMOUNT_NOTE: 10000000 # 10 melody
       FAUCET_CREDIT_AMOUNT_UION: 100000 # 0.1 ion
       FAUCET_REFILL_FACTOR: 8
       FAUCET_REFILL_THRESHOLD: 20
@@ -48,12 +48,12 @@ services:
     ports:
       - 8000:8000
     depends_on:
-      - localosmosis-a
+      - localsymphony-a
     networks:
-      - localosmosis
+      - localsymphony
 
-  localosmosis-b:
-    image: local:osmosis
+  localsymphony-b:
+    image: local:symphony
     build:
       context: ../../
       dockerfile: Dockerfile
@@ -61,12 +61,12 @@ services:
         RUNNER_IMAGE: alpine:3.19
         GO_VERSION: "1.21"
     volumes:
-      - ./scripts/setup_chain.sh:/osmosis/setup.sh
-      - $HOME/.osmosisd-local-b/:/osmosis/.osmosisd/
+      - ./scripts/setup_chain.sh:/symphony/setup.sh
+      - $HOME/.symphonyd-local-b/:/symphony/.symphonyd/
     entrypoint:
-      - /osmosis/setup.sh
+      - /symphony/setup.sh
     environment:
-      - CHAIN_ID=localosmosis-b
+      - CHAIN_ID=localsymphony-b
       - VALIDATOR_MONIKER=validator-b
       - VALIDATOR_MNEMONIC=family album bird seek tilt color pill danger message abuse manual tent almost ridge boost blast high comic core quantum spoon coconut oyster remove
       - FAUCET_MNEMONIC=increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great
@@ -77,22 +77,22 @@ services:
       - 31317:1317
       - 39090:9090
     networks:
-      - localosmosis
+      - localsymphony
 
   faucet-b:
     command:
       - start
-      - localosmosis-b:26657
+      - localsymphony-b:26657
     image: confio/faucet:0.28.11
     environment:
       FAUCET_CONCURRENCY: 1
       FAUCET_MNEMONIC: "increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great"
       FAUCET_PORT: 8000
-      FAUCET_GAS_PRICE: 0.025uosmo
+      FAUCET_GAS_PRICE: 0.025note
       FAUCET_PATH_PATTERN: "m/44'/118'/0'/0/a"
-      FAUCET_ADDRESS_PREFIX: osmo
-      FAUCET_TOKENS: uosmo,uion
-      FAUCET_CREDIT_AMOUNT_UOSMO: 10000000 # 10 osmo
+      FAUCET_ADDRESS_PREFIX: melody
+      FAUCET_TOKENS: note,uion
+      FAUCET_CREDIT_AMOUNT_NOTE: 10000000 # 10 melody
       FAUCET_CREDIT_AMOUNT_UION: 100000 # 0.1 ion
       FAUCET_REFILL_FACTOR: 8
       FAUCET_REFILL_THRESHOLD: 20
@@ -100,9 +100,9 @@ services:
     ports:
       - 38000:8000
     depends_on:
-      - localosmosis-b
+      - localsymphony-b
     networks:
-      - localosmosis
+      - localsymphony
 
   hermes:
     image: informalsystems/hermes:1.1.0
@@ -113,17 +113,17 @@ services:
     entrypoint:
       - /home/hermes/setup.sh
     environment:
-      - CHAIN_A_ID=localosmosis-a
+      - CHAIN_A_ID=localsymphony-a
       - CHAIN_A_MNEMONIC=black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken
-      - CHAIN_B_ID=localosmosis-b
+      - CHAIN_B_ID=localsymphony-b
       - CHAIN_B_MNEMONIC=black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken
     ports:
       - 3000:3000
     depends_on:
-      - localosmosis-a
-      - localosmosis-b
+      - localsymphony-a
+      - localsymphony-b
     networks:
-      - localosmosis
+      - localsymphony
 
 networks:
-  localosmosis:
+  localsymphony:

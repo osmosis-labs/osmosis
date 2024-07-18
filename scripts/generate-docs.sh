@@ -6,7 +6,7 @@ set -eo pipefail
 # prepare swagger generation
 mkdir -p "$SWAGGER_DIR/proto"
 printf "version: v1\ndirectories:\n  - proto\n  - third_party" > "$SWAGGER_DIR/buf.work.yaml"
-printf "version: v1\nname: buf.build/osmosis/osmosis\n" > "$SWAGGER_DIR/proto/buf.yaml"
+printf "version: v1\nname: buf.build/symphony/symphony\n" > "$SWAGGER_DIR/proto/buf.yaml"
 cp ./proto/buf.gen.swagger.yaml "$SWAGGER_DIR/proto/buf.gen.swagger.yaml"
 
 # copy existing proto files

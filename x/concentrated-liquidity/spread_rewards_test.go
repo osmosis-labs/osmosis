@@ -426,8 +426,8 @@ func (s *KeeperTestSuite) TestGetSpreadRewardGrowthOutside() {
 }
 
 func (s *KeeperTestSuite) TestCalculateSpreadRewardGrowth() {
-	defaultGeeFrowthGlobal := sdk.NewDecCoins(sdk.NewDecCoin("uosmo", osmomath.NewInt(10)))
-	defaultGeeFrowthOutside := sdk.NewDecCoins(sdk.NewDecCoin("uosmo", osmomath.NewInt(3)))
+	defaultGeeFrowthGlobal := sdk.NewDecCoins(sdk.NewDecCoin("note", osmomath.NewInt(10)))
+	defaultGeeFrowthOutside := sdk.NewDecCoins(sdk.NewDecCoin("note", osmomath.NewInt(3)))
 
 	defaultSmallerTargetTick := int64(1)
 	defaultCurrentTick := int64(2)

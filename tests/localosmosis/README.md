@@ -61,7 +61,7 @@ make localnet-keys
 - These keys are added to your `--keyring-backend test`
 - If the keys are already on your keyring, you will get an `"Error: aborted"`
 - Ensure you use the name of the account as listed in the table below, as well as ensure you append the `--keyring-backend test` to your txs
-- Example: `osmosisd tx bank send lo-test2 osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks --keyring-backend test --chain-id localosmosis`
+- Example: `osmosisd tx bank send lo-test2 symphony1jpr5824frn5472qm73ckfe2c3rh6vrn4lvlgj7 --keyring-backend test --chain-id localosmosis`
 
 5. You can stop chain, keeping the state with
 
@@ -186,7 +186,7 @@ osmosisd status
 11. Here is an example command to ensure complete understanding:
 
 ```sh
-osmosisd tx bank send wallet osmo1nyphwl8p5yx6fxzevjwqunsfqpcxukmtk8t60m 10000000uosmo --chain-id testing1 --keyring-backend test
+osmosisd tx bank send wallet symphony1jpr5824frn5472qm73ckfe2c3rh6vrn4lvlgj7 10000000uosmo --chain-id testing1 --keyring-backend test
 ```
 
 12. You can stop chain, keeping the state with
@@ -210,19 +210,19 @@ If you are only running the validator for a short time (< 24 hours) you will not
 
 LocalOsmosis is pre-configured with one validator and 9 accounts with ION and OSMO balances.
 
-| Account   | Address                                                                                                | Mnemonic                                                                                                                                                                   |
-|-----------|--------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| lo-val    | `osmo1phaxpevm5wecex2jyaqty2a4v02qj7qmlmzk5a`<br/>`osmovaloper1phaxpevm5wecex2jyaqty2a4v02qj7qm9v24r6` | `satisfy adjust timber high purchase tuition stool faith fine install that you unaware feed domain license impose boss human eager hat rent enjoy dawn`                    |
-| lo-test1  | `osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks`                                                          | `notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius`                       |
-| lo-test2  | `osmo18s5lynnmx37hq4wlrw9gdn68sg2uxp5rgk26vv`                                                          | `quality vacuum heart guard buzz spike sight swarm shove special gym robust assume sudden deposit grid alcohol choice devote leader tilt noodle tide penalty`              |
-| lo-test3  | `osmo1qwexv7c6sm95lwhzn9027vyu2ccneaqad4w8ka`                                                          | `symbol force gallery make bulk round subway violin worry mixture penalty kingdom boring survey tool fringe patrol sausage hard admit remember broken alien absorb`        |
-| lo-test4  | `osmo14hcxlnwlqtq75ttaxf674vk6mafspg8xwgnn53`                                                          | `bounce success option birth apple portion aunt rural episode solution hockey pencil lend session cause hedgehog slender journey system canvas decorate razor catch empty` |
-| lo-test5  | `osmo12rr534cer5c0vj53eq4y32lcwguyy7nndt0u2t`                                                          | `second render cat sing soup reward cluster island bench diet lumber grocery repeat balcony perfect diesel stumble piano distance caught occur example ozone loyal`        |
-| lo-test6  | `osmo1nt33cjd5auzh36syym6azgc8tve0jlvklnq7jq`                                                          | `spatial forest elevator battle also spoon fun skirt flight initial nasty transfer glory palm drama gossip remove fan joke shove label dune debate quick`                  |
-| lo-test7  | `osmo10qfrpash5g2vk3hppvu45x0g860czur8ff5yx0`                                                          | `noble width taxi input there patrol clown public spell aunt wish punch moment will misery eight excess arena pen turtle minimum grain vague inmate`                       |
-| lo-test8  | `osmo1f4tvsdukfwh6s9swrc24gkuz23tp8pd3e9r5fa`                                                          | `cream sport mango believe inhale text fish rely elegant below earth april wall rug ritual blossom cherry detail length blind digital proof identify ride`                 |
-| lo-test9  | `osmo1myv43sqgnj5sm4zl98ftl45af9cfzk7nhjxjqh`                                                          | `index light average senior silent limit usual local involve delay update rack cause inmate wall render magnet common feature laundry exact casual resource hundred`       |
-| lo-test10 | `osmo14gs9zqh8m49yy9kscjqu9h72exyf295afg6kgk`                                                          | `prefer forget visit mistake mixture feel eyebrow autumn shop pair address airport diesel street pass vague innocent poem method awful require hurry unhappy shoulder`     |
+| Account   | Address                                            | Mnemonic                                                                                                                                                                   |
+|-----------|----------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| lo-val    | `symphony1n7eq7r0ktw5q3w76854f3hqtz2mu9h2p54jsyr`  | `twist record public tattoo eternal blame twin saddle control monster quarter laptop lizard insect excite lawn lake caution tumble promote grow expand flight unknown`                    |
+| lo-test1  | `symphony1c605nvcw94rvvehrcdfj85qe09ulseyt0efhk7`  | `summer solar wall song wall defy cement stable punch dilemma proud absurd pizza metal surge fury brush clown sponsor april bounce thought stumble buzz`                       |
+| lo-test2  | `symphony1jpr5824frn5472qm73ckfe2c3rh6vrn4lvlgj7`  | `opinion coin approve cause element gallery film party laugh fire stumble switch analyst burden labor welcome sketch inflict three include chapter document jungle fossil`              |
+| lo-test3  | `symphony1amr6zrvs0hymf62qd5mwvshx94ul8cgfu9jtxn`  | `early float super rebel long paper inside favorite brown casual original youth spoil sure knee body abstract merry dragon memory either rack tide road`        |
+| lo-test4  | `symphony1egts9ayaqr6t54ahs62awmz5smuf764uu5f5xv`  | `you man shell elder fix among swarm shrug same absent faith axis reunion adult album gauge speed tumble brick false story board marble toast` |
+| lo-test5  | `symphony1450weujlqvtd0d5z59v388jmzwyk3e6qhlj5r5`  | `mass embark injury obvious usage what foil fat diary assist wise agent rigid renew have unlock hole record urge news uncover acoustic measure valid`        |
+| lo-test6  | `symphony12mdnm5yv5dfz37qsu0eu60x8qwxxl0x7sqqzn0`  | `tongue key pattern victory pumpkin divorce during dizzy pond wonder pelican visa arrive pave tonight cheese van junk bounce ability length hidden battle garlic`                  |
+| lo-test7  | `symphony1ar8mfrrtkwlm62wgu88d0cfleng5gl8y062gsn`  | `fork tourist chalk photo wrist entire shell barrel decide rigid trip fancy ostrich frozen table obscure velvet car manual similar kingdom pill visual sunset`                       |
+| lo-test8  | `symphony1kvgujs5yg9h6l6e265smwx99fmnnmc4af5v0ah`  | `bar assist play fade chuckle machine cross history flock water panther this repeat category snack viable awesome pause announce leisure pony organ orient visa`                 |
+| lo-test9  | `symphony1ww5e3y7ptw8h3lc0cumxe5lmcu3m53dn7qyn4k`  | `seed knife aunt flip mansion bird trophy cluster truth purpose weekend exact jewel beach visit stairs rich capable employ float omit harvest shell garment`       |
+| lo-test10 | `symphony1tsehv6f0v7ce4gy7574thxnp6v8jx7jm4evkpe`  | `page charge below sponsor primary page comic arrest ancient express polar frozen interest ship slim label giant remain evidence monitor large maximum cage curious`     |
 
 ## Tests
 

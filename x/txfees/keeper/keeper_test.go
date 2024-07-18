@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmosisapp "github.com/osmosis-labs/osmosis/v23/app"
+	symphonyApp "github.com/osmosis-labs/osmosis/v23/app"
 
 	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
 	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
@@ -31,7 +31,7 @@ func (s *KeeperTestSuite) SetupTest(isCheckTx bool) {
 	s.Setup()
 	s.queryClient = types.NewQueryClient(s.QueryHelper)
 
-	encodingConfig := osmosisapp.MakeEncodingConfig()
+	encodingConfig := symphonyApp.MakeEncodingConfig()
 	s.clientCtx = client.Context{}.
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
@@ -58,7 +58,7 @@ func (s *KeeperTestSuite) SetupTest(isCheckTx bool) {
 		s.FundAcc(acc,
 			sdk.NewCoins(
 				sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000000)),
-				sdk.NewCoin("uosmo", osmomath.NewInt(100000000000000000)), // Needed for pool creation fee
+				sdk.NewCoin("note", osmomath.NewInt(100000000000000000)), // Needed for pool creation fee
 				sdk.NewCoin("uion", osmomath.NewInt(10000000)),
 				sdk.NewCoin("atom", osmomath.NewInt(10000000)),
 				sdk.NewCoin("ust", osmomath.NewInt(10000000)),

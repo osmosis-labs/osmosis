@@ -270,8 +270,8 @@ func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
 }
 
 func (suite *MiddlewareTestSuite) initializeEscrow() (totalEscrow, expectedSed osmomath.Int) {
-	osmosisApp := suite.chainA.GetOsmosisApp()
-	supply := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
+	symphonyApp := suite.chainA.GetSymphonyApp()
+	supply := symphonyApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 
 	// Move some funds from chainA to chainB so that there is something in escrow
 	// Each user has 10% of the supply, so we send most of the funds from one user to chainA
@@ -304,10 +304,10 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 		denom = denomTrace.IBCDenom()
 	}
 
-	osmosisApp := suite.chainA.GetOsmosisApp()
+	symphonyApp := suite.chainA.GetSymphonyApp()
 
 	// This is the first one. Inside the tests. It works as expected.
-	channelValue := CalculateChannelValue(suite.chainA.GetContext(), denom, osmosisApp.BankKeeper)
+	channelValue := CalculateChannelValue(suite.chainA.GetContext(), denom, symphonyApp.BankKeeper)
 
 	// The amount to be sent is send 2.5% (quota is 5%)
 	quota := channelValue.QuoRaw(int64(100 / quotaPercentage))
@@ -400,9 +400,9 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 		sendDenom = denomTrace.IBCDenom()
 	}
 
-	osmosisApp := suite.chainA.GetOsmosisApp()
+	symphonyApp := suite.chainA.GetSymphonyApp()
 
-	channelValue := CalculateChannelValue(suite.chainA.GetContext(), localDenom, osmosisApp.BankKeeper)
+	channelValue := CalculateChannelValue(suite.chainA.GetContext(), localDenom, symphonyApp.BankKeeper)
 
 	// The amount to be sent is 2% (quota is 4%)
 	quota := channelValue.QuoRaw(int64(100 / quotaPercentage))
@@ -467,11 +467,11 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// Get the escrowed amount
-	osmosisApp := suite.chainA.GetOsmosisApp()
+	symphonyApp := suite.chainA.GetSymphonyApp()
 	// ToDo: This is what we eventually want here, but using the full supply temporarily for performance reasons. See CalculateChannelValue
 	// escrowAddress := transfertypes.GetEscrowAddress("transfer", "channel-0")
-	// escrowed := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), escrowAddress, sdk.DefaultBondDenom)
-	escrowed := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
+	// escrowed := symphonyApp.BankKeeper.GetBalance(suite.chainA.GetContext(), escrowAddress, sdk.DefaultBondDenom)
+	escrowed := symphonyApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 	quota := escrowed.Amount.QuoRaw(100) // 1% of the escrowed amount
 
 	// Use the whole quota
@@ -537,8 +537,8 @@ func (suite *MiddlewareTestSuite) TestUnsetRateLimitingContract() {
 	// Unset the contract param
 	params, err := types.NewParams("")
 	suite.Require().NoError(err)
-	osmosisApp := suite.chainA.GetOsmosisApp()
-	paramSpace, ok := osmosisApp.AppKeepers.ParamsKeeper.GetSubspace(types.ModuleName)
+	symphonyApp := suite.chainA.GetSymphonyApp()
+	paramSpace, ok := symphonyApp.AppKeepers.ParamsKeeper.GetSubspace(types.ModuleName)
 	suite.Require().True(ok)
 	// N.B.: this panics if validation fails.
 	paramSpace.SetParamSet(suite.chainA.GetContext(), &params)
@@ -553,10 +553,10 @@ func (suite *MiddlewareTestSuite) TestNonICS20() {
 	addr := suite.chainA.InstantiateRLContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
-	osmosisApp := suite.chainA.GetOsmosisApp()
+	symphonyApp := suite.chainA.GetSymphonyApp()
 
 	data := []byte("{}")
-	_, err := osmosisApp.RateLimitingICS4Wrapper.SendPacket(suite.chainA.GetContext(), capabilitytypes.NewCapability(1), "wasm.osmo1873ls0d60tg7hk00976teq9ywhzv45u3hk2urw8t3eau9eusa4eqtun9xn", "channel-0", clienttypes.NewHeight(0, 0), 1, data)
+	_, err := symphonyApp.RateLimitingICS4Wrapper.SendPacket(suite.chainA.GetContext(), capabilitytypes.NewCapability(1), "wasm.osmo1873ls0d60tg7hk00976teq9ywhzv45u3hk2urw8t3eau9eusa4eqtun9xn", "channel-0", clienttypes.NewHeight(0, 0), 1, data)
 
 	suite.Require().Error(err)
 	// This will error out, but not because of rate limiting

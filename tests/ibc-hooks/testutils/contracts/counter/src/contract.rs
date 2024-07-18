@@ -12,7 +12,7 @@ use crate::msg::*;
 use crate::state::{Counter, COUNTERS};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "osmosis:permissioned_counter";
+const CONTRACT_NAME: &str = "symphony:permissioned_counter";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]

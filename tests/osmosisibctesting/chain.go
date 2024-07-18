@@ -24,8 +24,8 @@ type TestChain struct {
 }
 
 func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
-	osmosisApp := app.Setup(false)
-	return osmosisApp, app.NewDefaultGenesisState()
+	symphonyApp := app.Setup(false)
+	return symphonyApp, app.NewDefaultGenesisState()
 }
 
 // SendMsgsNoCheck is an alternative to ibctesting.TestChain.SendMsgs so that it doesn't check for errors. That should be handled by the caller
@@ -90,7 +90,7 @@ func SignAndDeliver(
 
 // Move epochs to the future to avoid issues with minting
 func (chain *TestChain) MoveEpochsToTheFuture() error {
-	epochsKeeper := chain.GetOsmosisApp().EpochsKeeper
+	epochsKeeper := chain.GetSymphonyApp().EpochsKeeper
 	ctx := chain.GetContext()
 	for _, epoch := range epochsKeeper.AllEpochInfos(ctx) {
 		epoch.StartTime = ctx.BlockTime().Add(time.Hour * 24 * 30)
@@ -103,8 +103,8 @@ func (chain *TestChain) MoveEpochsToTheFuture() error {
 	return nil
 }
 
-// GetOsmosisApp returns the current chain's app as an OsmosisApp
-func (chain *TestChain) GetOsmosisApp() *app.OsmosisApp {
-	v, _ := chain.App.(*app.OsmosisApp)
+// GetSymphonyApp returns the current chain's app as an SymphonyApp
+func (chain *TestChain) GetSymphonyApp() *app.SymphonyApp {
+	v, _ := chain.App.(*app.SymphonyApp)
 	return v
 }

@@ -85,8 +85,8 @@ func (s *KeeperTestSuite) TestGetGroupByGaugeID() {
 
 	for name, test := range tests {
 		s.Run(name, func() {
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000)))) // 1,000 osmo
-			clPool := s.PrepareConcentratedPool()                                                      // gaugeid = 1
+			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(100_000_000)))) // 1,000 melody
+			clPool := s.PrepareConcentratedPool()                                                     // gaugeid = 1
 
 			// create 3 internal Gauge
 			var internalGauges []uint64
@@ -95,7 +95,7 @@ func (s *KeeperTestSuite) TestGetGroupByGaugeID() {
 				internalGauges = append(internalGauges, internalGauge)
 			}
 
-			_, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000))), 1, s.TestAccs[1], internalGauges) // gauge id = 5
+			_, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(100_000_000))), 1, s.TestAccs[1], internalGauges) // gauge id = 5
 			s.Require().NoError(err)
 
 			record, err := s.App.IncentivesKeeper.GetGroupByGaugeID(s.Ctx, test.groupGaugeId)
@@ -112,7 +112,7 @@ func (s *KeeperTestSuite) TestGetAllGroupsWithGauge() {
 
 	s.overwriteVolumes(groupPoolIds, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount, defaultVolumeAmount})
 	expectedStartTime := s.Ctx.BlockTime().UTC()
-	_, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000))), 1, s.TestAccs[0], groupPoolIds)
+	_, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(100_000_000))), 1, s.TestAccs[0], groupPoolIds)
 	s.Require().NoError(err)
 
 	// Call GetAllGroupsWithGauge
@@ -154,7 +154,7 @@ func (s *KeeperTestSuite) TestGetAllGroupsWithGauge() {
 		Gauge: types.Gauge{
 			Id:                uint64(8),
 			DistributeTo:      lockuptypes.QueryCondition{LockQueryType: lockuptypes.ByGroup},
-			Coins:             sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000))),
+			Coins:             sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(100_000_000))),
 			StartTime:         expectedStartTime,
 			NumEpochsPaidOver: 1,
 		},

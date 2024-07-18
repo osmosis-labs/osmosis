@@ -29,7 +29,7 @@ var (
 	defaultPoolId       = uint64(1)
 	defaultAmount       = osmomath.NewInt(100)
 	initalDefaultSupply = sdk.NewCoins(sdk.NewCoin(denomA, defaultAmount), sdk.NewCoin(denomB, defaultAmount))
-	uosmo               = "uosmo"
+	note               = "note"
 
 	defaultDenoms = []string{denomA, denomB}
 )
@@ -81,7 +81,7 @@ func (s *TransmuterSuite) TestFunctionalTransmuter() {
 	s.Require().NoError(err)
 
 	// Create gauge
-	incentive := sdk.NewCoins(sdk.NewCoin(uosmo, osmomath.NewInt(1_000_000)))
+	incentive := sdk.NewCoins(sdk.NewCoin(note, osmomath.NewInt(1_000_000)))
 	s.FundAcc(s.TestAccs[1], incentive)
 	gaugeId, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, true, s.TestAccs[1], incentive, lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,

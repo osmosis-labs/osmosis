@@ -135,7 +135,7 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 			return err
 		}
 
-		multiplier := k.calculateOsmoBackingPerShare(pool, osmoPoolAsset)
+		multiplier := k.calculateMelodyBackingPerShare(pool, osmoPoolAsset)
 		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, multiplier)
 	} else if asset.AssetType == types.SuperfluidAssetTypeConcentratedShare {
 		// https://github.com/osmosis-labs/osmosis/issues/6229

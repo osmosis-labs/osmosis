@@ -2,7 +2,7 @@
 
 |                 |                                                              |
 |-----------------|--------------------------------------------------------------|
-| Chain-id        | `osmo-test-5`                                                |
+| Chain-id        | `symphony-testnet-1`                                                |
 | Upgrade Version | `v17.0.0-rc0`                                                |
 | Upgrade Height  | 2200500                                                      |
 | Countdown       | <https://testnet.mintscan.io/osmosis-testnet/blocks/2200500> |

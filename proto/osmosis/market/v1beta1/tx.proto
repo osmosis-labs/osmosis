@@ -1,0 +1,70 @@
+syntax = "proto3";
+package osmosis.market.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v23/x/market/types";
+
+// Msg defines the market Msg service.
+service Msg {
+  // Swap defines a method for swapping coin from one denom to another
+  // denom.
+  rpc Swap(MsgSwap) returns (MsgSwapResponse);
+
+  // SwapSend defines a method for swapping and sending coin from a account to
+  // other account.
+  rpc SwapSend(MsgSwapSend) returns (MsgSwapSendResponse);
+}
+
+// MsgSwap represents a message to swap coin to another denom.
+message MsgSwap {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string trader = 1 [ (gogoproto.moretags) = "yaml:\"trader\"" ];
+  cosmos.base.v1beta1.Coin offer_coin = 2 [
+    (gogoproto.moretags) = "yaml:\"offer_coin\"",
+    (gogoproto.nullable) = false
+  ];
+  string ask_denom = 3 [ (gogoproto.moretags) = "yaml:\"ask_denom\"" ];
+}
+
+// MsgSwapResponse defines the Msg/Swap response type.
+message MsgSwapResponse {
+  cosmos.base.v1beta1.Coin swap_coin = 1 [
+    (gogoproto.moretags) = "yaml:\"swap_coin\"",
+    (gogoproto.nullable) = false
+  ];
+  cosmos.base.v1beta1.Coin swap_fee = 2 [
+    (gogoproto.moretags) = "yaml:\"swap_fee\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// MsgSwapSend represents a message to swap coin and send all result coin to
+// recipient
+message MsgSwapSend {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string from_address = 1 [ (gogoproto.moretags) = "yaml:\"from_address\"" ];
+  string to_address = 2 [ (gogoproto.moretags) = "yaml:\"to_address\"" ];
+  cosmos.base.v1beta1.Coin offer_coin = 3 [
+    (gogoproto.moretags) = "yaml:\"offer_coin\"",
+    (gogoproto.nullable) = false
+  ];
+  string ask_denom = 4 [ (gogoproto.moretags) = "yaml:\"ask_denom\"" ];
+}
+
+// MsgSwapSendResponse defines the Msg/SwapSend response type.
+message MsgSwapSendResponse {
+  cosmos.base.v1beta1.Coin swap_coin = 1 [
+    (gogoproto.moretags) = "yaml:\"swap_coin\"",
+    (gogoproto.nullable) = false
+  ];
+  cosmos.base.v1beta1.Coin swap_fee = 2 [
+    (gogoproto.moretags) = "yaml:\"swap_fee\"",
+    (gogoproto.nullable) = false
+  ];
+}

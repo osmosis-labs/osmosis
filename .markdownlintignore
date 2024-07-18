@@ -23,10 +23,10 @@ app/upgrades/README.md
 app/wasm/README.md
 networks/genesis-validators.md
 networks/genesis-validators.md
-networks/osmosis-1/upgrades/v4/cosmovisor.md
+networks/symphony-1/upgrades/v4/cosmovisor.md
 x/lockup/README.md
-networks/osmosis-1/upgrades/v5/guide.md
-networks/osmosis-1/upgrades/v7/guide.md
+networks/symphony-1/upgrades/v5/guide.md
+networks/symphony-1/upgrades/v7/guide.md
 networks/peers.md
 scripts/multinode-local-testnet.md
 store/README.md

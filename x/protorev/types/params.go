@@ -13,7 +13,7 @@ var (
 	// See https://github.com/osmosis-labs/osmosis/issues/4349 for more details
 	// Note that governance has full ability to change this live on-chain, and this admin can at most prevent protorev from working.
 	// All the settings manager's controls have limits, so it can't lead to a chain halt, excess processing time or prevention of swaps.
-	DefaultAdminAccount = "osmo17nv67dvc7f8yr00rhgxd688gcn9t9wvhn783z4"
+	DefaultAdminAccount = "symphony1vl3s0njph7uq9ar6vq6tdgy252tj0n0eeaz4zr"
 
 	// DefaultNullAddress is the default value for the null account. ProtoRev arbitrage profits denominated in OSMO are sent to this account
 	// as of V24. This address is equivalent to osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030.

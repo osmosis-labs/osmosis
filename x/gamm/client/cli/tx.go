@@ -56,8 +56,8 @@ func NewCreatePoolCmd() *osmocli.TxCliDesc {
 		Long: `Must provide path to a pool JSON file (--pool-file) describing the pool to be created
 Sample pool JSON file contents for balancer:
 {
-	"weights": "4uatom,4osmo,2uakt",
-	"initial-deposit": "100uatom,5osmo,20uakt",
+	"weights": "4uatom,4melody,2uakt",
+	"initial-deposit": "100uatom,5melody,20uakt",
 	"swap-fee": "0.01",
 	"exit-fee": "0.01",
 	"future-governor": "168h"
@@ -175,7 +175,7 @@ func NewStableSwapAdjustScalingFactorsCmd() *cobra.Command {
 	cmd := osmocli.TxCliDesc{
 		Use:              "adjust-scaling-factors --pool-id=[pool-id]  --scaling-factors=[scaling-factors]",
 		Short:            "adjust scaling factors",
-		Example:          "osmosisd adjust-scaling-factors --pool-id=1 --scaling-factors=\"100, 100\"",
+		Example:          "symphonyd adjust-scaling-factors --pool-id=1 --scaling-factors=\"100, 100\"",
 		NumArgs:          0,
 		ParseAndBuildMsg: NewStableSwapAdjustScalingFactorsMsg,
 	}.BuildCommandCustomFn()
@@ -325,21 +325,21 @@ func NewCmdSubmitSetScalingFactorControllerProposal() *cobra.Command {
 Sample proposal file:
 {
 	"title": "Set Scaling Factor Controller Proposal",
-	"description": "Change scaling factor controller address from osmoXXX to osmoYYY"
+	"description": "Change scaling factor controller address from melodyXXX to melodyYYY"
 	"pool-id": 1,
-	"controller-address": "osmoYYY"
+	"controller-address": "melodyYYY"
 }
->>> osmosisd tx gov submit-proposal set-scaling-factor-controller-proposal \
+>>> symphonyd tx gov submit-proposal set-scaling-factor-controller-proposal \
         --proposal proposal.json \
-		--deposit 1600000000uosmo \
+		--deposit 1600000000note \
 
 Sample proposal with flags
->>> osmosisd tx gov submit-proposal set-scaling-factor-controller-proposal \
+>>> symphonyd tx gov submit-proposal set-scaling-factor-controller-proposal \
         --title "Set Scaling Factor Controller Proposal" \
-		--summary "Change scaling factor controller address from osmoXXX to osmoYYY"
-		--deposit 1600000000uosmo
+		--summary "Change scaling factor controller address from melodyXXX to melodyYYY"
+		--deposit 1600000000note
 		--pool-id 1
-		--controller-address osmoYYY
+		--controller-address melodyYYY
 		`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, proposalTitle, summary, deposit, isExpedited, authority, err := osmocli.GetProposalInfo(cmd)

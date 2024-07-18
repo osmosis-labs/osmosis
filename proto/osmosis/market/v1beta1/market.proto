@@ -1,0 +1,25 @@
+syntax = "proto3";
+package osmosis.market.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v23/x/market/types";
+
+// Params defines the parameters for the market module.
+message Params {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  bytes base_pool = 1 [
+    (gogoproto.moretags) = "yaml:\"base_pool\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  uint64 pool_recovery_period = 2
+      [ (gogoproto.moretags) = "yaml:\"pool_recovery_period\"" ];
+  bytes min_stability_spread = 3 [
+    (gogoproto.moretags) = "yaml:\"min_stability_spread\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}

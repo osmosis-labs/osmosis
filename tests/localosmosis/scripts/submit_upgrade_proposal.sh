@@ -5,7 +5,7 @@ set -e
 # it should have enough voting power to pass the proposal
 VALIDATOR_MNEMONIC="bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort"
 
-OSMOSIS_HOME=$HOME/.osmosisd-local/
+OSMOSIS_HOME=$HOME/.symphonyd-local/
 RPC_NODE=http://localhost:26657/
 
 # Default upgrade version
@@ -13,8 +13,8 @@ UPGRADE_VERSION=${1:-"v15"}
 
 # Parameters
 KEY=val
-PROPOSAL_DEPOSIT=1600000000uosmo
-TX_FEES=1000uosmo
+PROPOSAL_DEPOSIT=1600000000note
+TX_FEES=1000note
 
 # Define ANSI escape sequences for colors
 YELLOW='\033[1;33m'
@@ -41,7 +41,7 @@ get_chain_info() {
 make_proposal() {
     echo
     echo "${YELLOW}Creating software-upgrade proposal...${NC}"
-    OSMOSIS_CMD="osmosisd tx gov submit-proposal software-upgrade \
+    OSMOSIS_CMD="symphonyd tx gov submit-proposal software-upgrade \
         $UPGRADE_VERSION \
         --title \"$UPGRADE_VERSION Upgrade\" \
         --description \"$UPGRADE_VERSION Upgrade\" \
@@ -65,7 +65,7 @@ make_proposal() {
 
 # Query proposal
 query_proposal() {
-    osmosisd q gov proposal $PROPOSAL_ID \
+    symphonyd q gov proposal $PROPOSAL_ID \
         --node $RPC_NODE \
         -o json | jq
 }
@@ -74,7 +74,7 @@ query_proposal() {
 vote_on_proposal() {
     echo
     echo "${YELLOW}Voting on proposal $PROPOSAL_ID...${NC}"
-    OSMOSIS_CMD="osmosisd tx gov vote $PROPOSAL_ID yes \
+    OSMOSIS_CMD="symphonyd tx gov vote $PROPOSAL_ID yes \
         --from $KEY \
         --chain-id $CHAIN_ID \
         --fees $TX_FEES \

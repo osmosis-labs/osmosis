@@ -21,7 +21,7 @@ pub fn contract_template() -> Box<dyn Contract<Empty>> {
 const USER: &str = "USER";
 const IBC_ADDR: &str = "IBC_MODULE";
 const GOV_ADDR: &str = "GOV_MODULE";
-const NATIVE_DENOM: &str = "nosmo";
+const NATIVE_DENOM: &str = "nmelody";
 
 fn mock_app() -> App {
     AppBuilder::new().build(|router, _, storage| {

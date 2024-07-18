@@ -1,6 +1,6 @@
 {
-    "weights": "1uosmo,1stake",
-    "initial-deposit": "1000000uosmo,2000000stake",
+    "weights": "1note,1stake",
+    "initial-deposit": "1000000note,2000000stake",
     "swap-fee": "0",
     "exit-fee": "0",
     "future-governor": ""

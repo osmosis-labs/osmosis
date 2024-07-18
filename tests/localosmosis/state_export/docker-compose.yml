@@ -1,8 +1,8 @@
 version: "4"
 
 services:
-  osmosisd:
-    image: local:osmosis
+  symphonyd:
+    image: local:symphony
     build:
       context: ../../../
       dockerfile: Dockerfile
@@ -10,15 +10,15 @@ services:
         RUNNER_IMAGE: alpine:3.19
         GO_VERSION: "1.21"
     volumes:
-      - ./scripts/start.sh:/osmosis/start.sh
-      - ./scripts/testnetify.py:/osmosis/testnetify.py
-      - ./state_export.json:/osmosis/state_export.json
-      - $HOME/.osmosisd-local/:/osmosis/.osmosisd/
+      - ./scripts/start.sh:/symphony/start.sh
+      - ./scripts/testnetify.py:/symphony/testnetify.py
+      - ./state_export.json:/symphony/state_export.json
+      - $HOME/.symphonyd-local/:/symphony/.symphonyd/
     entrypoint:
-      - /osmosis/start.sh
+      - /symphony/start.sh
     environment:
       MONIKER: val
-      CHAIN_ID: localosmosis
+      CHAIN_ID: localsymphony
     ports:
       - 26657:26657
       - 1317:1317

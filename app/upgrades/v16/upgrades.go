@@ -31,7 +31,7 @@ const (
 	// Denom0 translates to a base asset while denom1 to a quote asset
 	// We want quote asset to be DAI so that when the limit orders on ticks
 	// are implemented, we have tick spacing in terms of DAI as the quote.
-	DesiredDenom0 = "uosmo"
+	DesiredDenom0 = "note"
 	TickSpacing   = 100
 
 	// isPermissionlessPoolCreationEnabledCL is a boolean that determines if
@@ -54,7 +54,7 @@ var (
 	// from tick to price conversion. These increments are in a human
 	// understandeable magnitude only for token1 as a quote.
 	authorizedQuoteDenoms []string = []string{
-		"uosmo",
+		"note",
 		ATOMIBCDenom,
 		DAIIBCDenom,
 		USDCIBCDenom,

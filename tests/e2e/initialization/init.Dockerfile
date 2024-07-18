@@ -12,8 +12,8 @@ RUN apk add git
 # needed by github.com/zondax/hid
 RUN apk add linux-headers
 
-WORKDIR /osmosis
-COPY . /osmosis
+WORKDIR /symphony
+COPY . /symphony
 
 # CosmWasm: see https://github.com/CosmWasm/wasmvm/releases
 ADD https://github.com/CosmWasm/wasmvm/releases/download/v1.2.1/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.aarch64.a
@@ -32,9 +32,9 @@ FROM ubuntu
 # Args only last for a single build stage - renew
 ARG E2E_SCRIPT_NAME
 
-COPY --from=build /osmosis/build/${E2E_SCRIPT_NAME} /bin/${E2E_SCRIPT_NAME}
+COPY --from=build /symphony/build/${E2E_SCRIPT_NAME} /bin/${E2E_SCRIPT_NAME}
 
-ENV HOME /osmosis
+ENV HOME /symphony
 WORKDIR $HOME
 
 # Docker ARGs are not expanded in ENTRYPOINT in the exec mode. At the same time,

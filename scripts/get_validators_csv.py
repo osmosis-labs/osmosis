@@ -7,7 +7,7 @@ block_height = 11155925
 pagination_limit = 1000
 validator_count = 150
 INCLUDE_JAILED = False
-OSMO_CONSTANT = 1_000_000
+MELODY_CONSTANT = 1_000_000
 
 Validator = namedtuple(
     "Validator", ["moniker", "operator_address", "tokens", "commission", "jailed"]
@@ -15,7 +15,7 @@ Validator = namedtuple(
 
 # returns all validators
 def get_all_validators() -> List[Validator]:
-    command = f"osmosisd q staking validators --output=json --limit={pagination_limit}"
+    command = f"symphonyd q staking validators --output=json --limit={pagination_limit}"
     if block_height > 0:
         command += f" --height={block_height}"
     response = get_json_cli_response(command)
@@ -55,7 +55,7 @@ for validator in validators:
         continue
     moniker = validator.moniker
     operator_address = validator.operator_address
-    tokens = float(validator.tokens)/OSMO_CONSTANT  
+    tokens = float(validator.tokens)/MELODY_CONSTANT  
     data.append([moniker, operator_address, tokens])
 
 data = data[:validator_count]

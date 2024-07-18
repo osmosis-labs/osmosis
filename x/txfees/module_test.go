@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	osmosisapp "github.com/osmosis-labs/osmosis/v23/app"
+	symphonyapp "github.com/osmosis-labs/osmosis/v23/app"
 
 	simapp "github.com/osmosis-labs/osmosis/v23/app"
 	mempool1559 "github.com/osmosis-labs/osmosis/v23/x/txfees/keeper/mempool-1559"
@@ -22,7 +22,7 @@ func TestSetBaseDenomOnInitBlock(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	genesisState := osmosisapp.GenesisStateWithValSet(app)
+	genesisState := symphonyapp.GenesisStateWithValSet(app)
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	if err != nil {
 		panic(err)
@@ -33,7 +33,7 @@ func TestSetBaseDenomOnInitBlock(t *testing.T) {
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: sims.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
-			ChainId:         "osmosis-1",
+			ChainId:         "symphony-1",
 		},
 	)
 
@@ -44,9 +44,9 @@ func TestSetBaseDenomOnInitBlock(t *testing.T) {
 
 func TestBeginBlock(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "osmosis-1", Height: 1})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "symphony-1", Height: 1})
 
-	genesisState := osmosisapp.GenesisStateWithValSet(app)
+	genesisState := symphonyapp.GenesisStateWithValSet(app)
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	if err != nil {
 		panic(err)
@@ -57,7 +57,7 @@ func TestBeginBlock(t *testing.T) {
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: sims.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
-			ChainId:         "osmosis-1",
+			ChainId:         "symphony-1",
 		},
 	)
 
@@ -91,7 +91,7 @@ func TestBeginBlock(t *testing.T) {
 	require.Equal(t, expectedNewBlockTargetGas, mempool1559.TargetGas)
 }
 
-func RunBeginBlock(ctx sdk.Context, app *simapp.OsmosisApp) sdk.Context {
+func RunBeginBlock(ctx sdk.Context, app *simapp.SymphonyApp) sdk.Context {
 	oldHeight := ctx.BlockHeight()
 	oldHeader := ctx.BlockHeader()
 	app.Commit()

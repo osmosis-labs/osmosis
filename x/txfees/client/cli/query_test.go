@@ -23,7 +23,7 @@ func (s *QueryTestSuite) SetupSuite() {
 
 	// set up pool
 	poolAssets := []sdk.Coin{
-		sdk.NewInt64Coin("uosmo", 1000000),
+		sdk.NewInt64Coin("note", 1000000),
 		sdk.NewInt64Coin("stake", 120000000),
 	}
 	s.PrepareBalancerPoolWithCoins(poolAssets...)
@@ -34,7 +34,7 @@ func (s *QueryTestSuite) SetupSuite() {
 		"test",
 		[]types.FeeToken{
 			{
-				Denom:  "uosmo",
+				Denom:  "note",
 				PoolID: 1,
 			},
 		},
@@ -61,13 +61,13 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 		{
 			"Query poolID by denom",
 			"/osmosis.txfees.v1beta1.Query/DenomPoolId",
-			&types.QueryDenomPoolIdRequest{Denom: "uosmo"},
+			&types.QueryDenomPoolIdRequest{Denom: "note"},
 			&types.QueryDenomPoolIdResponse{},
 		},
 		{
 			"Query spot price by denom",
 			"/osmosis.txfees.v1beta1.Query/DenomSpotPrice",
-			&types.QueryDenomSpotPriceRequest{Denom: "uosmo"},
+			&types.QueryDenomSpotPriceRequest{Denom: "note"},
 			&types.QueryDenomSpotPriceResponse{},
 		},
 		{

@@ -1,4 +1,4 @@
-# This script is used to spam the Osmosis testnet with concentrated liquidity positions.
+# This script is used to spam the Symphony testnet with concentrated liquidity positions.
 # It reuses sequence numbers, allowing for submitting multiple transactions within the same block
 # from multiple accounts
 import subprocess
@@ -6,7 +6,7 @@ import re
 
 # min tick is -108000000, max tick is 342000000
 # this moves from start tick up towards end tick
-# expected price of osmo/dai is ~5000000000000 which corresponds to tick 112000000
+# expected price of melody/dai is ~5000000000000 which corresponds to tick 112000000
 # 50x price increase is 250_000_000_000_000 which corresponds to tick 127500000
 # 50x price decrease is 100_000_000_000 which corresponds to tick 99000000
 # 7750 positions
@@ -18,10 +18,10 @@ sequence = 0
 
 # env
 wallet_name = "validator1"
-position_max_coins = "1000uosmo,100000000stake"
+position_max_coins = "1000note,100000000stake"
 chain_id = "testing"
 node = "http://localhost:26657"
-home = "/root/.osmosisd/validator1"
+home = "/root/.symphonyd/validator1"
 retry_limit = 50
 pool_id = "1"
 
@@ -51,7 +51,7 @@ def write_to_file(start_tick_str, end_tick_str):
         file.write(f"Last end_tick_str: {end_tick_str}\n")
 
 
-def run_osmosis_cmd(start_tick, end_tick, tick_width, tick_gap, sequence, retry_limit):
+def run_symphony_cmd(start_tick, end_tick, tick_width, tick_gap, sequence, retry_limit):
     last_start_tick_str = None
     last_end_tick_str = None
 
@@ -70,7 +70,7 @@ def run_osmosis_cmd(start_tick, end_tick, tick_width, tick_gap, sequence, retry_
             end_tick_str = str(end_tick)
         
         cmd = [
-            "osmosisd",
+            "symphonyd",
             "tx",
             "concentratedliquidity",
             "create-position",
@@ -132,5 +132,5 @@ def run_osmosis_cmd(start_tick, end_tick, tick_width, tick_gap, sequence, retry_
         if retry_count > retry_limit:
             write_to_file(last_start_tick_str, last_end_tick_str)
 
-run_osmosis_cmd(start_tick, end_tick, tick_width,
+run_symphony_cmd(start_tick, end_tick, tick_width,
                 tick_gap, sequence, retry_limit)

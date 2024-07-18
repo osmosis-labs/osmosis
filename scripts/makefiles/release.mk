@@ -19,8 +19,8 @@ release-dry-run:
 		--rm \
 		-e COSMWASM_VERSION=$(COSMWASM_VERSION) \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		-v `pwd`:/go/src/osmosisd \
-		-w /go/src/osmosisd \
+		-v `pwd`:/go/src/symphonyd \
+		-w /go/src/symphonyd \
 		$(GORELEASER_IMAGE) \
 		release \
 		--clean \
@@ -31,8 +31,8 @@ release-snapshot:
 		--rm \
 		-e COSMWASM_VERSION=$(COSMWASM_VERSION) \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		-v `pwd`:/go/src/osmosisd \
-		-w /go/src/osmosisd \
+		-v `pwd`:/go/src/symphonyd \
+		-w /go/src/symphonyd \
 		$(GORELEASER_IMAGE) \
 		release \
 		--clean \

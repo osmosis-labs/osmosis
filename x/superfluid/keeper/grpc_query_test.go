@@ -67,12 +67,12 @@ func (s *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
 		s.Require().Equal(len(valAddrs), len(res.Assets))
 
 		for _, result := range res.Assets {
-			// check osmo equivalent is correct
-			actual_response_osmo := result.OsmoEquivalent
-			needed_response_osmo, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(ctx, denom, osmomath.NewInt(delegation_amount))
+			// check melody equivalent is correct
+			actual_response_melody := result.OsmoEquivalent
+			needed_response_melody, err := s.App.SuperfluidKeeper.GetSuperfluidMELODYTokens(ctx, denom, osmomath.NewInt(delegation_amount))
 			s.Require().NoError(err)
 
-			s.Require().Equal(actual_response_osmo, needed_response_osmo)
+			s.Require().Equal(actual_response_melody, needed_response_melody)
 
 			// check sfs'd asset amount correct
 			actual_response_asset := result.AmountSfsd
@@ -167,8 +167,8 @@ func (s *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 			sdk.NewInt64Coin(denoms[0], 1000000),
 			sdk.NewInt64Coin(denoms[1], 1000000),
 		)))
-		s.Require().True(res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.IsEqual(sdk.NewCoin("uosmo", expectAmount0.RoundInt())))
-		s.Require().True(res.SuperfluidDelegationRecords[1].EquivalentStakedAmount.IsEqual(sdk.NewCoin("uosmo", expectAmount1.RoundInt())))
+		s.Require().True(res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.IsEqual(sdk.NewCoin("note", expectAmount0.RoundInt())))
+		s.Require().True(res.SuperfluidDelegationRecords[1].EquivalentStakedAmount.IsEqual(sdk.NewCoin("note", expectAmount1.RoundInt())))
 	}
 
 	// for each validator denom pair, make sure they have 1 delegations
@@ -280,7 +280,7 @@ func (s *KeeperTestSuite) TestUserConcentratedSuperfluidPositionsBondedAndUnbond
 
 	// Set staking parameters (needed since stake is not a valid quote denom).
 	stakingParams := s.App.StakingKeeper.GetParams(s.Ctx)
-	stakingParams.BondDenom = "uosmo"
+	stakingParams.BondDenom = "note"
 	s.App.StakingKeeper.SetParams(s.Ctx, stakingParams)
 
 	coins := sdk.NewCoins(sdk.NewCoin("token0", osmomath.NewInt(1000000000000)), sdk.NewCoin(s.App.StakingKeeper.BondDenom(s.Ctx), osmomath.NewInt(1000000000000)))
@@ -461,11 +461,11 @@ func (s *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
 		s.Require().True(res.TotalDelegatedCoins.IsEqual(sdk.NewCoins(
 			sdk.NewInt64Coin(denoms[0], 1000000),
 			sdk.NewInt64Coin(denoms[1], 1000000),
-			sdk.NewInt64Coin("uosmo", 18000000),
+			sdk.NewInt64Coin("note", 18000000),
 		)))
 
-		total_osmo_equivalent := sdk.NewCoin("uosmo", expectAmount0.RoundInt().Add(expectAmount1.RoundInt()).Add(osmomath.NewInt(18000000)))
+		total_melody_equivalent := sdk.NewCoin("note", expectAmount0.RoundInt().Add(expectAmount1.RoundInt()).Add(osmomath.NewInt(18000000)))
 
-		s.Require().True(res.TotalEquivalentStakedAmount.IsEqual(total_osmo_equivalent))
+		s.Require().True(res.TotalEquivalentStakedAmount.IsEqual(total_melody_equivalent))
 	}
 }

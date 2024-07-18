@@ -1,10 +1,10 @@
-# This script is used for creating a concentrated liquidity pool on the Osmosis testnet.
+# This script is used for creating a concentrated liquidity pool on the Symphony testnet.
 # With the parameters defined below.
 import subprocess
 import re
 
 denom0 = "stake"
-denom1 = "uosmo"
+denom1 = "note"
 tick_spacing = "1000"
 spread_factor = "0.001"
 
@@ -12,7 +12,7 @@ spread_factor = "0.001"
 wallet_name = "validator1"
 chain_id = "testing"
 node = "http://localhost:26657"
-home = "/root/.osmosisd/validator1"
+home = "/root/.symphonyd/validator1"
 
 
 def parse_sequence_from_error(error_message):
@@ -34,9 +34,9 @@ def check_pool_creation(output):
     return False
 
 
-def run_osmosis_cmd(denom0, denom1, tick_spacing, spread_factor):
+def run_symphony_cmd(denom0, denom1, tick_spacing, spread_factor):
         cmd = [
-            "osmosisd",
+            "symphonyd",
             "tx",
             "concentratedliquidity",
             "create-pool",
@@ -72,4 +72,4 @@ def run_osmosis_cmd(denom0, denom1, tick_spacing, spread_factor):
             print(
                 f"Failed to create pool with error: {output}, {stderr}")
 
-run_osmosis_cmd(denom0, denom1, tick_spacing, spread_factor)
+run_symphony_cmd(denom0, denom1, tick_spacing, spread_factor)

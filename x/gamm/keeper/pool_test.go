@@ -41,7 +41,7 @@ var (
 // 			s.Ctx,
 // 			acc,
 // 			sdk.NewCoins(
-// 				sdk.NewCoin("uosmo", osmomath.NewInt(1000000000)),
+// 				sdk.NewCoin("note", osmomath.NewInt(1000000000)),
 // 				sdk.NewCoin("foo", osmomath.NewInt(1000)),
 // 				sdk.NewCoin("bar", osmomath.NewInt(1000)),
 // 				sdk.NewCoin("baz", osmomath.NewInt(1000)),
@@ -116,7 +116,7 @@ var (
 // 			coins[i] = sdk.Coin{denoms[i], amount}
 // 		}
 // 		coinOf[acc.String()] = coins
-// 		coins = append(coins, sdk.NewCoin("uosmo", osmomath.NewInt(1000000000)))
+// 		coins = append(coins, sdk.NewCoin("note", osmomath.NewInt(1000000000)))
 
 // 		s.FundAcc(
 // 			s.App.BankKeeper,
@@ -160,7 +160,7 @@ var (
 // 		s.Ctx,
 // 		acc1,
 // 		sdk.NewCoins(
-// 			sdk.NewCoin("uosmo", osmomath.NewInt(1000000000)),
+// 			sdk.NewCoin("note", osmomath.NewInt(1000000000)),
 // 			sdk.NewCoin("foo", osmomath.NewInt(1000)),
 // 			sdk.NewCoin("bar", osmomath.NewInt(1000)),
 // 			sdk.NewCoin("baz", osmomath.NewInt(1000)),
@@ -200,7 +200,7 @@ var (
 // 		s.Ctx,
 // 		acc1,
 // 		sdk.NewCoins(
-// 			sdk.NewCoin("uosmo", osmomath.NewInt(1000000000)),
+// 			sdk.NewCoin("note", osmomath.NewInt(1000000000)),
 // 			sdk.NewCoin("foo", osmomath.NewInt(1000)),
 // 			sdk.NewCoin("bar", osmomath.NewInt(1000)),
 // 			sdk.NewCoin("baz", osmomath.NewInt(1000)),

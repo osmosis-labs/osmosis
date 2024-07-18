@@ -25,14 +25,14 @@ func (s *KeeperTestSuite) TestBackRunEvent() {
 		"basic valid": {
 			pool: keeper.SwapToBackrun{
 				PoolId:        1,
-				TokenInDenom:  "uosmo",
+				TokenInDenom:  "note",
 				TokenOutDenom: "uatom",
 			},
 			remainingTxPoolPoints:    100,
 			remainingBlockPoolPoints: 100,
 			profit:                   osmomath.NewInt(100),
 			tokenOutAmount:           osmomath.NewInt(100),
-			inputCoin:                sdk.NewCoin("uosmo", osmomath.NewInt(100)),
+			inputCoin:                sdk.NewCoin("note", osmomath.NewInt(100)),
 		},
 	}
 

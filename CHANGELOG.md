@@ -590,7 +590,7 @@ and control over token transfers.
   * [#5375](https://github.com/osmosis-labs/osmosis/pull/5373) Add query and cli for lock reward receiver
   * [#4757](https://github.com/osmosis-labs/osmosis/pull/4752) Pagination for all intermediary accounts
   * [#5066](https://github.com/osmosis-labs/osmosis/pull/5066) Fixed bad stargate query declaration
-  * [#4868](https://github.com/osmosis-labs/osmosis/pull/4868) Remove wasmEnabledProposals []wasm.ProposalType from NewOsmosisApp
+  * [#4868](https://github.com/osmosis-labs/osmosis/pull/4868) Remove wasmEnabledProposals []wasm.ProposalType from NewSymphonyApp
   * [#4791](https://github.com/osmosis-labs/osmosis/pull/4791) feat(osmoutils): cosmwasm query and message wrappers
   * [#4549](https://github.com/osmosis-labs/osmosis/pull/4549) added single pool query
   * [#4659](https://github.com/osmosis-labs/osmosis/pull/4659) feat: implement AllPools query in x/poolmanager
@@ -896,7 +896,7 @@ which acts as a fuzz testing tool tailored for the SDK state machine.
 * [#2390](https://github.com/osmosis-labs/osmosis/pull/2390) x/mint remove unused mintCoins parameter from AfterDistributeMintedCoin
 * [#2418](https://github.com/osmosis-labs/osmosis/pull/2418) x/mint remove SetInitialSupplyOffsetDuringMigration from keeper
 * [#2417](https://github.com/osmosis-labs/osmosis/pull/2417) x/mint unexport keeper `SetLastReductionEpochNum`, `getLastReductionEpochNum`, `CreateDeveloperVestingModuleAccount`, and `MintCoins`
-* [#2587](https://github.com/osmosis-labs/osmosis/pull/2587) remove encoding config argument from NewOsmosisApp
+* [#2587](https://github.com/osmosis-labs/osmosis/pull/2587) remove encoding config argument from NewSymphonyApp
 x
 
 ### Features

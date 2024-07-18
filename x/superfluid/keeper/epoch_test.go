@@ -27,36 +27,36 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 		expectedZeroMultipler bool
 	}{
 		{
-			name:               "update LP token Osmo equivalent successfully",
+			name:               "update LP token Melody equivalent successfully",
 			asset:              types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
 			expectedMultiplier: osmomath.MustNewDecFromStr("0.01"),
 		},
 		{
-			name:             "update LP token Osmo equivalent with pool unexpectedly deleted",
+			name:             "update LP token Melody equivalent with pool unexpectedly deleted",
 			asset:            types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
 			poolDoesNotExist: true,
 			expectedError:    gammtypes.PoolDoesNotExistError{PoolId: 1},
 		},
 		{
-			name:               "update LP token Osmo equivalent with pool unexpectedly removed Osmo",
+			name:               "update LP token Melody equivalent with pool unexpectedly removed Melody",
 			asset:              types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
 			removeStakingAsset: true,
-			expectedError:      errors.New("pool 1 has zero OSMO amount"),
+			expectedError:      errors.New("pool 1 has zero MELODY amount"),
 		},
 		{
-			name:               "update concentrated share Osmo equivalent successfully",
+			name:               "update concentrated share Melody equivalent successfully",
 			asset:              types.SuperfluidAsset{Denom: cltypes.GetConcentratedLockupDenomFromPoolId(1), AssetType: types.SuperfluidAssetTypeConcentratedShare},
 			expectedMultiplier: osmomath.MustNewDecFromStr("1"),
 		},
 		{
-			name:             "update concentrated share Osmo equivalent with pool unexpectedly deleted",
+			name:             "update concentrated share Melody equivalent with pool unexpectedly deleted",
 			asset:            types.SuperfluidAsset{Denom: cltypes.GetConcentratedLockupDenomFromPoolId(1), AssetType: types.SuperfluidAssetTypeConcentratedShare},
 			poolDoesNotExist: true,
 			// Note: this does not error since CL errors are surrounded in `ApplyFuncIfNoError`
 			expectedZeroMultipler: true,
 		},
 		{
-			name:               "update concentrated share Osmo equivalent with pool unexpectedly removed Osmo",
+			name:               "update concentrated share Melody equivalent with pool unexpectedly removed Melody",
 			asset:              types.SuperfluidAsset{Denom: cltypes.GetConcentratedLockupDenomFromPoolId(1), AssetType: types.SuperfluidAssetTypeConcentratedShare},
 			removeStakingAsset: true,
 			// Note: this does not error since CL errors are surrounded in `ApplyFuncIfNoError`

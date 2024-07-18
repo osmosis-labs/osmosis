@@ -31,7 +31,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmosisApp "github.com/osmosis-labs/osmosis/v23/app"
+	SymphonyApp "github.com/osmosis-labs/osmosis/v23/app"
 	"github.com/osmosis-labs/osmosis/v23/tests/e2e/util"
 )
 
@@ -120,7 +120,7 @@ func (n *internalNode) createAppConfig(nodeConfig *NodeConfig) {
 	appConfig.BaseConfig.PruningKeepRecent = nodeConfig.PruningKeepRecent
 	appConfig.BaseConfig.PruningInterval = nodeConfig.PruningInterval
 	appConfig.API.Enable = true
-	appConfig.MinGasPrices = fmt.Sprintf("%s%s", MinGasPrice, OsmoDenom)
+	appConfig.MinGasPrices = fmt.Sprintf("%s%s", MinGasPrice, "melody")
 	appConfig.StateSync.SnapshotInterval = nodeConfig.SnapshotInterval
 	appConfig.StateSync.SnapshotKeepRecent = nodeConfig.SnapshotKeepRecent
 	appConfig.GRPC.Address = "0.0.0.0:9090"
@@ -275,7 +275,7 @@ func (n *internalNode) init() error {
 		return err
 	}
 
-	appState, err := json.MarshalIndent(osmosisApp.ModuleBasics.DefaultGenesis(util.Cdc), "", " ")
+	appState, err := json.MarshalIndent(SymphonyApp.ModuleBasics.DefaultGenesis(util.Cdc), "", " ")
 	if err != nil {
 		return fmt.Errorf("failed to JSON encode app genesis state: %w", err)
 	}

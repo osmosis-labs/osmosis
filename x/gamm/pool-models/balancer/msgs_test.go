@@ -187,7 +187,7 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 		{
 			name: "valid governor: address",
 			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
-				msg.FuturePoolGovernor = "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
+				msg.FuturePoolGovernor = "symphony1qxgkur7772gjk8wm7kta387wksn48ljh7v82da"
 				return msg
 			}),
 			expectPass: true,

@@ -1,13 +1,13 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "Osmosis - gRPC Gateway docs",
+    "title": "Symphony - gRPC Gateway docs",
     "description": "A REST interface for state queries, legacy transactions",
     "version": "1.0.0"
   },
   "apis": [
     {
-      "url": "./tmp-swagger-gen/osmosis/epochs/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/symphony/epochs/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "EpochsParams"
@@ -15,7 +15,7 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/osmosis/gamm/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/symphony/gamm/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "GAMMParams"
@@ -23,7 +23,7 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/osmosis/incentives/query.swagger.json",
+      "url": "./tmp-swagger-gen/symphony/incentives/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "IncentivesParams"
@@ -31,7 +31,7 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/osmosis/lockup/query.swagger.json",
+      "url": "./tmp-swagger-gen/symphony/lockup/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "LockupParams"
@@ -39,7 +39,7 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/osmosis/mint/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/symphony/mint/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "MintParams"
@@ -47,7 +47,7 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/osmosis/poolincentives/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/symphony/poolincentives/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "LockableDurations": "PoolLockableDurations",
@@ -56,7 +56,7 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/osmosis/superfluid/query.swagger.json",
+      "url": "./tmp-swagger-gen/symphony/superfluid/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "SuperfluidParams"
@@ -72,7 +72,7 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/osmosis/txfees/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/symphony/txfees/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "TxFeesParams",

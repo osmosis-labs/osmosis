@@ -107,25 +107,25 @@ func (s *KeeperTestSuite) TestCalcJoinPoolNoSwapShares() {
 		{
 			"valid uneven multi asset join test case",
 			poolId,
-			sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(5000000)), sdk.NewCoin("bar", osmomath.NewInt(5000000)), sdk.NewCoin("baz", osmomath.NewInt(5000000)), sdk.NewCoin("uosmo", osmomath.NewInt(5000000))),
+			sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(5000000)), sdk.NewCoin("bar", osmomath.NewInt(5000000)), sdk.NewCoin("baz", osmomath.NewInt(5000000)), sdk.NewCoin("note", osmomath.NewInt(5000000))),
 			nil,
 		},
 		{
 			"valid even multi asset join test case",
 			poolId,
-			sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(500000)), sdk.NewCoin("bar", osmomath.NewInt(1000000)), sdk.NewCoin("baz", osmomath.NewInt(1500000)), sdk.NewCoin("uosmo", osmomath.NewInt(2000000))),
+			sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(500000)), sdk.NewCoin("bar", osmomath.NewInt(1000000)), sdk.NewCoin("baz", osmomath.NewInt(1500000)), sdk.NewCoin("note", osmomath.NewInt(2000000))),
 			nil,
 		},
 		{
 			"invalid single asset join test case",
 			poolId,
-			sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(1000000))),
+			sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(1000000))),
 			errors.New("no-swap joins require LP'ing with all assets in pool"),
 		},
 		{
 			"pool id does not exist",
 			poolId + 1,
-			sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(1000000))),
+			sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(1000000))),
 			types.PoolDoesNotExistError{PoolId: poolId + 1},
 		},
 		{
@@ -137,7 +137,7 @@ func (s *KeeperTestSuite) TestCalcJoinPoolNoSwapShares() {
 		{
 			"join pool with incorrect amount of assets",
 			poolId,
-			sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(10000)), sdk.NewCoin("bar", osmomath.NewInt(10000))),
+			sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(10000)), sdk.NewCoin("bar", osmomath.NewInt(10000))),
 			errors.New("no-swap joins require LP'ing with all assets in pool"),
 		},
 	}
@@ -172,7 +172,7 @@ func (s *KeeperTestSuite) TestCalcJoinPoolNoSwapShares() {
 func (s *KeeperTestSuite) TestPoolsWithFilter() {
 	var (
 		defaultAcctFunds sdk.Coins = sdk.NewCoins(
-			sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)),
+			sdk.NewCoin("note", osmomath.NewInt(10000000000)),
 			sdk.NewCoin("foo", osmomath.NewInt(10000000)),
 			sdk.NewCoin("bar", osmomath.NewInt(10000000)),
 			sdk.NewCoin("baz", osmomath.NewInt(10000000)),
@@ -371,25 +371,25 @@ func (s *KeeperTestSuite) TestCalcJoinPoolShares() {
 		{
 			"valid uneven multi asset join test case",
 			poolId,
-			sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(5000000)), sdk.NewCoin("bar", osmomath.NewInt(5000000)), sdk.NewCoin("baz", osmomath.NewInt(5000000)), sdk.NewCoin("uosmo", osmomath.NewInt(5000000))),
+			sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(5000000)), sdk.NewCoin("bar", osmomath.NewInt(5000000)), sdk.NewCoin("baz", osmomath.NewInt(5000000)), sdk.NewCoin("note", osmomath.NewInt(5000000))),
 			nil,
 		},
 		{
 			"valid even multi asset join test case",
 			poolId,
-			sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(500000)), sdk.NewCoin("bar", osmomath.NewInt(1000000)), sdk.NewCoin("baz", osmomath.NewInt(1500000)), sdk.NewCoin("uosmo", osmomath.NewInt(2000000))),
+			sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(500000)), sdk.NewCoin("bar", osmomath.NewInt(1000000)), sdk.NewCoin("baz", osmomath.NewInt(1500000)), sdk.NewCoin("note", osmomath.NewInt(2000000))),
 			nil,
 		},
 		{
 			"valid single asset join test case",
 			poolId,
-			sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(1000000))),
+			sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(1000000))),
 			nil,
 		},
 		{
 			"pool id does not exist",
 			poolId + 1,
-			sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(1000000))),
+			sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(1000000))),
 			types.PoolDoesNotExistError{PoolId: poolId + 1},
 		},
 		{
@@ -401,7 +401,7 @@ func (s *KeeperTestSuite) TestCalcJoinPoolShares() {
 		{
 			"join pool with incorrect amount of assets",
 			poolId,
-			sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(10000)), sdk.NewCoin("bar", osmomath.NewInt(10000))),
+			sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(10000)), sdk.NewCoin("bar", osmomath.NewInt(10000))),
 			errors.New("balancer pool only supports LP'ing with one asset or all assets in pool"),
 		},
 	}
@@ -556,7 +556,7 @@ func (s *KeeperTestSuite) TestQueryTotalPoolLiquidity() {
 
 	res, err := queryClient.TotalPoolLiquidity(gocontext.Background(), &types.QueryTotalPoolLiquidityRequest{PoolId: poolId})
 	s.Require().NoError(err)
-	expectedCoins := sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(5000000)), sdk.NewCoin("bar", osmomath.NewInt(5000000)), sdk.NewCoin("baz", osmomath.NewInt(5000000)), sdk.NewCoin("uosmo", osmomath.NewInt(5000000)))
+	expectedCoins := sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(5000000)), sdk.NewCoin("bar", osmomath.NewInt(5000000)), sdk.NewCoin("baz", osmomath.NewInt(5000000)), sdk.NewCoin("note", osmomath.NewInt(5000000)))
 	s.Require().Equal(res.Liquidity, expectedCoins)
 }
 
@@ -600,7 +600,7 @@ func (s *KeeperTestSuite) TestQueryBalancerPoolTotalLiquidity() {
 	// create pool
 	res, err = queryClient.TotalLiquidity(gocontext.Background(), &types.QueryTotalLiquidityRequest{})
 	s.Require().NoError(err)
-	s.Require().Equal("5000000bar,5000000baz,5000000foo,5000000uosmo", sdk.Coins(res.Liquidity).String())
+	s.Require().Equal("5000000bar,5000000baz,5000000foo,5000000note", sdk.Coins(res.Liquidity).String())
 }
 
 // TODO: Come fix

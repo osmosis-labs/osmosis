@@ -13,16 +13,16 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*ConcentratedPoolExtension)(nil), nil)
 
 	// msgs
-	cdc.RegisterConcrete(&MsgCreatePosition{}, "osmosis/cl-create-position", nil)
-	cdc.RegisterConcrete(&MsgAddToPosition{}, "osmosis/cl-add-to-position", nil)
-	cdc.RegisterConcrete(&MsgWithdrawPosition{}, "osmosis/cl-withdraw-position", nil)
-	cdc.RegisterConcrete(&MsgCollectSpreadRewards{}, "osmosis/cl-col-sp-rewards", nil)
-	cdc.RegisterConcrete(&MsgCollectIncentives{}, "osmosis/cl-collect-incentives", nil)
-	cdc.RegisterConcrete(&MsgFungifyChargedPositions{}, "osmosis/cl-fungify-charged-positions", nil)
+	cdc.RegisterConcrete(&MsgCreatePosition{}, "symphony/cl-create-position", nil)
+	cdc.RegisterConcrete(&MsgAddToPosition{}, "symphony/cl-add-to-position", nil)
+	cdc.RegisterConcrete(&MsgWithdrawPosition{}, "symphony/cl-withdraw-position", nil)
+	cdc.RegisterConcrete(&MsgCollectSpreadRewards{}, "symphony/cl-col-sp-rewards", nil)
+	cdc.RegisterConcrete(&MsgCollectIncentives{}, "symphony/cl-collect-incentives", nil)
+	cdc.RegisterConcrete(&MsgFungifyChargedPositions{}, "symphony/cl-fungify-charged-positions", nil)
 
 	// gov proposals
-	cdc.RegisterConcrete(&CreateConcentratedLiquidityPoolsProposal{}, "osmosis/create-cl-pools-proposal", nil)
-	cdc.RegisterConcrete(&TickSpacingDecreaseProposal{}, "osmosis/cl-tick-spacing-dec-prop", nil)
+	cdc.RegisterConcrete(&CreateConcentratedLiquidityPoolsProposal{}, "symphony/create-cl-pools-proposal", nil)
+	cdc.RegisterConcrete(&TickSpacingDecreaseProposal{}, "symphony/cl-tick-spacing-dec-prop", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {

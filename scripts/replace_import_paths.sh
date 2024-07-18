@@ -19,7 +19,7 @@ done < <(find . -name go.mod -exec grep -l "github.com/osmosis-labs/osmosis/v23"
 
 replace_paths() {
     file="${1}"
-    sed -i "s/github.com\/osmosis-labs\/osmosis\/v${version_to_replace}/github.com\/osmosis-labs\/osmosis\/v${NEXT_MAJOR_VERSION}/g" ${file}
+    sed -i "s/github.com\/osmosis-labs\/symphony\/v${version_to_replace}/github.com\/osmosis-labs\/symphony\/v${NEXT_MAJOR_VERSION}/g" ${file}
 }
 
 echo "Replacing import paths in all files"

@@ -56,7 +56,7 @@ func NewQueryProfitsByDenomCmd() (*osmocli.QueryDescriptor, *types.QueryGetProto
 	return &osmocli.QueryDescriptor{
 		Use:   "profits-by-denom",
 		Short: "Query the profits of protorev by denom",
-		Long:  `{{.Short}}{{.ExampleHeader}}{{.CommandPrefix}} profits-by-denom uosmo`,
+		Long:  `{{.Short}}{{.ExampleHeader}}{{.CommandPrefix}} profits-by-denom note`,
 	}, &types.QueryGetProtoRevProfitsByDenomRequest{}
 }
 

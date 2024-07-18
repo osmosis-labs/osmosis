@@ -182,7 +182,7 @@ func CalculatePriceToTick(price osmomath.BigDec) (tickIndex int64, err error) {
 	if price.GT(types.MaxSpotPriceBigDec) || price.LT(types.MinSpotPriceV2) {
 		return 0, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice}
 	}
-	if price.Equal(osmomathBigOneDec) {
+	if price.Equal(mathBigOneDec) {
 		return 0, nil
 	}
 
@@ -200,7 +200,7 @@ func CalculatePriceToTick(price osmomath.BigDec) (tickIndex int64, err error) {
 	// If price < 1, we search for the first geometric spacing w/ a min price smaller than our price.
 	// TODO: We can optimize by using smarter search algorithms
 	var geoSpacing *tickExpIndexData
-	if price.GT(osmomathBigOneDec) {
+	if price.GT(mathBigOneDec) {
 		index := 0
 		geoSpacing = tickExpCache[int64(index)]
 		for geoSpacing.maxPrice.LT(price) {

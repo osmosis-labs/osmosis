@@ -69,12 +69,12 @@ func (k Keeper) ConvertLockToStake(ctx sdk.Context, sender sdk.AccAddress, valAd
 	return k.convertLockToStake(ctx, sender, valAddr, lockId, minAmtToStake)
 }
 
-func (k Keeper) ConvertGammSharesToOsmoAndStake(
+func (k Keeper) ConvertGammSharesToMelodyAndStake(
 	ctx sdk.Context,
 	sender sdk.AccAddress, valAddr string,
 	poolIdLeaving uint64, exitCoins sdk.Coins, minAmtToStake osmomath.Int, originalSuperfluidValAddr string,
 ) (totalAmtCoverted osmomath.Int, err error) {
-	return k.convertGammSharesToOsmoAndStake(ctx, sender, valAddr, poolIdLeaving, exitCoins, minAmtToStake, originalSuperfluidValAddr)
+	return k.convertGammSharesToMelodyAndStake(ctx, sender, valAddr, poolIdLeaving, exitCoins, minAmtToStake, originalSuperfluidValAddr)
 }
 
 func (k Keeper) ConvertUnlockedToStake(ctx sdk.Context, sender sdk.AccAddress, valAddr string, sharesToStake sdk.Coin,

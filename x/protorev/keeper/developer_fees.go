@@ -50,7 +50,7 @@ func (k Keeper) DistributeProfit(ctx sdk.Context, arbProfits sdk.Coins) error {
 	remainingProfit = arbProfits.Sub(devProfit...)
 
 	// If the remaining arb profits has the OSMO denom for one of the coins, burn the OSMO by sending to the null address
-	arbProfitsOsmoCoin := sdk.NewCoin(types.OsmosisDenomination, remainingProfit.AmountOf(types.OsmosisDenomination))
+	arbProfitsOsmoCoin := sdk.NewCoin(types.SymphonyDenomination, remainingProfit.AmountOf(types.SymphonyDenomination))
 	if arbProfitsOsmoCoin.IsPositive() {
 		err := k.bankKeeper.SendCoinsFromModuleToAccount(
 			ctx,

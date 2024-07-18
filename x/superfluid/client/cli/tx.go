@@ -311,7 +311,7 @@ func NewCmdUpdateUnpoolWhitelistProposal() *cobra.Command {
 		Long: "This proposal will update the unpool whitelist if passed. " +
 			"Every pool id must be valid. If the pool id is invalid, the proposal will not be submitted. " +
 			"If the flag to overwrite is set, the whitelist is completely overridden. Otherwise, it is appended to the existing whitelist, having all duplicates removed.",
-		Example: "osmosisd tx gov submit-proposal update-unpool-whitelist --pool-ids \"1, 2, 3\" --title \"Title\" --summary \"Description\"",
+		Example: "symphonyd tx gov submit-proposal update-unpool-whitelist --pool-ids \"1, 2, 3\" --title \"Title\" --summary \"Description\"",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, proposalTitle, summary, deposit, isExpedited, authority, err := osmocli.GetProposalInfo(cmd)
 			if err != nil {
@@ -349,7 +349,7 @@ func NewCreateFullRangePositionAndSuperfluidDelegateCmd() (*osmocli.TxCliDesc, *
 	return &osmocli.TxCliDesc{
 		Use:     "create-full-range-position-and-sf-delegate",
 		Short:   "creates a full range concentrated position and superfluid delegates it to the provided validator",
-		Example: "create-full-range-position-and-sf-delegate 100000000uosmo,10000udai 45 --from val --chain-id osmosis-1",
+		Example: "create-full-range-position-and-sf-delegate 100000000note,10000udai 45 --from val --chain-id symphony-1",
 	}, &types.MsgCreateFullRangePositionAndSuperfluidDelegate{}
 }
 
@@ -392,7 +392,7 @@ func NewAddToConcentratedLiquiditySuperfluidPositionCmd() (*osmocli.TxCliDesc, *
 	return &osmocli.TxCliDesc{
 		Use:     "add-to-superfluid-cl-position",
 		Short:   "add to an existing superfluid staked concentrated liquidity position",
-		Example: "add-to-superfluid-cl-position 10 1000000000uosmo 10000000uion",
+		Example: "add-to-superfluid-cl-position 10 1000000000note 10000000uion",
 	}, &types.MsgAddToConcentratedLiquiditySuperfluidPosition{}
 }
 
@@ -400,15 +400,15 @@ func NewUnlockAndMigrateSharesToFullRangeConcentratedPositionCmd() (*osmocli.TxC
 	return &osmocli.TxCliDesc{
 		Use:     "unlock-and-migrate-to-cl",
 		Short:   "unlock and migrate gamm shares to full range concentrated position",
-		Example: "unlock-and-migrate-cl 10 25000000000gamm/pool/2 1000000000uosmo,10000000uion",
+		Example: "unlock-and-migrate-cl 10 25000000000gamm/pool/2 1000000000note,10000000uion",
 	}, &types.MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{}
 }
 
 func NewUnbondConvertAndStake() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "unbond-convert-and-stake [lock-id] [valAddr] [min-amount-to-stake](optional) [shares-to-convert](optional)",
-		Short:   "instantly unbond any locked gamm shares convert them into osmo and stake",
-		Example: "unbond-convert-and-stake 10 osmo1xxx 100000uosmo",
+		Short:   "instantly unbond any locked gamm shares convert them into melody and stake",
+		Example: "unbond-convert-and-stake 10 symphony1xxx 100000note",
 		Args:    cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)

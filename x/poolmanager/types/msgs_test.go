@@ -25,7 +25,7 @@ var (
 
 	validSwapExactAmountInRoutes = []types.SwapAmountInRoute{{
 		PoolId:        1,
-		TokenOutDenom: "uosmo",
+		TokenOutDenom: "note",
 	}, {
 		PoolId:        2,
 		TokenOutDenom: "uatom",
@@ -41,7 +41,7 @@ var (
 		TokenInDenom: "uatom",
 	}, {
 		PoolId:       2,
-		TokenInDenom: "uosmo",
+		TokenInDenom: "note",
 	}}
 )
 
@@ -575,12 +575,12 @@ func TestMsgSetDenomPairTakerFee(t *testing.T) {
 			Sender: addr1,
 			DenomPairTakerFee: []types.DenomPairTakerFee{
 				{
-					Denom0:   "uosmo",
+					Denom0:   "note",
 					Denom1:   "uatom",
 					TakerFee: osmomath.MustNewDecFromStr("0.003"),
 				},
 				{
-					Denom0:   "uosmo",
+					Denom0:   "note",
 					Denom1:   "uion",
 					TakerFee: osmomath.MustNewDecFromStr("0.006"),
 				},

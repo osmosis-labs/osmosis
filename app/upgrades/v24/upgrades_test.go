@@ -84,13 +84,13 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	// Set the old KVStore base denoms
 	s.App.ProtoRevKeeper.DeprecatedSetBaseDenoms(s.Ctx, []protorevtypes.BaseDenom{
-		{Denom: protorevtypes.OsmosisDenomination, StepSize: osmomath.NewInt(1_000_000)},
+		{Denom: protorevtypes.SymphonyDenomination, StepSize: osmomath.NewInt(1_000_000)},
 		{Denom: "atom", StepSize: osmomath.NewInt(1_000_000)},
 		{Denom: "weth", StepSize: osmomath.NewInt(1_000_000)}})
 	oldBaseDenoms, err := s.App.ProtoRevKeeper.DeprecatedGetAllBaseDenoms(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(oldBaseDenoms))
-	s.Require().Equal(oldBaseDenoms[0].Denom, protorevtypes.OsmosisDenomination)
+	s.Require().Equal(oldBaseDenoms[0].Denom, protorevtypes.SymphonyDenomination)
 	s.Require().Equal(oldBaseDenoms[1].Denom, "atom")
 	s.Require().Equal(oldBaseDenoms[2].Denom, "weth")
 

@@ -36,14 +36,14 @@ var testGenesis = types.GenesisState{
 	IntermediaryAccounts: []types.SuperfluidIntermediaryAccount{
 		{
 			Denom:   DefaultGammAsset,
-			ValAddr: "osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n",
+			ValAddr: "symphonyvaloper1h9vcjg5nfmq20h8dd2flx6wtf7ezvdjtgvq39z",
 			GaugeId: 1,
 		},
 	},
 	IntemediaryAccountConnections: []types.LockIdIntermediaryAccountConnection{
 		{
 			LockId:              1,
-			IntermediaryAccount: "osmo1hpgapnfl3thkevvl0jp3wqtk8jw7mpqumuuc2f",
+			IntermediaryAccount: "symphony1h9vcjg5nfmq20h8dd2flx6wtf7ezvdjtmwgkjj",
 		},
 	},
 }

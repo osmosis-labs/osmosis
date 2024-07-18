@@ -21,9 +21,9 @@ import (
 
 func TestNoStorageWithoutProposal(t *testing.T) {
 	// we use default config
-	osmosis, ctx := CreateTestInput()
+	symphony, ctx := CreateTestInput()
 
-	wasmKeeper := osmosis.WasmKeeper
+	wasmKeeper := symphony.WasmKeeper
 	// this wraps wasmKeeper, providing interfaces exposed to external messages
 	contractKeeper := keeper.NewDefaultPermissionKeeper(wasmKeeper)
 
@@ -36,9 +36,9 @@ func TestNoStorageWithoutProposal(t *testing.T) {
 	require.Error(t, err)
 }
 
-func storeCodeViaProposal(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sdk.AccAddress) {
+func storeCodeViaProposal(t *testing.T, ctx sdk.Context, symphony *app.SymphonyApp, addr sdk.AccAddress) {
 	t.Helper()
-	govKeeper := osmosis.GovKeeper
+	govKeeper := symphony.GovKeeper
 	wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")
 	require.NoError(t, err)
 
@@ -62,11 +62,11 @@ func storeCodeViaProposal(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp
 
 func TestStoreCodeProposal(t *testing.T) {
 	apptesting.SkipIfWSL(t)
-	osmosis, ctx := CreateTestInput()
-	wasmKeeper := osmosis.WasmKeeper
+	symphony, ctx := CreateTestInput()
+	wasmKeeper := symphony.WasmKeeper
 
-	govModuleAccount := osmosis.AccountKeeper.GetModuleAccount(ctx, govtypes.ModuleName).GetAddress()
-	storeCodeViaProposal(t, ctx, osmosis, govModuleAccount)
+	govModuleAccount := symphony.AccountKeeper.GetModuleAccount(ctx, govtypes.ModuleName).GetAddress()
+	storeCodeViaProposal(t, ctx, symphony, govModuleAccount)
 
 	// then
 	cInfo := wasmKeeper.GetCodeInfo(ctx, 1)
@@ -89,15 +89,15 @@ type HackatomExampleInitMsg struct {
 
 func TestInstantiateContract(t *testing.T) {
 	apptesting.SkipIfWSL(t)
-	osmosis, ctx := CreateTestInput()
+	symphony, ctx := CreateTestInput()
 	instantiator := RandomAccountAddress()
 	benefit, arb := RandomAccountAddress(), RandomAccountAddress()
-	FundAccount(t, ctx, osmosis, instantiator)
+	FundAccount(t, ctx, symphony, instantiator)
 
-	govModuleAccount := osmosis.AccountKeeper.GetModuleAccount(ctx, govtypes.ModuleName).GetAddress()
+	govModuleAccount := symphony.AccountKeeper.GetModuleAccount(ctx, govtypes.ModuleName).GetAddress()
 
-	storeCodeViaProposal(t, ctx, osmosis, govModuleAccount)
-	contractKeeper := keeper.NewDefaultPermissionKeeper(osmosis.WasmKeeper)
+	storeCodeViaProposal(t, ctx, symphony, govModuleAccount)
+	contractKeeper := keeper.NewDefaultPermissionKeeper(symphony.WasmKeeper)
 	codeID := uint64(1)
 
 	initMsg := HackatomExampleInitMsg{
@@ -107,7 +107,7 @@ func TestInstantiateContract(t *testing.T) {
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
 
-	funds := sdk.NewInt64Coin("uosmo", 123456)
+	funds := sdk.NewInt64Coin("note", 123456)
 	_, _, err = contractKeeper.Instantiate(ctx, codeID, instantiator, instantiator, initMsgBz, "demo contract", sdk.Coins{funds})
 	require.NoError(t, err)
 }

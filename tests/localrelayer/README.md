@@ -109,11 +109,11 @@ The faucet used is `confio/faucet:0.28.11`. The source code and additional docum
 Create a new account:
 
 ```bash
-❯ osmosisd keys add my-account --keyring-backend test
+❯ symphonyd keys add my-account --keyring-backend test
 
 - name: my-account
   type: local
-  address: osmo1e5zmvznxr0zuulsstna0rd3959sw858e5ctw2j
+  address: symphony1450weujlqvtd0d5z59v388jmzwyk3e6qhlj5r5
   pubkey: '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AougdpyGftv+BMBXzQWFVJx9ASz/QRoBDM0nRI/xq90Y"}'
   mnemonic: ""
 ```
@@ -128,7 +128,7 @@ FAUCET_ENDPOINT=http://localhost:8080
 
 curl --header "Content-Type: application/json" \
   --request POST \
-  --data '{"denom":"uosmo","address":"osmo1e5zmvznxr0zuulsstna0rd3959sw858e5ctw2j"}' \
+  --data '{"denom":"note","address":"symphony1450weujlqvtd0d5z59v388jmzwyk3e6qhlj5r5"}' \
   http://localhost:8000/credit
 ```
 
@@ -140,7 +140,7 @@ LCD_ENDPOINT=\localhost:1317
 # Use the following endpoint for localosmosis-b:
 # LCD_ENDPOINT=localhost:31317
 
-curl -s http://$LCD_ENDPOINT/cosmos/bank/v1beta1/balances/osmo1e5zmvznxr0zuulsstna0rd3959sw858e5ctw2j
+curl -s http://$LCD_ENDPOINT/cosmos/bank/v1beta1/balances/symphony1450weujlqvtd0d5z59v388jmzwyk3e6qhlj5r5
 ```
 
 ### Hermes

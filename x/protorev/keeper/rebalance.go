@@ -55,12 +55,12 @@ func (k Keeper) IterateRoutes(ctx sdk.Context, routes []RouteMetaData, remaining
 //
 // NOTE: This does not check the underlying pool before swapping so this may go over the MaxTicksCrossed.
 func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit osmomath.Int) (osmomath.Int, error) {
-	if inputCoin.Denom == types.OsmosisDenomination {
+	if inputCoin.Denom == types.SymphonyDenomination {
 		return profit, nil
 	}
 
 	// Get highest liquidity pool ID for the input coin and uosmo
-	conversionPoolID, err := k.GetPoolForDenomPair(ctx, types.OsmosisDenomination, inputCoin.Denom)
+	conversionPoolID, err := k.GetPoolForDenomPair(ctx, types.SymphonyDenomination, inputCoin.Denom)
 	if err != nil {
 		return profit, err
 	}
@@ -82,7 +82,7 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit osmom
 		ctx,
 		conversionPool,
 		sdk.NewCoin(inputCoin.Denom, profit),
-		types.OsmosisDenomination,
+		types.SymphonyDenomination,
 		conversionPool.GetSpreadFactor(ctx),
 	)
 	if err != nil {

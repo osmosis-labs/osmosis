@@ -29,7 +29,7 @@ func ValidateFutureGovernor(governor string) error {
 	}
 
 	// validation for future owner
-	// "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
+	// "symphony1qxgkur7772gjk8wm7kta387wksn48ljh7v82da"
 	_, err := sdk.AccAddressFromBech32(governor)
 	if err == nil {
 		return nil

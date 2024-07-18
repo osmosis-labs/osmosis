@@ -55,9 +55,9 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(
 // CustomQuerier dispatches custom CosmWasm bindings queries.
 func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {
 	return func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {
-		var contractQuery bindings.OsmosisQuery
+		var contractQuery bindings.SymphonyQuery
 		if err := json.Unmarshal(request, &contractQuery); err != nil {
-			return nil, errorsmod.Wrap(err, "osmosis query")
+			return nil, errorsmod.Wrap(err, "symphony query")
 		}
 
 		switch {
@@ -67,7 +67,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 
 			fullDenom, err := GetFullDenom(creator, subdenom)
 			if err != nil {
-				return nil, errorsmod.Wrap(err, "osmo full denom query")
+				return nil, errorsmod.Wrap(err, "melody full denom query")
 			}
 
 			res := bindings.FullDenomResponse{
@@ -76,7 +76,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 
 			bz, err := json.Marshal(res)
 			if err != nil {
-				return nil, errorsmod.Wrap(err, "osmo full denom query response")
+				return nil, errorsmod.Wrap(err, "melody full denom query response")
 			}
 
 			return bz, nil
@@ -95,7 +95,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 			return bz, nil
 
 		default:
-			return nil, wasmvmtypes.UnsupportedRequest{Kind: "unknown osmosis query variant"}
+			return nil, wasmvmtypes.UnsupportedRequest{Kind: "unknown symphony query variant"}
 		}
 	}
 }

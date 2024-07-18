@@ -913,7 +913,7 @@ func (s *KeeperTestHelper) SetupConcentratedLiquidityDenomsAndPoolCreation() {
 	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, defaultParams)
 
 	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
-	poolManagerParams.AuthorizedQuoteDenoms = append(poolmanagertypes.DefaultParams().AuthorizedQuoteDenoms, ETH, USDC, BAR, BAZ, FOO, UOSMO, STAKE, WBTC)
+	poolManagerParams.AuthorizedQuoteDenoms = append(poolmanagertypes.DefaultParams().AuthorizedQuoteDenoms, ETH, USDC, BAR, BAZ, FOO, NOTE, STAKE, WBTC)
 	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
 }
 

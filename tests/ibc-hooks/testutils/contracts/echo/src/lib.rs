@@ -5,7 +5,7 @@ use cosmwasm_schema::cw_serde;
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_binary, DepsMut, Env, MessageInfo, Response, StdError};
 use ibc::{ContractAck, IBCAck, IBCAsyncOptions, OnRecvPacketAsyncResponse, Packet};
-use osmosis_std_derive::CosmwasmExt;
+use symphony_std_derive::CosmwasmExt;
 use state::INFLIGHT_PACKETS;
 
 // Messages
@@ -63,7 +63,7 @@ fn simple_response(msg: String) -> Response {
     schemars::JsonSchema,
     CosmwasmExt,
 )]
-#[proto_message(type_url = "/osmosis.ibchooks.MsgEmitIBCAck")]
+#[proto_message(type_url = "/symphony.ibchooks.MsgEmitIBCAck")]
 pub struct MsgEmitIBCAck {
     #[prost(string, tag = "1")]
     pub sender: ::prost::alloc::string::String,

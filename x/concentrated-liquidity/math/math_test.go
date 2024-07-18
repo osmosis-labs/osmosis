@@ -102,9 +102,9 @@ func TestLiquidity0(t *testing.T) {
 			amount0Desired: osmomath.NewInt(123999),
 			// from clmath import *
 			// from math import *
-			// product1 = round_osmo_prec_down(sqrtPriceA * sqrtPriceB)
-			// product2 = round_osmo_prec_down(amount0 * product1)
-			// diff = round_osmo_prec_down(sqrtPriceB - sqrtPriceA)
+			// product1 = round_melody_prec_down(sqrtPriceA * sqrtPriceB)
+			// product2 = round_melody_prec_down(amount0 * product1)
+			// diff = round_melody_prec_down(sqrtPriceB - sqrtPriceA)
 			// round_sdk_prec_down(product2 / diff)
 			expectedLiquidity: "0.000000000003167050",
 		},
@@ -508,7 +508,7 @@ func TestGetNextSqrtPriceFromAmount0InRoundingUp(t *testing.T) {
 			liquidity:        osmomath.MustNewBigDecFromStr("1517882343.751510418088349649"), // liquidity0 calculated above
 			sqrtPriceCurrent: sqrt5000BigDec,
 			amountRemaining:  osmomath.NewBigDec(13370),
-			// round_osmo_prec_up(liquidity / (round_osmo_prec_down(liquidity / sqrtPriceCurrent) + amountRemaining))
+			// round_melody_prec_up(liquidity / (round_melody_prec_down(liquidity / sqrtPriceCurrent) + amountRemaining))
 			expected: osmomath.MustNewBigDecFromStr("70.666663910857144331148691821263626767"),
 		},
 		"low price range": {
@@ -595,14 +595,14 @@ func TestGetNextSqrtPriceFromAmount1OutRoundingDown(t *testing.T) {
 			sqrtPriceCurrent: sqrt5000BigDec,
 			liquidity:        osmomath.MustNewBigDecFromStr("3035764687.503020836176699298"),
 			amountRemaining:  osmomath.MustNewBigDecFromStr("8398"),
-			// round_osmo_prec_down(sqrtPriceCurrent - round_osmo_prec_up(tokenOut / liquidity))
+			// round_melody_prec_down(sqrtPriceCurrent - round_melody_prec_up(tokenOut / liquidity))
 			expected: osmomath.MustNewBigDecFromStr("70.710675352300682056656660729199999832"),
 		},
 		"no round up due zeroes at precision end": {
 			sqrtPriceCurrent: osmomath.MustNewBigDecFromStr("12.5"),
 			liquidity:        osmomath.MustNewBigDecFromStr("1"),
 			amountRemaining:  osmomath.MustNewBigDecFromStr("10"),
-			// round_osmo_prec_down(sqrtPriceCurrent - round_osmo_prec_up(tokenOut / liquidity))
+			// round_melody_prec_down(sqrtPriceCurrent - round_melody_prec_up(tokenOut / liquidity))
 			expected: osmomath.MustNewBigDecFromStr("2.5"),
 		},
 		"low price range": {

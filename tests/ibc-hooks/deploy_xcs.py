@@ -12,11 +12,11 @@ from asyncio import subprocess
 
 
 class Command(object):
-    def __init__(self, command="osmosisd", node=None, keyring_backend=None, chain_id=None):
+    def __init__(self, command="symphonyd", node=None, keyring_backend=None, chain_id=None):
         self.command = command
         self.node = node or "http://localhost:26657"
         self.keyring_backend = keyring_backend or "test"
-        self.chain_id = chain_id or "osmosis-1"
+        self.chain_id = chain_id or "symphony-1"
 
     def parse_arg(self, arg):
         if '"' in arg or "'" in arg:
@@ -32,7 +32,7 @@ class Command(object):
         if len(args) == 0:
             raise ValueError("No arguments passed to command")
 
-        cmd = ["osmosisd"]
+        cmd = ["symphonyd"]
         if chain_id:
             cmd += ["--chain-id", self.chain_id]
         if node:
@@ -71,31 +71,31 @@ ENV = "testnet"
 match ENV:
     case "testnet":
         BASE_API = "https://api.testnet.osmosis.zone"
-        osmosisd = Command(node="https://rpc.testnet.osmosis.zone:443", keyring_backend="test", chain_id="osmo-test-5")
+        symphonyd = Command(node="https://rpc.testnet.osmosis.zone:443", keyring_backend="test", chain_id="melody-test-5")
         CHANNEL_PREFIX_MAP = []
         CHAIN_REGISTRY_PATH = "~/devel/chain-registry/testnets"
         # SWAPROUTER_CODE_ID = 6477
         # CROSSCHAIN_SWAPS_CODE_ID = 6478
     case "edgenet":
         BASE_API = "https://api-osmosis.imperator.co"
-        osmosisd = Command(node="https://rpc.edgenet.osmosis.zone:443", keyring_backend="test", chain_id="edgenet")
+        symphonyd = Command(node="https://rpc.edgenet.osmosis.zone:443", keyring_backend="test", chain_id="edgenet")
         CHAIN_REGISTRY_PATH = "~/devel/chain-registry"
     case "mainnet":
         SWAPROUTER_CODE_ID = 10
         CROSSCHAIN_SWAPS_CODE_ID = 31
         BASE_API = "https://api-osmosis.imperator.co"
-        osmosisd = Command(node="https://rpc.osmosis.zone:443", keyring_backend="test", chain_id="osmosis-1")
+        symphonyd = Command(node="https://rpc.osmosis.zone:443", keyring_backend="test", chain_id="symphony-1")
         CHAIN_REGISTRY_PATH = "~/devel/chain-registry"
     case _:
         raise ValueError("Invalid environment")
 
 POOL_API_ENDPOINT = BASE_API + "/stream/pool/v1/all?min_liquidity=0&order_key=liquidity&order_by=desc&offset=0&limit=20"
-GAS_ADJUSTMENT = "--gas auto --gas-prices 0.1uosmo --gas-adjustment 1.5 -y"
+GAS_ADJUSTMENT = "--gas auto --gas-prices 0.1note --gas-adjustment 1.5 -y"
 CHAIN_REGISTRY_PATH = os.path.expanduser(CHAIN_REGISTRY_PATH)
 
 
 async def get_gov_addr():
-    module_accounts, err = await osmosisd.query("auth module-accounts", print_cmd=False)
+    module_accounts, err = await symphonyd.query("auth module-accounts", print_cmd=False)
     gov_account = next(i for i in module_accounts["accounts"] if i["name"] == "gov")
     gov = gov_account["base_account"]["address"]
     return gov
@@ -140,7 +140,7 @@ async def get_channels_for_denoms(pools):
     channels = {}
 
     async def fetch_trace(denom):
-        trace, err = await osmosisd.query("ibc-transfer denom-trace", denom, print_cmd=False)
+        trace, err = await symphonyd.query("ibc-transfer denom-trace", denom, print_cmd=False)
         if err:
             print(err)
             return None, denom
@@ -232,13 +232,13 @@ def get_denom_aliases():
     result = {}
 
     for chain_1_name, chain_2_name, channel in generate_channels():
-        if "osmosis" not in chain_1_name.lower() and "osmosis" not in chain_2_name.lower():
+        if "symphony" not in chain_1_name.lower() and "symphony" not in chain_2_name.lower():
             continue
-        osmosis_chain, other_chain = ("chain_1", chain_2_name) if 'osmosis' in chain_1_name.lower() else ("chain_2", chain_1_name)
-        osmosis_channel_id = channel[osmosis_chain]['channel_id']
-        osmosis_port_id = channel[osmosis_chain]['port_id']
+        symphony_chain, other_chain = ("chain_1", chain_2_name) if 'symphony' in chain_1_name.lower() else ("chain_2", chain_1_name)
+        symphony_channel_id = channel[symphony_chain]['channel_id']
+        symphony_port_id = channel[symphony_chain]['port_id']
 
-        channel_info = f"{osmosis_port_id}/{osmosis_channel_id}"
+        channel_info = f"{symphony_port_id}/{symphony_channel_id}"
 
         # Now handle the asset list for each other_chain
         assetlist_path = f"{CHAIN_REGISTRY_PATH}/{other_chain}/assetlist.json"
@@ -264,9 +264,9 @@ def get_denom_aliases():
 
 async def setup_registry(moniker, owner, gov, pools, dry_run=False):
     registry_id = get_code_id(
-        await osmosisd(f"tx wasm store {REGISTRY_PATH} --from {moniker}", GAS_ADJUSTMENT, dry_run=dry_run))
+        await symphonyd(f"tx wasm store {REGISTRY_PATH} --from {moniker}", GAS_ADJUSTMENT, dry_run=dry_run))
     msg = '{"owner": "%s"}' % owner
-    registry_addr = get_address(await osmosisd(
+    registry_addr = get_address(await symphonyd(
         f'tx wasm instantiate {registry_id}',
         msg,
         f'--from {moniker} --admin {gov} --label registry', GAS_ADJUSTMENT, dry_run=dry_run))
@@ -280,7 +280,7 @@ async def setup_registry(moniker, owner, gov, pools, dry_run=False):
             "channel_id": channel
         } for ((src, dst), channel) in get_channel_links().items()]}
     })
-    result, err = await osmosisd(f"tx wasm execute {registry_addr}", msg,
+    result, err = await symphonyd(f"tx wasm execute {registry_addr}", msg,
                                  f"--from {moniker}", GAS_ADJUSTMENT, dry_run=dry_run)
 
     if not result or not result.get('txhash'):
@@ -293,7 +293,7 @@ async def setup_registry(moniker, owner, gov, pools, dry_run=False):
     msg = json.dumps({
         "modify_bech32_prefixes": {"operations": get_bech32_prefixes()}
     })
-    result, err = await osmosisd(f"tx wasm execute {registry_addr}", msg,
+    result, err = await symphonyd(f"tx wasm execute {registry_addr}", msg,
                                  f"--from {moniker}", GAS_ADJUSTMENT, dry_run=dry_run)
 
     if not result or not result.get('txhash'):
@@ -310,7 +310,7 @@ async def setup_registry(moniker, owner, gov, pools, dry_run=False):
             "alias": alias
         } for alias, full_denom_path in get_denom_aliases().items()]}
     })
-    result, err = await osmosisd(f"tx wasm execute {registry_addr}", msg,
+    result, err = await symphonyd(f"tx wasm execute {registry_addr}", msg,
                                  f"--from {moniker}", GAS_ADJUSTMENT, dry_run=dry_run)
     if not result or not result.get('txhash'):
         print(err)
@@ -329,17 +329,17 @@ async def setup_swaprouter(moniker, owner, gov, pools, dry_run=False):
         swaprouter_id = SWAPROUTER_CODE_ID
     else:
         swaprouter_id = get_code_id(
-            await osmosisd(f"tx wasm store {SWAPROUTER_PATH} --from {moniker}", GAS_ADJUSTMENT, dry_run=dry_run))
+            await symphonyd(f"tx wasm store {SWAPROUTER_PATH} --from {moniker}", GAS_ADJUSTMENT, dry_run=dry_run))
 
     msg = '{"owner": "%s"}' % owner
-    swaprouter_addr = get_address(await osmosisd(
+    swaprouter_addr = get_address(await symphonyd(
         f'tx wasm instantiate {swaprouter_id}',
         msg,
         f'--from {moniker} --admin {gov} --label swaprouter', GAS_ADJUSTMENT, dry_run=dry_run))
 
     swap_router_messages = build_swap_router_messages(pools)
     for message in swap_router_messages:
-        result, err = await osmosisd(f"tx wasm execute {swaprouter_addr}", json.dumps(message),
+        result, err = await symphonyd(f"tx wasm execute {swaprouter_addr}", json.dumps(message),
                                      f"--from {moniker}", GAS_ADJUSTMENT, dry_run=dry_run)
         await asyncio.sleep(1)
         if not isinstance(result, dict) or result['code'] != 0:
@@ -350,7 +350,7 @@ async def setup_swaprouter(moniker, owner, gov, pools, dry_run=False):
                 continue
             raise Exception("Error setting up swaprouter")
 
-    # result, err = await osmosisd(f"tx wasm execute {swaprouter_addr}", '{"transfer_ownership": {"new_owner": "%s"}}' % gov,
+    # result, err = await symphonyd(f"tx wasm execute {swaprouter_addr}", '{"transfer_ownership": {"new_owner": "%s"}}' % gov,
     #                              f"--from {moniker}", GAS_ADJUSTMENT, dry_run=dry_run)
     # if not isinstance(result, dict) or result['code'] != 0:
     #     print(result)
@@ -363,11 +363,11 @@ async def setup_xcs(moniker, governor, swaprouter_addr, registry_addr, gov, dry_
         xcs_id = CROSSCHAIN_SWAPS_CODE_ID
     else:
         xcs_id = get_code_id(
-            await osmosisd(f"tx wasm store {CROSSCHAIN_SWAPS_PATH} --from {moniker}", GAS_ADJUSTMENT, dry_run=dry_run))
+            await symphonyd(f"tx wasm store {CROSSCHAIN_SWAPS_PATH} --from {moniker}", GAS_ADJUSTMENT, dry_run=dry_run))
 
     msg = '{"governor": "%s", "swap_contract": "%s", "registry_contract": "%s"}' % (
         governor, swaprouter_addr, registry_addr)
-    xcs_addr = get_address(await osmosisd(
+    xcs_addr = get_address(await symphonyd(
         f'tx wasm instantiate {xcs_id}',
         msg,
         f'--from {moniker} --admin {gov} --label crosschain_swaps', GAS_ADJUSTMENT, dry_run=dry_run))
@@ -377,7 +377,7 @@ async def setup_xcs(moniker, governor, swaprouter_addr, registry_addr, gov, dry_
 
 async def deploy(dry_run=False, moniker="deployer", owner=None):
     (deployer, _), gov, pools = await asyncio.gather(
-        osmosisd(f"keys show {moniker} -a", node=False, chain_id=False, block=False, as_json=False, print_cmd=False),
+        symphonyd(f"keys show {moniker} -a", node=False, chain_id=False, block=False, as_json=False, print_cmd=False),
         get_gov_addr(),
         get_pools()
     )

@@ -26,15 +26,15 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 				Delegator: addr1,
 				Preferences: []types.ValidatorPreference{
 					{
-						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
+						ValOperAddress: "symphonyvaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86lswllt",
 						Weight:         osmomath.NewDecWithPrec(322, 3),
 					},
 					{
-						ValOperAddress: "osmovaloper1jcr68jghzm24zwe78zuhz7xahua8429erxk7vm",
+						ValOperAddress: "symphonyvaloper1jcr68jghzm24zwe78zuhz7xahua8429e4s99gc",
 						Weight:         osmomath.NewDecWithPrec(332, 3),
 					},
 					{
-						ValOperAddress: "osmovaloper1gqsr38e4zteekwr6kq5se5jpadafqmcfyz8jds",
+						ValOperAddress: "symphonyvaloper1gqsr38e4zteekwr6kq5se5jpadafqmcfj55ffn",
 						Weight:         osmomath.NewDecWithPrec(348, 3),
 					},
 				},
@@ -47,15 +47,15 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 				Delegator: addr1,
 				Preferences: []types.ValidatorPreference{
 					{
-						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
+						ValOperAddress: "symphonyvaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86lswllt",
 						Weight:         osmomath.NewDecWithPrec(6, 1),
 					},
 					{
-						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
+						ValOperAddress: "symphonyvaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86lswllt",
 						Weight:         osmomath.NewDecWithPrec(4, 1),
 					},
 					{
-						ValOperAddress: "osmovaloper1jcr68jghzm24zwe78zuhz7xahua8429erxk7vm",
+						ValOperAddress: "symphonyvaloper1jcr68jghzm24zwe78zuhz7xahua8429e4s99gc",
 						Weight:         osmomath.NewDecWithPrec(2, 1),
 					},
 				},
@@ -68,7 +68,7 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 				Delegator: invalidAddr,
 				Preferences: []types.ValidatorPreference{
 					{
-						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
+						ValOperAddress: "symphonyvaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86lswllt",
 						Weight:         osmomath.NewDec(1),
 					},
 				},
@@ -81,15 +81,15 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 				Delegator: addr1,
 				Preferences: []types.ValidatorPreference{
 					{
-						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxay", // invalid address
+						ValOperAddress: "symphonyvaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxay", // invalid address
 						Weight:         osmomath.NewDecWithPrec(2, 1),
 					},
 					{
-						ValOperAddress: "osmovaloper1jcr68jghzm24zwe78zuhz7xahua8429erxk7vm",
+						ValOperAddress: "symphonyvaloper1jcr68jghzm24zwe78zuhz7xahua8429e4s99gc",
 						Weight:         osmomath.NewDecWithPrec(2, 1),
 					},
 					{
-						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
+						ValOperAddress: "symphonyvaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86lswllt",
 						Weight:         osmomath.NewDecWithPrec(6, 1),
 					},
 				},
@@ -102,15 +102,15 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 				Delegator: addr1,
 				Preferences: []types.ValidatorPreference{
 					{
-						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
+						ValOperAddress: "symphonyvaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86lswllt",
 						Weight:         osmomath.NewDecWithPrec(5, 1),
 					},
 					{
-						ValOperAddress: "osmovaloper1jcr68jghzm24zwe78zuhz7xahua8429erxk7vm",
+						ValOperAddress: "symphonyvaloper1jcr68jghzm24zwe78zuhz7xahua8429e4s99gc",
 						Weight:         osmomath.NewDecWithPrec(3, 1),
 					},
 					{
-						ValOperAddress: "osmovaloper1gqsr38e4zteekwr6kq5se5jpadafqmcfyz8jds",
+						ValOperAddress: "symphonyvaloper1gqsr38e4zteekwr6kq5se5jpadafqmcfj55ffn",
 						Weight:         osmomath.NewDecWithPrec(3, 1),
 					},
 				},
@@ -123,15 +123,15 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 				Delegator: addr1,
 				Preferences: []types.ValidatorPreference{
 					{
-						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
+						ValOperAddress: "symphonyvaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
 						Weight:         osmomath.NewDecWithPrec(2, 1),
 					},
 					{
-						ValOperAddress: "osmovaloper1jcr68jghzm24zwe78zuhz7xahua8429erxk7vm",
+						ValOperAddress: "symphonyvaloper1jcr68jghzm24zwe78zuhz7xahua8429e4s99gc",
 						Weight:         osmomath.NewDecWithPrec(2, 1),
 					},
 					{
-						ValOperAddress: "osmovaloper1gqsr38e4zteekwr6kq5se5jpadafqmcfyz8jds",
+						ValOperAddress: "symphonyvaloper1gqsr38e4zteekwr6kq5se5jpadafqmcfyz8jds",
 						Weight:         osmomath.NewDecWithPrec(2, 1),
 					},
 				},

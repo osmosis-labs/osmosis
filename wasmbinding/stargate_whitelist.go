@@ -84,7 +84,7 @@ func init() {
 	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/Params", &stakingtypes.QueryParamsResponse{})
 	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/Validator", &stakingtypes.QueryValidatorResponse{})
 
-	// osmosis queries
+	// symphony queries
 	// cosmwasm pool
 	setWhitelistedQuery("/osmosis.cosmwasmpool.v1beta1.Query/Pools", &cosmwasmpooltypes.PoolsResponse{})
 	setWhitelistedQuery("/osmosis.cosmwasmpool.v1beta1.Query/Params", &cosmwasmpooltypes.ParamsResponse{})
@@ -183,6 +183,10 @@ func init() {
 	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/IncentiveRecords", &concentratedliquidityquery.IncentiveRecordsResponse{})
 	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/TickAccumulatorTrackers", &concentratedliquidityquery.TickAccumulatorTrackersResponse{})
 	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/CFMMPoolIdLinkFromConcentratedPoolId", &concentratedliquidityquery.CFMMPoolIdLinkFromConcentratedPoolIdResponse{})
+
+	// market
+	//setWhitelistedQuery("/osmosis.market.v1beta1.Query/Swap", &marketqueryproto.QuerySwapResponse{})
+	//setWhitelistedQuery("/osmosis.market.v1beta1.Query/OsmosisPoolDelta", &marketqueryproto.QueryTerraPoolDeltaResponse{})
 }
 
 // IsWhitelistedQuery returns if the query is not whitelisted.

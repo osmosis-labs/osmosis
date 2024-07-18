@@ -76,7 +76,7 @@ func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, se
 	}
 
 	// Superfluid undelegate the superfluid delegated position.
-	// This deletes the connection between the lock and the intermediate account, deletes the synthetic lock, and burns the synthetic osmo.
+	// This deletes the connection between the lock and the intermediate account, deletes the synthetic lock, and burns the synthetic melody.
 	intermediateAccount, err := k.SuperfluidUndelegateToConcentratedPosition(ctx, sender.String(), lockId)
 	if err != nil {
 		return cltypes.CreateFullRangePositionData{}, 0, err

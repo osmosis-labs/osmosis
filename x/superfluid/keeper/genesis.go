@@ -16,7 +16,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 		k.SetSuperfluidAsset(ctx, asset)
 	}
 
-	// initialize osmo equivalent multipliers
+	// initialize melody equivalent multipliers
 	for _, multiplierRecord := range genState.OsmoEquivalentMultipliers {
 		k.SetOsmoEquivalentMultiplier(ctx, multiplierRecord.EpochNumber, multiplierRecord.Denom, multiplierRecord.Multiplier)
 	}

@@ -17,16 +17,16 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/app"
 )
 
-func CreateTestInput() (*app.OsmosisApp, sdk.Context) {
-	osmosis := app.Setup(false)
-	ctx := osmosis.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
-	return osmosis, ctx
+func CreateTestInput() (*app.SymphonyApp, sdk.Context) {
+	symphony := app.Setup(false)
+	ctx := symphony.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "symphony-1", Time: time.Now().UTC()})
+	return symphony, ctx
 }
 
-func FundAccount(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, acct sdk.AccAddress) {
+func FundAccount(t *testing.T, ctx sdk.Context, symphony *app.SymphonyApp, acct sdk.AccAddress) {
 	t.Helper()
-	err := testutil.FundAccount(osmosis.BankKeeper, ctx, acct, sdk.NewCoins(
-		sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)),
+	err := testutil.FundAccount(symphony.BankKeeper, ctx, acct, sdk.NewCoins(
+		sdk.NewCoin("note", osmomath.NewInt(10000000000)),
 	))
 	require.NoError(t, err)
 }

@@ -8,7 +8,7 @@ import (
 
 // BlockedAddrs returns all the app's module account addresses that are not
 // allowed to receive external tokens.
-func (app *OsmosisApp) BlockedAddrs() map[string]bool {
+func (app *SymphonyApp) BlockedAddrs() map[string]bool {
 	blockedAddrs := make(map[string]bool)
 	for acc := range maccPerms {
 		blockedAddrs[authtypes.NewModuleAddress(acc).String()] = !allowedReceivingModAcc[acc]

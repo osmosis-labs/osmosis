@@ -10,7 +10,6 @@ import (
 	"time"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -33,6 +32,8 @@ import (
 	ibcwasmtypes "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
+
+	//oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
 
 	"github.com/osmosis-labs/osmosis/v23/ingest/sqs"
 	"github.com/osmosis-labs/osmosis/v23/ingest/sqs/domain"
@@ -79,7 +80,6 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 
-	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
 
 	"github.com/osmosis-labs/osmosis/v23/app/keepers"
@@ -111,7 +111,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/x/mint"
 )
 
-const appName = "OsmosisApp"
+const appName = "SymphonyApp"
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
@@ -126,7 +126,12 @@ var (
 	maccPerms = moduleAccountPermissions
 
 	// module accounts that are allowed to receive tokens.
-	allowedReceivingModAcc = map[string]bool{protorevtypes.ModuleName: true}
+	allowedReceivingModAcc = map[string]bool{
+		protorevtypes.ModuleName: true,
+		// oracletypes.ModuleName:        true, TODO: yurii: enable oracle
+		// markettypes.ModuleName:        true, TODO: yurii: enable swaps
+		// markettypes.ReserveModuleName: true, TODO: yurii: enable swaps
+	}
 
 	// TODO: Refactor wasm items into a wasm.go file
 	// WasmProposalsEnabled enables all x/wasm proposals when it's value is "true"
@@ -144,16 +149,16 @@ var (
 	// EmptyWasmOpts defines a type alias for a list of wasm options.
 	EmptyWasmOpts []wasmkeeper.Option
 
-	_ runtime.AppI = (*OsmosisApp)(nil)
+	_ runtime.AppI = (*SymphonyApp)(nil)
 
 	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade, v21.Upgrade, v22.Upgrade, v23.Upgrade, v24.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 )
 
-// OsmosisApp extends an ABCI application, but with most of its parameters exported.
+// SymphonyApp extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
 // capabilities aren't needed for testing.
-type OsmosisApp struct {
+type SymphonyApp struct {
 	*baseapp.BaseApp
 	keepers.AppKeepers
 
@@ -168,17 +173,17 @@ type OsmosisApp struct {
 	homePath     string
 }
 
-// init sets DefaultNodeHome to default osmosisd install location.
+// init sets DefaultNodeHome to default symphonyd install location.
 func init() {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		panic(err)
 	}
 
-	DefaultNodeHome = filepath.Join(userHomeDir, ".osmosisd")
+	DefaultNodeHome = filepath.Join(userHomeDir, ".symphonyd")
 }
 
-// initReusablePackageInjections injects data available within osmosis into the reusable packages.
+// initReusablePackageInjections injects data available within symphony into the reusable packages.
 // This is done to ensure they can be built without depending on at compilation time and thus imported by other chains
 // This should always be called before any other function to avoid inconsistent data
 func initReusablePackageInjections() {
@@ -196,8 +201,8 @@ func overrideWasmVariables() {
 	wasmtypes.MaxProposalWasmSize = wasmtypes.MaxWasmSize
 }
 
-// NewOsmosisApp returns a reference to an initialized Osmosis.
-func NewOsmosisApp(
+// NewSymphonyApp returns a reference to an initialized Symphony.
+func NewSymphonyApp(
 	logger log.Logger,
 	db dbm.DB,
 	traceStore io.Writer,
@@ -208,7 +213,7 @@ func NewOsmosisApp(
 	appOpts servertypes.AppOptions,
 	wasmOpts []wasmkeeper.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
-) *OsmosisApp {
+) *SymphonyApp {
 	initReusablePackageInjections() // This should run before anything else to make sure the variables are properly initialized
 	overrideWasmVariables()
 	encodingConfig := GetEncodingConfig()
@@ -222,7 +227,7 @@ func NewOsmosisApp(
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 
-	app := &OsmosisApp{
+	app := &SymphonyApp{
 		AppKeepers:        keepers.AppKeepers{},
 		BaseApp:           bApp,
 		cdc:               cdc,
@@ -431,10 +436,10 @@ func NewOsmosisApp(
 	return app
 }
 
-// InitOsmosisAppForTestnet is broken down into two sections:
+// InitSymphonyAppForTestnet is broken down into two sections:
 // Required Changes: Changes that, if not made, will cause the testnet to halt or panic
 // Optional Changes: Changes to customize the testnet to one's liking (lower vote times, fund accounts, etc)
-func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newValPubKey crypto.PubKey, newOperatorAddress, upgradeToTrigger string) *OsmosisApp {
+func InitSymphonyAppForTestnet(app *SymphonyApp, newValAddr bytes.HexBytes, newValPubKey crypto.PubKey, newOperatorAddress, upgradeToTrigger string) *SymphonyApp {
 	//
 	// Required Changes:
 	//
@@ -454,7 +459,7 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	if err != nil {
 		tmos.Exit(err.Error())
 	}
-	bech32Addr, err := bech32.ConvertAndEncode("osmovaloper", bz)
+	bech32Addr, err := bech32.ConvertAndEncode("symphonyvaloper", bz)
 	if err != nil {
 		tmos.Exit(err.Error())
 	}
@@ -554,8 +559,8 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	govParams := app.GovKeeper.GetParams(ctx)
 	govParams.ExpeditedVotingPeriod = &newExpeditedVotingPeriod
 	govParams.VotingPeriod = &newVotingPeriod
-	govParams.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin("uosmo", 100000000))
-	govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewInt64Coin("uosmo", 150000000))
+	govParams.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin("note", 100000000))
+	govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewInt64Coin("note", 150000000))
 
 	err = app.GovKeeper.SetParams(ctx, govParams)
 	if err != nil {
@@ -591,69 +596,67 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 
 	// BANK
 	//
-
-	defaultCoins := sdk.NewCoins(
-		sdk.NewInt64Coin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", 1000000000000), // DAI
-		sdk.NewInt64Coin("uosmo", 1000000000000),
-		sdk.NewInt64Coin("uion", 1000000000))
-
-	localOsmosisAccounts := []sdk.AccAddress{
-		sdk.MustAccAddressFromBech32("osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj"),
-		sdk.MustAccAddressFromBech32("osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks"),
-		sdk.MustAccAddressFromBech32("osmo18s5lynnmx37hq4wlrw9gdn68sg2uxp5rgk26vv"),
-		sdk.MustAccAddressFromBech32("osmo1qwexv7c6sm95lwhzn9027vyu2ccneaqad4w8ka"),
-		sdk.MustAccAddressFromBech32("osmo14hcxlnwlqtq75ttaxf674vk6mafspg8xwgnn53"),
-		sdk.MustAccAddressFromBech32("osmo12rr534cer5c0vj53eq4y32lcwguyy7nndt0u2t"),
-		sdk.MustAccAddressFromBech32("osmo1nt33cjd5auzh36syym6azgc8tve0jlvklnq7jq"),
-		sdk.MustAccAddressFromBech32("osmo10qfrpash5g2vk3hppvu45x0g860czur8ff5yx0"),
-		sdk.MustAccAddressFromBech32("osmo1f4tvsdukfwh6s9swrc24gkuz23tp8pd3e9r5fa"),
-		sdk.MustAccAddressFromBech32("osmo1myv43sqgnj5sm4zl98ftl45af9cfzk7nhjxjqh"),
-		sdk.MustAccAddressFromBech32("osmo14gs9zqh8m49yy9kscjqu9h72exyf295afg6kgk"),
-		sdk.MustAccAddressFromBech32("osmo1jllfytsz4dryxhz5tl7u73v29exsf80vz52ucc")}
-
-	// Fund localosmosis accounts
-	for _, account := range localOsmosisAccounts {
-		err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, defaultCoins)
-		if err != nil {
-			tmos.Exit(err.Error())
-		}
-		err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, account, defaultCoins)
-		if err != nil {
-			tmos.Exit(err.Error())
-		}
-	}
-
-	// Fund edgenet faucet
-	faucetCoins := sdk.NewCoins(
-		sdk.NewInt64Coin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", 1000000000000000), // DAI
-		sdk.NewInt64Coin("uosmo", 1000000000000000),
-		sdk.NewInt64Coin("uion", 1000000000000))
-	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, faucetCoins)
-	if err != nil {
-		tmos.Exit(err.Error())
-	}
-	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, sdk.MustAccAddressFromBech32("osmo1rqgf207csps822qwmd3k2n6k6k4e99w502e79t"), faucetCoins)
-	if err != nil {
-		tmos.Exit(err.Error())
-	}
-
-	// Mars bank account
-	marsCoins := sdk.NewCoins(
-		sdk.NewInt64Coin("uosmo", 10000000000000),
-		sdk.NewInt64Coin("ibc/903A61A498756EA560B85A85132D3AEE21B5DEDD41213725D22ABF276EA6945E", 400000000000),
-		sdk.NewInt64Coin("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", 3000000000000),
-		sdk.NewInt64Coin("ibc/C140AFD542AE77BD7DCC83F13FDD8C5E5BB8C4929785E6EC2F4C636F98F17901", 200000000000),
-		sdk.NewInt64Coin("ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", 700000000000),
-		sdk.NewInt64Coin("ibc/D1542AA8762DB13087D8364F3EA6509FD6F009A34F00426AF9E4F9FA85CBBF1F", 2000000000),
-		sdk.NewInt64Coin("ibc/EA1D43981D5C9A1C4AAEA9C23BB1D4FA126BA9BC7020A25E0AE4AA841EA25DC5", 3000000000000000000))
-	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, marsCoins)
-	if err != nil {
-		tmos.Exit(err.Error())
-	}
-	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, sdk.MustAccAddressFromBech32("osmo1ev02crc36675xd8s029qh7wg3wjtfk37jr004z"), marsCoins)
-	if err != nil {
-		tmos.Exit(err.Error())
-	}
+	//
+	//defaultCoins := sdk.NewCoins(
+	//	sdk.NewInt64Coin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", 1000000000000), // DAI
+	//	sdk.NewInt64Coin("note", 1000000000000))
+	//
+	//localSymphonyAccounts := []sdk.AccAddress{
+	//	sdk.MustAccAddressFromBech32("symphony1p7mp7r9f9f6sf2c95ht42ncm6ga96ha8xghdeg"),
+	//	sdk.MustAccAddressFromBech32("symphony1c605nvcw94rvvehrcdfj85qe09ulseyt0efhk7"),
+	//	sdk.MustAccAddressFromBech32("symphony1jpr5824frn5472qm73ckfe2c3rh6vrn4lvlgj7"),
+	//	sdk.MustAccAddressFromBech32("symphony1amr6zrvs0hymf62qd5mwvshx94ul8cgfu9jtxn"),
+	//	sdk.MustAccAddressFromBech32("symphony1egts9ayaqr6t54ahs62awmz5smuf764uu5f5xv"),
+	//	sdk.MustAccAddressFromBech32("symphony1450weujlqvtd0d5z59v388jmzwyk3e6qhlj5r5"),
+	//	sdk.MustAccAddressFromBech32("symphony12mdnm5yv5dfz37qsu0eu60x8qwxxl0x7sqqzn0"),
+	//	sdk.MustAccAddressFromBech32("symphony1ar8mfrrtkwlm62wgu88d0cfleng5gl8y062gsn"),
+	//	sdk.MustAccAddressFromBech32("symphony1kvgujs5yg9h6l6e265smwx99fmnnmc4af5v0ah"),
+	//	sdk.MustAccAddressFromBech32("symphony1ww5e3y7ptw8h3lc0cumxe5lmcu3m53dn7qyn4k"),
+	//	sdk.MustAccAddressFromBech32("symphony1tsehv6f0v7ce4gy7574thxnp6v8jx7jm4evkpe"),
+	//	sdk.MustAccAddressFromBech32("symphony1fg5d24fgmxgux2p8e6xm8vjdjza8xy3ju6ta6m")}
+	//
+	//// Fund localsymphony accounts
+	//for _, account := range localSymphonyAccounts {
+	//	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, defaultCoins)
+	//	if err != nil {
+	//		tmos.Exit(err.Error())
+	//	}
+	//	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, account, defaultCoins)
+	//	if err != nil {
+	//		tmos.Exit(err.Error())
+	//	}
+	//}
+	//
+	//// Fund edgenet faucet
+	//faucetCoins := sdk.NewCoins(
+	//	sdk.NewInt64Coin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", 1000000000000000), // DAI
+	//	sdk.NewInt64Coin("note", 1000000000000000))
+	//err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, faucetCoins)
+	//if err != nil {
+	//	tmos.Exit(err.Error())
+	//}
+	//err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, sdk.MustAccAddressFromBech32("melody1rqgf207csps822qwmd3k2n6k6k4e99w502e79t"), faucetCoins)
+	//if err != nil {
+	//	tmos.Exit(err.Error())
+	//}
+	//
+	//// Mars bank account
+	//marsCoins := sdk.NewCoins(
+	//	sdk.NewInt64Coin("note", 10000000000000),
+	//	sdk.NewInt64Coin("ibc/903A61A498756EA560B85A85132D3AEE21B5DEDD41213725D22ABF276EA6945E", 400000000000),
+	//	sdk.NewInt64Coin("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", 3000000000000),
+	//	sdk.NewInt64Coin("ibc/C140AFD542AE77BD7DCC83F13FDD8C5E5BB8C4929785E6EC2F4C636F98F17901", 200000000000),
+	//	sdk.NewInt64Coin("ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", 700000000000),
+	//	sdk.NewInt64Coin("ibc/D1542AA8762DB13087D8364F3EA6509FD6F009A34F00426AF9E4F9FA85CBBF1F", 2000000000),
+	//	sdk.NewInt64Coin("ibc/EA1D43981D5C9A1C4AAEA9C23BB1D4FA126BA9BC7020A25E0AE4AA841EA25DC5", 3000000000000000000))
+	//err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, marsCoins)
+	//if err != nil {
+	//	tmos.Exit(err.Error())
+	//}
+	//err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, sdk.MustAccAddressFromBech32("melody1ev02crc36675xd8s029qh7wg3wjtfk37jr004z"), marsCoins)
+	//if err != nil {
+	//	tmos.Exit(err.Error())
+	//}
 
 	// UPGRADE
 	//
@@ -678,28 +681,28 @@ func MakeCodecs() (codec.Codec, *codec.LegacyAmino) {
 	return config.Marshaler, config.Amino
 }
 
-func (app *OsmosisApp) GetBaseApp() *baseapp.BaseApp {
+func (app *SymphonyApp) GetBaseApp() *baseapp.BaseApp {
 	return app.BaseApp
 }
 
 // Name returns the name of the App.
-func (app *OsmosisApp) Name() string { return app.BaseApp.Name() }
+func (app *SymphonyApp) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block.
-func (app *OsmosisApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+func (app *SymphonyApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	BeginBlockForks(ctx, app)
 	return app.mm.BeginBlock(ctx, req)
 }
 
 // EndBlocker application updates every end block.
-func (app *OsmosisApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+func (app *SymphonyApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	// Process the block and ingest data into various sinks.
 	app.IngestManager.ProcessBlock(ctx)
 	return app.mm.EndBlock(ctx, req)
 }
 
 // InitChainer application update at chain initialization.
-func (app *OsmosisApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *SymphonyApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState GenesisState
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
@@ -711,7 +714,7 @@ func (app *OsmosisApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) a
 }
 
 // LoadHeight loads a particular height.
-func (app *OsmosisApp) LoadHeight(height int64) error {
+func (app *SymphonyApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height)
 }
 
@@ -719,30 +722,30 @@ func (app *OsmosisApp) LoadHeight(height int64) error {
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
-func (app *OsmosisApp) LegacyAmino() *codec.LegacyAmino {
+func (app *SymphonyApp) LegacyAmino() *codec.LegacyAmino {
 	return app.cdc
 }
 
-// AppCodec returns Osmosis' app codec.
+// AppCodec returns Symphony' app codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
-func (app *OsmosisApp) AppCodec() codec.Codec {
+func (app *SymphonyApp) AppCodec() codec.Codec {
 	return app.appCodec
 }
 
-// InterfaceRegistry returns Osmosis' InterfaceRegistry.
-func (app *OsmosisApp) InterfaceRegistry() types.InterfaceRegistry {
+// InterfaceRegistry returns Symphony' InterfaceRegistry.
+func (app *SymphonyApp) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
 }
 
-func (app *OsmosisApp) ModuleManager() module.Manager {
+func (app *SymphonyApp) ModuleManager() module.Manager {
 	return *app.mm
 }
 
 // RegisterAPIRoutes registers all application module routes with the provided
 // API server.
-func (app *OsmosisApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
+func (app *SymphonyApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
 	// Register new tx routes from grpc-gateway.
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
@@ -762,12 +765,12 @@ func (app *OsmosisApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.AP
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.
-func (app *OsmosisApp) RegisterTxService(clientCtx client.Context) {
+func (app *SymphonyApp) RegisterTxService(clientCtx client.Context) {
 	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.interfaceRegistry)
 }
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
-func (app *OsmosisApp) RegisterTendermintService(clientCtx client.Context) {
+func (app *SymphonyApp) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(
 		clientCtx,
 		app.BaseApp.GRPCQueryRouter(),
@@ -777,24 +780,24 @@ func (app *OsmosisApp) RegisterTendermintService(clientCtx client.Context) {
 }
 
 // RegisterNodeService registers the node gRPC Query service.
-func (app *OsmosisApp) RegisterNodeService(clientCtx client.Context) {
+func (app *SymphonyApp) RegisterNodeService(clientCtx client.Context) {
 	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter())
 }
 
 // SimulationManager implements the SimulationApp interface
-func (app *OsmosisApp) SimulationManager() *module.SimulationManager {
+func (app *SymphonyApp) SimulationManager() *module.SimulationManager {
 	return app.sm
 }
 
 // ChainID gets chainID from private fields of BaseApp
 // Should be removed once SDK 0.50.x will be adopted
-func (app *OsmosisApp) ChainID() string {
+func (app *SymphonyApp) ChainID() string {
 	field := reflect.ValueOf(app.BaseApp).Elem().FieldByName("chainID")
 	return field.String()
 }
 
 // configure store loader that checks if version == upgradeHeight and applies store upgrades
-func (app *OsmosisApp) setupUpgradeStoreLoaders() {
+func (app *SymphonyApp) setupUpgradeStoreLoaders() {
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
@@ -818,7 +821,7 @@ func (app *OsmosisApp) setupUpgradeStoreLoaders() {
 	}
 }
 
-func (app *OsmosisApp) customPreUpgradeHandler(upgradeInfo upgradetypes.Plan) {
+func (app *SymphonyApp) customPreUpgradeHandler(upgradeInfo upgradetypes.Plan) {
 	switch upgradeInfo.Name {
 	case "v16":
 		// v16 upgrade handler
@@ -830,7 +833,7 @@ func (app *OsmosisApp) customPreUpgradeHandler(upgradeInfo upgradetypes.Plan) {
 	}
 }
 
-func (app *OsmosisApp) setupUpgradeHandlers() {
+func (app *SymphonyApp) setupUpgradeHandlers() {
 	for _, upgrade := range Upgrades {
 		app.UpgradeKeeper.SetUpgradeHandler(
 			upgrade.UpgradeName,

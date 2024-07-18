@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	validCosmwasmAddress   = "osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9"
-	invalidCosmwasmAddress = "osmo1{}{}4hj2tfpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9"
+	validCosmwasmAddress   = "symphony14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s748pj4"
+	invalidCosmwasmAddress = "symphony1{}{}4hj2tfpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s748pj4"
 	validActionPrefix      = "beforeSwapExactAmountIn"
 	counterContractPath    = "./testcontracts/compiled-wasm/counter.wasm"
 )
@@ -324,7 +324,7 @@ func (s *KeeperTestSuite) uploadAndInstantiateContract(filePath string) (rawCWAd
 	s.Require().NoError(err)
 	rawCWAddr, _, err = contractKeeper.Instantiate(s.Ctx, codeID, s.TestAccs[0], s.TestAccs[0], []byte("{}"), "", sdk.NewCoins())
 	s.Require().NoError(err)
-	bech32CWAddr, err = sdk.Bech32ifyAddressBytes("osmo", rawCWAddr)
+	bech32CWAddr, err = sdk.Bech32ifyAddressBytes("symphony", rawCWAddr)
 	s.Require().NoError(err)
 
 	return rawCWAddr, bech32CWAddr

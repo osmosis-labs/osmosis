@@ -15,8 +15,8 @@ import (
 var (
 	KeyPoolCreationFee                                = []byte("PoolCreationFee")
 	KeyDefaultTakerFee                                = []byte("DefaultTakerFee")
-	KeyOsmoTakerFeeDistribution                       = []byte("OsmoTakerFeeDistribution")
-	KeyNonOsmoTakerFeeDistribution                    = []byte("NonOsmoTakerFeeDistribution")
+	KeyMelodyTakerFeeDistribution                     = []byte("OsmoTakerFeeDistribution")
+	KeyNonMelodyTakerFeeDistribution                  = []byte("NonOsmoTakerFeeDistribution")
 	KeyAdminAddresses                                 = []byte("AdminAddresses")
 	KeyCommunityPoolDenomToSwapNonWhitelistedAssetsTo = []byte("CommunityPoolDenomToSwapNonWhitelistedAssetsTo")
 	KeyAuthorizedQuoteDenoms                          = []byte("AuthorizedQuoteDenoms")
@@ -30,15 +30,15 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 func NewParams(poolCreationFee sdk.Coins,
 	defaultTakerFee osmomath.Dec,
-	osmoTakerFeeDistribution, nonOsmoTakerFeeDistribution TakerFeeDistributionPercentage,
+	melodyTakerFeeDistribution, nonMelodyTakerFeeDistribution TakerFeeDistributionPercentage,
 	adminAddresses, authorizedQuoteDenoms []string,
 	communityPoolDenomToSwapNonWhitelistedAssetsTo string) Params {
 	return Params{
 		PoolCreationFee: poolCreationFee,
 		TakerFeeParams: TakerFeeParams{
 			DefaultTakerFee:                                defaultTakerFee,
-			OsmoTakerFeeDistribution:                       osmoTakerFeeDistribution,
-			NonOsmoTakerFeeDistribution:                    nonOsmoTakerFeeDistribution,
+			OsmoTakerFeeDistribution:                       melodyTakerFeeDistribution,
+			NonOsmoTakerFeeDistribution:                    nonMelodyTakerFeeDistribution,
 			AdminAddresses:                                 adminAddresses,
 			CommunityPoolDenomToSwapNonWhitelistedAssetsTo: communityPoolDenomToSwapNonWhitelistedAssetsTo,
 		},
@@ -49,7 +49,7 @@ func NewParams(poolCreationFee sdk.Coins,
 // DefaultParams are the default poolmanager module parameters.
 func DefaultParams() Params {
 	return Params{
-		PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)}, // 1000 OSMO
+		PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)}, // 1000 MELODY
 		TakerFeeParams: TakerFeeParams{
 			DefaultTakerFee: osmomath.ZeroDec(), // 0%
 			OsmoTakerFeeDistribution: TakerFeeDistributionPercentage{
@@ -65,7 +65,7 @@ func DefaultParams() Params {
 			ReducedFeeWhitelist:                            []string{},
 		},
 		AuthorizedQuoteDenoms: []string{
-			"uosmo",
+			"note",
 			"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", // ATOM
 			"ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", // DAI
 			"ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // USDC
@@ -108,8 +108,8 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyPoolCreationFee, &p.PoolCreationFee, validatePoolCreationFee),
 		paramtypes.NewParamSetPair(KeyDefaultTakerFee, &p.TakerFeeParams.DefaultTakerFee, validateDefaultTakerFee),
-		paramtypes.NewParamSetPair(KeyOsmoTakerFeeDistribution, &p.TakerFeeParams.OsmoTakerFeeDistribution, validateTakerFeeDistribution),
-		paramtypes.NewParamSetPair(KeyNonOsmoTakerFeeDistribution, &p.TakerFeeParams.NonOsmoTakerFeeDistribution, validateTakerFeeDistribution),
+		paramtypes.NewParamSetPair(KeyMelodyTakerFeeDistribution, &p.TakerFeeParams.OsmoTakerFeeDistribution, validateTakerFeeDistribution),
+		paramtypes.NewParamSetPair(KeyNonMelodyTakerFeeDistribution, &p.TakerFeeParams.NonOsmoTakerFeeDistribution, validateTakerFeeDistribution),
 		paramtypes.NewParamSetPair(KeyAdminAddresses, &p.TakerFeeParams.AdminAddresses, validateAdminAddresses),
 		paramtypes.NewParamSetPair(KeyCommunityPoolDenomToSwapNonWhitelistedAssetsTo, &p.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo, validateCommunityPoolDenomToSwapNonWhitelistedAssetsTo),
 		paramtypes.NewParamSetPair(KeyAuthorizedQuoteDenoms, &p.AuthorizedQuoteDenoms, validateAuthorizedQuoteDenoms),

@@ -269,19 +269,19 @@ func (s *KeeperTestSuite) TestCreateGroup_Fee() {
 	}{
 		{
 			name:                 "user creates a non-perpetual group and fills group with all remaining tokens",
-			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000))),
+			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(100000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000))),
 			groupFunds:           tenTokens,
 			numEpochsPaidOver:    3,
 		},
 		{
 			name:                 "user creates a perpetual group and fills group with all remaining tokens",
-			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000))),
+			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(100000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000))),
 			groupFunds:           tenTokens,
 			numEpochsPaidOver:    0,
 		},
 		{
 			name:                 "user creates a non-perpetual group and fills group with some remaining tokens",
-			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(15000000))),
+			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(100000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(15000000))),
 			groupFunds:           tenTokens,
 			numEpochsPaidOver:    3,
 		},
@@ -294,14 +294,14 @@ func (s *KeeperTestSuite) TestCreateGroup_Fee() {
 		},
 		{
 			name:                 "user tries to create a non-perpetual group but does not have enough funds to pay for the create group fee",
-			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(90000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000))),
+			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(90000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000))),
 			groupFunds:           tenTokens,
 			expectErr:            true,
 			numEpochsPaidOver:    3,
 		},
 		{
 			name:                 "one user tries to create a group, has enough funds to pay for the create group fee but not enough to fill the group funds",
-			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(9000000))),
+			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(100000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(9000000))),
 			groupFunds:           tenTokens,
 			expectErr:            true,
 			numEpochsPaidOver:    3,

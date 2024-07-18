@@ -20,8 +20,8 @@ var (
 	KeyCreatorWhitelist     = []byte("CreatorWhitelist")
 	KeyInternalUptime       = []byte("InternalUptime")
 
-	// 100 OSMO
-	DefaultGroupCreationFee = sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000)))
+	// 100 MELODY
+	DefaultGroupCreationFee = sdk.NewCoins(sdk.NewCoin("note", sdk.NewInt(100_000_000)))
 )
 
 // ParamKeyTable returns the key table for the incentive module's parameters.

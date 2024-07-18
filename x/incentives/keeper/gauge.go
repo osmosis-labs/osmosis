@@ -220,11 +220,11 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		// Group gauges do not distribute to a denom. skip this check for group gauges.
 		if distrTo.LockQueryType != lockuptypes.ByGroup {
 			// check if denom this gauge pays out to exists on-chain
-			// N.B.: The reason we check for osmovaloper is to account for gauges that pay out to
+			// N.B.: The reason we check for symphonyvaloper is to account for gauges that pay out to
 			// superfluid synthetic locks. These locks have the following format:
-			// "cl/pool/1/superbonding/osmovaloper1wcfyglfgjs2xtsyqu7pl60d0mpw5g7f4wh7pnm"
+			// "cl/pool/1/superbonding/symphonyvaloper1wcfyglfgjs2xtsyqu7pl60d0mpw5g7f4wh7pnm"
 			// See x/superfluid module README for details.
-			if !k.bk.HasSupply(ctx, distrTo.Denom) && !strings.Contains(distrTo.Denom, "osmovaloper") {
+			if !k.bk.HasSupply(ctx, distrTo.Denom) && !strings.Contains(distrTo.Denom, "symphonyvaloper") {
 				return 0, fmt.Errorf("denom does not exist: %s", distrTo.Denom)
 			}
 		}

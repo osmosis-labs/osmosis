@@ -75,7 +75,7 @@ func benchmarkDistributionLogic(b *testing.B, numAccts, numDenoms, numGauges, nu
 	blockStartTime := time.Now().UTC()
 	app, cleanupFn := app.SetupTestingAppWithLevelDb(false)
 	defer cleanupFn()
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: blockStartTime})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "symphony-1", Time: blockStartTime})
 
 	r := rand.New(rand.NewSource(10))
 

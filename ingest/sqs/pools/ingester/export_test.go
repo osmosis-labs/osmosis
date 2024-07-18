@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	OneToOnePrecision             = uosmoPrecision
+	OneToOnePrecision             = notePrecision
 	SpotPriceErrorFmtStr          = spotPriceErrorFmtStr
 	NoTokenPrecisionErrorFmtStr   = noTokenPrecisionErrorFmtStr
 	RouteIngestDisablePlaceholder = routeIngestDisablePlaceholder

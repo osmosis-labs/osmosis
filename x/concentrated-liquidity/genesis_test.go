@@ -98,7 +98,7 @@ var (
 func accumRecordWithDefinedValues(accumRecord accum.Record, numShares osmomath.Dec, initAccumValue, unclaimedRewards osmomath.Int) accum.Record {
 	accumRecord.NumShares = numShares
 	accumRecord.AccumValuePerShare = sdk.NewDecCoins(sdk.NewDecCoin("uion", initAccumValue))
-	accumRecord.UnclaimedRewardsTotal = sdk.NewDecCoins(sdk.NewDecCoin("uosmo", unclaimedRewards))
+	accumRecord.UnclaimedRewardsTotal = sdk.NewDecCoins(sdk.NewDecCoin("note", unclaimedRewards))
 	return accumRecord
 }
 

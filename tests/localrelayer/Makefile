@@ -20,5 +20,5 @@ restartd: stop
 	@docker-compose -f docker-compose.yml up --force-recreate -d
 
 clean:
-	@rm -rfI $(HOME)/.osmosisd-local-a/
-	@rm -rfI $(HOME)/.osmosisd-local-b/
+	@rm -rfI $(HOME)/.symphonyd-local-a/
+	@rm -rfI $(HOME)/.symphonyd-local-b/

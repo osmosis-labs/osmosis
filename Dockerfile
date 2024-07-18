@@ -37,22 +37,22 @@ RUN ARCH=$(uname -m) && WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm |
 # Copy the remaining files
 COPY . .
 
-# Build osmosisd binary
+# Build symphonyd binary
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/root/go/pkg/mod \
     GOWORK=off go build \
     -mod=readonly \
     -tags ${BUILD_TAGS} \
     -ldflags \
-    "-X github.com/cosmos/cosmos-sdk/version.Name="osmosis" \
-    -X github.com/cosmos/cosmos-sdk/version.AppName="osmosisd" \
+    "-X github.com/cosmos/cosmos-sdk/version.Name="symphony" \
+    -X github.com/cosmos/cosmos-sdk/version.AppName="symphonyd" \
     -X github.com/cosmos/cosmos-sdk/version.Version=${GIT_VERSION} \
     -X github.com/cosmos/cosmos-sdk/version.Commit=${GIT_COMMIT} \
     -X github.com/cosmos/cosmos-sdk/version.BuildTags=${BUILD_TAGS} \
     -w -s -linkmode=external -extldflags '-Wl,-z,muldefs -static'" \
     -trimpath \
-    -o /osmosis/build/osmosisd \
-    /osmosis/cmd/osmosisd/main.go
+    -o /symphony-osmosis/build/symphonyd \
+    /symphony-osmosis/cmd/symphonyd/main.go
 
 # --------------------------------------------------------
 # Runner
@@ -60,7 +60,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 
 FROM ${RUNNER_IMAGE}
 
-COPY --from=builder /osmosis/build/osmosisd /bin/osmosisd
+COPY --from=builder /symphony-osmosis/build/symphonyd /bin/symphonyd
 
 ENV HOME /osmosis
 WORKDIR $HOME
@@ -72,4 +72,4 @@ EXPOSE 1317
 # We disable it by default in out main Dockerfile for security reasons
 # EXPOSE 6060
 
-ENTRYPOINT ["osmosisd"]
+ENTRYPOINT ["symphonyd"]

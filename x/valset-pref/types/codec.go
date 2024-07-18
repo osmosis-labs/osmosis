@@ -10,12 +10,12 @@ import (
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgSetValidatorSetPreference{}, "osmosis/MsgSetValidatorSetPreference", nil)
-	cdc.RegisterConcrete(&MsgDelegateToValidatorSet{}, "osmosis/MsgDelegateToValidatorSet", nil)
-	cdc.RegisterConcrete(&MsgUndelegateFromValidatorSet{}, "osmosis/MsgUndelegateFromValidatorSet", nil)
-	cdc.RegisterConcrete(&MsgUndelegateFromRebalancedValidatorSet{}, "osmosis/MsgUndelegateFromRebalValset", nil)
-	cdc.RegisterConcrete(&MsgWithdrawDelegationRewards{}, "osmosis/MsgWithdrawDelegationRewards", nil)
-	cdc.RegisterConcrete(&MsgRedelegateValidatorSet{}, "osmosis/MsgRedelegateValidatorSet", nil)
+	cdc.RegisterConcrete(&MsgSetValidatorSetPreference{}, "symphony/MsgSetValidatorSetPreference", nil)
+	cdc.RegisterConcrete(&MsgDelegateToValidatorSet{}, "symphony/MsgDelegateToValidatorSet", nil)
+	cdc.RegisterConcrete(&MsgUndelegateFromValidatorSet{}, "symphony/MsgUndelegateFromValidatorSet", nil)
+	cdc.RegisterConcrete(&MsgUndelegateFromRebalancedValidatorSet{}, "symphony/MsgUndelegateFromRebalValset", nil)
+	cdc.RegisterConcrete(&MsgWithdrawDelegationRewards{}, "symphony/MsgWithdrawDelegationRewards", nil)
+	cdc.RegisterConcrete(&MsgRedelegateValidatorSet{}, "symphony/MsgRedelegateValidatorSet", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {

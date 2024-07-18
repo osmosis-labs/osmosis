@@ -96,7 +96,7 @@ func TestNewSwapExactAmountOutCmd(t *testing.T) {
 // 		expectErr bool
 // 	}{
 // 		{
-// 			"query pool estimate swap exact amount in", // osmosisd query poolmanager estimate-swap-exact-amount-in 1 cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq 10.0stake --swap-route-pool-ids=1 --swap-route-denoms=node0token
+// 			"query pool estimate swap exact amount in", // symphonyd query poolmanager estimate-swap-exact-amount-in 1 cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq 10.0stake --swap-route-pool-ids=1 --swap-route-denoms=node0token
 // 			[]string{
 // 				"1",
 // 				"cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq",
@@ -137,7 +137,7 @@ func TestNewSwapExactAmountOutCmd(t *testing.T) {
 // 		expectErr bool
 // 	}{
 // 		{
-// 			"query pool estimate swap exact amount in", // osmosisd query poolmanager estimate-swap-exact-amount-in 1 cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq 10.0stake --swap-route-pool-ids=1 --swap-route-denoms=node0token
+// 			"query pool estimate swap exact amount in", // symphonyd query poolmanager estimate-swap-exact-amount-in 1 cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq 10.0stake --swap-route-pool-ids=1 --swap-route-denoms=node0token
 // 			[]string{
 // 				"1",
 // 				val.Address.String(),
@@ -339,7 +339,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			  "%s": "100node0token,100stake",
 			  "%s": "0.001",
 			  "%s": "0.001",
-			  "%s": "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
+			  "%s": "symphony1qxgkur7772gjk8wm7kta387wksn48ljh7v82da"
 			}
 			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
 			false, &sdk.TxResponse{}, 0,

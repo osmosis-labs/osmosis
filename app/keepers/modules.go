@@ -110,6 +110,8 @@ var AppModuleBasics = []module.AppModuleBasic{
 	vesting.AppModuleBasic{},
 	gamm.AppModuleBasic{},
 	poolmanager.AppModuleBasic{},
+	//oracle.AppModuleBasic{}, TODO: yurii: enable oracle
+	// market.AppModuleBasic{}, TODO: yurii: enable swaps
 	twapmodule.AppModuleBasic{},
 	concentratedliquidity.AppModuleBasic{},
 	protorev.AppModuleBasic{},

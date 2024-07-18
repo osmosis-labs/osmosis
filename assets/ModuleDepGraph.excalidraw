@@ -1421,12 +1421,12 @@
       "locked": false,
       "fontSize": 36.00462962962961,
       "fontFamily": 1,
-      "text": "Allow DeFi assets containing Osmo\nto be used in staking",
+      "text": "Allow DeFi assets containing Melody\nto be used in staking",
       "baseline": 78,
       "textAlign": "center",
       "verticalAlign": "top",
       "containerId": null,
-      "originalText": "Allow DeFi assets containing Osmo\nto be used in staking"
+      "originalText": "Allow DeFi assets containing Melody\nto be used in staking"
     },
     {
       "type": "text",

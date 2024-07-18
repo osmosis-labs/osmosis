@@ -171,9 +171,9 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 			postAddToPositionStakeSupply := bankKeeper.GetSupply(ctx, bondDenom)
 			postAddToPositionPoolFunds := bankKeeper.GetAllBalances(ctx, clPoolAddress)
 
-			// Check that bond denom supply changed by the amount of bond denom added (taking into consideration risk adjusted osmo value and err tolerance)
+			// Check that bond denom supply changed by the amount of bond denom added (taking into consideration risk adjusted melody value and err tolerance)
 			diffInBondDenomSupply := postAddToPositionStakeSupply.Amount.Sub(preAddToPositionStakeSupply.Amount)
-			expectedBondDenomSupplyDiff := superfluidKeeper.GetRiskAdjustedOsmoValue(ctx, tc.amount0Added)
+			expectedBondDenomSupplyDiff := superfluidKeeper.GetRiskAdjustedMelodyValue(ctx, tc.amount0Added)
 			osmoassert.Equal(s.T(), errTolerance, expectedBondDenomSupplyDiff, diffInBondDenomSupply)
 			// Check that the pool funds changed by the amount of tokens added (taking into consideration err tolerance)
 			diffInPoolFundsToken0 := postAddToPositionPoolFunds.AmountOf(clPool.GetToken0()).Sub(preAddToPositionPoolFunds.AmountOf(clPool.GetToken0()))
@@ -224,7 +224,7 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 			s.Require().False(found)
 
 			// Check if the new intermediary account has expected delegation amount.
-			expectedDelegationAmt := superfluidKeeper.GetRiskAdjustedOsmoValue(ctx, positionData.Amount0)
+			expectedDelegationAmt := superfluidKeeper.GetRiskAdjustedMelodyValue(ctx, positionData.Amount0)
 			delegationAmt, found := stakingKeeper.GetDelegation(ctx, newIntermediaryAcc, valAddr)
 			s.Require().True(found)
 			s.Require().Equal(expectedDelegationAmt, delegationAmt.Shares.TruncateInt())

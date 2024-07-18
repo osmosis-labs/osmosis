@@ -48,7 +48,7 @@ func setupRateLimiting(ctx sdk.Context, keepers *keepers.AppKeepers) error {
 	if err != nil {
 		return err
 	}
-	addrStr, err := sdk.Bech32ifyAddressBytes("osmo", addr)
+	addrStr, err := sdk.Bech32ifyAddressBytes("symphony", addr)
 	if err != nil {
 		return err
 	}

@@ -23,7 +23,7 @@
                     "key": "A/NlPxYDzI3cgNZkl8VSYHXBe90BCv1mgqd5X88eYY0="
                 },
                 "value": {
-                    "denom": "uosmo",
+                    "denom": "note",
                     "amount": "1000000"
                 }
             }

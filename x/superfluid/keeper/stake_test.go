@@ -77,14 +77,14 @@ func (s *KeeperTestSuite) TestSuperfluidDelegate() {
 
 			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
-			// get pre-superfluid delegations osmo supply and supplyWithOffset
+			// get pre-superfluid delegations melody supply and supplyWithOffset
 			presupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
 			presupplyWithOffset := s.App.BankKeeper.GetSupplyWithOffset(s.Ctx, bondDenom)
 
 			// setup superfluid delegations
 			_, intermediaryAccs, locks := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
 
-			// ensure post-superfluid delegations osmo supplywithoffset is the same while supply is not
+			// ensure post-superfluid delegations melody supplywithoffset is the same while supply is not
 			postsupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
 			postsupplyWithOffset := s.App.BankKeeper.GetSupplyWithOffset(s.Ctx, bondDenom)
 			s.Require().False(postsupply.IsEqual(presupply), "presupply: %s   postsupply: %s", presupply, postsupply)
@@ -193,12 +193,12 @@ func (s *KeeperTestSuite) TestValidateLockForSFDelegate() {
 			name: "invalid lock - not superfluid asset",
 			lock: &lockuptypes.PeriodLock{
 				Owner:    lockOwner.String(),
-				Coins:    sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100))),
+				Coins:    sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(100))),
 				Duration: time.Hour * 24 * 21,
 				ID:       1,
 			},
 			superfluidAssetToSet: types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
-			expectedErr:          errorsmod.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", "uosmo"),
+			expectedErr:          errorsmod.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", "note"),
 		},
 		{
 			name: "invalid lock - unbonding lockup not supported",
@@ -365,7 +365,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegate() {
 					lock = &lockuptypes.PeriodLock{}
 				}
 
-				// get pre-superfluid delegations osmo supply and supplyWithOffset
+				// get pre-superfluid delegations melody supply and supplyWithOffset
 				presupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
 				presupplyWithOffset := s.App.BankKeeper.GetSupplyWithOffset(s.Ctx, bondDenom)
 
@@ -377,7 +377,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegate() {
 				}
 				s.Require().NoError(err)
 
-				// ensure post-superfluid delegations osmo supplywithoffset is the same while supply is not
+				// ensure post-superfluid delegations melody supplywithoffset is the same while supply is not
 				postsupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
 				postsupplyWithOffset := s.App.BankKeeper.GetSupplyWithOffset(s.Ctx, bondDenom)
 				s.Require().False(postsupply.IsEqual(presupply), "presupply: %s   postsupply: %s", presupply, postsupply)
@@ -529,7 +529,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
 					lock = &lockuptypes.PeriodLock{}
 				}
 
-				// get pre-superfluid delegations osmo supply and supplyWithOffset
+				// get pre-superfluid delegations melody supply and supplyWithOffset
 				presupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
 				presupplyWithOffset := s.App.BankKeeper.GetSupplyWithOffset(s.Ctx, bondDenom)
 
@@ -541,7 +541,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
 				}
 				s.Require().NoError(err)
 
-				// ensure post-superfluid delegations osmo supplywithoffset is the same while supply is not
+				// ensure post-superfluid delegations melody supplywithoffset is the same while supply is not
 				postsupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
 				postsupplyWithOffset := s.App.BankKeeper.GetSupplyWithOffset(s.Ctx, bondDenom)
 				s.Require().False(postsupply.IsEqual(presupply), "presupply: %s   postsupply: %s", presupply, postsupply)
@@ -802,10 +802,10 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 				intermediaryAcc := s.App.SuperfluidKeeper.GetIntermediaryAccount(s.Ctx, accAddr)
 				valAddr := intermediaryAcc.ValAddr
 
-				// get OSMO total supply and amount to be burned
+				// get MELODY total supply and amount to be burned
 				bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
 				supplyBefore := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
-				osmoAmount, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(s.Ctx, intermediaryAcc.Denom, tc.unlockAmount)
+				melodyAmount, err := s.App.SuperfluidKeeper.GetSuperfluidMELODYTokens(s.Ctx, intermediaryAcc.Denom, tc.unlockAmount)
 				s.Require().NoError(err)
 
 				unbondLockStartTime := startTime.Add(time.Hour)
@@ -818,10 +818,10 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 
 				s.Require().NoError(err)
 
-				// check OSMO total supply and burnt amount
-				s.Require().True(osmoAmount.IsPositive())
+				// check MELODY total supply and burnt amount
+				s.Require().True(melodyAmount.IsPositive())
 				supplyAfter := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
-				s.Require().Equal(supplyAfter, supplyBefore.Sub(sdk.NewCoin(bondDenom, osmoAmount)))
+				s.Require().Equal(supplyAfter, supplyBefore.Sub(sdk.NewCoin(bondDenom, melodyAmount)))
 
 				if tc.splitLockId {
 					s.Require().Equal(lockId, lock.ID+1)
@@ -988,7 +988,7 @@ func (s *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 				denom := intermediaryAcc.Denom
 				_, err := s.App.SuperfluidKeeper.GetSuperfluidAsset(s.Ctx, denom)
 				s.Require().NoError(err)
-				expAmount := s.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(s.Ctx, decAmt.RoundInt())
+				expAmount := s.App.SuperfluidKeeper.GetRiskAdjustedMelodyValue(s.Ctx, decAmt.RoundInt())
 
 				// check delegation changes
 				valAddr, err := sdk.ValAddressFromBech32(intermediaryAcc.ValAddr)
@@ -1104,7 +1104,7 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 			}
 
 			// only test with test related denoms
-			balanceBeforeConvertLockToStake := osmoutils.FilterDenoms(s.App.BankKeeper.GetAllBalances(s.Ctx, sender), []string{"foo", "stake", "uosmo"})
+			balanceBeforeConvertLockToStake := osmoutils.FilterDenoms(s.App.BankKeeper.GetAllBalances(s.Ctx, sender), []string{"foo", "stake", "note"})
 
 			// system under test
 			totalAmtConverted, err := s.App.SuperfluidKeeper.UnbondConvertAndStake(s.Ctx, lockId, sender.String(), valAddr.String(), minAmountToStake, sharesToConvert)
@@ -1119,7 +1119,7 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 			s.delegationCheck(sender, originalValAddr, valAddr, totalAmtConverted)
 
 			// Bank check
-			balanceAfterConvertLockToStake := osmoutils.FilterDenoms(s.App.BankKeeper.GetAllBalances(s.Ctx, sender), []string{"foo", "stake", "uosmo"})
+			balanceAfterConvertLockToStake := osmoutils.FilterDenoms(s.App.BankKeeper.GetAllBalances(s.Ctx, sender), []string{"foo", "stake", "note"})
 			s.Require().True(balanceBeforeConvertLockToStake.IsEqual(balanceAfterConvertLockToStake))
 
 			// if unlocked, no need to check locks since there is no lock existing
@@ -1335,7 +1335,7 @@ func (s *KeeperTestSuite) TestConvertUnlockedToStake() {
 	}
 }
 
-func (s *KeeperTestSuite) TestConvertGammSharesToOsmoAndStake() {
+func (s *KeeperTestSuite) TestConvertGammSharesToMelodyAndStake() {
 	type tc struct {
 		useInvalidValAddr        bool
 		useMinAmtToStake         bool
@@ -1358,7 +1358,7 @@ func (s *KeeperTestSuite) TestConvertGammSharesToOsmoAndStake() {
 		},
 		"error: invalid val address": {
 			useInvalidValAddr: true,
-			expectedError:     "invalid Bech32 prefix; expected osmovaloper, got osmo",
+			expectedError:     "invalid Bech32 prefix; expected symphonyvaloper, got symphony",
 		},
 		"error: min amount to stake exceeds actual amount staking": {
 			useMinAmtToStake: true,
@@ -1435,7 +1435,7 @@ func (s *KeeperTestSuite) TestConvertGammSharesToOsmoAndStake() {
 			poolBeforeNonBondDenomAmt := poolLiquidityBeforeSwap.AmountOf("foo")
 
 			// system under test.
-			totalAmtConverted, err := s.App.SuperfluidKeeper.ConvertGammSharesToOsmoAndStake(s.Ctx, sender, valAddrString, poolId, exitCoins, minAmtToStake, originalSuperfluidValAddr)
+			totalAmtConverted, err := s.App.SuperfluidKeeper.ConvertGammSharesToMelodyAndStake(s.Ctx, sender, valAddrString, poolId, exitCoins, minAmtToStake, originalSuperfluidValAddr)
 			if tc.expectedError != "" {
 				s.Require().Equal(err.Error(), tc.expectedError)
 				s.Require().Error(err)
@@ -1726,14 +1726,14 @@ func (s *KeeperTestSuite) getExpectedBondDenomPoolAmtAfterConvert(sender sdk.Acc
 	exitCoins, err := s.App.GAMMKeeper.ExitPool(cc, sender, poolId, sharesToStake.Amount, sdk.NewCoins())
 	s.Require().NoError(err)
 
-	var nonOsmoCoin sdk.Coin
+	var nonMelodyCoin sdk.Coin
 	for _, exitCoin := range exitCoins {
-		// if coin is not uosmo, add it to non-osmo Coins
+		// if coin is not note, add it to non-melody Coins
 		if exitCoin.Denom != bondDenom {
-			nonOsmoCoin = exitCoin
+			nonMelodyCoin = exitCoin
 		}
 	}
-	_, err = s.App.PoolManagerKeeper.SwapExactAmountIn(cc, sender, poolId, nonOsmoCoin, bondDenom, osmomath.ZeroInt())
+	_, err = s.App.PoolManagerKeeper.SwapExactAmountIn(cc, sender, poolId, nonMelodyCoin, bondDenom, osmomath.ZeroInt())
 	s.Require().NoError(err)
 	expectedLiquidity, err := s.App.GAMMKeeper.GetTotalPoolLiquidity(cc, poolId)
 	s.Require().NoError(err)

@@ -59,9 +59,9 @@ func TestGetCmdActiveGaugesPerDenom(t *testing.T) {
 	desc, _ := GetCmdActiveGaugesPerDenom()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.ActiveGaugesPerDenomRequest]{
 		"basic test": {
-			Cmd: "uosmo --offset=2",
+			Cmd: "note --offset=2",
 			ExpectedQuery: &types.ActiveGaugesPerDenomRequest{
-				Denom:      "uosmo",
+				Denom:      "note",
 				Pagination: &query.PageRequest{Key: []uint8{}, Offset: 2, Limit: 100},
 			},
 		},
@@ -86,9 +86,9 @@ func TestGetCmdUpcomingGaugesPerDenom(t *testing.T) {
 	desc, _ := GetCmdUpcomingGaugesPerDenom()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.UpcomingGaugesPerDenomRequest]{
 		"basic test": {
-			Cmd: "uosmo --offset=2",
+			Cmd: "note --offset=2",
 			ExpectedQuery: &types.UpcomingGaugesPerDenomRequest{
-				Denom:      "uosmo",
+				Denom:      "note",
 				Pagination: &query.PageRequest{Key: []uint8{}, Offset: 2, Limit: 100},
 			},
 		},

@@ -97,7 +97,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 
 	// create an address and fund with coins
 	addr := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 20000), sdk.NewInt64Coin("uosmo", 10000000000)}
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 20000), sdk.NewInt64Coin("note", 10000000000)}
 	err := testutil.FundAccount(app.BankKeeper, ctx, addr, coins)
 	require.NoError(t, err)
 
@@ -110,7 +110,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	msgCreatePool := model.MsgCreateConcentratedPool{
 		Sender:       addr.String(),
 		Denom0:       "uion",
-		Denom1:       "uosmo",
+		Denom1:       "note",
 		TickSpacing:  100,
 		SpreadFactor: osmomath.MustNewDecFromStr("0.0005"),
 	}
@@ -229,7 +229,7 @@ func TestIncentivesInitGenesis(t *testing.T) {
 	require.Equal(t, expectedGroups, groups)
 }
 
-func createAllGaugeTypes(t *testing.T, app *osmoapp.OsmosisApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins, startTime time.Time) {
+func createAllGaugeTypes(t *testing.T, app *osmoapp.SymphonyApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins, startTime time.Time) {
 	// create a byDuration gauge
 	_, err := app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrToByDuration, startTime, 1, 0)
 	require.NoError(t, err)

@@ -13,7 +13,7 @@ import (
 var customGenesis = types.NewGenesisState(
 	types.NewMinter(osmomath.ZeroDec()),
 	types.NewParams(
-		"uosmo",                       // denom
+		"note",                        // denom
 		osmomath.NewDec(200),          // epoch provisions
 		"year",                        // epoch identifier
 		osmomath.NewDecWithPrec(5, 1), // reduction factor
@@ -26,11 +26,11 @@ var customGenesis = types.NewGenesisState(
 		},
 		[]types.WeightedAddress{
 			{
-				Address: "osmo14kjcwdwcqsujkdt8n5qwpd8x8ty2rys5rjrdjj",
+				Address: "symphony1u7ryvx794sy5yqwezfryygsce84q287ts98n66",
 				Weight:  osmomath.NewDecWithPrec(6, 1),
 			},
 			{
-				Address: "osmo1gw445ta0aqn26suz2rg3tkqfpxnq2hs224d7gq",
+				Address: "symphony1zrmuw4xux344w4k9pw93qs8d0d7kc0fnhxw4wd",
 				Weight:  osmomath.NewDecWithPrec(4, 1),
 			},
 		},
@@ -76,7 +76,7 @@ func (s *KeeperTestSuite) TestMintInitGenesis() {
 		},
 		"custom genesis": {
 			mintGenesis: customGenesis,
-			mintDenom:   "uosmo",
+			mintDenom:   "note",
 
 			expectedEpochProvisions:             osmomath.NewDec(200),
 			expectedSupplyOffsetDelta:           osmomath.NewInt(keeper.DeveloperVestingAmount).Neg(),

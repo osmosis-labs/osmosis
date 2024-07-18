@@ -1,8 +1,8 @@
 version: "4"
 
 services:
-  osmosisd:
-    image: local:osmosis
+  symphonyd:
+    image: local:symphony
     build:
       context: ../../
       dockerfile: Dockerfile
@@ -10,16 +10,16 @@ services:
         RUNNER_IMAGE: golang:1.21.7-alpine3.19
         GO_VERSION: "1.21"
     volumes:
-      - ./scripts/uosmoUionBalancerPool.json:/osmosis/uosmoUionBalancerPool.json
-      - ./scripts/uosmoUusdcBalancerPool.json:/osmosis/uosmoUusdcBalancerPool.json
-      - ./scripts/uusdcUionBalancerPool.json:/osmosis/uusdcUionBalancerPool.json
-      - ./scripts/uwethUusdcStablePool.json:/osmosis/uwethUusdcStablePool.json
-      - ./scripts/nativeDenomThreeAssetPool.json:/osmosis/nativeDenomThreeAssetPool.json
-      - ./scripts/setup.sh:/osmosis/setup.sh
-      - ../cl-genesis-positions:/osmosis/cl-genesis-positions
-      - $HOME/.osmosisd-local/:/osmosis/.osmosisd/
+      - ./scripts/noteUionBalancerPool.json:/symphony/noteUionBalancerPool.json
+      - ./scripts/noteUusdcBalancerPool.json:/symphony/noteUusdcBalancerPool.json
+      - ./scripts/uusdcUionBalancerPool.json:/symphony/uusdcUionBalancerPool.json
+      - ./scripts/uwethUusdcStablePool.json:/symphony/uwethUusdcStablePool.json
+      - ./scripts/nativeDenomThreeAssetPool.json:/symphony/nativeDenomThreeAssetPool.json
+      - ./scripts/setup.sh:/symphony/setup.sh
+      - ../cl-genesis-positions:/symphony/cl-genesis-positions
+      - $HOME/.symphonyd-local/:/symphony/.symphonyd/
     entrypoint:
-      - /osmosis/setup.sh
+      - /symphony/setup.sh
     command:
       - $STATE
     ports:

@@ -149,7 +149,7 @@ func CreateUpgradeHandler(
 
 		// Set expedited proposal param:
 		govParams := keepers.GovKeeper.GetParams(ctx)
-		govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(5000000000)))
+		govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewCoin("note", sdk.NewInt(5000000000)))
 		govParams.MinInitialDepositRatio = "0.250000000000000000"
 		err = keepers.GovKeeper.SetParams(ctx, govParams)
 		if err != nil {

@@ -131,12 +131,15 @@ var moduleAccountPermissions = map[string][]string{
 	tokenfactorytypes.ModuleName:             {authtypes.Minter, authtypes.Burner},
 	valsetpreftypes.ModuleName:               {authtypes.Staking},
 	poolmanagertypes.ModuleName:              nil,
-	cosmwasmpooltypes.ModuleName:             nil,
+	// markettypes.ModuleName:                        {authtypes.Minter, authtypes.Burner}, TODO: yurii: enable swaps
+	// markettypes.ReserveModuleName:                 {authtypes.Minter, authtypes.Burner}, TODO: yurii: enable swaps
+	// oracletypes.ModuleName:
+	cosmwasmpooltypes.ModuleName: nil,
 }
 
 // appModules return modules to initialize module manager.
 func appModules(
-	app *OsmosisApp,
+	app *SymphonyApp,
 	encodingConfig appparams.EncodingConfig,
 	skipGenesisInvariants bool,
 ) []module.AppModule {
@@ -171,6 +174,8 @@ func appModules(
 		app.RawIcs20TransferAppModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		poolmanager.NewAppModule(*app.PoolManagerKeeper, app.GAMMKeeper),
+		// oracle.NewAppModule(appCodec, *app.OracleKeeper, app.AccountKeeper, app.BankKeeper), TODO: yurii: enable oracle
+		// market.NewAppModule(*app.MarketKeeper, app.AccountKeeper, app.BankKeeper, app.OracleKeeper), TODO: yurii: enable swaps
 		twapmodule.NewAppModule(*app.TwapKeeper),
 		concentratedliquidity.NewAppModule(appCodec, *app.ConcentratedLiquidityKeeper),
 		protorev.NewAppModule(appCodec, *app.ProtoRevKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper, app.GAMMKeeper),
@@ -234,7 +239,7 @@ func OrderEndBlockers(allModuleNames []string) []string {
 	ord.FirstElements(govtypes.ModuleName)
 	ord.LastElements(stakingtypes.ModuleName)
 
-	// only Osmosis modules with endblock code are: twap, crisis, govtypes, staking
+	// only Symphony modules with endblock code are: twap, crisis, govtypes, staking
 	// we don't care about the relative ordering between them.
 	return ord.TotalOrdering()
 }
@@ -261,6 +266,8 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		icatypes.ModuleName,
 		gammtypes.ModuleName,
 		poolmanagertypes.ModuleName,
+		// markettypes.ModuleName, TODO: yurii: enable swaps
+		// oracletypes.ModuleName, TODO: yurii: enable oracle
 		protorevtypes.ModuleName,
 		twaptypes.ModuleName,
 		txfeestypes.ModuleName,
@@ -302,34 +309,34 @@ func ModuleAccountAddrs() map[string]bool {
 	return modAccAddrs
 }
 
-func (app *OsmosisApp) GetAccountKeeper() simtypes.AccountKeeper {
+func (app *SymphonyApp) GetAccountKeeper() simtypes.AccountKeeper {
 	return app.AppKeepers.AccountKeeper
 }
 
-func (app *OsmosisApp) GetBankKeeper() simtypes.BankKeeper {
+func (app *SymphonyApp) GetBankKeeper() simtypes.BankKeeper {
 	return app.AppKeepers.BankKeeper
 }
 
 // Required for ibctesting
-func (app *OsmosisApp) GetStakingKeeper() ibctestingtypes.StakingKeeper {
+func (app *SymphonyApp) GetStakingKeeper() ibctestingtypes.StakingKeeper {
 	return *app.AppKeepers.StakingKeeper // Dereferencing the pointer
 }
-func (app *OsmosisApp) GetSDKStakingKeeper() stakingkeeper.Keeper {
+func (app *SymphonyApp) GetSDKStakingKeeper() stakingkeeper.Keeper {
 	return *app.AppKeepers.StakingKeeper // Dereferencing the pointer
 }
 
-func (app *OsmosisApp) GetIBCKeeper() *ibckeeper.Keeper {
+func (app *SymphonyApp) GetIBCKeeper() *ibckeeper.Keeper {
 	return app.AppKeepers.IBCKeeper // This is a *ibckeeper.Keeper
 }
 
-func (app *OsmosisApp) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
+func (app *SymphonyApp) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
 	return app.AppKeepers.ScopedIBCKeeper
 }
 
-func (app *OsmosisApp) GetPoolManagerKeeper() simtypes.PoolManagerKeeper {
+func (app *SymphonyApp) GetPoolManagerKeeper() simtypes.PoolManagerKeeper {
 	return app.AppKeepers.PoolManagerKeeper
 }
 
-func (app *OsmosisApp) GetTxConfig() client.TxConfig {
+func (app *SymphonyApp) GetTxConfig() client.TxConfig {
 	return MakeEncodingConfig().TxConfig
 }

@@ -1,7 +1,7 @@
 """
 Usage:
 This script generates a JSON object containing binary download URLs and their corresponding checksums 
-for a given release tag of osmosis-labs/osmosis or from a provided checksum URL.
+for a given release tag of osmosis-labs/symphony or from a provided checksum URL.
 The binary JSON is compatible with cosmovisor and with the chain registry.
 
 You can run this script with the following commands:
@@ -11,23 +11,23 @@ You can run this script with the following commands:
 Output:
 {
     "binaries": {
-    "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/16.1.1/osmosisd-16.1.1-linux-arm64?checksum=<checksum>",
-    "darwin/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/16.1.1/osmosisd-16.1.1-darwin-arm64?checksum=<checksum>",
-    "darwin/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/16.1.1/osmosisd-16.1.1-darwin-amd64?checksum=<checksum>,
-    "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/16.1.1/osmosisd-16.1.1-linux-amd64?checksum=><checksum>"
+    "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/16.1.1/symphonyd-16.1.1-linux-arm64?checksum=<checksum>",
+    "darwin/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/16.1.1/symphonyd-16.1.1-darwin-arm64?checksum=<checksum>",
+    "darwin/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/16.1.1/symphonyd-16.1.1-darwin-amd64?checksum=<checksum>,
+    "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/16.1.1/symphonyd-16.1.1-linux-amd64?checksum=><checksum>"
     }
 }
 
 Expects a checksum in the form:
 
-<CHECKSUM>  osmosisd-<VERSION>-<OS>-<ARCH>[.tar.gz]
-<CHECKSUM>  osmosisd-<VERSION>-<OS>-<ARCH>[.tar.gz]
+<CHECKSUM>  symphonyd-<VERSION>-<OS>-<ARCH>[.tar.gz]
+<CHECKSUM>  symphonyd-<VERSION>-<OS>-<ARCH>[.tar.gz]
 ...
 
 Example:
 
-f838618633c1d42f593dc33d26b25842f5900961e987fc08570bb81a062e311d  osmosisd-16.1.1-linux-amd64
-fa6699a763487fe6699c8720a2a9be4e26a4f45aafaec87aa0c3aced4cbdd155  osmosisd-16.1.1-linux-amd64.tar.gz
+f838618633c1d42f593dc33d26b25842f5900961e987fc08570bb81a062e311d  symphonyd-16.1.1-linux-amd64
+fa6699a763487fe6699c8720a2a9be4e26a4f45aafaec87aa0c3aced4cbdd155  symphonyd-16.1.1-linux-amd64.tar.gz
 
 (From: https://github.com/osmosis-labs/osmosis/releases/download/v16.1.1/sha256sum.txt)
 
@@ -36,10 +36,10 @@ fa6699a763487fe6699c8720a2a9be4e26a4f45aafaec87aa0c3aced4cbdd155  osmosisd-16.1.
 Output:
 {
     "binaries": {
-    "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/16.1.1/osmosisd-16.1.1-linux-arm64?checksum=<checksum>",
-    "darwin/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/16.1.1/osmosisd-16.1.1-darwin-arm64?checksum=<checksum>",
-    "darwin/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/16.1.1/osmosisd-16.1.1-darwin-amd64?checksum=<checksum>",
-    "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/16.1.1/osmosisd-16.1.1-linux-amd64?checksum=><checksum>"
+    "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/16.1.1/symphonyd-16.1.1-linux-arm64?checksum=<checksum>",
+    "darwin/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/16.1.1/symphonyd-16.1.1-darwin-arm64?checksum=<checksum>",
+    "darwin/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/16.1.1/symphonyd-16.1.1-darwin-amd64?checksum=<checksum>",
+    "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/16.1.1/symphonyd-16.1.1-linux-amd64?checksum=><checksum>"
     }
 }
 
@@ -73,11 +73,11 @@ def checksums_to_binaries_json(checksums):
         checksum, filename = line.split('  ')
 
         # exclude tar.gz files
-        if not filename.endswith('.tar.gz') and filename.startswith('osmosisd'):
+        if not filename.endswith('.tar.gz') and filename.startswith('symphonyd'):
             try:
                 _, tag, platform, arch = filename.split('-')
             except ValueError:
-                print(f"Error: Expected binary name in the form: osmosisd-X.Y.Z-platform-architecture, but got {filename}")
+                print(f"Error: Expected binary name in the form: symphonyd-X.Y.Z-platform-architecture, but got {filename}")
                 sys.exit(1)
             _, tag, platform, arch,  = filename.split('-')
             # exclude universal binaries and windows binaries

@@ -20,37 +20,37 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/wasmbinding/bindings"
 )
 
-func SetupCustomApp(t *testing.T, addr sdk.AccAddress) (*app.OsmosisApp, sdk.Context) {
+func SetupCustomApp(t *testing.T, addr sdk.AccAddress) (*app.SymphonyApp, sdk.Context) {
 	t.Helper()
 
-	osmosis, ctx := CreateTestInput()
-	wasmKeeper := osmosis.WasmKeeper
+	symphony, ctx := CreateTestInput()
+	wasmKeeper := symphony.WasmKeeper
 
-	storeReflectCode(t, ctx, osmosis, addr)
+	storeReflectCode(t, ctx, symphony, addr)
 
 	cInfo := wasmKeeper.GetCodeInfo(ctx, 1)
 	require.NotNil(t, cInfo)
 
-	return osmosis, ctx
+	return symphony, ctx
 }
 
 func TestQueryFullDenom(t *testing.T) {
 	apptesting.SkipIfWSL(t)
 	actor := RandomAccountAddress()
-	osmosis, ctx := SetupCustomApp(t, actor)
+	symphony, ctx := SetupCustomApp(t, actor)
 
-	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
+	reflect := instantiateReflectContract(t, ctx, symphony, actor)
 	require.NotEmpty(t, reflect)
 
 	// query full denom
-	query := bindings.OsmosisQuery{
+	query := bindings.SymphonyQuery{
 		FullDenom: &bindings.FullDenom{
 			CreatorAddr: reflect.String(),
 			Subdenom:    "ustart",
 		},
 	}
 	resp := bindings.FullDenomResponse{}
-	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+	queryCustom(t, ctx, symphony, reflect, query, &resp)
 
 	expected := fmt.Sprintf("factory/%s/ustart", reflect.String())
 	require.EqualValues(t, expected, resp.Denom)
@@ -68,7 +68,7 @@ type ChainResponse struct {
 	Data []byte `json:"data"`
 }
 
-func queryCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contract sdk.AccAddress, request bindings.OsmosisQuery, response interface{}) {
+func queryCustom(t *testing.T, ctx sdk.Context, symphony *app.SymphonyApp, contract sdk.AccAddress, request bindings.SymphonyQuery, response interface{}) {
 	t.Helper()
 
 	msgBz, err := json.Marshal(request)
@@ -82,7 +82,7 @@ func queryCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contrac
 	queryBz, err := json.Marshal(query)
 	require.NoError(t, err)
 
-	resBz, err := osmosis.WasmKeeper.QuerySmart(ctx, contract, queryBz)
+	resBz, err := symphony.WasmKeeper.QuerySmart(ctx, contract, queryBz)
 	require.NoError(t, err)
 	var resp ChainResponse
 	err = json.Unmarshal(resBz, &resp)
@@ -91,32 +91,32 @@ func queryCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contrac
 	require.NoError(t, err)
 }
 
-func storeReflectCode(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sdk.AccAddress) {
+func storeReflectCode(t *testing.T, ctx sdk.Context, symphony *app.SymphonyApp, addr sdk.AccAddress) {
 	t.Helper()
 	wasmCode, err := os.ReadFile("../testdata/osmo_reflect.wasm")
 	require.NoError(t, err)
 
 	// Quick hack to allow code upload
-	originalParams := osmosis.WasmKeeper.GetParams(ctx)
+	originalParams := symphony.WasmKeeper.GetParams(ctx)
 	temporaryParams := originalParams
 	temporaryParams.CodeUploadAccess.Permission = wasmtypes.AccessTypeEverybody
-	osmosis.WasmKeeper.SetParams(ctx, temporaryParams)
+	symphony.WasmKeeper.SetParams(ctx, temporaryParams)
 
 	msg := wasmtypes.MsgStoreCodeFixture(func(m *wasmtypes.MsgStoreCode) {
 		m.WASMByteCode = wasmCode
 		m.Sender = addr.String()
 	})
-	_, err = osmosis.MsgServiceRouter().Handler(msg)(ctx, msg)
+	_, err = symphony.MsgServiceRouter().Handler(msg)(ctx, msg)
 	require.NoError(t, err)
 
-	osmosis.WasmKeeper.SetParams(ctx, originalParams)
+	symphony.WasmKeeper.SetParams(ctx, originalParams)
 }
 
-func instantiateReflectContract(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, funder sdk.AccAddress) sdk.AccAddress {
+func instantiateReflectContract(t *testing.T, ctx sdk.Context, symphony *app.SymphonyApp, funder sdk.AccAddress) sdk.AccAddress {
 	t.Helper()
 
 	initMsgBz := []byte("{}")
-	contractKeeper := keeper.NewDefaultPermissionKeeper(osmosis.WasmKeeper)
+	contractKeeper := keeper.NewDefaultPermissionKeeper(symphony.WasmKeeper)
 	codeID := uint64(1)
 	addr, _, err := contractKeeper.Instantiate(ctx, codeID, funder, funder, initMsgBz, "demo contract", nil)
 	require.NoError(t, err)
@@ -124,10 +124,10 @@ func instantiateReflectContract(t *testing.T, ctx sdk.Context, osmosis *app.Osmo
 	return addr
 }
 
-func fundAccount(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sdk.AccAddress, coins sdk.Coins) {
+func fundAccount(t *testing.T, ctx sdk.Context, symphony *app.SymphonyApp, addr sdk.AccAddress, coins sdk.Coins) {
 	t.Helper()
 	err := testutil.FundAccount(
-		osmosis.BankKeeper,
+		symphony.BankKeeper,
 		ctx,
 		addr,
 		coins,

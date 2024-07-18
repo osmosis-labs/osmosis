@@ -20,7 +20,7 @@ func FlagSetLockTokens() *flag.FlagSet {
 
 func FlagSetUnlockTokens() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
-	fs.String(FlagAmount, "", "The amount to be unlocked. e.g. 1osmo")
+	fs.String(FlagAmount, "", "The amount to be unlocked. e.g. 1melody")
 	return fs
 }
 

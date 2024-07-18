@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Script for updating osmoutils, osmomath, epochs and ibc-hooks
+# Script for updating osmoutils, osmomath. epochs and ibc-hooks
 # Used by Go Mod Auto Version Update workflow
 # Argument: sha of commit on target branch
 
 commit_after=$1
 
 # Define modules
-modules=("osmoutils" "osmomath" "x/ibc-hooks" "x/epochs")
+modules=("osmoutils" "osmomath. "x/ibc-hooks" "x/epochs")
 
 # Find all go.mod files in the repo
 go_mod_files=$(find . -name go.mod)

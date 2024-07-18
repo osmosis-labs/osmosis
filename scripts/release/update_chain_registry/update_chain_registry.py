@@ -1,12 +1,12 @@
 # Usage: update_chain_registry.py [OPTIONS]
 
 # Description:
-# This script fetches the current chain-registry entry for Osmosis and returns an updated registry 
+# This script fetches the current chain-registry entry for Symphony and returns an updated registry 
 # with the new version and height information.
 #
 # The script fetches 
-# - the checksums from the osmosis release page
-# - package information from the `go.mod` in osmosis repository 
+# - the checksums from the symphony release page
+# - package information from the `go.mod` in symphony repository 
 
 # Options:
 #   --upgrade_version VERSION  Required. The version tag for the upgrade (e.g., v19.0.0).
@@ -59,11 +59,11 @@ def checksums_to_binaries_json(checksums):
     for line in checksums.splitlines():
         checksum, filename = line.split('  ')
 
-        if not filename.endswith('.tar.gz') and filename.startswith('osmosisd'):
+        if not filename.endswith('.tar.gz') and filename.startswith('symphonyd'):
             try:
                 _, tag, platform, arch = filename.split('-')
             except ValueError:
-                print(f"Error: Expected binary name in the form: osmosisd-X.Y.Z-platform-architecture, but got {filename}")
+                print(f"Error: Expected binary name in the form: symphonyd-X.Y.Z-platform-architecture, but got {filename}")
                 sys.exit(1)
             _, tag, platform, arch,  = filename.split('-')
             # exclude universal binaries and windows binaries

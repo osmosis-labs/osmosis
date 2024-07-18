@@ -112,7 +112,7 @@ func (k Keeper) BuildHighestLiquidityRoutes(ctx sdk.Context, tokenIn, tokenOut s
 	return routes, nil
 }
 
-// BuildHighestLiquidityRoute constructs a cyclic arbitrage route that is starts/ends with swapDenom (ex. osmo) given the swap (tokenIn, tokenOut, poolId).
+// BuildHighestLiquidityRoute constructs a cyclic arbitrage route that is starts/ends with swapDenom (ex. melody) given the swap (tokenIn, tokenOut, poolId).
 func (k Keeper) BuildHighestLiquidityRoute(ctx sdk.Context, swapDenom types.BaseDenom, tokenIn, tokenOut string, poolId uint64) (RouteMetaData, error) {
 	// Create the first swap for the MultiHopSwap Route
 	entryPoolId, err := k.GetPoolForDenomPair(ctx, swapDenom.Denom, tokenOut)

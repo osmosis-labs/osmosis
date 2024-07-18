@@ -65,7 +65,7 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool)
 	// if calculating for amountIn, we round up
 	// if calculating for amountOut, we round down at precision end
 	// this is to prevent removing more from the pool than expected due to rounding
-	// example: we calculate 1000000.9999999 uusdc (~$1) amountIn and 2000000.999999 uosmo amountOut
+	// example: we calculate 1000000.9999999 uusdc (~$1) amountIn and 2000000.999999 note amountOut
 	// we would want the user to put in 1000001 uusdc rather than 1000000 uusdc to ensure we are charging enough for the amount they are removing
 	// additionally, without rounding, there exists cases where the swapState.amountSpecifiedRemaining.IsPositive() for loop within
 	// the CalcOut/In functions never actually reach zero due to dust that would have never gotten counted towards the amount (numbers after the 10^6 place)
@@ -104,7 +104,7 @@ func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool)
 	// if calculating for amountIn, we round up
 	// if calculating for amountOut, we don't round at all
 	// this is to prevent removing more from the pool than expected due to rounding
-	// example: we calculate 1000000.9999999 uusdc (~$1) amountIn and 2000000.999999 uosmo amountOut
+	// example: we calculate 1000000.9999999 uusdc (~$1) amountIn and 2000000.999999 note amountOut
 	// we would want the used to put in 1000001 uusdc rather than 1000000 uusdc to ensure we are charging enough for the amount they are removing
 	// additionally, without rounding, there exists cases where the swapState.amountSpecifiedRemaining.IsPositive() for loop within
 	// the CalcOut/In functions never actually reach zero due to dust that would have never gotten counted towards the amount (numbers after the 10^6 place)

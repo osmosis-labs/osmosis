@@ -28,31 +28,31 @@ func (s *KeeperTestSuite) TestGetNumberOfTrades() {
 // TestGetProfitsByDenom tests GetProfitsByDenom, UpdateProfitsByDenom, and GetAllProfits
 func (s *KeeperTestSuite) TestGetProfitsByDenom() {
 	// Should be zero by default
-	profits, err := s.App.ProtoRevKeeper.GetProfitsByDenom(s.Ctx, types.OsmosisDenomination)
+	profits, err := s.App.ProtoRevKeeper.GetProfitsByDenom(s.Ctx, types.SymphonyDenomination)
 	s.Require().Error(err)
-	s.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, osmomath.ZeroInt()), profits)
+	s.Require().Equal(sdk.NewCoin(types.SymphonyDenomination, osmomath.ZeroInt()), profits)
 
 	// Pseudo execute a trade
-	err = s.App.ProtoRevKeeper.UpdateProfitsByDenom(s.Ctx, types.OsmosisDenomination, osmomath.NewInt(9000))
+	err = s.App.ProtoRevKeeper.UpdateProfitsByDenom(s.Ctx, types.SymphonyDenomination, osmomath.NewInt(9000))
 	s.Require().NoError(err)
 
 	// Check the updated result
-	profits, err = s.App.ProtoRevKeeper.GetProfitsByDenom(s.Ctx, types.OsmosisDenomination)
+	profits, err = s.App.ProtoRevKeeper.GetProfitsByDenom(s.Ctx, types.SymphonyDenomination)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(9000)), profits)
+	s.Require().Equal(sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(9000)), profits)
 
 	// Pseudo execute a second trade
-	err = s.App.ProtoRevKeeper.UpdateProfitsByDenom(s.Ctx, types.OsmosisDenomination, osmomath.NewInt(5000))
+	err = s.App.ProtoRevKeeper.UpdateProfitsByDenom(s.Ctx, types.SymphonyDenomination, osmomath.NewInt(5000))
 	s.Require().NoError(err)
 
 	// Check the updated result after the second trade
-	profits, err = s.App.ProtoRevKeeper.GetProfitsByDenom(s.Ctx, types.OsmosisDenomination)
+	profits, err = s.App.ProtoRevKeeper.GetProfitsByDenom(s.Ctx, types.SymphonyDenomination)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(14000)), profits)
+	s.Require().Equal(sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(14000)), profits)
 
 	// Check the result of GetAllProfits
 	allProfits := s.App.ProtoRevKeeper.GetAllProfits(s.Ctx)
-	s.Require().Equal([]sdk.Coin{{Denom: types.OsmosisDenomination, Amount: osmomath.NewInt(14000)}}, allProfits)
+	s.Require().Equal([]sdk.Coin{{Denom: types.SymphonyDenomination, Amount: osmomath.NewInt(14000)}}, allProfits)
 
 	// Pseudo execute a third trade in a different denom
 	err = s.App.ProtoRevKeeper.UpdateProfitsByDenom(s.Ctx, "Atom", osmomath.NewInt(1000))
@@ -60,7 +60,7 @@ func (s *KeeperTestSuite) TestGetProfitsByDenom() {
 
 	// Check the result of GetAllProfits
 	allProfits = s.App.ProtoRevKeeper.GetAllProfits(s.Ctx)
-	s.Require().Equal([]sdk.Coin{{Denom: "Atom", Amount: osmomath.NewInt(1000)}, {Denom: types.OsmosisDenomination, Amount: osmomath.NewInt(14000)}}, allProfits)
+	s.Require().Equal([]sdk.Coin{{Denom: "Atom", Amount: osmomath.NewInt(1000)}, {Denom: types.SymphonyDenomination, Amount: osmomath.NewInt(14000)}}, allProfits)
 }
 
 // TestGetTradesByRoute tests GetTradesByRoute, IncrementTradesByRoute, and GetAllRoutes
@@ -114,22 +114,22 @@ func (s *KeeperTestSuite) TestGetProfitsByRoute() {
 	s.Require().Equal([]sdk.Coin{}, profits)
 
 	// Check the profits for a route that has not been executed
-	profit, err := s.App.ProtoRevKeeper.GetProfitsByRoute(s.Ctx, []uint64{1, 2, 3}, types.OsmosisDenomination)
+	profit, err := s.App.ProtoRevKeeper.GetProfitsByRoute(s.Ctx, []uint64{1, 2, 3}, types.SymphonyDenomination)
 	s.Require().Error(err)
-	s.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, osmomath.ZeroInt()), profit)
+	s.Require().Equal(sdk.NewCoin(types.SymphonyDenomination, osmomath.ZeroInt()), profit)
 
 	// Pseudo execute a trade
-	err = s.App.ProtoRevKeeper.UpdateProfitsByRoute(s.Ctx, []uint64{1, 2, 3}, types.OsmosisDenomination, osmomath.NewInt(1000))
+	err = s.App.ProtoRevKeeper.UpdateProfitsByRoute(s.Ctx, []uint64{1, 2, 3}, types.SymphonyDenomination, osmomath.NewInt(1000))
 	s.Require().NoError(err)
 
 	// Check the updated result
-	profit, err = s.App.ProtoRevKeeper.GetProfitsByRoute(s.Ctx, []uint64{1, 2, 3}, types.OsmosisDenomination)
+	profit, err = s.App.ProtoRevKeeper.GetProfitsByRoute(s.Ctx, []uint64{1, 2, 3}, types.SymphonyDenomination)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(1000)), profit)
+	s.Require().Equal(sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(1000)), profit)
 
 	// Check the result of GetAllProfitsByRoute
 	profits = s.App.ProtoRevKeeper.GetAllProfitsByRoute(s.Ctx, []uint64{1, 2, 3})
-	s.Require().Equal([]sdk.Coin{{Denom: types.OsmosisDenomination, Amount: osmomath.NewInt(1000)}}, profits)
+	s.Require().Equal([]sdk.Coin{{Denom: types.SymphonyDenomination, Amount: osmomath.NewInt(1000)}}, profits)
 
 	// Pseudo execute a second trade
 	err = s.App.ProtoRevKeeper.UpdateProfitsByRoute(s.Ctx, []uint64{1, 2, 3}, "Atom", osmomath.NewInt(2000))
@@ -142,7 +142,7 @@ func (s *KeeperTestSuite) TestGetProfitsByRoute() {
 
 	// Check the result of GetAllProfitsByRoute
 	profits = s.App.ProtoRevKeeper.GetAllProfitsByRoute(s.Ctx, []uint64{1, 2, 3})
-	s.Require().Contains(profits, sdk.Coin{Denom: types.OsmosisDenomination, Amount: osmomath.NewInt(1000)})
+	s.Require().Contains(profits, sdk.Coin{Denom: types.SymphonyDenomination, Amount: osmomath.NewInt(1000)})
 	s.Require().Contains(profits, sdk.Coin{Denom: "Atom", Amount: osmomath.NewInt(2000)})
 }
 
@@ -152,7 +152,7 @@ func (s *KeeperTestSuite) TestUpdateStatistics() {
 	// Pseudo execute a trade
 	err := s.App.ProtoRevKeeper.UpdateStatistics(s.Ctx,
 		poolmanagertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 1}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}},
-		types.OsmosisDenomination, osmomath.NewInt(1000),
+		types.SymphonyDenomination, osmomath.NewInt(1000),
 	)
 	s.Require().NoError(err)
 
@@ -162,9 +162,9 @@ func (s *KeeperTestSuite) TestUpdateStatistics() {
 	s.Require().Equal(osmomath.NewInt(1), trades)
 
 	// Check the result of GetProfitsByRoute
-	profit, err := s.App.ProtoRevKeeper.GetProfitsByRoute(s.Ctx, []uint64{1, 2, 3}, types.OsmosisDenomination)
+	profit, err := s.App.ProtoRevKeeper.GetProfitsByRoute(s.Ctx, []uint64{1, 2, 3}, types.SymphonyDenomination)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(1000)), profit)
+	s.Require().Equal(sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(1000)), profit)
 
 	// Check the result of GetAllRoutes
 	routes, err := s.App.ProtoRevKeeper.GetAllRoutes(s.Ctx)
@@ -174,7 +174,7 @@ func (s *KeeperTestSuite) TestUpdateStatistics() {
 	// Pseudo execute a second trade
 	err = s.App.ProtoRevKeeper.UpdateStatistics(s.Ctx,
 		poolmanagertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}, {TokenOutDenom: "", PoolId: 4}},
-		types.OsmosisDenomination, osmomath.NewInt(1100),
+		types.SymphonyDenomination, osmomath.NewInt(1100),
 	)
 	s.Require().NoError(err)
 
@@ -184,9 +184,9 @@ func (s *KeeperTestSuite) TestUpdateStatistics() {
 	s.Require().Equal(osmomath.NewInt(1), trades)
 
 	// Check the result of GetProfitsByRoute
-	profit, err = s.App.ProtoRevKeeper.GetProfitsByRoute(s.Ctx, []uint64{2, 3, 4}, types.OsmosisDenomination)
+	profit, err = s.App.ProtoRevKeeper.GetProfitsByRoute(s.Ctx, []uint64{2, 3, 4}, types.SymphonyDenomination)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(1100)), profit)
+	s.Require().Equal(sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(1100)), profit)
 
 	// Check the result of GetAllRoutes
 	routes, err = s.App.ProtoRevKeeper.GetAllRoutes(s.Ctx)

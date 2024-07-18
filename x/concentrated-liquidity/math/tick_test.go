@@ -181,19 +181,19 @@ func TestTickToSqrtPrice(t *testing.T) {
 			tickIndex:     -29203900,
 			expectedPrice: osmomath.MustNewBigDecFromStr("0.000779610000000000"),
 		},
-		"Atom <> Osmo, tick -12150000 -> price 0.068500": {
+		"Atom <> Melody, tick -12150000 -> price 0.068500": {
 			tickIndex:     -12150000,
 			expectedPrice: osmomath.MustNewBigDecFromStr("0.068500000000000000"),
 		},
-		"Atom <> Osmo, tick -12150000 + 100 -> price 0.068501": {
+		"Atom <> Melody, tick -12150000 + 100 -> price 0.068501": {
 			tickIndex:     -12149900,
 			expectedPrice: osmomath.MustNewBigDecFromStr("0.068501000000000000"),
 		},
-		"Boot <> Osmo, tick 64576000 -> price 25760000": {
+		"Boot <> Melody, tick 64576000 -> price 25760000": {
 			tickIndex:     64576000,
 			expectedPrice: osmomath.MustNewBigDecFromStr("25760000"),
 		},
-		"Boot <> Osmo, tick 64576000 + 100 -> price 25760000": {
+		"Boot <> Melody, tick 64576000 + 100 -> price 25760000": {
 			tickIndex:     64576100,
 			expectedPrice: osmomath.MustNewBigDecFromStr("25761000"),
 		},
@@ -390,19 +390,19 @@ func TestPriceToTick(t *testing.T) {
 			price:        osmomath.MustNewBigDecFromStr("0.00077961"),
 			tickExpected: -29203900,
 		},
-		"Atom <> Osmo, tick -12150000 -> price 0.068500": {
+		"Atom <> Melody, tick -12150000 -> price 0.068500": {
 			price:        osmomath.MustNewBigDecFromStr("0.0685"),
 			tickExpected: -12150000,
 		},
-		"Atom <> Osmo, tick -12150000 + 100 -> price 0.068501": {
+		"Atom <> Melody, tick -12150000 + 100 -> price 0.068501": {
 			price:        osmomath.MustNewBigDecFromStr("0.068501"),
 			tickExpected: -12149900,
 		},
-		"Boot <> Osmo, tick 64576000 -> price 25760000": {
+		"Boot <> Melody, tick 64576000 -> price 25760000": {
 			price:        osmomath.MustNewBigDecFromStr("25760000"),
 			tickExpected: 64576000,
 		},
-		"Boot <> Osmo, tick 64576000 + 100 -> price 25761000": {
+		"Boot <> Melody, tick 64576000 + 100 -> price 25761000": {
 			price:        osmomath.MustNewBigDecFromStr("25761000"),
 			tickExpected: 64576100,
 		},

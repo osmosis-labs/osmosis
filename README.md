@@ -56,6 +56,39 @@ The contributing guide for Osmosis explains the branching structure, how
 to use the SDK fork, and how to make / test updates to SDK branches.
 
 ## LocalOsmosis
-
-LocalOsmosis is a containerized local Osmosis testnet used for trying out new features locally. 
+LocalOsmosis is a containerized local Osmosis testnet used for trying out new features locally.
 LocalOsmosis documentation can be found [here](https://github.com/osmosis-labs/osmosis/tree/main/tests/localosmosis)
+
+To utilize LocalOsmosis, follow these steps:
+
+1. **Build the project:**
+    ```bash
+    make build
+    ```
+
+2. **Add `symphonyd` to PATH:**
+    ```bash
+    export PATH="$PATH:$HOME/path_to_your_project/build"
+    ```
+   Replace `"$HOME/path/to/your/project/build"` with the actual path to the `build` directory in your project.
+
+
+3. **Configure localnet:**
+
+   Before executing the script, ensure it has the necessary permissions.
+   You can grant permission by running:
+    ```bash
+    chmod +x ./scripts/multinode-local-testnet.sh
+    ```
+
+   Then, run the script:
+    ```bash
+    ./scripts/multinode-local-testnet.sh
+    ```
+
+4. **Start localnet:**
+    ```bash
+    symphonyd start --home=$HOME/.symphonyd/validator1
+    ```
+
+These steps ensure the proper setup and execution of LocalOsmosis for your use.

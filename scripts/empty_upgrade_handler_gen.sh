@@ -8,7 +8,7 @@
 
 # Also insures that all the imports make use of a current module version from go mod:
 # (see:    module=$(go mod edit -json | jq ".Module.Path")      in this script)
-# Github workflow which calls this script can be found here: osmosis/.github/workflows/auto-update-upgrade.yml
+# Github workflow which calls this script can be found here: symphony/.github/workflows/auto-update-upgrade.yml
 
 latest_version=0
 for f in app/upgrades/*; do 
@@ -58,7 +58,7 @@ echo ")" >> $UPGRADES_FILE
 echo -e ")\n" >> $CONSTANTS_FILE
  
 # constants.go logic
-echo "// UpgradeName defines the on-chain upgrade name for the Osmosis $version_create upgrade." >> $CONSTANTS_FILE
+echo "// UpgradeName defines the on-chain upgrade name for the Symphony $version_create upgrade." >> $CONSTANTS_FILE
 echo "const UpgradeName = ${bracks}$version_create$bracks" >> $CONSTANTS_FILE
 echo "
 var Upgrade = upgrades.Upgrade{
@@ -105,26 +105,26 @@ sed -i "s/E2E_UPGRADE_VERSION := ${bracks}v$latest_version$bracks/E2E_UPGRADE_VE
 
 # bumps up prev e2e version
 e2e_file=./tests/e2e/containers/config.go
-PREV_OSMOSIS_DEV_TAG=$(curl -L -s 'https://registry.hub.docker.com/v2/repositories/osmolabs/osmosis/tags?page=1&page_size=100' | jq -r '.results[] | .name | select(.|test("^(?:v|)[0-9]+\\.0\\.0-alpine$"))' | grep --max-count=1 "")
-PREV_OSMOSIS_E2E_TAG=$(curl -L -s 'https://registry.hub.docker.com/v2/repositories/osmolabs/osmosis-e2e-init-chain/tags?page=1&page_size=100' | jq -r '.results[] | .name | select(.|test("^(?:v|)[0-9]+\\.[0-9]+(?:$|\\.[0-9]+$)"))' | grep --max-count=1 "")
+PREV_OSMOSIS_DEV_TAG=$(curl -L -s 'https://registry.hub.docker.com/v2/repositories/osmolabs/symphony/tags?page=1&page_size=100' | jq -r '.results[] | .name | select(.|test("^(?:v|)[0-9]+\\.0\\.0-alpine$"))' | grep --max-count=1 "")
+PREV_OSMOSIS_E2E_TAG=$(curl -L -s 'https://registry.hub.docker.com/v2/repositories/osmolabs/symphony-e2e-init-chain/tags?page=1&page_size=100' | jq -r '.results[] | .name | select(.|test("^(?:v|)[0-9]+\\.[0-9]+(?:$|\\.[0-9]+$)"))' | grep --max-count=1 "")
 
-# previousVersionOsmoTag  = PREV_OSMOSIS_DEV_TAG
+# previousVersionMelodyTag  = PREV_OSMOSIS_DEV_TAG
 if [[ $version_create == v$(($(echo $PREV_OSMOSIS_DEV_TAG | awk -F . '{print $1}')+1)) ]]; then	
-    echo "Found previous osmosis-dev tag $PREV_OSMOSIS_DEV_TAG"
-	sed -i '/previousVersionOsmoTag/s/".*"/'"\"$PREV_OSMOSIS_DEV_TAG\""'/' $e2e_file
+    echo "Found previous symphony-dev tag $PREV_OSMOSIS_DEV_TAG"
+	sed -i '/previousVersionMelodyTag/s/".*"/'"\"$PREV_OSMOSIS_DEV_TAG\""'/' $e2e_file
 else
     PREV_OSMOSIS_DEV_TAG=v$((${version_create:1}-1)).0.0
-    echo "Using pre-defined osmosis-dev tag: $PREV_OSMOSIS_DEV_TAG"
-    sed -i '/previousVersionOsmoTag/s/".*"/'"\"$PREV_OSMOSIS_DEV_TAG\""'/' $e2e_file
+    echo "Using pre-defined symphony-dev tag: $PREV_OSMOSIS_DEV_TAG"
+    sed -i '/previousVersionMelodyTag/s/".*"/'"\"$PREV_OSMOSIS_DEV_TAG\""'/' $e2e_file
 fi
 
 # previousVersionInitTag  = PREV_OSMOSIS_E2E_TAG
 if [[ $version_create == v$(($(echo $PREV_OSMOSIS_E2E_TAG | awk -F . '{print $1}' | grep -Eo '[0-9]*')+1)) ]]; then	
-    echo "Found previous osmosis-e2e-init-chain tag $PREV_OSMOSIS_E2E_TAG"
+    echo "Found previous symphony-e2e-init-chain tag $PREV_OSMOSIS_E2E_TAG"
 	sed -i '/previousVersionInitTag/s/".*"/'"\"$PREV_OSMOSIS_E2E_TAG\""'/' $e2e_file
 else
     PREV_OSMOSIS_E2E_TAG=v$((${version_create:1}-1)).0.0
-    echo "Using pre-defined osmosis-e2e-init-chain tag: $PREV_OSMOSIS_E2E_TAG"
+    echo "Using pre-defined symphony-e2e-init-chain tag: $PREV_OSMOSIS_E2E_TAG"
     sed -i '/previousVersionInitTag/s/".*"/'"\"$PREV_OSMOSIS_E2E_TAG\""'/' $e2e_file
 fi
 

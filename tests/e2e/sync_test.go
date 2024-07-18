@@ -44,7 +44,7 @@ func (s *IntegrationTestSuite) StateSync() {
 		SnapshotKeepRecent: 2,
 	}
 
-	tempDir, err := os.MkdirTemp("", "osmosis-e2e-statesync-")
+	tempDir, err := os.MkdirTemp("", "symphony-e2e-statesync-")
 	s.Require().NoError(err)
 
 	// configure genesis and config files for the state-synchin node.

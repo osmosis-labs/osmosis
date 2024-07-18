@@ -32,7 +32,7 @@ var Upgrade = upgrades.Upgrade{
 }
 
 const (
-	OSMO        = "uosmo"
+	OSMO        = "note"
 	TickSpacing = 100
 )
 

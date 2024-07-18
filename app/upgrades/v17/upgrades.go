@@ -36,9 +36,9 @@ type clPoolCreationInfo struct {
 }
 
 const (
-	mainnetChainID = "osmosis-1"
-	e2eChainA      = "osmo-test-a"
-	e2eChainB      = "osmo-test-b"
+	mainnetChainID = "symphony-1"
+	e2eChainA      = "symphony-testnet-a"
+	e2eChainB      = "symphony-testnet-b"
 )
 
 var notEnoughLiquidityForSwapErr = errorsmod.Wrapf(gammtypes.ErrInvalidMathApprox, "token amount must be positive")

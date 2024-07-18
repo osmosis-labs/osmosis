@@ -36,7 +36,7 @@ var (
 	// It is expected to create a concentrated liquidity pool
 	// associated with this balancer pool in the upgrade handler.
 	// This is meant to be removed post-v16.
-	DaiOsmoPoolIdv16 uint64
+	DaiMelodyPoolIdv16 uint64
 	// A pool created via CLI before starting an
 	// upgrade.
 	PreUpgradePoolId = []uint64{}

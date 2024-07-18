@@ -257,9 +257,9 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 			return nil, err
 		}
 
-		// Find how many osmo tokens this delegation is worth at superfluids current risk adjustment
+		// Find how many melody tokens this delegation is worth at superfluids current risk adjustment
 		// and twap of the denom.
-		equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokens(ctx, baseDenom, lockedCoins.Amount)
+		equivalentAmount, err := q.Keeper.GetSuperfluidMELODYTokens(ctx, baseDenom, lockedCoins.Amount)
 		if err != nil {
 			return nil, err
 		}
@@ -299,7 +299,7 @@ func (q Querier) UserConcentratedSuperfluidPositionsDelegated(goCtx context.Cont
 	}
 
 	// Query each position ID and determine if it has a lock ID associated with it.
-	// Construct a response with the position ID, lock ID, the amount of cl shares staked, and what those shares are worth in staked osmo tokens.
+	// Construct a response with the position ID, lock ID, the amount of cl shares staked, and what those shares are worth in staked melody tokens.
 	clPoolUserPositionRecords, err := q.filterConcentratedPositionLocks(ctx, positions, false)
 	if err != nil {
 		return nil, err
@@ -326,7 +326,7 @@ func (q Querier) UserConcentratedSuperfluidPositionsUndelegating(goCtx context.C
 	}
 
 	// Query each position ID and determine if it has a lock ID associated with it.
-	// Construct a response with the position ID, lock ID, the amount of cl shares staked, and what those shares are worth in staked osmo tokens.
+	// Construct a response with the position ID, lock ID, the amount of cl shares staked, and what those shares are worth in staked melody tokens.
 	clPoolUserPositionRecords, err := q.filterConcentratedPositionLocks(ctx, positions, true)
 	if err != nil {
 		return nil, err
@@ -483,8 +483,8 @@ func (q Querier) EstimateSuperfluidDelegatedAmountByValidatorDenom(goCtx context
 		return nil, stakingtypes.ErrNoDelegation
 	}
 
-	syntheticOsmoAmt := delegation.Shares.Quo(val.DelegatorShares).MulInt(val.Tokens)
-	baseAmount := q.Keeper.UnriskAdjustOsmoValue(ctx, syntheticOsmoAmt).Quo(q.Keeper.GetOsmoEquivalentMultiplier(ctx, req.Denom)).RoundInt()
+	syntheticMelodyAmt := delegation.Shares.Quo(val.DelegatorShares).MulInt(val.Tokens)
+	baseAmount := q.Keeper.UnriskAdjustMelodyValue(ctx, syntheticMelodyAmt).Quo(q.Keeper.GetOsmoEquivalentMultiplier(ctx, req.Denom)).RoundInt()
 
 	return &types.EstimateSuperfluidDelegatedAmountByValidatorDenomResponse{
 		TotalDelegatedCoins: sdk.NewCoins(sdk.NewCoin(req.Denom, baseAmount)),
@@ -515,7 +515,7 @@ func (q Querier) TotalDelegationByValidatorForDenom(goCtx context.Context, req *
 			amount = amount.Add(record.DelegationAmount.Amount)
 		}
 
-		equivalentAmountOSMO, err := q.Keeper.GetSuperfluidOSMOTokens(ctx, req.Denom, amount)
+		equivalentAmountMELODY, err := q.Keeper.GetSuperfluidMELODYTokens(ctx, req.Denom, amount)
 		if err != nil {
 			return nil, err
 		}
@@ -523,7 +523,7 @@ func (q Querier) TotalDelegationByValidatorForDenom(goCtx context.Context, req *
 		result := types.Delegations{
 			ValAddr:        valAddr.String(),
 			AmountSfsd:     amount,
-			OsmoEquivalent: equivalentAmountOSMO,
+			OsmoEquivalent: equivalentAmountMELODY,
 		}
 
 		delegationsByValidator = append(delegationsByValidator, result)
@@ -534,7 +534,7 @@ func (q Querier) TotalDelegationByValidatorForDenom(goCtx context.Context, req *
 	}, nil
 }
 
-// TotalSuperfluidDelegations returns total amount of osmo delegated via superfluid staking.
+// TotalSuperfluidDelegations returns total amount of melody delegated via superfluid staking.
 func (q Querier) TotalSuperfluidDelegations(goCtx context.Context, _ *types.TotalSuperfluidDelegationsRequest) (*types.TotalSuperfluidDelegationsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -557,8 +557,8 @@ func (q Querier) TotalSuperfluidDelegations(goCtx context.Context, _ *types.Tota
 			continue
 		}
 
-		syntheticOsmoAmt := delegation.Shares.Quo(val.DelegatorShares).MulInt(val.Tokens).RoundInt()
-		totalSuperfluidDelegated = totalSuperfluidDelegated.Add(syntheticOsmoAmt)
+		syntheticMelodyAmt := delegation.Shares.Quo(val.DelegatorShares).MulInt(val.Tokens).RoundInt()
+		totalSuperfluidDelegated = totalSuperfluidDelegated.Add(syntheticMelodyAmt)
 	}
 
 	return &types.TotalSuperfluidDelegationsResponse{
@@ -638,7 +638,7 @@ func (q Querier) UnpoolWhitelist(goCtx context.Context, req *types.QueryUnpoolWh
 
 func (q Querier) filterConcentratedPositionLocks(ctx sdk.Context, positions []model.Position, isUnbonding bool) ([]types.ConcentratedPoolUserPositionRecord, error) {
 	// Query each position ID and determine if it has a lock ID associated with it.
-	// Construct a response with the position ID, lock ID, the amount of cl shares staked, and what those shares are worth in staked osmo tokens.
+	// Construct a response with the position ID, lock ID, the amount of cl shares staked, and what those shares are worth in staked melody tokens.
 	var clPoolUserPositionRecords []types.ConcentratedPoolUserPositionRecord
 	for _, pos := range positions {
 		lockId, err := q.Keeper.clk.GetLockIdFromPositionId(ctx, pos.PositionId)
@@ -687,7 +687,7 @@ func (q Querier) filterConcentratedPositionLocks(ctx sdk.Context, positions []mo
 
 		baseDenom := lock.Coins.GetDenomByIndex(0)
 		lockedCoins := sdk.NewCoin(baseDenom, lock.GetCoins().AmountOf(baseDenom))
-		equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokens(ctx, baseDenom, lockedCoins.Amount)
+		equivalentAmount, err := q.Keeper.GetSuperfluidMELODYTokens(ctx, baseDenom, lockedCoins.Amount)
 		if err != nil {
 			return nil, err
 		}

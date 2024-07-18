@@ -11,8 +11,8 @@ var (
 	powersOfTen    []osmomath.Dec
 	negPowersOfTen []osmomath.Dec
 
-	osmomathBigOneDec = osmomath.NewBigDec(1)
-	osmomathBigTenDec = osmomath.NewBigDec(10)
+	mathBigOneDec     = osmomath.NewBigDec(1)
+	mathBigTenDec     = osmomath.NewBigDec(10)
 	bigPowersOfTen    []osmomath.BigDec
 	bigNegPowersOfTen []osmomath.BigDec
 
@@ -47,13 +47,13 @@ var tickExpCache map[int64]*tickExpIndexData = make(map[int64]*tickExpIndexData)
 
 func buildTickExpCache() {
 	// build positive indices first
-	maxPrice := osmomathBigOneDec
+	maxPrice := mathBigOneDec
 	curExpIndex := int64(0)
 	for maxPrice.LT(osmomath.BigDecFromDec(types.MaxSpotPrice)) {
 		tickExpCache[curExpIndex] = &tickExpIndexData{
 			// price range 10^curExpIndex to 10^(curExpIndex + 1). (10, 100)
-			initialPrice:             osmomathBigTenDec.PowerInteger(uint64(curExpIndex)),
-			maxPrice:                 osmomathBigTenDec.PowerInteger(uint64(curExpIndex + 1)),
+			initialPrice:             mathBigTenDec.PowerInteger(uint64(curExpIndex)),
+			maxPrice:                 mathBigTenDec.PowerInteger(uint64(curExpIndex + 1)),
 			additiveIncrementPerTick: powTenBigDec(types.ExponentAtPriceOne + curExpIndex),
 			initialTick:              geometricExponentIncrementDistanceInTicks * curExpIndex,
 		}
@@ -61,7 +61,7 @@ func buildTickExpCache() {
 		curExpIndex += 1
 	}
 
-	minPrice := osmomathBigOneDec
+	minPrice := mathBigOneDec
 	curExpIndex = -1
 	for minPrice.GT(osmomath.NewBigDecWithPrec(1, 30)) {
 		tickExpCache[curExpIndex] = &tickExpIndexData{
@@ -90,12 +90,12 @@ func init() {
 
 	bigNegPowersOfTen = make([]osmomath.BigDec, osmomath.BigDecPrecision+1)
 	for i := 0; i <= osmomath.BigDecPrecision; i++ {
-		bigNegPowersOfTen[i] = osmomathBigOneDec.Quo(osmomathBigTenDec.PowerInteger(uint64(i)))
+		bigNegPowersOfTen[i] = mathBigOneDec.Quo(mathBigTenDec.PowerInteger(uint64(i)))
 	}
 	// 10^308 < osmomath.MaxInt < 10^309
 	bigPowersOfTen = make([]osmomath.BigDec, 309)
 	for i := 0; i <= 308; i++ {
-		bigPowersOfTen[i] = osmomathBigTenDec.PowerInteger(uint64(i))
+		bigPowersOfTen[i] = mathBigTenDec.PowerInteger(uint64(i))
 	}
 
 	buildTickExpCache()

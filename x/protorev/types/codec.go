@@ -16,16 +16,16 @@ var (
 
 const (
 	// msgs
-	setHotRoutes             = "osmosis/MsgSetHotRoutes"
-	setDeveloperAccount      = "osmosis/MsgSetDeveloperAccount"
-	setMaxPoolPointsPerTx    = "osmosis/MsgSetMaxPoolPointsPerTx"
-	setMaxPoolPointsPerBlock = "osmosis/MsgSetMaxPoolPointsPerBlock"
-	setInfoByPoolType        = "osmosis/MsgSetInfoByPoolType"
-	setBaseDenoms            = "osmosis/MsgSetBaseDenoms"
+	setHotRoutes             = "symphony/MsgSetHotRoutes"
+	setDeveloperAccount      = "symphony/MsgSetDeveloperAccount"
+	setMaxPoolPointsPerTx    = "symphony/MsgSetMaxPoolPointsPerTx"
+	setMaxPoolPointsPerBlock = "symphony/MsgSetMaxPoolPointsPerBlock"
+	setInfoByPoolType        = "symphony/MsgSetInfoByPoolType"
+	setBaseDenoms            = "symphony/MsgSetBaseDenoms"
 
 	// proposals
-	setProtoRevEnabledProposal      = "osmosis/SetProtoRevEnabledProposal"
-	setProtoRevAdminAccountProposal = "osmosis/SetProtoRevAdminAccountProposal"
+	setProtoRevEnabledProposal      = "symphony/SetProtoRevEnabledProposal"
+	setProtoRevAdminAccountProposal = "symphony/SetProtoRevAdminAccountProposal"
 )
 
 func init() {

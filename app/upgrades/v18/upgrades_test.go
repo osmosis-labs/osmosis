@@ -169,7 +169,7 @@ func (s *UpgradeTestSuite) setupCorruptedState() {
 	pool3Denom := "gamm/pool/3"
 
 	// join pool, create lock
-	addr, err := sdk.AccAddressFromBech32("osmo1urn0pnx8fl5kt89r5nzqd8htruq7skadc2xdk3")
+	addr, err := sdk.AccAddressFromBech32("symphony1xctd7ph963k7mfv8kys30gdrueuf9nt9ze792e")
 	s.Require().NoError(err)
 	keepers := &s.App.AppKeepers
 	err = keepers.BankKeeper.MintCoins(s.Ctx, protorevtypes.ModuleName, sdk.NewCoins(sdk.NewCoin(v17.OSMO, osmomath.NewInt(50000000000))))
@@ -247,7 +247,7 @@ func (s *UpgradeTestSuite) ensurePreUpgradeDistributionPanics() {
 	s.App.GAMMKeeper.SetMigrationRecords(s.Ctx, migrationInfo)
 
 	// add new coins to the CL pool gauge so that it would be distributed after epoch ends then trigger panic
-	coinsToAdd := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(1000)))
+	coinsToAdd := sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(1000)))
 	gagueId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, clPool.GetId(), epochInfo.Duration)
 	s.Require().NoError(err)
 	gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gagueId)
