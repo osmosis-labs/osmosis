@@ -55,15 +55,9 @@ func (p *PubSubClient) publish(ctx context.Context, message any, topicId string)
 
 	// Publish message to topic
 	topic := p.pubsubClient.Topic(topicId)
-	result := topic.Publish(ctx, &pubsub.Message{
+	topic.Publish(ctx, &pubsub.Message{
 		Data: msgBytes,
 	})
-
-	// Block until message is published
-	_, err = result.Get(ctx)
-	if err != nil {
-		return err
-	}
 
 	return nil
 }
