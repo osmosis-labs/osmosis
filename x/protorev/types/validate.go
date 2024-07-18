@@ -1,7 +1,8 @@
 package types
 
 import (
-	fmt "fmt"
+	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -12,11 +13,11 @@ import (
 // Validates the base denoms that are used to generate highest liquidity routes.
 func (base *BaseDenom) Validate() error {
 	if base.Denom == "" {
-		return fmt.Errorf("base denom cannot be empty")
+		return errors.New("base denom cannot be empty")
 	}
 
 	if base.StepSize.IsNil() || base.StepSize.LT(osmomath.OneInt()) {
-		return fmt.Errorf("step size must be greater than 0")
+		return errors.New("step size must be greater than 0")
 	}
 
 	return nil
@@ -26,7 +27,7 @@ func (base *BaseDenom) Validate() error {
 func ValidateBaseDenoms(denoms []BaseDenom) error {
 	// The first base denom must be the Osmosis denomination
 	if len(denoms) == 0 || denoms[0].Denom != OsmosisDenomination {
-		return fmt.Errorf("the first base denom must be the Osmosis denomination")
+		return errors.New("the first base denom must be the Osmosis denomination")
 	}
 
 	seenDenoms := make(map[string]bool)
@@ -48,7 +49,7 @@ func ValidateBaseDenoms(denoms []BaseDenom) error {
 // Validates the information about each pool type that is used throughout the module.
 func (info *InfoByPoolType) Validate() error {
 	if info == nil {
-		return fmt.Errorf("pool type info cannot be nil")
+		return errors.New("pool type info cannot be nil")
 	}
 
 	if err := info.Balancer.Validate(); err != nil {
@@ -73,11 +74,11 @@ func (info *InfoByPoolType) Validate() error {
 // Validates balancer pool information.
 func (b *BalancerPoolInfo) Validate() error {
 	if b == nil {
-		return fmt.Errorf("balancer pool info cannot be nil")
+		return errors.New("balancer pool info cannot be nil")
 	}
 
 	if b.Weight == 0 {
-		return fmt.Errorf("balancer pool weight cannot be 0")
+		return errors.New("balancer pool weight cannot be 0")
 	}
 
 	return nil
@@ -86,11 +87,11 @@ func (b *BalancerPoolInfo) Validate() error {
 // Validates stable pool information.
 func (s *StablePoolInfo) Validate() error {
 	if s == nil {
-		return fmt.Errorf("stable pool info cannot be nil")
+		return errors.New("stable pool info cannot be nil")
 	}
 
 	if s.Weight == 0 {
-		return fmt.Errorf("stable pool weight cannot be 0")
+		return errors.New("stable pool weight cannot be 0")
 	}
 
 	return nil
@@ -99,11 +100,11 @@ func (s *StablePoolInfo) Validate() error {
 // Validates concentrated pool information.
 func (c *ConcentratedPoolInfo) Validate() error {
 	if c == nil {
-		return fmt.Errorf("concentrated pool info cannot be nil")
+		return errors.New("concentrated pool info cannot be nil")
 	}
 
 	if c.Weight == 0 {
-		return fmt.Errorf("concentrated pool weight cannot be 0")
+		return errors.New("concentrated pool weight cannot be 0")
 	}
 
 	if c.MaxTicksCrossed == 0 || c.MaxTicksCrossed > MaxTicksCrossed {
@@ -116,7 +117,7 @@ func (c *ConcentratedPoolInfo) Validate() error {
 // Validates cosmwasm pool information.
 func (c *CosmwasmPoolInfo) Validate() error {
 	if c == nil {
-		return fmt.Errorf("cosmwasm pool info cannot be nil")
+		return errors.New("cosmwasm pool info cannot be nil")
 	}
 
 	for _, weightMap := range c.WeightMaps {

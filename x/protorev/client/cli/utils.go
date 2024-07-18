@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 
@@ -98,7 +99,7 @@ func (release *createArbRoutesInput) extractTokenPairArbRoutes() []types.TokenPa
 // BuildSetHotRoutesMsg builds a MsgSetHotRoutes from the provided json file
 func BuildSetHotRoutesMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
 	if len(args) == 0 {
-		return nil, fmt.Errorf("must provide a json file")
+		return nil, errors.New("must provide a json file")
 	}
 
 	// Read the json file
@@ -188,7 +189,7 @@ func (release *createInfoByPoolTypeInput) convertToInfoByPoolType() types.InfoBy
 // BuildSetInfoByPoolTypeMsg builds a MsgSetInfoByPoolType from the provided json file
 func BuildSetInfoByPoolTypeMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
 	if len(args) == 0 {
-		return nil, fmt.Errorf("must provide a json file")
+		return nil, errors.New("must provide a json file")
 	}
 
 	// Read the json file
@@ -250,7 +251,7 @@ func (release *createBaseDenomsInput) UnmarshalJSON(data []byte) error {
 // BuildSetBaseDenomsMsg builds a MsgSetBaseDenoms from the provided json file
 func BuildSetBaseDenomsMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
 	if len(args) == 0 {
-		return nil, fmt.Errorf("must provide a json file")
+		return nil, errors.New("must provide a json file")
 	}
 
 	// Read the json file
