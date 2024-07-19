@@ -399,7 +399,7 @@ func findUptimeIndex(uptime time.Duration) (int, error) {
 	return index, nil
 }
 
-// setIncentiveRecords sets the passed in incentive records in state
+// setIncentiveRecord sets the passed in incentive records in state
 // Errors if the incentive record has an unsupported min uptime.
 func (k Keeper) setIncentiveRecord(ctx sdk.Context, incentiveRecord types.IncentiveRecord) error {
 	store := ctx.KVStore(k.storeKey)

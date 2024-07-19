@@ -102,7 +102,7 @@ func (k Keeper) HasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, err
 	return osmoutils.HasAnyAtPrefix(store, poolPositionKey, parse)
 }
 
-// GetAllPositionsForPoolId gets all the position for a specific poolId and store prefix.
+// GetAllPositionIdsForPoolId gets all the position for a specific poolId and store prefix.
 func (k Keeper) GetAllPositionIdsForPoolId(ctx sdk.Context, prefix []byte, poolId uint64) ([]uint64, error) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, prefix)

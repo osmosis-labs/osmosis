@@ -20,7 +20,7 @@ service Query {
 // ParamsRequest is the request type for the Query/Params RPC method.
 message ParamsRequest {}
 
-// aramsResponse is the response type for the Query/Params RPC method.
+// ParamsResponse is the response type for the Query/Params RPC method.
 message ParamsResponse {
   // params defines the parameters of the module.
   Params params = 1 [ (gogoproto.nullable) = false ];

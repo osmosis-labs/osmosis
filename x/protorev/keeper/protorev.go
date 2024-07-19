@@ -231,7 +231,7 @@ func (k Keeper) DeleteSwapsToBackrun(ctx sdk.Context) {
 	store.Delete(types.KeyPrefixSwapsToBackrun)
 }
 
-// AddSwapToSwapsToBackrun appends a swap to the swaps to backrun
+// AddSwapsToSwapsToBackrun appends a swap to the swaps to backrun
 func (k Keeper) AddSwapsToSwapsToBackrun(ctx sdk.Context, swaps []types.Trade) error {
 	swapsToBackrun, err := k.GetSwapsToBackrun(ctx)
 	if err != nil {

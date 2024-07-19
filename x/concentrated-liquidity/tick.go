@@ -184,7 +184,7 @@ func (k Keeper) GetAllInitializedTicksForPool(ctx sdk.Context, poolId uint64) ([
 	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyTickPrefixByPoolId(poolId), ParseFullTickFromBytes)
 }
 
-// validateTickInRangeIsValid validates that given ticks are valid. That is:
+// validateTickRangeIsValid validates that given ticks are valid. That is:
 // - both lower and upper ticks are divisible by the tick spacing
 // - both lower and upper ticks are within MinTick and MaxTick range
 // - lower tick must be less than upper tick.

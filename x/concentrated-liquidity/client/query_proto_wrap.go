@@ -265,7 +265,7 @@ func (q Querier) CFMMPoolIdLinkFromConcentratedPoolId(ctx sdk.Context, req clque
 	}, nil
 }
 
-// UserUnbodingPositions returns all the unbonding concentrated liquidity positions along with their respective period lock.
+// UserUnbondingPositions returns all the unbonding concentrated liquidity positions along with their respective period lock.
 func (q Querier) UserUnbondingPositions(ctx sdk.Context, req clquery.UserUnbondingPositionsRequest) (*clquery.UserUnbondingPositionsResponse, error) {
 	sdkAddr, err := sdk.AccAddressFromBech32(req.Address)
 	if err != nil {

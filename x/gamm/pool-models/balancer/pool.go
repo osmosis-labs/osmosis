@@ -211,7 +211,7 @@ func (p *Pool) setInitialPoolParams(params PoolParams, sortedAssets []PoolAsset,
 	return nil
 }
 
-// GetPoolAssets returns the denom's PoolAsset, If the PoolAsset doesn't exist, will return error.
+// GetPoolAsset returns the denom's PoolAsset, If the PoolAsset doesn't exist, will return error.
 // As above, it will search the denom's PoolAsset by using binary search.
 // So, it is important to make sure that the PoolAssets are sorted.
 func (p Pool) GetPoolAsset(denom string) (PoolAsset, error) {

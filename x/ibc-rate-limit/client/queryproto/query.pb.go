@@ -68,7 +68,7 @@ func (m *ParamsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ParamsRequest proto.InternalMessageInfo
 
-// aramsResponse is the response type for the Query/Params RPC method.
+// ParamsResponse is the response type for the Query/Params RPC method.
 type ParamsResponse struct {
 	// params defines the parameters of the module.
 	Params types.Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`

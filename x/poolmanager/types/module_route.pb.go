@@ -62,7 +62,7 @@ func (PoolType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_96bfcc7b6d387cee, []int{0}
 }
 
-// ModuleRouter defines a route encapsulating pool type.
+// ModuleRoute defines a route encapsulating pool type.
 // It is used as the value of a mapping from pool id to the pool type,
 // allowing the pool manager to know which module to route swaps to given the
 // pool id.

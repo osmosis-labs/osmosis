@@ -60,7 +60,7 @@ func (k Keeper) uploadCodeIdAndWhitelist(ctx sdk.Context, byteCode []byte) (uint
 	return codeID, nil
 }
 
-// migrateComswasmPools migrates all given cw pool contracts specified by their IDs.
+// migrateCosmwasmPools migrates all given cw pool contracts specified by their IDs.
 // It has two options to perform the migration.
 //
 // 1. If the codeID is non-zero, it will migrate the pool contracts to a given codeID assuming that it has already
