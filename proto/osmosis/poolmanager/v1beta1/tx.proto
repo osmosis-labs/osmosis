@@ -194,12 +194,17 @@ message MsgSetRegisteredAlloyedPool {
 message MsgSetRegisteredAlloyedPoolResponse {}
 
 message DenomPairTakerFee {
-  // We now use tokenInDenom and tokenOutDenom instead of denom0 and denom1,
-  // for better clarity due to taker fee pairs now being uni-directional.
-  string denom0 = 1
-      [ (gogoproto.moretags) = "yaml:\"denom0\"", deprecated = true ];
-  string denom1 = 2
-      [ (gogoproto.moretags) = "yaml:\"denom1\"", deprecated = true ];
+  // DEPRECATED: Now that we are using uni-directional trading pairs, we are
+  // using tokenInDenom and tokenOutDenom instead of denom0 and denom1 to
+  // prevent confusion.
+  string denom0 = 1 [
+    (gogoproto.moretags) = "yaml:\"denom0\",deprecated:\"true\"",
+    deprecated = true
+  ];
+  string denom1 = 2 [
+    (gogoproto.moretags) = "yaml:\"denom1\",deprecated:\"true\"",
+    deprecated = true
+  ];
   string taker_fee = 3 [
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"taker_fee\"",
