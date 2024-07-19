@@ -2197,7 +2197,7 @@ func (s *KeeperTestSuite) TestEstimateTradeBasedOnPriceImpact() {
 		s.Run(name, func() {
 			s.SetupTest()
 			poolmanagerKeeper := s.App.PoolManagerKeeper
-			poolmanagerQuerier := client.NewQuerier(*poolmanagerKeeper)
+			poolmanagerQuerier := client.NewQuerier(poolmanagerKeeper)
 
 			s.CreatePoolFromType(tc.preCreatePoolType)
 

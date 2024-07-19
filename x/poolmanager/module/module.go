@@ -91,7 +91,7 @@ type AppModule struct {
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), poolmanager.NewMsgServerImpl(am.k))
-	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: pmclient.NewQuerier(*am.k)})
+	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: pmclient.NewQuerier(am.k)})
 	queryprotov2.RegisterQueryServer(cfg.QueryServer(), grpcv2.Querier{Q: pmclient.NewV2Querier(*am.k)})
 }
 

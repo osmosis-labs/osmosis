@@ -17,10 +17,10 @@ import (
 // This file should evolve to being code gen'd, off of `proto/poolmanager/v1beta/query.yml`
 
 type Querier struct {
-	K poolmanager.Keeper
+	K *poolmanager.Keeper
 }
 
-func NewQuerier(k poolmanager.Keeper) Querier {
+func NewQuerier(k *poolmanager.Keeper) Querier {
 	return Querier{k}
 }
 
