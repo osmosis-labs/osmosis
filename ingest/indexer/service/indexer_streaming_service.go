@@ -17,6 +17,7 @@ import (
 	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/service/blockprocessor"
+	sqsdomain "github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 )
 
 var _ baseapp.StreamingService = (*indexerStreamingService)(nil)
@@ -39,6 +40,8 @@ type indexerStreamingService struct {
 	// extracts the pools from chain state
 	poolExtractor commondomain.PoolExtractor
 
+	poolTracker sqsdomain.BlockPoolUpdateTracker
+
 	logger log.Logger
 }
 
@@ -47,13 +50,15 @@ type indexerStreamingService struct {
 // sqsIngester is an ingester that ingests the block data into SQS.
 // poolTracker is a tracker that tracks the pools that were changed in the block.
 // nodeStatusChecker is a checker that checks if the node is syncing.
-func New(writeListeners map[storetypes.StoreKey][]storetypes.WriteListener, blockProcessStrategyManager commondomain.BlockProcessStrategyManager, client domain.Publisher, poolExtractor commondomain.PoolExtractor, keepers domain.Keepers, txDecoder sdk.TxDecoder, logger log.Logger) baseapp.StreamingService {
+func New(writeListeners map[storetypes.StoreKey][]storetypes.WriteListener, blockProcessStrategyManager commondomain.BlockProcessStrategyManager, client domain.Publisher, poolExtractor commondomain.PoolExtractor, poolTracker sqsdomain.BlockPoolUpdateTracker, keepers domain.Keepers, txDecoder sdk.TxDecoder, logger log.Logger) baseapp.StreamingService {
 	return &indexerStreamingService{
 		blockProcessStrategyManager: blockProcessStrategyManager,
 
 		writeListeners: writeListeners,
 
 		poolExtractor: poolExtractor,
+
+		poolTracker: poolTracker,
 
 		client: client,
 
@@ -180,6 +185,11 @@ func (s *indexerStreamingService) ListenEndBlock(ctx context.Context, req types.
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	defer func() {
+		// Reset the pool tracker after processing the block.
+		s.poolTracker.Reset()
+	}()
 
 	// Create block processor
 	blockProcessor := blockprocessor.NewBlockProcessor(s.blockProcessStrategyManager, s.client, s.poolExtractor, s.keepers)
