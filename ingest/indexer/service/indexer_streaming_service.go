@@ -15,6 +15,7 @@ import (
 	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/service/blockprocessor"
+	sqsdomain "github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 )
 
 var _ storetypes.ABCIListener = (*indexerStreamingService)(nil)
@@ -33,6 +34,8 @@ type indexerStreamingService struct {
 	// extracts the pools from chain state
 	poolExtractor commondomain.PoolExtractor
 
+	poolTracker sqsdomain.BlockPoolUpdateTracker
+
 	txDecoder sdk.TxDecoder
 
 	logger log.Logger
@@ -43,11 +46,13 @@ type indexerStreamingService struct {
 // sqsIngester is an ingester that ingests the block data into SQS.
 // poolTracker is a tracker that tracks the pools that were changed in the block.
 // nodeStatusChecker is a checker that checks if the node is syncing.
-func New(blockUpdatesProcessUtils commondomain.BlockUpdateProcessUtilsI, blockProcessStrategyManager commondomain.BlockProcessStrategyManager, client domain.Publisher, storeKeyMap map[string]storetypes.StoreKey, poolExtractor commondomain.PoolExtractor, keepers domain.Keepers, txDecoder sdk.TxDecoder, logger log.Logger) storetypes.ABCIListener {
+func New(blockUpdatesProcessUtils commondomain.BlockUpdateProcessUtilsI, blockProcessStrategyManager commondomain.BlockProcessStrategyManager, client domain.Publisher, storeKeyMap map[string]storetypes.StoreKey, poolExtractor commondomain.PoolExtractor, poolTracker sqsdomain.BlockPoolUpdateTracker, keepers domain.Keepers, txDecoder sdk.TxDecoder, logger log.Logger) storetypes.ABCIListener {
 	return &indexerStreamingService{
 		blockProcessStrategyManager: blockProcessStrategyManager,
 
 		poolExtractor: poolExtractor,
+
+		poolTracker: poolTracker,
 
 		client: client,
 
@@ -165,6 +170,11 @@ func (s *indexerStreamingService) ListenFinalizeBlock(ctx context.Context, req a
 // ListenCommit updates the steaming service with the latest Commit messages and state changes
 func (s *indexerStreamingService) ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*storetypes.StoreKVPair) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	defer func() {
+		// Reset the pool tracker after processing the block.
+		s.poolTracker.Reset()
+	}()
 
 	// Create block processor
 	blockProcessor := blockprocessor.NewBlockProcessor(s.blockProcessStrategyManager, s.client, s.poolExtractor, s.keepers)
