@@ -450,7 +450,7 @@ func (q Querier) AllTakerFeeShareAccumulators(ctx sdk.Context, req queryproto.Al
 func (q Querier) RegisteredAlloyedPoolFromDenom(ctx sdk.Context, req queryproto.RegisteredAlloyedPoolFromDenomRequest) (*queryproto.RegisteredAlloyedPoolFromDenomResponse, error) {
 	contractState, found := q.K.GetRegisteredAlloyedPoolFromDenomUNSAFE(req.Denom)
 	if !found {
-		return nil, status.Error(codes.NotFound, "pool not found")
+		return nil, status.Error(codes.NotFound, "denom not found")
 	}
 
 	return &queryproto.RegisteredAlloyedPoolFromDenomResponse{

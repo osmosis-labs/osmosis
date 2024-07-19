@@ -38,6 +38,7 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetTakerFeeShareDenomsToAccruedValue)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetAllTakerFeeShareAccumulators)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetRegisteredAlloyedPoolFromDenom)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetRegisteredAlloyedPoolFromPoolId)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetAllRegisteredAlloyedPools)
 	cmd.AddCommand(
 		osmocli.GetParams[*queryproto.ParamsRequest](
@@ -260,6 +261,15 @@ func GetRegisteredAlloyedPoolFromDenom() (*osmocli.QueryDescriptor, *queryproto.
 		Long: `{{.Short}}
 		{{.CommandPrefix}} registered-alloyed-pool-from-denom uosmo`,
 	}, &queryproto.RegisteredAlloyedPoolFromDenomRequest{}
+}
+
+func GetRegisteredAlloyedPoolFromPoolId() (*osmocli.QueryDescriptor, *queryproto.RegisteredAlloyedPoolFromPoolIdRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "registered-alloyed-pool-from-pool-id",
+		Short: "Query registered alloyed pool from pool id",
+		Long: `{{.Short}}
+		{{.CommandPrefix}} registered-alloyed-pool-from-pool-id 1`,
+	}, &queryproto.RegisteredAlloyedPoolFromPoolIdRequest{}
 }
 
 func GetAllRegisteredAlloyedPools() (*osmocli.QueryDescriptor, *queryproto.AllRegisteredAlloyedPoolsRequest) {
