@@ -4253,12 +4253,6 @@
           "step_size": "1000000"
         }
       ],
-      "pool_weights": {
-        "stable_weight": "0",
-        "balancer_weight": "0",
-        "concentrated_weight": "0",
-        "cosmwasm_weight": "0"
-      },
       "days_since_module_genesis": "0",
       "developer_fees": [],
       "latest_block_height": "0",
