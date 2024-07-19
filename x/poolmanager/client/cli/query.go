@@ -257,9 +257,9 @@ func GetAllTakerFeeShareAccumulators() (*osmocli.QueryDescriptor, *queryproto.Al
 func GetRegisteredAlloyedPoolFromDenom() (*osmocli.QueryDescriptor, *queryproto.RegisteredAlloyedPoolFromDenomRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "registered-alloyed-pool-from-denom",
-		Short: "Query registered alloyed pool from denom",
+		Short: "Query registered alloyed pool from the alloyed pool denom",
 		Long: `{{.Short}}
-		{{.CommandPrefix}} registered-alloyed-pool-from-denom uosmo`,
+		{{.CommandPrefix}} registered-alloyed-pool-from-denom factory/osmo1z6r6qdknhgsc0zeracktgpcxf43j6sekq07nw8sxduc9lg0qjjlqfu25e3/alloyed/allBTC`,
 	}, &queryproto.RegisteredAlloyedPoolFromDenomRequest{}
 }
 
@@ -268,7 +268,7 @@ func GetRegisteredAlloyedPoolFromPoolId() (*osmocli.QueryDescriptor, *queryproto
 		Use:   "registered-alloyed-pool-from-pool-id",
 		Short: "Query registered alloyed pool from pool id",
 		Long: `{{.Short}}
-		{{.CommandPrefix}} registered-alloyed-pool-from-pool-id 1`,
+		{{.CommandPrefix}} registered-alloyed-pool-from-pool-id 1868`,
 	}, &queryproto.RegisteredAlloyedPoolFromPoolIdRequest{}
 }
 
