@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/hex"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/service/blockprocessor"
 	sqsdomain "github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
 var _ storetypes.ABCIListener = (*indexerStreamingService)(nil)
@@ -126,6 +128,11 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 			if eventType == "token_swapped" || eventType == "pool_joined" || eventType == "pool_exited" || eventType == "create_position" || eventType == "withdraw_position" {
 				includedEvents = append(includedEvents, domain.EventWrapper{Index: i, Event: event})
 			}
+
+			// Track the created pool ID
+			if eventType == poolmanagertypes.TypeEvtPoolCreated {
+				s.trackCreatedPoolID(event)
+			}
 		}
 
 		// Publish the transaction
@@ -190,4 +197,25 @@ func (s *indexerStreamingService) ListenCommit(ctx context.Context, res abci.Res
 // Stream implements baseapp.StreamingService.
 func (s *indexerStreamingService) Stream(wg *sync.WaitGroup) error {
 	return nil
+}
+
+// trackCreatedPoolID tracks the created pool ID.
+// If the pool ID is not found in the event attributes, it logs an error.
+// If the pool ID is found, it parses the pool ID to uint64 and tracks it.
+func (s *indexerStreamingService) trackCreatedPoolID(event abci.Event) {
+	if len(event.Attributes) == 0 {
+		s.logger.Error("Event attributes are empty for pool created event")
+		return
+	}
+
+	poolIDAttribute := event.Attributes[0]
+
+	// Parse to uint64
+	createdPoolID, err := strconv.ParseUint(poolIDAttribute.Value, 10, 64)
+	if err != nil {
+		s.logger.Error("Error parsing pool ID from event attributes", err)
+		return
+	}
+
+	s.poolTracker.TrackCreatedPoolID(createdPoolID)
 }

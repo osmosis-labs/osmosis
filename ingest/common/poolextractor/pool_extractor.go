@@ -99,3 +99,47 @@ func (p *poolExtractor) ExtractChanged(ctx sdk.Context) (commondomain.BlockPools
 
 	return changedBlockPools, nil
 }
+
+// ExtractCreated implements commondomain.PoolExtractor.
+func (p *poolExtractor) ExtractCreated(ctx sdk.Context) (commondomain.BlockPools, error) {
+	changedPools, err := p.ExtractChanged(ctx)
+	if err != nil {
+		return commondomain.BlockPools{}, err
+	}
+
+	createdPoolIDs := p.poolTracker.GetCreatedPoolIDs()
+
+	result := commondomain.BlockPools{}
+
+	// Copy over the pools that were created in the block
+
+	// CFMM
+	for _, pool := range changedPools.CFMMPools {
+		if _, ok := createdPoolIDs[pool.GetId()]; ok {
+			result.CFMMPools = append(result.CFMMPools, pool)
+		}
+	}
+
+	// CosmWasm
+	for _, pool := range changedPools.CosmWasmPools {
+		if _, ok := createdPoolIDs[pool.GetId()]; ok {
+			result.CosmWasmPools = append(result.CosmWasmPools, pool)
+		}
+	}
+
+	// Concentrated
+	for _, pool := range changedPools.ConcentratedPools {
+		if _, ok := createdPoolIDs[pool.GetId()]; ok {
+			result.ConcentratedPools = append(result.ConcentratedPools, pool)
+		}
+	}
+
+	// Concentrated ticks
+	for poolID := range changedPools.ConcentratedPoolIDTickChange {
+		if _, ok := createdPoolIDs[poolID]; ok {
+			result.ConcentratedPoolIDTickChange[poolID] = struct{}{}
+		}
+	}
+
+	return result, nil
+}
