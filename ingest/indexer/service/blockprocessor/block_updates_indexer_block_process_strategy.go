@@ -40,6 +40,12 @@ func (f *blockUpdatesIndexerBlockProcessStrategy) publishChangedPools(ctx types.
 
 	pools := blockPools.GetAll()
 
+	// TODO: move to config.
+	if len(pools) > 200 {
+		// TODO: add counter and alert
+		// Threshold is arbitrary but should be a good starting point
+	}
+
 	// Publish pool pairs
 	if err := f.poolPairPublisher.PublishPoolPairs(ctx, pools); err != nil {
 		return err

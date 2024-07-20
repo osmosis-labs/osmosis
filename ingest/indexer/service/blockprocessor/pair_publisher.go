@@ -38,6 +38,7 @@ func NewPairPublisher(client domain.Publisher, poolManagerKeeper domain.PoolMana
 // Invalid denoms are skipped as per domain.ShouldFilterDenom function.
 // Returns error if at least one of the pairs failed to be published.
 // Nil otherwise.
+// TODO: complete test
 // TODO: unit test
 func (p PairPublisher) PublishPoolPairs(ctx sdk.Context, pools []poolmanagertypes.PoolI) error {
 	result := make(chan error, len(pools))

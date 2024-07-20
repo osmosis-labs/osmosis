@@ -12,6 +12,9 @@ func NewBlockProcessor(blockProcessStrategyManager commondomain.BlockProcessStra
 
 	// If true, ingest all the data.
 	if blockProcessStrategyManager.ShouldPushAllData() {
+		// TODO: need to complete this and test it via functional tests
+		// i.e. ingest all the data for the very first block
+		// and then ingest only the changed data for the subsequent blocks
 		// TODO: move this to a higher level component
 		blockProcessStrategyManager.MarkInitialDataIngested()
 
