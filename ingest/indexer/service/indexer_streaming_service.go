@@ -151,6 +151,17 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 
 // ListenFinalizeBlock updates the streaming service with the latest FinalizeBlock messages
 func (s *indexerStreamingService) ListenFinalizeBlock(ctx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
+	// Log the status only for the first block
+	// Avoid subsequent blocks to avoid spamming the logs
+	if s.blockProcessStrategyManager.ShouldPushAllData() {
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		sdkCtx.Logger().Info("Starting indexer ingest ListenFinalizeBlock", "height", sdkCtx.BlockHeight())
+
+		defer func() {
+			sdkCtx.Logger().Info("Finished indexer ingest ListenFinalizeBlock", "height", sdkCtx.BlockHeight())
+		}()
+	}
+
 	// Publish the block data
 	var err error
 	err = s.publishBlock(ctx, req)
@@ -170,6 +181,17 @@ func (s *indexerStreamingService) ListenFinalizeBlock(ctx context.Context, req a
 // ListenCommit updates the steaming service with the latest Commit messages and state changes
 func (s *indexerStreamingService) ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*storetypes.StoreKVPair) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	// Log the status only for the first block
+	// Avoid subsequent blocks to avoid spamming the logs
+	if s.blockProcessStrategyManager.ShouldPushAllData() {
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		sdkCtx.Logger().Info("Starting indexer ingest ListenCommit", "height", sdkCtx.BlockHeight())
+
+		defer func() {
+			sdkCtx.Logger().Info("Finished indexer ingest ListenCommit", "height", sdkCtx.BlockHeight())
+		}()
+	}
 
 	defer func() {
 		// Reset the pool tracker after processing the block.
