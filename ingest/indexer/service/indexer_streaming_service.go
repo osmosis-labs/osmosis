@@ -151,7 +151,6 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 
 // ListenFinalizeBlock updates the streaming service with the latest FinalizeBlock messages
 func (s *indexerStreamingService) ListenFinalizeBlock(ctx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
-
 	// Log the status only for the first block
 	// Avoid subsequent blocks to avoid spamming the logs
 	if s.blockProcessStrategyManager.ShouldPushAllData() {
