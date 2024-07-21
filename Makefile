@@ -29,7 +29,7 @@ help:
 	@echo "  make lint                  Show available lint commands"
 	@echo "  make localnet              Show available localnet commands"
 	@echo "  make proto                 Show available proto commands"
-	@echo "  make release               Show available release commands"
+	@echo "  make release               Use goreleaser to build and release cross-platform osmosisd binary version"
 	@echo "  make release-help          Show available release commands"
 	@echo "  make run-querygen          Generating GRPC queries, and queryproto logic"
 	@echo "  make sqs                   Show available sqs commands"
