@@ -21,7 +21,7 @@ RUN apk add --no-cache \
     ca-certificates \
     build-base \
     linux-headers \
-    git
+    binutils-gold
 
 # Download go dependencies
 WORKDIR /osmosis
