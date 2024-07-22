@@ -8,7 +8,7 @@ ARG BUILD_TAGS="netgo,ledger,muslc"
 # Builder
 # --------------------------------------------------------
 
-FROM golang:${GO_VERSION}-alpine3.18 as builder
+FROM golang:${GO_VERSION}-alpine3.18 AS builder
 
 ARG GIT_VERSION
 ARG GIT_COMMIT
@@ -63,7 +63,7 @@ FROM ${RUNNER_IMAGE}
 
 COPY --from=builder /osmosis/build/osmosisd /bin/osmosisd
 
-ENV HOME /osmosis
+ENV HOME=/osmosis
 WORKDIR $HOME
 
 EXPOSE 26656

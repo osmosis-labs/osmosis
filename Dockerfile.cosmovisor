@@ -10,7 +10,7 @@ ARG COSMOVISOR_VERSION="v1.5.0"
 # Builder
 # --------------------------------------------------------
 
-FROM golang:${GO_VERSION}-alpine3.18 as builder
+FROM golang:${GO_VERSION}-alpine3.18 AS builder
 
 ARG GIT_VERSION
 ARG GIT_COMMIT
@@ -70,14 +70,14 @@ FROM ${RUNNER_IMAGE}
 COPY --from=builder /osmosis/build/osmosisd /bin/osmosisd
 COPY --from=builder /go/bin/cosmovisor /bin/cosmovisor
 
-ENV HOME /osmosis
+ENV HOME=/osmosis
 
-ENV DAEMON_NAME osmosisd
-ENV DAEMON_HOME ${HOME}/.osmosisd
-ENV DAEMON_ALLOW_DOWNLOAD_BINARIES true
-ENV DAEMON_RESTART_AFTER_UPGRADE true 
-ENV DAEMON_LOG_BUFFER_SIZE 512
-ENV UNSAFE_SKIP_BACKUP true
+ENV DAEMON_NAME=osmosisd
+ENV DAEMON_HOME=${HOME}/.osmosisd
+ENV DAEMON_ALLOW_DOWNLOAD_BINARIES=true
+ENV DAEMON_RESTART_AFTER_UPGRADE=true 
+ENV DAEMON_LOG_BUFFER_SIZE=512
+ENV UNSAFE_SKIP_BACKUP=true
 
 WORKDIR $HOME
 
