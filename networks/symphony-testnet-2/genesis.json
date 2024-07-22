@@ -1,0 +1,697 @@
+{
+  "genesis_time": "2024-07-10T05:50:43.226991581Z",
+  "chain_id": "symphony-testnet-2",
+  "initial_height": "1",
+  "consensus_params": {
+    "block": {
+      "max_bytes": "5242880",
+      "max_gas": "6000000"
+    },
+    "evidence": {
+      "max_age_num_blocks": "403200",
+      "max_age_duration": "1209600000000000",
+      "max_bytes": "1048576"
+    },
+    "validator": {
+      "pub_key_types": [
+        "ed25519"
+      ]
+    },
+    "version": {
+      "app": "1"
+    }
+  },
+  "app_hash": "",
+  "app_state": {
+    "07-tendermint": null,
+    "08-wasm": {
+      "contracts": []
+    },
+    "auth": {
+      "params": {
+        "max_memo_characters": "256",
+        "tx_sig_limit": "7",
+        "tx_size_cost_per_byte": "10",
+        "sig_verify_cost_ed25519": "590",
+        "sig_verify_cost_secp256k1": "1000"
+      },
+      "accounts": [
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "symphony1nkdh6l5wkygv7cuw6kfalknpus6fqmsr746f6k",
+          "pub_key": null,
+          "account_number": "0",
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "symphony16agv74asz2zlcyq4eusk4h0hkxwpp0hxex83jk",
+          "pub_key": null,
+          "account_number": "0",
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "symphony1dmlepawltn5hrvmz6humx99rrh48jdst4dce86",
+          "pub_key": null,
+          "account_number": "0",
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "symphony1vhhgnhmnw0x9zfslv4m2plchx8ecgthugemp74",
+          "pub_key": null,
+          "account_number": "0",
+          "sequence": "0"
+        }
+      ]
+    },
+    "authz": {
+      "authorization": []
+    },
+    "bank": {
+      "params": {
+        "send_enabled": [],
+        "default_send_enabled": true
+      },
+      "balances": [
+        {
+          "address": "symphony1nkdh6l5wkygv7cuw6kfalknpus6fqmsr746f6k",
+          "coins": [
+            {
+              "denom": "note",
+              "amount": "1000000000"
+            }
+          ]
+        },
+        {
+          "address": "symphony16agv74asz2zlcyq4eusk4h0hkxwpp0hxex83jk",
+          "coins": [
+            {
+              "denom": "note",
+              "amount": "1000000000"
+            }
+          ]
+        },
+        {
+          "address": "symphony1dmlepawltn5hrvmz6humx99rrh48jdst4dce86",
+          "coins": [
+            {
+              "denom": "note",
+              "amount": "1000000000"
+            }
+          ]
+        },
+        {
+          "address": "symphony1vhhgnhmnw0x9zfslv4m2plchx8ecgthugemp74",
+          "coins": [
+            {
+              "denom": "note",
+              "amount": "1000000000"
+            }
+          ]
+        }
+      ],
+      "supply": [],
+      "denom_metadata": [],
+      "send_enabled": []
+    },
+    "capability": {
+      "index": "1",
+      "owners": []
+    },
+    "concentratedliquidity": {
+      "params": {
+        "authorized_tick_spacing": [
+          "1",
+          "10",
+          "100",
+          "1000"
+        ],
+        "authorized_spread_factors": [
+          "0.000000000000000000",
+          "0.000100000000000000",
+          "0.000500000000000000",
+          "0.001000000000000000",
+          "0.002000000000000000",
+          "0.003000000000000000",
+          "0.005000000000000000"
+        ],
+        "balancer_shares_reward_discount": "0.050000000000000000",
+        "authorized_quote_denoms": [
+          "note",
+          "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
+          "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
+          "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858"
+        ],
+        "authorized_uptimes": [
+          "0.000000001s"
+        ],
+        "is_permissionless_pool_creation_enabled": false,
+        "unrestricted_pool_creator_whitelist": [],
+        "hook_gas_limit": "2000000"
+      },
+      "pool_data": [],
+      "position_data": [],
+      "next_position_id": "1",
+      "next_incentive_record_id": "1",
+      "incentives_accumulator_pool_id_migration_threshold": "0"
+    },
+    "consensus": null,
+    "cosmwasmpool": {
+      "params": {
+        "code_id_whitelist": [],
+        "pool_migration_limit": "20"
+      },
+      "pools": []
+    },
+    "crisis": {
+      "constant_fee": {
+        "denom": "note",
+        "amount": "500000000000"
+      }
+    },
+    "distribution": {
+      "params": {
+        "community_tax": "0.000000000000000000",
+        "base_proposer_reward": "0.000000000000000000",
+        "bonus_proposer_reward": "0.000000000000000000",
+        "withdraw_addr_enabled": true
+      },
+      "fee_pool": {
+        "community_pool": []
+      },
+      "delegator_withdraw_infos": [],
+      "previous_proposer": "",
+      "outstanding_rewards": [],
+      "validator_accumulated_commissions": [],
+      "validator_historical_rewards": [],
+      "validator_current_rewards": [],
+      "delegator_starting_infos": [],
+      "validator_slash_events": []
+    },
+    "downtimedetector": {
+      "downtimes": [
+        {
+          "duration": "DURATION_30S",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_1M",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_2M",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_3M",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_4M",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_5M",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_10M",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_20M",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_30M",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_40M",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_50M",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_1H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_1_5H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_2H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_2_5H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_3H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_4H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_5H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_6H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_9H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_12H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_18H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_24H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_36H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_48H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        }
+      ],
+      "last_block_time": "1970-01-01T00:00:00Z"
+    },
+    "epochs": {
+      "epochs": [
+        {
+          "identifier": "day",
+          "start_time": "0001-01-01T00:00:00Z",
+          "duration": "86400s",
+          "current_epoch": "0",
+          "current_epoch_start_time": "0001-01-01T00:00:00Z",
+          "epoch_counting_started": false,
+          "current_epoch_start_height": "0"
+        },
+        {
+          "identifier": "hour",
+          "start_time": "0001-01-01T00:00:00Z",
+          "duration": "3600s",
+          "current_epoch": "0",
+          "current_epoch_start_time": "0001-01-01T00:00:00Z",
+          "epoch_counting_started": false,
+          "current_epoch_start_height": "0"
+        },
+        {
+          "identifier": "week",
+          "start_time": "0001-01-01T00:00:00Z",
+          "duration": "604800s",
+          "current_epoch": "0",
+          "current_epoch_start_time": "0001-01-01T00:00:00Z",
+          "epoch_counting_started": false,
+          "current_epoch_start_height": "0"
+        }
+      ]
+    },
+    "evidence": {
+      "evidence": []
+    },
+    "gamm": {
+      "pools": [],
+      "next_pool_number": "1",
+      "params": {
+        "pool_creation_fee": [
+          {
+            "denom": "note",
+            "amount": "1000000000"
+          }
+        ]
+      },
+      "migration_records": {
+        "balancer_to_concentrated_pool_links": []
+      }
+    },
+    "genutil": {
+      "gen_txs": [{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgCreateValidator","description":{"moniker":"validator1","identity":"","website":"","security_contact":"","details":""},"commission":{"rate":"0.050000000000000000","max_rate":"0.600000000000000000","max_change_rate":"0.050000000000000000"},"min_self_delegation":"100000000","delegator_address":"symphony1nkdh6l5wkygv7cuw6kfalknpus6fqmsr746f6k","validator_address":"symphonyvaloper1nkdh6l5wkygv7cuw6kfalknpus6fqmsrdhjwdx","pubkey":{"@type":"/cosmos.crypto.ed25519.PubKey","key":"DjUBgbX1i/TIAIyPCtFg6YoWZAziD2zYEDHjx0o/6jk="},"value":{"denom":"note","amount":"100000000"}}],"memo":"8df964c61393d33d11f7c821aba1a72f428c0d24@10.128.0.2:26656","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[{"public_key":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A+Uv+rArBBphEQ4MJpV5TxK2GWdDks/iJFQ8MdKAIvuh"},"mode_info":{"single":{"mode":"SIGN_MODE_DIRECT"}},"sequence":"0"}],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""},"tip":null},"signatures":["s0wtcG8KSo+QevAjfdsmJySfWkOgpKJiZ5fWVqeRpC4YnlFDt80g2AtnqMataTR9YyuOzxyizgEJhaxAcJh+sQ=="]}]
+    },
+    "gov": {
+      "starting_proposal_id": "1",
+      "deposits": [],
+      "votes": [],
+      "proposals": [],
+      "deposit_params": null,
+      "voting_params": null,
+      "tally_params": null,
+      "params": {
+        "min_deposit": [
+          {
+            "denom": "note",
+            "amount": "2500000000"
+          }
+        ],
+        "max_deposit_period": "1209600s",
+        "voting_period": "259200s",
+        "quorum": "0.2",
+        "threshold": "0.500000000000000000",
+        "veto_threshold": "0.334000000000000000",
+        "min_initial_deposit_ratio": "0.000000000000000000",
+        "expedited_voting_period": "86400s",
+        "expedited_threshold": "0.667000000000000000",
+        "expedited_min_deposit": [
+          {
+            "denom": "note",
+            "amount": "5000000000"
+          }
+        ],
+        "burn_vote_quorum": false,
+        "burn_proposal_deposit_prevote": false,
+        "burn_vote_veto": true
+      }
+    },
+    "ibc": {
+      "client_genesis": {
+        "clients": [],
+        "clients_consensus": [],
+        "clients_metadata": [],
+        "params": {
+          "allowed_clients": [
+            "06-solomachine",
+            "07-tendermint",
+            "09-localhost"
+          ]
+        },
+        "create_localhost": false,
+        "next_client_sequence": "0"
+      },
+      "connection_genesis": {
+        "connections": [],
+        "client_connection_paths": [],
+        "next_connection_sequence": "0",
+        "params": {
+          "max_expected_time_per_block": "30000000000"
+        }
+      },
+      "channel_genesis": {
+        "channels": [],
+        "acknowledgements": [],
+        "commitments": [],
+        "receipts": [],
+        "send_sequences": [],
+        "recv_sequences": [],
+        "ack_sequences": [],
+        "next_channel_sequence": "0"
+      }
+    },
+    "ibchooks": {
+      "params": {
+        "allowed_async_ack_contracts": []
+      }
+    },
+    "incentives": {
+      "params": {
+        "distr_epoch_identifier": "day",
+        "group_creation_fee": [
+          {
+            "denom": "note",
+            "amount": "100000000"
+          }
+        ],
+        "unrestricted_creator_whitelist": [],
+        "internal_uptime": "0.000000001s"
+      },
+      "gauges": [],
+      "lockable_durations": [
+        "86400s",
+        "604800s",
+        "1209600s"
+      ],
+      "last_gauge_id": "0",
+      "group_gauges": [],
+      "groups": []
+    },
+    "interchainaccounts": {
+      "controller_genesis_state": {
+        "active_channels": [],
+        "interchain_accounts": [],
+        "ports": [],
+        "params": {
+          "controller_enabled": true
+        }
+      },
+      "host_genesis_state": {
+        "active_channels": [],
+        "interchain_accounts": [],
+        "port": "icahost",
+        "params": {
+          "host_enabled": true,
+          "allow_messages": [
+            "*"
+          ]
+        }
+      }
+    },
+    "interchainquery": {
+      "host_port": "icqhost",
+      "params": {
+        "host_enabled": true,
+        "allow_queries": []
+      }
+    },
+    "lockup": {
+      "last_lock_id": "0",
+      "locks": [],
+      "synthetic_locks": [],
+      "params": null
+    },
+    "mint": {
+      "minter": {
+        "epoch_provisions": "0.000000000000000000"
+      },
+      "params": {
+        "mint_denom": "note",
+        "genesis_epoch_provisions": "150250000000.000000000000000000",
+        "epoch_identifier": "week",
+        "reduction_period_in_epochs": "208",
+        "reduction_factor": "0.500000000000000000",
+        "distribution_proportions": {
+          "staking": "0.700000000000000000",
+          "pool_incentives": "0.000000000000000000",
+          "developer_rewards": "0.250000000000000000",
+          "community_pool": "0.050000000000000000"
+        },
+        "weighted_developer_rewards_receivers": [
+          {
+            "address": "symphony1g6pxgl8g0rnk7q86j9zh7yxsqdsn7jvdmc8fkx",
+            "weight": "1.000000000000000000"
+          }
+        ],
+        "minting_rewards_distribution_start_epoch": "1"
+      },
+      "reduction_started_epoch": "0"
+    },
+    "packetfowardmiddleware": {
+      "params": {
+        "fee_percentage": "0.000000000000000000"
+      },
+      "in_flight_packets": {}
+    },
+    "params": null,
+    "poolincentives": {
+      "params": {
+        "minted_denom": "note"
+      },
+      "lockable_durations": [
+        "86400s",
+        "604800s",
+        "1209600s"
+      ],
+      "distr_info": {
+        "total_weight": "1000",
+        "records": [
+          {
+            "gauge_id": "0",
+            "weight": "1000"
+          }
+        ]
+      },
+      "any_pool_to_internal_gauges": null,
+      "concentrated_pool_to_no_lock_gauges": null
+    },
+    "poolmanager": {
+      "next_pool_id": "1",
+      "params": {
+        "pool_creation_fee": [
+          {
+            "denom": "note",
+            "amount": "1000000000"
+          }
+        ],
+        "taker_fee_params": {
+          "default_taker_fee": "0.000000000000000000",
+          "osmo_taker_fee_distribution": {
+            "staking_rewards": "1.000000000000000000",
+            "community_pool": "0.000000000000000000"
+          },
+          "non_osmo_taker_fee_distribution": {
+            "staking_rewards": "0.670000000000000000",
+            "community_pool": "0.330000000000000000"
+          },
+          "admin_addresses": [],
+          "community_pool_denom_to_swap_non_whitelisted_assets_to": "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858",
+          "reduced_fee_whitelist": []
+        },
+        "authorized_quote_denoms": [
+          "note",
+          "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
+          "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
+          "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858"
+        ]
+      },
+      "pool_routes": [],
+      "taker_fees_tracker": {
+        "taker_fees_to_stakers": [],
+        "taker_fees_to_community_pool": [],
+        "height_accounting_starts_from": "0"
+      },
+      "pool_volumes": [],
+      "denom_pair_taker_fee_store": []
+    },
+    "protorev": {
+      "params": {
+        "enabled": true,
+        "admin": "symphony1vl3s0njph7uq9ar6vq6tdgy252tj0n0eeaz4zr"
+      },
+      "token_pair_arb_routes": [],
+      "base_denoms": [
+        {
+          "denom": "note",
+          "step_size": "1000000"
+        }
+      ],
+      "days_since_module_genesis": "0",
+      "developer_fees": [],
+      "latest_block_height": "0",
+      "developer_address": "",
+      "max_pool_points_per_block": "100",
+      "max_pool_points_per_tx": "18",
+      "point_count_for_block": "0",
+      "profits": [],
+      "info_by_pool_type": {
+        "stable": {
+          "weight": "5"
+        },
+        "balancer": {
+          "weight": "2"
+        },
+        "concentrated": {
+          "weight": "7",
+          "max_ticks_crossed": "5"
+        },
+        "cosmwasm": {
+          "weight_maps": []
+        }
+      },
+      "cyclic_arb_tracker": {
+        "cyclic_arb": [],
+        "height_accounting_starts_from": "0"
+      }
+    },
+    "rate-limited-ibc": {
+      "params": {
+        "contract_address": ""
+      }
+    },
+    "slashing": {
+      "params": {
+        "signed_blocks_window": "30000",
+        "min_signed_per_window": "0.050000000000000000",
+        "downtime_jail_duration": "60s",
+        "slash_fraction_double_sign": "0.050000000000000000",
+        "slash_fraction_downtime": "0.000000000000000000"
+      },
+      "signing_infos": [],
+      "missed_blocks": []
+    },
+    "staking": {
+      "params": {
+        "unbonding_time": "1209600s",
+        "max_validators": 100,
+        "max_entries": 7,
+        "historical_entries": 10000,
+        "bond_denom": "note",
+        "min_commission_rate": "0.050000000000000000"
+      },
+      "last_total_power": "0",
+      "last_validator_powers": [],
+      "validators": [],
+      "delegations": [],
+      "unbonding_delegations": [],
+      "redelegations": [],
+      "exported": false
+    },
+    "superfluid": {
+      "params": {
+        "minimum_risk_factor": "0.500000000000000000"
+      },
+      "superfluid_assets": [],
+      "osmo_equivalent_multipliers": [],
+      "intermediary_accounts": [],
+      "intemediary_account_connections": []
+    },
+    "tokenfactory": {
+      "params": {
+        "denom_creation_fee": [],
+        "denom_creation_gas_consume": "1000000"
+      },
+      "factory_denoms": []
+    },
+    "transfer": {
+      "port_id": "transfer",
+      "denom_traces": [],
+      "params": {
+        "send_enabled": true,
+        "receive_enabled": true
+      },
+      "total_escrowed": []
+    },
+    "twap": {
+      "twaps": [],
+      "params": {
+        "prune_epoch_identifier": "day",
+        "record_history_keep_period": "172800s"
+      }
+    },
+    "txfees": {
+      "basedenom": "note",
+      "feetokens": []
+    },
+    "upgrade": {},
+    "valsetpref": null,
+    "vesting": {},
+    "wasm": {
+      "params": {
+        "code_upload_access": {
+          "permission": "Everybody",
+          "addresses": []
+        },
+        "instantiate_default_permission": "Everybody"
+      },
+      "codes": [],
+      "contracts": [],
+      "sequences": []
+    }
+  }
+}

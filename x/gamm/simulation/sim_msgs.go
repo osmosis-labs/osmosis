@@ -16,7 +16,7 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 )
 
-var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
+var PoolCreationFee = sdk.NewInt64Coin("note", 10_000_000)
 
 // RandomJoinPoolMsg pseudo-randomly selects an existing pool ID, attempts to find an account with the
 // respective underlying token denoms, and attempts to execute a join pool transaction
@@ -44,7 +44,7 @@ func RandomJoinPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (
 	}
 
 	// TODO: Make FuzzTokenSubset API, token_in_maxs := sim.FuzzTokensSubset(sender, poolDenoms)
-	// TODO: Add some slippage tolerance
+	// TODO: Add some slippage toleranceG
 	// TODO: Make MinShareOutAmt fuzz API: minShareOutAmt = sim.FuzzEqualInt(share_out_amount)
 	return &types.MsgJoinPool{
 		Sender:         sender.Address.String(),
