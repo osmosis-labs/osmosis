@@ -15,6 +15,9 @@ import (
 	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/service/blockprocessor"
+
+	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
 var _ storetypes.ABCIListener = (*indexerStreamingService)(nil)
@@ -108,6 +111,29 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 		txMessages := tx.GetMsgs()
 		msgType := txMessages[0].String()
 
+		// Obtain the token in before spread
+		// Related thread: https://osmosis-network.slack.com/archives/C060VCJAVBL/p1721316448977489
+		var tokenInBeforeSpread string
+		for _, txMsgGeneric := range txMessages {
+			if txMsg, ok := txMsgGeneric.(*poolmanagertypes.MsgSwapExactAmountIn); ok {
+				tokenInBeforeSpread = txMsg.GetTokenIn().String()
+				break
+			}
+			if txMsg, ok := txMsgGeneric.(*poolmanagertypes.MsgSplitRouteSwapExactAmountIn); ok {
+				tokenInDenom := txMsg.GetTokenInDenom()
+				routes := txMsg.GetRoutes()
+				for _, route := range routes {
+					tokenInAmount := route.TokenInAmount
+					tokenInBeforeSpread = tokenInAmount.String() + tokenInDenom
+					break
+				}
+			}
+			if txMsg, ok := txMsgGeneric.(*gammtypes.MsgSwapExactAmountIn); ok {
+				tokenInBeforeSpread = txMsg.GetTokenIn().String()
+				break
+			}
+		}
+
 		// Include these events only:
 		// - token_swapped
 		// - pool_joined
@@ -125,15 +151,16 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 
 		// Publish the transaction
 		txn := domain.Transaction{
-			Height:             uint64(sdkCtx.BlockHeight()),
-			BlockTime:          sdkCtx.BlockTime().UTC(),
-			GasWanted:          uint64(gasWanted),
-			GasUsed:            uint64(gasUsed),
-			Fees:               fee,
-			MessageType:        msgType,
-			TransactionHash:    txHash,
-			TransactionIndexId: txnIndex,
-			Events:             includedEvents,
+			Height:              uint64(sdkCtx.BlockHeight()),
+			BlockTime:           sdkCtx.BlockTime().UTC(),
+			GasWanted:           uint64(gasWanted),
+			GasUsed:             uint64(gasUsed),
+			Fees:                fee,
+			MessageType:         msgType,
+			TransactionHash:     txHash,
+			TransactionIndexId:  txnIndex,
+			TokenInBeforeSpread: tokenInBeforeSpread,
+			Events:              includedEvents,
 		}
 		err = s.client.PublishTransaction(sdkCtx, txn)
 		if err != nil {
