@@ -24,7 +24,7 @@ on:
       - v[0-9]+.x-iavl-v1
 
 env:
-  RUNNER_BASE_IMAGE_ALPINE: alpine:3.17
+  RUNNER_BASE_IMAGE_ALPINE: alpine:3.20
   OSMOSIS_DEV_IMAGE_REPOSITORY: osmolabs/osmosis-dev
   OSMOSIS_INIT_CHAIN_IMAGE_REPOSITORY: osmolabs/osmosis-e2e-init-chain
   OSMOSIS_DEV_IMAGE_COSMOVISOR_REPOSITORY: osmolabs/osmosis-dev-cosmovisor
