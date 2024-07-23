@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -151,6 +153,22 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req types.Requ
 	var includedEvents []domain.EventWrapper
 	for i, event := range events {
 		eventType := event.Type
+		if eventType == "token_swapped" {
+			var poolId string
+			attributes := event.Attributes
+			for _, attribute := range attributes {
+				if attribute.Key == "pool_id" {
+					poolId = attribute.Value
+					break
+				}
+			}
+			poolIdInt, err := strconv.ParseInt(poolId, 10, 64)
+			if err != nil {
+				return err
+			}
+			pool, _ := s.keepers.PoolManagerKeeper.GetPool(sdkCtx, uint64(poolIdInt))
+			fmt.Println(pool)
+		}
 		if eventType == "token_swapped" || eventType == "pool_joined" || eventType == "pool_exited" || eventType == "create_position" || eventType == "withdraw_position" {
 			includedEvents = append(includedEvents, domain.EventWrapper{Index: i, Event: event})
 		}
