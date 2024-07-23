@@ -63,3 +63,12 @@ func (i *indexerPublisher) PublishTokenSupplyOffset(ctx context.Context, tokenSu
 	}
 	return nil
 }
+
+// PublishPair implements domain.Publisher.
+func (i *indexerPublisher) PublishPair(ctx context.Context, pair domain.Pair) error {
+	err := i.pubsubClient.PublishPair(ctx, pair)
+	if err != nil {
+		return err
+	}
+	return nil
+}

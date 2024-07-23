@@ -8,20 +8,7 @@ import (
 	"github.com/osmosis-labs/sqs/sqsdomain"
 
 	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
-
-// Ingester is an interface that defines the methods for the ingester.
-// Ingester ingests data into a sink.
-type Ingester interface {
-	// ProcessAllBlockData processes the block and ingests data into a sink.
-	// Returns error if the ingester fails to ingest data.
-	// Also returns cwpools, which is used to create the initial address to pool mapping.
-	ProcessAllBlockData(ctx sdk.Context) ([]poolmanagertypes.PoolI, error)
-
-	// ProcessChangedBlockData processes only the pools that were changed in the block.
-	ProcessChangedBlockData(ctx sdk.Context, changedPools commondomain.BlockPools) error
-}
 
 // PoolsTransformer is an interface that defines the methods for the pool transformer
 type PoolsTransformer interface {

@@ -5,8 +5,8 @@ import (
 	bankmigv2 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v2"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	"github.com/osmosis-labs/osmosis/v25/ingest/common/pooltracker"
 	"github.com/osmosis-labs/osmosis/v25/ingest/common/writelistener"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
 	"github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/model"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
 )
@@ -62,7 +62,7 @@ func (s *WriteListenerTestSuite) TestWriteListener_CosmWasm() {
 		tc := tc
 		s.Run(tc.name, func() {
 
-			poolTracker := service.NewPoolTracker()
+			poolTracker := pooltracker.NewMemory()
 
 			cosmWasmPoolWriteListener := writelistener.NewCosmwasmPool(poolTracker, s.App.WasmKeeper)
 
@@ -101,7 +101,7 @@ func (s *WriteListenerTestSuite) TestWriteListener_CosmWasmBalance() {
 	s.Require().NoError(err)
 
 	// Trigger cwPool write listener actions at pool creation
-	poolTracker := service.NewPoolTracker()
+	poolTracker := pooltracker.NewMemory()
 	cosmWasmPoolWriteListener := writelistener.NewCosmwasmPool(poolTracker, s.App.WasmKeeper)
 	cosmwasmPoolKVStore := s.App.GetKey(cosmwasmpooltypes.ModuleName)
 	err = cosmWasmPoolWriteListener.OnWrite(cosmwasmPoolKVStore, cosmwasmpooltypes.FormatPoolsPrefix(cosmWasmPoolModel.PoolId), concentratedPoolModelBz, false)
