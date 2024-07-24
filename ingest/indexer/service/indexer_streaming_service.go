@@ -3,14 +3,20 @@ package service
 import (
 	"context"
 	"encoding/hex"
+	"errors"
+	"strconv"
 	"strings"
 	"sync"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
+
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	pooltypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 
 	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
@@ -122,6 +128,11 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 		events := res.GetEvents()
 		var includedEvents []domain.EventWrapper
 		for i, event := range events {
+			err := s.adjustTokenInAmountBySpreadFactor(ctx, &event)
+			if err != nil {
+				s.logger.Error("Error adjusting amount by spread factor", "error", err)
+				continue
+			}
 			eventType := event.Type
 			if eventType == "token_swapped" || eventType == "pool_joined" || eventType == "pool_exited" || eventType == "create_position" || eventType == "withdraw_position" {
 				includedEvents = append(includedEvents, domain.EventWrapper{Index: i, Event: event})
@@ -146,6 +157,65 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 			return err
 		}
 	}
+	return nil
+}
+
+// adjustAmountBySpreadFactor adjusts the amount by the spread factor.
+// This is done to adjust the amount of tokens in the token_swapped event by the spread factor,
+// as the amount in the event is the amount AFTER the spread factor is applied.
+// therefore, we need to adjust the amount by the spread factor to get the amount BEFORE the spread factor is applied.
+// NOTE: This applies to CL pools only
+func (s *indexerStreamingService) adjustTokenInAmountBySpreadFactor(ctx context.Context, event *abci.Event) error {
+	if event.Type != "token_swapped" {
+		return nil
+	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	var poolIdStr string
+	var afterTokensIn string
+	var afterTokensInIndex int
+	attributes := event.Attributes
+	// Find the pool id and tokens in attributes from the token_swapped
+	for index, attribute := range attributes {
+		if poolIdStr != "" && afterTokensIn != "" {
+			break
+		}
+		if attribute.Key == "pool_id" {
+			poolIdStr = attribute.Value
+		}
+		if attribute.Key == "tokens_in" {
+			afterTokensIn = attribute.Value
+			afterTokensInIndex = index
+		}
+	}
+	if poolIdStr == "" || afterTokensIn == "" {
+		return errors.New("pool id or tokens in not found")
+	}
+	poolId, err := strconv.ParseInt(poolIdStr, 10, 64)
+	if err != nil {
+		return errors.New("failed to parse pool id")
+	}
+	poolType, err := s.keepers.PoolManagerKeeper.GetPoolType(sdkCtx, uint64(poolId))
+	if err != nil {
+		return errors.New("failed to get pool type")
+	}
+	// Adjustment required only for CL pools
+	if poolType != pooltypes.Concentrated {
+		return nil
+	}
+	// Get the pool and its spread factor
+	pool, err := s.keepers.PoolManagerKeeper.GetPool(sdkCtx, uint64(poolId))
+	if err != nil {
+		return errors.New("failed to get pool")
+	}
+	spreadFactor := pool.GetSpreadFactor(sdkCtx)
+	coins, err := sdk.ParseCoinsNormalized(afterTokensIn)
+	if err != nil {
+		return errors.New("failed to parse tokens in")
+	}
+	tokenInAmount := coins[0].Amount.ToLegacyDec()
+	// Adjust the amount by the spread factor, i.e. before = after/(1 - spreadFactor)
+	adjustedAmt := tokenInAmount.Quo(math.LegacyNewDec(1).Sub(spreadFactor))
+	attributes[afterTokensInIndex].Value = adjustedAmt.String()
 	return nil
 }
 
