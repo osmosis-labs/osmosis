@@ -8,14 +8,7 @@ import (
 	"strings"
 	"sync"
 
-<<<<<<< HEAD
 	"github.com/cometbft/cometbft/abci/types"
-=======
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
-	abci "github.com/cometbft/cometbft/abci/types"
-
->>>>>>> bfe47ba3 (fix: [indexer] adjust token in amount for spread factor for CL pools only (#8541))
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -23,25 +16,21 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
-
 	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/service/blockprocessor"
 	sqsdomain "github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
-<<<<<<< HEAD
-var _ baseapp.StreamingService = (*indexerStreamingService)(nil)
-=======
 var (
-	_      storetypes.ABCIListener = (*indexerStreamingService)(nil)
-	oneDec                         = osmomath.OneDec()
+	_      baseapp.StreamingService = (*indexerStreamingService)(nil)
+	oneDec                          = osmomath.OneDec()
 )
->>>>>>> bfe47ba3 (fix: [indexer] adjust token in amount for spread factor for CL pools only (#8541))
 
 // ind is a streaming service that processes block data and ingests it into the indexer
 type indexerStreamingService struct {
@@ -138,96 +127,12 @@ func (s *indexerStreamingService) publishBlock(ctx context.Context, req types.Re
 	return s.client.PublishBlock(sdkCtx, block)
 }
 
-// publishTxn publishes the transaction data to the indexer.
-func (s *indexerStreamingService) publishTxn(ctx context.Context, req types.RequestDeliverTx, res types.ResponseDeliverTx) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	// Decode the transaction
-	tx, err := s.txDecoder(req.GetTx())
-	if err != nil {
-		return err
-	}
-
-	// Calculate the transaction hash
-	txHash := strings.ToUpper(hex.EncodeToString(tmhash.Sum(req.GetTx())))
-
-	// Gas data
-	gasWanted := res.GasWanted
-	gasUsed := res.GasUsed
-
-	// Fee data
-	feeTx, _ := tx.(sdk.FeeTx)
-	fee := feeTx.GetFee()
-
-<<<<<<< HEAD
-	// Message type
-	txMessages := tx.GetMsgs()
-	msgType := proto.MessageName(txMessages[0])
-=======
-		// Include these events only:
-		// - token_swapped
-		// - pool_joined
-		// - pool_exited
-		// - create_position
-		// - withdraw_position
-		events := res.GetEvents()
-		var includedEvents []domain.EventWrapper
-		for i, event := range events {
-			err := s.adjustTokenInAmountBySpreadFactor(ctx, &event)
-			if err != nil {
-				s.logger.Error("Error adjusting amount by spread factor", "error", err)
-				continue
-			}
-			eventType := event.Type
-			if eventType == gammtypes.TypeEvtTokenSwapped || eventType == gammtypes.TypeEvtPoolJoined || eventType == gammtypes.TypeEvtPoolExited || eventType == concentratedliquiditytypes.TypeEvtCreatePosition || eventType == concentratedliquiditytypes.TypeEvtWithdrawPosition {
-				includedEvents = append(includedEvents, domain.EventWrapper{Index: i, Event: event})
-			}
-		}
->>>>>>> bfe47ba3 (fix: [indexer] adjust token in amount for spread factor for CL pools only (#8541))
-
-	// Include these events only:
-	// - token_swapped
-	// - pool_joined
-	// - pool_exited
-	// - create_position
-	// - withdraw_position
-	events := res.GetEvents()
-	var includedEvents []domain.EventWrapper
-	for i, event := range events {
-		eventType := event.Type
-		if eventType == "token_swapped" || eventType == "pool_joined" || eventType == "pool_exited" || eventType == "create_position" || eventType == "withdraw_position" {
-			includedEvents = append(includedEvents, domain.EventWrapper{Index: i, Event: event})
-		}
-	}
-
-	// Publish the transaction
-	txn := domain.Transaction{
-		Height:             uint64(sdkCtx.BlockHeight()),
-		BlockTime:          sdkCtx.BlockTime().UTC(),
-		GasWanted:          uint64(gasWanted),
-		GasUsed:            uint64(gasUsed),
-		Fees:               fee,
-		MessageType:        msgType,
-		TransactionHash:    txHash,
-		TransactionIndexId: s.txnIndexId,
-		Events:             includedEvents,
-	}
-	return s.client.PublishTransaction(sdkCtx, txn)
-}
-
-<<<<<<< HEAD
-// ListenEndBlock implements baseapp.StreamingService.
-func (s *indexerStreamingService) ListenEndBlock(ctx context.Context, req types.RequestEndBlock, res types.ResponseEndBlock) error {
-	// Reset the transaction index id on end block
-	defer func() {
-		s.txnIndexId = 0
-	}()
-=======
 // adjustAmountBySpreadFactor adjusts the amount by the spread factor.
 // This is done to adjust the amount of tokens in the token_swapped event by the spread factor,
 // as the amount in the event is the amount AFTER the spread factor is applied.
 // therefore, we need to adjust the amount by the spread factor to get the amount BEFORE the spread factor is applied.
 // NOTE: This applies to CL pools only
-func (s *indexerStreamingService) adjustTokenInAmountBySpreadFactor(ctx context.Context, event *abci.Event) error {
+func (s *indexerStreamingService) adjustTokenInAmountBySpreadFactor(ctx context.Context, event *types.Event) error {
 	if event.Type != gammtypes.TypeEvtTokenSwapped {
 		return nil
 	}
@@ -256,14 +161,12 @@ func (s *indexerStreamingService) adjustTokenInAmountBySpreadFactor(ctx context.
 	if err != nil {
 		return errors.New("failed to parse pool id")
 	}
-	// Get the pool, pool type and its spread factor
 	pool, err := s.keepers.PoolManagerKeeper.GetPool(sdkCtx, uint64(poolId))
 	if err != nil {
 		return errors.New("failed to get pool")
 	}
-	poolType := pool.GetType()
 	// Adjustment required only for CL pools
-	if poolType != poolmanagertypes.Concentrated {
+	if pool.GetType() != poolmanagertypes.Concentrated {
 		return nil
 	}
 	spreadFactor := pool.GetSpreadFactor(sdkCtx)
@@ -278,20 +181,71 @@ func (s *indexerStreamingService) adjustTokenInAmountBySpreadFactor(ctx context.
 	return nil
 }
 
-// ListenFinalizeBlock updates the streaming service with the latest FinalizeBlock messages
-func (s *indexerStreamingService) ListenFinalizeBlock(ctx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
-	// Log the status only for the first block
-	// Avoid subsequent blocks to avoid spamming the logs
-	if s.blockProcessStrategyManager.ShouldPushAllData() {
-		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		sdkCtx.Logger().Info("Starting indexer ingest ListenFinalizeBlock", "height", sdkCtx.BlockHeight())
-
-		defer func() {
-			sdkCtx.Logger().Info("Finished indexer ingest ListenFinalizeBlock", "height", sdkCtx.BlockHeight())
-		}()
+// publishTxn publishes the transaction data to the indexer.
+func (s *indexerStreamingService) publishTxn(ctx context.Context, req types.RequestDeliverTx, res types.ResponseDeliverTx) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	// Decode the transaction
+	tx, err := s.txDecoder(req.GetTx())
+	if err != nil {
+		return err
 	}
 
->>>>>>> bfe47ba3 (fix: [indexer] adjust token in amount for spread factor for CL pools only (#8541))
+	// Calculate the transaction hash
+	txHash := strings.ToUpper(hex.EncodeToString(tmhash.Sum(req.GetTx())))
+
+	// Gas data
+	gasWanted := res.GasWanted
+	gasUsed := res.GasUsed
+
+	// Fee data
+	feeTx, _ := tx.(sdk.FeeTx)
+	fee := feeTx.GetFee()
+
+	// Message type
+	txMessages := tx.GetMsgs()
+	msgType := proto.MessageName(txMessages[0])
+
+	// Include these events only:
+	// - token_swapped
+	// - pool_joined
+	// - pool_exited
+	// - create_position
+	// - withdraw_position
+	events := res.GetEvents()
+	var includedEvents []domain.EventWrapper
+	for i, event := range events {
+		err := s.adjustTokenInAmountBySpreadFactor(ctx, &event)
+		if err != nil {
+			s.logger.Error("Error adjusting amount by spread factor", "error", err)
+			continue
+		}
+		eventType := event.Type
+		if eventType == gammtypes.TypeEvtTokenSwapped || eventType == gammtypes.TypeEvtPoolJoined || eventType == gammtypes.TypeEvtPoolExited || eventType == concentratedliquiditytypes.TypeEvtCreatePosition || eventType == concentratedliquiditytypes.TypeEvtWithdrawPosition {
+			includedEvents = append(includedEvents, domain.EventWrapper{Index: i, Event: event})
+		}
+	}
+
+	// Publish the transaction
+	txn := domain.Transaction{
+		Height:             uint64(sdkCtx.BlockHeight()),
+		BlockTime:          sdkCtx.BlockTime().UTC(),
+		GasWanted:          uint64(gasWanted),
+		GasUsed:            uint64(gasUsed),
+		Fees:               fee,
+		MessageType:        msgType,
+		TransactionHash:    txHash,
+		TransactionIndexId: s.txnIndexId,
+		Events:             includedEvents,
+	}
+	return s.client.PublishTransaction(sdkCtx, txn)
+}
+
+// ListenEndBlock implements baseapp.StreamingService.
+func (s *indexerStreamingService) ListenEndBlock(ctx context.Context, req types.RequestEndBlock, res types.ResponseEndBlock) error {
+	// Reset the transaction index id on end block
+	defer func() {
+		s.txnIndexId = 0
+	}()
 	// Publish the block data
 	err := s.publishBlock(ctx, req)
 	if err != nil {
