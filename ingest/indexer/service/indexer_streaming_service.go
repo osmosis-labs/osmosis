@@ -9,14 +9,16 @@ import (
 	"sync"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	pooltypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 
 	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
@@ -24,7 +26,10 @@ import (
 	sqsdomain "github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 )
 
-var _ storetypes.ABCIListener = (*indexerStreamingService)(nil)
+var (
+	_      storetypes.ABCIListener = (*indexerStreamingService)(nil)
+	oneDec                         = osmomath.OneDec()
+)
 
 // ind is a streaming service that processes block data and ingests it into the indexer
 type indexerStreamingService struct {
@@ -134,7 +139,7 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 				continue
 			}
 			eventType := event.Type
-			if eventType == "token_swapped" || eventType == "pool_joined" || eventType == "pool_exited" || eventType == "create_position" || eventType == "withdraw_position" {
+			if eventType == gammtypes.TypeEvtTokenSwapped || eventType == gammtypes.TypeEvtPoolJoined || eventType == gammtypes.TypeEvtPoolExited || eventType == concentratedliquiditytypes.TypeEvtCreatePosition || eventType == concentratedliquiditytypes.TypeEvtWithdrawPosition {
 				includedEvents = append(includedEvents, domain.EventWrapper{Index: i, Event: event})
 			}
 		}
@@ -166,7 +171,7 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 // therefore, we need to adjust the amount by the spread factor to get the amount BEFORE the spread factor is applied.
 // NOTE: This applies to CL pools only
 func (s *indexerStreamingService) adjustTokenInAmountBySpreadFactor(ctx context.Context, event *abci.Event) error {
-	if event.Type != "token_swapped" {
+	if event.Type != gammtypes.TypeEvtTokenSwapped {
 		return nil
 	}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -179,10 +184,10 @@ func (s *indexerStreamingService) adjustTokenInAmountBySpreadFactor(ctx context.
 		if poolIdStr != "" && afterTokensIn != "" {
 			break
 		}
-		if attribute.Key == "pool_id" {
+		if attribute.Key == concentratedliquiditytypes.AttributeKeyPoolId {
 			poolIdStr = attribute.Value
 		}
-		if attribute.Key == "tokens_in" {
+		if attribute.Key == concentratedliquiditytypes.AttributeKeyTokensIn {
 			afterTokensIn = attribute.Value
 			afterTokensInIndex = index
 		}
@@ -194,18 +199,15 @@ func (s *indexerStreamingService) adjustTokenInAmountBySpreadFactor(ctx context.
 	if err != nil {
 		return errors.New("failed to parse pool id")
 	}
-	poolType, err := s.keepers.PoolManagerKeeper.GetPoolType(sdkCtx, uint64(poolId))
-	if err != nil {
-		return errors.New("failed to get pool type")
-	}
-	// Adjustment required only for CL pools
-	if poolType != pooltypes.Concentrated {
-		return nil
-	}
-	// Get the pool and its spread factor
+	// Get the pool, pool type and its spread factor
 	pool, err := s.keepers.PoolManagerKeeper.GetPool(sdkCtx, uint64(poolId))
 	if err != nil {
 		return errors.New("failed to get pool")
+	}
+	poolType := pool.GetType()
+	// Adjustment required only for CL pools
+	if poolType != poolmanagertypes.Concentrated {
+		return nil
 	}
 	spreadFactor := pool.GetSpreadFactor(sdkCtx)
 	coins, err := sdk.ParseCoinsNormalized(afterTokensIn)
@@ -214,7 +216,7 @@ func (s *indexerStreamingService) adjustTokenInAmountBySpreadFactor(ctx context.
 	}
 	tokenInAmount := coins[0].Amount.ToLegacyDec()
 	// Adjust the amount by the spread factor, i.e. before = after/(1 - spreadFactor)
-	adjustedAmt := tokenInAmount.Quo(math.LegacyNewDec(1).Sub(spreadFactor))
+	adjustedAmt := tokenInAmount.Quo(oneDec.Sub(spreadFactor))
 	attributes[afterTokensInIndex].Value = adjustedAmt.String()
 	return nil
 }
