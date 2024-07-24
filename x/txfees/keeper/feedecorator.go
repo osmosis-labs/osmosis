@@ -61,36 +61,39 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		}
 	}
 
-	msgs := tx.GetMsgs()
-	for _, msg := range msgs {
-		// If one of the msgs is an IBC Transfer msg, limit it's size due to current spam potential.
-		// 500KB for entire msg
-		// 400KB for memo
-		// 65KB for receiver
-		if transferMsg, ok := msg.(*transfertypes.MsgTransfer); ok {
-			if transferMsg.Size() > 500000 { // 500KB
-				return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "msg size is too large")
+	// TODO: In v26, move this code to the correct spot, and make it CheckTX only.
+	if ctx.BlockHeight() >= 16841116 {
+		msgs := tx.GetMsgs()
+		for _, msg := range msgs {
+			// If one of the msgs is an IBC Transfer msg, limit it's size due to current spam potential.
+			// 500KB for entire msg
+			// 400KB for memo
+			// 65KB for receiver
+			if transferMsg, ok := msg.(*transfertypes.MsgTransfer); ok {
+				if transferMsg.Size() > 500000 { // 500KB
+					return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "msg size is too large")
+				}
+
+				if len([]byte(transferMsg.Memo)) > 400000 { // 400KB
+					return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "memo is too large")
+				}
+
+				if len(transferMsg.Receiver) > 65000 { // 65KB
+					return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "receiver address is too large")
+				}
 			}
 
-			if len([]byte(transferMsg.Memo)) > 400000 { // 400KB
-				return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "memo is too large")
-			}
+			// If one of the msgs is from ICA, limit it's size due to current spam potential.
+			// 500KB for packet data
+			// 65KB for sender
+			if icaMsg, ok := msg.(*icacontrollertypes.MsgSendTx); ok {
+				if icaMsg.PacketData.Size() > 500000 { // 500KB
+					return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "packet data is too large")
+				}
 
-			if len(transferMsg.Receiver) > 65000 { // 65KB
-				return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "receiver address is too large")
-			}
-		}
-
-		// If one of the msgs is from ICA, limit it's size due to current spam potential.
-		// 500KB for packet data
-		// 65KB for sender
-		if icaMsg, ok := msg.(*icacontrollertypes.MsgSendTx); ok {
-			if icaMsg.PacketData.Size() > 500000 { // 500KB
-				return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "packet data is too large")
-			}
-
-			if len([]byte(icaMsg.Owner)) > 65000 { // 65KB
-				return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "owner address is too large")
+				if len([]byte(icaMsg.Owner)) > 65000 { // 65KB
+					return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "owner address is too large")
+				}
 			}
 		}
 	}
