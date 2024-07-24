@@ -292,6 +292,7 @@ func (s *KeeperTestSuite) TestMempoolFeeDecorator_AnteHandle_MsgTransfer() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
+			s.Ctx = s.Ctx.WithBlockHeight(1_000_000_000)
 			baseDenom, _ := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
 			txFee := sdk.NewCoins(sdk.NewCoin(baseDenom, sdk.NewInt(250000)))
 			tx, err := s.prepareTx(tc.msg, txFee)
