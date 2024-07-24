@@ -22,7 +22,6 @@ on:
       - main
       - v[0-9]+.x
       - v[0-9]+.x-iavl-v1
-  workflow_dispatch:
 
 env:
   RUNNER_BASE_IMAGE_ALPINE: alpine:3.17
