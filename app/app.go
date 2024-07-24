@@ -247,8 +247,7 @@ func NewOsmosisApp(
 	wasmOpts []wasmkeeper.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
-
-	// Handler OTEL configuraiton.
+	// Handler OTEL configuration.
 	OTELConfig := NewOTELConfigFromOptions(appOpts)
 	if OTELConfig.Enabled {
 		ctx := context.Background()
