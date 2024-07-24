@@ -301,6 +301,16 @@ func (s *KeeperTestSuite) TestGetTakerFeeShareAgreements() {
 			expectedDenomShares:   defaultTakerFeeShareAgreements[:2],
 			expectedAlloyedShares: []types.TakerFeeShareAgreement{},
 		},
+		"multiple denomShareAgreement denoms and multiple alloyedAssetShareAgreements, alloyed denoms first": {
+			setupFunc: func() []string {
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:2])
+				alloyedDenom1 := s.setupAndRegisterAlloyedPool([]string{denomA, denomC}, []uint16{1, 1})
+				alloyedDenom2 := s.setupAndRegisterAlloyedPool([]string{denomB, denomC}, []uint16{1, 1})
+				return []string{alloyedDenom1, alloyedDenom2, denomA, denomB}
+			},
+			expectedDenomShares:   defaultTakerFeeShareAgreements[:2],
+			expectedAlloyedShares: []types.TakerFeeShareAgreement{},
+		},
 		"no agreements": {
 			setupFunc: func() []string {
 				return []string{denomA, denomB}
