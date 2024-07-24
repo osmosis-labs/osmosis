@@ -34,7 +34,6 @@ linters:
     - tenv
     - thelper
     - tparallel
-    - typecheck
     - thelper
     - unconvert
     - unused
