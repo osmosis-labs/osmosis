@@ -146,9 +146,6 @@ import (
 
 const appName = "OsmosisApp"
 
-// TODO: move to config
-const isOTELEnabled = true
-
 var (
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
@@ -251,13 +248,13 @@ func NewOsmosisApp(
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
 
-	if isOTELEnabled {
-		// TODO: handle proper cancellation on shutdown.
+	// Handler OTEL configuraiton.
+	OTELConfig := NewOTELConfigFromOptions(appOpts)
+	if OTELConfig.Enabled {
 		ctx := context.Background()
 
-		// resource.WithContainer() adds container.id which the agent will leverage to fetch container tags via the tagger.
 		res, err := resource.New(ctx, resource.WithContainer(),
-			resource.WithAttributes(semconv.ServiceNameKey.String("osmosis")),
+			resource.WithAttributes(semconv.ServiceNameKey.String(OTELConfig.ServiceName)),
 			resource.WithFromEnv(),
 		)
 		if err != nil {
@@ -268,13 +265,6 @@ func NewOsmosisApp(
 		if err != nil {
 			panic(err)
 		}
-
-		// TODO: find location to shutdown this
-		// defer func() {
-		// 	if err := tp.Shutdown(ctx); err != nil {
-		// 		panic(fmt.Sprintf("Error shutting down tracer provider: %s", err))
-		// 	}
-		// }()
 	}
 
 	initReusablePackageInjections() // This should run before anything else to make sure the variables are properly initialized
