@@ -116,7 +116,11 @@ func (k *Keeper) SetTakerFeeShareAgreementForDenom(ctx sdk.Context, takerFeeShar
 	k.cachedTakerFeeShareAgreementMap[takerFeeShare.Denom] = takerFeeShare
 
 	// Check if this denom is in the registered alloyed pools, if so we need to recalculate the taker fee share composition
-	for _, poolId := range k.cachedRegisteredAlloyedPoolIdArray {
+	poolIds, err := k.getAllRegisteredAlloyedPoolsIdArray(ctx)
+	if err != nil {
+		return err
+	}
+	for _, poolId := range poolIds {
 		pool, err := k.cosmwasmpoolKeeper.GetPool(ctx, poolId)
 		if err != nil {
 			return err
@@ -299,12 +303,8 @@ func (k *Keeper) setRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error 
 	key := types.FormatRegisteredAlloyPoolKey(poolId, alloyedDenom)
 	store.Set(key, bz)
 
-	// Set cache values
+	// Set cache value
 	k.cachedRegisteredAlloyPoolByAlloyDenomMap[alloyedDenom] = registeredAlloyedPool
-	k.cachedRegisteredAlloyedPoolIdArray = append(k.cachedRegisteredAlloyedPoolIdArray, poolId)
-	sort.Slice(k.cachedRegisteredAlloyedPoolIdArray, func(i, j int) bool {
-		return k.cachedRegisteredAlloyedPoolIdArray[i] < k.cachedRegisteredAlloyedPoolIdArray[j]
-	})
 
 	// Emit event
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -412,7 +412,7 @@ func (k *Keeper) setAllRegisteredAlloyedPoolsByDenomCached(ctx sdk.Context) erro
 // Registered Alloyed Pool Ids
 //
 
-// getAllRegisteredAlloyedPoolsIdArray creates the array used for the registered alloyed pools id array cache.
+// getAllRegisteredAlloyedPoolsIdArray creates an array of all registered alloyed pools IDs.
 func (k Keeper) getAllRegisteredAlloyedPoolsIdArray(ctx sdk.Context) ([]uint64, error) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, types.KeyRegisteredAlloyPool)
@@ -436,16 +436,6 @@ func (k Keeper) getAllRegisteredAlloyedPoolsIdArray(ctx sdk.Context) ([]uint64, 
 	sort.Slice(registeredAlloyedPoolsIdArray, func(i, j int) bool { return registeredAlloyedPoolsIdArray[i] < registeredAlloyedPoolsIdArray[j] })
 
 	return registeredAlloyedPoolsIdArray, nil
-}
-
-// setAllRegisteredAlloyedPoolIdArrayCached initializes the cache for the registered alloyed pools id array.
-func (k *Keeper) setAllRegisteredAlloyedPoolIdArrayCached(ctx sdk.Context) error {
-	registeredAlloyPoolIds, err := k.getAllRegisteredAlloyedPoolsIdArray(ctx)
-	if err != nil {
-		return err
-	}
-	k.cachedRegisteredAlloyedPoolIdArray = registeredAlloyPoolIds
-	return nil
 }
 
 //

@@ -70,12 +70,12 @@ func (k Keeper) RecalculateAndSetTakerFeeShareAlloyComposition(ctx sdk.Context, 
 	return k.recalculateAndSetTakerFeeShareAlloyComposition(ctx, poolId)
 }
 
-func (k Keeper) GetCachedTrackers() (map[string]types.TakerFeeShareAgreement, map[string]types.AlloyContractTakerFeeShareState, []uint64) {
+func (k Keeper) GetCachedTrackers() (map[string]types.TakerFeeShareAgreement, map[string]types.AlloyContractTakerFeeShareState) {
 	return k.getCacheTrackers()
 }
 
-func (k *Keeper) SetCacheTrackers(takerFeeShareAgreement map[string]types.TakerFeeShareAgreement, registeredAlloyPoolToState map[string]types.AlloyContractTakerFeeShareState, registeredAlloyedPoolId []uint64) {
-	k.setCacheTrackers(takerFeeShareAgreement, registeredAlloyPoolToState, registeredAlloyedPoolId)
+func (k *Keeper) SetCacheTrackers(takerFeeShareAgreement map[string]types.TakerFeeShareAgreement, registeredAlloyPoolToState map[string]types.AlloyContractTakerFeeShareState) {
+	k.setCacheTrackers(takerFeeShareAgreement, registeredAlloyPoolToState)
 }
 
 func (k Keeper) GetAlloyedDenomFromPoolId(ctx sdk.Context, poolId uint64) (string, error) {
@@ -132,10 +132,6 @@ func (k *Keeper) SetAllRegisteredAlloyedPoolsByDenomCached(ctx sdk.Context) erro
 
 func (k Keeper) GetAllRegisteredAlloyedPoolsIdArray(ctx sdk.Context) ([]uint64, error) {
 	return k.getAllRegisteredAlloyedPoolsIdArray(ctx)
-}
-
-func (k *Keeper) SetAllRegisteredAlloyedPoolIdArrayCached(ctx sdk.Context) error {
-	return k.setAllRegisteredAlloyedPoolIdArrayCached(ctx)
 }
 
 func (k Keeper) GetTakerFeeShareAgreementFromDenom(takerFeeShareDenom string) (types.TakerFeeShareAgreement, bool) {

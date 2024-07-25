@@ -227,7 +227,7 @@ func (s *KeeperTestSuite) TestSetTakerFeeShareAgreementsMapCached() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				cachedTakerFeeShareAgreementMap, _, _ := s.App.PoolManagerKeeper.GetCachedTrackers()
+				cachedTakerFeeShareAgreementMap, _ := s.App.PoolManagerKeeper.GetCachedTrackers()
 				s.Require().Equal(expectedTakerFeeShareAgreements, cachedTakerFeeShareAgreementMap, "cachedTakerFeeShareAgreementMap = %v, want %v", cachedTakerFeeShareAgreementMap, expectedTakerFeeShareAgreements)
 			}
 		})
@@ -1156,7 +1156,7 @@ func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsCached() {
 			s.Require().NoError(err)
 
 			// Check that the cache was correctly set
-			_, cachedRegisteredAlloyPoolByAlloyDenomMap, _ := s.App.PoolManagerKeeper.GetCachedTrackers()
+			_, cachedRegisteredAlloyPoolByAlloyDenomMap := s.App.PoolManagerKeeper.GetCachedTrackers()
 			s.Require().Equal(expectedTakerFeeShareAgreementsMap, cachedRegisteredAlloyPoolByAlloyDenomMap)
 		})
 	}
@@ -1200,52 +1200,6 @@ func (s *KeeperTestSuite) TestGetAllRegisteredAlloyedPoolsIdMap() {
 			registeredAlloyedPoolIdsArray, err := s.App.PoolManagerKeeper.GetAllRegisteredAlloyedPoolsIdArray(s.Ctx)
 			s.Require().NoError(err)
 			s.Require().Equal(expectedRegisteredAlloyedPoolsIdMap, registeredAlloyedPoolIdsArray)
-		})
-	}
-}
-
-func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsIdCached() {
-	tests := map[string]struct {
-		setupFunc func() []uint64
-	}{
-		"no registered pools": {
-			setupFunc: func() []uint64 {
-				return []uint64{}
-			},
-		},
-		"single registered pool": {
-			setupFunc: func() []uint64 {
-				poolInfos := s.PrepareAllSupportedPools()
-				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
-				s.Require().NoError(err)
-				return []uint64{poolInfos.AlloyedPoolID}
-			},
-		},
-		"multiple registered pools": {
-			setupFunc: func() []uint64 {
-				poolInfos := s.PrepareAllSupportedPools()
-				err := s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
-				s.Require().NoError(err)
-				cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{secondaryDenomA, secondaryDenomB}, []uint16{1, 1})
-				err = s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId())
-				s.Require().NoError(err)
-				return []uint64{poolInfos.AlloyedPoolID, cwPool.GetId()}
-			},
-		},
-	}
-
-	for name, tc := range tests {
-		s.Run(name, func() {
-			s.SetupTest()
-			expectedRegisteredAlloyedPoolsIdMap := tc.setupFunc()
-
-			// Call the function to test
-			err := s.App.PoolManagerKeeper.SetAllRegisteredAlloyedPoolIdArrayCached(s.Ctx)
-			s.Require().NoError(err)
-
-			// Check that the cache was correctly set
-			_, _, cachedRegisteredAlloyedPoolIdArray := s.App.PoolManagerKeeper.GetCachedTrackers()
-			s.Require().Equal(expectedRegisteredAlloyedPoolsIdMap, cachedRegisteredAlloyedPoolIdArray)
 		})
 	}
 }
