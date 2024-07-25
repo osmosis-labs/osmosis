@@ -217,7 +217,7 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req types.Requ
 		err := s.adjustTokenInAmountBySpreadFactor(ctx, &event)
 		if err != nil {
 			s.logger.Error("Error adjusting amount by spread factor", "error", err)
-			continue	
+			continue
 		}
 		err = s.addTokenLiquidity(ctx, &event)
 		if err != nil {
