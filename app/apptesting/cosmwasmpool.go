@@ -130,7 +130,8 @@ func (s *KeeperTestHelper) PrepareTransmuterPool(owner sdk.AccAddress, denoms []
 }
 
 // AddRatioFundsToTransmuterPool adds funds to a transmuter pool based on the provided ratio of denoms.
-// It mints the specified amounts of each denom and joins the pool with these funds.
+// The number of tokens minted is equal to 1000000000 times the ratio.
+// (i.e. if the ratio is 2,3,5, then the number of tokens minted for each denom will be 2000000000, 3000000000, 5000000000)
 //
 // Parameters:
 // - owner: The account address that will own the funds.
