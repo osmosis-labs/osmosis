@@ -71,10 +71,7 @@ func (k *Keeper) setTakerFeeShareAgreementsMapCached(ctx sdk.Context) error {
 // getTakerFeeShareAgreementFromDenom retrieves a specific taker fee share agreement from the store.
 func (k Keeper) getTakerFeeShareAgreementFromDenom(takerFeeShareDenom string) (types.TakerFeeShareAgreement, bool) {
 	takerFeeShareAgreement, found := k.cachedTakerFeeShareAgreementMap[takerFeeShareDenom]
-	if !found {
-		return types.TakerFeeShareAgreement{}, false
-	}
-	return takerFeeShareAgreement, true
+	return takerFeeShareAgreement, found
 }
 
 // GetTakerFeeShareAgreementFromDenomUNSAFE is used to expose an internal method to gRPC query. This method should not be used in other modules, since the cache is not populated in those keepers.
