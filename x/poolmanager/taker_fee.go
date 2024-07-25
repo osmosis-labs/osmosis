@@ -250,7 +250,7 @@ func (k Keeper) processShareAgreements(ctx sdk.Context, shareAgreements []types.
 	percentageOfTakerFeeToSkim := osmomath.ZeroDec()
 	for _, agreement := range shareAgreements {
 		// Add up the percentage of the taker fee that should be skimmed off.
-		percentageOfTakerFeeToSkim = percentageOfTakerFeeToSkim.Add(agreement.SkimPercent)
+		percentageOfTakerFeeToSkim.AddMut(agreement.SkimPercent)
 	}
 
 	// Validate the total percentage of taker fees to skim.
