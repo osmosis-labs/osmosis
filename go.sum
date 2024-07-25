@@ -1592,8 +1592,6 @@ github.com/leonklingele/grouper v1.1.1 h1:suWXRU57D4/Enn6pXR0QVqqWWrnJ9Osrz+5rjt
 github.com/leonklingele/grouper v1.1.1/go.mod h1:uk3I3uDfi9B6PeUjsCKi6ndcf63Uy7snXgR4yDYQVDY=
 github.com/lib/pq v1.10.9 h1:YXG7RB+JIjhP29X+OtkiDnYaXQwpS4JEWq7dtCCRUEw=
 github.com/lib/pq v1.10.9/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
-github.com/libp2p/go-buffer-pool v0.1.0 h1:oK4mSFcQz7cTQIfqbe4MIj9gLW+mnanjyFtc6cdF0Y8=
-github.com/libp2p/go-buffer-pool v0.1.0/go.mod h1:N+vh8gMqimBzdKkSMVuydVDq+UV5QTWy5HSiZacSbPg=
 github.com/lightstep/lightstep-tracer-common/golang/gogo v0.0.0-20190605223551-bc2310a04743/go.mod h1:qklhhLq1aX+mtWk9cPHPzaBjWImj5ULL6C7HFJtXQMM=
 github.com/lightstep/lightstep-tracer-go v0.18.1/go.mod h1:jlF1pusYV4pidLvZ+XD0UBX0ZE6WURAspgAczcDHrL4=
 github.com/linxGnu/grocksdb v1.8.12 h1:1/pCztQUOa3BX/1gR3jSZDoaKFpeHFvQ1XrqZpSvZVo=
@@ -1740,8 +1738,8 @@ github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
 github.com/ory/dockertest/v3 v3.10.0 h1:4K3z2VMe8Woe++invjaTB7VRyQXQy5UY+loujO4aNE4=
 github.com/ory/dockertest/v3 v3.10.0/go.mod h1:nr57ZbRWMqfsdGdFNLHz5jjNdDb7VVFnzAeW1n5N1Lg=
-github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-11 h1:1aFFoE7clL4u2zl+ml36oD/32YswhG+URYRnVlb+cv8=
-github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-11/go.mod h1:nuXFuhpSEmzgx54P5e3kDIhWQL96zPfm/JZNvyOyhE8=
+github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-12 h1:mbaOrGuAM2KTOPxZv7qKIfCWJVp8xzwKME0EKwE38Qg=
+github.com/osmosis-labs/cometbft v0.37.4-v25-osmo-12/go.mod h1:P8DC+Uxspu/JGC5QkWI3jOSyWE2DsUyrOPppvikbBFQ=
 github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240723014704-1f1e8bb04f06 h1:HCcqV+XMaWoDk7PzdSPcNcxcquW3NHXvxN9zvxt/a20=
 github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20240723014704-1f1e8bb04f06/go.mod h1:pzCaM1m/ewsQArM92pJbXQRP8+Fszj097PbkT2F3URw=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
