@@ -198,17 +198,14 @@ func (k Keeper) TakerFeeSkim(ctx sdk.Context, denomsInvolvedInRoute []string, to
 	// Retrieve the share agreements for denoms.
 	denomShareAgreements, alloyedAssetShareAgreements := k.getTakerFeeShareAgreements(denomsInvolvedInRoute)
 
-	// Process denom share agreements if any exist.
+	shareAgreementsToProcess := []types.TakerFeeShareAgreement{}
 	if len(denomShareAgreements) > 0 {
-		return k.processDenomShareAgreements(ctx, denomShareAgreements, totalTakerFees)
+		shareAgreementsToProcess = append(shareAgreementsToProcess, denomShareAgreements...)
+	} else {
+		shareAgreementsToProcess = append(shareAgreementsToProcess, alloyedAssetShareAgreements...)
 	}
 
-	// Process alloyed asset share agreements if no denom share agreements exist.
-	if len(alloyedAssetShareAgreements) > 0 {
-		return k.processAlloyedAssetShareAgreements(ctx, alloyedAssetShareAgreements, totalTakerFees)
-	}
-
-	return nil
+	return k.processShareAgreements(ctx, shareAgreementsToProcess, totalTakerFees)
 }
 
 // getTakerFeeShareAgreements checks for individual denomShareAgreement and alloyedAssetShareAgreement denoms.
@@ -233,16 +230,6 @@ func (k Keeper) getTakerFeeShareAgreements(denomsInvolvedInRoute []string) ([]ty
 	}
 
 	return denomShareAgreements, alloyedAssetShareAgreements
-}
-
-// processDenomShareAgreements processes denom share agreements by calculating the percentage of the taker fees that should be skimmed off and increasing the accumulator for the denomShareAgreement denom / taker fee denom pair.
-func (k Keeper) processDenomShareAgreements(ctx sdk.Context, denomShareAgreements []types.TakerFeeShareAgreement, totalTakerFees sdk.Coins) error {
-	return k.processShareAgreements(ctx, denomShareAgreements, totalTakerFees)
-}
-
-// processAlloyedAssetShareAgreements processes alloyed asset share agreements by calculating the taker fee share for the alloyed asset for each underlying asset that has a taker fee share agreement.
-func (k Keeper) processAlloyedAssetShareAgreements(ctx sdk.Context, alloyedAssetShareAgreements []types.TakerFeeShareAgreement, totalTakerFees sdk.Coins) error {
-	return k.processShareAgreements(ctx, alloyedAssetShareAgreements, totalTakerFees)
 }
 
 // processShareAgreements processes share agreements by calculating the taker fee share for the alloyed asset for each underlying asset that has a taker fee share agreement.

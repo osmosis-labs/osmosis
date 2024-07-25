@@ -78,12 +78,8 @@ func (k Keeper) GetTakerFeeShareAgreements(denomsInvolvedInRoute []string) ([]ty
 	return k.getTakerFeeShareAgreements(denomsInvolvedInRoute)
 }
 
-func (k Keeper) ProcessDenomShareAgreements(ctx sdk.Context, denomShareAgreements []types.TakerFeeShareAgreement, totalTakerFees sdk.Coins) error {
-	return k.processDenomShareAgreements(ctx, denomShareAgreements, totalTakerFees)
-}
-
-func (k Keeper) ProcessAlloyedAssetShareAgreements(ctx sdk.Context, alloyedAssetShareAgreements []types.TakerFeeShareAgreement, totalTakerFees sdk.Coins) error {
-	return k.processAlloyedAssetShareAgreements(ctx, alloyedAssetShareAgreements, totalTakerFees)
+func (k Keeper) ProcessShareAgreements(ctx sdk.Context, shareAgreements []types.TakerFeeShareAgreement, totalTakerFees sdk.Coins) error {
+	return k.processShareAgreements(ctx, shareAgreements, totalTakerFees)
 }
 
 func (k Keeper) ValidatePercentage(percentage osmomath.Dec) error {

@@ -365,7 +365,7 @@ func (s *KeeperTestSuite) TestProcessDenomShareAgreements() {
 	for name, tc := range tests {
 		s.Run(name, func() {
 			s.SetupTest()
-			err := s.App.PoolManagerKeeper.ProcessDenomShareAgreements(s.Ctx, tc.denomShareAgreements, tc.totalTakerFees)
+			err := s.App.PoolManagerKeeper.ProcessShareAgreements(s.Ctx, tc.denomShareAgreements, tc.totalTakerFees)
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().Equal(tc.expectedError, err)
@@ -413,7 +413,7 @@ func (s *KeeperTestSuite) TestProcessAlloyedAssetShareAgreements() {
 	for name, tc := range tests {
 		s.Run(name, func() {
 			s.SetupTest()
-			err := s.App.PoolManagerKeeper.ProcessAlloyedAssetShareAgreements(s.Ctx, tc.alloyedAssetShareAgreements, tc.totalTakerFees)
+			err := s.App.PoolManagerKeeper.ProcessShareAgreements(s.Ctx, tc.alloyedAssetShareAgreements, tc.totalTakerFees)
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().Equal(tc.expectedError, err)
