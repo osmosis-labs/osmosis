@@ -334,7 +334,7 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 			s.App.PoolManagerKeeper.BeginBlock(s.Ctx)
 
 			// Check expected values
-			cachedTakerFeeShareAgreementMap, cachedRegisteredAlloyPoolByAlloyDenomMap := s.App.PoolManagerKeeper.GetCachedTrackers()
+			cachedTakerFeeShareAgreementMap, cachedRegisteredAlloyPoolByAlloyDenomMap := s.App.PoolManagerKeeper.GetCacheTrackers()
 			s.Require().Equal(tc.expectedCachedTakerFeeShareAgreementMap, cachedTakerFeeShareAgreementMap)
 			s.Require().Equal(tc.expectedCachedRegisteredAlloyPoolByAlloyDenomMap, cachedRegisteredAlloyPoolByAlloyDenomMap)
 		})

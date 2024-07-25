@@ -227,7 +227,7 @@ func (s *KeeperTestSuite) TestSetTakerFeeShareAgreementsMapCached() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				cachedTakerFeeShareAgreementMap, _ := s.App.PoolManagerKeeper.GetCachedTrackers()
+				cachedTakerFeeShareAgreementMap, _ := s.App.PoolManagerKeeper.GetCacheTrackers()
 				s.Require().Equal(expectedTakerFeeShareAgreements, cachedTakerFeeShareAgreementMap, "cachedTakerFeeShareAgreementMap = %v, want %v", cachedTakerFeeShareAgreementMap, expectedTakerFeeShareAgreements)
 			}
 		})
@@ -1156,7 +1156,7 @@ func (s *KeeperTestSuite) TestSetAllRegisteredAlloyedPoolsCached() {
 			s.Require().NoError(err)
 
 			// Check that the cache was correctly set
-			_, cachedRegisteredAlloyPoolByAlloyDenomMap := s.App.PoolManagerKeeper.GetCachedTrackers()
+			_, cachedRegisteredAlloyPoolByAlloyDenomMap := s.App.PoolManagerKeeper.GetCacheTrackers()
 			s.Require().Equal(expectedTakerFeeShareAgreementsMap, cachedRegisteredAlloyPoolByAlloyDenomMap)
 		})
 	}

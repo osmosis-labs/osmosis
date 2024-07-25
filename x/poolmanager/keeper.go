@@ -261,20 +261,3 @@ func (k *Keeper) EndBlock(ctx sdk.Context) {
 		}
 	}
 }
-
-// getCacheTrackers returns the cached trackers, used for testing.
-// nolint: unused
-func (k Keeper) getCacheTrackers() (map[string]types.TakerFeeShareAgreement, map[string]types.AlloyContractTakerFeeShareState) {
-	return k.cachedTakerFeeShareAgreementMap, k.cachedRegisteredAlloyPoolByAlloyDenomMap
-}
-
-// setCacheTrackers sets the cached trackers, used for testing.
-// nolint: unused
-func (k *Keeper) setCacheTrackers(takerFeeShareAgreement map[string]types.TakerFeeShareAgreement, registeredAlloyPoolToState map[string]types.AlloyContractTakerFeeShareState) {
-	if takerFeeShareAgreement != nil {
-		k.cachedTakerFeeShareAgreementMap = takerFeeShareAgreement
-	}
-	if registeredAlloyPoolToState != nil {
-		k.cachedRegisteredAlloyPoolByAlloyDenomMap = registeredAlloyPoolToState
-	}
-}

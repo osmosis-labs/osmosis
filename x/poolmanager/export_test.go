@@ -70,14 +70,6 @@ func (k Keeper) RecalculateAndSetTakerFeeShareAlloyComposition(ctx sdk.Context, 
 	return k.recalculateAndSetTakerFeeShareAlloyComposition(ctx, poolId)
 }
 
-func (k Keeper) GetCachedTrackers() (map[string]types.TakerFeeShareAgreement, map[string]types.AlloyContractTakerFeeShareState) {
-	return k.getCacheTrackers()
-}
-
-func (k *Keeper) SetCacheTrackers(takerFeeShareAgreement map[string]types.TakerFeeShareAgreement, registeredAlloyPoolToState map[string]types.AlloyContractTakerFeeShareState) {
-	k.setCacheTrackers(takerFeeShareAgreement, registeredAlloyPoolToState)
-}
-
 func (k Keeper) GetAlloyedDenomFromPoolId(ctx sdk.Context, poolId uint64) (string, error) {
 	return k.getAlloyedDenomFromPoolId(ctx, poolId)
 }
@@ -144,4 +136,21 @@ func (k Keeper) GetRegisteredAlloyedPoolFromDenom(alloyedDenom string) (types.Al
 
 func (k Keeper) GetRegisteredAlloyedPoolFromPoolId(ctx sdk.Context, poolId uint64) (types.AlloyContractTakerFeeShareState, error) {
 	return k.getRegisteredAlloyedPoolFromPoolId(ctx, poolId)
+}
+
+// getCacheTrackers returns the cached trackers, used for testing.
+// nolint: unused
+func (k Keeper) GetCacheTrackers() (map[string]types.TakerFeeShareAgreement, map[string]types.AlloyContractTakerFeeShareState) {
+	return k.cachedTakerFeeShareAgreementMap, k.cachedRegisteredAlloyPoolByAlloyDenomMap
+}
+
+// setCacheTrackers sets the cached trackers, used for testing.
+// nolint: unused
+func (k *Keeper) SetCacheTrackers(takerFeeShareAgreement map[string]types.TakerFeeShareAgreement, registeredAlloyPoolToState map[string]types.AlloyContractTakerFeeShareState) {
+	if takerFeeShareAgreement != nil {
+		k.cachedTakerFeeShareAgreementMap = takerFeeShareAgreement
+	}
+	if registeredAlloyPoolToState != nil {
+		k.cachedRegisteredAlloyPoolByAlloyDenomMap = registeredAlloyPoolToState
+	}
 }
