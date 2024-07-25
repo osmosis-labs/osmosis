@@ -2,6 +2,8 @@ package app
 
 import (
 	"fmt"
+	markettypes "github.com/osmosis-labs/osmosis/v23/x/market/types"
+	oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
 	"io"
 	"net/http"
 	"os"
@@ -127,10 +129,10 @@ var (
 
 	// module accounts that are allowed to receive tokens.
 	allowedReceivingModAcc = map[string]bool{
-		protorevtypes.ModuleName: true,
-		// oracletypes.ModuleName:        true, TODO: yurii: enable oracle
-		// markettypes.ModuleName:        true, TODO: yurii: enable swaps
-		// markettypes.ReserveModuleName: true, TODO: yurii: enable swaps
+		protorevtypes.ModuleName:      true,
+		oracletypes.ModuleName:        true,
+		markettypes.ModuleName:        true,
+		markettypes.ReserveModuleName: true,
 	}
 
 	// TODO: Refactor wasm items into a wasm.go file
