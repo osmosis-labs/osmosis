@@ -152,7 +152,7 @@ func (s *KeeperTestHelper) AddRatioFundsToTransmuterPool(owner sdk.AccAddress, d
 	var poolCoins sdk.Coins
 	for i, denom := range denoms {
 		// 1000000000 is chosen randomly, we just want a set of coins that is equal to the ratio,
-		// but not so small that test cases wont have enough tokens to work with.
+		// but not so small that test cases won't have enough tokens to work with.
 		amount := osmomath.NewInt(int64(ratioOfDenoms[i])).Mul(osmomath.NewInt(1000000000))
 		if amount.IsZero() {
 			continue
