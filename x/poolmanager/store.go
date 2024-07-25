@@ -138,17 +138,6 @@ func (k *Keeper) SetTakerFeeShareAgreementForDenom(ctx sdk.Context, takerFeeShar
 		}
 	}
 
-	// Emit event
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.TypeMsgSetTakerFeeShareAgreementForDenomPair,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(types.AttributeKeyTakerFeeShareDenom, takerFeeShare.Denom),
-			sdk.NewAttribute(types.AttributeKeyTakerFeeShareSkimPercent, takerFeeShare.SkimPercent.String()),
-			sdk.NewAttribute(types.AttributeKeyTakerFeeShareSkimAddress, takerFeeShare.SkimAddress),
-		),
-	})
-
 	return nil
 }
 

@@ -131,7 +131,16 @@ func (server msgServer) SetTakerFeeShareAgreementForDenom(goCtx context.Context,
 		return nil, err
 	}
 
-	// Set taker fee share agreement for denom event is handled in the keeper
+	// Emit event
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeMsgSetTakerFeeShareAgreementForDenomPair,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(types.AttributeKeyTakerFeeShareDenom, takerFeeShareAgreement.Denom),
+			sdk.NewAttribute(types.AttributeKeyTakerFeeShareSkimPercent, takerFeeShareAgreement.SkimPercent.String()),
+			sdk.NewAttribute(types.AttributeKeyTakerFeeShareSkimAddress, takerFeeShareAgreement.SkimAddress),
+		),
+	})
 
 	return &types.MsgSetTakerFeeShareAgreementForDenomResponse{}, nil
 }
