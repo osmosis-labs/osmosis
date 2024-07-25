@@ -51,6 +51,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8535](https://github.com/osmosis-labs/osmosis/pull/8535) Prevent Setting Invalid Before Send Hook
 * [#8494](https://github.com/osmosis-labs/osmosis/pull/8494) Add additional events in x/lockup, x/superfluid, x/concentratedliquidity
 
+### Config
+
+* [#8548](https://github.com/osmosis-labs/osmosis/pull/8548) chore: disable sqs by default in app.toml
+
 ### State Compatible
 
 ## v25.2.1
