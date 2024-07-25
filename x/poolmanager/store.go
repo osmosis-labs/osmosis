@@ -545,7 +545,7 @@ func (k Keeper) createNormalizationFactorsMap(assetConfigs []v3.AssetConfig) (ma
 // the scaled skim percentages for each asset with a share agreement. Returns a slice of TakerFeeShareAgreement
 // objects if successful, otherwise returns an error.
 func (k Keeper) calculateTakerFeeShareAgreements(totalPoolLiquidity []sdk.Coin, normalizationFactors map[string]osmomath.Dec) ([]types.TakerFeeShareAgreement, error) {
-	totalAlloyedLiquidity := osmomath.ZeroDec()
+	totalAlloyedLiquidity := types.ZeroDec
 	var assetsWithShareAgreement []sdk.Coin
 	var takerFeeShareAgreements []types.TakerFeeShareAgreement
 	var skimAddresses []string

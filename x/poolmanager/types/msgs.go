@@ -6,8 +6,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 // constants.
@@ -198,7 +196,7 @@ func (msg MsgSetTakerFeeShareAgreementForDenom) ValidateBasic() error {
 		return fmt.Errorf("invalid skim address: %s", msg.SkimAddress)
 	}
 
-	if msg.SkimPercent.GT(osmomath.OneDec()) || msg.SkimPercent.IsNegative() {
+	if msg.SkimPercent.GT(OneDec) || msg.SkimPercent.IsNegative() {
 		return fmt.Errorf("invalid skim percent: %s", msg.SkimPercent)
 	}
 

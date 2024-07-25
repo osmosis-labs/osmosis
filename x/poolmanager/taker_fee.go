@@ -274,7 +274,7 @@ func (k Keeper) processShareAgreements(ctx sdk.Context, shareAgreements []types.
 
 // validatePercentage validates the total percentage of taker fees to skim.
 func (k Keeper) validatePercentage(percentage osmomath.Dec) error {
-	if percentage.GT(osmomath.OneDec()) || percentage.LT(osmomath.ZeroDec()) {
+	if percentage.GT(types.OneDec) || percentage.LT(types.ZeroDec) {
 		return types.InvalidTakerFeeSharePercentageError{Percentage: percentage}
 	}
 	return nil

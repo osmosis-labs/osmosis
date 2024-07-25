@@ -820,7 +820,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactBalancerPool(
 	swapModule types.PoolModuleI,
 	poolI types.PoolI,
 ) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
-	tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, osmomath.ZeroDec())
+	tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, types.ZeroDec)
 	if err != nil {
 		if errors.Is(err, gammtypes.ErrInvalidMathApprox) {
 			return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
@@ -885,7 +885,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactBalancerPool(
 		currFromCoin = sdk.NewCoin(req.FromCoin.Denom, midAmount)
 
 		tokenOut, err := swapModule.CalcOutAmtGivenIn(
-			ctx, poolI, currFromCoin, req.ToCoinDenom, osmomath.ZeroDec(),
+			ctx, poolI, currFromCoin, req.ToCoinDenom, types.ZeroDec,
 		)
 		if err != nil {
 			if errors.Is(err, gammtypes.ErrInvalidMathApprox) {
@@ -947,7 +947,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactStableSwapPool(
 	var tokenOut sdk.Coin
 	var err error
 	err = osmoutils.ApplyFuncIfNoError(ctx, func(ctx sdk.Context) error {
-		tokenOut, err = swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, osmomath.ZeroDec())
+		tokenOut, err = swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, types.ZeroDec)
 		return err
 	})
 
@@ -1004,7 +1004,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactStableSwapPool(
 		currFromCoin = sdk.NewCoin(req.FromCoin.Denom, midAmount)
 
 		err = osmoutils.ApplyFuncIfNoError(ctx, func(ctx sdk.Context) error {
-			tokenOut, err = swapModule.CalcOutAmtGivenIn(ctx, poolI, currFromCoin, req.ToCoinDenom, osmomath.ZeroDec())
+			tokenOut, err = swapModule.CalcOutAmtGivenIn(ctx, poolI, currFromCoin, req.ToCoinDenom, types.ZeroDec)
 			return err
 		})
 
@@ -1064,7 +1064,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactConcentratedLiquidity(
 	swapModule types.PoolModuleI,
 	poolI types.PoolI,
 ) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
-	tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, osmomath.ZeroDec())
+	tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, types.ZeroDec)
 	// If there was no error we attempt to validate if the output is below the adjustedMaxPriceImpact.
 	if err == nil {
 		// If the tokenOut was returned to be zero it means the amount being traded is too small. We ignore the
@@ -1116,7 +1116,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactConcentratedLiquidity(
 		midAmount := lowAmount.Add(highAmount).Quo(osmomath.NewInt(2))
 		currFromCoin = sdk.NewCoin(req.FromCoin.Denom, midAmount)
 
-		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, currFromCoin, req.ToCoinDenom, osmomath.ZeroDec())
+		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, currFromCoin, req.ToCoinDenom, types.ZeroDec)
 		if err == nil {
 			// If the tokenOut was returned to be zero it means the amount being traded is too small. We ignore the
 			// error output here as it could mean that the input is too large.
