@@ -592,3 +592,27 @@ allBTC's composition is 25% nBTC, 25% iBTC, 25% WBTC, and 25% xBTC.
 This swap generates 5 OSMO, 10 wBTC, and 20 allBTC in taker fees.
 
 Because this route does not contain taker fee share denoms, but does contain a registered alloyed pool, each skim percent must be calculated as the weighted skim percents of the underlying denoms with taker fee share agreements. The total skim percent for the route is 3.75%, 2.5% to nBTC (10% * 25%) and 1.25% to iBTC (5% * 25%). 2.5% of the taker fees are noted to go to the nBTC `skim_address` (0.125 OSMO, 0.25 wBTC, 0.5 allBTC) and 1.25% to the iBTC `skim_address` (0.0625 OSMO, 0.125 wBTC, 0.25 allBTC). All funds, including those noted to go to the `skim_address`, are sent to the `taker_fee_collector` module account at time of swap. At epoch, the noted skim amounts are sent to the respective `skim_address`.
+
+### Cached Maps: `cachedTakerFeeShareAgreementMap` and `cachedRegisteredAlloyPoolByAlloyDenomMap`
+
+#### Overview
+
+The `cachedTakerFeeShareAgreementMap` and `cachedRegisteredAlloyPoolByAlloyDenomMap` are two in-memory caches used to optimize the retrieval of taker fee share agreements and registered alloyed pools, respectively. These caches are designed to reduce the number of reads from the persistent KVStore, thereby improving the performance of the poolmanager module.
+
+The initialization of these caches occurs during the `BeginBlock` method to ensure they are populated at the start of the block if they are empty. This means that the cache population logic in `BeginBlock` is always executed when the node is first started up, and then is a no-op for the rest of the block processing.
+
+By using these caches, the pool manager module can efficiently handle frequent read operations, thereby improving overall performance and reducing latency.
+
+#### `cachedTakerFeeShareAgreementMap`
+
+- **Purpose**: This map caches taker fee share agreements, which define the percentage of taker fees to be skimmed and sent to specific addresses for various denoms.
+- **Type**: `map[string]types.TakerFeeShareAgreement`
+- **Setter**: The cache is initialized by calling the `setTakerFeeShareAgreementsMapCached` method, which populates the map with all taker fee share agreements from the KVStore.
+- **Usage**: The cache is used to quickly retrieve taker fee share agreements during swaps and other operations that involve taker fees.
+
+#### `cachedRegisteredAlloyPoolByAlloyDenomMap`
+
+- **Purpose**: This map caches the state of registered alloyed pools, which are pools containing denoms with taker fee share agreements.
+- **Type**: `map[string]types.AlloyContractTakerFeeShareState`
+- **Setter**: The cache is initialized by calling the `setAllRegisteredAlloyedPoolsByDenomCached` method, which populates the map with all registered alloyed pools from the KVStore.
+- **Usage**: The cache is used to quickly retrieve the state of registered alloyed pools during swaps and other operations that involve alloyed assets.
