@@ -44,14 +44,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
-* [#8169](https://github.com/osmosis-labs/osmosis/pull/8169) Support non-pool assets in superfluid staking.
-* [#8169](https://github.com/osmosis-labs/osmosis/pull/8169) Support non-pool assets in superfluid staking
 * [#8169](https://github.com/osmosis-labs/osmosis/pull/8169) [#8250](https://github.com/osmosis-labs/osmosis/pull/8250) [#8276](https://github.com/osmosis-labs/osmosis/pull/8276) [#8320](https://github.com/osmosis-labs/osmosis/pull/8320) Support non-pool assets in superfluid staking
 * [#8274](https://github.com/osmosis-labs/osmosis/pull/8274) SDK v50 and Comet v0.38 upgrade
+* [#8375](https://github.com/osmosis-labs/osmosis/pull/8375) Enforce sub-authenticator to be greater than 1
+* [#8509](https://github.com/osmosis-labs/osmosis/pull/8509) Change LiquidityNetInDirection return type to sdk math
+* [#8535](https://github.com/osmosis-labs/osmosis/pull/8535) Prevent Setting Invalid Before Send Hook
+* [#8494](https://github.com/osmosis-labs/osmosis/pull/8494) Add additional events in x/lockup, x/superfluid, x/concentratedliquidity
 
 ### State Compatible
-* [#8494](https://github.com/osmosis-labs/osmosis/pull/8494) Add additional events in x/lockup, x/superfluid, x/concentratedliquidity
+
+## v25.2.1
 * [#8546](https://github.com/osmosis-labs/osmosis/pull/8546) feat: reduce commit timeout to 500ms to enable faster blocks, and timeout propose to 1.8s
+
+### CosmosSDK 1f1e8bb04f062250af732b6df98e8581e0e0b77b
+
+* [#612](https://github.com/osmosis-labs/cosmos-sdk/pull/612) OTEL wiring in grpcserver interceptor (DataDog POC) (#612)
+
+### CometBFT v0.37.4-v25-osmo-12
+
+* [#128](https://github.com/osmosis-labs/cometbft/pull/128) feat(p2p): render HasChannel(chID) is a public p2p.Peer method (#3510)
+* [#126]() Remove p2p allocations for wrapping outbound packets
+* [#125]() Fix marshalling and concurrency overhead within broadcast routines
+* perf(p2p): Only update send monitor once per batch packet msg send (#3382)
+* [#124]() Secret connection read buffer
+* [#123](https://github.com/osmosis-labs/cometbft/pull/123) perf(p2p/conn): Remove unneeded global pool buffers in secret connection #3403
+* perf(p2p): Delete expensive debug log already slated for deletion #3412
+* perf(p2p): Reduce the p2p metrics overhead. #3411
+* commit f663bd35153b0b366c1e1e6b41e7f2dcff7963fd : one more debug log deletion
+* [#120](https://github.com/osmosis-labs/cometbft/pull/120) perf(consensus): Use TrySend for hasVote/HasBlockPart messages #3407
 
 ## v25.2.0
 
