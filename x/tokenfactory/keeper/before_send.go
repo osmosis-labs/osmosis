@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/json"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -139,6 +140,13 @@ func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress,
 			childCtx := ctx.WithGasMeter(sdk.NewGasMeter(types.BeforeSendHookGasLimit))
 			_, err = k.contractKeeper.Sudo(childCtx.WithEventManager(em), cwAddr, msgBz)
 			if err != nil {
+				if strings.Contains(err.Error(), "no such contract") {
+					return nil
+				}
+				if k.IsModuleAcc(ctx, from) {
+					return nil
+				}
+
 				return errorsmod.Wrapf(err, "failed to call before send hook for denom %s", coin.Denom)
 			}
 
