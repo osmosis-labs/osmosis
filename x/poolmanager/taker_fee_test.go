@@ -299,7 +299,17 @@ func (s *KeeperTestSuite) TestGetTakerFeeShareAgreements() {
 				return []string{denomA, denomB, alloyedDenom1, alloyedDenom2}
 			},
 			expectedDenomShares:   defaultTakerFeeShareAgreements[:2],
-			expectedAlloyedShares: []types.TakerFeeShareAgreement{},
+			expectedAlloyedShares: modifySkimPercent(defaultTakerFeeShareAgreements[:2], []osmomath.Dec{osmomath.MustNewDecFromStr("0.5"), osmomath.MustNewDecFromStr("0.5")}),
+		},
+		"multiple denomShareAgreement denoms and multiple alloyedAssetShareAgreements, alloyed denoms first": {
+			setupFunc: func() []string {
+				setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:2])
+				alloyedDenom1 := s.setupAndRegisterAlloyedPool([]string{denomA, denomC}, []uint16{1, 1})
+				alloyedDenom2 := s.setupAndRegisterAlloyedPool([]string{denomB, denomC}, []uint16{1, 1})
+				return []string{alloyedDenom1, alloyedDenom2, denomA, denomB}
+			},
+			expectedDenomShares:   defaultTakerFeeShareAgreements[:2],
+			expectedAlloyedShares: modifySkimPercent(defaultTakerFeeShareAgreements[:2], []osmomath.Dec{osmomath.MustNewDecFromStr("0.5"), osmomath.MustNewDecFromStr("0.5")}),
 		},
 		"no agreements": {
 			setupFunc: func() []string {
