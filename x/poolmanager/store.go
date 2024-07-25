@@ -100,7 +100,7 @@ func (k Keeper) GetTakerFeeShareAgreementFromDenomNoCache(ctx sdk.Context, taker
 	return takerFeeShareAgreement, true
 }
 
-// SetTakerFeeShareAgreementForDenom is used for setting a specific take fee share agreement in the store.
+// SetTakerFeeShareAgreementForDenom is used for setting a specific taker fee share agreement in the store.
 // Used in the MsgSetTakerFeeShareAgreementForDenom, by the gov address only.
 func (k *Keeper) SetTakerFeeShareAgreementForDenom(ctx sdk.Context, takerFeeShare types.TakerFeeShareAgreement) error {
 	store := ctx.KVStore(k.storeKey)
