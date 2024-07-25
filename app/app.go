@@ -137,6 +137,7 @@ import (
 
 	blocksdkabci "github.com/skip-mev/block-sdk/v2/abci"
 	"github.com/skip-mev/block-sdk/v2/abci/checktx"
+	"github.com/skip-mev/block-sdk/v2/block/utils"
 
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
@@ -403,7 +404,7 @@ func NewOsmosisApp(
 			StoreKeyMap:    storeKeyMap,
 		}
 		poolExtractor := poolextractor.New(poolKeepers, poolTracker)
-		indexerStreamingService := indexerservice.New(blockUpdatesProcessUtils, blockProcessStrategyManager, indexerPublisher, storeKeyMap, poolExtractor, keepers, app.GetTxConfig().TxDecoder(), logger)
+		indexerStreamingService := indexerservice.New(blockUpdatesProcessUtils, blockProcessStrategyManager, indexerPublisher, storeKeyMap, poolExtractor, poolTracker, keepers, app.GetTxConfig().TxDecoder(), logger)
 
 		// Register the SQS streaming service with the app.
 		streamingServices = append(streamingServices, indexerStreamingService)
@@ -580,7 +581,7 @@ func NewOsmosisApp(
 
 	// ABCI handlers
 	// prepare proposal
-	proposalHandler := blocksdkabci.NewProposalHandler(
+	proposalHandler := blocksdkabci.NewDefaultProposalHandler(
 		app.Logger(),
 		txConfig.TxDecoder(),
 		txConfig.TxEncoder(),
@@ -595,10 +596,15 @@ func NewOsmosisApp(
 	// this ProcessProposal always returns ACCEPT.
 	app.SetProcessProposal(baseapp.NoOpProcessProposal())
 
+	cacheDecoder, err := utils.NewDefaultCacheTxDecoder(txConfig.TxDecoder())
+	if err != nil {
+		panic(err)
+	}
+
 	// check-tx
 	mevCheckTxHandler := checktx.NewMEVCheckTxHandler(
 		app,
-		txConfig.TxDecoder(),
+		cacheDecoder.TxDecoder(),
 		mevLane,
 		anteHandler,
 		app.BaseApp.CheckTx,
@@ -608,7 +614,7 @@ func NewOsmosisApp(
 	parityCheckTx := checktx.NewMempoolParityCheckTx(
 		app.Logger(),
 		lanedMempool,
-		txConfig.TxDecoder(),
+		cacheDecoder.TxDecoder(),
 		mevCheckTxHandler.CheckTx(),
 	)
 
