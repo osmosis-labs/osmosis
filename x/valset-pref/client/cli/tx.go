@@ -2,7 +2,6 @@ package valsetprefcli
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
