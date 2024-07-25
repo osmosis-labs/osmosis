@@ -502,7 +502,7 @@ If a swap route contains an alloyed asset pool but no individual taker fee share
 
 NOTE: We cache the alloyed pool asset weight composition and recalculate in the poolmanager EndBlock every 700 blocks (approx 30 minutes at 2.6s blocks) to avoid recalculating the weights for every swap.
 
-At the time of swap, all taker fees (including those skimmed via taker fee share agreements) are sent to the `taker_fee_collector` module account. At the end of each epoch, the fees are distributed as follows:
+At the time of swap, all taker fees (including those skimmed via taker fee share agreements) are sent to the `taker_fee_collector` module account. At the time of sending to the `taker_fee_collector`, we track the amount of fees to be skimmed via the `KeyTakerFeeShareDenomAccrualForTakerFeeChargedDenom` key. At the end of each epoch, all the fees tracked are distributed as follows:
 
 - Skimmed taker fee:
     - Sent directly to the `skim_address` specified in the taker fee agreement.
