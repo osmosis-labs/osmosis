@@ -13,7 +13,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
 	"github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/cosmwasm/msg"
 	"github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/cosmwasm/msg/transmuter"
-	v3 "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/cosmwasm/msg/v3"
 	"github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/model"
 
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
@@ -38,6 +37,14 @@ const (
 	osmosisRepository         = "osmosis"
 	osmosisRepoTransmuterPath = "x/cosmwasmpool/bytecode"
 )
+
+type InstantiateMsg struct {
+	PoolAssetConfigs                []AssetConfig `json:"pool_asset_configs"`
+	AlloyedAssetSubdenom            string        `json:"alloyed_asset_subdenom"`
+	AlloyedAssetNormalizationFactor string        `json:"alloyed_asset_normalization_factor"`
+	Admin                           string        `json:"admin"`
+	Moderator                       string        `json:"moderator"`
+}
 
 type AssetConfig struct {
 	Denom               string       `json:"denom"`
@@ -187,15 +194,18 @@ func (s *KeeperTestHelper) GetTransmuterInstantiateMsgBytes(poolAssetDenoms []st
 // GetTransmuterInstantiateMsgBytesV3 returns the instantiate message for the transmuter contract with the
 // given pool asset denoms and their respective normalization factors.
 func (s *KeeperTestHelper) GetTransmuterInstantiateMsgBytesV3(poolAssetDenoms []string, normalizationFactors []string, owner sdk.AccAddress) []byte {
-	var assetConfigs []v3.AssetConfig
+	var assetConfigs []AssetConfig
 	for i, denom := range poolAssetDenoms {
-		assetConfigs = append(assetConfigs, v3.AssetConfig{
+		normalizationFactor, ok := osmomath.NewIntFromString(normalizationFactors[i])
+		s.Require().True(ok)
+
+		assetConfigs = append(assetConfigs, AssetConfig{
 			Denom:               denom,
-			NormalizationFactor: normalizationFactors[i],
+			NormalizationFactor: normalizationFactor,
 		})
 	}
 
-	instantiateMsg := v3.InstantiateMsg{
+	instantiateMsg := InstantiateMsg{
 		PoolAssetConfigs:                assetConfigs,
 		AlloyedAssetSubdenom:            DefaultAlloyedSubDenom,
 		AlloyedAssetNormalizationFactor: "1",
