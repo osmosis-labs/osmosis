@@ -72,7 +72,7 @@ func (s *KeeperTestHelper) PrepareCustomTransmuterPool(owner sdk.AccAddress, den
 // Gives flexibility for the helper to be reused outside of the Osmosis repository by providing custom
 // project name and bytecode path.
 func (s *KeeperTestHelper) PrepareCustomTransmuterPoolCustomProject(owner sdk.AccAddress, denoms []string, projectName, byteCodePath string) cosmwasmpooltypes.CosmWasmExtension {
-	return s.PreparePool(owner, denoms, nil, projectName, byteCodePath, TransmuterContractName, s.GetTransmuterInstantiateMsgBytes)
+	return s.PrepareTransmuterPool(owner, denoms, nil, projectName, byteCodePath, TransmuterContractName, s.GetTransmuterInstantiateMsgBytes)
 }
 
 // PrepareCustomTransmuterPoolV3 sets up a transmuter pool with the custom parameters for version 3 of the transmuter contract (alloyed assets).
@@ -88,15 +88,15 @@ func (s *KeeperTestHelper) PrepareCustomTransmuterPoolV3(owner sdk.AccAddress, d
 // PrepareCustomTransmuterPoolV3WithNormalization sets up a transmuter pool with the custom parameters for version 3 of the transmuter contract (alloyed assets).
 // It initializes the pool with the provided ratio for the given denoms and their respective normalization factors.
 func (s *KeeperTestHelper) PrepareCustomTransmuterPoolV3WithNormalization(owner sdk.AccAddress, denoms []string, normalizationFactors []string, ratio []uint16) cosmwasmpooltypes.CosmWasmExtension {
-	pool := s.PreparePool(owner, denoms, normalizationFactors, osmosisRepository, osmosisRepoTransmuterPath, TransmuterV3ContractName, s.GetTransmuterInstantiateMsgBytesV3)
+	pool := s.PrepareTransmuterPool(owner, denoms, normalizationFactors, osmosisRepository, osmosisRepoTransmuterPath, TransmuterV3ContractName, s.GetTransmuterInstantiateMsgBytesV3)
 	s.AddRatioFundsToTransmuterPool(s.TestAccs[0], denoms, ratio, pool.GetId())
 	pool, err := s.App.CosmwasmPoolKeeper.GetPoolById(s.Ctx, pool.GetId())
 	s.Require().NoError(err)
 	return pool
 }
 
-// PreparePool sets up a transmuter pool with the custom parameters and optional normalization factors.
-func (s *KeeperTestHelper) PreparePool(owner sdk.AccAddress, denoms []string, normalizationFactors []string, projectName, byteCodePath, contractName string, getInstantiateMsgBytes func([]string, []string, sdk.AccAddress) []byte) cosmwasmpooltypes.CosmWasmExtension {
+// PrepareTransmuterPool sets up a transmuter pool with the custom parameters and optional normalization factors.
+func (s *KeeperTestHelper) PrepareTransmuterPool(owner sdk.AccAddress, denoms []string, normalizationFactors []string, projectName, byteCodePath, contractName string, getInstantiateMsgBytes func([]string, []string, sdk.AccAddress) []byte) cosmwasmpooltypes.CosmWasmExtension {
 	// Mint some assets to the account.
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
 
