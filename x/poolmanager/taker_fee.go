@@ -225,7 +225,7 @@ func (k Keeper) getTakerFeeShareAgreements(denomsInvolvedInRoute []string) ([]ty
 		} else if len(denomShareAgreements) == 0 {
 			// If there are no denomShareAgreements in the denomShareAgreements slice, continue to filter this denom to determine if it is a registered alloyedAssetShareAgreement denom.
 			// If there are 1 or more denomShareAgreements in the denomShareAgreements slice, we don't need to check for alloyedAssetShareAgreements anymore, since the taker fee share
-			// only goes to alloyedAssetShareAgreements IF there are no denomShareAgreement denoms in the route.
+			// only goes to alloyedAssetShareAgreements IFF there are no denomShareAgreement denoms in the route.
 
 			// Check if the denom is an alloyedAssetShareAgreement denom.
 			// If it is, add the alloyedAssetShareAgreement to the alloyedAssetShareAgreements slice.
