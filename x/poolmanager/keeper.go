@@ -226,7 +226,9 @@ func (k *Keeper) SetWasmKeeper(wasmKeeper types.WasmKeeper) {
 
 // BeginBlock sets the poolmanager caches if they are empty
 func (k *Keeper) BeginBlock(ctx sdk.Context) {
-	// Set the caches if they are empty.
+	// Here, the only time in which these caches are empty is during the start up of the node.
+	// Once the node has started up and runs the first BeginBlock of the poolmanager module,
+	// it will populate the caches. Every single subsequent BeginBlock, this logic will be a no-op.
 	if len(k.cachedTakerFeeShareAgreementMap) == 0 || len(k.cachedRegisteredAlloyPoolByAlloyDenomMap) == 0 {
 		err := k.setTakerFeeShareAgreementsMapCached(ctx)
 		if err != nil {
