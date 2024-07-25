@@ -217,6 +217,11 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req types.Requ
 		err := s.adjustTokenInAmountBySpreadFactor(ctx, &event)
 		if err != nil {
 			s.logger.Error("Error adjusting amount by spread factor", "error", err)
+			continue	
+		}
+		err = s.addTokenLiquidity(ctx, &event)
+		if err != nil {
+			s.logger.Error("Error adding reserves to event", "error", err)
 			continue
 		}
 		eventType := event.Type
@@ -238,6 +243,43 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req types.Requ
 		Events:             includedEvents,
 	}
 	return s.client.PublishTransaction(sdkCtx, txn)
+}
+
+// addTokenLiquidity adds the token liquidity to the event.
+// It refers to the pooled amount of each asset after a swap event has occurred.
+func (s *indexerStreamingService) addTokenLiquidity(ctx context.Context, event *types.Event) error {
+	if event.Type != gammtypes.TypeEvtTokenSwapped {
+		return nil
+	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	var poolIdStr string
+	attributes := event.Attributes
+	// Find the pool id from the token_swapped
+	for _, attribute := range attributes {
+		if attribute.Key == concentratedliquiditytypes.AttributeKeyPoolId {
+			poolIdStr = attribute.Value
+			break
+		}
+	}
+	if poolIdStr == "" {
+		return errors.New("pool id not found")
+	}
+	poolId, err := strconv.ParseInt(poolIdStr, 10, 64)
+	if err != nil {
+		return err
+	}
+	coins, err := s.keepers.PoolManagerKeeper.GetTotalPoolLiquidity(sdkCtx, uint64(poolId))
+	if err != nil {
+		return err
+	}
+	// Store the liquidity of the token in the attributes map of the event, keyed by "liquidity_" + coin.Denom
+	for _, coin := range coins {
+		event.Attributes = append(event.Attributes, types.EventAttribute{
+			Key:   "liquidity_" + coin.Denom,
+			Value: coin.Amount.String(),
+		})
+	}
+	return nil
 }
 
 // ListenEndBlock implements baseapp.StreamingService.
