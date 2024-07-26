@@ -1477,7 +1477,7 @@ func (s *KeeperTestSuite) TestConvertGammSharesToOsmoAndStake() {
 			stakeDenomCoin := exitCoins.AmountOf(bondDenom)
 			// use cache context to get expected amount after swap without changing test state
 			cc, _ := s.Ctx.CacheContext()
-			tokenOutAmt, err := s.App.PoolManagerKeeper.SwapExactAmountIn(cc, sender, poolId, nonStakeDenomCoin, bondDenom, osmomath.ZeroInt())
+			tokenOutAmt, _, err := s.App.PoolManagerKeeper.SwapExactAmountIn(cc, sender, poolId, nonStakeDenomCoin, bondDenom, osmomath.ZeroInt())
 			s.Require().NoError(err)
 			expectedTotalAmtStaked := tokenOutAmt.Add(stakeDenomCoin)
 
@@ -1791,7 +1791,7 @@ func (s *KeeperTestSuite) getExpectedBondDenomPoolAmtAfterConvert(sender sdk.Acc
 			nonOsmoCoin = exitCoin
 		}
 	}
-	_, err = s.App.PoolManagerKeeper.SwapExactAmountIn(cc, sender, poolId, nonOsmoCoin, bondDenom, osmomath.ZeroInt())
+	_, _, err = s.App.PoolManagerKeeper.SwapExactAmountIn(cc, sender, poolId, nonOsmoCoin, bondDenom, osmomath.ZeroInt())
 	s.Require().NoError(err)
 	expectedLiquidity, err := s.App.GAMMKeeper.GetTotalPoolLiquidity(cc, poolId)
 	s.Require().NoError(err)

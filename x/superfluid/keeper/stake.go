@@ -804,7 +804,7 @@ func (k Keeper) convertGammSharesToOsmoAndStake(
 
 	// iterate over non-bond denom coins and swap them into bond denom
 	for _, coinToConvert := range nonOsmoCoins {
-		tokenOutAmt, err := k.pmk.SwapExactAmountIn(ctx, sender, poolIdLeaving, coinToConvert, bondDenom, osmomath.ZeroInt())
+		tokenOutAmt, _, err := k.pmk.SwapExactAmountIn(ctx, sender, poolIdLeaving, coinToConvert, bondDenom, osmomath.ZeroInt())
 		if err != nil {
 			return osmomath.Int{}, err
 		}
