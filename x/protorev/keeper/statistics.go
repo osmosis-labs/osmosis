@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -23,7 +24,7 @@ func (k Keeper) GetNumberOfTrades(ctx sdk.Context) (osmomath.Int, error) {
 
 	bz := store.Get(types.KeyPrefixNumberOfTrades)
 	if len(bz) == 0 {
-		return osmomath.ZeroInt(), fmt.Errorf("no trades have been executed by the protorev module")
+		return osmomath.ZeroInt(), errors.New("no trades have been executed by the protorev module")
 	}
 
 	trades := osmomath.Int{}

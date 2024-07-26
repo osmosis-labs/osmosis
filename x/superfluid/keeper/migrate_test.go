@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -273,7 +274,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 		"error: invalid validator address": {
 			overwriteValidatorAddress: true,
 			percentOfSharesToMigrate:  osmomath.MustNewDecFromStr("1"),
-			expectedError:             fmt.Errorf("decoding bech32 failed: invalid checksum"),
+			expectedError:             errors.New("decoding bech32 failed: invalid checksum"),
 		},
 		"error: non-existent lock ID": {
 			overwriteLockId:          true,
@@ -432,7 +433,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrated()
 		"error: invalid validator address": {
 			overwriteValidatorAddress: true,
 			percentOfSharesToMigrate:  osmomath.MustNewDecFromStr("1"),
-			expectedError:             fmt.Errorf("decoding bech32 failed: invalid checksum"),
+			expectedError:             errors.New("decoding bech32 failed: invalid checksum"),
 		},
 		"error: lock that is superfluid undelegating, not unlocking (full shares), token out mins is more than exit coins": {
 			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
@@ -628,7 +629,7 @@ func (s *KeeperTestSuite) TestMigrateUnlockedPositionFromBalancerToConcentrated(
 		},
 		"no lock (more shares than own)": {
 			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1.1"),
-			expectedError:            fmt.Errorf("insufficient funds"),
+			expectedError:            errors.New("insufficient funds"),
 		},
 		"no lock (no shares)": {
 			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("0"),

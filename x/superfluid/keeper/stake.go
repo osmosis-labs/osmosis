@@ -1,6 +1,11 @@
 package keeper
 
 import (
+<<<<<<< HEAD
+=======
+	"context"
+	"errors"
+>>>>>>> 6ae3b81a (chore(x/protorev): use `errors.New` to replace `fmt.Errorf` with no parameters (#8517))
 	"fmt"
 	"strings"
 
@@ -332,10 +337,10 @@ func (k Keeper) SuperfluidUndelegateAndUnbondLock(ctx sdk.Context, lockID uint64
 
 	coins := sdk.Coins{sdk.NewCoin(lock.Coins[0].Denom, amount)}
 	if coins[0].IsZero() {
-		return 0, fmt.Errorf("amount to unlock must be greater than 0")
+		return 0, errors.New("amount to unlock must be greater than 0")
 	}
 	if lock.Coins[0].IsLT(coins[0]) {
-		return 0, fmt.Errorf("requested amount to unlock exceeds locked tokens")
+		return 0, errors.New("requested amount to unlock exceeds locked tokens")
 	}
 
 	// get intermediary account before connection is deleted in SuperfluidUndelegate
@@ -639,7 +644,7 @@ func (k Keeper) UnbondConvertAndStake(ctx sdk.Context, lockID uint64, sender, va
 	} else if migrationType == Unlocked { // liquid gamm shares without locks
 		totalAmtConverted, err = k.convertUnlockedToStake(ctx, senderAddr, valAddr, sharesToConvert, minAmtToStake)
 	} else { // any other types of migration should fail
-		return osmomath.Int{}, fmt.Errorf("unsupported staking conversion type")
+		return osmomath.Int{}, errors.New("unsupported staking conversion type")
 	}
 
 	if err != nil {

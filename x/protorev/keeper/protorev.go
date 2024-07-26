@@ -266,7 +266,7 @@ func (k Keeper) GetDaysSinceModuleGenesis(ctx sdk.Context) (uint64, error) {
 	bz := store.Get(types.KeyPrefixDaysSinceGenesis)
 	if bz == nil {
 		// This should never happen as the module is initialized with 0 days on genesis
-		return 0, fmt.Errorf("days since module genesis not found")
+		return 0, errors.New("days since module genesis not found")
 	}
 
 	daysSinceGenesis := sdk.BigEndianToUint64(bz)
@@ -364,7 +364,7 @@ func (k Keeper) GetPointCountForBlock(ctx sdk.Context) (uint64, error) {
 	bz := store.Get(types.KeyPrefixPointCountForBlock)
 	if bz == nil {
 		// This should never happen as this is set to 0 on genesis
-		return 0, fmt.Errorf("current pool point count has not been set in state")
+		return 0, errors.New("current pool point count has not been set in state")
 	}
 
 	res := sdk.BigEndianToUint64(bz)
@@ -396,7 +396,7 @@ func (k Keeper) GetLatestBlockHeight(ctx sdk.Context) (uint64, error) {
 	bz := store.Get(types.KeyPrefixLatestBlockHeight)
 	if bz == nil {
 		// This should never happen as the module is initialized on genesis and reset in the post handler
-		return 0, fmt.Errorf("block height has not been set in state")
+		return 0, errors.New("block height has not been set in state")
 	}
 
 	res := sdk.BigEndianToUint64(bz)
@@ -430,7 +430,7 @@ func (k Keeper) GetDeveloperAccount(ctx sdk.Context) (sdk.AccAddress, error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDeveloperAccount)
 	bz := store.Get(types.KeyPrefixDeveloperAccount)
 	if bz == nil {
-		return nil, fmt.Errorf("developer account not found, it has not been initialized by the admin account")
+		return nil, errors.New("developer account not found, it has not been initialized by the admin account")
 	}
 
 	return sdk.AccAddress(bz), nil
@@ -449,7 +449,7 @@ func (k Keeper) GetMaxPointsPerTx(ctx sdk.Context) (uint64, error) {
 	bz := store.Get(types.KeyPrefixMaxPointsPerTx)
 	if bz == nil {
 		// This should never happen as it is set to the default value on genesis
-		return 0, fmt.Errorf("max pool points per tx has not been set in state")
+		return 0, errors.New("max pool points per tx has not been set in state")
 	}
 
 	res := sdk.BigEndianToUint64(bz)
@@ -477,7 +477,7 @@ func (k Keeper) GetMaxPointsPerBlock(ctx sdk.Context) (uint64, error) {
 	bz := store.Get(types.KeyPrefixMaxPointsPerBlock)
 	if bz == nil {
 		// This should never happen as it is set to the default value on genesis
-		return 0, fmt.Errorf("max pool points per block has not been set in state")
+		return 0, errors.New("max pool points per block has not been set in state")
 	}
 
 	res := sdk.BigEndianToUint64(bz)

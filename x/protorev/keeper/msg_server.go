@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -77,7 +78,7 @@ func (m MsgServer) SetMaxPoolPointsPerTx(c context.Context, msg *types.MsgSetMax
 	}
 
 	if msg.MaxPoolPointsPerTx > maxPointsPerBlock {
-		return nil, fmt.Errorf("max pool points per tx cannot be greater than max pool points per block")
+		return nil, errors.New("max pool points per tx cannot be greater than max pool points per block")
 	}
 
 	// Set the max pool points per tx
@@ -103,7 +104,7 @@ func (m MsgServer) SetMaxPoolPointsPerBlock(c context.Context, msg *types.MsgSet
 	}
 
 	if msg.MaxPoolPointsPerBlock < maxPointsPerTx {
-		return nil, fmt.Errorf("max pool points per block cannot be less than max pool points per tx")
+		return nil, errors.New("max pool points per block cannot be less than max pool points per tx")
 	}
 
 	// Set the max pool points per block

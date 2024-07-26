@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"math"
 
@@ -86,7 +87,7 @@ func (k Keeper) GetValSetPreferencesWithDelegations(ctx sdk.Context, delegator s
 
 	// No existing delegations for a delegator when valSet does not exist
 	if !exists && len(existingDelegations) == 0 {
-		return types.ValidatorSetPreferences{}, fmt.Errorf("No Existing delegation to unbond from")
+		return types.ValidatorSetPreferences{}, errors.New("No Existing delegation to unbond from")
 	}
 
 	// Returning existing valSet when there are no existing delegations

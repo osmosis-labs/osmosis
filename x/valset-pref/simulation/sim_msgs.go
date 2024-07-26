@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -58,7 +59,7 @@ func RandomMsgUnDelegateFromValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimC
 	// get delegator valset preferences
 	preferences, err := k.GetDelegationPreferences(ctx, delAddr.String())
 	if err != nil {
-		return nil, fmt.Errorf("no delegations found")
+		return nil, errors.New("no delegations found")
 	}
 
 	rand := sim.GetRand()
@@ -66,12 +67,18 @@ func RandomMsgUnDelegateFromValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimC
 	delegation := preferences.Preferences[rand.Intn(len(preferences.Preferences))]
 	val, err := sdk.ValAddressFromBech32(delegation.ValOperAddress)
 	if err != nil {
-		return nil, fmt.Errorf("validator address not formatted")
+		return nil, errors.New("validator address not formatted")
 	}
 
+<<<<<<< HEAD
 	validator, found := sim.SDKStakingKeeper().GetValidator(ctx, val)
 	if !found {
 		return nil, fmt.Errorf("Validator not found")
+=======
+	validator, err := sim.SDKStakingKeeper().GetValidator(ctx, val)
+	if err != nil {
+		return nil, errors.New("Validator not found")
+>>>>>>> 6ae3b81a (chore(x/protorev): use `errors.New` to replace `fmt.Errorf` with no parameters (#8517))
 	}
 
 	// check if the user has delegated tokens to the valset
@@ -101,21 +108,38 @@ func RandomMsgReDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx
 	// existing delegations
 	delegations, err := k.GetDelegationPreferences(ctx, delAddr.String())
 	if err != nil {
-		return nil, fmt.Errorf("no delegations found")
+		return nil, errors.New("no delegations found")
 	}
 
 	for _, dels := range delegations.Preferences {
 		val, err := sdk.ValAddressFromBech32(dels.ValOperAddress)
 		if err != nil {
-			return nil, fmt.Errorf("validator address not formatted")
+			return nil, errors.New("validator address not formatted")
 		}
 
+<<<<<<< HEAD
 		if sim.SDKStakingKeeper().HasReceivingRedelegation(ctx, delAddr, val) {
 			return nil, fmt.Errorf("receiving redelegation is not allowed for source validators")
 		}
 
 		if sim.SDKStakingKeeper().HasMaxUnbondingDelegationEntries(ctx, delAddr, val) {
 			return nil, fmt.Errorf("keeper does have a max unbonding delegation entries")
+=======
+		found, err := sim.SDKStakingKeeper().HasReceivingRedelegation(ctx, delAddr, val)
+		if err != nil {
+			return nil, errors.New("error while checking redelegation")
+		}
+		if !found {
+			return nil, errors.New("receiving redelegation is not allowed for source validators")
+		}
+
+		found, err = sim.SDKStakingKeeper().HasMaxUnbondingDelegationEntries(ctx, delAddr, val)
+		if err != nil {
+			return nil, errors.New("error while checking redelegation")
+		}
+		if !found {
+			return nil, errors.New("keeper does have a max unbonding delegation entries")
+>>>>>>> 6ae3b81a (chore(x/protorev): use `errors.New` to replace `fmt.Errorf` with no parameters (#8517))
 		}
 
 		// check if the user has delegated tokens to the valset
@@ -136,15 +160,32 @@ func RandomMsgReDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx
 	for _, vals := range preferences {
 		val, err := sdk.ValAddressFromBech32(vals.ValOperAddress)
 		if err != nil {
-			return nil, fmt.Errorf("validator address not formatted")
+			return nil, errors.New("validator address not formatted")
 		}
 
+<<<<<<< HEAD
 		if sim.SDKStakingKeeper().HasMaxUnbondingDelegationEntries(ctx, delAddr, val) {
 			return nil, fmt.Errorf("keeper does have a max unbonding delegation entries")
 		}
 
 		if sim.SDKStakingKeeper().HasReceivingRedelegation(ctx, delAddr, val) {
 			return nil, fmt.Errorf("receiving redelegation is not allowed for target validators")
+=======
+		found, err := sim.SDKStakingKeeper().HasMaxUnbondingDelegationEntries(ctx, delAddr, val)
+		if err != nil {
+			return nil, errors.New("keeper does have a max unbonding delegation entries")
+		}
+		if !found {
+			return nil, errors.New("keeper does have a max unbonding delegation entries")
+		}
+
+		found, err = sim.SDKStakingKeeper().HasReceivingRedelegation(ctx, delAddr, val)
+		if err != nil {
+			return nil, errors.New("error while checking redelegation")
+		}
+		if !found {
+			return nil, errors.New("receiving redelegation is not allowed for target validators")
+>>>>>>> 6ae3b81a (chore(x/protorev): use `errors.New` to replace `fmt.Errorf` with no parameters (#8517))
 		}
 	}
 
@@ -172,7 +213,7 @@ func GetRandomValAndWeights(ctx sdk.Context, k valsetkeeper.Keeper, sim *osmosim
 	for remainingWeight.IsPositive() {
 		randValidator := RandomValidator(ctx, sim)
 		if randValidator == nil {
-			return nil, fmt.Errorf("No validator")
+			return nil, errors.New("No validator")
 		}
 
 		randValue := sim.RandomDecAmount(remainingWeight)
@@ -203,7 +244,7 @@ func GetRandomDelegations(ctx sdk.Context, k valsetkeeper.Keeper, sim *osmosimty
 	// Get Valset delegations
 	delegations, err := k.GetDelegationPreferences(ctx, delegatorAddr.String())
 	if err != nil {
-		return nil, fmt.Errorf("No delegations found")
+		return nil, errors.New("No delegations found")
 	}
 
 	return delegations.Preferences, err
