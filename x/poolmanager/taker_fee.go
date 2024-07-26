@@ -201,7 +201,7 @@ func (k Keeper) TakerFeeSkim(ctx sdk.Context, denomsInvolvedInRoute []string, to
 	shareAgreementsToProcess := []types.TakerFeeShareAgreement{}
 	if len(denomShareAgreements) > 0 {
 		shareAgreementsToProcess = append(shareAgreementsToProcess, denomShareAgreements...)
-	} else {
+	} else if len(alloyedAssetShareAgreements) > 0 {
 		shareAgreementsToProcess = append(shareAgreementsToProcess, alloyedAssetShareAgreements...)
 	}
 
