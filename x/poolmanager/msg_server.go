@@ -2,6 +2,7 @@ package poolmanager
 
 import (
 	"context"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -158,7 +159,14 @@ func (server msgServer) SetRegisteredAlloyedPool(goCtx context.Context, msg *typ
 		return nil, err
 	}
 
-	// Set registered alloyed pool event is handled in the keeper
+	// Emit event
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeMsgSetRegisteredAlloyedPool,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
+		),
+	})
 
 	return &types.MsgSetRegisteredAlloyedPoolResponse{}, nil
 }

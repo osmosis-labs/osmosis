@@ -292,15 +292,6 @@ func (k *Keeper) setRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error 
 	// Set cache value
 	k.cachedRegisteredAlloyPoolByAlloyDenomMap[alloyedDenom] = registeredAlloyedPool
 
-	// Emit event
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.TypeMsgSetRegisteredAlloyedPool,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
-		),
-	})
-
 	return nil
 }
 
