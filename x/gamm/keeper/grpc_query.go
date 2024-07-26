@@ -44,6 +44,17 @@ func NewV2Querier(k Keeper) QuerierV2 {
 	return QuerierV2{Keeper: k}
 }
 
+func (q Querier) Params(ctx context.Context, req *types.ParamsRequest) (*types.ParamsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	params := q.Keeper.GetParams(sdkCtx)
+	return &types.ParamsResponse{
+		Params: params,
+	}, nil
+}
+
 // Pool checks if a pool exists and their respective poolWeights.
 // Deprecated: use x/poolmanager's Pool query.
 // nolint: staticcheck

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -440,7 +441,7 @@ func NewUnbondConvertAndStake() *cobra.Command {
 			if len(args) >= 3 {
 				convertedInt, ok := osmomath.NewIntFromString(args[2])
 				if !ok {
-					return fmt.Errorf("Conversion for osmomath.Int failed")
+					return errors.New("Conversion for osmomath.Int failed")
 				}
 				minAmtToStake = convertedInt
 				if len(args) == 4 {

@@ -144,12 +144,12 @@ var (
 		{
 			Section: "consensus",
 			Key:     "timeout_commit",
-			Value:   "600ms",
+			Value:   "500ms",
 		},
 		{
 			Section: "consensus",
 			Key:     "timeout_propose",
-			Value:   "2s",
+			Value:   "1.8s",
 		},
 		{
 			Section: "consensus",
@@ -524,7 +524,7 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 		}()
 
 		// Check if the file is writable
-		if fileInfo.Mode()&os.FileMode(0200) != 0 {
+		if fileInfo.Mode()&os.FileMode(0o200) != 0 {
 			// It will be re-read in server.InterceptConfigsPreRunHandler
 			// this may panic for permissions issues. So we catch the panic.
 			// Note that this exits with a non-zero exit code if fails to write the file.
@@ -585,7 +585,7 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 		}
 
 		// Check if the file is writable
-		if fileInfo.Mode()&os.FileMode(0200) != 0 {
+		if fileInfo.Mode()&os.FileMode(0o200) != 0 {
 			// It will be re-read in server.InterceptConfigsPreRunHandler
 			// this may panic for permissions issues. So we catch the panic.
 			// Note that this exits with a non-zero exit code if fails to write the file.
@@ -642,7 +642,7 @@ func initAppConfig() (string, interface{}) {
 		WasmConfig wasmtypes.WasmConfig `mapstructure:"wasm"`
 	}
 
-	var DefaultOsmosisMempoolConfig = OsmosisMempoolConfig{
+	DefaultOsmosisMempoolConfig := OsmosisMempoolConfig{
 		MaxGasWantedPerTx:         "60000000",
 		MinGasPriceForArbitrageTx: ".1",
 		MinGasPriceForHighGasTx:   ".0025",
@@ -829,6 +829,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, t
 		txCommand(tempApp.ModuleBasics),
 		keys.Commands(),
 	)
+	rootCmd.AddCommand(CmdListQueries(rootCmd))
 	// add rosetta
 	rootCmd.AddCommand(rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
 }
@@ -837,6 +838,28 @@ func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
 	wasm.AddModuleInitFlags(startCmd)
 	startCmd.Flags().Bool(FlagRejectConfigDefaults, false, "Reject some select recommended default values from being automatically set in the config.toml and app.toml")
+}
+
+// CmdListQueries list all available modules' queries
+func CmdListQueries(rootCmd *cobra.Command) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list-queries",
+		Short: "listing all available modules' queries",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			for _, cmd := range rootCmd.Commands() {
+				if cmd.Name() != "query" {
+					continue
+				}
+				for _, cmd := range cmd.Commands() {
+					for _, cmd := range cmd.Commands() {
+						fmt.Println(cmd.CommandPath())
+					}
+				}
+			}
+			return nil
+		},
+	}
+	return cmd
 }
 
 func CmdModuleNameToAddress() *cobra.Command {

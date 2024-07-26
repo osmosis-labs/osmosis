@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	"fmt"
+	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -64,7 +64,7 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 			superfluidDelegated: true,
 			amount0Added:        osmomath.NewInt(100000000),
 			amount1Added:        osmomath.NewInt(100000000),
-			expectedError:       fmt.Errorf("insufficient funds"),
+			expectedError:       errors.New("insufficient funds"),
 		},
 		"error: last position in pool": {
 			superfluidDelegated:  true,

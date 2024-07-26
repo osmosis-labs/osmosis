@@ -17,6 +17,17 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
+func (s *KeeperTestSuite) TestParams() {
+	queryClient := s.queryClient
+	ctx := s.Ctx
+
+	expectedParams := s.App.GAMMKeeper.GetParams(s.Ctx)
+
+	params, err := queryClient.Params(ctx, &types.ParamsRequest{})
+	s.Require().NoError(err)
+	s.Require().Equal(expectedParams, params.Params)
+}
+
 func (s *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 	queryClient := s.queryClient
 	ctx := s.Ctx

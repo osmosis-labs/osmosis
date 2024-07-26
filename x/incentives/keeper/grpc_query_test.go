@@ -215,6 +215,16 @@ func (s *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 	s.Require().NoError(err)
 }
 
+// TestGRPCParams tests querying params via gRPC returns the correct response.
+func (s *KeeperTestSuite) TestGRPCParams() {
+	s.SetupTest()
+
+	expectedParams := s.App.IncentivesKeeper.GetParams(s.Ctx)
+	res, err := s.querier.Params(s.Ctx, &types.ParamsRequest{})
+	s.Require().NoError(err)
+	s.Require().Equal(expectedParams, res.Params)
+}
+
 // TestGRPCUpcomingGauges tests querying upcoming gauges via gRPC returns the correct response.
 func (s *KeeperTestSuite) TestGRPCUpcomingGauges() {
 	s.SetupTest()

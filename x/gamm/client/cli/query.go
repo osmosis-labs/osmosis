@@ -31,6 +31,10 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetConcentratedPoolIdLinkFromCFMMRequest)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCFMMConcentratedPoolLinksRequest)
 	cmd.AddCommand(
+		osmocli.GetParams[*types.ParamsRequest](
+			types.ModuleName, types.NewQueryClient),
+	)
+	cmd.AddCommand(
 		GetCmdNumPools(),
 		GetCmdPoolParams(),
 		GetCmdTotalShares(),
