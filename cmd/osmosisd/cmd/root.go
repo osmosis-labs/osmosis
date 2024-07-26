@@ -812,7 +812,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, t
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
 		server.StatusCommand(),
-		queryCommand(tempApp.ModuleBasics),
+		queryCommand(),
 		txCommand(tempApp.ModuleBasics),
 		keys.Commands(),
 	)
@@ -844,7 +844,7 @@ func CmdModuleNameToAddress() *cobra.Command {
 }
 
 // queryCommand adds transaction and account querying commands.
-func queryCommand(moduleBasics module.BasicManager) *cobra.Command {
+func queryCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "query",
 		Aliases:                    []string{"q"},
@@ -862,7 +862,6 @@ func queryCommand(moduleBasics module.BasicManager) *cobra.Command {
 		CmdModuleNameToAddress(),
 	)
 
-	// UNFORKING v2 TODO: Auto CLI claims we can remove this, but was having issues with AddTxCommands counterpart. See line for comment.
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
