@@ -416,7 +416,7 @@ func (q Querier) AllTakerFeeShareAgreements(ctx sdk.Context, req queryproto.AllT
 }
 
 func (q Querier) TakerFeeShareAgreementFromDenom(ctx sdk.Context, req queryproto.TakerFeeShareAgreementFromDenomRequest) (*queryproto.TakerFeeShareAgreementFromDenomResponse, error) {
-	takerFeeShareAgreement, found := q.K.GetTakerFeeShareAgreementFromDenomUNSAFE(req.Denom)
+	takerFeeShareAgreement, found := q.K.GetTakerFeeShareAgreementFromDenomNoCache(ctx, req.Denom)
 	if !found {
 		return nil, status.Error(codes.NotFound, "taker fee share agreement not found")
 	}

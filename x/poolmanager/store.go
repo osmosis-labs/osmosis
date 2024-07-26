@@ -74,12 +74,6 @@ func (k Keeper) getTakerFeeShareAgreementFromDenom(takerFeeShareDenom string) (t
 	return takerFeeShareAgreement, found
 }
 
-// GetTakerFeeShareAgreementFromDenomUNSAFE is used to expose an internal method to gRPC query. This method should not be used in other modules, since the cache is not populated in those keepers.
-// Used in the TakerFeeShareAgreementFromDenomRequest gRPC query.
-func (k Keeper) GetTakerFeeShareAgreementFromDenomUNSAFE(takerFeeShareDenom string) (types.TakerFeeShareAgreement, bool) {
-	return k.getTakerFeeShareAgreementFromDenom(takerFeeShareDenom)
-}
-
 // GetTakerFeeShareAgreementFromDenom retrieves a specific taker fee share agreement from the store, bypassing cache.
 func (k Keeper) GetTakerFeeShareAgreementFromDenomNoCache(ctx sdk.Context, takerFeeShareDenom string) (types.TakerFeeShareAgreement, bool) {
 	store := ctx.KVStore(k.storeKey)

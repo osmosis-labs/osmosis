@@ -79,6 +79,7 @@ import (
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
 	smartaccountkeeper "github.com/osmosis-labs/osmosis/v25/x/smart-account/keeper"
 	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
@@ -434,6 +435,9 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	appKeepers.CosmwasmPoolKeeper = cosmwasmpool.NewKeeper(appCodec, appKeepers.keys[cosmwasmpooltypes.StoreKey], appKeepers.GetSubspace(cosmwasmpooltypes.ModuleName), appKeepers.AccountKeeper, appKeepers.BankKeeper)
 
+	// cachedPoolModules := &sync.Map{}
+	cachedTakerFeeShareAgreementMap := osmoutils.Cache[string, poolmanagertypes.TakerFeeShareAgreement]{}
+	cachedRegisteredAlloyPoolMap := osmoutils.Cache[string, poolmanagertypes.AlloyContractTakerFeeShareState]{}
 	appKeepers.PoolManagerKeeper = poolmanager.NewKeeper(
 		appKeepers.keys[poolmanagertypes.StoreKey],
 		appKeepers.GetSubspace(poolmanagertypes.ModuleName),
@@ -446,6 +450,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.StakingKeeper,
 		appKeepers.ProtoRevKeeper,
 		appKeepers.WasmKeeper,
+		cachedTakerFeeShareAgreementMap,
+		cachedRegisteredAlloyPoolMap,
 	)
 	appKeepers.PoolManagerKeeper.SetStakingKeeper(appKeepers.StakingKeeper)
 	appKeepers.GAMMKeeper.SetPoolManager(appKeepers.PoolManagerKeeper)

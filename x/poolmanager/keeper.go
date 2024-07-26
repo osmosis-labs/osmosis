@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
+
 	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 
 	storetypes "cosmossdk.io/store/types"
@@ -48,11 +49,11 @@ type Keeper struct {
 	defaultTakerFeeBz  []byte
 	defaultTakerFeeVal osmomath.Dec
 
-	cachedTakerFeeShareAgreementMap          map[string]types.TakerFeeShareAgreement
-	cachedRegisteredAlloyPoolByAlloyDenomMap map[string]types.AlloyContractTakerFeeShareState
+	cachedTakerFeeShareAgreementMap          osmoutils.Cache[string, types.TakerFeeShareAgreement]
+	cachedRegisteredAlloyPoolByAlloyDenomMap osmoutils.Cache[string, types.AlloyContractTakerFeeShareState]
 }
 
-func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI, stakingKeeper types.StakingKeeper, protorevKeeper types.ProtorevKeeper, wasmKeeper types.WasmKeeper) *Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI, stakingKeeper types.StakingKeeper, protorevKeeper types.ProtorevKeeper, wasmKeeper types.WasmKeeper, cachedTakerFeeShareAgreementMap osmoutils.Cache[string, types.TakerFeeShareAgreement], cachedRegisteredAlloyPoolByAlloyDenomMap osmoutils.Cache[string, types.AlloyContractTakerFeeShareState]) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -70,8 +71,6 @@ func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gam
 	}
 
 	cachedPoolModules := &sync.Map{}
-	cachedTakerFeeShareAgreementMap := make(map[string]types.TakerFeeShareAgreement)
-	cachedRegisteredAlloyPoolMap := make(map[string]types.AlloyContractTakerFeeShareState)
 
 	return &Keeper{
 		storeKey:                                 storeKey,
@@ -89,7 +88,7 @@ func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gam
 		wasmKeeper:                               wasmKeeper,
 		cachedPoolModules:                        cachedPoolModules,
 		cachedTakerFeeShareAgreementMap:          cachedTakerFeeShareAgreementMap,
-		cachedRegisteredAlloyPoolByAlloyDenomMap: cachedRegisteredAlloyPoolMap,
+		cachedRegisteredAlloyPoolByAlloyDenomMap: cachedRegisteredAlloyPoolByAlloyDenomMap,
 	}
 }
 
