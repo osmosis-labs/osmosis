@@ -459,11 +459,11 @@ func (s *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 	}
 }
 
-// TestMultihopSwapExactAmountIn tests that the swaps are routed correctly.
+// TestRouteExactAmountIn tests that the swaps are routed correctly.
 // That is:
 // - to the correct module (concentrated-liquidity or gamm)
 // - over the right routes (hops)
-func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
+func (s *KeeperTestSuite) TestRouteExactAmountIn() {
 	tests := []struct {
 		name               string
 		poolCoins          []sdk.Coins
@@ -737,11 +737,99 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 	}
 }
 
-// TestMultihopSwapExactAmountOut tests that the swaps are routed correctly.
+func (s *KeeperTestSuite) TestRouteExactAmountInInternal() {
+	defaultTakerFee := osmomath.MustNewDecFromStr("0.002")
+
+	tests := []struct {
+		name              string
+		poolCoins         []sdk.Coins
+		poolSpreadFactor  []osmomath.Dec
+		poolType          []types.PoolType
+		routes            []types.SwapAmountInRoute
+		tokenIn           sdk.Coin
+		tokenOutMinAmount osmomath.Int
+		expectedTakerFees sdk.Coins
+		expectError       bool
+	}{
+		{
+			name:             "One route: Swap - [foo -> bar], 1 percent fee",
+			poolCoins:        []sdk.Coins{sdk.NewCoins(sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(BAR, defaultInitPoolAmount))},
+			poolSpreadFactor: []osmomath.Dec{defaultPoolSpreadFactor},
+			poolType:         []types.PoolType{types.Balancer},
+			routes: []types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: BAR,
+				},
+			},
+			tokenIn:           sdk.NewCoin(FOO, osmomath.NewInt(100000)),
+			tokenOutMinAmount: osmomath.NewInt(1),
+			expectedTakerFees: sdk.NewCoins(sdk.NewCoin(FOO, osmomath.NewDec(100000).Mul(defaultTakerFee).Ceil().TruncateInt())),
+		},
+		{
+			name: "Two routes: Swap - [foo -> bar](pool 1) - [bar -> baz](pool 2), both pools 1 percent fee",
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(BAR, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount)), // pool 2.
+			},
+			poolType:         []types.PoolType{types.Balancer, types.Balancer},
+			poolSpreadFactor: []osmomath.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor},
+			routes: []types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: BAR,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: BAZ,
+				},
+			},
+			tokenIn:           sdk.NewCoin(FOO, osmomath.NewInt(100000)),
+			tokenOutMinAmount: osmomath.NewInt(1),
+			expectedTakerFees: sdk.NewCoins(sdk.NewCoin(FOO, osmomath.NewDec(100000).Mul(defaultTakerFee).Ceil().TruncateInt()),
+				sdk.NewCoin(BAR, osmomath.NewDec(99700).Mul(defaultTakerFee).Ceil().TruncateInt())),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
+			poolManagerParams.TakerFeeParams.DefaultTakerFee = defaultTakerFee
+			s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
+
+			for i := range tc.poolType {
+				s.FundAcc(s.TestAccs[0], tc.poolCoins[i])
+				s.CreatePoolFromTypeWithCoinsAndSpreadFactor(tc.poolType[i], tc.poolCoins[i], tc.poolSpreadFactor[i])
+			}
+
+			if tc.expectError {
+				// execute the internal swap
+				_, _, err := s.App.PoolManagerKeeper.RouteExactAmountInInternal(s.Ctx, s.TestAccs[0], tc.routes, tc.tokenIn, tc.tokenOutMinAmount)
+				s.Require().Error(err)
+			} else {
+				// calculate the swap as separate swaps
+				expectedMultihopTokenOutAmount := s.calcOutGivenInAmountAsSeparatePoolSwaps(tc.routes, tc.tokenIn)
+
+				// execute the internal swap
+				multihopTokenOutAmount, totalTakerFees, err := s.App.PoolManagerKeeper.RouteExactAmountInInternal(s.Ctx, s.TestAccs[0], tc.routes, tc.tokenIn, tc.tokenOutMinAmount)
+				// compare the expected tokenOut to the actual tokenOut
+				s.Require().NoError(err)
+				s.Require().Equal(expectedMultihopTokenOutAmount.Amount.String(), multihopTokenOutAmount.String())
+
+				// Verify the taker fees are accumulated correctly
+				s.Require().Equal(tc.expectedTakerFees.String(), totalTakerFees.String())
+			}
+		})
+	}
+}
+
+// TestRouteExactAmountOut tests that the swaps are routed correctly.
 // That is:
 // - to the correct module (concentrated-liquidity or gamm)
 // - over the right routes (hops)
-func (s *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
+func (s *KeeperTestSuite) TestRouteExactAmountOut() {
 	tests := []struct {
 		name               string
 		poolCoins          []sdk.Coins
@@ -974,9 +1062,97 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 	}
 }
 
-// TestEstimateMultihopSwapExactAmountIn tests that the estimation done via `EstimateSwapExactAmountIn`
+func (s *KeeperTestSuite) TestRouteExactAmountOutInternal() {
+	defaultTakerFee := osmomath.MustNewDecFromStr("0.002")
+
+	tests := []struct {
+		name              string
+		poolCoins         []sdk.Coins
+		poolSpreadFactor  []osmomath.Dec
+		poolType          []types.PoolType
+		routes            []types.SwapAmountOutRoute
+		tokenInMaxAmount  osmomath.Int
+		tokenOut          sdk.Coin
+		expectedTakerFees sdk.Coins
+		expectError       bool
+	}{
+		{
+			name:             "One route: Swap - [foo -> bar], 1 percent fee",
+			poolCoins:        []sdk.Coins{sdk.NewCoins(sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(BAR, defaultInitPoolAmount))},
+			poolSpreadFactor: []osmomath.Dec{defaultPoolSpreadFactor},
+			poolType:         []types.PoolType{types.Balancer},
+			routes: []types.SwapAmountOutRoute{
+				{
+					PoolId:       1,
+					TokenInDenom: FOO,
+				},
+			},
+			tokenInMaxAmount:  osmomath.NewInt(100000),
+			tokenOut:          sdk.NewCoin(BAR, osmomath.NewInt(1000)),
+			expectedTakerFees: sdk.NewCoins(sdk.NewCoin(FOO, osmomath.NewDec(1002).Mul(defaultTakerFee).Ceil().TruncateInt())),
+		},
+		{
+			name: "Two routes: Swap - [foo -> bar](pool 1) - [bar -> baz](pool 2), both pools 1 percent fee",
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(FOO, defaultInitPoolAmount), sdk.NewCoin(BAR, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(BAR, defaultInitPoolAmount), sdk.NewCoin(BAZ, defaultInitPoolAmount)), // pool 2.
+			},
+			poolType:         []types.PoolType{types.Balancer, types.Balancer},
+			poolSpreadFactor: []osmomath.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor},
+			routes: []types.SwapAmountOutRoute{
+				{
+					PoolId:       1,
+					TokenInDenom: FOO,
+				},
+				{
+					PoolId:       2,
+					TokenInDenom: BAR,
+				},
+			},
+			tokenInMaxAmount: osmomath.NewInt(100000),
+			tokenOut:         sdk.NewCoin(BAZ, osmomath.NewInt(1000)),
+			expectedTakerFees: sdk.NewCoins(sdk.NewCoin(FOO, osmomath.NewDec(1002).Mul(defaultTakerFee).Ceil().TruncateInt()),
+				sdk.NewCoin(BAR, osmomath.NewDec(1007).Mul(defaultTakerFee).Ceil().TruncateInt())),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
+			poolManagerParams.TakerFeeParams.DefaultTakerFee = defaultTakerFee
+			s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
+
+			for i := range tc.poolType {
+				s.FundAcc(s.TestAccs[0], tc.poolCoins[i])
+				s.CreatePoolFromTypeWithCoinsAndSpreadFactor(tc.poolType[i], tc.poolCoins[i], tc.poolSpreadFactor[i])
+			}
+
+			if tc.expectError {
+				// execute the internal swap
+				_, _, err := s.App.PoolManagerKeeper.RouteExactAmountOutInternal(s.Ctx, s.TestAccs[0], tc.routes, tc.tokenInMaxAmount, tc.tokenOut)
+				s.Require().Error(err)
+			} else {
+				// calculate the swap as separate swaps
+				expectedMultihopTokenInAmount := s.calcInGivenOutAmountAsSeparateSwaps(tc.routes, tc.tokenOut)
+
+				// execute the internal swap
+				multihopTokenInAmount, totalTakerFees, err := s.App.PoolManagerKeeper.RouteExactAmountOutInternal(s.Ctx, s.TestAccs[0], tc.routes, tc.tokenInMaxAmount, tc.tokenOut)
+				// compare the expected tokenIn to the actual tokenIn
+				s.Require().NoError(err)
+				s.Require().Equal(expectedMultihopTokenInAmount.Amount.String(), multihopTokenInAmount.String())
+
+				// Verify the taker fees are accumulated correctly
+				s.Require().Equal(tc.expectedTakerFees.String(), totalTakerFees.String())
+			}
+		})
+	}
+}
+
+// TestMultihopEstimateOutGivenExactAmountIn tests that the estimation done via `EstimateSwapExactAmountIn`
 // results in the same amount of token out as the actual swap.
-func (s *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
+func (s *KeeperTestSuite) TestMultihopEstimateOutGivenExactAmountIn() {
 	type param struct {
 		routes            []types.SwapAmountInRoute
 		estimateRoutes    []types.SwapAmountInRoute
@@ -1156,9 +1332,9 @@ func (s *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 	}
 }
 
-// TestEstimateMultihopSwapExactAmountOut tests that the estimation done via `EstimateSwapExactAmountOut`
+// TestMultihopEstimateInGivenExactAmountOut tests that the estimation done via `EstimateSwapExactAmountOut`
 // results in the same amount of token in as the actual swap.
-func (s *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
+func (s *KeeperTestSuite) TestMultihopEstimateInGivenExactAmountOut() {
 	type param struct {
 		routes           []types.SwapAmountOutRoute
 		estimateRoutes   []types.SwapAmountOutRoute
