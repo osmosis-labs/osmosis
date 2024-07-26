@@ -9,6 +9,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "osmosis/incentives/gauge.proto";
 import "osmosis/lockup/lock.proto";
 import "osmosis/incentives/group.proto";
+import "osmosis/incentives/params.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v25/x/incentives/types";
 
@@ -94,6 +95,10 @@ service Query {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/current_weight_by_group_gauge_id/"
         "{group_gauge_id}";
+  }
+  // Params returns incentives module params.
+  rpc Params(ParamsRequest) returns (ParamsResponse) {
+    option (google.api.http).get = "/osmosis/incentives/v1beta1/params";
   }
 }
 
@@ -237,3 +242,6 @@ message GaugeWeight {
     (gogoproto.nullable) = false
   ];
 }
+
+message ParamsRequest {}
+message ParamsResponse { Params params = 1 [ (gogoproto.nullable) = false ]; }
