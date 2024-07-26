@@ -177,7 +177,7 @@ func (s *indexerStreamingService) adjustTokenInAmountBySpreadFactor(ctx context.
 	tokenInAmount := coins[0].Amount.ToLegacyDec()
 	// Adjust the amount by the spread factor, i.e. before = after/(1 - spreadFactor)
 	adjustedAmt := tokenInAmount.Quo(oneDec.Sub(spreadFactor))
-	attributes[afterTokensInIndex].Value = adjustedAmt.String()
+	attributes[afterTokensInIndex].Value = adjustedAmt.String() + coins[0].Denom
 	return nil
 }
 
