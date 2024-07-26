@@ -863,7 +863,6 @@ func queryCommand(moduleBasics module.BasicManager) *cobra.Command {
 	)
 
 	// UNFORKING v2 TODO: Auto CLI claims we can remove this, but was having issues with AddTxCommands counterpart. See line for comment.
-	moduleBasics.AddQueryCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
