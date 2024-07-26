@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -258,7 +259,7 @@ func (k Keeper) CalculateRoutePoolPoints(ctx sdk.Context, route poolmanagertypes
 
 			totalWeight += weight
 		default:
-			return 0, fmt.Errorf("invalid pool type")
+			return 0, errors.New("invalid pool type")
 		}
 	}
 

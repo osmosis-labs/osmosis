@@ -1,7 +1,7 @@
 package client
 
 import (
-	"fmt"
+	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -20,7 +20,7 @@ func NewQuerier(k validatorprefkeeper.Keeper) Querier {
 func (q Querier) UserValidatorPreferences(ctx sdk.Context, req queryproto.UserValidatorPreferencesRequest) (*queryproto.UserValidatorPreferencesResponse, error) {
 	validatorSet, found := q.K.GetValidatorSetPreference(ctx, req.Address)
 	if !found {
-		return nil, fmt.Errorf("Validator set not found")
+		return nil, errors.New("Validator set not found")
 	}
 
 	return &queryproto.UserValidatorPreferencesResponse{
