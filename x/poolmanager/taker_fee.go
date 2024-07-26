@@ -234,6 +234,11 @@ func (k Keeper) getTakerFeeShareAgreements(denomsInvolvedInRoute []string) ([]ty
 
 // processShareAgreements processes share agreements by calculating the taker fee share for the alloyed asset for each underlying asset that has a taker fee share agreement.
 func (k Keeper) processShareAgreements(ctx sdk.Context, shareAgreements []types.TakerFeeShareAgreement, totalTakerFees sdk.Coins) error {
+	// Early return if there are no share agreements.
+	if len(shareAgreements) == 0 {
+		return nil
+	}
+
 	percentageOfTakerFeeToSkim := osmomath.ZeroDec()
 	for _, agreement := range shareAgreements {
 		// Add up the percentage of the taker fee that should be skimmed off.
