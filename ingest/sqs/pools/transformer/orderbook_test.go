@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sqscosmwasmpool "github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 	poolstransformer "github.com/osmosis-labs/osmosis/v25/ingest/sqs/pools/transformer"
-	sqscosmwasmpool "github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
 )
 
 const (
@@ -89,7 +90,7 @@ func (s *PoolTransformerTestSuite) TestUpdateOrderbookInfo() {
 			NextBidTickIndex:               0,
 			NextAskTickIndex:               -1,
 			BidAmountToExhaustAskLiquidity: osmomath.ZeroBigDec(),
-			AskAmountToExhaustBidLiquidity: osmomath.BigDecFromSDKInt(quantity).Mul(osmomath.NewBigDec(2)),
+			AskAmountToExhaustBidLiquidity: osmomath.BigDecFromSDKInt(quantity).Quo(osmomath.NewBigDec(2)),
 			Ticks: []sqscosmwasmpool.OrderbookTick{{
 				TickId: LARGE_POSITIVE_TICK,
 				TickLiquidity: sqscosmwasmpool.OrderbookTickLiquidity{
