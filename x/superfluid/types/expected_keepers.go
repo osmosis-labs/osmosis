@@ -137,7 +137,7 @@ type PoolManagerKeeper interface {
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
 		tokenOutMinAmount osmomath.Int,
-	) (osmomath.Int, error)
+	) (osmomath.Int, sdk.Coin, error)
 }
 
 type ValSetPreferenceKeeper interface {

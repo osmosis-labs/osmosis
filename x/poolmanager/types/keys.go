@@ -48,6 +48,15 @@ var (
 
 	// KeyTakerFeeCommunityPoolProtoRevArray defines key to store the taker fee for community pool tracker coin array.
 	KeyTakerFeeCommunityPoolProtoRevArray = []byte{0x09}
+
+	// TakerFeeSkimAccrualPrefix defines the prefix to store taker fee skim accrual data.
+	TakerFeeSkimAccrualPrefix = []byte{0x0A}
+
+	// KeyTakerFeeShare defines the key to store taker fee share data.
+	KeyTakerFeeShare = []byte{0x0B}
+
+	// KeyRegisteredAlloyPool defines the key to store registered alloy pool data.
+	KeyRegisteredAlloyPool = []byte{0x0C}
 )
 
 // ModuleRouteToBytes serializes moduleRoute to bytes.
@@ -107,4 +116,34 @@ func ParseDenomTradePairKey(key []byte) (tokenInDenom, tokenOutDenom string, err
 	}
 
 	return tokenInDenom, tokenOutDenom, nil
+}
+
+// KeyTakerFeeShareDenomAccrualForTakerFeeChargedDenom generates a key for a specific taker fee share denomination and taker fee charged denomination.
+// The key is used to store and retrieve the accrued value of the taker fee denomination for the given taker fee share denom.
+func KeyTakerFeeShareDenomAccrualForTakerFeeChargedDenom(takerFeeShareDenom string, takerFeeChargedDenom string) []byte {
+	return []byte(fmt.Sprintf("%s%s%s%s%s", TakerFeeSkimAccrualPrefix, KeySeparator, takerFeeShareDenom, KeySeparator, takerFeeChargedDenom))
+}
+
+// KeyTakerFeeShareDenomAccrualForAllDenoms generates a key for a specific taker fee share denomination.
+// The key is used to store and retrieve the accrued value for all taker fee charged denominations for the given taker fee share denomination.
+func KeyTakerFeeShareDenomAccrualForAllDenoms(takerFeeShareDenom string) []byte {
+	return []byte(fmt.Sprintf("%s%s%s", TakerFeeSkimAccrualPrefix, KeySeparator, takerFeeShareDenom))
+}
+
+// FormatTakerFeeShareAgreementKey generates a key for a specific denomination.
+// The key is used to store and retrieve the TakerFeeShareAgreement for the given denomination.
+func FormatTakerFeeShareAgreementKey(denom string) []byte {
+	return []byte(fmt.Sprintf("%s%s%s", KeyTakerFeeShare, KeySeparator, denom))
+}
+
+// FormatRegisteredAlloyPoolKey generates a key for a registered alloy pool with a specific pool ID and alloyed denomination.
+// The key is used to store and retrieve the registered alloy pool data.
+func FormatRegisteredAlloyPoolKey(poolId uint64, alloyedDenom string) []byte {
+	return []byte(fmt.Sprintf("%s%s%d%s%s", KeyRegisteredAlloyPool, KeySeparator, poolId, KeySeparator, alloyedDenom))
+}
+
+// FormatRegisteredAlloyPoolKeyPoolIdOnly generates a key for a registered alloy pool with a specific pool ID.
+// The key is used to store and retrieve the registered alloy pool data without specifying the alloyed denomination.
+func FormatRegisteredAlloyPoolKeyPoolIdOnly(poolId uint64) []byte {
+	return []byte(fmt.Sprintf("%s%s%d", KeyRegisteredAlloyPool, KeySeparator, poolId))
 }

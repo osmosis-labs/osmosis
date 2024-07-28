@@ -225,9 +225,9 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// TWAP records indexed by pool ID should be untouched.
 	twapRecords, err = s.App.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(s.Ctx, twapRecord1.PoolId)
 	s.Require().NoError(err)
-	s.Require().Len(twapRecords, 6)
-	s.Require().Equal(twapRecord1, twapRecords[4])
-	s.Require().Equal(twapRecord2, twapRecords[5])
+	s.Require().Len(twapRecords, 8)
+	s.Require().Equal(twapRecord1, twapRecords[6])
+	s.Require().Equal(twapRecord2, twapRecords[7])
 
 	// PROTOREV Tests
 	//

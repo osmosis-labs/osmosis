@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "osmosis/poolmanager/v1beta1/genesis.proto";
 import "osmosis/poolmanager/v1beta1/tx.proto";
 import "osmosis/poolmanager/v1beta1/swap_route.proto";
+import "osmosis/poolmanager/v1beta1/taker_fee_share.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
@@ -139,6 +140,79 @@ service Query {
       returns (EstimateTradeBasedOnPriceImpactResponse) {
     option (google.api.http).get =
         "/osmosis/poolmanager/v1beta1/{pool_id}/estimate_trade";
+  }
+
+  // AllTakerFeeShareAgreements returns all taker fee share agreements.
+  // A taker fee share agreement includes the denom of the denom getting the
+  // taker fees, the percent of the taker fees that the denom gets when it is
+  // in the route being traded against, and the address that the taker fees are
+  // sent to at epoch.
+  rpc AllTakerFeeShareAgreements(AllTakerFeeShareAgreementsRequest)
+      returns (AllTakerFeeShareAgreementsResponse) {
+    option (google.api.http).get =
+        "/osmosis/poolmanager/v1beta1/all_taker_fee_share_agreements";
+  }
+
+  // TakerFeeShareAgreementFromDenom returns the taker fee share agreement for a
+  // given denom. A taker fee share agreement includes the denom of the denom
+  // getting the taker fees, the percent of the taker fees that the denom gets
+  // when it is in the route being traded against, and the address that the
+  // taker fees are sent to at epoch.
+  rpc TakerFeeShareAgreementFromDenom(TakerFeeShareAgreementFromDenomRequest)
+      returns (TakerFeeShareAgreementFromDenomResponse) {
+    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/{denom}/"
+                                   "taker_fee_share_agreement_from_denom";
+  }
+
+  // TakerFeeShareDenomsToAccruedValue returns the accrued value (as an Int) of
+  // the given taker fee denom (the collected fees) for the given fee share
+  // denom (the denom with the taker fee share agreement)
+  rpc TakerFeeShareDenomsToAccruedValue(
+      TakerFeeShareDenomsToAccruedValueRequest)
+      returns (TakerFeeShareDenomsToAccruedValueResponse) {
+    option (google.api.http).get =
+        "/osmosis/poolmanager/v1beta1/{takerFeeDenom}/{denom}/"
+        "taker_fee_share_denoms_to_accrued_value";
+  }
+
+  // AllTakerFeeShareAccumulators returns all taker fee share accumulators. A
+  // taker fee share accumulator includes the denom of the denom getting the
+  // taker fees, and an accumulated value of coins that the denom has accrued
+  // since the last time it was distributed in the epoch prior.
+  rpc AllTakerFeeShareAccumulators(AllTakerFeeShareAccumulatorsRequest)
+      returns (AllTakerFeeShareAccumulatorsResponse) {
+    option (google.api.http).get =
+        "/osmosis/poolmanager/v1beta1/all_taker_fee_share_accumulators";
+  }
+
+  // RegisteredAlloyedPoolFromDenom returns the registered alloyed pool state
+  // from the given denom. The registered alloyed pool contains the pool's
+  // contract address, along with the current distribution composition of taker
+  // fee share denoms within the alloyed pool.
+  rpc RegisteredAlloyedPoolFromDenom(RegisteredAlloyedPoolFromDenomRequest)
+      returns (RegisteredAlloyedPoolFromDenomResponse) {
+    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/{denom}/"
+                                   "registered_alloyed_pool_from_denom";
+  }
+
+  // RegisteredAlloyedPoolFromPoolId returns the registered alloyed pool state
+  // from the given pool id. The registered alloyed pool contains the pool's
+  // contract address, along with the current distribution composition of taker
+  // fee share denoms within the alloyed pool.
+  rpc RegisteredAlloyedPoolFromPoolId(RegisteredAlloyedPoolFromPoolIdRequest)
+      returns (RegisteredAlloyedPoolFromPoolIdResponse) {
+    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/{pool_id}/"
+                                   "registered_alloyed_pool_from_pool_id";
+  }
+
+  // AllRegisteredAlloyedPools returns all registered alloyed pools. The
+  // registered alloyed pool contains the pool's contract address, along with
+  // the current distribution composition of taker fee share denoms within the
+  // alloyed pool.
+  rpc AllRegisteredAlloyedPools(AllRegisteredAlloyedPoolsRequest)
+      returns (AllRegisteredAlloyedPoolsResponse) {
+    option (google.api.http).get =
+        "/osmosis/poolmanager/v1beta1/all_registered_alloyed_pools";
   }
 }
 
@@ -381,4 +455,73 @@ message EstimateTradeBasedOnPriceImpactResponse {
   // output_coin is the amount of tokens of the ToCoinDenom type
   // that will be received for the actual InputCoin trade.
   cosmos.base.v1beta1.Coin output_coin = 2 [ (gogoproto.nullable) = false ];
+}
+
+//=============================== AllTakerFeeShareAgreementsRequest
+
+message AllTakerFeeShareAgreementsRequest {}
+
+message AllTakerFeeShareAgreementsResponse {
+  repeated TakerFeeShareAgreement taker_fee_share_agreements = 1
+      [ (gogoproto.nullable) = false ];
+}
+
+//=============================== TakerFeeShareAgreementFromDenomRequest
+
+message TakerFeeShareAgreementFromDenomRequest { string denom = 1; }
+
+message TakerFeeShareAgreementFromDenomResponse {
+  TakerFeeShareAgreement taker_fee_share_agreement = 1
+      [ (gogoproto.nullable) = false ];
+}
+
+//=============================== TakerFeeShareDenomsToAccruedValueRequest
+
+message TakerFeeShareDenomsToAccruedValueRequest {
+  string denom = 1;
+  string takerFeeDenom = 2;
+}
+
+message TakerFeeShareDenomsToAccruedValueResponse {
+  string amount = 1 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.moretags) = "yaml:\"amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+//=============================== AllTakerFeeShareAccumulatorsRequest
+
+message AllTakerFeeShareAccumulatorsRequest {}
+
+message AllTakerFeeShareAccumulatorsResponse {
+  repeated TakerFeeSkimAccumulator taker_fee_skim_accumulators = 1
+      [ (gogoproto.nullable) = false ];
+}
+
+//=============================== RegisteredAlloyedPoolFromDenomRequest
+
+message RegisteredAlloyedPoolFromDenomRequest { string denom = 1; }
+
+message RegisteredAlloyedPoolFromDenomResponse {
+  AlloyContractTakerFeeShareState contract_state = 1
+      [ (gogoproto.nullable) = false ];
+}
+
+//=============================== RegisteredAlloyedPoolFromPoolIdRequest
+
+message RegisteredAlloyedPoolFromPoolIdRequest { uint64 pool_id = 1; }
+
+message RegisteredAlloyedPoolFromPoolIdResponse {
+  AlloyContractTakerFeeShareState contract_state = 1
+      [ (gogoproto.nullable) = false ];
+}
+
+// =============================== AllRegisteredAlloyedPoolsRequest
+
+message AllRegisteredAlloyedPoolsRequest {}
+
+message AllRegisteredAlloyedPoolsResponse {
+  repeated AlloyContractTakerFeeShareState contract_states = 1
+      [ (gogoproto.nullable) = false ];
 }
