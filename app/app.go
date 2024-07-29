@@ -643,6 +643,7 @@ func NewOsmosisApp(
 		lanedMempool,
 		cacheDecoder.TxDecoder(),
 		mevCheckTxHandler.CheckTx(),
+		app,
 	)
 
 	app.SetCheckTx(parityCheckTx.CheckTx())
