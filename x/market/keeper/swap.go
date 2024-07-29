@@ -2,7 +2,9 @@ package keeper
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	appParams "github.com/osmosis-labs/osmosis/v23/app/params"
 	"github.com/osmosis-labs/osmosis/v23/x/market/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -59,14 +61,23 @@ func (k Keeper) ComputeInternalSwap(ctx sdk.Context, offerCoin sdk.DecCoin, askD
 		return offerCoin, nil
 	}
 
-	offerRate, err := k.OracleKeeper.GetMelodyExchangeRate(ctx, offerCoin.Denom)
-	if err != nil {
-		return sdk.DecCoin{}, errorsmod.Wrap(types.ErrNoEffectivePrice, offerCoin.Denom)
-	}
+	askRate := sdk.NewDec(1)
+	offerRate := sdk.NewDec(1)
+	if offerCoin.Denom == appParams.BaseCoinUnit { // melody -> stable
+		exchangeRatio, err := k.OracleKeeper.GetMelodyExchangeRate(ctx, askDenom)
+		if err != nil {
+			return sdk.DecCoin{}, errorsmod.Wrap(types.ErrNoEffectivePrice, askDenom)
+		}
+		offerRate = exchangeRatio
 
-	askRate, err := k.OracleKeeper.GetMelodyExchangeRate(ctx, askDenom)
-	if err != nil {
-		return sdk.DecCoin{}, errorsmod.Wrap(types.ErrNoEffectivePrice, askDenom)
+	} else if askDenom == appParams.BaseCoinUnit { // stable -> melody
+		exchangeRatio, err := k.OracleKeeper.GetMelodyExchangeRate(ctx, offerCoin.Denom)
+		if err != nil {
+			return sdk.DecCoin{}, errorsmod.Wrap(types.ErrNoEffectivePrice, offerCoin.Denom)
+		}
+		askRate = exchangeRatio
+	} else {
+		return sdk.DecCoin{}, fmt.Errorf("unsupported swap: %s -> %s", offerCoin.Denom, askDenom)
 	}
 
 	retAmount := offerCoin.Amount.Mul(askRate).Quo(offerRate)
