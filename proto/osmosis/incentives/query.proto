@@ -260,7 +260,7 @@ message GaugeWeight {
 
 message QueryInternalGaugesRequest {
   // Pagination defines pagination for the request
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 message QueryInternalGaugesResponse {
   repeated Gauge gauges = 1 [ (gogoproto.nullable) = false ];
@@ -270,7 +270,7 @@ message QueryInternalGaugesResponse {
 
 message QueryExternalGaugesRequest {
   // Pagination defines pagination for the request
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 message QueryExternalGaugesResponse {
   repeated Gauge gauges = 1 [ (gogoproto.nullable) = false ];
@@ -281,7 +281,7 @@ message QueryExternalGaugesResponse {
 message QueryGaugesByPoolIDRequest {
   uint64 id = 1;
   // Pagination defines pagination for the request
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
 message QueryGaugesByPoolIDResponse {
