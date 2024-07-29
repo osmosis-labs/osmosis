@@ -1,6 +1,9 @@
 package types
 
 import (
+	fmt "fmt"
+	"strconv"
+	"strings"
 	time "time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -57,4 +60,26 @@ func (gauge Gauge) IsLastNonPerpetualDistribution() bool {
 	// in MsgCreateGauge.ValidateBasic. Additionally, FilledEpoch is always initialized to 0
 	// at gauge creation time.
 	return !gauge.IsPerpetual && gauge.FilledEpochs+1 >= gauge.NumEpochsPaidOver
+}
+
+// IsNoLockGauge returns true if the Gauge LockQueryType is NoLock
+func (gauge Gauge) IsNoLockGauge() bool {
+	return gauge.DistributeTo.LockQueryType == lockuptypes.NoLock
+}
+
+func (gauge Gauge) IsDurationLockGauge() bool {
+	return gauge.DistributeTo.LockQueryType == lockuptypes.ByDuration
+}
+
+func (gauge Gauge) IsInternalGauge() bool {
+	return gauge.IsNoLockGauge() && strings.HasPrefix(gauge.DistributeTo.GetDenom(), NoLockInternalPrefix)
+}
+
+func (gauge Gauge) IsExternalGauge() bool {
+	return gauge.IsNoLockGauge() && strings.HasPrefix(gauge.DistributeTo.GetDenom(), NoLockExternalPrefix)
+}
+
+func (gauge Gauge) IsLinkedToPool(poolID uint64) bool {
+	_, foundSuffix := strings.CutSuffix(gauge.DistributeTo.Denom, fmt.Sprintf("/%s", strconv.FormatUint(poolID, 10)))
+	return foundSuffix
 }

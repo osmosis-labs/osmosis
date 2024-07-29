@@ -75,6 +75,78 @@ func (s *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 	s.Require().NoError(err)
 }
 
+func (s *KeeperTestSuite) TestGetGauges() {
+	s.SetupTest()
+
+	gaugesToCreate := []struct {
+		distrTo lockuptypes.QueryCondition
+		poolId  uint64
+	}{
+		{
+			poolId: concentratedPoolId,
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+				Denom:         "",
+				Duration:      time.Nanosecond,
+			},
+		},
+		{
+			poolId: concentratedPoolId,
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+				Denom:         "",
+				Duration:      time.Nanosecond,
+			},
+		},
+		{
+			poolId: concentratedPoolId,
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+				Denom:         types.NoLockInternalGaugeDenom(concentratedPoolId),
+				Duration:      s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration,
+			},
+		},
+	}
+
+	for _, coin := range defaultGaugeCreationCoins {
+		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+	}
+	s.PrepareBalancerPool()
+	s.PrepareConcentratedPool()
+	s.FundAcc(s.TestAccs[0], defaultGaugeCreationCoins)
+
+	gaugeCreationCoins := sdk.NewCoins(
+		sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(200)),
+		sdk.NewCoin("atom", osmomath.NewInt(200)),
+	)
+	for _, gaugeToCreate := range gaugesToCreate {
+		gaugeId, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, defaultIsPerpetualParam, s.TestAccs[0], gaugeCreationCoins, gaugeToCreate.distrTo, defaultTime, defaultNumEpochPaidOver, gaugeToCreate.poolId)
+		s.Require().NoError(err)
+		_ = gaugeId
+
+	}
+	gauges := s.App.IncentivesKeeper.GetGauges(s.Ctx)
+	s.Require().Len(gauges, 7)
+	s.Run("ExternalGauges", func() {
+		externalGauges := s.App.IncentivesKeeper.GetExternalGauges(s.Ctx)
+		s.Require().Len(externalGauges, 2)
+		s.Require().Equal(uint64(5), externalGauges[0].Id)
+		s.Require().Equal(uint64(6), externalGauges[1].Id)
+	})
+	s.Run("InternalGauges", func() {
+		internalGauges := s.App.IncentivesKeeper.GetInternalGauges(s.Ctx)
+		s.Require().Len(internalGauges, 2)
+		s.Require().Equal(uint64(7), internalGauges[0].Id)
+		s.Require().Equal(uint64(4), internalGauges[1].Id) // generated when initializing concentrated pool
+	})
+	s.Run("GaugesFromPoolID", func() {
+		gauges := s.App.IncentivesKeeper.GetGaugesFromPoolID(s.Ctx, concentratedPoolId)
+		s.Require().Len(gauges, 4)
+		gauges = s.App.IncentivesKeeper.GetGaugesFromPoolID(s.Ctx, balancerPoolId)
+		s.Require().Len(gauges, 3)
+	})
+}
+
 // TestNonExistentDenomGaugeCreation tests error handling for creating a gauge with an invalid denom.
 func (s *KeeperTestSuite) TestNonExistentDenomGaugeCreation() {
 	s.SetupTest()
@@ -382,7 +454,6 @@ func (s *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
 }
 
 func (s *KeeperTestSuite) TestAddToGaugeRewards() {
-
 	defaultCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 12))
 
 	// since most of the same functionality and edge cases are tested by a higher level

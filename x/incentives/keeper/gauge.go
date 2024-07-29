@@ -27,6 +27,14 @@ var byGroupQueryCondition = lockuptypes.QueryCondition{LockQueryType: lockuptype
 
 // getGaugesFromIterator iterates over everything in a gauge's iterator, until it reaches the end. Return all gauges iterated over.
 func (k Keeper) getGaugesFromIterator(ctx sdk.Context, iterator db.Iterator) []types.Gauge {
+	return k.getGaugesFromIteratorAndFilter(ctx, iterator, func(_ *types.Gauge) bool { return true })
+}
+
+// GaugeFilterFn is a function returning true if the Gauge has the expected values
+type GaugeFilterFn func(*types.Gauge) bool
+
+// getGaugesFromIterator iterates over everything in a gauge's iterator, until it reaches the end. Return all gauges iterated over.
+func (k Keeper) getGaugesFromIteratorAndFilter(ctx sdk.Context, iterator db.Iterator, filter GaugeFilterFn) []types.Gauge {
 	gauges := []types.Gauge{}
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -40,7 +48,9 @@ func (k Keeper) getGaugesFromIterator(ctx sdk.Context, iterator db.Iterator) []t
 			if err != nil {
 				panic(err)
 			}
-			gauges = append(gauges, *gauge)
+			if filter(gauge) {
+				gauges = append(gauges, *gauge)
+			}
 		}
 	}
 	return gauges
@@ -308,6 +318,27 @@ func (k Keeper) GetGaugeFromIDs(ctx sdk.Context, gaugeIDs []uint64) ([]types.Gau
 		gauges = append(gauges, *gauge)
 	}
 	return gauges, nil
+}
+
+// GetInternalGauges returns internal gauges
+func (k Keeper) GetInternalGauges(ctx sdk.Context) []types.Gauge {
+	return k.getGaugesFromIteratorAndFilter(ctx, k.GaugesIterator(ctx), func(g *types.Gauge) bool {
+		return g.IsInternalGauge()
+	})
+}
+
+// GetExternalGauges returns external gauges
+func (k Keeper) GetExternalGauges(ctx sdk.Context) []types.Gauge {
+	return k.getGaugesFromIteratorAndFilter(ctx, k.GaugesIterator(ctx), func(g *types.Gauge) bool {
+		return g.IsExternalGauge()
+	})
+}
+
+// GetGaugesFromPoolID return gauges associated to poolID
+func (k Keeper) GetGaugesFromPoolID(ctx sdk.Context, poolID uint64) []types.Gauge {
+	return k.getGaugesFromIteratorAndFilter(ctx, k.GaugesIterator(ctx), func(g *types.Gauge) bool {
+		return g.IsLinkedToPool(poolID)
+	})
 }
 
 // GetGauges returns upcoming, active, and finished gauges.
