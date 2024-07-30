@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/cosmos/gogoproto/proto"
-
 	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -38,7 +37,7 @@ func (k Keeper) SetOsmoEquivalentMultiplier(ctx sdk.Context, epoch int64, denom 
 	prefixStore.Set([]byte(denom), bz)
 }
 
-func IsNonNative(denom string) bool {
+func isNonNative(denom string) bool {
 	if strings.HasPrefix(denom, cltypes.ConcentratedLiquidityTokenPrefix) {
 		return true
 	}
@@ -49,23 +48,19 @@ func IsNonNative(denom string) bool {
 	return false
 }
 
-// GetSuperfluidOSMOTokens calculates the equivalent amount of OSMO tokens staked for a given amount of the specified denom.
 func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount osmomath.Int) (osmomath.Int, error) {
-	return k.getSuperfluidOSMOTokens(ctx, denom, amount)
+	return k.getSuperfluidOSMOTokens(ctx, denom, amount, true)
 }
 
-// GetSuperfluidOSMOTokensIfNonNative calculates the equivalent amount of OSMO tokens for a given amount of a specified denom.
-// If the denom provided is a native token, it will return 0.
-// Currently, native tokens are defined as any token that does not have the prefix "gamm" or "concentrated_liquidity".
-func (k Keeper) GetSuperfluidOSMOTokensIfNonNative(ctx sdk.Context, denom string, amount osmomath.Int) (osmomath.Int, error) {
-	if !IsNonNative(denom) {
+func (k Keeper) GetSuperfluidOSMOTokensExcludeNative(ctx sdk.Context, denom string, amount osmomath.Int) (osmomath.Int, error) {
+	return k.getSuperfluidOSMOTokens(ctx, denom, amount, false)
+}
+
+func (k Keeper) getSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount osmomath.Int, includeNative bool) (osmomath.Int, error) {
+	if !includeNative && !isNonNative(denom) {
 		return osmomath.ZeroInt(), nil
 	}
-	return k.getSuperfluidOSMOTokens(ctx, denom, amount)
-}
 
-// getSuperfluidOSMOTokens is a helper function that calculates the equivalent amount of OSMO tokens for a given amount of a specified denom.
-func (k Keeper) getSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount osmomath.Int) (osmomath.Int, error) {
 	multiplier := k.GetOsmoEquivalentMultiplier(ctx, denom)
 	if multiplier.IsZero() {
 		return osmomath.ZeroInt(), nil

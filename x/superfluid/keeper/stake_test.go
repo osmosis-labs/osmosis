@@ -851,7 +851,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 				bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
 				s.Require().NoError(err)
 				supplyBefore := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
-				osmoAmount, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokensIfNonNative(s.Ctx, intermediaryAcc.Denom, tc.unlockAmount)
+				osmoAmount, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokensExcludeNative(s.Ctx, intermediaryAcc.Denom, tc.unlockAmount)
 				s.Require().NoError(err)
 
 				unbondLockStartTime := startTime.Add(time.Hour)

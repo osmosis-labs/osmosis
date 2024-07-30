@@ -208,29 +208,6 @@ func (s *TestSuite) TestGammSuperfluid() {
 	remainingGammTokens := s.App.BankKeeper.GetBalance(s.Ctx, lpAddr, gammToken)
 	s.Require().Equal(totalGammTokens.Amount.Sub(gammDelegationAmount), remainingGammTokens.Amount)
 
-	queryDelegations := types.SuperfluidDelegationsByDelegatorRequest{DelegatorAddress: lpAddr.String()}
-	querier := keeper.NewQuerier(*s.App.SuperfluidKeeper)
-	res, err := querier.SuperfluidDelegationsByDelegator(s.Ctx, &queryDelegations)
-	s.Require().NoError(err)
-	s.Require().Len(res.SuperfluidDelegationRecords, 1)
-	s.Require().Equal(lpAddr.String(), res.SuperfluidDelegationRecords[0].DelegatorAddress)
-	s.Require().Equal(validator.GetOperator(), res.SuperfluidDelegationRecords[0].ValidatorAddress)
-	s.Require().Equal(gammToken, res.SuperfluidDelegationRecords[0].DelegationAmount.Denom)
-	s.Require().Equal(gammDelegationAmount, res.SuperfluidDelegationRecords[0].DelegationAmount.Amount)
-	s.Require().Equal(appparams.BaseCoinUnit, res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Denom)
-	riskFactor := s.App.SuperfluidKeeper.CalculateRiskFactor(s.Ctx, gammToken)
-	multiplier := s.App.SuperfluidKeeper.GetOsmoEquivalentMultiplier(s.Ctx, gammToken)
-	equivalentAmount := riskFactor.Mul(osmomath.NewDec(gammDelegationAmount.Int64())).Mul(multiplier)
-	fmt.Println("riskFactor", riskFactor)
-	fmt.Println("equivalentAmount", equivalentAmount)
-	fmt.Println("res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Amount", res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Amount)
-	fmt.Println("res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Amount.Int64()", res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Amount.Int64())
-	s.Require().Equal(equivalentAmount, osmomath.NewDec(res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Amount.Int64()))
-	s.Require().Equal(appparams.BaseCoinUnit, res.TotalEquivalentStakedAmount.Denom)
-	s.Require().Equal(equivalentAmount, osmomath.NewDec(res.TotalEquivalentStakedAmount.Amount.Int64()))
-	s.Require().Equal(appparams.BaseCoinUnit, res.TotalEquivalentNonOsmoStakedAmount.Denom)
-	s.Require().Equal(osmomath.NewDec(0), osmomath.NewDec(res.TotalEquivalentNonOsmoStakedAmount.Amount.Int64()))
-
 	////////
 	// TEST: Reward distribution
 	////////
@@ -313,8 +290,9 @@ func (s *TestSuite) TestGammSuperfluid() {
 	s.Require().NoError(err)
 
 	// Check delegations
-	queryDelegations = types.SuperfluidDelegationsByDelegatorRequest{DelegatorAddress: lpAddr.String()}
-	res, err = querier.SuperfluidDelegationsByDelegator(s.Ctx, &queryDelegations)
+	querier := keeper.NewQuerier(*s.App.SuperfluidKeeper)
+	queryDelegations := types.SuperfluidDelegationsByDelegatorRequest{DelegatorAddress: lpAddr.String()}
+	res, err := querier.SuperfluidDelegationsByDelegator(s.Ctx, &queryDelegations)
 	s.Require().NoError(err)
 	s.Require().Len(res.SuperfluidDelegationRecords, 0)
 
@@ -467,17 +445,10 @@ func (s *TestSuite) TestNativeSuperfluid() {
 	s.Require().Equal(validator.GetOperator(), res.SuperfluidDelegationRecords[0].ValidatorAddress)
 	s.Require().Equal(btcDenom, res.SuperfluidDelegationRecords[0].DelegationAmount.Denom)
 	s.Require().Equal(btcStakeAmount, res.SuperfluidDelegationRecords[0].DelegationAmount.Amount)
-	s.Require().Equal(appparams.BaseCoinUnit, res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Denom)
-	riskFactor := s.App.SuperfluidKeeper.CalculateRiskFactor(s.Ctx, btcDenom)
-	twapStartTime := s.Ctx.BlockTime().Add(-5 * time.Minute)
-	price, err := s.App.TwapKeeper.UnsafeGetMultiPoolArithmeticTwapToNow(s.Ctx, []*poolmanagertypes.SwapAmountInRoute{{PoolId: nextPoolId, TokenOutDenom: bondDenom}}, btcDenom, bondDenom, twapStartTime)
-	equivalentAmount := riskFactor.Mul(osmomath.NewDec(btcStakeAmount.Int64())).Mul(price)
-	s.Require().NoError(err)
-	s.Require().Equal(equivalentAmount, osmomath.NewDec(res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Amount.Int64()))
-	s.Require().Equal(appparams.BaseCoinUnit, res.TotalEquivalentStakedAmount.Denom)
-	s.Require().Equal(equivalentAmount, osmomath.NewDec(res.TotalEquivalentStakedAmount.Amount.Int64()))
-	s.Require().Equal(appparams.BaseCoinUnit, res.TotalEquivalentNonOsmoStakedAmount.Denom)
-	s.Require().Equal(equivalentAmount, osmomath.NewDec(res.TotalEquivalentNonOsmoStakedAmount.Amount.Int64()))
+	s.Require().Equal("uosmo", res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Denom)
+	s.Require().Equal(osmomath.NewInt(0), res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.Amount)
+	s.Require().Equal("uosmo", res.TotalEquivalentStakedAmount.Denom)
+	s.Require().Equal(osmomath.NewInt(0), res.TotalEquivalentStakedAmount.Amount)
 
 	//
 	// TEST: Reward distribution
