@@ -72,7 +72,8 @@ func (k Keeper) getSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount os
 		return osmomath.ZeroInt(), err
 	}
 
-	return k.GetRiskAdjustedOsmoValue(ctx, decAmt.RoundInt(), denom), nil
+	// TODO: here! change the risk adjusted value based on the type/denom
+	return k.GetRiskAdjustedOsmoValue(ctx, decAmt.RoundInt()), nil
 }
 
 func (k Keeper) DeleteOsmoEquivalentMultiplier(ctx sdk.Context, denom string) {

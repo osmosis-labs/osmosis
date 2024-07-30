@@ -97,9 +97,7 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 			// Create the respective pool if the test case requires it
 			if !tc.poolDoesNotExist {
 				if tc.asset.AssetType == types.SuperfluidAssetTypeLPShare || tc.asset.AssetType == types.SuperfluidAssetTypeNative {
-					s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute * -6))
 					s.PrepareBalancerPoolWithCoins(poolCoins...)
-					s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute * 7))
 				} else if tc.asset.AssetType == types.SuperfluidAssetTypeConcentratedShare {
 					s.PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition(stakeDenom, "foo")
 				}

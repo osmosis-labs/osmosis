@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -597,97 +596,4 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition_Event
 			}
 		})
 	}
-}
-
-func (s *KeeperTestSuite) TestSetDenomRiskFactors() {
-	s.SetupTest()
-
-	msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
-	c := sdk.WrapSDKContext(s.Ctx)
-
-	govAddr := s.App.AccountKeeper.GetModuleAccount(s.Ctx, govtypes.ModuleName).GetAddress().String()
-
-	// Let's turn this into a table test
-	setDenomRiskFactorTests := []struct {
-		name          string
-		sender        string
-		denom         string
-		riskFactor    string
-		expectedError string
-	}{
-		{"happy path", govAddr, "something", "0.1", ""},
-		{"happy path with zero", govAddr, "something", "0", ""},
-		{"bad gov addr", "osmo1herasn5ewvv9acpujdmqxz698y849aq9ucsccl", "something", "0", "only the governance module is allowed to execute this message"},
-		{"bad gov addr 2", "something else", "something", "0", "invalid sender address (decoding bech32 failed"},
-		{"bad denom", govAddr, "", "0", "denom cannot be empty"},
-	}
-
-	for _, test := range setDenomRiskFactorTests {
-		s.Run(test.name, func() {
-			s.SetupTest()
-
-			msg := &types.MsgSetDenomRiskFactor{
-				Sender:     test.sender,
-				Denom:      test.denom,
-				RiskFactor: osmomath.MustNewDecFromStr(test.riskFactor),
-			}
-			err := msg.ValidateBasic()
-			if err == nil {
-				_, err = msgServer.SetDenomRiskFactor(c, msg)
-			}
-
-			if test.expectedError != "" {
-				s.Require().Error(err)
-				s.Require().ErrorContains(err, test.expectedError)
-			} else {
-				s.Require().NoError(err)
-			}
-		})
-	}
-}
-
-func (s *KeeperTestSuite) TestUnsetDenomRiskFactors() {
-	s.SetupTest()
-	denom := "anything"
-
-	msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
-	c := sdk.WrapSDKContext(s.Ctx)
-	govAddr := s.App.AccountKeeper.GetModuleAccount(s.Ctx, govtypes.ModuleName).GetAddress().String()
-
-	_, found := s.App.SuperfluidKeeper.GetDenomRiskFactor(s.Ctx, denom)
-	s.Require().False(found)
-
-	// Set the risk factor
-	_, err := msgServer.SetDenomRiskFactor(c, &types.MsgSetDenomRiskFactor{
-		Sender:     govAddr,
-		Denom:      denom,
-		RiskFactor: osmomath.MustNewDecFromStr("0.5"),
-	})
-	s.Require().NoError(err)
-
-	riskFactor, found := s.App.SuperfluidKeeper.GetDenomRiskFactor(s.Ctx, denom)
-	s.Require().True(found)
-	s.Require().Equal(osmomath.MustNewDecFromStr("0.5"), riskFactor)
-
-	// Unset fails if the sender is not the governance module
-	_, err = msgServer.UnsetDenomRiskFactor(c, &types.MsgUnsetDenomRiskFactor{
-		Sender: "osmo1herasn5ewvv9acpujdmqxz698y849aq9ucsccl",
-		Denom:  denom,
-	})
-	s.Require().Error(err)
-
-	riskFactor, found = s.App.SuperfluidKeeper.GetDenomRiskFactor(s.Ctx, denom)
-	s.Require().True(found)
-	s.Require().Equal(osmomath.MustNewDecFromStr("0.5"), riskFactor)
-
-	// Unset the risk factor
-	_, err = msgServer.UnsetDenomRiskFactor(c, &types.MsgUnsetDenomRiskFactor{
-		Sender: govAddr,
-		Denom:  denom,
-	})
-	s.Require().NoError(err)
-
-	riskFactor, found = s.App.SuperfluidKeeper.GetDenomRiskFactor(s.Ctx, denom)
-	s.Require().False(found)
-
 }
