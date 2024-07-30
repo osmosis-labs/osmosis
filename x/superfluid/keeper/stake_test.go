@@ -3,8 +3,6 @@ package keeper_test
 import (
 	"time"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
@@ -160,9 +158,6 @@ func (s *KeeperTestSuite) TestSuperfluidDelegate() {
 
 func (s *KeeperTestSuite) TestValidateLockForSFDelegate() {
 	lockOwner := s.TestAccs[0]
-	params, err := s.App.StakingKeeper.GetParams(s.Ctx)
-	s.Require().NoError(err)
-	bondDenom := params.BondDenom
 
 	tests := []struct {
 		name                             string
@@ -251,7 +246,7 @@ func (s *KeeperTestSuite) TestValidateLockForSFDelegate() {
 				Duration: time.Hour * 24 * 21,
 				ID:       1,
 			},
-			superfluidAssetToSet: types.SuperfluidAsset{Denom: "foo", AssetType: types.SuperfluidAssetTypeNative, PriceRoute: []*poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: bondDenom}}},
+			superfluidAssetToSet: types.SuperfluidAsset{Denom: "foo", AssetType: types.SuperfluidAssetTypeNative, PricePoolId: 1},
 			expectedErr:          nil,
 		},
 		{
@@ -262,7 +257,7 @@ func (s *KeeperTestSuite) TestValidateLockForSFDelegate() {
 				Duration: time.Hour * 24 * 21,
 				ID:       1,
 			},
-			superfluidAssetToSet: types.SuperfluidAsset{Denom: "foo", AssetType: types.SuperfluidAssetTypeNative, PriceRoute: []*poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: bondDenom}}},
+			superfluidAssetToSet: types.SuperfluidAsset{Denom: "foo", AssetType: types.SuperfluidAssetTypeNative, PricePoolId: 1},
 			expectedErr:          errorsmod.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", "bar"),
 		},
 		{

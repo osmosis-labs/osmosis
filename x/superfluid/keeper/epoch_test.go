@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"errors"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -66,7 +65,7 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 		},
 		{
 			name:               "update native token Osmo equivalent successfully",
-			asset:              types.SuperfluidAsset{Denom: "foo", AssetType: types.SuperfluidAssetTypeNative, PriceRoute: []*poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: appparams.BaseCoinUnit}}},
+			asset:              types.SuperfluidAsset{Denom: "foo", AssetType: types.SuperfluidAssetTypeNative, PricePoolId: 1},
 			expectedMultiplier: osmomath.MustNewDecFromStr("2.0"),
 		},
 		{
@@ -79,11 +78,6 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			s.SetupTest()
-
-			params, _ := s.App.StakingKeeper.GetParams(s.Ctx)
-			params.BondDenom = appparams.BaseCoinUnit
-			err := s.App.StakingKeeper.SetParams(s.Ctx, params)
-			s.Require().NoError(err)
 
 			ctx := s.Ctx
 			superfluidKeeper := s.App.SuperfluidKeeper
