@@ -141,7 +141,3 @@ type PoolManagerKeeper interface {
 type ValSetPreferenceKeeper interface {
 	DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error
 }
-
-type TwapKeeper interface {
-	GetArithmeticTwapToNow(ctx sdk.Context, poolId uint64, baseAssetDenom string, quoteAssetDenom string, startTime time.Time) (osmomath.Dec, error)
-}

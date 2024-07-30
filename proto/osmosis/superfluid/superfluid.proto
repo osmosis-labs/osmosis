@@ -29,9 +29,6 @@ message SuperfluidAsset {
   // AssetType indicates whether the superfluid asset is a native token or an lp
   // share
   SuperfluidAssetType asset_type = 2;
-  // For non-osmo native assets, we need a pool_id osmo/asset to determine the
-  // twap of the asset
-  uint64 price_pool_id = 3;
 }
 
 // SuperfluidIntermediaryAccount takes the role of intermediary between LP token
