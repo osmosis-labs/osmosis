@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-CHAIN_ID="symphony-testnet-1"
+CHAIN_ID="testing"
 
 # always returns true so set -e doesn't exit if it is not running.
 killall symphonyd || true
@@ -31,7 +31,7 @@ update_genesis () {
 
 # create validator node with tokens
 symphonyd add-genesis-account $(symphonyd keys show validator1 -a --keyring-backend=test --home=$HOME/.symphonyd/validator1) 100000000000note,100000000000000000000stake --home=$HOME/.symphonyd/validator1
-symphonyd gentx validator1 5000000000note --moniker="validator1" --chain-id=$CHAIN_ID --commission-rate="0.1" --commission-max-rate="0.2" --commission-max-change-rate="0.05" --min-self-delegation="500000000" --keyring-backend=test --home=$HOME/.symphonyd/validator1 --chain-id=testing
+symphonyd gentx validator1 5000000000note --moniker="validator1" --chain-id=$CHAIN_ID --commission-rate="0.1" --commission-max-rate="0.2" --commission-max-change-rate="0.05" --min-self-delegation="500000000" --keyring-backend=test --home=$HOME/.symphonyd/validator1 --chain-id=$CHAIN_ID
 symphonyd collect-gentxs --home=$HOME/.symphonyd/validator1
 
 # change staking denom to note
@@ -77,6 +77,18 @@ update_genesis '.app_state["concentratedliquidity"]["params"]["is_permissionless
 
 # update txfees genesis
 update_genesis '.app_state["txfees"]["basedenom"]="note"'
+
+# update oracle genesis by adding usdr to whitelist
+update_genesis '.app_state["oracle"]["params"]["whitelist"][0]["name"]="note"'
+update_genesis '.app_state["oracle"]["params"]["whitelist"][0]["tobin_tax"]="0.0"'
+
+update_genesis '.app_state["oracle"]["params"]["whitelist"][0]["name"]="peppe"'
+update_genesis '.app_state["oracle"]["params"]["whitelist"][0]["tobin_tax"]="0.0"'
+
+# update oracle genesis by adding exchange rate for usdr
+update_genesis '.app_state["oracle"]["exchange_rates"][0]["denom"]="peppe"'
+update_genesis '.app_state["oracle"]["exchange_rates"][0]["exchange_rate"]="1.7"'
+
 
 # copy validator1 genesis file to validator2-4
 cp $HOME/.symphonyd/validator1/config/genesis.json $HOME/.symphonyd/validator2/config/genesis.json
@@ -160,33 +172,33 @@ sed -i -E "s|persistent_peers = \"\"|persistent_peers = \"$(symphonyd tendermint
 
 # start all three validators
 tmux new -s validator1 -d symphonyd start --home=$HOME/.symphonyd/validator1
-tmux new -s validator2 -d symphonyd start --home=$HOME/.symphonyd/validator2
-tmux new -s validator3 -d symphonyd start --home=$HOME/.symphonyd/validator3
-tmux new -s validator4 -d symphonyd start --home=$HOME/.symphonyd/validator4
+#tmux new -s validator2 -d symphonyd start --home=$HOME/.symphonyd/validator2
+#tmux new -s validator3 -d symphonyd start --home=$HOME/.symphonyd/validator3
+#tmux new -s validator4 -d symphonyd start --home=$HOME/.symphonyd/validator4
 
 # send note from first validator to second validator
 echo "Waiting 7 seconds to send funds to validators 2, 3, and 4..."
-sleep 7
+#sleep 7
 
 # send note to other validators
 # send note from 1-st validator to 2-nd validator
-symphonyd tx bank send validator1 $(symphonyd keys show validator2 -a --keyring-backend=test --home=$HOME/.symphonyd/validator2) 500000000note --keyring-backend=test --home=$HOME/.symphonyd/validator1 --chain-id=$CHAIN_ID --broadcast-mode sync --yes --fees 1000000note
-sleep 5
+#symphonyd tx bank send validator1 $(symphonyd keys show validator2 -a --keyring-backend=test --home=$HOME/.symphonyd/validator2) 500000000note --keyring-backend=test --home=$HOME/.symphonyd/validator1 --chain-id=$CHAIN_ID --broadcast-mode sync --yes --fees 1000000note
+#sleep 5
 
 # send note from 1-st validator to 3-rd validator
-symphonyd tx bank send validator1 $(symphonyd keys show validator3 -a --keyring-backend=test --home=$HOME/.symphonyd/validator3) 400000000note --keyring-backend=test --home=$HOME/.symphonyd/validator1 --chain-id=$CHAIN_ID --broadcast-mode sync --yes --fees 1000000note
-sleep 5
+#symphonyd tx bank send validator1 $(symphonyd keys show validator3 -a --keyring-backend=test --home=$HOME/.symphonyd/validator3) 400000000note --keyring-backend=test --home=$HOME/.symphonyd/validator1 --chain-id=$CHAIN_ID --broadcast-mode sync --yes --fees 1000000note
+#sleep 5
 
 # send note from 1-st validator to 4-rd validator
-symphonyd tx bank send validator1 $(symphonyd keys show validator4 -a --keyring-backend=test --home=$HOME/.symphonyd/validator4) 400000000note --keyring-backend=test --home=$HOME/.symphonyd/validator1 --chain-id=$CHAIN_ID --broadcast-mode sync --yes --fees 1000000note
-sleep 5
+#symphonyd tx bank send validator1 $(symphonyd keys show validator4 -a --keyring-backend=test --home=$HOME/.symphonyd/validator4) 400000000note --keyring-backend=test --home=$HOME/.symphonyd/validator1 --chain-id=$CHAIN_ID --broadcast-mode sync --yes --fees 1000000note
+#sleep 5
 
 # add 2 - 4 validators
-symphonyd tx staking create-validator --amount=500000000note --from=validator2 --pubkey=$(symphonyd tendermint show-validator --home=$HOME/.symphonyd/validator2) --moniker="validator2" --chain-id=$CHAIN_ID --commission-rate="0.1" --commission-max-rate="0.2" --commission-max-change-rate="0.05" --min-self-delegation="500000000" --keyring-backend=test --home=$HOME/.symphonyd/validator1 --broadcast-mode sync  --yes --fees 1000000note
-sleep 5
-symphonyd tx staking create-validator --amount=500000000note --from=validator3 --pubkey=$(symphonyd tendermint show-validator --home=$HOME/.symphonyd/validator3) --moniker="validator3" --chain-id=$CHAIN_ID --commission-rate="0.1" --commission-max-rate="0.2" --commission-max-change-rate="0.05" --min-self-delegation="500000000" --keyring-backend=test --home=$HOME/.symphonyd/validator1 --broadcast-mode sync  --yes --fees 1000000note
-sleep 5
-symphonyd tx staking create-validator --amount=500000000note --from=validator4 --pubkey=$(symphonyd tendermint show-validator --home=$HOME/.symphonyd/validator4) --moniker="validator4" --chain-id=$CHAIN_ID --commission-rate="0.1" --commission-max-rate="0.2" --commission-max-change-rate="0.05" --min-self-delegation="500000000" --keyring-backend=test --home=$HOME/.symphonyd/validator1 --broadcast-mode sync  --yes --fees 1000000note
-sleep 5
+#symphonyd tx staking create-validator --amount=500000000note --from=validator2 --pubkey=$(symphonyd tendermint show-validator --home=$HOME/.symphonyd/validator2) --moniker="validator2" --chain-id=$CHAIN_ID --commission-rate="0.1" --commission-max-rate="0.2" --commission-max-change-rate="0.05" --min-self-delegation="500000000" --keyring-backend=test --home=$HOME/.symphonyd/validator1 --broadcast-mode sync  --yes --fees 1000000note
+#sleep 5
+#symphonyd tx staking create-validator --amount=500000000note --from=validator3 --pubkey=$(symphonyd tendermint show-validator --home=$HOME/.symphonyd/validator3) --moniker="validator3" --chain-id=$CHAIN_ID --commission-rate="0.1" --commission-max-rate="0.2" --commission-max-change-rate="0.05" --min-self-delegation="500000000" --keyring-backend=test --home=$HOME/.symphonyd/validator1 --broadcast-mode sync  --yes --fees 1000000note
+#sleep 5
+#symphonyd tx staking create-validator --amount=500000000note --from=validator4 --pubkey=$(symphonyd tendermint show-validator --home=$HOME/.symphonyd/validator4) --moniker="validator4" --chain-id=$CHAIN_ID --commission-rate="0.1" --commission-max-rate="0.2" --commission-max-change-rate="0.05" --min-self-delegation="500000000" --keyring-backend=test --home=$HOME/.symphonyd/validator1 --broadcast-mode sync  --yes --fees 1000000note
+#sleep 5
 
 echo "All 4 Validators are up and running!"
