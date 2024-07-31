@@ -41,24 +41,22 @@ func (s *KeeperTestSuite) TestMsgServer_SwapToNativeCoins() {
 
 	s.Require().Error(err)
 	s.Require().ErrorIs(err, types.ErrNotEnoughBalanceOnMarketVaults)
-	s.Require().ErrorContains(err, "Market vaults do not have enough coins to swap. Available amount: 0")
+	s.Require().ErrorContains(err, "Market vaults do not have enough coins to swap. Available amount: (main: 0), (reserve: 0)")
 
 	// 2) Happy case when exchange vault has enough balance
 	err = s.App.BankKeeper.SendCoinsFromModuleToModule(s.Ctx, FaucetAccountName, types.ModuleName, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(30000))))
 	s.Require().NoError(err)
 
-	exchangeAcc := s.App.MarketKeeper.GetMarketAccount(s.Ctx)
-	//reserveAcc := s.App.MarketKeeper.GetReserveMarketAccount(s.Ctx)
-
-	exchangeVaultBalanceBefore := s.App.BankKeeper.GetBalance(s.Ctx, exchangeAcc.GetAddress(), appparams.BaseCoinUnit)
+	exchangeVaultBalanceBefore := s.App.MarketKeeper.GetExchangePoolBalance(s.Ctx)
+	reserveVaultBalanceBefore := s.App.MarketKeeper.GetReservePoolBalance(s.Ctx)
 	userBalanceBefore := s.App.BankKeeper.GetBalance(s.Ctx, Addr, appparams.BaseCoinUnit)
 	sdrSupplyBefore := s.App.BankKeeper.GetSupply(s.Ctx, assets.MicroSDRDenom)
 
 	resp, err := msgServer.Swap(sdk.WrapSDKContext(s.Ctx), swapMsg)
 	s.Require().NoError(err)
 
-	exchangeVaultBalanceAfter := s.App.BankKeeper.GetBalance(s.Ctx, exchangeAcc.GetAddress(), appparams.BaseCoinUnit)
-	//reserveVaultBalanceAfter := s.App.BankKeeper.GetBalance(s.Ctx, reserveAcc.GetAddress(), appparams.BaseCoinUnit)
+	exchangeVaultBalanceAfter := s.App.MarketKeeper.GetExchangePoolBalance(s.Ctx)
+	reserveVaultBalanceAfter := s.App.MarketKeeper.GetReservePoolBalance(s.Ctx)
 	userBalanceAfter := s.App.BankKeeper.GetBalance(s.Ctx, Addr, appparams.BaseCoinUnit)
 	sdrSupplyAfter := s.App.BankKeeper.GetSupply(s.Ctx, assets.MicroSDRDenom)
 
@@ -66,6 +64,8 @@ func (s *KeeperTestSuite) TestMsgServer_SwapToNativeCoins() {
 	//s.Require().Equal(resp.SwapFee.Amount, reserveVaultBalanceAfter.Amount)
 	s.Require().Equal(resp.SwapCoin.Amount.Add(resp.SwapFee.Amount), exchangeVaultBalanceBefore.Amount.Sub(exchangeVaultBalanceAfter.Amount))
 	s.Require().Equal(sdrSupplyBefore.Amount.Sub(sdrSupplyAfter.Amount), swapAmountInSDR, "supply should decrease by swap amount since we burn stable coin")
+	s.Require().Equal(reserveVaultBalanceBefore.Amount, reserveVaultBalanceAfter.Amount)
+	s.Require().True(reserveVaultBalanceBefore.IsZero())
 }
 
 func (s *KeeperTestSuite) TestMsgServer_SwapToNativeBalancePool() {
@@ -83,9 +83,7 @@ func (s *KeeperTestSuite) TestMsgServer_SwapToNativeBalancePool() {
 	err := s.App.BankKeeper.SendCoinsFromModuleToModule(s.Ctx, FaucetAccountName, types.ModuleName, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(30000))))
 	s.Require().NoError(err)
 
-	exchangeAcc := s.App.MarketKeeper.GetMarketAccount(s.Ctx)
-
-	exchangeVaultBalanceBefore := s.App.BankKeeper.GetBalance(s.Ctx, exchangeAcc.GetAddress(), appparams.BaseCoinUnit)
+	exchangeVaultBalanceBefore := s.App.MarketKeeper.GetExchangePoolBalance(s.Ctx)
 	userBalanceBefore := s.App.BankKeeper.GetBalance(s.Ctx, Addr, appparams.BaseCoinUnit)
 
 	resp, err := msgServer.Swap(sdk.WrapSDKContext(s.Ctx), swapMsg)
@@ -97,7 +95,7 @@ func (s *KeeperTestSuite) TestMsgServer_SwapToNativeBalancePool() {
 	resp, err = msgServer.Swap(sdk.WrapSDKContext(s.Ctx), swapMsg)
 	s.Require().NoError(err)
 
-	exchangeVaultBalanceAfter := s.App.BankKeeper.GetBalance(s.Ctx, exchangeAcc.GetAddress(), appparams.BaseCoinUnit)
+	exchangeVaultBalanceAfter := s.App.MarketKeeper.GetExchangePoolBalance(s.Ctx)
 	userBalanceAfter := s.App.BankKeeper.GetBalance(s.Ctx, Addr, appparams.BaseCoinUnit)
 
 	s.Require().Equal(userBalanceBefore.Amount, userBalanceAfter.Amount)
