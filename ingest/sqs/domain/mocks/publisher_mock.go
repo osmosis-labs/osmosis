@@ -20,10 +20,6 @@ func (g *PublisherMock) PublishTransaction(ctx context.Context, txn domain.Trans
 	return g.Error
 }
 
-func (g *PublisherMock) PublishPool(ctx context.Context, pool domain.Pool) error {
-	return g.Error
-}
-
 func (g *PublisherMock) PublishPair(ctx context.Context, pair domain.Pair) error {
 	return g.Error
 }
