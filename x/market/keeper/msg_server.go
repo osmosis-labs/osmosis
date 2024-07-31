@@ -135,7 +135,7 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 		var neededBalanceFromReserve = osmomath.ZeroInt()
 		if marketVaultBalance.Amount.LT(calculatedAskCoin.Amount) {
 			neededBalanceFromReserve = calculatedAskCoin.Amount.Sub(marketVaultBalance.Amount)
-			reserveVaultBalance := k.GetExchangePoolBalance(ctx)
+			reserveVaultBalance := k.GetReservePoolBalance(ctx)
 			if reserveVaultBalance.Amount.LT(neededBalanceFromReserve) {
 				return nil, errorsmod.Wrapf(types.ErrNotEnoughBalanceOnMarketVaults, "Market vaults do not have enough coins to swap. Available amount: (main: %v), (reserve: %v), needed amount: %v",
 					marketVaultBalance.Amount, reserveVaultBalance.Amount, calculatedAskCoin.Amount)

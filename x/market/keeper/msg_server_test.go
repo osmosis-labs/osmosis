@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,6 +25,7 @@ func (s *KeeperTestSuite) setupServer() types.MsgServer {
 	return msgServer
 }
 
+// TestMsgServer_SwapToNativeCoins tests the case when the user wants to swap from a stable coin to a native coin.
 func (s *KeeperTestSuite) TestMsgServer_SwapToNativeCoins() {
 	msgServer := s.setupServer()
 
@@ -60,14 +62,16 @@ func (s *KeeperTestSuite) TestMsgServer_SwapToNativeCoins() {
 	userBalanceAfter := s.App.BankKeeper.GetBalance(s.Ctx, Addr, appparams.BaseCoinUnit)
 	sdrSupplyAfter := s.App.BankKeeper.GetSupply(s.Ctx, assets.MicroSDRDenom)
 
-	s.Require().Equal(resp.SwapCoin.Amount, userBalanceAfter.Amount.Sub(userBalanceBefore.Amount))
+	s.Require().Equal(resp.SwapCoin.Amount, userBalanceAfter.Amount.Sub(userBalanceBefore.Amount), "user balance should increase by swap amount")
 	//s.Require().Equal(resp.SwapFee.Amount, reserveVaultBalanceAfter.Amount)
-	s.Require().Equal(resp.SwapCoin.Amount.Add(resp.SwapFee.Amount), exchangeVaultBalanceBefore.Amount.Sub(exchangeVaultBalanceAfter.Amount))
+	s.Require().Equal(resp.SwapCoin.Amount.Add(resp.SwapFee.Amount), exchangeVaultBalanceBefore.Amount.Sub(exchangeVaultBalanceAfter.Amount), "all asked amount should be deducted from exchange pool")
 	s.Require().Equal(sdrSupplyBefore.Amount.Sub(sdrSupplyAfter.Amount), swapAmountInSDR, "supply should decrease by swap amount since we burn stable coin")
-	s.Require().Equal(reserveVaultBalanceBefore.Amount, reserveVaultBalanceAfter.Amount)
+	s.Require().Equal(reserveVaultBalanceBefore.Amount, reserveVaultBalanceAfter.Amount, "reserve pool balance should not change")
 	s.Require().True(reserveVaultBalanceBefore.IsZero())
 }
 
+// TestMsgServer_SwapToNativeBalancePool tests the case when the user wants to swap from a stable coin to a native coin and vica verse.
+// In this case, the balance should be the same.
 func (s *KeeperTestSuite) TestMsgServer_SwapToNativeBalancePool() {
 	msgServer := s.setupServer()
 
@@ -84,6 +88,7 @@ func (s *KeeperTestSuite) TestMsgServer_SwapToNativeBalancePool() {
 	s.Require().NoError(err)
 
 	exchangeVaultBalanceBefore := s.App.MarketKeeper.GetExchangePoolBalance(s.Ctx)
+	reserveVaultBalanceBefore := s.App.MarketKeeper.GetReservePoolBalance(s.Ctx)
 	userBalanceBefore := s.App.BankKeeper.GetBalance(s.Ctx, Addr, appparams.BaseCoinUnit)
 
 	resp, err := msgServer.Swap(sdk.WrapSDKContext(s.Ctx), swapMsg)
@@ -96,8 +101,106 @@ func (s *KeeperTestSuite) TestMsgServer_SwapToNativeBalancePool() {
 	s.Require().NoError(err)
 
 	exchangeVaultBalanceAfter := s.App.MarketKeeper.GetExchangePoolBalance(s.Ctx)
+	reserveVaultBalanceAfter := s.App.MarketKeeper.GetReservePoolBalance(s.Ctx)
 	userBalanceAfter := s.App.BankKeeper.GetBalance(s.Ctx, Addr, appparams.BaseCoinUnit)
 
-	s.Require().Equal(userBalanceBefore.Amount, userBalanceAfter.Amount)
-	s.Require().Equal(exchangeVaultBalanceBefore.Amount, exchangeVaultBalanceAfter.Amount)
+	s.Require().Equal(userBalanceBefore.Amount, userBalanceAfter.Amount, "user balance should not change")
+	s.Require().Equal(exchangeVaultBalanceBefore.Amount, exchangeVaultBalanceAfter.Amount, "exchange pool balance should not change")
+	s.Require().Equal(reserveVaultBalanceBefore.Amount, reserveVaultBalanceAfter.Amount, "reserve pool balance should not change")
+}
+
+// TestMsgServe_SwapNotEnoughInMainPool tests the case when there is not enough balance in the main pool but enough in the reserve pool and swap should be successful.
+func (s *KeeperTestSuite) TestMsgServe_SwapNotEnoughInMainPool() {
+	msgServer := s.setupServer()
+
+	// Set Oracle Price
+	sdrPriceInMelody := sdk.NewDecWithPrec(1, 0) // 1 SDR -> 1 Melody
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.MicroSDRDenom, sdrPriceInMelody)
+
+	swapAmountInSDR := sdrPriceInMelody.MulInt64(appparams.MicroUnit).TruncateInt()
+	offerCoin := sdk.NewCoin(assets.MicroSDRDenom, swapAmountInSDR)
+
+	swapMsg := types.NewMsgSwap(Addr, offerCoin, appparams.BaseCoinUnit)
+
+	err := s.App.BankKeeper.SendCoinsFromModuleToModule(s.Ctx, FaucetAccountName, types.ModuleName, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(appparams.MicroUnit/2))))
+	s.Require().NoError(err)
+
+	err = s.App.BankKeeper.SendCoinsFromModuleToModule(s.Ctx, FaucetAccountName, types.ReserveModuleName, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(appparams.MicroUnit))))
+	s.Require().NoError(err)
+
+	exchangeVaultBalanceBefore := s.App.MarketKeeper.GetExchangePoolBalance(s.Ctx)
+	reserveVaultBalanceBefore := s.App.MarketKeeper.GetReservePoolBalance(s.Ctx)
+	userBalanceBefore := s.App.BankKeeper.GetBalance(s.Ctx, Addr, appparams.BaseCoinUnit)
+
+	resp, err := msgServer.Swap(sdk.WrapSDKContext(s.Ctx), swapMsg)
+	s.Require().NoError(err)
+
+	exchangeVaultBalanceAfter := s.App.MarketKeeper.GetExchangePoolBalance(s.Ctx)
+	reserveVaultBalanceAfter := s.App.MarketKeeper.GetReservePoolBalance(s.Ctx)
+	userBalanceAfter := s.App.BankKeeper.GetBalance(s.Ctx, Addr, appparams.BaseCoinUnit)
+
+	exchangeVaultDiff := exchangeVaultBalanceBefore.Amount.Sub(exchangeVaultBalanceAfter.Amount)
+	reserveVaultDiff := reserveVaultBalanceBefore.Amount.Sub(reserveVaultBalanceAfter.Amount)
+	s.Require().Equal(swapAmountInSDR.ToLegacyDec(), userBalanceAfter.Amount.Sub(userBalanceBefore.Amount).ToLegacyDec(),
+		"user balance should increase by swap amount")
+	s.Require().Equal(resp.SwapCoin.Amount.ToLegacyDec(), exchangeVaultDiff.Add(reserveVaultDiff).ToLegacyDec(),
+		"all asked amount should be deducted from reserve pool and exchange pool")
+	s.Require().Equal(swapAmountInSDR.Sub(exchangeVaultBalanceBefore.Amount).ToLegacyDec(), reserveVaultDiff.ToLegacyDec(),
+		"difference that is not present in the main pool needs to be covered by the reserve pool")
+}
+
+// TestMsgServe_SwapMainPoolEmpty tests the case when the main pool is empty and swap should be successful since there is enough liquidity in the reserve pool.
+func (s *KeeperTestSuite) TestMsgServe_SwapMainPoolEmpty() {
+	msgServer := s.setupServer()
+
+	// Set Oracle Price
+	sdrPriceInMelody := sdk.NewDecWithPrec(1, 0) // 1 SDR -> 1 Melody
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.MicroSDRDenom, sdrPriceInMelody)
+
+	swapAmountInSDR := sdrPriceInMelody.MulInt64(appparams.MicroUnit).TruncateInt()
+	offerCoin := sdk.NewCoin(assets.MicroSDRDenom, swapAmountInSDR)
+
+	swapMsg := types.NewMsgSwap(Addr, offerCoin, appparams.BaseCoinUnit)
+
+	err := s.App.BankKeeper.SendCoinsFromModuleToModule(s.Ctx, FaucetAccountName, types.ReserveModuleName, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(appparams.MicroUnit))))
+	s.Require().NoError(err)
+
+	exchangeVaultBalanceBefore := s.App.MarketKeeper.GetExchangePoolBalance(s.Ctx)
+	reserveVaultBalanceBefore := s.App.MarketKeeper.GetReservePoolBalance(s.Ctx)
+	userBalanceBefore := s.App.BankKeeper.GetBalance(s.Ctx, Addr, appparams.BaseCoinUnit)
+
+	resp, err := msgServer.Swap(sdk.WrapSDKContext(s.Ctx), swapMsg)
+	s.Require().NoError(err)
+
+	exchangeVaultBalanceAfter := s.App.MarketKeeper.GetExchangePoolBalance(s.Ctx)
+	reserveVaultBalanceAfter := s.App.MarketKeeper.GetReservePoolBalance(s.Ctx)
+	userBalanceAfter := s.App.BankKeeper.GetBalance(s.Ctx, Addr, appparams.BaseCoinUnit)
+
+	exchangeVaultDiff := exchangeVaultBalanceBefore.Amount.Sub(exchangeVaultBalanceAfter.Amount)
+	reserveVaultDiff := reserveVaultBalanceBefore.Amount.Sub(reserveVaultBalanceAfter.Amount)
+	s.Require().True(exchangeVaultDiff.IsZero(), "exchange vault should not change")
+	s.Require().Equal(swapAmountInSDR.ToLegacyDec(), userBalanceAfter.Amount.Sub(userBalanceBefore.Amount).ToLegacyDec(), "user balance should increase by swap amount")
+	s.Require().Equal(resp.SwapCoin.Amount.ToLegacyDec(), reserveVaultDiff.ToLegacyDec(), "all asked amount should be deducted from reserve pool")
+}
+
+// TestMsgServe_SwapNotEnoughInReservePool tests the case when there is not enough balance in the reserve pool and swap should fail.
+func (s *KeeperTestSuite) TestMsgServe_SwapNotEnoughInReservePool() {
+	msgServer := s.setupServer()
+
+	// Set Oracle Price
+	sdrPriceInMelody := sdk.NewDecWithPrec(1, 0) // 1 SDR -> 1 Melody
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.MicroSDRDenom, sdrPriceInMelody)
+
+	swapAmountInSDR := sdrPriceInMelody.MulInt64(appparams.MicroUnit).TruncateInt()
+	offerCoin := sdk.NewCoin(assets.MicroSDRDenom, swapAmountInSDR)
+
+	swapMsg := types.NewMsgSwap(Addr, offerCoin, appparams.BaseCoinUnit)
+
+	err := s.App.BankKeeper.SendCoinsFromModuleToModule(s.Ctx, FaucetAccountName, types.ModuleName, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(appparams.MicroUnit/2))))
+	s.Require().NoError(err)
+
+	resp, err := msgServer.Swap(sdk.WrapSDKContext(s.Ctx), swapMsg)
+	s.Require().Error(err)
+	s.Require().ErrorContains(err, fmt.Sprintf("Market vaults do not have enough coins to swap. Available amount: (main: %v), (reserve: 0)", appparams.MicroUnit/2))
+	s.Require().Nil(resp)
 }
