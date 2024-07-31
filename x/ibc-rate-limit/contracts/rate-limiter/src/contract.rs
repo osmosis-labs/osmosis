@@ -9,7 +9,10 @@ use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg, SudoMsg};
 use crate::rbac::can_invoke_message;
 use crate::state::rbac::Roles;
 use crate::state::storage::RBAC_PERMISSIONS;
-use crate::state::{flow::FlowType, storage::{GOVMODULE, IBCMODULE}};
+use crate::state::{
+    flow::FlowType,
+    storage::{GOVMODULE, IBCMODULE},
+};
 use crate::{execute, message_queue, query, rbac, sudo};
 
 // version info for migration info
@@ -27,7 +30,11 @@ pub fn instantiate(
     IBCMODULE.save(deps.storage, &msg.ibc_module)?;
     GOVMODULE.save(deps.storage, &msg.gov_module)?;
     // grant the gov address full permissions
-    RBAC_PERMISSIONS.save(deps.storage, msg.gov_module.to_string(), &Roles::all_roles().into_iter().collect())?;
+    RBAC_PERMISSIONS.save(
+        deps.storage,
+        msg.gov_module.to_string(),
+        &Roles::all_roles().into_iter().collect(),
+    )?;
 
     execute::add_new_paths(&mut deps, msg.paths, env.block.time)?;
 
@@ -94,11 +101,13 @@ pub fn sudo(deps: DepsMut, env: Env, msg: SudoMsg) -> Result<Response, ContractE
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::GetQuotas { channel_id, denom } => query::get_quotas(deps.storage, channel_id, denom),
+        QueryMsg::GetQuotas { channel_id, denom } => {
+            query::get_quotas(deps.storage, channel_id, denom)
+        }
         QueryMsg::GetRoleOwners => query::get_role_owners(deps.storage),
         QueryMsg::GetRoles { owner } => query::get_roles(deps.storage, owner),
         QueryMsg::GetMessageIds => query::get_message_ids(deps.storage),
-        QueryMsg::GetMessage { id } => query::get_queued_message(deps.storage, id)
+        QueryMsg::GetMessage { id } => query::get_queued_message(deps.storage, id),
     }
 }
 
@@ -109,33 +118,31 @@ pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, C
     // check contract version, and apply version specific migrations
     if contract_version.version.eq("0.1.0") {
         let gov_module = GOVMODULE.load(deps.storage)?;
-    
-        // grant the gov address full permissions
-        RBAC_PERMISSIONS.save(deps.storage, gov_module.to_string(), &Roles::all_roles().into_iter().collect())?;
-    }
-    
-    // update contract version
-    set_contract_version(
-        deps.storage,
-        CONTRACT_NAME,
-        CONTRACT_VERSION
-    )?;
 
-    Ok(
-        Response::new()
+        // grant the gov address full permissions
+        RBAC_PERMISSIONS.save(
+            deps.storage,
+            gov_module.to_string(),
+            &Roles::all_roles().into_iter().collect(),
+        )?;
+    }
+
+    // update contract version
+    set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+    Ok(Response::new()
         .add_attribute("method", "migrate")
         .add_attribute("version.old", contract_version.version)
-        .add_attribute("version.new", CONTRACT_VERSION)
-    )
+        .add_attribute("version.new", CONTRACT_VERSION))
 }
 
 /// Processes `msg` and executes the corresponding message handler
-/// 
+///
 /// This shouldn't be called directly and instead invoked by the `execute` function, or internally via message queue processing
 pub(crate) fn match_execute(
     deps: &mut DepsMut,
     env: &Env,
-    msg: ExecuteMsg
+    msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::AddPath {
@@ -150,41 +157,27 @@ pub(crate) fn match_execute(
             channel_id,
             denom,
             quota_id,
-        } => execute::try_reset_path_quota(
-            deps,
-            channel_id,
-            denom,
-            quota_id,
-            env.block.time,
-        ),
+        } => execute::try_reset_path_quota(deps, channel_id, denom, quota_id, env.block.time),
         ExecuteMsg::GrantRole { signer, roles } => {
             rbac::grant_role(deps, signer, roles)?;
             Ok(Response::new().add_attribute("method", "grant_role"))
-        },
+        }
         ExecuteMsg::RevokeRole { signer, roles } => {
             rbac::revoke_role(deps, signer, roles)?;
             Ok(Response::new().add_attribute("method", "revoke_role"))
-        },
+        }
         ExecuteMsg::EditPathQuota {
             channel_id,
             denom,
             quota,
         } => {
-            execute::edit_path_quota(
-                deps,
-                channel_id,
-                denom,
-                quota
-            )?;
+            execute::edit_path_quota(deps, channel_id, denom, quota)?;
             Ok(Response::new().add_attribute("method", "edit_path_quota"))
-        },
+        }
         ExecuteMsg::RemoveMessage { message_id } => {
-            message_queue::remove_message(
-                deps,
-                message_id
-            )?;
+            message_queue::remove_message(deps, message_id)?;
             Ok(Response::new().add_attribute("method", "remove_message"))
-        },
+        }
         ExecuteMsg::SetTimelockDelay { signer, hours } => {
             crate::rbac::set_timelock_delay(deps, signer.clone(), hours)?;
             Ok(Response::new()
@@ -193,13 +186,8 @@ pub(crate) fn match_execute(
                 .add_attribute("hours", hours.to_string()))
         }
         ExecuteMsg::ProcessMessages { count, message_ids } => {
-            message_queue::process_message_queue(
-                deps,
-                env,
-                count,
-                message_ids
-            )?;
+            message_queue::process_message_queue(deps, env, count, message_ids)?;
             Ok(Response::new().add_attribute("method", "process_messages"))
-        },
+        }
     }
 }

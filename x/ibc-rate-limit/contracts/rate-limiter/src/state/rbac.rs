@@ -1,14 +1,13 @@
-use cosmwasm_std::{Timestamp};
+use cosmwasm_std::Timestamp;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-
-use crate::{
-    msg::{ExecuteMsg},
-};
+use crate::msg::ExecuteMsg;
 
 /// Roles defines the available permissions that can be assigned to addresses as part of the RBAC system
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, JsonSchema, PartialOrd, Ord, Hash)]
+#[derive(
+    Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, JsonSchema, PartialOrd, Ord, Hash,
+)]
 pub enum Roles {
     /// Has the ability to add a new rate limit
     AddRateLimit,
@@ -58,36 +57,19 @@ impl Roles {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use super::*;
     #[test]
     fn test_all_roles() {
         let roles = Roles::all_roles();
-        assert!(
-            roles.contains(&Roles::AddRateLimit)
-        );
-        assert!(
-            roles.contains(&Roles::RemoveRateLimit)
-        );
-        assert!(
-            roles.contains(&Roles::ResetPathQuota)
-        );
-        assert!(
-            roles.contains(&Roles::EditPathQuota)
-        );
-        assert!(
-            roles.contains(&Roles::GrantRole)
-        );
-        assert!(
-            roles.contains(&Roles::RevokeRole)
-        );
-        assert!(
-            roles.contains(&Roles::RemoveMessage)
-        );
-        assert!(
-            roles.contains(&Roles::SetTimelockDelay)
-        );
+        assert!(roles.contains(&Roles::AddRateLimit));
+        assert!(roles.contains(&Roles::RemoveRateLimit));
+        assert!(roles.contains(&Roles::ResetPathQuota));
+        assert!(roles.contains(&Roles::EditPathQuota));
+        assert!(roles.contains(&Roles::GrantRole));
+        assert!(roles.contains(&Roles::RevokeRole));
+        assert!(roles.contains(&Roles::RemoveMessage));
+        assert!(roles.contains(&Roles::SetTimelockDelay));
     }
 }

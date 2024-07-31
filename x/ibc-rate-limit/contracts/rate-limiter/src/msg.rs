@@ -106,12 +106,12 @@ pub enum ExecuteMsg {
     },
     /// Permissionless message that anyone can invoke to trigger execution
     /// of queued messages that have passed the timelock delay
-    /// 
+    ///
     /// If both count and message_ids are some, message_ids is used. If both are None returns an error
     ProcessMessages {
         /// number of queued messages to process, a value of 0 will attempt to process all queued messages
         count: Option<u64>,
-        message_ids: Option<Vec<String>>
+        message_ids: Option<Vec<String>>,
     },
 }
 
@@ -131,9 +131,7 @@ pub enum QueryMsg {
     GetMessageIds,
     #[returns(crate::state::rbac::QueuedMessage)]
     /// Returns the queued message matching id
-    GetMessage {
-        id: String
-    }
+    GetMessage { id: String },
 }
 
 #[cw_serde]
@@ -156,11 +154,10 @@ pub enum SudoMsg {
 #[cw_serde]
 pub struct MigrateMsg {}
 
-
 impl ExecuteMsg {
     /// Given an ExecuteMsg variant returns the required RBAC role
     /// that must be held by the address which is invoking the message.
-    /// 
+    ///
     /// If no RBAC role is required, returns None
     pub fn required_permission(&self) -> Option<Roles> {
         match self {
@@ -171,17 +168,17 @@ impl ExecuteMsg {
             Self::RevokeRole { .. } => Some(Roles::RevokeRole),
             Self::EditPathQuota { .. } => Some(Roles::EditPathQuota),
             Self::RemoveMessage { .. } => Some(Roles::RemoveMessage),
-            Self::SetTimelockDelay  { .. } => Some(Roles::SetTimelockDelay),
-            Self::ProcessMessages { .. } => None
+            Self::SetTimelockDelay { .. } => Some(Roles::SetTimelockDelay),
+            Self::ProcessMessages { .. } => None,
         }
     }
     /// Checks to see if the message type is able to skip queueing.
-    /// 
+    ///
     /// This is limited to the message type responsible for processing the queue
     pub fn skip_queue(&self) -> bool {
         match self {
             Self::ProcessMessages { .. } => true,
-            _ => false
+            _ => false,
         }
     }
 }

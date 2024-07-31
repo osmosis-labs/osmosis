@@ -309,8 +309,8 @@ pub mod tests {
 
         // uatom on osmosis sent back to the hub
         let packet = Packet::mock(
-            "channel-0".to_string(),                      // from: osmosis
-            "channel-141".to_string(),                    // to: hub
+            "channel-0".to_string(),                   // from: osmosis
+            "channel-141".to_string(),                 // to: hub
             WRAPPED_ATOM_ON_OSMOSIS_TRACE.to_string(), // unwrapped before reaching the contract
             0_u128.into(),
         );
@@ -328,8 +328,8 @@ pub mod tests {
         // osmo on the hub sent back to osmosis
         // send
         let packet = Packet::mock(
-            "channel-141".to_string(),                // from: hub
-            "channel-0".to_string(),                  // to: osmosis
+            "channel-141".to_string(),             // from: hub
+            "channel-0".to_string(),               // to: osmosis
             WRAPPED_OSMO_ON_HUB_TRACE.to_string(), // unwrapped before reaching the contract
             0_u128.into(),
         );
@@ -337,8 +337,8 @@ pub mod tests {
 
         // receive
         let packet = Packet::mock(
-            "channel-141".to_string(),                // from: hub
-            "channel-0".to_string(),                  // to: osmosis
+            "channel-141".to_string(),             // from: hub
+            "channel-0".to_string(),               // to: osmosis
             WRAPPED_OSMO_ON_HUB_TRACE.to_string(), // unwrapped before reaching the contract
             0_u128.into(),
         );
@@ -358,8 +358,8 @@ pub mod tests {
 
         // uosmo on the hub sent back to the osmosis
         let packet = Packet::mock(
-            "channel-141".to_string(),                // from: hub
-            "channel-0".to_string(),                  // to: osmosis
+            "channel-141".to_string(),             // from: hub
+            "channel-0".to_string(),               // to: osmosis
             WRAPPED_OSMO_ON_HUB_TRACE.to_string(), // unwrapped before reaching the contract
             0_u128.into(),
         );
@@ -377,8 +377,8 @@ pub mod tests {
         // utaom on the osmosis sent back to the hub
         // send
         let packet = Packet::mock(
-            "channel-0".to_string(),                      // from: osmosis
-            "channel-141".to_string(),                    // to: hub
+            "channel-0".to_string(),                   // from: osmosis
+            "channel-141".to_string(),                 // to: hub
             WRAPPED_ATOM_ON_OSMOSIS_TRACE.to_string(), // unwrapped before reaching the contract
             0_u128.into(),
         );
@@ -389,8 +389,8 @@ pub mod tests {
 
         // receive
         let packet = Packet::mock(
-            "channel-0".to_string(),                      // from: osmosis
-            "channel-141".to_string(),                    // to: hub
+            "channel-0".to_string(),                   // from: osmosis
+            "channel-141".to_string(),                 // to: hub
             WRAPPED_ATOM_ON_OSMOSIS_TRACE.to_string(), // unwrapped before reaching the contract
             0_u128.into(),
         );
@@ -407,8 +407,8 @@ pub mod tests {
         // Send uatom on stored on osmosis to juno
         // send
         let packet = Packet::mock(
-            "channel-42".to_string(),                     // from: osmosis
-            "channel-0".to_string(),                      // to: juno
+            "channel-42".to_string(),                  // from: osmosis
+            "channel-0".to_string(),                   // to: juno
             WRAPPED_ATOM_ON_OSMOSIS_TRACE.to_string(), // unwrapped before reaching the contract
             0_u128.into(),
         );

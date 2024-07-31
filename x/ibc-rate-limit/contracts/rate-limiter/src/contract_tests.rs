@@ -9,8 +9,8 @@ use cosmwasm_std::{from_binary, Addr, Attribute, MessageInfo, Uint256};
 use crate::helpers::tests::verify_query_response;
 use crate::msg::{InstantiateMsg, MigrateMsg, PathMsg, QueryMsg, QuotaMsg, SudoMsg};
 use crate::state::flow::tests::RESET_TIME_WEEKLY;
-use crate::state::storage::{GOVMODULE, IBCMODULE, RATE_LIMIT_TRACKERS, RBAC_PERMISSIONS};
 use crate::state::rate_limit::RateLimit;
+use crate::state::storage::{GOVMODULE, IBCMODULE, RATE_LIMIT_TRACKERS, RBAC_PERMISSIONS};
 const IBC_ADDR: &str = "osmo1vz5e6tzdjlzy2f7pjvx0ecv96h8r4m2y92thdm";
 const GOV_ADDR: &str = "osmo1tzz5zf2u68t00un2j4lrrnkt2ztd46kfzfp58r";
 
@@ -33,7 +33,9 @@ fn proper_instantiation() {
     assert_eq!(IBCMODULE.load(deps.as_ref().storage).unwrap(), IBC_ADDR);
     assert_eq!(GOVMODULE.load(deps.as_ref().storage).unwrap(), GOV_ADDR);
 
-    let permissions = RBAC_PERMISSIONS.load(&mut deps.storage, GOV_ADDR.to_string()).unwrap();
+    let permissions = RBAC_PERMISSIONS
+        .load(&mut deps.storage, GOV_ADDR.to_string())
+        .unwrap();
     for permission in Roles::all_roles() {
         assert!(permissions.contains(&permission));
     }
@@ -404,7 +406,6 @@ fn test_tokenfactory_message() {
     //println!("{parsed:?}");
 }
 
-
 #[test] // Tests we ccan instantiate the contract and that the owners are set correctly
 fn proper_migrate() {
     let mut deps = mock_dependencies();
@@ -415,37 +416,35 @@ fn proper_migrate() {
         env,
         MessageInfo {
             sender: Addr::unchecked("osmo16tumts0kckpfp9fk7e3rnx9ahzn70dyyqfypgh"),
-            funds: vec![]
+            funds: vec![],
         },
         InstantiateMsg {
             gov_module: Addr::unchecked(GOV_ADDR),
             ibc_module: Addr::unchecked(IBC_ADDR),
-            paths: vec![]
-        }
-
-    ).unwrap();
+            paths: vec![],
+        },
+    )
+    .unwrap();
 
     // test that instantiate set the correct gov module address and RBAC permissions
-    let permissions = RBAC_PERMISSIONS.load(&mut deps.storage, GOV_ADDR.to_string()).unwrap();
+    let permissions = RBAC_PERMISSIONS
+        .load(&mut deps.storage, GOV_ADDR.to_string())
+        .unwrap();
     for permission in Roles::all_roles() {
         assert!(permissions.contains(&permission));
     }
     assert_eq!(GOVMODULE.load(deps.as_ref().storage).unwrap(), GOV_ADDR);
 
     // revoke all roles from the gov contract, instantiation should re-asssign
-    crate::rbac::revoke_role(
-        &mut deps.as_mut(),
-        GOV_ADDR.to_string(),
-        Roles::all_roles()
-    ).unwrap();
+    crate::rbac::revoke_role(&mut deps.as_mut(), GOV_ADDR.to_string(), Roles::all_roles()).unwrap();
 
-    
     migrate(deps.as_mut(), mock_env(), MigrateMsg {}).unwrap();
 
     // ensure migration assigned all the roles
-    let permissions = RBAC_PERMISSIONS.load(&mut deps.storage, GOV_ADDR.to_string()).unwrap();
+    let permissions = RBAC_PERMISSIONS
+        .load(&mut deps.storage, GOV_ADDR.to_string())
+        .unwrap();
     for permission in Roles::all_roles() {
         assert!(permissions.contains(&permission));
     }
-
 }

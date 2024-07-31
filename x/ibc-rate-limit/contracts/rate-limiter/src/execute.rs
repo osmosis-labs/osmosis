@@ -1,6 +1,6 @@
 use crate::msg::{PathMsg, QuotaMsg};
 
-use crate::state::{flow::Flow, path::Path, rate_limit::RateLimit, storage::{RATE_LIMIT_TRACKERS}};
+use crate::state::{flow::Flow, path::Path, rate_limit::RateLimit, storage::RATE_LIMIT_TRACKERS};
 use crate::ContractError;
 use cosmwasm_std::{DepsMut, Response, Timestamp};
 
@@ -93,7 +93,7 @@ pub fn edit_path_quota(
     deps: &mut DepsMut,
     channel_id: String,
     denom: String,
-    quota: QuotaMsg
+    quota: QuotaMsg,
 ) -> Result<(), ContractError> {
     let path = Path::new(&channel_id, &denom);
     RATE_LIMIT_TRACKERS.update(deps.storage, path.into(), |maybe_rate_limit| {
@@ -108,7 +108,7 @@ pub fn edit_path_quota(
                     if limit.quota.name.eq(&quota.name) {
                         // TODO: is this the current way of handling channel_value when editing the quota?
 
-                        // cache the current channel_value 
+                        // cache the current channel_value
                         let channel_value = limit.quota.channel_value;
                         // update the quota
                         limit.quota = From::from(&quota);
@@ -132,7 +132,10 @@ mod tests {
     use crate::helpers::tests::verify_query_response;
     use crate::msg::{ExecuteMsg, QueryMsg, QuotaMsg};
     use crate::state::rbac::Roles;
-    use crate::state::{rate_limit::RateLimit, storage::{GOVMODULE, IBCMODULE}};
+    use crate::state::{
+        rate_limit::RateLimit,
+        storage::{GOVMODULE, IBCMODULE},
+    };
 
     const IBC_ADDR: &str = "osmo1vz5e6tzdjlzy2f7pjvx0ecv96h8r4m2y92thdm";
     const GOV_ADDR: &str = "osmo1tzz5zf2u68t00un2j4lrrnkt2ztd46kfzfp58r";
@@ -151,8 +154,9 @@ mod tests {
         crate::rbac::grant_role(
             &mut deps.as_mut(),
             IBC_ADDR.to_string(),
-            vec![Roles::AddRateLimit, Roles::RemoveRateLimit]
-        ).unwrap();
+            vec![Roles::AddRateLimit, Roles::RemoveRateLimit],
+        )
+        .unwrap();
 
         let msg = ExecuteMsg::AddPath {
             channel_id: "channel".to_string(),

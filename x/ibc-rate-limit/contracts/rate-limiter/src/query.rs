@@ -1,6 +1,9 @@
-use crate::state::{path::Path, storage::{MESSAGE_QUEUE, RATE_LIMIT_TRACKERS, RBAC_PERMISSIONS}};
-use cosmwasm_std::{Order::Ascending, StdError, Storage};
+use crate::state::{
+    path::Path,
+    storage::{MESSAGE_QUEUE, RATE_LIMIT_TRACKERS, RBAC_PERMISSIONS},
+};
 use cosmwasm_std::{to_binary, Binary, StdResult};
+use cosmwasm_std::{Order::Ascending, StdError, Storage};
 
 pub fn get_quotas(
     storage: &dyn Storage,
@@ -38,12 +41,15 @@ pub fn get_message_ids(storage: &dyn Storage) -> StdResult<Binary> {
 
 /// Searches MESSAGE_QUEUE for a message_id matching `id`
 pub fn get_queued_message(storage: &dyn Storage, id: String) -> StdResult<Binary> {
-    to_binary(&MESSAGE_QUEUE.iter(storage)?.find(|message| {
-        let Ok(message) = message else {
-            return false
-        };
-        message.message_id.eq(&id)
-    }).ok_or_else(|| StdError::not_found(id))??)
+    to_binary(
+        &MESSAGE_QUEUE
+            .iter(storage)?
+            .find(|message| {
+                let Ok(message) = message else { return false };
+                message.message_id.eq(&id)
+            })
+            .ok_or_else(|| StdError::not_found(id))??,
+    )
 }
 
 #[cfg(test)]
@@ -118,7 +124,9 @@ mod test {
             .save(
                 &mut deps.storage,
                 "foobar".to_string(),
-                &vec![Roles::SetTimelockDelay, Roles::EditPathQuota].into_iter().collect(),
+                &vec![Roles::SetTimelockDelay, Roles::EditPathQuota]
+                    .into_iter()
+                    .collect(),
             )
             .unwrap();
         let response = get_roles(deps.as_ref().storage, "foobar".to_string()).unwrap();
@@ -134,13 +142,16 @@ mod test {
         let response = get_message_ids(deps.as_ref().storage).unwrap();
         let decoded: Vec<String> = from_binary(&response).unwrap();
         assert_eq!(decoded.len(), 0);
-        
+
         MESSAGE_QUEUE
             .push_back(
                 &mut deps.storage,
                 &QueuedMessage {
                     message_id: "prop-1".to_string(),
-                    message: ExecuteMsg::ProcessMessages { count: Some(1),message_ids: None },
+                    message: ExecuteMsg::ProcessMessages {
+                        count: Some(1),
+                        message_ids: None,
+                    },
                     submitted_at: Timestamp::default(),
                     timelock_delay: 0,
                 },
@@ -151,7 +162,10 @@ mod test {
                 &mut deps.storage,
                 &QueuedMessage {
                     message_id: "prop-2".to_string(),
-                    message: ExecuteMsg::ProcessMessages { count: Some(1),message_ids: None },
+                    message: ExecuteMsg::ProcessMessages {
+                        count: Some(1),
+                        message_ids: None,
+                    },
                     submitted_at: Timestamp::default(),
                     timelock_delay: 0,
                 },

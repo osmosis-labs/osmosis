@@ -1,13 +1,14 @@
 //! storage variables
 
-use std::collections::{BTreeSet};
+use std::collections::BTreeSet;
 
 use cosmwasm_std::Addr;
 use cw_storage_plus::{Deque, Item, Map};
 
-use super::{rate_limit::RateLimit, rbac::{QueuedMessage, Roles}};
-
-
+use super::{
+    rate_limit::RateLimit,
+    rbac::{QueuedMessage, Roles},
+};
 
 /// Only this address can manage the contract. This will likely be the
 /// governance module, but could be set to something else if needed
@@ -36,7 +37,7 @@ pub const IBCMODULE: Item<Addr> = Item::new("ibc_module");
 /// PrimaryKey trait
 pub const RATE_LIMIT_TRACKERS: Map<(String, String), Vec<RateLimit>> = Map::new("flow");
 
-/// Maps address -> delay, automatically applying a timelock delay to all 
+/// Maps address -> delay, automatically applying a timelock delay to all
 /// messages submitted by a specific address
 pub const TIMELOCK_DELAY: Map<String, u64> = Map::new("timelock_delay");
 

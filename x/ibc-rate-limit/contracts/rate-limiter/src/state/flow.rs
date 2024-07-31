@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 
 use super::quota::Quota;
 
-
 #[derive(Debug, Clone)]
 pub enum FlowType {
     In,
@@ -127,8 +126,6 @@ impl Flow {
         expired
     }
 }
-
-
 
 #[cfg(test)]
 pub mod tests {

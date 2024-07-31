@@ -4,9 +4,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::ContractError;
 
-use super::{flow::{Flow, FlowType}, quota::Quota, path::Path};
-
-
+use super::{
+    flow::{Flow, FlowType},
+    path::Path,
+    quota::Quota,
+};
 
 /// RateLimit is the main structure tracked for each channel/denom pair. Its quota
 /// represents rate limit configuration, and the flow its
@@ -69,8 +71,6 @@ impl RateLimit {
         }
     }
 }
-
-
 
 // The channel value on send depends on the amount on escrow. The ibc transfer
 // module modifies the escrow amount by "funds" on sends before calling the

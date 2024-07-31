@@ -6,7 +6,6 @@ use crate::msg::QuotaMsg;
 
 use super::flow::FlowType;
 
-
 /// A Quota is the percentage of the denom's total value that can be transferred
 /// through the channel in a given period of time (duration)
 ///

@@ -27,5 +27,5 @@ pub enum ContractError {
         denom: String,
     },
     #[error("{0}")]
-    InvalidParameters(String)
+    InvalidParameters(String),
 }
