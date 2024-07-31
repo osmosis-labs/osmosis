@@ -1,6 +1,6 @@
-use std::collections::HashSet;
 
-use cosmwasm_std::{Addr, DepsMut, MessageInfo};
+
+use cosmwasm_std::{DepsMut, MessageInfo};
 
 use crate::{msg::ExecuteMsg, state::{rbac::Roles, storage::{RBAC_PERMISSIONS, TIMELOCK_DELAY}}, ContractError};
 
@@ -451,7 +451,7 @@ mod test {
         let mut granted_roles: BTreeSet<_> = all_roles.iter().copied().collect();
 
         for roles in &all_roles.iter().chunks(2) {
-            let roles = roles.map(|role| *role).collect::<Vec<_>>();
+            let roles = roles.copied().collect::<Vec<_>>();
 
             revoke_role(
                 &mut deps,

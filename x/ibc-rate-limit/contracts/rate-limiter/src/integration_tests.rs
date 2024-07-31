@@ -1,10 +1,10 @@
 #![cfg(test)]
-use std::any::Any;
+
 
 use crate::{helpers::RateLimitingContract, msg::{ExecuteMsg, QueryMsg}, state::{rate_limit::RateLimit, rbac::Roles}, test_msg_send, ContractError};
-use cosmwasm_std::{to_binary, Addr, Coin, Empty, Timestamp, Uint128, Uint256};
+use cosmwasm_std::{Addr, Coin, Empty, Timestamp, Uint128, Uint256};
 use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-use cosmwasm_std::Querier;
+
 use crate::{
     msg::{InstantiateMsg, PathMsg, QuotaMsg},
     state::flow::tests::{RESET_TIME_DAILY, RESET_TIME_MONTHLY, RESET_TIME_WEEKLY},
@@ -75,8 +75,8 @@ fn expiration() {
     let quota = QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 10);
 
     let (mut app, cw_rate_limit_contract) = proper_instantiate(vec![PathMsg {
-        channel_id: format!("any"),
-        denom: format!("denom"),
+        channel_id: "any".to_string(),
+        denom: "denom".to_string(),
         quotas: vec![quota],
     }]);
 
@@ -166,8 +166,8 @@ fn multiple_quotas() {
     ];
 
     let (mut app, cw_rate_limit_contract) = proper_instantiate(vec![PathMsg {
-        channel_id: format!("any"),
-        denom: format!("denom"),
+        channel_id: "any".to_string(),
+        denom: "denom".to_string(),
         quotas,
     }]);
 
@@ -300,8 +300,8 @@ fn channel_value_cached() {
     ];
 
     let (mut app, cw_rate_limit_contract) = proper_instantiate(vec![PathMsg {
-        channel_id: format!("any"),
-        denom: format!("denom"),
+        channel_id: "any".to_string(),
+        denom: "denom".to_string(),
         quotas,
     }]);
 
@@ -405,8 +405,8 @@ fn add_paths_later() {
 
     // Add a weekly limit of 1%
     let management_msg = ExecuteMsg::AddPath {
-        channel_id: format!("any"),
-        denom: format!("denom"),
+        channel_id: "any".to_string(),
+        denom: "denom".to_string(),
         quotas: vec![QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 1, 1)],
     };
 
@@ -428,14 +428,14 @@ fn test_execute_add_path() {
     ];
 
     let (mut app, cw_rate_limit_contract) = proper_instantiate(vec![PathMsg {
-        channel_id: format!("any"),
-        denom: format!("denom"),
+        channel_id: "any".to_string(),
+        denom: "denom".to_string(),
         quotas,
     }]);
 
     let management_msg = ExecuteMsg::AddPath {
-        channel_id: format!("new_channel_id"),
-        denom: format!("new_denom"),
+        channel_id: "new_channel_id".to_string(),
+        denom: "new_denom".to_string(),
         quotas: vec![QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 1, 1)],
     };
 
@@ -474,8 +474,8 @@ fn test_execute_remove_path() {
     ];
 
     let (mut app, cw_rate_limit_contract) = proper_instantiate(vec![PathMsg {
-        channel_id: format!("any"),
-        denom: format!("denom"),
+        channel_id: "any".to_string(),
+        denom: "denom".to_string(),
         quotas,
     }]);
 
@@ -506,8 +506,8 @@ fn test_execute_reset_path_quota() {
     ];
 
     let (mut app, cw_rate_limit_contract) = proper_instantiate(vec![PathMsg {
-        channel_id: format!("any"),
-        denom: format!("denom"),
+        channel_id: "any".to_string(),
+        denom: "denom".to_string(),
         quotas,
     }]);
 
@@ -561,8 +561,8 @@ fn test_execute_grant_and_revoke_role() {
     ];
 
     let (mut app, cw_rate_limit_contract) = proper_instantiate(vec![PathMsg {
-        channel_id: format!("any"),
-        denom: format!("denom"),
+        channel_id: "any".to_string(),
+        denom: "denom".to_string(),
         quotas,
     }]);
 
@@ -630,8 +630,8 @@ fn test_execute_edit_path_quota() {
     ];
 
     let (mut app, cw_rate_limit_contract) = proper_instantiate(vec![PathMsg {
-        channel_id: format!("any"),
-        denom: format!("denom"),
+        channel_id: "any".to_string(),
+        denom: "denom".to_string(),
         quotas,
     }]);
 
@@ -686,8 +686,8 @@ fn test_execute_remove_message() {
     ];
 
     let (mut app, cw_rate_limit_contract) = proper_instantiate(vec![PathMsg {
-        channel_id: format!("any"),
-        denom: format!("denom"),
+        channel_id: "any".to_string(),
+        denom: "denom".to_string(),
         quotas,
     }]);
 
@@ -754,8 +754,8 @@ fn test_execute_process_messages() {
     ];
 
     let (mut app, cw_rate_limit_contract) = proper_instantiate(vec![PathMsg {
-        channel_id: format!("any"),
-        denom: format!("denom"),
+        channel_id: "any".to_string(),
+        denom: "denom".to_string(),
         quotas,
     }]);
 

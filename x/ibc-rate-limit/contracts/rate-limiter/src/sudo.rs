@@ -22,7 +22,7 @@ pub fn process_packet(
 ) -> Result<Response, ContractError> {
     let (channel_id, denom) = packet.path_data(&direction);
     #[allow(clippy::needless_borrow)]
-    let path = &Path::new(&channel_id, &denom);
+    let path = &Path::new(channel_id, denom);
     let funds = packet.get_funds();
 
     #[cfg(test)]
@@ -146,7 +146,7 @@ pub fn undo_send(deps: DepsMut, packet: Packet) -> Result<Response, ContractErro
     // Sudo call. Only go modules should be allowed to access this
     let (channel_id, denom) = packet.path_data(&FlowType::Out); // Sends have direction out.
     #[allow(clippy::needless_borrow)]
-    let path = &Path::new(&channel_id, &denom);
+    let path = &Path::new(channel_id, &denom);
     let any_path = Path::new("any", &denom);
     let funds = packet.get_funds();
 

@@ -23,7 +23,7 @@ fn proper_instantiation() {
         ibc_module: Addr::unchecked(IBC_ADDR),
         paths: vec![],
     };
-    let info = mock_info(IBC_ADDR, &vec![]);
+    let info = mock_info(IBC_ADDR, &[]);
 
     // we can just call .unwrap() to assert this was a success
     let res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
@@ -48,12 +48,12 @@ fn consume_allowance() {
         gov_module: Addr::unchecked(GOV_ADDR),
         ibc_module: Addr::unchecked(IBC_ADDR),
         paths: vec![PathMsg {
-            channel_id: format!("any"),
-            denom: format!("denom"),
+            channel_id: "any".to_string(),
+            denom: "denom".to_string(),
             quotas: vec![quota],
         }],
     };
-    let info = mock_info(GOV_ADDR, &vec![]);
+    let info = mock_info(GOV_ADDR, &[]);
     let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     let msg = test_msg_send!(
@@ -87,12 +87,12 @@ fn symetric_flows_dont_consume_allowance() {
         gov_module: Addr::unchecked(GOV_ADDR),
         ibc_module: Addr::unchecked(IBC_ADDR),
         paths: vec![PathMsg {
-            channel_id: format!("any"),
-            denom: format!("denom"),
+            channel_id: "any".to_string(),
+            denom: "denom".to_string(),
             quotas: vec![quota],
         }],
     };
-    let info = mock_info(GOV_ADDR, &vec![]);
+    let info = mock_info(GOV_ADDR, &[]);
     let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
 
     let send_msg = test_msg_send!(
@@ -149,12 +149,12 @@ fn asymetric_quotas() {
         gov_module: Addr::unchecked(GOV_ADDR),
         ibc_module: Addr::unchecked(IBC_ADDR),
         paths: vec![PathMsg {
-            channel_id: format!("any"),
-            denom: format!("denom"),
+            channel_id: "any".to_string(),
+            denom: "denom".to_string(),
             quotas: vec![quota],
         }],
     };
-    let info = mock_info(GOV_ADDR, &vec![]);
+    let info = mock_info(GOV_ADDR, &[]);
     let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
 
     // Sending 2%
@@ -232,18 +232,18 @@ fn query_state() {
         gov_module: Addr::unchecked(GOV_ADDR),
         ibc_module: Addr::unchecked(IBC_ADDR),
         paths: vec![PathMsg {
-            channel_id: format!("any"),
-            denom: format!("denom"),
+            channel_id: "any".to_string(),
+            denom: "denom".to_string(),
             quotas: vec![quota],
         }],
     };
-    let info = mock_info(GOV_ADDR, &vec![]);
+    let info = mock_info(GOV_ADDR, &[]);
     let env = mock_env();
     let _res = instantiate(deps.as_mut(), env.clone(), info, msg).unwrap();
 
     let query_msg = QueryMsg::GetQuotas {
-        channel_id: format!("any"),
-        denom: format!("denom"),
+        channel_id: "any".to_string(),
+        denom: "denom".to_string(),
     };
 
     let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
@@ -297,8 +297,8 @@ fn bad_quotas() {
         gov_module: Addr::unchecked(GOV_ADDR),
         ibc_module: Addr::unchecked(IBC_ADDR),
         paths: vec![PathMsg {
-            channel_id: format!("any"),
-            denom: format!("denom"),
+            channel_id: "any".to_string(),
+            denom: "denom".to_string(),
             quotas: vec![QuotaMsg {
                 name: "bad_quota".to_string(),
                 duration: 200,
@@ -306,15 +306,15 @@ fn bad_quotas() {
             }],
         }],
     };
-    let info = mock_info(IBC_ADDR, &vec![]);
+    let info = mock_info(IBC_ADDR, &[]);
 
     let env = mock_env();
     instantiate(deps.as_mut(), env.clone(), info, msg).unwrap();
 
     // If a quota is higher than 100%, we set it to 100%
     let query_msg = QueryMsg::GetQuotas {
-        channel_id: format!("any"),
-        denom: format!("denom"),
+        channel_id: "any".to_string(),
+        denom: "denom".to_string(),
     };
     let res = query(deps.as_ref(), env.clone(), query_msg).unwrap();
     let value: Vec<RateLimit> = from_binary(&res).unwrap();
@@ -338,12 +338,12 @@ fn undo_send() {
         gov_module: Addr::unchecked(GOV_ADDR),
         ibc_module: Addr::unchecked(IBC_ADDR),
         paths: vec![PathMsg {
-            channel_id: format!("any"),
-            denom: format!("denom"),
+            channel_id: "any".to_string(),
+            denom: "denom".to_string(),
             quotas: vec![quota],
         }],
     };
-    let info = mock_info(GOV_ADDR, &vec![]);
+    let info = mock_info(GOV_ADDR, &[]);
     let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
 
     let send_msg = test_msg_send!(
@@ -354,9 +354,9 @@ fn undo_send() {
     );
     let undo_msg = SudoMsg::UndoSend {
         packet: Packet::mock(
-            format!("channel"),
-            format!("channel"),
-            format!("denom"),
+            "channel".to_string(),
+            "channel".to_string(),
+            "denom".to_string(),
             300_u32.into(),
         ),
     };
@@ -408,7 +408,7 @@ fn test_tokenfactory_message() {
 #[test] // Tests we ccan instantiate the contract and that the owners are set correctly
 fn proper_migrate() {
     let mut deps = mock_dependencies();
-    let mut env = mock_env();
+    let env = mock_env();
 
     crate::contract::instantiate(
         deps.as_mut(),

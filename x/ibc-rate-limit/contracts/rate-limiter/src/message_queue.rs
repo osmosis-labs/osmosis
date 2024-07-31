@@ -135,7 +135,7 @@ fn try_process_message(
 
     // check to see if the timelock delay has passed, which we need to first convert from hours into seconds
     if env.block.time.ge(&min_unlock) {
-        crate::contract::match_execute(deps, &env, message.message)?;
+        crate::contract::match_execute(deps, env, message.message)?;
     } else {
         MESSAGE_QUEUE.push_back(deps.storage, &message)?;
     }
@@ -148,7 +148,7 @@ mod tests {
     use cosmwasm_std::{
         from_binary,
         testing::{mock_dependencies, mock_env},
-        Addr, MemoryStorage, Timestamp, TransactionInfo,
+        Addr, Timestamp, TransactionInfo,
     };
 
     use crate::{msg::QuotaMsg, query::get_queued_message, rbac::set_timelock_delay};
@@ -178,7 +178,7 @@ mod tests {
 
     #[test]
     fn test_queue_message() {
-        let mut env = mock_env();
+        let env = mock_env();
         let mut deps = mock_dependencies();
         let mut deps = deps.as_mut();
 
@@ -247,7 +247,7 @@ mod tests {
 
         let mut deps = mock_dependencies();
         let mut deps = deps.as_mut();
-        let mut env = mock_env();
+        let env = mock_env();
         create_n_messages(&mut deps, 10, &mut |_i: u64| Timestamp::default());
         assert_eq!(MESSAGE_QUEUE.len(deps.storage).unwrap(), 10);
 
@@ -383,7 +383,7 @@ mod tests {
     fn test_process_message_queue_invalid_parameters() {
         let mut deps = mock_dependencies();
         let mut deps = deps.as_mut();
-        let mut env = mock_env();
+        let env = mock_env();
         create_n_messages(&mut deps, 10, &mut |_i: u64| Timestamp::default());
         assert_eq!(MESSAGE_QUEUE.len(deps.storage).unwrap(), 10);
 

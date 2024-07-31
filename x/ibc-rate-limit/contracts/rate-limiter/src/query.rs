@@ -1,6 +1,6 @@
 use crate::state::{path::Path, storage::{MESSAGE_QUEUE, RATE_LIMIT_TRACKERS, RBAC_PERMISSIONS}};
 use cosmwasm_std::{Order::Ascending, StdError, Storage};
-use cosmwasm_std::{to_binary, Binary, Deps, StdResult};
+use cosmwasm_std::{to_binary, Binary, StdResult};
 
 pub fn get_quotas(
     storage: &dyn Storage,

@@ -1,6 +1,6 @@
 //! storage variables
 
-use std::collections::{BTreeSet, HashSet};
+use std::collections::{BTreeSet};
 
 use cosmwasm_std::Addr;
 use cw_storage_plus::{Deque, Item, Map};

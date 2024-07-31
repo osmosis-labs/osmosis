@@ -1,8 +1,8 @@
 use crate::msg::{PathMsg, QuotaMsg};
-use crate::state::quota::Quota;
-use crate::state::{flow::Flow, path::Path, rate_limit::RateLimit, storage::{GOVMODULE, IBCMODULE, RATE_LIMIT_TRACKERS}};
+
+use crate::state::{flow::Flow, path::Path, rate_limit::RateLimit, storage::{RATE_LIMIT_TRACKERS}};
 use crate::ContractError;
-use cosmwasm_std::{Addr, DepsMut, Response, Timestamp};
+use cosmwasm_std::{DepsMut, Response, Timestamp};
 
 pub fn add_new_paths(
     deps: &mut DepsMut,
@@ -155,23 +155,23 @@ mod tests {
         ).unwrap();
 
         let msg = ExecuteMsg::AddPath {
-            channel_id: format!("channel"),
-            denom: format!("denom"),
+            channel_id: "channel".to_string(),
+            denom: "denom".to_string(),
             quotas: vec![QuotaMsg {
                 name: "daily".to_string(),
                 duration: 1600,
                 send_recv: (3, 5),
             }],
         };
-        let info = mock_info(IBC_ADDR, &vec![]);
+        let info = mock_info(IBC_ADDR, &[]);
 
         let env = mock_env();
         let res = execute(deps.as_mut(), env.clone(), info, msg).unwrap();
         assert_eq!(0, res.messages.len());
 
         let query_msg = QueryMsg::GetQuotas {
-            channel_id: format!("channel"),
-            denom: format!("denom"),
+            channel_id: "channel".to_string(),
+            denom: "denom".to_string(),
         };
 
         let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
@@ -191,26 +191,26 @@ mod tests {
 
         // Add another path
         let msg = ExecuteMsg::AddPath {
-            channel_id: format!("channel2"),
-            denom: format!("denom"),
+            channel_id: "channel2".to_string(),
+            denom: "denom".to_string(),
             quotas: vec![QuotaMsg {
                 name: "daily".to_string(),
                 duration: 1600,
                 send_recv: (3, 5),
             }],
         };
-        let info = mock_info(IBC_ADDR, &vec![]);
+        let info = mock_info(IBC_ADDR, &[]);
 
         let env = mock_env();
         execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
         // remove the first one
         let msg = ExecuteMsg::RemovePath {
-            channel_id: format!("channel"),
-            denom: format!("denom"),
+            channel_id: "channel".to_string(),
+            denom: "denom".to_string(),
         };
 
-        let info = mock_info(IBC_ADDR, &vec![]);
+        let info = mock_info(IBC_ADDR, &[]);
         let env = mock_env();
         execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
@@ -220,8 +220,8 @@ mod tests {
 
         // The second channel is still there
         let query_msg = QueryMsg::GetQuotas {
-            channel_id: format!("channel2"),
-            denom: format!("denom"),
+            channel_id: "channel2".to_string(),
+            denom: "denom".to_string(),
         };
         let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
         let value: Vec<RateLimit> = from_binary(&res).unwrap();
@@ -238,22 +238,22 @@ mod tests {
 
         // Paths are overriden if they share a name and denom
         let msg = ExecuteMsg::AddPath {
-            channel_id: format!("channel2"),
-            denom: format!("denom"),
+            channel_id: "channel2".to_string(),
+            denom: "denom".to_string(),
             quotas: vec![QuotaMsg {
                 name: "different".to_string(),
                 duration: 5000,
                 send_recv: (50, 30),
             }],
         };
-        let info = mock_info(IBC_ADDR, &vec![]);
+        let info = mock_info(IBC_ADDR, &[]);
 
         let env = mock_env();
         execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
         let query_msg = QueryMsg::GetQuotas {
-            channel_id: format!("channel2"),
-            denom: format!("denom"),
+            channel_id: "channel2".to_string(),
+            denom: "denom".to_string(),
         };
         let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
         let value: Vec<RateLimit> = from_binary(&res).unwrap();
