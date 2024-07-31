@@ -2,7 +2,8 @@
 
 ## Introduction
 
-Security researchers are essential in identifying vulnerabilities that may impact the Symphony ecosystem. If you have discovered a security vulnerability in the OsSymphonymosis chain or any repository managed by Symphony, we encourage you to notify us using one of the methods outlined below.
+Security researchers are essential in identifying vulnerabilities that may impact the Symphony ecosystem. If you have discovered a security vulnerability in the Symphony chain or any repository managed by Symphony, we encourage you to notify us using one of the methods outlined below.
+
 
 ### Guidelines for Responsible Vulnerability Testing and Reporting
 
