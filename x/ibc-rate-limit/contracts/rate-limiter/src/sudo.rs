@@ -98,11 +98,12 @@ pub fn try_transfer(
     // Adds the attributes for each path to the response. In prod, the
     // addtribute add_rate_limit_attributes is a noop
     let response: Result<Response, ContractError> =
-        any_results.iter().fold(Ok(response), |acc, result| {
-            Ok(add_rate_limit_attributes(acc?, result))
+        any_results.iter().try_fold(response, |acc, result| {
+            Ok(add_rate_limit_attributes(acc, result))
         });
-    results.iter().fold(Ok(response?), |acc, result| {
-        Ok(add_rate_limit_attributes(acc?, result))
+
+    results.iter().try_fold(response?, |acc, result| {
+        Ok(add_rate_limit_attributes(acc, result))
     })
 }
 

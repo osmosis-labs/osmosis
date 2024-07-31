@@ -176,6 +176,7 @@ impl ExecuteMsg {
     ///
     /// This is limited to the message type responsible for processing the queue
     pub fn skip_queue(&self) -> bool {
+        #[allow(clippy::match_like_matches_macro)]
         match self {
             Self::ProcessMessages { .. } => true,
             _ => false,
