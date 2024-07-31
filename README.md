@@ -40,12 +40,12 @@ may find that it is not highly performant or prone to crashing.
 ## Documentation
 
 For the most up to date documentation please visit
-[orchestralabs.org/documentation](https://orchestralabs.org/documentation/)
+[orchestralabs.org/documentation](https://orchestralabs.org/documentation/).
 
 ## Joining the Testnet
 
-[If you are a validator, please visit the official instructions on how to create a validator on the Testnet
-here.](https://orchestralabs.org/documentation/developers/validators)
+If you are a validator, please visit the official instructions on how to create a validator on the Testnet
+[here](https://orchestralabs.org/documentation/developers/validators).
 
 Thank you for supporting a healthy blockchain network and community by
 running an Symphony node!
@@ -58,7 +58,7 @@ to use the SDK fork, and how to make / test updates to SDK branches.
 ## LocalSymphony
 
 LocalSymphony is a containerized local Symphony testnet used for trying out new features locally.
-LocalSymphony documentation can be found [here](https://github.com/Orchestra-Labs/symphony/tree/main/tests/localosmosis)
+LocalSymphony documentation can be found [here](https://github.com/Orchestra-Labs/symphony/tree/main/tests/localosmosis).
 
 To utilize LocalSymphony, follow these steps:
 
