@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 	"github.com/osmosis-labs/osmosis/v23/x/market/types"
@@ -130,10 +129,9 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 			panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 		}
 
-		marketVaultBalance := k.BankKeeper.GetBalance(ctx, marketAcc.GetAddress(), appparams.BaseCoinUnit)
-
+		marketVaultBalance := k.GetExchangePoolBalance(ctx)
 		if marketVaultBalance.Amount.LT(calculatedAskCoin.Amount) {
-			return nil, errorsmod.Wrapf(types.ErrNotEnoughBalanceOnMarketVaults, "Market vaults do not have enough coins to swap. Available amount: %v, needed amount: %v", marketVaultBalance.Amount, calculatedAskCoin.Amount)
+
 		}
 
 		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiver, sdk.NewCoins(swapCoin))

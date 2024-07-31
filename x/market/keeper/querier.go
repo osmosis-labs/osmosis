@@ -26,7 +26,10 @@ var _ types.QueryServer = querier{}
 // Params queries params of market module
 func (q querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	return &types.QueryParamsResponse{Params: q.GetParams(ctx)}, nil
+	params := q.GetParams(ctx)
+	params.ExchangePool = q.GetExchangePoolBalance(ctx).Amount.ToLegacyDec()
+	params.ReservePool = q.GetReservePoolBalance(ctx).Amount.ToLegacyDec()
+	return &types.QueryParamsResponse{Params: params}, nil
 }
 
 // Swap queries for swap simulation

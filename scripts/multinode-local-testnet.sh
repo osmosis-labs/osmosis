@@ -30,7 +30,7 @@ update_genesis () {
 }
 
 # create validator node with tokens
-symphonyd add-genesis-account $(symphonyd keys show validator1 -a --keyring-backend=test --home=$HOME/.symphonyd/validator1) 100000000000note,100000000000000000000stake --home=$HOME/.symphonyd/validator1
+symphonyd add-genesis-account $(symphonyd keys show validator1 -a --keyring-backend=test --home=$HOME/.symphonyd/validator1) 100000000000note --home=$HOME/.symphonyd/validator1
 symphonyd gentx validator1 5000000000note --moniker="validator1" --chain-id=$CHAIN_ID --commission-rate="0.1" --commission-max-rate="0.2" --commission-max-change-rate="0.05" --min-self-delegation="500000000" --keyring-backend=test --home=$HOME/.symphonyd/validator1 --chain-id=$CHAIN_ID
 symphonyd collect-gentxs --home=$HOME/.symphonyd/validator1
 

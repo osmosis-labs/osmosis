@@ -13,8 +13,6 @@ import (
 
 // Parameter keys
 var (
-	// Symphony liquidity pool(usdr unit) made available per ${PoolRecoveryPeriod} (usdr unit)
-	KeyBasePool = []byte("BasePool")
 	// The period required to recover BasePool
 	KeyPoolRecoveryPeriod = []byte("PoolRecoveryPeriod")
 	// Min spread
@@ -33,7 +31,6 @@ var _ paramstypes.ParamSet = &Params{}
 // DefaultParams creates default market module parameters
 func DefaultParams() Params {
 	return Params{
-		BasePool:           DefaultBasePool,
 		PoolRecoveryPeriod: DefaultPoolRecoveryPeriod,
 		MinStabilitySpread: DefaultMinStabilitySpread,
 	}
@@ -54,7 +51,6 @@ func (p Params) String() string {
 // pairs of market module's parameters.
 func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
-		paramstypes.NewParamSetPair(KeyBasePool, &p.BasePool, validateBasePool),
 		paramstypes.NewParamSetPair(KeyPoolRecoveryPeriod, &p.PoolRecoveryPeriod, validatePoolRecoveryPeriod),
 		paramstypes.NewParamSetPair(KeyMinStabilitySpread, &p.MinStabilitySpread, validateMinStabilitySpread),
 	}
@@ -62,27 +58,17 @@ func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 
 // Validate a set of params
 func (p Params) Validate() error {
-	if p.BasePool.IsNegative() {
-		return fmt.Errorf("mint base pool should be positive or zero, is %s", p.BasePool)
+	if p.ExchangePool.IsNegative() {
+		return fmt.Errorf("exchange pool should be positive or zero, is %s", p.ExchangePool)
+	}
+	if p.ReservePool.IsNegative() {
+		return fmt.Errorf("reserve pool should be positive or zero, is %s", p.ReservePool)
 	}
 	if p.PoolRecoveryPeriod == 0 {
 		return fmt.Errorf("pool recovery period should be positive, is %d", p.PoolRecoveryPeriod)
 	}
 	if p.MinStabilitySpread.IsNegative() || p.MinStabilitySpread.GT(sdk.OneDec()) {
 		return fmt.Errorf("market minimum stability spead should be a value between [0,1], is %s", p.MinStabilitySpread)
-	}
-
-	return nil
-}
-
-func validateBasePool(i interface{}) error {
-	v, ok := i.(sdk.Dec)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v.IsNegative() {
-		return fmt.Errorf("mint base pool must be positive or zero: %s", v)
 	}
 
 	return nil
