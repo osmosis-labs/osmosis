@@ -62,7 +62,8 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	}
 
 	// TODO: In v26, move this code to the correct spot, and make it CheckTX only.
-	if ctx.BlockHeight() >= 16841116 {
+	bh := ctx.BlockHeight()
+	if bh <= 16841115 || bh >= 17004043 {
 		msgs := tx.GetMsgs()
 		for _, msg := range msgs {
 			// If one of the msgs is an IBC Transfer msg, limit it's size due to current spam potential.
