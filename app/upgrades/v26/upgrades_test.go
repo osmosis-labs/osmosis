@@ -48,6 +48,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
 
 	s.PrepareTradingPairTakerFeeTest()
+	s.PrepareIncreaseUnauthenticatedGasTest()
 
 	// Run the upgrade
 	dummyUpgrade(s)
@@ -57,6 +58,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	})
 
 	s.ExecuteTradingPairTakerFeeTest()
+	s.ExecuteIncreaseUnauthenticatedGasTest()
 }
 
 func dummyUpgrade(s *UpgradeTestSuite) {
@@ -100,4 +102,16 @@ func (s *UpgradeTestSuite) ExecuteTradingPairTakerFeeTest() {
 	s.Require().NoError(err)
 	s.Require().Len(allTradingPairTakerFees, 4)
 	s.Require().Equal(expectedTradingPairTakerFees, allTradingPairTakerFees)
+}
+
+func (s *UpgradeTestSuite) PrepareIncreaseUnauthenticatedGasTest() {
+	// Set the unauthenticator gas parameter to 1
+	authenticatorParams := s.App.SmartAccountKeeper.GetParams(s.Ctx)
+	authenticatorParams.MaximumUnauthenticatedGas = 1
+	s.App.SmartAccountKeeper.SetParams(s.Ctx, authenticatorParams)
+}
+
+func (s *UpgradeTestSuite) ExecuteIncreaseUnauthenticatedGasTest() {
+	authenticatorParams := s.App.SmartAccountKeeper.GetParams(s.Ctx)
+	s.Require().Equal(authenticatorParams.MaximumUnauthenticatedGas, v26.MaximumUnauthenticatedGas)
 }

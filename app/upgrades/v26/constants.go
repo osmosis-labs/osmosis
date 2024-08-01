@@ -8,7 +8,12 @@ import (
 )
 
 // UpgradeName defines the on-chain upgrade name for the Osmosis v26 upgrade.
-const UpgradeName = "v26"
+const (
+	UpgradeName = "v26"
+
+	// MaximumUnauthenticatedGas for smart account transactions to verify the fee payer
+	MaximumUnauthenticatedGas = uint64(200_000)
+)
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
