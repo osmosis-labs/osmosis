@@ -256,7 +256,7 @@ func GenerateAuthenticationRequest(
 		return AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signBytes")
 	}
 
-	// TODO: Add other sign modes. Specifically textual when it becomes available
+	// TODO: Add other sign modes. Specifically json when it becomes available
 	authRequest.SignModeTxData = SignModeData{
 		Direct: signBytes,
 	}
