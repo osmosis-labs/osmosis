@@ -30,7 +30,7 @@ update_genesis () {
 }
 
 # create validator node with tokens
-symphonyd add-genesis-account $(symphonyd keys show validator1 -a --keyring-backend=test --home=$HOME/.symphonyd/validator1) 100000000000note --home=$HOME/.symphonyd/validator1
+symphonyd add-genesis-account $(symphonyd keys show validator1 -a --keyring-backend=test --home=$HOME/.symphonyd/validator1) 100000000000note,10000000usdr --home=$HOME/.symphonyd/validator1
 symphonyd gentx validator1 5000000000note --moniker="validator1" --chain-id=$CHAIN_ID --commission-rate="0.1" --commission-max-rate="0.2" --commission-max-change-rate="0.05" --min-self-delegation="500000000" --keyring-backend=test --home=$HOME/.symphonyd/validator1 --chain-id=$CHAIN_ID
 symphonyd collect-gentxs --home=$HOME/.symphonyd/validator1
 
@@ -78,17 +78,22 @@ update_genesis '.app_state["concentratedliquidity"]["params"]["is_permissionless
 # update txfees genesis
 update_genesis '.app_state["txfees"]["basedenom"]="note"'
 
-# update oracle genesis by adding usdr to whitelist
+# update oracle genesis by adding test tokens to whitelist
 update_genesis '.app_state["oracle"]["params"]["whitelist"][0]["name"]="note"'
 update_genesis '.app_state["oracle"]["params"]["whitelist"][0]["tobin_tax"]="0.0"'
 
 update_genesis '.app_state["oracle"]["params"]["whitelist"][0]["name"]="peppe"'
 update_genesis '.app_state["oracle"]["params"]["whitelist"][0]["tobin_tax"]="0.0"'
 
-# update oracle genesis by adding exchange rate for usdr
+update_genesis '.app_state["oracle"]["params"]["whitelist"][1]["name"]="usdr"'
+update_genesis '.app_state["oracle"]["params"]["whitelist"][1]["tobin_tax"]="0.0"'
+
+# update oracle genesis by adding exchange rate for test tokens
 update_genesis '.app_state["oracle"]["exchange_rates"][0]["denom"]="peppe"'
 update_genesis '.app_state["oracle"]["exchange_rates"][0]["exchange_rate"]="1.7"'
 
+update_genesis '.app_state["oracle"]["exchange_rates"][1]["denom"]="usdr"'
+update_genesis '.app_state["oracle"]["exchange_rates"][1]["exchange_rate"]="2.0"'
 
 # copy validator1 genesis file to validator2-4
 cp $HOME/.symphonyd/validator1/config/genesis.json $HOME/.symphonyd/validator2/config/genesis.json

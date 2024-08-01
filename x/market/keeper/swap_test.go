@@ -66,6 +66,25 @@ func (s *KeeperTestSuite) TestComputeInternalSwap() {
 	s.Require().Error(err)
 }
 
+// TestComputeInternalSwapStableAndStable tests the case where the offer coin and the return coin are both stable coins.
+// In this case the conversion should go through Melody price.
+func (s *KeeperTestSuite) TestComputeInternalSwapStableAndStable() {
+	// Set Oracle Price
+	sdrPriceInMelody := sdk.NewDecWithPrec(17, 1)
+	mntPriceInMelody := sdk.NewDecWithPrec(7652, 1)
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.MicroSDRDenom, sdrPriceInMelody)
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.MicroMNTDenom, mntPriceInMelody)
+
+	params := s.App.MarketKeeper.GetParams(s.Ctx)
+	s.App.MarketKeeper.SetParams(s.Ctx, params)
+
+	swapAmountInSDR := sdrPriceInMelody.MulInt64(rand.Int63()%10000 + 2).TruncateInt()
+	offerCoin := sdk.NewCoin(assets.MicroSDRDenom, swapAmountInSDR)
+	swapCoin, _, err := s.App.MarketKeeper.ComputeSwap(s.Ctx, offerCoin, assets.MicroMNTDenom)
+	s.Require().NoError(err)
+	s.Require().Equal(swapAmountInSDR.ToLegacyDec().Mul(sdrPriceInMelody).Quo(mntPriceInMelody), swapCoin.Amount)
+}
+
 //func (s *KeeperTestSuite) TestIlliquidTobinTaxListParams() {
 //	// Set Oracle Price
 //	melodyPriceInSDR := sdk.NewDecWithPrec(17, 1)

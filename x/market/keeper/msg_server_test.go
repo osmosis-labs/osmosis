@@ -109,6 +109,31 @@ func (s *KeeperTestSuite) TestMsgServer_SwapToNativeBalancePool() {
 	s.Require().Equal(reserveVaultBalanceBefore.Amount, reserveVaultBalanceAfter.Amount, "reserve pool balance should not change")
 }
 
+// TestMsgServer_SwapStableToStable tests the case when the user wants to swap from a stable coin to a stable coin.
+func (s *KeeperTestSuite) TestMsgServer_SwapStableToStable() {
+	msgServer := s.setupServer()
+
+	// Set Oracle Price
+	sdrPriceInMelody := sdk.NewDecWithPrec(17, 1) // 1 SDR -> 1.7 Melody
+	usdPriceInMelody := sdk.NewDecWithPrec(13, 1) // 1 USD -> 1.3 Melody
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.MicroSDRDenom, sdrPriceInMelody)
+	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.MicroUSDDenom, usdPriceInMelody)
+
+	swapAmountInSDR := sdrPriceInMelody.MulInt64(rand.Int63()%10000 + 2).TruncateInt()
+	offerCoin := sdk.NewCoin(assets.MicroSDRDenom, swapAmountInSDR)
+
+	userBalanceSDRBefore := s.App.BankKeeper.GetBalance(s.Ctx, Addr, assets.MicroSDRDenom)
+
+	swapMsg := types.NewMsgSwap(Addr, offerCoin, assets.MicroUSDDenom)
+	resp, err := msgServer.Swap(sdk.WrapSDKContext(s.Ctx), swapMsg)
+	s.Require().NoError(err)
+
+	userBalanceSDRAfter := s.App.BankKeeper.GetBalance(s.Ctx, Addr, assets.MicroSDRDenom)
+	userBalanceUSDAfter := s.App.BankKeeper.GetBalance(s.Ctx, Addr, assets.MicroUSDDenom)
+	s.Require().Equal(resp.SwapCoin, userBalanceUSDAfter, "user balance should increase by swap amount")
+	s.Require().Equal(userBalanceSDRBefore.Amount.Sub(userBalanceSDRAfter.Amount), swapAmountInSDR, "user balance should decrease by swap amount")
+}
+
 // TestMsgServe_SwapNotEnoughInMainPool tests the case when there is not enough balance in the main pool but enough in the reserve pool and swap should be successful.
 func (s *KeeperTestSuite) TestMsgServe_SwapNotEnoughInMainPool() {
 	msgServer := s.setupServer()
