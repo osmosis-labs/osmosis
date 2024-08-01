@@ -37,12 +37,6 @@ func GenMinSpread(r *rand.Rand) sdk.Dec {
 
 // RandomizedGenState generates a random GenesisState for gov
 func RandomizedGenState(simState *module.SimulationState) {
-	var basePool sdk.Dec
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, basePoolKey, &basePool, simState.Rand,
-		func(r *rand.Rand) { basePool = GenBasePool(r) },
-	)
-
 	var poolRecoveryPeriod uint64
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, poolRecoveryPeriodKey, &poolRecoveryPeriod, simState.Rand,
@@ -57,7 +51,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	marketGenesis := types.NewGenesisState(
 		types.Params{
-			BasePool:           basePool,
 			PoolRecoveryPeriod: poolRecoveryPeriod,
 			MinStabilitySpread: minStabilitySpread,
 		},

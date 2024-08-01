@@ -2,8 +2,6 @@ package app
 
 import (
 	"fmt"
-	markettypes "github.com/osmosis-labs/osmosis/v23/x/market/types"
-	oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
 	"io"
 	"net/http"
 	"os"
@@ -34,6 +32,8 @@ import (
 	ibcwasmtypes "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
+	markettypes "github.com/osmosis-labs/osmosis/v23/x/market/types"
+	oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
 
 	//oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
 

@@ -68,7 +68,6 @@ func (k Keeper) ComputeInternalSwap(ctx sdk.Context, offerCoin sdk.DecCoin, askD
 			return sdk.DecCoin{}, errorsmod.Wrap(types.ErrNoEffectivePrice, askDenom)
 		}
 		offerRate = exchangeRatio
-
 	} else if askDenom == appParams.BaseCoinUnit { // stable -> melody
 		exchangeRatio, err := k.OracleKeeper.GetMelodyExchangeRate(ctx, offerCoin.Denom)
 		if err != nil {
