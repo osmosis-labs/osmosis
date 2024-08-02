@@ -215,7 +215,7 @@ func (n *NodeConfig) QueryParams(subspace, key string, prev26 bool) string {
 // TODO: Post v26, can be removed
 func (n *NodeConfig) QueryGovModuleAccount(prev26 bool) string {
 	n.LogActionF("------------------------------")
-	scmd := []string{"osmosisd", "query", "bank", "params", "--output=json"}
+	scmd := []string{"osmosisd", "query", "gamm", "num-pools", "--output=json"}
 	outa, _, err := n.containerManager.ExecCmd(n.t, n.Name, scmd, "", false, false)
 	require.NoError(n.t, err)
 	n.LogActionF(string(outa.Bytes()))
