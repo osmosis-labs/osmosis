@@ -12,7 +12,7 @@ const (
 	UpgradeName = "v26"
 
 	// MaximumUnauthenticatedGas for smart account transactions to verify the fee payer
-	MaximumUnauthenticatedGas = uint64(200_000)
+	MaximumUnauthenticatedGas = uint64(250_000)
 )
 
 var Upgrade = upgrades.Upgrade{
