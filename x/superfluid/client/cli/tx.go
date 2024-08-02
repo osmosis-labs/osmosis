@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
@@ -214,10 +212,8 @@ func parseSetSuperfluidAssetsArgsToContent(cmd *cobra.Command) (govtypesv1beta1.
 			assetType = types.SuperfluidAssetTypeLPShare
 		} else if strings.HasPrefix(asset, cltypes.ConcentratedLiquidityTokenPrefix) {
 			assetType = types.SuperfluidAssetTypeConcentratedShare
-		} else if asset == appparams.BaseCoinUnit {
-			return nil, fmt.Errorf("invalid asset type: %s", asset)
 		} else {
-			assetType = types.SuperfluidAssetTypeNative
+			return nil, fmt.Errorf("Invalid asset prefix: %s", asset)
 		}
 
 		superfluidAssets = append(superfluidAssets, types.SuperfluidAsset{

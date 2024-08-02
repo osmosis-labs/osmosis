@@ -403,22 +403,6 @@ type MsgAddToConcentratedLiquiditySuperfluidPositionResponse struct {
 }
 ```
 
-### Set a custom Risk Factor for a denom
-
-The risk factor is a multiplier that is applied to the Osmo Equivalent
-Multiplier for a denom. It is used to adjust the staking power of a
-denom. The risk factor is set by the governance module.
- 
-If not set, it defaults to params.minimum_risk_factor.
-
-```{.go}
-type MsgSetRiskFactor struct {
-    Sender string
-    Denom  string
-    RiskFactor github_com_cosmos_cosmos_sdk_types.Dec
-}
-```
-
 ## Epochs
 
 Overall Epoch sequence
@@ -651,13 +635,9 @@ It consists of the following attributes:
 ### SetSuperfluidAssetsProposal
 
 | Type                 | Attribute Key         | Attribute Value |
-| -------------------- |-----------------------|-----------------|
+| -------------------- | --------------------- | --------------- |
 | set_superfluid_asset | denom                 | {denom}         |
 | set_superfluid_asset | superfluid_asset_type | {asset_type}    |
-| set_superfluid_asset | price_route           | {pool_route}    |
-
-The price_route is only needed for native tokens. It is the route used to
-get the price of the token in terms of OSMO.
 
 ### RemoveSuperfluidAssetsProposal
 
@@ -706,7 +686,6 @@ message AssetTypeResponse {
 enum SuperfluidAssetType {
   SuperfluidAssetTypeNative = 0;
   SuperfluidAssetTypeLPShare = 1;
-  SuperfluidAssetTypeConcentratedShare = 2;
 }
 ```
 
@@ -716,12 +695,9 @@ superfluid staking than just LP shares. Each AssetType has a different
 algorithm used to get its "Osmo equivalent value".
 
 We represent different types of superfluid assets as different enums.
-Currently, enum `1` represents Gamm shares and enum `2` Concentrated
-liquidity positions.
-
-Enum value `0` is used for staking non-osmo tokens. These behave differently
-and their value is calculated based on the twap price of the token.
-
+Currently, only enum `1` is actually used. Enum value `0` is reserved
+for the Native staking token for if we deprecate the legacy staking
+workflow to have native staking also go through the superfluid module.
 In the future, more enums will be added.
 
 If this query errors, that means that a denom is not allowed to be used
@@ -1072,72 +1048,3 @@ the `IntermediaryAccount` will be slashed by less than the
 TODO - expand on this Uses `lockup` accumulator to find total amount of
 synthetic locks for a given `IntermediaryAccount` (Superfluid Asset +
 Validator pair)
-
-## Pool tokens vs non-pool tokens
-
-The superfluid module treats pool tokens and non-pool tokens differently
-when calculating the staking power of a denom. This is because the pool tokens
-actually represent an amount of the underlying osmo in the pool, while non-pool 
-tokens just have an equivalent value that is determined by the twap price of the 
-token.
-
-### Adding a new non-pool token
-
-To add a new non-pool token to the superfluid module, a proposal needs to be sent
-specifying the new token's denom, the asset type, and a price route. 
-
-The price route needs to start in a pool containing the token and end in a pool
-containing osmo. 
-
-Example:
-
-```go
-types.SuperfluidAsset{
-	Denom: btcDenom, 
-	AssetType: types.SuperfluidAssetTypeNative, 
-	PriceRoute: []*poolmanagertypes.SwapAmountInRoute{{PoolId: poolId, TokenOutDenom: bondDenom}}
-}
-```
-
-### Delegating
-
-Once the new token is added, users can delegate to the new token in the same way
-as they would with a pool token. The module will calculate the staking power of the
-token based on the twap price of the token.
-
-Example:
-
-```go
-	types.MsgLockAndSuperfluidDelegate{
-		Sender:  userAddr.String(),
-		Coins:   sdk.NewCoins(sdk.NewCoin(btcDenom, btcStakeAmount)),
-		ValAddr: validator.GetOperator(),
-	}
-```
-
-### Querying delegations
-
-To check the superfluid delegations for a user the following query can be used:
-
-```go
-types.SuperfluidDelegationsByDelegatorRequest{DelegatorAddress: userAddr.String()}
-```
-
-### Rewards
-
-The rewards for non-pool tokens are calculated in the same way as pool tokens: the amount of 
-equivalent osmo staked times the discount factor.
-The rewards are distributed to the intermediary account and then to the locks associated
-with the account.
-
-### Undelegating
-
-To undelegate, a user would send the `MsgSuperfluidUndelegate` message. 
-
-```go
-	types.MsgSuperfluidUndelegateAndUnbondLock{
-		Sender: userAddr.String(),
-		LockId: underlyingLock.ID,
-		Coin:   sdk.NewCoin(btcDenom, btcStakeAmount),
-	}
-```
