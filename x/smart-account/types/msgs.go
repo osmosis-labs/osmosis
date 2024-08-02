@@ -28,7 +28,7 @@ func getSender(sender string) []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// Msgs
+// MsgAddAuthenticator
 var _ sdk.Msg = &MsgAddAuthenticator{}
 
 func (msg *MsgAddAuthenticator) ValidateBasic() error {
@@ -46,6 +46,7 @@ func (msg MsgAddAuthenticator) Route() string { return RouterKey }
 
 func (msg MsgAddAuthenticator) Type() string { return TypeMsgAddAuthenticator }
 
+// MsgRemoveAuthenticator
 var _ sdk.Msg = &MsgRemoveAuthenticator{}
 
 func (msg *MsgRemoveAuthenticator) ValidateBasic() error {
@@ -55,14 +56,16 @@ func (msg *MsgRemoveAuthenticator) ValidateBasic() error {
 func (msg MsgRemoveAuthenticator) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
+
 func (msg MsgRemoveAuthenticator) Route() string { return RouterKey }
+
+func (msg MsgRemoveAuthenticator) Type() string { return TypeMsgRemoveAuthenticator }
 
 func (msg *MsgRemoveAuthenticator) GetSigners() []sdk.AccAddress {
 	return getSender(msg.Sender)
 }
 
-func (msg MsgRemoveAuthenticator) Type() string { return TypeMsgRemoveAuthenticator }
-
+// MsgSetActiveState
 var _ sdk.Msg = &MsgSetActiveState{}
 
 func (msg *MsgSetActiveState) ValidateBasic() error {
