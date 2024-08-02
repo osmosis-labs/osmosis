@@ -219,6 +219,8 @@ func (n *NodeConfig) QueryGovModuleAccount(prev26 bool) string {
 	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
 	n.LogActionF("------------------------------")
 	n.LogActionF(string(out.Bytes()))
+	n.LogActionF("------------------------------")
+	n.LogActionF("%v", out.Bytes())
 
 	require.NoError(n.t, err)
 	var result map[string][]interface{}
