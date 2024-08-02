@@ -217,6 +217,9 @@ func (n *NodeConfig) QueryGovModuleAccount(prev26 bool) string {
 	cmd := []string{"osmosisd", "query", "auth", "module-accounts", "--output=json"}
 
 	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
+	n.LogActionF("------------------------------")
+	n.LogActionF(string(out.Bytes()))
+
 	require.NoError(n.t, err)
 	var result map[string][]interface{}
 	err = json.Unmarshal(out.Bytes(), &result)
