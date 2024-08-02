@@ -214,13 +214,17 @@ func (n *NodeConfig) QueryParams(subspace, key string, prev26 bool) string {
 
 // TODO: Post v26, can be removed
 func (n *NodeConfig) QueryGovModuleAccount(prev26 bool) string {
-	cmd := []string{"osmosisd", "query", "auth", "module-accounts", "--output=json"}
+	n.LogActionF("------------------------------")
+	scmd := []string{"osmosisd", "query", "bank", "params", "--output=json"}
+	outa, _, err := n.containerManager.ExecCmd(n.t, n.Name, scmd, "", false, false)
+	require.NoError(n.t, err)
+	n.LogActionF(string(outa.Bytes()))
+	var result1 map[string][]interface{}
+	err = json.Unmarshal(outa.Bytes(), &result1)
+	require.NoError(n.t, err)
 
+	cmd := []string{"osmosisd", "query", "auth", "module-accounts", "--output=json"}
 	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
-	n.LogActionF("------------------------------")
-	n.LogActionF(string(out.Bytes()))
-	n.LogActionF("------------------------------")
-	n.LogActionF("%v", out.Bytes())
 
 	require.NoError(n.t, err)
 	var result map[string][]interface{}
