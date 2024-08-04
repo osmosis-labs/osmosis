@@ -37,7 +37,7 @@ func HandleRemoveSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, p *t
 			return err
 		}
 		dummyAsset := types.SuperfluidAsset{}
-		if asset == dummyAsset {
+		if asset.Equal(dummyAsset) {
 			return fmt.Errorf("superfluid asset %s doesn't exist", denom)
 		}
 		k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
