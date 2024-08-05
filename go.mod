@@ -1,7 +1,6 @@
 module github.com/osmosis-labs/osmosis/v25
 
 go 1.22.4
-
 require (
 	cloud.google.com/go/pubsub v1.40.0
 	cosmossdk.io/api v0.7.5
@@ -19,7 +18,7 @@ require (
 	github.com/CosmWasm/wasmd v0.50.0
 	github.com/CosmWasm/wasmvm v1.5.2
 	github.com/cometbft/cometbft v0.38.9
-	github.com/cometbft/cometbft-db v0.12.0
+	github.com/cometbft/cometbft-db v0.13.0
 	github.com/cosmos/cosmos-db v1.0.2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.50.8
@@ -91,9 +90,10 @@ require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
-	github.com/cockroachdb/errors v1.11.1 // indirect
+	github.com/cockroachdb/errors v1.11.3 // indirect
+	github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
-	github.com/cockroachdb/pebble v1.1.0 // indirect
+	github.com/cockroachdb/pebble v1.1.1 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0 // indirect
@@ -212,7 +212,6 @@ require (
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jessevdk/go-flags v1.5.0 // indirect
-	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/joho/godotenv v1.5.1
 	github.com/klauspost/compress v1.17.7 // indirect
 	github.com/lib/pq v1.10.9 // indirect
@@ -250,7 +249,6 @@ require (
 	github.com/zimmski/go-tool v0.0.0-20150119110811-2dfdc9ac8439 // indirect
 	github.com/zimmski/osutil v0.0.0-20190128123334-0d0b3ca231ac // indirect
 	github.com/zondax/hid v0.9.2 // indirect
-	go.etcd.io/bbolt v1.4.0-alpha.0.0.20240404170359-43604f3112c5 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.24.0 // indirect
 	golang.org/x/mod v0.18.0 // indirect

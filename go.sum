@@ -337,12 +337,14 @@ github.com/cockroachdb/apd/v2 v2.0.2/go.mod h1:DDxRlzC2lo3/vSlmSoS7JkqbbrARPuFOG
 github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:zn76sxSg3SzpJ0PPJaLDCu+Bu0Lg3sKTORVIj19EIF8=
 github.com/cockroachdb/datadriven v1.0.3-0.20230801171734-e384cf455877 h1:1MLK4YpFtIEo3ZtMA5C795Wtv5VuUnrXX7mQG+aHg6o=
 github.com/cockroachdb/datadriven v1.0.3-0.20230801171734-e384cf455877/go.mod h1:a9RdTaap04u637JoCzcUoIcDmvwSUtcUFtT/C3kJlTU=
-github.com/cockroachdb/errors v1.11.1 h1:xSEW75zKaKCWzR3OfxXUxgrk/NtT4G1MiOv5lWZazG8=
-github.com/cockroachdb/errors v1.11.1/go.mod h1:8MUxA3Gi6b25tYlFEBGLf+D8aISL+M4MIpiWMSNRfxw=
+github.com/cockroachdb/errors v1.11.3 h1:5bA+k2Y6r+oz/6Z/RFlNeVCesGARKuC6YymtcDrbC/I=
+github.com/cockroachdb/errors v1.11.3/go.mod h1:m4UIW4CDjx+R5cybPsNrRbreomiFqt8o1h1wUVazSd8=
+github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce h1:giXvy4KSc/6g/esnpM7Geqxka4WSqI1SZc7sMJFd3y4=
+github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce/go.mod h1:9/y3cnZ5GKakj/H4y9r9GTjCvAFta7KLgSHPJJYc52M=
 github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b h1:r6VH0faHjZeQy818SGhaone5OnYfxFR/+AzdY3sf5aE=
 github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b/go.mod h1:Vz9DsVWQQhf3vs21MhPMZpMGSht7O/2vFW2xusFUVOs=
-github.com/cockroachdb/pebble v1.1.0 h1:pcFh8CdCIt2kmEpK0OIatq67Ln9uGDYY3d5XnE0LJG4=
-github.com/cockroachdb/pebble v1.1.0/go.mod h1:sEHm5NOXxyiAoKWhoFxT8xMgd/f3RA6qUqQ1BXKrh2E=
+github.com/cockroachdb/pebble v1.1.1 h1:XnKU22oiCLy2Xn8vp1re67cXg4SAasg/WDt1NtcRFaw=
+github.com/cockroachdb/pebble v1.1.1/go.mod h1:4exszw1r40423ZsmkG/09AFEG83I0uDgfujJdbL6kYU=
 github.com/cockroachdb/redact v1.1.5 h1:u1PMllDkdFfPWaNGMyLD1+so+aq3uUItthCFqzwPJ30=
 github.com/cockroachdb/redact v1.1.5/go.mod h1:BVNblN9mBWFyMyqK1k3AAiSxhvhfK2oOZZ2lK+dpvRg=
 github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 h1:zuQyyAKVxetITBuuhv3BI9cMrmStnpT18zmgmTxunpo=
@@ -350,8 +352,8 @@ github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06/go.mod h1:
 github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE/e/2PUdi/liOCUjSTXgM1o87ZssimdTWN964YiIeI=
 github.com/coinbase/rosetta-sdk-go/types v1.0.0 h1:jpVIwLcPoOeCR6o1tU+Xv7r5bMONNbHU7MuEHboiFuA=
 github.com/coinbase/rosetta-sdk-go/types v1.0.0/go.mod h1:eq7W2TMRH22GTW0N0beDnN931DW0/WOI1R2sdHNHG4c=
-github.com/cometbft/cometbft-db v0.12.0 h1:v77/z0VyfSU7k682IzZeZPFZrQAKiQwkqGN0QzAjMi0=
-github.com/cometbft/cometbft-db v0.12.0/go.mod h1:aX2NbCrjNVd2ZajYxt1BsiFf/Z+TQ2MN0VxdicheYuw=
+github.com/cometbft/cometbft-db v0.13.0 h1:Ea0YyR4phCwdOzFo1IWoN9fZz1DHFh6w59b3TCCibJY=
+github.com/cometbft/cometbft-db v0.13.0/go.mod h1:KiHYylxxaQrOxdiTOpJMhwiGvOKpiCdaqkAM9JcxcJ8=
 github.com/containerd/continuity v0.3.0 h1:nisirsYROK15TAMVukJOUyGJjz4BNQJBVsNvAXZJ/eg=
 github.com/containerd/continuity v0.3.0/go.mod h1:wJEAIwKOm/pBZuBd0JmeTvnLquTB1Ag8espWhkykbPM=
 github.com/coreos/go-semver v0.2.0/go.mod h1:nnelYz7RCh+5ahJtPPxZlU+153eP4D4r3EedlOD2RNk=
@@ -747,8 +749,6 @@ github.com/jmespath/go-jmespath v0.4.0 h1:BEgLn5cpjn8UN1mAw4NjwDrS35OdebyEtFe+9Y
 github.com/jmespath/go-jmespath v0.4.0/go.mod h1:T8mJZnbsbmF+m6zOOFylbeCJqk5+pHWvzYPziyZiYoo=
 github.com/jmespath/go-jmespath/internal/testify v1.5.1 h1:shLQSRRSCCPj3f2gpwzGwWFoC7ycTf1rcQZHOlsJ6N8=
 github.com/jmespath/go-jmespath/internal/testify v1.5.1/go.mod h1:L3OGu8Wl2/fWfCI6z80xFu9LTZmf1ZRjMHUOPmWr69U=
-github.com/jmhodges/levigo v1.0.0 h1:q5EC36kV79HWeTBWsod3mG11EgStG3qArTKcvlksN1U=
-github.com/jmhodges/levigo v1.0.0/go.mod h1:Q6Qx+uH3RAqyK4rFQroq9RL7mdkABMcfhEI+nNuzMJQ=
 github.com/joho/godotenv v1.5.1 h1:7eLL/+HRGLY0ldzfGMeQkb7vMd0as4CfYvUVzLqw0N0=
 github.com/joho/godotenv v1.5.1/go.mod h1:f4LDr5Voq0i2e/R5DDNOoa2zzDfwtkZa6DnEwAbqwq4=
 github.com/jonboulle/clockwork v0.1.0/go.mod h1:Ii8DK3G1RaLaWxj9trq07+26W01tbo22gdxWY5EU2bo=
@@ -1096,8 +1096,6 @@ github.com/zondax/ledger-go v0.14.3/go.mod h1:IKKaoxupuB43g4NxeQmbLXv7T9AlQyie1U
 go.einride.tech/aip v0.67.1 h1:d/4TW92OxXBngkSOwWS2CH5rez869KpKMaN44mdxkFI=
 go.einride.tech/aip v0.67.1/go.mod h1:ZGX4/zKw8dcgzdLsrvpOOGxfxI2QSk12SlP7d6c0/XI=
 go.etcd.io/bbolt v1.3.3/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
-go.etcd.io/bbolt v1.4.0-alpha.0.0.20240404170359-43604f3112c5 h1:qxen9oVGzDdIRP6ejyAJc760RwW4SnVDiTYTzwnXuxo=
-go.etcd.io/bbolt v1.4.0-alpha.0.0.20240404170359-43604f3112c5/go.mod h1:eW0HG9/oHQhvRCvb1/pIXW4cOvtDqeQK+XSi3TnwaXY=
 go.etcd.io/etcd v0.0.0-20191023171146-3cf2f69b5738/go.mod h1:dnLIgRNXwCJa5e+c6mIZCrds/GIG4ncV9HhK5PX7jPg=
 go.opencensus.io v0.20.1/go.mod h1:6WKK9ahsWS3RSO+PY9ZHZUfv2irvY6gN279GOPZjmmk=
 go.opencensus.io v0.20.2/go.mod h1:6WKK9ahsWS3RSO+PY9ZHZUfv2irvY6gN279GOPZjmmk=
