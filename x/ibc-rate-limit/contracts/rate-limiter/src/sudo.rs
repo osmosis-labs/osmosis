@@ -1,6 +1,7 @@
 use cosmwasm_std::{DepsMut, Response, Timestamp, Uint256};
 
 use crate::{
+    blocking::check_restricted_denoms,
     packet::Packet,
     state::{flow::FlowType, path::Path, rate_limit::RateLimit, storage::RATE_LIMIT_TRACKERS},
     ContractError,
@@ -20,6 +21,8 @@ pub fn process_packet(
     now: Timestamp,
     #[cfg(test)] channel_value_mock: Option<Uint256>,
 ) -> Result<Response, ContractError> {
+    check_restricted_denoms(deps.as_ref(), &packet, &direction)?;
+
     let (channel_id, denom) = packet.path_data(&direction);
     #[allow(clippy::needless_borrow)]
     let path = &Path::new(channel_id, denom);

@@ -1,5 +1,6 @@
 use crate::msg::{PathMsg, QuotaMsg};
 
+use crate::state::storage::ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM;
 use crate::state::{flow::Flow, path::Path, rate_limit::RateLimit, storage::RATE_LIMIT_TRACKERS};
 use crate::ContractError;
 use cosmwasm_std::{DepsMut, Response, Timestamp};
@@ -121,6 +122,23 @@ pub fn edit_path_quota(
         }
     })?;
     Ok(())
+}
+
+pub fn set_denom_restrictions(
+    deps: &mut DepsMut,
+    denom: String,
+    allowed_channels: Vec<String>,
+) -> Result<Response, ContractError> {
+    ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM.save(deps.storage, denom, &allowed_channels)?;
+    Ok(Response::new().add_attribute("method", "set_denom_restrictions"))
+}
+
+pub fn unset_denom_restrictions(
+    deps: &mut DepsMut,
+    denom: String,
+) -> Result<Response, ContractError> {
+    ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM.remove(deps.storage, denom);
+    Ok(Response::new().add_attribute("method", "unset_denom_restrictions"))
 }
 
 #[cfg(test)]
