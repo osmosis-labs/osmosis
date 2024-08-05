@@ -468,7 +468,6 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 	initRootCmd(rootCmd, encodingConfig, tempApp)
 
-	// UNFORKING v2 TODO: I don't think we have an option but to implement this. With out, the sdk queries do not show up in the CLI.
 	if err := autoCliOpts(initClientCtx, tempApp).EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}
@@ -826,7 +825,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, t
 	rootCmd.AddCommand(
 		server.StatusCommand(),
 		queryCommand(),
-		txCommand(tempApp.ModuleBasics),
+		txCommand(),
 		keys.Commands(),
 	)
 	rootCmd.AddCommand(CmdListQueries(rootCmd))
@@ -904,7 +903,7 @@ func queryCommand() *cobra.Command {
 }
 
 // txCommand adds transaction signing, encoding / decoding, and broadcasting commands.
-func txCommand(moduleBasics module.BasicManager) *cobra.Command {
+func txCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "tx",
 		Short:                      "Transactions subcommands",
@@ -924,8 +923,6 @@ func txCommand(moduleBasics module.BasicManager) *cobra.Command {
 		authcmd.GetDecodeCommand(),
 	)
 
-	// UNFORKING v2 TODO: Auto CLI claims we can remove this, but if we do, then the legacy proposal sub commands will not be available.
-	moduleBasics.AddTxCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
