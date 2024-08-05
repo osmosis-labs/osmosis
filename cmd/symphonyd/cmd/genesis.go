@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	txfeestypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -205,6 +206,14 @@ func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessag
 	}
 	appState[poolincentivestypes.ModuleName] = poolincentivesGenStateBz
 
+	// txtypes module genesis
+	txfeesGenState := &genesisParams.TxFees
+	txfeesGenStateBz, err := cdc.MarshalJSON(txfeesGenState)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal txfees genesis state: %w", err)
+	}
+	appState[txfeestypes.ModuleName] = txfeesGenStateBz
+
 	// return appState and genDoc
 	return appState, genDoc, nil
 }
@@ -232,13 +241,15 @@ type GenesisParams struct {
 	PoolIncentivesGenesis poolincentivestypes.GenesisState
 
 	Epochs []epochstypes.EpochInfo
+
+	TxFees txfeestypes.GenesisState
 }
 
 func MainnetGenesisParams() GenesisParams {
 	genParams := GenesisParams{}
 
 	//genParams.AirdropSupply = osmomath.NewIntWithDecimal(5, 13)           // 5*10^13 note, 5*10^7 (50 million) melody
-	genParams.GenesisTime = time.Date(2021, 6, 18, 17, 0, 0, 0, time.UTC) // Jun 18, 2021 - 17:00 UTC
+	genParams.GenesisTime = time.Now()
 
 	genParams.NativeCoinMetadatas = []banktypes.Metadata{
 		{
@@ -296,6 +307,10 @@ func MainnetGenesisParams() GenesisParams {
 		genParams.NativeCoinMetadatas[0].Base,
 		osmomath.NewInt(2_500_000_000),
 	))
+	genParams.GovParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewCoin(
+		genParams.NativeCoinMetadatas[0].Base,
+		osmomath.NewInt(5_000_000_000),
+	))
 	genParams.GovParams.Quorum = "0.2"                     // 20%
 	*genParams.GovParams.VotingPeriod = time.Hour * 24 * 3 // 3 days
 
@@ -343,6 +358,9 @@ func MainnetGenesisParams() GenesisParams {
 			},
 		},
 	}
+
+	genParams.TxFees = *txfeestypes.DefaultGenesis()
+	genParams.TxFees.Basedenom = genParams.NativeCoinMetadatas[0].Base
 
 	return genParams
 }
