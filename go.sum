@@ -381,8 +381,8 @@ github.com/cosmos/ibc-go/modules/capability v1.0.1 h1:ibwhrpJ3SftEEZRxCRkH0fQZ9s
 github.com/cosmos/ibc-go/modules/capability v1.0.1/go.mod h1:rquyOV262nGJplkumH+/LeYs04P3eV8oB7ZM4Ygqk4E=
 github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.1.1-0.20231213092650-57fcdb9a9a9d h1:F4mhR61RZU4KJ38n5CeZrnNINU/KxMfP1sKfk5fTlHA=
 github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.1.1-0.20231213092650-57fcdb9a9a9d/go.mod h1:u2FXNcSxzzn5IwjWBA51HKMwiYMRK6/G35VmSJULhP0=
-github.com/cosmos/ibc-go/v8 v8.3.2 h1:8X1oHHKt2Bh9hcExWS89rntLaCKZp2EjFTUSxKlPhGI=
-github.com/cosmos/ibc-go/v8 v8.3.2/go.mod h1:WVVIsG39jGrF9Cjggjci6LzySyWGloz194sjTxiGNIE=
+github.com/cosmos/ibc-go/v8 v8.4.0 h1:K2PfX0AZ+1XKZytHGEMuSjQXG/MZshPb83RSTQt2+cE=
+github.com/cosmos/ibc-go/v8 v8.4.0/go.mod h1:zh6x1osR0hNvEcFrC/lhGD08sMfQmr9wHVvZ/mRWMCs=
 github.com/cosmos/ics23/go v0.10.0 h1:iXqLLgp2Lp+EdpIuwXTYIQU+AiHj9mOC2X9ab++bZDM=
 github.com/cosmos/ics23/go v0.10.0/go.mod h1:ZfJSmng/TBNTBkFemHHHj5YY7VAU/MBU980F4VU1NG0=
 github.com/cosmos/ledger-cosmos-go v0.13.3 h1:7ehuBGuyIytsXbd4MP43mLeoN2LTOEnk5nvue4rK+yM=
