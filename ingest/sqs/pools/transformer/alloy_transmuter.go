@@ -13,6 +13,7 @@ import (
 const (
 	listAssetConfigsQueryString = `{"list_asset_configs":{}}`
 	getShareDenomQueryString    = `{"get_share_denom":{}}`
+	listLimitersQueryString     = `{"list_limiters":{}}`
 )
 
 // updateAlloyTransmuterInfo updates cosmwasmPoolModel with alloyed transmuter specific info.
@@ -37,12 +38,18 @@ func (pi *poolTransformer) updateAlloyTransmuterInfo(
 		return err
 	}
 
+	rateLimiterData, err := alloyTransmuterListLimiters(ctx, pi.wasmKeeper, poolId, contractAddress)
+	if err != nil {
+		return err
+	}
+
 	// append alloyed denom to denoms
 	*poolDenoms = append(*poolDenoms, alloyedDenom)
 
 	cosmWasmPoolModel.Data.AlloyTransmuter = &sqscosmwasmpool.AlloyTransmuterData{
-		AlloyedDenom: alloyedDenom,
-		AssetConfigs: assetConfigs,
+		AlloyedDenom:      alloyedDenom,
+		AssetConfigs:      assetConfigs,
+		RateLimiterConfig: rateLimiterData,
 	}
 
 	return nil
@@ -103,4 +110,77 @@ func alloyTransmuterGetShareDenom(
 	}
 
 	return getShareDenomResponse.ShareDenom, nil
+}
+
+type listLimitersResponse struct {
+	Limiters [][2]json.RawMessage `json:"limiters"`
+}
+
+type LimiterInfo [2]string
+
+type LimiterValue struct {
+	StaticLimiter *sqscosmwasmpool.StaticLimiter `json:"static_limiter,omitempty"`
+	ChangeLimiter *sqscosmwasmpool.ChangeLimiter `json:"change_limiter,omitempty"`
+}
+
+// alloyTransmuterListLimiters queries the limiters of the alloyed transmuter contract.
+func alloyTransmuterListLimiters(
+	ctx sdk.Context,
+	wasmKeeper commondomain.WasmKeeper,
+	poolId uint64,
+	contractAddress sdk.AccAddress,
+) (sqscosmwasmpool.AlloyedRateLimiter, error) {
+	bz, err := wasmKeeper.QuerySmart(ctx, contractAddress, []byte(listLimitersQueryString))
+	if err != nil {
+		return sqscosmwasmpool.AlloyedRateLimiter{}, fmt.Errorf(
+			"error querying list_limiters for pool (%d) contrat_address (%s): %w",
+			poolId, contractAddress, err,
+		)
+	}
+
+	listLimtersResponseData := listLimitersResponse{}
+
+	if err := json.Unmarshal(bz, &listLimtersResponseData); err != nil {
+		return sqscosmwasmpool.AlloyedRateLimiter{}, fmt.Errorf(
+			"error unmarshalling limiters for pool (%d) contrat_address (%s): %w",
+			poolId, contractAddress, err,
+		)
+	}
+
+	staticLimiters := make(map[string]sqscosmwasmpool.StaticLimiter, 0)
+	changeLimiters := make(map[string]sqscosmwasmpool.ChangeLimiter, 0)
+
+	for _, limiterRaw := range listLimtersResponseData.Limiters {
+		var info LimiterInfo
+		err := json.Unmarshal(limiterRaw[0], &info)
+		if err != nil {
+			ctx.Logger().Error("Error unmarshaling info:", "err", err, "pool_id", poolId)
+			continue
+		}
+
+		var value LimiterValue
+		err = json.Unmarshal(limiterRaw[1], &value)
+		if err != nil {
+			ctx.Logger().Error("Error unmarshaling value:", "err", err, "pool_id", poolId)
+			continue
+		}
+
+		// First element of info is the denom
+		if len(info) < 1 {
+			ctx.Logger().Error("Error parsing limiter info", "pool_id", poolId)
+		}
+
+		denom := info[0]
+
+		if value.StaticLimiter != nil {
+			staticLimiters[denom] = *value.StaticLimiter
+		} else if value.ChangeLimiter != nil {
+			changeLimiters[denom] = *value.ChangeLimiter
+		}
+	}
+
+	return sqscosmwasmpool.AlloyedRateLimiter{
+		StaticLimiterByDenomMap: staticLimiters,
+		ChangeLimiterByDenomMap: changeLimiters,
+	}, nil
 }
