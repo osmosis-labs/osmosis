@@ -26,7 +26,9 @@ pub fn can_invoke_message(
         // no permission required so return ok
         return Ok(());
     };
-    let permissions = RBAC_PERMISSIONS.load(deps.storage, info.sender.to_string())?;
+    let permissions = RBAC_PERMISSIONS
+        .load(deps.storage, info.sender.to_string())
+        .unwrap_or_default();
     if permissions.contains(&required_permission) {
         return Ok(());
     }

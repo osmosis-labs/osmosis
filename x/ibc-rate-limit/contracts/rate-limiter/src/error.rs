@@ -28,4 +28,7 @@ pub enum ContractError {
     },
     #[error("{0}")]
     InvalidParameters(String),
+
+    #[error("Channel {channel} has been blocked for denom {denom}")]
+    ChannelBlocked { channel: String, denom: String },
 }

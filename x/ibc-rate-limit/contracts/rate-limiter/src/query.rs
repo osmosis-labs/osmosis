@@ -1,6 +1,9 @@
 use crate::state::{
     path::Path,
-    storage::{MESSAGE_QUEUE, RATE_LIMIT_TRACKERS, RBAC_PERMISSIONS},
+    storage::{
+        ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM, MESSAGE_QUEUE, RATE_LIMIT_TRACKERS,
+        RBAC_PERMISSIONS,
+    },
 };
 use cosmwasm_std::{to_binary, Binary, StdResult};
 use cosmwasm_std::{Order::Ascending, StdError, Storage};
@@ -50,6 +53,10 @@ pub fn get_queued_message(storage: &dyn Storage, id: String) -> StdResult<Binary
             })
             .ok_or_else(|| StdError::not_found(id))??,
     )
+}
+
+pub fn get_denom_restrictions(storage: &dyn Storage, denom: String) -> StdResult<Binary> {
+    to_binary(&ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM.load(storage, denom)?)
 }
 
 #[cfg(test)]

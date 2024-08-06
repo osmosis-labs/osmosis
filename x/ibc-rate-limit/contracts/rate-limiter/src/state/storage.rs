@@ -47,3 +47,7 @@ pub const MESSAGE_QUEUE: Deque<QueuedMessage> = Deque::new("queued_messages");
 
 /// Storage variable that is used to map signing addresses and the permissions they have been granted
 pub const RBAC_PERMISSIONS: Map<String, BTreeSet<Roles>> = Map::new("rbac");
+
+/// Accepted channels for restricted denom. This is a map of denom -> channels.
+/// If a denom is not in this map, it is unrestricted.
+pub const ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM: Map<String, Vec<String>> = Map::new("acfd");

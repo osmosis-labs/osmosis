@@ -108,6 +108,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetRoles { owner } => query::get_roles(deps.storage, owner),
         QueryMsg::GetMessageIds => query::get_message_ids(deps.storage),
         QueryMsg::GetMessage { id } => query::get_queued_message(deps.storage, id),
+        QueryMsg::GetDenomRestrictions { denom } => {
+            query::get_denom_restrictions(deps.storage, denom)
+        }
     }
 }
 
@@ -158,6 +161,13 @@ pub(crate) fn match_execute(
             denom,
             quota_id,
         } => execute::try_reset_path_quota(deps, channel_id, denom, quota_id, env.block.time),
+        ExecuteMsg::SetDenomRestrictions {
+            denom,
+            allowed_channels,
+        } => execute::set_denom_restrictions(deps, denom, allowed_channels),
+        ExecuteMsg::UnsetDenomRestrictions { denom } => {
+            execute::unset_denom_restrictions(deps, denom)
+        }
         ExecuteMsg::GrantRole { signer, roles } => {
             rbac::grant_role(deps, signer, roles)?;
             Ok(Response::new().add_attribute("method", "grant_role"))

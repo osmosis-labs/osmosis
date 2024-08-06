@@ -25,6 +25,8 @@ pub enum Roles {
     RemoveMessage,
     /// Has the ability to alter timelock delay's
     SetTimelockDelay,
+    // Has the ability to manage denom restrictions
+    ManageDenomRestrictions,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -53,6 +55,7 @@ impl Roles {
             Roles::RevokeRole,
             Roles::RemoveMessage,
             Roles::SetTimelockDelay,
+            Roles::ManageDenomRestrictions,
         ]
     }
 }

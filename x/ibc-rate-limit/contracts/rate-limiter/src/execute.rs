@@ -1,5 +1,6 @@
 use crate::msg::{PathMsg, QuotaMsg};
 
+use crate::state::storage::ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM;
 use crate::state::{flow::Flow, path::Path, rate_limit::RateLimit, storage::RATE_LIMIT_TRACKERS};
 use crate::ContractError;
 use cosmwasm_std::{DepsMut, Response, Timestamp};
@@ -123,6 +124,23 @@ pub fn edit_path_quota(
     Ok(())
 }
 
+pub fn set_denom_restrictions(
+    deps: &mut DepsMut,
+    denom: String,
+    allowed_channels: Vec<String>,
+) -> Result<Response, ContractError> {
+    ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM.save(deps.storage, denom, &allowed_channels)?;
+    Ok(Response::new().add_attribute("method", "set_denom_restrictions"))
+}
+
+pub fn unset_denom_restrictions(
+    deps: &mut DepsMut,
+    denom: String,
+) -> Result<Response, ContractError> {
+    ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM.remove(deps.storage, denom);
+    Ok(Response::new().add_attribute("method", "unset_denom_restrictions"))
+}
+
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
@@ -134,8 +152,9 @@ mod tests {
     use crate::state::rbac::Roles;
     use crate::state::{
         rate_limit::RateLimit,
-        storage::{GOVMODULE, IBCMODULE},
+        storage::{ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM, GOVMODULE, IBCMODULE},
     };
+    use crate::ContractError;
 
     const IBC_ADDR: &str = "osmo1vz5e6tzdjlzy2f7pjvx0ecv96h8r4m2y92thdm";
     const GOV_ADDR: &str = "osmo1tzz5zf2u68t00un2j4lrrnkt2ztd46kfzfp58r";
@@ -272,5 +291,150 @@ mod tests {
             0_u32.into(),
             env.block.time.plus_seconds(5000),
         );
+    }
+
+    #[test]
+    fn test_execute_set_denom_restrictions() {
+        let mut deps = mock_dependencies();
+
+        // Set up the message and the environment
+        let denom = "denom1".to_string();
+        let allowed_channels = vec!["channel1".to_string(), "channel2".to_string()];
+        let msg = ExecuteMsg::SetDenomRestrictions {
+            denom: denom.clone(),
+            allowed_channels: allowed_channels.clone(),
+        };
+        let info = mock_info("executor", &[]);
+
+        // Grant the necessary role
+        crate::rbac::grant_role(
+            &mut deps.as_mut(),
+            "executor".to_string(),
+            vec![Roles::ManageDenomRestrictions],
+        )
+        .unwrap();
+
+        // Execute the message
+        let res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+        assert_eq!(res.attributes[0].value, "set_denom_restrictions");
+
+        // Verify the restriction was set
+        let stored_channels = ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM
+            .load(deps.as_ref().storage, denom)
+            .unwrap();
+        assert_eq!(stored_channels, allowed_channels);
+    }
+
+    #[test]
+    fn test_execute_unset_denom_restrictions() {
+        let mut deps = mock_dependencies();
+
+        // First, set a restriction
+        let denom = "denom1".to_string();
+        let allowed_channels = vec!["channel1".to_string()];
+        let set_msg = ExecuteMsg::SetDenomRestrictions {
+            denom: denom.clone(),
+            allowed_channels: allowed_channels.clone(),
+        };
+        let info = mock_info("executor", &[]);
+
+        // Grant the necessary role
+        crate::rbac::grant_role(
+            &mut deps.as_mut(),
+            "executor".to_string(),
+            vec![Roles::ManageDenomRestrictions],
+        )
+        .unwrap();
+
+        // Execute the set message
+        execute(deps.as_mut(), mock_env(), info.clone(), set_msg).unwrap();
+
+        // Verify the restriction was set
+        let stored_channels = ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM
+            .load(deps.as_ref().storage, denom.clone())
+            .unwrap();
+        assert_eq!(stored_channels, allowed_channels);
+
+        // Now unset the restriction
+        let unset_msg = ExecuteMsg::UnsetDenomRestrictions {
+            denom: denom.clone(),
+        };
+        let res = execute(deps.as_mut(), mock_env(), info, unset_msg).unwrap();
+        assert_eq!(res.attributes[0].value, "unset_denom_restrictions");
+
+        // Verify the restriction was removed
+        let stored_channels = ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM
+            .may_load(deps.as_ref().storage, denom)
+            .unwrap();
+        assert!(stored_channels.is_none());
+    }
+
+    #[test]
+    fn test_query_denom_restrictions() {
+        let mut deps = mock_dependencies();
+
+        // Set up initial restrictions
+        let denom = "denom1".to_string();
+        let allowed_channels = vec!["channel1".to_string(), "channel2".to_string()];
+        let set_msg = ExecuteMsg::SetDenomRestrictions {
+            denom: denom.clone(),
+            allowed_channels: allowed_channels.clone(),
+        };
+        let info = mock_info("executor", &[]);
+
+        // Grant the necessary role
+        crate::rbac::grant_role(
+            &mut deps.as_mut(),
+            "executor".to_string(),
+            vec![Roles::ManageDenomRestrictions],
+        )
+        .unwrap();
+
+        // Execute the set message
+        execute(deps.as_mut(), mock_env(), info, set_msg).unwrap();
+
+        // Query the restrictions
+        let query_msg = QueryMsg::GetDenomRestrictions {
+            denom: denom.clone(),
+        };
+        let res = query(deps.as_ref(), mock_env(), query_msg).unwrap();
+        let returned_channels: Vec<String> = from_binary(&res).unwrap();
+        assert_eq!(returned_channels, allowed_channels);
+    }
+
+    #[test]
+    fn test_query_unset_denom_restrictions() {
+        let deps = mock_dependencies();
+
+        // Attempt to query restrictions on a denom with no restrictions
+        let denom = "denom1".to_string();
+        let query_msg = QueryMsg::GetDenomRestrictions {
+            denom: denom.clone(),
+        };
+        query(deps.as_ref(), mock_env(), query_msg).unwrap_err();
+    }
+
+    #[test]
+    fn test_permissions_enforced() {
+        let mut deps = mock_dependencies();
+
+        // Set up the message and the environment
+        let denom = "denom1".to_string();
+        let allowed_channels = vec!["channel1".to_string(), "channel2".to_string()];
+        let msg = ExecuteMsg::SetDenomRestrictions {
+            denom: denom.clone(),
+            allowed_channels: allowed_channels.clone(),
+        };
+        let info = mock_info("unauthorized_user", &[]);
+
+        // Attempt to execute the message without the necessary role
+        let err = execute(deps.as_mut(), mock_env(), info, msg).unwrap_err();
+        assert!(matches!(err, ContractError::Unauthorized { .. }));
+
+        // Verify no restrictions were set
+        let stored_channels = ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM
+            .may_load(deps.as_ref().storage, denom)
+            .unwrap();
+        assert!(stored_channels.is_none());
     }
 }

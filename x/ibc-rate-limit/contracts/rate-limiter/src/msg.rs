@@ -75,6 +75,13 @@ pub enum ExecuteMsg {
         denom: String,
         quota_id: String,
     },
+    SetDenomRestrictions {
+        denom: String,
+        allowed_channels: Vec<String>,
+    },
+    UnsetDenomRestrictions {
+        denom: String,
+    },
     /// Grants a role to the given signer
     GrantRole {
         signer: String,
@@ -129,9 +136,12 @@ pub enum QueryMsg {
     /// Returns a vector of queued message id's
     #[returns(Vec<String>)]
     GetMessageIds,
-    #[returns(crate::state::rbac::QueuedMessage)]
     /// Returns the queued message matching id
+    #[returns(crate::state::rbac::QueuedMessage)]
     GetMessage { id: String },
+    /// Returns the restrictions for a given denom
+    #[returns(Vec<String>)]
+    GetDenomRestrictions { denom: String },
 }
 
 #[cw_serde]
@@ -164,6 +174,8 @@ impl ExecuteMsg {
             Self::AddPath { .. } => Some(Roles::AddRateLimit),
             Self::RemovePath { .. } => Some(Roles::RemoveRateLimit),
             Self::ResetPathQuota { .. } => Some(Roles::ResetPathQuota),
+            Self::SetDenomRestrictions { .. } => Some(Roles::ManageDenomRestrictions),
+            Self::UnsetDenomRestrictions { .. } => Some(Roles::ManageDenomRestrictions),
             Self::GrantRole { .. } => Some(Roles::GrantRole),
             Self::RevokeRole { .. } => Some(Roles::RevokeRole),
             Self::EditPathQuota { .. } => Some(Roles::EditPathQuota),

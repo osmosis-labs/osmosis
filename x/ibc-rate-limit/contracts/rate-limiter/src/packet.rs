@@ -8,19 +8,19 @@ use sha2::{Digest, Sha256};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Height {
     /// Previously known as "epoch"
-    revision_number: Option<u64>,
+    pub revision_number: Option<u64>,
 
     /// The height of a block
-    revision_height: Option<u64>,
+    pub revision_height: Option<u64>,
 }
 
 // IBC transfer data
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct FungibleTokenData {
     pub denom: String,
-    amount: Uint256,
-    sender: Addr,
-    receiver: Addr,
+    pub amount: Uint256,
+    pub sender: Addr,
+    pub receiver: Addr,
 }
 
 // An IBC packet

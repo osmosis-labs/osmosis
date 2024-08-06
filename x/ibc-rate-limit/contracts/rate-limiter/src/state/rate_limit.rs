@@ -85,7 +85,7 @@ fn calculate_channel_value(
 ) -> Uint256 {
     match direction {
         FlowType::Out => {
-            if denom.contains("ibc") {
+            if denom.starts_with("ibc") {
                 channel_value + funds // Non-Native tokens get removed from the supply on send. Add that amount back
             } else {
                 // The commented-out code in the golang calculate channel value is what we want, but we're currently using the whole supply temporarily for efficiency. see rate_limit.go/CalculateChannelValue(..)

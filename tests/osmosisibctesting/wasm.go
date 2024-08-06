@@ -81,6 +81,12 @@ func (chain *TestChain) QueryContractJson(suite *suite.Suite, contract sdk.AccAd
 	return json
 }
 
+func (chain *TestChain) ExecuteContract(contract, sender sdk.AccAddress, msg []byte, funds sdk.Coins) ([]byte, error) {
+	osmosisApp := chain.GetOsmosisApp()
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
+	return contractKeeper.Execute(chain.GetContext(), contract, sender, msg, funds)
+}
+
 func (chain *TestChain) RegisterRateLimitingContract(addr []byte) {
 	addrStr, err := sdk.Bech32ifyAddressBytes("osmo", addr)
 	require.NoError(chain.TB, err)
