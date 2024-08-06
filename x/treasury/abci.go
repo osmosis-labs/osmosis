@@ -16,14 +16,16 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
 	// Check epoch last block
-	if !appparams.IsPeriodLastBlock(ctx, appparams.BlocksPerWeek) {
+	if !appparams.IsPeriodLastBlock(ctx, 3*appparams.BlocksPerMinute) {
 		return
 	}
 
 	// Check probation period
-	if ctx.BlockHeight() < int64(appparams.BlocksPerWeek*k.WindowProbation(ctx)) {
-		return
-	}
+	//if ctx.BlockHeight() < int64(3*appparams.BlocksPerMinute*k.WindowProbation(ctx)) {
+	//	return
+	//}
+
+	k.RefillExchangePool(ctx)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(types.EventTypePolicyUpdate,

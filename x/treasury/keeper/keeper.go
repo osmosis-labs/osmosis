@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"fmt"
+	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
+	markettypes "github.com/osmosis-labs/osmosis/v23/x/market/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -94,4 +96,23 @@ func (k Keeper) SetTaxRate(ctx sdk.Context, taxRate sdk.Dec) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&sdk.DecProto{Dec: taxRate})
 	store.Set(types.TaxRateKey, b)
+}
+
+func (k Keeper) RefillExchangePool(ctx sdk.Context) {
+	exchangeAmount := k.marketKeeper.GetExchangePoolBalance(ctx).Amount
+	reserveAmount := k.GetReservePoolBalance(ctx).Amount
+	exchangeRequirement := k.marketKeeper.GetExchangeRequirement(ctx).Amount
+
+	if exchangeAmount.LT(exchangeRequirement) {
+		params := k.GetParams(ctx)
+		percentMissing := 100 - (exchangeAmount.Quo(exchangeRequirement).Mul(sdk.NewInt(100)).Int64())
+		if sdk.NewDec(percentMissing).GTE(params.ReserveAllowableOffset) {
+			refillAmount := sdk.MinInt(reserveAmount, exchangeRequirement.Sub(exchangeAmount))
+			err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, markettypes.ModuleName, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, refillAmount)))
+			if err != nil {
+				// TODO: yurii: check if it's ok to just log here.
+				k.Logger(ctx).Error("failed to refill exchange pool", "error", err)
+			}
+		}
+	}
 }
