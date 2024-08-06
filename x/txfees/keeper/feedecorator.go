@@ -9,6 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 	mempool1559 "github.com/osmosis-labs/osmosis/v25/x/txfees/keeper/mempool-1559"
@@ -56,6 +59,43 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		if feeTx.GetGas() > mfd.Opts.MaxGasWantedPerTx {
 			msg := "Too much gas wanted: %d, maximum is %d"
 			return ctx, errorsmod.Wrapf(sdkerrors.ErrOutOfGas, msg, feeTx.GetGas(), mfd.Opts.MaxGasWantedPerTx)
+		}
+	}
+
+	// Local mempool filter for improper ibc packets
+	if ctx.IsCheckTx() {
+		msgs := tx.GetMsgs()
+		for _, msg := range msgs {
+			// If one of the msgs is an IBC Transfer msg, limit it's size due to current spam potential.
+			// 500KB for entire msg
+			// 400KB for memo
+			// 65KB for receiver
+			if transferMsg, ok := msg.(*ibctransfertypes.MsgTransfer); ok {
+				if transferMsg.Size() > 500000 { // 500KB
+					return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "msg size is too large")
+				}
+
+				if len([]byte(transferMsg.Memo)) > 400000 { // 400KB
+					return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "memo is too large")
+				}
+
+				if len(transferMsg.Receiver) > 65000 { // 65KB
+					return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "receiver address is too large")
+				}
+			}
+
+			// If one of the msgs is from ICA, limit it's size due to current spam potential.
+			// 500KB for packet data
+			// 65KB for sender
+			if icaMsg, ok := msg.(*icacontrollertypes.MsgSendTx); ok {
+				if icaMsg.PacketData.Size() > 500000 { // 500KB
+					return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "packet data is too large")
+				}
+
+				if len([]byte(icaMsg.Owner)) > 65000 { // 65KB
+					return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "owner address is too large")
+				}
+			}
 		}
 	}
 
