@@ -65,12 +65,3 @@ func (k Keeper) GetExchangePoolBalance(ctx sdk.Context) sdk.Coin {
 
 	return k.BankKeeper.GetBalance(ctx, account.GetAddress(), appparams.BaseCoinUnit)
 }
-
-func (k Keeper) GetReservePoolBalance(ctx sdk.Context) sdk.Coin {
-	account := k.GetReserveMarketAccount(ctx)
-	if account == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
-	}
-
-	return k.BankKeeper.GetBalance(ctx, account.GetAddress(), appparams.BaseCoinUnit)
-}
