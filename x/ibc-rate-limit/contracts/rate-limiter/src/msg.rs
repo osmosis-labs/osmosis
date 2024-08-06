@@ -136,9 +136,12 @@ pub enum QueryMsg {
     /// Returns a vector of queued message id's
     #[returns(Vec<String>)]
     GetMessageIds,
-    #[returns(crate::state::rbac::QueuedMessage)]
     /// Returns the queued message matching id
+    #[returns(crate::state::rbac::QueuedMessage)]
     GetMessage { id: String },
+    /// Returns the restrictions for a given denom
+    #[returns(Vec<String>)]
+    GetDenomRestrictions { denom: String },
 }
 
 #[cw_serde]

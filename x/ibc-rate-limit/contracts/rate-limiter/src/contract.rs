@@ -108,6 +108,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetRoles { owner } => query::get_roles(deps.storage, owner),
         QueryMsg::GetMessageIds => query::get_message_ids(deps.storage),
         QueryMsg::GetMessage { id } => query::get_queued_message(deps.storage, id),
+        QueryMsg::GetDenomRestrictions { denom } => {
+            query::get_denom_restrictions(deps.storage, denom)
+        }
     }
 }
 
