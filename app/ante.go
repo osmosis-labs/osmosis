@@ -60,6 +60,7 @@ func NewAnteHandler(
 		ante.NewValidateMemoDecorator(ak),
 		ante.NewConsumeGasForTxSizeDecorator(ak),
 		deductFeeDecorator,
+
 		ante.NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewValidateSigCountDecorator(ak),
 		ante.NewSigGasConsumeDecorator(ak, sigGasConsumer),

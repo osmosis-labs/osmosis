@@ -38,9 +38,6 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
-	marketkeeper "github.com/osmosis-labs/osmosis/v23/x/market/keeper"
-	markettypes "github.com/osmosis-labs/osmosis/v23/x/market/types"
-
 	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
@@ -49,11 +46,14 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/x/gamm"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v23/x/ibc-rate-limit"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v23/x/ibc-rate-limit/types"
+	marketkeeper "github.com/osmosis-labs/osmosis/v23/x/market/keeper"
+	markettypes "github.com/osmosis-labs/osmosis/v23/x/market/types"
 	oraclekeeper "github.com/osmosis-labs/osmosis/v23/x/oracle/keeper"
 	oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
 	"github.com/osmosis-labs/osmosis/v23/x/poolmanager"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v23/x/protorev"
+	treasurykeeper "github.com/osmosis-labs/osmosis/v23/x/treasury/keeper"
 	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
@@ -166,8 +166,9 @@ type AppKeepers struct {
 	ContractKeeper               *wasmkeeper.PermissionedKeeper
 	TokenFactoryKeeper           *tokenfactorykeeper.Keeper
 	PoolManagerKeeper            *poolmanager.Keeper
-	MarketKeeper                 *marketkeeper.Keeper
 	OracleKeeper                 *oraclekeeper.Keeper
+	MarketKeeper                 *marketkeeper.Keeper
+	TreasuryKeeper               *treasurykeeper.Keeper
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
 	ConcentratedLiquidityKeeper  *concentratedliquidity.Keeper
 	CosmwasmPoolKeeper           *cosmwasmpool.Keeper
