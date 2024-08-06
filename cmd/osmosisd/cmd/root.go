@@ -825,7 +825,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, t
 	rootCmd.AddCommand(
 		server.StatusCommand(),
 		queryCommand(),
-		txCommand(),
+		txCommand(tempApp.ModuleBasics),
 		keys.Commands(),
 	)
 	rootCmd.AddCommand(CmdListQueries(rootCmd))
@@ -903,7 +903,7 @@ func queryCommand() *cobra.Command {
 }
 
 // txCommand adds transaction signing, encoding / decoding, and broadcasting commands.
-func txCommand() *cobra.Command {
+func txCommand(moduleBasics module.BasicManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "tx",
 		Short:                      "Transactions subcommands",
@@ -922,6 +922,8 @@ func txCommand() *cobra.Command {
 		authcmd.GetEncodeCommand(),
 		authcmd.GetDecodeCommand(),
 	)
+
+	moduleBasics.AddTxCommands(cmd)
 
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
