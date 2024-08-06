@@ -424,8 +424,6 @@ func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 
 	// Move chainA forward one block
 	suite.chainA.NextBlock()
-	err = suite.chainA.SenderAccount.SetSequence(suite.chainA.SenderAccount.GetSequence() + 1)
-	suite.Require().NoError(err)
 
 	// Reset time + one second
 	oneSecAfterReset := resetTime.Add(time.Second)
@@ -547,8 +545,6 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 
 	// Move forward one block
 	suite.chainA.NextBlock()
-	err = suite.chainA.SenderAccount.SetSequence(suite.chainA.SenderAccount.GetSequence() + 1)
-	suite.Require().NoError(err)
 	suite.chainA.Coordinator.IncrementTime()
 
 	// Update both clients

@@ -87,8 +87,8 @@ impl Flow {
     /// Expire resets the Flow to start tracking the value transfer from the
     /// moment this method is called.
     pub fn expire(&mut self, now: Timestamp, duration: u64) {
-        self.inflow = Uint256::from(0_u32);
-        self.outflow = Uint256::from(0_u32);
+        self.inflow = Uint256::zero();
+        self.outflow = Uint256::zero();
         self.period_end = now.plus_seconds(duration);
     }
 
