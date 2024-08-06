@@ -110,8 +110,7 @@ func (k Keeper) RefillExchangePool(ctx sdk.Context) {
 			refillAmount := sdk.MinInt(reserveAmount, exchangeRequirement.Sub(exchangeAmount))
 			err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, markettypes.ModuleName, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, refillAmount)))
 			if err != nil {
-				// TODO: yurii: check if it's ok to just log here.
-				k.Logger(ctx).Error("failed to refill exchange pool", "error", err)
+				panic(err)
 			}
 		}
 	}
