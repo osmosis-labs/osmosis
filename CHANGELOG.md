@@ -85,7 +85,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * perf(p2p): Delete expensive debug log already slated for deletion #3412
 * perf(p2p): Reduce the p2p metrics overhead. #3411
 * commit f663bd35153b0b366c1e1e6b41e7f2dcff7963fd : one more debug log deletion
-
 * [#120](https://github.com/osmosis-labs/cometbft/pull/120) perf(consensus): Use TrySend for hasVote/HasBlockPart messages #3407
 
 * [#8504](https://github.com/osmosis-labs/osmosis/pull/8504) Add missing module params query to CLI
