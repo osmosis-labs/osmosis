@@ -10,6 +10,14 @@ import (
 	"reflect"
 	"time"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/propagation"
+
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/skip-mev/block-sdk/block"
 	"github.com/skip-mev/block-sdk/block/base"
@@ -239,6 +247,25 @@ func NewOsmosisApp(
 	wasmOpts []wasmkeeper.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
+	// Handler OTEL configuration.
+	OTELConfig := NewOTELConfigFromOptions(appOpts)
+	if OTELConfig.Enabled {
+		ctx := context.Background()
+
+		res, err := resource.New(ctx, resource.WithContainer(),
+			resource.WithAttributes(semconv.ServiceNameKey.String(OTELConfig.ServiceName)),
+			resource.WithFromEnv(),
+		)
+		if err != nil {
+			panic(err)
+		}
+
+		_, err = initOTELTracer(ctx, res)
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	initReusablePackageInjections() // This should run before anything else to make sure the variables are properly initialized
 	overrideWasmVariables()
 	encodingConfig := GetEncodingConfig()
@@ -1089,4 +1116,23 @@ func GetMaccPerms() map[string][]string {
 	}
 
 	return dupMaccPerms
+}
+
+// initOTELTracer initializes the OTEL tracer
+// and wires it up with the Sentry exporter.
+func initOTELTracer(ctx context.Context, res *resource.Resource) (*sdktrace.TracerProvider, error) {
+	exporter, err := otlptracegrpc.New(ctx, otlptracegrpc.WithInsecure())
+	if err != nil {
+		return nil, err
+	}
+
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithResource(res),
+	)
+
+	otel.SetTracerProvider(tp)
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+
+	return tp, nil
 }
