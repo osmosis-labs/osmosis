@@ -4,8 +4,6 @@ import (
 	context "context"
 	"time"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -137,13 +135,9 @@ type PoolManagerKeeper interface {
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
 		tokenOutMinAmount osmomath.Int,
-	) (osmomath.Int, error)
+	) (osmomath.Int, sdk.Coin, error)
 }
 
 type ValSetPreferenceKeeper interface {
 	DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error
-}
-
-type TwapKeeper interface {
-	UnsafeGetMultiPoolArithmeticTwapToNow(ctx sdk.Context, route []*poolmanagertypes.SwapAmountInRoute, baseAssetDenom string, quoteAssetDenom string, startTime time.Time) (osmomath.Dec, error)
 }

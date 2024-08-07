@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/go-metrics"
 	"github.com/osmosis-labs/sqs/sqsdomain"
 	prototypes "github.com/osmosis-labs/sqs/sqsdomain/proto/types"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -64,7 +65,7 @@ func (g *GRPCClient) PushData(ctx context.Context, height uint64, pools []sqsdom
 		// Using the built-in GRPC retry back-off logic is likely to halt the serial system.
 		// As a result, we opt in for simply continuing to attempting to process the next block
 		// and retrying the connection and ingest
-		g.grpcConn, err = grpc.NewClient(g.grpcAddress, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(g.grpcMaxCallSizeBytes)), grpc.WithDisableRetry(), grpc.WithDisableRetry())
+		g.grpcConn, err = grpc.NewClient(g.grpcAddress, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(g.grpcMaxCallSizeBytes)), grpc.WithDisableRetry(), grpc.WithDisableRetry(), grpc.WithStatsHandler(otelgrpc.NewClientHandler()))
 		if err != nil {
 			shouldResetConnection = true
 			return err

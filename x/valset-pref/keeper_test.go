@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -110,7 +111,7 @@ func (s *KeeperTestSuite) PrepareExistingDelegations(ctx sdk.Context, valAddrs [
 	for i := 0; i < len(valAddrs); i++ {
 		valAddr, err := sdk.ValAddressFromBech32(valAddrs[i])
 		if err != nil {
-			return fmt.Errorf("validator address not formatted")
+			return errors.New("validator address not formatted")
 		}
 
 		validator, err := s.App.StakingKeeper.GetValidator(ctx, valAddr)

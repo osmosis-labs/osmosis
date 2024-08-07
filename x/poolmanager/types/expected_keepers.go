@@ -26,6 +26,7 @@ type BankI interface {
 	SetDenomMetaData(ctx context.Context, denomMetaData banktypes.Metadata)
 	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 }
 
 // CommunityPoolI defines the contract needed to be fulfilled for distribution keeper.
@@ -112,4 +113,8 @@ type StakingKeeper interface {
 
 type ProtorevKeeper interface {
 	GetPoolForDenomPair(ctx sdk.Context, baseDenom, denomToMatch string) (uint64, error)
+}
+
+type WasmKeeper interface {
+	QuerySmart(ctx context.Context, contractAddress sdk.AccAddress, queryMsg []byte) ([]byte, error)
 }

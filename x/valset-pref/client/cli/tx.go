@@ -1,7 +1,7 @@
 package valsetprefcli
 
 import (
-	"fmt"
+	"errors"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -131,11 +131,11 @@ func ValidateValAddrAndWeight(args []string) ([]types.ValidatorPreference, error
 	}
 
 	if len(valAddrs) != len(weights) {
-		return nil, fmt.Errorf("the length of validator addresses and weights not matched")
+		return nil, errors.New("the length of validator addresses and weights not matched")
 	}
 
 	if len(valAddrs) == 0 {
-		return nil, fmt.Errorf("records is empty")
+		return nil, errors.New("records is empty")
 	}
 
 	var valset []types.ValidatorPreference

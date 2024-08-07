@@ -1558,8 +1558,14 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 				ExitFee: osmomath.ZeroDec(),
 			})
 
+			var expectedTakerFeeCharged sdk.Coin
+			if !tc.takerFee.IsNil() {
+				_, expectedTakerFeeCharged = poolmanager.CalcTakerFeeExactIn(tc.tokenIn, tc.takerFee)
+			}
+
 			// execute the swap
 			var multihopTokenOutAmount osmomath.Int
+			var takerFeeCharged sdk.Coin
 			var err error
 			// TODO: move the denom pair set out and only run SwapExactAmountIn.
 			// SwapExactAmountInNoTakerFee should be in a different test.
@@ -1568,7 +1574,7 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 				poolmanagerKeeper.SetDenomPairTakerFee(s.Ctx, tc.poolCoins[0].Denom, tc.poolCoins[1].Denom, tc.takerFee)
 				poolmanagerKeeper.SetDenomPairTakerFee(s.Ctx, tc.poolCoins[1].Denom, tc.poolCoins[0].Denom, tc.takerFee)
 
-				multihopTokenOutAmount, err = poolmanagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], tc.poolId, tc.tokenIn, tc.tokenOutDenom, tc.tokenOutMinAmount)
+				multihopTokenOutAmount, takerFeeCharged, err = poolmanagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], tc.poolId, tc.tokenIn, tc.tokenOutDenom, tc.tokenOutMinAmount)
 			} else {
 				multihopTokenOutAmount, err = poolmanagerKeeper.SwapExactAmountInNoTakerFee(s.Ctx, s.TestAccs[0], tc.poolId, tc.tokenIn, tc.tokenOutDenom, tc.tokenOutMinAmount)
 			}
@@ -1578,6 +1584,7 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 				// compare the expected tokenOut to the actual tokenOut
 				s.Require().NoError(err)
 				s.Require().Equal(tc.expectedTokenOutAmount.String(), multihopTokenOutAmount.String())
+				s.Require().Equal(expectedTakerFeeCharged, takerFeeCharged)
 			}
 		})
 	}
@@ -2190,7 +2197,7 @@ func (s *KeeperTestSuite) TestEstimateTradeBasedOnPriceImpact() {
 		s.Run(name, func() {
 			s.SetupTest()
 			poolmanagerKeeper := s.App.PoolManagerKeeper
-			poolmanagerQuerier := client.NewQuerier(*poolmanagerKeeper)
+			poolmanagerQuerier := client.NewQuerier(poolmanagerKeeper)
 
 			s.CreatePoolFromType(tc.preCreatePoolType)
 
@@ -3786,16 +3793,16 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_VolumeTracked() {
 	const withTakerFee = false
 
 	s.Run("with taker fee", func() {
-		s.testSwapExactAmpountInVolumeTracked(withTakerFee)
+		s.testSwapExactAmountInVolumeTracked(withTakerFee)
 	})
 
 	s.Run("without taker fee", func() {
-		s.testSwapExactAmpountInVolumeTracked(!withTakerFee)
+		s.testSwapExactAmountInVolumeTracked(!withTakerFee)
 	})
 }
 
 // test for ensuring that volume is tracked by variants of swap exact amount in
-func (s *KeeperTestSuite) testSwapExactAmpountInVolumeTracked(noTakerFeeVariant bool) {
+func (s *KeeperTestSuite) testSwapExactAmountInVolumeTracked(noTakerFeeVariant bool) {
 	s.SetupTest()
 
 	// Set UOSMO as bond denom
@@ -3822,7 +3829,7 @@ func (s *KeeperTestSuite) testSwapExactAmpountInVolumeTracked(noTakerFeeVariant 
 		_, err := s.App.PoolManagerKeeper.SwapExactAmountInNoTakerFee(s.Ctx, s.TestAccs[0], concentratedPool.GetId(), tokenIn, FOO, osmomath.ZeroInt())
 		s.Require().NoError(err)
 	} else {
-		_, err := s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], concentratedPool.GetId(), tokenIn, FOO, osmomath.ZeroInt())
+		_, _, err := s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], concentratedPool.GetId(), tokenIn, FOO, osmomath.ZeroInt())
 		s.Require().NoError(err)
 	}
 

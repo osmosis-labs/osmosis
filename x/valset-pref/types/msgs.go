@@ -1,7 +1,8 @@
 package types
 
 import (
-	fmt "fmt"
+	"errors"
+	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -54,7 +55,7 @@ func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 	// check that all the validator address are unique
 	containsDuplicate := osmoutils.ContainsDuplicate(validatorAddrs)
 	if containsDuplicate {
-		return fmt.Errorf("The validator operator address are duplicated")
+		return errors.New("The validator operator address are duplicated")
 	}
 
 	// Round to 2 digit after the decimal. For ex: 0.999 = 1.0, 0.874 = 0.87, 0.5123 = 0.51
@@ -98,7 +99,7 @@ func (m MsgDelegateToValidatorSet) ValidateBasic() error {
 	}
 
 	if !m.Coin.IsValid() {
-		return fmt.Errorf("The stake coin is not valid")
+		return errors.New("The stake coin is not valid")
 	}
 
 	return nil
@@ -133,7 +134,7 @@ func (m MsgUndelegateFromValidatorSet) ValidateBasic() error {
 	}
 
 	if !m.Coin.IsValid() {
-		return fmt.Errorf("The stake coin is not valid")
+		return errors.New("The stake coin is not valid")
 	}
 
 	return nil
@@ -170,7 +171,7 @@ func (m MsgUndelegateFromRebalancedValidatorSet) ValidateBasic() error {
 	}
 
 	if !m.Coin.IsValid() {
-		return fmt.Errorf("The stake coin is not valid")
+		return errors.New("The stake coin is not valid")
 	}
 
 	return nil
@@ -219,7 +220,7 @@ func (m MsgRedelegateValidatorSet) ValidateBasic() error {
 	// check that all the validator address are unique
 	containsDuplicate := osmoutils.ContainsDuplicate(validatorAddrs)
 	if containsDuplicate {
-		return fmt.Errorf("The validator operator address are duplicated")
+		return errors.New("The validator operator address are duplicated")
 	}
 
 	// Round to 2 digit after the decimal. For ex: 0.999 = 1.0, 0.874 = 0.87, 0.5123 = 0.51
