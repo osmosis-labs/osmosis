@@ -84,20 +84,21 @@ func (k Keeper) SetTaxRate(ctx sdk.Context, taxRate sdk.Dec) {
 }
 
 func (k Keeper) RefillExchangePool(ctx sdk.Context) sdk.Dec {
-	exchangeAmount := k.marketKeeper.GetExchangePoolBalance(ctx).Amount
-	reserveAmount := k.GetReservePoolBalance(ctx).Amount
-	exchangeRequirement := k.marketKeeper.GetExchangeRequirement(ctx).Amount
+	exchangeAmount := k.marketKeeper.GetExchangePoolBalance(ctx).Amount.ToLegacyDec()
+	reserveAmount := k.GetReservePoolBalance(ctx).Amount.ToLegacyDec()
+	exchangeRequirement := k.marketKeeper.GetExchangeRequirement(ctx)
 
 	if exchangeAmount.LT(exchangeRequirement) {
 		params := k.GetParams(ctx)
-		percentMissing := 100 - (exchangeAmount.Quo(exchangeRequirement).Mul(sdk.NewInt(100)).Int64())
+		percentMissing := 100 - (exchangeAmount.Quo(exchangeRequirement).Mul(sdk.NewDec(100))).TruncateInt64()
 		if sdk.NewDec(percentMissing).GTE(params.ReserveAllowableOffset) {
-			refillAmount := sdk.MinInt(reserveAmount, exchangeRequirement.Sub(exchangeAmount))
-			err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, markettypes.ModuleName, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, refillAmount)))
+			refillAmount := sdk.MinDec(reserveAmount, exchangeRequirement.Sub(exchangeAmount))
+			err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, markettypes.ModuleName,
+				sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, refillAmount.TruncateInt())))
 			if err != nil {
 				panic(err)
 			}
-			return refillAmount.ToLegacyDec()
+			return refillAmount
 		}
 	}
 	return sdk.ZeroDec()
@@ -106,11 +107,11 @@ func (k Keeper) RefillExchangePool(ctx sdk.Context) sdk.Dec {
 func (k Keeper) UpdateReserveFee(ctx sdk.Context) sdk.Dec {
 	currentTaxRate := k.GetTaxRate(ctx)
 	newTaxRate := currentTaxRate
-	reserveAmount := k.GetReservePoolBalance(ctx).Amount
-	exchangeRequirement := k.marketKeeper.GetExchangeRequirement(ctx).Amount
+	reserveAmount := k.GetReservePoolBalance(ctx).Amount.ToLegacyDec()
+	exchangeRequirement := k.marketKeeper.GetExchangeRequirement(ctx)
 	if reserveAmount.LT(exchangeRequirement) {
 		params := k.GetParams(ctx)
-		percentMissing := 100 - (reserveAmount.Quo(exchangeRequirement).Mul(sdk.NewInt(100)).Int64())
+		percentMissing := 100 - (reserveAmount.Quo(exchangeRequirement).Mul(sdk.NewDec(100))).TruncateInt64()
 		if sdk.NewDec(percentMissing).GTE(params.ReserveAllowableOffset) {
 			// Determine the power of 2 that the percentMissing falls beneath
 			powerOf2 := uint64(math.Log2(float64(percentMissing)))

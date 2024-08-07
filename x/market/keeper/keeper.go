@@ -61,6 +61,13 @@ func (k Keeper) GetExchangePoolBalance(ctx sdk.Context) sdk.Coin {
 	return k.BankKeeper.GetBalance(ctx, account.GetAddress(), appparams.BaseCoinUnit)
 }
 
-func (k Keeper) GetExchangeRequirement(ctx sdk.Context) sdk.Coin {
-	panic("implement me")
+// GetExchangeRequirement calculates the total amount of Melody asset required to back the assets in the oracle module.
+func (k Keeper) GetExchangeRequirement(ctx sdk.Context) sdk.Dec {
+	total := sdk.ZeroDec()
+	k.OracleKeeper.IterateNoteExchangeRates(ctx, func(denom string, exchangeRate sdk.Dec) (stop bool) {
+		supply := k.BankKeeper.GetSupply(ctx, denom)
+		total = total.Add(supply.Amount.ToLegacyDec().Mul(exchangeRate))
+		return false
+	})
+	return total
 }

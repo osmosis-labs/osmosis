@@ -30,7 +30,7 @@ type MarketKeeper interface {
 	// GetExchangePoolBalance returns the balance of the exchange pool. In Melody.
 	GetExchangePoolBalance(ctx sdk.Context) sdk.Coin
 	// GetExchangeRequirement calculates the total amount of Melody asset required to back the assets in the exchange pool.
-	GetExchangeRequirement(ctx sdk.Context) sdk.Coin
+	GetExchangeRequirement(ctx sdk.Context) sdk.Dec
 	ComputeInternalSwap(ctx sdk.Context, offerCoin sdk.DecCoin, askDenom string) (sdk.DecCoin, error)
 }
 
