@@ -27,6 +27,11 @@ service Msg {
       returns (MsgSetRewardReceiverAddressResponse);
 }
 
+message MsgUnlockPeriodLock {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  uint64 ID = 2;
+}
+
 message MsgLockTokens {
   option (amino.name) = "osmosis/lockup/lock-tokens";
   option (cosmos.msg.v1.signer) = "owner";
@@ -44,6 +49,10 @@ message MsgLockTokens {
   ];
 }
 message MsgLockTokensResponse { uint64 ID = 1; }
+
+message MsgUnlockTokens {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+}
 
 message MsgBeginUnlockingAll {
   option (amino.name) = "osmosis/lockup/begin-unlock-tokens";
