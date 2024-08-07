@@ -2,13 +2,13 @@ package keeper
 
 import (
 	"fmt"
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
-	markettypes "github.com/osmosis-labs/osmosis/v23/x/market/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
+	markettypes "github.com/osmosis-labs/osmosis/v23/x/market/types"
+	"math"
 
 	"github.com/cometbft/cometbft/libs/log"
 
@@ -98,7 +98,7 @@ func (k Keeper) SetTaxRate(ctx sdk.Context, taxRate sdk.Dec) {
 	store.Set(types.TaxRateKey, b)
 }
 
-func (k Keeper) RefillExchangePool(ctx sdk.Context) {
+func (k Keeper) RefillExchangePool(ctx sdk.Context) sdk.Dec {
 	exchangeAmount := k.marketKeeper.GetExchangePoolBalance(ctx).Amount
 	reserveAmount := k.GetReservePoolBalance(ctx).Amount
 	exchangeRequirement := k.marketKeeper.GetExchangeRequirement(ctx).Amount
@@ -112,6 +112,31 @@ func (k Keeper) RefillExchangePool(ctx sdk.Context) {
 			if err != nil {
 				panic(err)
 			}
+			return refillAmount.ToLegacyDec()
 		}
 	}
+	return sdk.ZeroDec()
+}
+
+func (k Keeper) UpdateReserveFee(ctx sdk.Context) sdk.Dec {
+	currentTaxRate := k.GetTaxRate(ctx)
+	newTaxRate := currentTaxRate
+	reserveAmount := k.GetReservePoolBalance(ctx).Amount
+	exchangeRequirement := k.marketKeeper.GetExchangeRequirement(ctx).Amount
+	if reserveAmount.LT(exchangeRequirement) {
+		params := k.GetParams(ctx)
+		percentMissing := 100 - (reserveAmount.Quo(exchangeRequirement).Mul(sdk.NewInt(100)).Int64())
+		if sdk.NewDec(percentMissing).GTE(params.ReserveAllowableOffset) {
+			// Determine the power of 2 that the percentMissing falls beneath
+			powerOf2 := uint64(math.Log2(float64(percentMissing)))
+			newTaxRate = sdk.MinDec(params.MaxFeeMultiplier, currentTaxRate.Mul(sdk.NewDec(2).Power(powerOf2+1)))
+		} else {
+			// Double the base fee to fill the remaining difference
+			newTaxRate = currentTaxRate.Mul(sdk.NewDec(2))
+		}
+	} else {
+		newTaxRate = sdk.ZeroDec()
+	}
+	k.SetTaxRate(ctx, newTaxRate)
+	return newTaxRate
 }

@@ -2,12 +2,12 @@ package types
 
 // Treasury module event types
 const (
-	EventTypeTaxRateUpdate      = "tax_rate_update"
-	EventTypeRewardWeightUpdate = "reward_weight_update"
+	EventTypeTaxRateUpdate = "treasury_tax_rate_update"
 
-	AttributeKeyTaxRate      = "tax_rate"
-	AttributeKeyRewardWeight = "reward_weight"
-	AttributeKeyTaxCap       = "tax_cap"
+	AttributeKeyOldTaxRate               = "old_tax_rate"
+	AttributeKeyNewTaxRate               = "new_tax_rate"
+	AttributeKeyExchangePoolRefillAmount = "exchange_pool_refill_amount"
+	AttributeKeyRewardWeight             = "reward_weight"
 
 	AttributeValueCategory = ModuleName
 )

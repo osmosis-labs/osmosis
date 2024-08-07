@@ -20,18 +20,16 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 		return
 	}
 
-	// Check probation period
-	//if ctx.BlockHeight() < int64(3*appparams.BlocksPerMinute*k.WindowProbation(ctx)) {
-	//	return
-	//}
-
-	k.RefillExchangePool(ctx)
+	refillAmount := k.RefillExchangePool(ctx)
+	oldTaxRate := k.GetTaxRate(ctx)
+	newTaxRate := k.UpdateReserveFee(ctx)
 
 	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(types.EventTypePolicyUpdate,
-			sdk.NewAttribute(types.AttributeKeyTaxRate, taxRate.String()),
-			sdk.NewAttribute(types.AttributeKeyRewardWeight, rewardWeight.String()),
-			sdk.NewAttribute(types.AttributeKeyTaxCap, taxCap.String()),
+		sdk.NewEvent(types.EventTypeTaxRateUpdate,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(types.AttributeKeyExchangePoolRefillAmount, refillAmount.String()),
+			sdk.NewAttribute(types.AttributeKeyOldTaxRate, oldTaxRate.String()),
+			sdk.NewAttribute(types.AttributeKeyNewTaxRate, newTaxRate.String()),
 		),
 	)
 }
