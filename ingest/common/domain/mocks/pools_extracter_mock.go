@@ -18,7 +18,8 @@ type PoolsExtractorMock struct {
 	// If this is non-empty, ProcessAllBlockData(...) will panic with this message.
 	ProcessAllBlockDataPanicMsg string
 	// Block pools to return
-	BlockPools commondomain.BlockPools
+	BlockPools     commondomain.BlockPools
+	CreatedPoolIDs map[uint64]commondomain.PoolCreation
 
 	// CreatedPoolsError is the error to return when ExtractCreated is called.
 	CreatedPoolsError error
@@ -45,7 +46,7 @@ func (p *PoolsExtractorMock) ExtractChanged(ctx types.Context) (commondomain.Blo
 }
 
 // ExtractCreated implements commondomain.PoolExtractor.
-func (p *PoolsExtractorMock) ExtractCreated(ctx types.Context) (commondomain.BlockPools, error) {
+func (p *PoolsExtractorMock) ExtractCreated(ctx types.Context) (commondomain.BlockPools, map[uint64]commondomain.PoolCreation, error) {
 	p.IsProcessCreatedCalled = true
-	return p.BlockPools, p.CreatedPoolsError
+	return p.BlockPools, p.CreatedPoolIDs, p.CreatedPoolsError
 }

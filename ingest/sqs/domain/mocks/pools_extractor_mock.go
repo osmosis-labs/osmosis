@@ -40,6 +40,6 @@ func (p *PoolsExtractorMock) ExtractChanged(ctx types.Context) (commondomain.Blo
 }
 
 // ExtractCreated implements commondomain.PoolExtractor.
-func (p *PoolsExtractorMock) ExtractCreated(ctx types.Context) (commondomain.BlockPools, error) {
+func (p *PoolsExtractorMock) ExtractCreated(ctx types.Context) (commondomain.BlockPools, map[uint64]commondomain.PoolCreation, error) {
 	panic("unimplemented")
 }

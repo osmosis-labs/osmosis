@@ -1,6 +1,9 @@
 package pooltracker
 
 import (
+	"time"
+
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
@@ -16,7 +19,7 @@ type poolBlockUpdateTracker struct {
 	// Tracks the pool IDs that were created in the block.
 	// CONTRACT: the caller calls this method only once per pool creation as observed
 	// by poolmanagertypes.TypeEvtPoolCreated
-	createdPoolIDs map[uint64]struct{}
+	createdPoolIDs map[uint64]commondomain.PoolCreation
 }
 
 // NewMemory creates a new memory pool tracker.
@@ -56,8 +59,12 @@ func (pt *poolBlockUpdateTracker) TrackConcentratedPoolIDTickChange(poolID uint6
 }
 
 // TrackCreatedPoolID implements domain.BlockPoolUpdateTracker.
-func (pt *poolBlockUpdateTracker) TrackCreatedPoolID(poolID uint64) {
-	pt.createdPoolIDs[poolID] = struct{}{}
+func (pt *poolBlockUpdateTracker) TrackCreatedPoolID(poolID uint64, blockHeight int64, blockTime time.Time, txnHash string) {
+	pt.createdPoolIDs[poolID] = commondomain.PoolCreation{
+		BlockHeight: blockHeight,
+		BlockTime:   blockTime,
+		TxnHash:     txnHash,
+	}
 }
 
 // GetConcentratedPools implements PoolTracker.
@@ -86,7 +93,7 @@ func (pt *poolBlockUpdateTracker) GetCosmWasmPoolsAddressToIDMap() map[string]po
 }
 
 // GetCreatedPoolIDs implements domain.BlockPoolUpdateTracker.
-func (pt *poolBlockUpdateTracker) GetCreatedPoolIDs() map[uint64]struct{} {
+func (pt *poolBlockUpdateTracker) GetCreatedPoolIDs() map[uint64]commondomain.PoolCreation {
 	return pt.createdPoolIDs
 }
 
@@ -96,7 +103,7 @@ func (pt *poolBlockUpdateTracker) Reset() {
 	pt.cfmmPools = map[uint64]poolmanagertypes.PoolI{}
 	pt.cosmwasmPools = map[uint64]poolmanagertypes.PoolI{}
 	pt.concentratedPoolIDTickChange = map[uint64]struct{}{}
-	pt.createdPoolIDs = map[uint64]struct{}{}
+	pt.createdPoolIDs = map[uint64]commondomain.PoolCreation{}
 }
 
 // poolMapToSlice converts a map of pools to a slice of pools.

@@ -14,5 +14,5 @@ type PoolExtractor interface {
 	ExtractChanged(ctx sdk.Context) (BlockPools, error)
 	// ExtractrCreated extracts the pools that were created in the block height associated
 	// with the context.
-	ExtractCreated(ctx sdk.Context) (BlockPools, error)
+	ExtractCreated(ctx sdk.Context) (BlockPools, map[uint64]PoolCreation, error)
 }

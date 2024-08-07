@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -145,7 +146,7 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 
 			// Track the created pool ID
 			if eventType == poolmanagertypes.TypeEvtPoolCreated {
-				s.trackCreatedPoolID(event)
+				s.trackCreatedPoolID(event, sdkCtx.BlockHeight(), sdkCtx.BlockTime().UTC(), txHash)
 			}
 		}
 
@@ -294,7 +295,7 @@ func (s *indexerStreamingService) Stream(wg *sync.WaitGroup) error {
 // trackCreatedPoolID tracks the created pool ID.
 // If the pool ID is not found in the event attributes, it logs an error.
 // If the pool ID is found, it parses the pool ID to uint64 and tracks it.
-func (s *indexerStreamingService) trackCreatedPoolID(event abci.Event) {
+func (s *indexerStreamingService) trackCreatedPoolID(event abci.Event, blockHeight int64, blockTime time.Time, txHash string) {
 	if len(event.Attributes) == 0 {
 		s.logger.Error("Event attributes are empty for pool created event")
 		return
@@ -309,5 +310,5 @@ func (s *indexerStreamingService) trackCreatedPoolID(event abci.Event) {
 		return
 	}
 
-	s.poolTracker.TrackCreatedPoolID(createdPoolID)
+	s.poolTracker.TrackCreatedPoolID(createdPoolID, blockHeight, blockTime, txHash)
 }

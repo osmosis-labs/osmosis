@@ -101,10 +101,10 @@ func (p *poolExtractor) ExtractChanged(ctx sdk.Context) (commondomain.BlockPools
 }
 
 // ExtractCreated implements commondomain.PoolExtractor.
-func (p *poolExtractor) ExtractCreated(ctx sdk.Context) (commondomain.BlockPools, error) {
+func (p *poolExtractor) ExtractCreated(ctx sdk.Context) (commondomain.BlockPools, map[uint64]commondomain.PoolCreation, error) {
 	changedPools, err := p.ExtractChanged(ctx)
 	if err != nil {
-		return commondomain.BlockPools{}, err
+		return commondomain.BlockPools{}, nil, err
 	}
 
 	createdPoolIDs := p.poolTracker.GetCreatedPoolIDs()
@@ -141,5 +141,5 @@ func (p *poolExtractor) ExtractCreated(ctx sdk.Context) (commondomain.BlockPools
 		}
 	}
 
-	return result, nil
+	return result, createdPoolIDs, nil
 }

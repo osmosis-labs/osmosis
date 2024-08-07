@@ -33,7 +33,7 @@ func (f *blockUpdatesIndexerBlockProcessStrategy) ProcessBlock(ctx types.Context
 // publishCreatedPools publishes the pools that were created in the block.
 func (f *blockUpdatesIndexerBlockProcessStrategy) publishCreatedPools(ctx types.Context) error {
 	// Extract the pools that were changed in the block
-	blockPools, err := f.poolExtractor.ExtractCreated(ctx)
+	blockPools, createdPoolIDS, err := f.poolExtractor.ExtractCreated(ctx)
 	if err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func (f *blockUpdatesIndexerBlockProcessStrategy) publishCreatedPools(ctx types.
 	pools := blockPools.GetAll()
 
 	// Publish pool pairs
-	if err := f.poolPairPublisher.PublishPoolPairs(ctx, pools); err != nil {
+	if err := f.poolPairPublisher.PublishPoolPairs(ctx, pools, createdPoolIDS); err != nil {
 		return err
 	}
 
