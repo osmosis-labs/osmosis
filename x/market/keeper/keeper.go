@@ -37,11 +37,6 @@ func NewKeeper(
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
-	// ensure reserve market module account is set
-	if addr := accountKeeper.GetModuleAddress(types.ReserveModuleName); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.ReserveModuleName))
-	}
-
 	// set KeyTable if it has not already been set
 	if !paramstore.HasKeyTable() {
 		paramstore = paramstore.WithKeyTable(types.ParamKeyTable())
@@ -64,4 +59,8 @@ func (k Keeper) GetExchangePoolBalance(ctx sdk.Context) sdk.Coin {
 	}
 
 	return k.BankKeeper.GetBalance(ctx, account.GetAddress(), appparams.BaseCoinUnit)
+}
+
+func (k Keeper) GetExchangeRequirement(ctx sdk.Context) sdk.Coin {
+	panic("implement me")
 }

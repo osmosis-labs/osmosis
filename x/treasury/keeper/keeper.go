@@ -13,8 +13,6 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/osmosis-labs/osmosis/v23/x/treasury/types"
-
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 )
 
 // Keeper of the treasury store
@@ -26,12 +24,7 @@ type Keeper struct {
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	marketKeeper  types.MarketKeeper
-	stakingKeeper types.StakingKeeper
-	distrKeeper   types.DistributionKeeper
 	oracleKeeper  types.OracleKeeper
-	wasmKeeper    *wasmkeeper.Keeper
-
-	distributionModuleName string
 }
 
 // NewKeeper creates a new treasury Keeper instance
@@ -43,10 +36,6 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	marketKeeper types.MarketKeeper,
 	oracleKeeper types.OracleKeeper,
-	stakingKeeper types.StakingKeeper,
-	distrKeeper types.DistributionKeeper,
-	wasmKeeper *wasmkeeper.Keeper,
-	distributionModuleName string,
 ) Keeper {
 	// ensure treasury module account is set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
@@ -59,17 +48,13 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		cdc:                    cdc,
-		storeKey:               storeKey,
-		paramSpace:             paramSpace,
-		accountKeeper:          accountKeeper,
-		bankKeeper:             bankKeeper,
-		marketKeeper:           marketKeeper,
-		oracleKeeper:           oracleKeeper,
-		stakingKeeper:          stakingKeeper,
-		distrKeeper:            distrKeeper,
-		wasmKeeper:             wasmKeeper,
-		distributionModuleName: distributionModuleName,
+		cdc:           cdc,
+		storeKey:      storeKey,
+		paramSpace:    paramSpace,
+		accountKeeper: accountKeeper,
+		bankKeeper:    bankKeeper,
+		marketKeeper:  marketKeeper,
+		oracleKeeper:  oracleKeeper,
 	}
 }
 

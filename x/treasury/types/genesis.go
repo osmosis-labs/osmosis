@@ -27,6 +27,9 @@ func DefaultGenesisState() *GenesisState {
 // ValidateGenesis validates the provided oracle genesis state to ensure the
 // expected invariants holds. (i.e. params in correct bounds, no duplicate validators)
 func ValidateGenesis(data *GenesisState) error {
+	if data.TaxRate.LT(sdk.ZeroDec()) {
+		return fmt.Errorf("tax_rate must be positive, is %s", data.TaxRate)
+	}
 	if data.TaxRate.GT(data.Params.MaxFeeMultiplier) {
 		return fmt.Errorf("tax_rate must less than RateMax(%s)", data.Params.MaxFeeMultiplier)
 	}

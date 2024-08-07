@@ -16,35 +16,13 @@ func TestGenesisValidation(t *testing.T) {
 	genState.TaxRate = sdk.NewDec(-1)
 	require.Error(t, ValidateGenesis(genState))
 
-	// Valid
-	genState.TaxRate = sdk.NewDecWithPrec(1, 2)
-	require.NoError(t, ValidateGenesis(genState))
-
-	// Error - reward_weight range error
-	genState.RewardWeight = sdk.NewDec(-1)
+	// Error - tax_rate range error
+	genState.TaxRate = genState.Params.MaxFeeMultiplier.Add(sdk.NewDecWithPrec(1, 1))
 	require.Error(t, ValidateGenesis(genState))
 
 	// Valid
-	genState.RewardWeight = sdk.NewDecWithPrec(5, 2)
+	genState.TaxRate = sdk.NewDecWithPrec(1, 2)
 	require.NoError(t, ValidateGenesis(genState))
-
-	dummyDec := sdk.NewDec(10)
-	dummyInt := sdk.NewInt(10)
-
-	genState.EpochStates = []EpochState{
-		{
-			Epoch:             0,
-			TaxReward:         dummyDec,
-			SeigniorageReward: dummyDec,
-			TotalStakedLuna:   dummyInt,
-		},
-		{
-			Epoch:             1,
-			TaxReward:         dummyDec,
-			SeigniorageReward: dummyDec,
-			TotalStakedLuna:   dummyInt,
-		},
-	}
 
 	// Valid
 	require.NoError(t, ValidateGenesis(genState))

@@ -50,6 +50,5 @@ type OracleKeeper interface {
 	Whitelist(ctx sdk.Context) (res oracletypes.DenomList)
 
 	// only used for test purpose
-	SetLunaExchangeRate(ctx sdk.Context, denom string, exchangeRate sdk.Dec)
 	SetWhitelist(ctx sdk.Context, whitelist oracletypes.DenomList)
 }

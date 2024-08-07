@@ -9,5 +9,4 @@ var NewQueryClient = types.NewQueryClient
 
 type (
 	QueryTaxRateRequest = types.QueryTaxRateRequest
-	QueryTaxCapRequest  = types.QueryTaxCapRequest
 )
