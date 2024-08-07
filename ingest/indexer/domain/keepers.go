@@ -11,6 +11,7 @@ import (
 type PoolManagerKeeperI interface {
 	GetTradingPairTakerFee(ctx sdk.Context, denom0, denom1 string) (osmomath.Dec, error)
 	GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error)
+	GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error)
 }
 
 type Keepers struct {
