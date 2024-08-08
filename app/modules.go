@@ -221,7 +221,7 @@ func orderBeginBlockers(allModuleNames []string) []string {
 	// Epochs must come before staking, because txfees epoch hook sends fees to the auth "fee collector"
 	// module account, which is then distributed to stakers. If staking comes before epochs, then the
 	// funds will not be distributed to stakers as expected.
-	ord.FirstElements(upgradetypes.ModuleName, epochstypes.ModuleName, capabilitytypes.ModuleName)
+	ord.FirstElements(epochstypes.ModuleName, capabilitytypes.ModuleName)
 
 	// Staking ordering
 	// TODO: Perhaps this can be relaxed, left to future work to analyze.

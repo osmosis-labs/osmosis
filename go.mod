@@ -272,8 +272,6 @@ replace (
 	// Needs to be replaced due to iavlFastNodeModuleWhitelist feature
 	cosmossdk.io/store => github.com/osmosis-labs/cosmos-sdk/store v0.1.0-alpha.1.0.20240509221435-b8feb2ffb728
 
-	// UNFORKING v2 TODO: No longer use wasmd fork, added logic to app.toml override to use 1000 instead of default 100 cache size, which was the reason for having the fork in the first place.
-
 	// Using branch osmo/v0.38.x
 	// https://github.com/osmosis-labs/cometbft/releases/tag/v0.37.4-v25-osmo-2
 	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.0.0-20240510005818-6ce422c6f3d3
