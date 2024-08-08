@@ -17,7 +17,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
@@ -319,27 +318,6 @@ func (k Keeper) GetGaugeFromIDs(ctx sdk.Context, gaugeIDs []uint64) ([]types.Gau
 		gauges = append(gauges, *gauge)
 	}
 	return gauges, nil
-}
-
-// GetInternalGauges returns internal gauges
-func (k Keeper) GetInternalGauges(ctx sdk.Context) []types.Gauge {
-	return k.getGaugesFromIteratorAndFilter(ctx, k.GaugesIterator(ctx), func(g *types.Gauge) bool {
-		return g.IsInternalGauge([]string{gammtypes.GAMMTokenPrefix})
-	})
-}
-
-// GetExternalGauges returns external gauges
-func (k Keeper) GetExternalGauges(ctx sdk.Context) []types.Gauge {
-	return k.getGaugesFromIteratorAndFilter(ctx, k.GaugesIterator(ctx), func(g *types.Gauge) bool {
-		return g.IsExternalGauge()
-	})
-}
-
-// GetGaugesFromPoolID return gauges associated to poolID
-func (k Keeper) GetGaugesFromPoolID(ctx sdk.Context, poolID uint64) []types.Gauge {
-	return k.getGaugesFromIteratorAndFilter(ctx, k.GaugesIterator(ctx), func(g *types.Gauge) bool {
-		return g.IsLinkedToPool(poolID)
-	})
 }
 
 // GetGauges returns upcoming, active, and finished gauges.
