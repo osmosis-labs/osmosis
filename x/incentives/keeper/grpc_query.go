@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
 )
@@ -296,7 +297,7 @@ func (q Querier) InternalGauges(goCtx context.Context, req *types.QueryInternalG
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	pageRes, gauges, err := q.getGaugesWithFilter(ctx, types.KeyPrefixGauges, req.GetPagination(), func(gauge *types.Gauge) bool {
-		return gauge.IsInternalGauge()
+		return gauge.IsInternalGauge([]string{gammtypes.GAMMTokenPrefix})
 	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

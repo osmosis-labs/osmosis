@@ -140,8 +140,8 @@ func (s *KeeperTestSuite) TestGRPCSpecificGauges() {
 	s.Run("InternalGauges", func() {
 		res, err := s.querier.InternalGauges(s.Ctx, &types.QueryInternalGaugesRequest{})
 		s.Require().NoError(err)
-		s.Require().Len(res.GetGauges(), 2)
-		missingGauges := checkContainsGauges(res.GetGauges(), []uint64{4, 7})
+		s.Require().Len(res.GetGauges(), 5)
+		missingGauges := checkContainsGauges(res.GetGauges(), []uint64{1, 2, 3, 4, 7})
 		s.Require().Empty(missingGauges, "missing gauges %v", missingGauges)
 	})
 	s.Run("ByPoolID", func() {

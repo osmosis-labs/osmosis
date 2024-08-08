@@ -135,9 +135,12 @@ func (s *KeeperTestSuite) TestGetGauges() {
 	})
 	s.Run("InternalGauges", func() {
 		internalGauges := s.App.IncentivesKeeper.GetInternalGauges(s.Ctx)
-		s.Require().Len(internalGauges, 2)
+		s.Require().Len(internalGauges, 5)
 		s.Require().Equal(uint64(7), internalGauges[0].Id)
-		s.Require().Equal(uint64(4), internalGauges[1].Id) // generated when initializing concentrated pool
+		s.Require().Equal(uint64(1), internalGauges[1].Id) // generated when initializing concentrated pool
+		s.Require().Equal(uint64(2), internalGauges[2].Id) // generated when initializing concentrated pool
+		s.Require().Equal(uint64(3), internalGauges[3].Id) // generated when initializing concentrated pool
+		s.Require().Equal(uint64(4), internalGauges[4].Id) // generated when initializing concentrated pool
 	})
 	s.Run("GaugesFromPoolID", func() {
 		gauges := s.App.IncentivesKeeper.GetGaugesFromPoolID(s.Ctx, concentratedPoolId)

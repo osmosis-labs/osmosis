@@ -17,6 +17,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
@@ -323,7 +324,7 @@ func (k Keeper) GetGaugeFromIDs(ctx sdk.Context, gaugeIDs []uint64) ([]types.Gau
 // GetInternalGauges returns internal gauges
 func (k Keeper) GetInternalGauges(ctx sdk.Context) []types.Gauge {
 	return k.getGaugesFromIteratorAndFilter(ctx, k.GaugesIterator(ctx), func(g *types.Gauge) bool {
-		return g.IsInternalGauge()
+		return g.IsInternalGauge([]string{gammtypes.GAMMTokenPrefix})
 	})
 }
 
