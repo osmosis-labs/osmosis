@@ -281,7 +281,7 @@ func (s *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 			superDelegations:      []superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			superUnbondingLockIds: []uint64{1, 2},
 			slashedValIndexes:     []int64{0},
-			expSlashedLockIds:     []uint64{}, // UNFORKING v2 TODO: We no longer slash unbonded validators so we no longer expect this to be slashed, verify that this is correct.
+			expSlashedLockIds:     []uint64{},
 			expUnslashedLockIds:   []uint64{1, 2},
 		},
 	}

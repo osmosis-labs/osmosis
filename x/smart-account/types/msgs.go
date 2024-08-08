@@ -6,6 +6,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	TypeMsgAddAuthenticator    = "add_authenticator"
+	TypeMsgRemoveAuthenticator = "remove_authenticator"
+)
+
 // Helper functions
 func validateSender(sender string) error {
 	_, err := sdk.AccAddressFromBech32(sender)
@@ -23,7 +28,7 @@ func getSender(sender string) []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// Msgs
+// MsgAddAuthenticator
 var _ sdk.Msg = &MsgAddAuthenticator{}
 
 func (msg *MsgAddAuthenticator) ValidateBasic() error {
@@ -34,16 +39,33 @@ func (msg *MsgAddAuthenticator) GetSigners() []sdk.AccAddress {
 	return getSender(msg.Sender)
 }
 
+func (msg MsgAddAuthenticator) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+func (msg MsgAddAuthenticator) Route() string { return RouterKey }
+
+func (msg MsgAddAuthenticator) Type() string { return TypeMsgAddAuthenticator }
+
+// MsgRemoveAuthenticator
 var _ sdk.Msg = &MsgRemoveAuthenticator{}
 
 func (msg *MsgRemoveAuthenticator) ValidateBasic() error {
 	return validateSender(msg.Sender)
 }
 
+func (msg MsgRemoveAuthenticator) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgRemoveAuthenticator) Route() string { return RouterKey }
+
+func (msg MsgRemoveAuthenticator) Type() string { return TypeMsgRemoveAuthenticator }
+
 func (msg *MsgRemoveAuthenticator) GetSigners() []sdk.AccAddress {
 	return getSender(msg.Sender)
 }
 
+// MsgSetActiveState
 var _ sdk.Msg = &MsgSetActiveState{}
 
 func (msg *MsgSetActiveState) ValidateBasic() error {

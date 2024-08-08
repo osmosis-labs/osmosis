@@ -55,6 +55,11 @@ func CreateUpgradeHandler(
 			keepers.PoolManagerKeeper.SetDenomPairTakerFee(ctx, tradingPairTakerFee.TokenOutDenom, tradingPairTakerFee.TokenInDenom, tradingPairTakerFee.TakerFee)
 		}
 
+		// Set the authenticator params in the store
+		authenticatorParams := keepers.SmartAccountKeeper.GetParams(ctx)
+		authenticatorParams.MaximumUnauthenticatedGas = MaximumUnauthenticatedGas
+		keepers.SmartAccountKeeper.SetParams(ctx, authenticatorParams)
+
 		return migrations, nil
 	}
 }

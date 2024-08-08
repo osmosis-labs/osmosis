@@ -73,3 +73,12 @@ func (pi *poolTransformer) InitCosmWasmPoolModel(
 func TickIndexById(ticks []sqscosmwasmpool.OrderbookTick, tickId int64) int {
 	return tickIndexById(ticks, tickId)
 }
+
+func AlloyTransmuterListLimiters(
+	ctx sdk.Context,
+	wasmKeeper commondomain.WasmKeeper,
+	poolId uint64,
+	contractAddress sdk.AccAddress,
+) (sqscosmwasmpool.AlloyedRateLimiter, error) {
+	return alloyTransmuterListLimiters(ctx, wasmKeeper, poolId, contractAddress)
+}

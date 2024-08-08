@@ -61,8 +61,8 @@ func BuildAddAuthenticatorMsg(
 	}
 
 	return &types.MsgAddAuthenticator{
-		Type:   authenticatorType,
-		Data:   pubKeyBytes,
-		Sender: clientCtx.GetFromAddress().String(),
+		AuthenticatorType: authenticatorType,
+		Data:              pubKeyBytes,
+		Sender:            clientCtx.GetFromAddress().String(),
 	}, nil
 }

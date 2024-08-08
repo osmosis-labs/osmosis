@@ -44,13 +44,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
-* [#8169](https://github.com/osmosis-labs/osmosis/pull/8169) [#8250](https://github.com/osmosis-labs/osmosis/pull/8250) [#8276](https://github.com/osmosis-labs/osmosis/pull/8276) [#8320](https://github.com/osmosis-labs/osmosis/pull/8320) Support non-pool assets in superfluid staking
 * [#8274](https://github.com/osmosis-labs/osmosis/pull/8274) SDK v50 and Comet v0.38 upgrade
 * [#8375](https://github.com/osmosis-labs/osmosis/pull/8375) Enforce sub-authenticator to be greater than 1
 * [#8509](https://github.com/osmosis-labs/osmosis/pull/8509) Change LiquidityNetInDirection return type to sdk math
 * [#8535](https://github.com/osmosis-labs/osmosis/pull/8535) Prevent Setting Invalid Before Send Hook
 * [#8310](https://github.com/osmosis-labs/osmosis/pull/8310) Taker fee share
 * [#8494](https://github.com/osmosis-labs/osmosis/pull/8494) Add additional events in x/lockup, x/superfluid, x/concentratedliquidity
+* [#8581](https://github.com/osmosis-labs/osmosis/pull/8581) feat: add ledger signing to smart account module 
+* [#8573](https://github.com/osmosis-labs/osmosis/pull/8573) fix: increase unauthenticated gas to fix fee token issue
 
 ### Config
 
@@ -60,6 +61,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#8494](https://github.com/osmosis-labs/osmosis/pull/8494) Add additional events in x/lockup, x/superfluid, x/concentratedliquidity
 * [#8543](https://github.com/osmosis-labs/osmosis/pull/8543) Add OTEL wiring and new configs in app.toml
+* [#8566](https://github.com/osmosis-labs/osmosis/pull/8566) Minor speedup to CalcExitCFMM shares
+
 
 ## v25.2.1
 * [#8546](https://github.com/osmosis-labs/osmosis/pull/8546) feat: reduce commit timeout to 500ms to enable faster blocks, and timeout propose to 1.8s

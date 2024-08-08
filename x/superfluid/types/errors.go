@@ -23,7 +23,6 @@ var (
 	ErrBondingLockupNotSupported       = errorsmod.Register(ModuleName, 9, "bonded superfluid stake is not allowed to have underlying lock unlocked")
 
 	ErrNonSuperfluidAsset = errorsmod.Register(ModuleName, 10, "provided asset is not supported for superfluid staking")
-	ErrUnauthorizedGov    = errorsmod.Register(ModuleName, 11, "only the governance module is allowed to execute this message")
 
 	ErrPoolNotWhitelisted   = errorsmod.Register(ModuleName, 41, "pool not whitelisted to unpool")
 	ErrLockUnpoolNotAllowed = errorsmod.Register(ModuleName, 42, "lock not eligible for unpooling")
