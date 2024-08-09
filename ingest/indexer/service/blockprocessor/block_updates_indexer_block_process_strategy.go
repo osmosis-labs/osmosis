@@ -23,17 +23,17 @@ func (f *blockUpdatesIndexerBlockProcessStrategy) IsFullBlockProcessor() bool {
 // ProcessBlock implements commondomain.BlockProcessStrategy.
 func (f *blockUpdatesIndexerBlockProcessStrategy) ProcessBlock(ctx types.Context) error {
 	// Publish supplies
-	if err := f.publishChangedPools(ctx); err != nil {
+	if err := f.publishCreatedPools(ctx); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// publishChangedPools publishes the pools that were changed in the block.
-func (f *blockUpdatesIndexerBlockProcessStrategy) publishChangedPools(ctx types.Context) error {
+// publishCreatedPools publishes the pools that were created in the block.
+func (f *blockUpdatesIndexerBlockProcessStrategy) publishCreatedPools(ctx types.Context) error {
 	// Extract the pools that were changed in the block
-	blockPools, err := f.poolExtractor.ExtractChanged(ctx)
+	blockPools, createdPoolIDS, err := f.poolExtractor.ExtractCreated(ctx)
 	if err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func (f *blockUpdatesIndexerBlockProcessStrategy) publishChangedPools(ctx types.
 	pools := blockPools.GetAll()
 
 	// Publish pool pairs
-	if err := f.poolPairPublisher.PublishPoolPairs(ctx, pools); err != nil {
+	if err := f.poolPairPublisher.PublishPoolPairs(ctx, pools, createdPoolIDS); err != nil {
 		return err
 	}
 

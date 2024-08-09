@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
@@ -27,5 +28,5 @@ type Publisher interface {
 // PairPublisher is an interface for publishing pair data.
 type PairPublisher interface {
 	// PublishPoolPairs publishes the given pools as pairs.
-	PublishPoolPairs(ctx sdk.Context, pools []poolmanagertypes.PoolI) error
+	PublishPoolPairs(ctx sdk.Context, pools []poolmanagertypes.PoolI, createdPoolIDs map[uint64]commondomain.PoolCreation) error
 }

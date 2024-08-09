@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -141,6 +142,11 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 			eventType := event.Type
 			if eventType == gammtypes.TypeEvtTokenSwapped || eventType == gammtypes.TypeEvtPoolJoined || eventType == gammtypes.TypeEvtPoolExited || eventType == concentratedliquiditytypes.TypeEvtCreatePosition || eventType == concentratedliquiditytypes.TypeEvtWithdrawPosition {
 				includedEvents = append(includedEvents, domain.EventWrapper{Index: i, Event: event})
+			}
+
+			// Track the created pool ID
+			if eventType == poolmanagertypes.TypeEvtPoolCreated {
+				s.trackCreatedPoolID(event, sdkCtx.BlockHeight(), sdkCtx.BlockTime().UTC(), txHash)
 			}
 		}
 
@@ -284,4 +290,25 @@ func (s *indexerStreamingService) ListenCommit(ctx context.Context, res abci.Res
 // Stream implements baseapp.StreamingService.
 func (s *indexerStreamingService) Stream(wg *sync.WaitGroup) error {
 	return nil
+}
+
+// trackCreatedPoolID tracks the created pool ID.
+// If the pool ID is not found in the event attributes, it logs an error.
+// If the pool ID is found, it parses the pool ID to uint64 and tracks it.
+func (s *indexerStreamingService) trackCreatedPoolID(event abci.Event, blockHeight int64, blockTime time.Time, txHash string) {
+	if len(event.Attributes) == 0 {
+		s.logger.Error("Event attributes are empty for pool created event")
+		return
+	}
+
+	poolIDAttribute := event.Attributes[0]
+
+	// Parse to uint64
+	createdPoolID, err := strconv.ParseUint(poolIDAttribute.Value, 10, 64)
+	if err != nil {
+		s.logger.Error("Error parsing pool ID from event attributes", err)
+		return
+	}
+
+	s.poolTracker.TrackCreatedPoolID(createdPoolID, blockHeight, blockTime, txHash)
 }

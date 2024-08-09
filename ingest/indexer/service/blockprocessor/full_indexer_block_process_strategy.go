@@ -105,7 +105,7 @@ func (f *fullIndexerBlockProcessStrategy) processPools(ctx sdk.Context) error {
 	pools := blockPools.GetAll()
 
 	// Process pool pairs
-	if err := f.poolPairPublisher.PublishPoolPairs(ctx, pools); err != nil {
+	if err := f.poolPairPublisher.PublishPoolPairs(ctx, pools, nil); err != nil {
 		return err
 	}
 

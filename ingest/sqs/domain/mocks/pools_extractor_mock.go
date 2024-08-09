@@ -38,3 +38,8 @@ func (p *PoolsExtractorMock) ExtractChanged(ctx types.Context) (commondomain.Blo
 	p.IsProcessAllChangedDataCalled = true
 	return p.BlockPools, p.ChangedBlockDataError
 }
+
+// ExtractCreated implements commondomain.PoolExtractor.
+func (p *PoolsExtractorMock) ExtractCreated(ctx types.Context) (commondomain.BlockPools, map[uint64]commondomain.PoolCreation, error) {
+	panic("unimplemented")
+}
