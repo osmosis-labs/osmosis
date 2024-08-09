@@ -150,7 +150,7 @@ func (s *WriteListenerTestSuite) TestWriteListener_Bank() {
 			}
 
 			// Initialize token supply publisher mock
-			tokenSupplyPublisherMock := &mocks.TokenSupplyPublisherMock{
+			tokenSupplyPublisherMock := &mocks.PublisherMock{
 				ForceTokenSupplyError:       tc.forceTokenSupplyError,
 				ForceTokenSupplyOffsetError: tc.ForceTokenSupplyOffsetError,
 			}

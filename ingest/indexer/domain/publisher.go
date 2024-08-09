@@ -20,7 +20,6 @@ type Publisher interface {
 
 	PublishBlock(ctx context.Context, block Block) error
 	PublishTransaction(ctx context.Context, txn Transaction) error
-	PublishPool(ctx context.Context, pool Pool) error
 	PublishPair(ctx context.Context, pair Pair) error
 }
 

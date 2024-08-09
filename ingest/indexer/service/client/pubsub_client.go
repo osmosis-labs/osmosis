@@ -82,16 +82,6 @@ func (p *PubSubClient) PublishTransaction(ctx context.Context, txn indexerdomain
 	return p.publish(ctx, txn, p.transactionTopicId)
 }
 
-// PublishPool implements PubSubClient.PublishPool
-func (p *PubSubClient) PublishPool(ctx context.Context, pool indexerdomain.Pool) error {
-	// Check if project id and topic id are set
-	if p.projectId == "" || p.poolTopicId == "" {
-		return errors.New("project id and pool topic id must be set")
-	}
-	pool.IngestedAt = time.Now().UTC()
-	return p.publish(ctx, pool, p.poolTopicId)
-}
-
 // PublishTokenSupply implements domain.PubSubClient.
 func (p *PubSubClient) PublishTokenSupply(ctx context.Context, tokenSupply indexerdomain.TokenSupply) error {
 	// Check if project id and topic id are set
