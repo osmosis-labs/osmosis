@@ -1,0 +1,52 @@
+syntax = "proto3";
+package osmosis.bridge.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "osmosis/bridge/v1beta1/bridge.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v24/x/bridge/types";
+
+// Query provides defines the gRPC querier service.
+service Query {
+  // Params returns x/bridge module params.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/osmosis/bridge/v1beta1/params";
+  }
+
+  // LastTransferHeight returns the height of the external chain at which
+  // the last transfer with the given asset was successfully completed
+  // (finalized).
+  rpc LastTransferHeight(LastTransferHeightRequest)
+      returns (LastTransferHeightResponse) {
+    option (google.api.http).get =
+        "/osmosis/bridge/v1beta1/last-transfer-height";
+  }
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  Params params = 1 [
+    (gogoproto.moretags) = "yaml:\"params\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// LastTransferHeightRequest is the request type for the
+// Query/LastTransferHeight RPC method.
+message LastTransferHeightRequest {
+  AssetID asset_id = 1 [
+    (gogoproto.moretags) = "yaml:\"asset_id\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// LastTransferHeightResponse is the response type for the
+// Query/LastTransferHeight RPC method.
+message LastTransferHeightResponse {
+  uint64 last_transfer_height = 1
+      [ (gogoproto.moretags) = "yaml:\"last_transfer_height\"" ];
+}
