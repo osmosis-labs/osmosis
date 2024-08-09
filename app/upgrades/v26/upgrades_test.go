@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/appmodule"
@@ -49,6 +50,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	s.PrepareTradingPairTakerFeeTest()
 	s.PrepareIncreaseUnauthenticatedGasTest()
+	s.PrepareChangeBlockParamsTest()
+	s.PrepareCostPerByteTest()
 
 	// Run the upgrade
 	dummyUpgrade(s)
@@ -59,6 +62,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	s.ExecuteTradingPairTakerFeeTest()
 	s.ExecuteIncreaseUnauthenticatedGasTest()
+	s.ExecuteChangeBlockParamsTest()
+	s.ExecuteCostPerByteTest()
 }
 
 func dummyUpgrade(s *UpgradeTestSuite) {
@@ -114,4 +119,29 @@ func (s *UpgradeTestSuite) PrepareIncreaseUnauthenticatedGasTest() {
 func (s *UpgradeTestSuite) ExecuteIncreaseUnauthenticatedGasTest() {
 	authenticatorParams := s.App.SmartAccountKeeper.GetParams(s.Ctx)
 	s.Require().Equal(authenticatorParams.MaximumUnauthenticatedGas, v26.MaximumUnauthenticatedGas)
+}
+
+func (s *UpgradeTestSuite) PrepareChangeBlockParamsTest() {
+	defaultConsensusParams := cmttypes.DefaultConsensusParams().ToProto()
+	defaultConsensusParams.Block.MaxBytes = 1
+	defaultConsensusParams.Block.MaxGas = 1
+	s.App.ConsensusParamsKeeper.ParamsStore.Set(s.Ctx, defaultConsensusParams)
+}
+
+func (s *UpgradeTestSuite) ExecuteChangeBlockParamsTest() {
+	consParams, err := s.App.ConsensusParamsKeeper.ParamsStore.Get(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(consParams.Block.MaxBytes, v26.BlockMaxBytes)
+	s.Require().Equal(consParams.Block.MaxGas, v26.BlockMaxGas)
+}
+
+func (s *UpgradeTestSuite) PrepareCostPerByteTest() {
+	accountParams := s.App.AccountKeeper.GetParams(s.Ctx)
+	accountParams.TxSizeCostPerByte = 0
+	s.App.AccountKeeper.Params.Set(s.Ctx, accountParams)
+}
+
+func (s *UpgradeTestSuite) ExecuteCostPerByteTest() {
+	accountParams := s.App.AccountKeeper.GetParams(s.Ctx)
+	s.Require().Equal(accountParams.TxSizeCostPerByte, v26.CostPerByte)
 }

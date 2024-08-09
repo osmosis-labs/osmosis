@@ -13,6 +13,15 @@ const (
 
 	// MaximumUnauthenticatedGas for smart account transactions to verify the fee payer
 	MaximumUnauthenticatedGas = uint64(250_000)
+
+	// BlockMaxBytes is the max bytes for a block, 2mb
+	BlockMaxBytes = int64(5000000)
+
+	// BlockMaxGas is the max gas allowed in a block
+	BlockMaxGas = int64(300000000)
+
+	// CostPerByte is the gas cost per byte
+	CostPerByte = uint64(30)
 )
 
 var Upgrade = upgrades.Upgrade{

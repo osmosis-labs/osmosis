@@ -6,6 +6,7 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
+	cmttypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v25/app/keepers"
@@ -59,6 +60,23 @@ func CreateUpgradeHandler(
 		authenticatorParams := keepers.SmartAccountKeeper.GetParams(ctx)
 		authenticatorParams.MaximumUnauthenticatedGas = MaximumUnauthenticatedGas
 		keepers.SmartAccountKeeper.SetParams(ctx, authenticatorParams)
+
+		// Set the next block limits
+		defaultConsensusParams := cmttypes.DefaultConsensusParams().ToProto()
+		defaultConsensusParams.Block.MaxBytes = BlockMaxBytes // previously 5000000
+		defaultConsensusParams.Block.MaxGas = BlockMaxGas     // unchanged
+		err = keepers.ConsensusParamsKeeper.ParamsStore.Set(ctx, defaultConsensusParams)
+		if err != nil {
+			return nil, err
+		}
+
+		// Increase the tx size cost per byte to 30 to reduce the exploitability of bandwidth amplification problems.
+		accountParams := keepers.AccountKeeper.GetParams(ctx)
+		accountParams.TxSizeCostPerByte = CostPerByte // increase from 20 to 30
+		err = keepers.AccountKeeper.Params.Set(ctx, accountParams)
+		if err != nil {
+			return nil, err
+		}
 
 		return migrations, nil
 	}
