@@ -34,6 +34,9 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdAllGroupsWithGauge)
 	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdGroupByGroupGaugeID)
 	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdCurrentWeightByGroupGaugeID)
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdGaugesByPoolID)
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdExternalGauges)
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdInternalGauges)
 	cmd.AddCommand(
 		osmocli.GetParams[*types.ParamsRequest](
 			types.ModuleName, types.NewQueryClient),
@@ -264,4 +267,31 @@ func GetCmdGroupByGroupGaugeID() (*osmocli.QueryDescriptor, *types.QueryGroupByG
 		Short: "Query a group it's respective group gauge ID",
 		Long:  `{{.Short}}`,
 	}, &types.QueryGroupByGroupGaugeIDRequest{}
+}
+
+// GetCmdGaugesByPoolID returns a gauges by PoolID.
+func GetCmdGaugesByPoolID() (*osmocli.QueryDescriptor, *types.QueryGaugesByPoolIDRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "gauges-by-pool-id",
+		Short: "Query gauges by pool id.",
+		Long:  `{{.Short}}`,
+	}, &types.QueryGaugesByPoolIDRequest{}
+}
+
+// GetCmdExternalGauges returns all external gauges.
+func GetCmdExternalGauges() (*osmocli.QueryDescriptor, *types.QueryExternalGaugesRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "gauges-external",
+		Short: "Query external gauges.",
+		Long:  `{{.Short}}`,
+	}, &types.QueryExternalGaugesRequest{}
+}
+
+// GetCmdInternalGauges returns all internal gauges.
+func GetCmdInternalGauges() (*osmocli.QueryDescriptor, *types.QueryInternalGaugesRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "gauges-internal",
+		Short: "Query external gauges.",
+		Long:  `{{.Short}}`,
+	}, &types.QueryInternalGaugesRequest{}
 }
