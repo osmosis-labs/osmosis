@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	sdkmath "cosmossdk.io/math"
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
@@ -30,6 +31,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/osmosis-labs/osmosis/v23/app/apptesting/assets"
 	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 	"github.com/osmosis-labs/osmosis/v23/x/market"
 	marketkeeper "github.com/osmosis-labs/osmosis/v23/x/market/keeper"
@@ -169,6 +171,11 @@ func CreateTestInput(t *testing.T) TestInput {
 	err := bankKeeper.MintCoins(ctx, faucetAccountName, totalSupply)
 	require.NoError(t, err)
 
+	// mint stable
+	totalSupply = sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, sdkmath.NewInt(10_000*1e6)))
+	err = bankKeeper.MintCoins(ctx, faucetAccountName, totalSupply)
+	require.NoError(t, err)
+
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec,
 		keyStaking,
@@ -233,7 +240,12 @@ func CreateTestInput(t *testing.T) TestInput {
 		distrtypes.ModuleName,
 	)
 	oracleDefaultParams := oracletypes.DefaultParams()
+	oracleDefaultParams.Whitelist = oracletypes.DenomList{oracletypes.Denom{
+		Name:     assets.MicroSDRDenom,
+		TobinTax: sdk.ZeroDec(),
+	}}
 	oracleKeeper.SetParams(ctx, oracleDefaultParams)
+	oracleKeeper.SetMelodyExchangeRate(ctx, assets.MicroSDRDenom, sdk.NewDecWithPrec(1, 1))
 
 	for _, denom := range oracleDefaultParams.Whitelist {
 		oracleKeeper.SetTobinTax(ctx, denom.Name, denom.TobinTax)
