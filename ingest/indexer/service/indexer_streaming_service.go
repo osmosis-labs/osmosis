@@ -60,7 +60,7 @@ type indexerStreamingService struct {
 // sqsIngester is an ingester that ingests the block data into SQS.
 // poolTracker is a tracker that tracks the pools that were changed in the block.
 // nodeStatusChecker is a checker that checks if the node is syncing.
-func New(writeListeners map[storetypes.StoreKey][]storetypes.WriteListener, blockProcessStrategyManager commondomain.BlockProcessStrategyManager, client domain.Publisher, poolExtractor commondomain.PoolExtractor, poolTracker sqsdomain.BlockPoolUpdateTracker, keepers domain.Keepers, txDecoder sdk.TxDecoder, logger log.Logger) baseapp.StreamingService {
+func New(writeListeners map[storetypes.StoreKey][]storetypes.WriteListener, blockProcessStrategyManager commondomain.BlockProcessStrategyManager, client domain.Publisher, poolExtractor commondomain.PoolExtractor, poolTracker sqsdomain.BlockPoolUpdateTracker, keepers domain.Keepers, txDecoder sdk.TxDecoder, logger log.Logger) *indexerStreamingService {
 	return &indexerStreamingService{
 		blockProcessStrategyManager: blockProcessStrategyManager,
 
@@ -132,7 +132,7 @@ func (s *indexerStreamingService) publishBlock(ctx context.Context, req types.Re
 // as the amount in the event is the amount AFTER the spread factor is applied.
 // therefore, we need to adjust the amount by the spread factor to get the amount BEFORE the spread factor is applied.
 // NOTE: This applies to CL pools only
-func (s *indexerStreamingService) adjustTokenInAmountBySpreadFactor(ctx context.Context, event *types.Event) error {
+func (s *indexerStreamingService) AdjustTokenInAmountBySpreadFactor(ctx context.Context, event *types.Event) error {
 	if event.Type != gammtypes.TypeEvtTokenSwapped {
 		return nil
 	}
@@ -214,12 +214,12 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req types.Requ
 	events := res.GetEvents()
 	var includedEvents []domain.EventWrapper
 	for i, event := range events {
-		err := s.adjustTokenInAmountBySpreadFactor(ctx, &event)
+		err := s.AdjustTokenInAmountBySpreadFactor(ctx, &event)
 		if err != nil {
 			s.logger.Error("Error adjusting amount by spread factor", "error", err)
 			continue
 		}
-		err = s.addTokenLiquidity(ctx, &event)
+		err = s.AddTokenLiquidity(ctx, &event)
 		if err != nil {
 			s.logger.Error("Error adding reserves to event", "error", err)
 			continue
@@ -247,7 +247,7 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req types.Requ
 
 // addTokenLiquidity adds the token liquidity to the event.
 // It refers to the pooled amount of each asset after a swap event has occurred.
-func (s *indexerStreamingService) addTokenLiquidity(ctx context.Context, event *types.Event) error {
+func (s *indexerStreamingService) AddTokenLiquidity(ctx context.Context, event *types.Event) error {
 	if event.Type != gammtypes.TypeEvtTokenSwapped {
 		return nil
 	}
