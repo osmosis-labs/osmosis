@@ -37,15 +37,6 @@ func (i *indexerPublisher) PublishTransaction(ctx context.Context, txn domain.Tr
 	return nil
 }
 
-// PublishPool implements domain.Ingester.
-func (i *indexerPublisher) PublishPool(ctx context.Context, pool domain.Pool) error {
-	err := i.pubsubClient.PublishPool(ctx, pool)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // PublishTokenSupply implements domain.Ingester.
 func (i *indexerPublisher) PublishTokenSupply(ctx context.Context, tokenSupply domain.TokenSupply) error {
 	err := i.pubsubClient.PublishTokenSupply(ctx, tokenSupply)
