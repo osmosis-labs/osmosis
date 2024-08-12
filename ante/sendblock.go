@@ -73,8 +73,6 @@ func (decorator *SendBlockDecorator) CheckIfBlocked(msgs []sdk.Msg) error {
 		return nil
 	}
 	for _, msg := range msgs {
-		// UNFORKING v2 TODO: GetSigners is no longer available
-		// This is the workaround for I did for all calls, verify it is correct.
 		signers, _, err := decorator.cdc.GetMsgV1Signers(msg)
 		if err != nil {
 			return err

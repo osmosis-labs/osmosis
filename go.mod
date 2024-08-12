@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/client/v2 v2.0.0-beta.1
 	cosmossdk.io/core v0.12.0
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/log v1.3.1
+	cosmossdk.io/log v1.4.0
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/store v1.1.0
 	cosmossdk.io/tools/confix v0.1.1
@@ -17,20 +17,20 @@ require (
 	cosmossdk.io/x/tx v0.13.4
 	cosmossdk.io/x/upgrade v0.1.4
 	github.com/CosmWasm/wasmd v0.50.0
-	github.com/CosmWasm/wasmvm v1.5.2
-	github.com/cometbft/cometbft v0.38.9
+	github.com/CosmWasm/wasmvm v1.5.4
+	github.com/cometbft/cometbft v0.38.10
 	github.com/cometbft/cometbft-db v0.12.0
 	github.com/cosmos/cosmos-db v1.0.2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
-	github.com/cosmos/cosmos-sdk v0.50.8
+	github.com/cosmos/cosmos-sdk v0.50.9
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/gogoproto v1.5.0
+	github.com/cosmos/gogoproto v1.6.0
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8 v8.0.2
 	github.com/cosmos/ibc-apps/modules/async-icq/v8 v8.0.0
 	github.com/cosmos/ibc-go/modules/capability v1.0.1
 	github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.1.1-ibc-go-v7.3-wasmvm-v1.5
 	github.com/cosmos/ibc-go/v8 v8.4.0
-	github.com/cosmos/rosetta v0.50.8
+	github.com/cosmos/rosetta v0.50.9
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
 	github.com/gorilla/mux v1.8.1
@@ -48,7 +48,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/skip-mev/block-sdk/v2 v2.1.5
-	github.com/spf13/cast v1.6.0
+	github.com/spf13/cast v1.7.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
@@ -78,7 +78,7 @@ require (
 	cloud.google.com/go/iam v1.1.10 // indirect
 	cloud.google.com/go/storage v1.41.0 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
-	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
+	cosmossdk.io/depinject v1.0.0 // indirect
 	cosmossdk.io/x/feegrant v0.1.0 // indirect
 	github.com/DataDog/datadog-go v3.2.0+incompatible // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
@@ -237,7 +237,7 @@ require (
 	github.com/prometheus/procfs v0.13.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rs/cors v1.11.0 // indirect
-	github.com/rs/zerolog v1.32.0 // indirect
+	github.com/rs/zerolog v1.33.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
@@ -271,8 +271,6 @@ replace (
 
 	// Needs to be replaced due to iavlFastNodeModuleWhitelist feature
 	cosmossdk.io/store => github.com/osmosis-labs/cosmos-sdk/store v0.1.0-alpha.1.0.20240509221435-b8feb2ffb728
-
-	// UNFORKING v2 TODO: No longer use wasmd fork, added logic to app.toml override to use 1000 instead of default 100 cache size, which was the reason for having the fork in the first place.
 
 	// Using branch osmo/v0.38.x
 	// https://github.com/osmosis-labs/cometbft/releases/tag/v0.37.4-v25-osmo-2
