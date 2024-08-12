@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	oracleexported "github.com/classic-terra/core/v3/x/oracle/exported"
+	oracleexported "github.com/osmosis-labs/osmosis/v23/x/oracle/exported"
 )
 
 // SpammingPreventionDecorator will check if the transaction's gas is smaller than
