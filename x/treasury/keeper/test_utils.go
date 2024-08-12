@@ -118,6 +118,7 @@ type TestInput struct {
 }
 
 func CreateTestInput(t *testing.T) TestInput {
+	t.Helper()
 	keyAcc := sdk.NewKVStoreKey(authtypes.StoreKey)
 	keyBank := sdk.NewKVStoreKey(banktypes.StoreKey)
 	keyParams := sdk.NewKVStoreKey(paramstypes.StoreKey)
@@ -186,7 +187,8 @@ func CreateTestInput(t *testing.T) TestInput {
 
 	stakingParams := stakingtypes.DefaultParams()
 	stakingParams.BondDenom = appparams.BaseCoinUnit
-	stakingKeeper.SetParams(ctx, stakingParams)
+	err = stakingKeeper.SetParams(ctx, stakingParams)
+	require.NoError(t, err)
 
 	distrKeeper := distrkeeper.NewKeeper(
 		appCodec, keyDistr,
@@ -200,7 +202,8 @@ func CreateTestInput(t *testing.T) TestInput {
 	distrParams.CommunityTax = sdk.NewDecWithPrec(2, 2)
 	distrParams.BaseProposerReward = sdk.NewDecWithPrec(1, 2)
 	distrParams.BonusProposerReward = sdk.NewDecWithPrec(4, 2)
-	distrKeeper.SetParams(ctx, distrParams)
+	err = distrKeeper.SetParams(ctx, distrParams)
+	require.NoError(t, err)
 	stakingKeeper.SetHooks(stakingtypes.NewMultiStakingHooks(distrKeeper.Hooks()))
 
 	feeCollectorAcc := authtypes.NewEmptyModuleAccount(authtypes.FeeCollectorName)

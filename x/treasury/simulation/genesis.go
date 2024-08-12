@@ -41,7 +41,6 @@ func GenWindowProbation(r *rand.Rand) uint64 {
 
 // RandomizedGenState generates a random GenesisState for gov
 func RandomizedGenState(simState *module.SimulationState) {
-
 	var windowShort uint64
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, windowShortKey, &windowShort, simState.Rand,

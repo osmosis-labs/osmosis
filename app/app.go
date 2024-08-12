@@ -2,7 +2,6 @@ package app
 
 import (
 	"fmt"
-	treasurytypes "github.com/osmosis-labs/osmosis/v23/x/treasury/types"
 	"io"
 	"net/http"
 	"os"
@@ -34,6 +33,7 @@ import (
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	markettypes "github.com/osmosis-labs/osmosis/v23/x/market/types"
+	treasurytypes "github.com/osmosis-labs/osmosis/v23/x/treasury/types"
 	//oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
 
 	"github.com/osmosis-labs/osmosis/v23/ingest/sqs"

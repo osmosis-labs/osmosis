@@ -2,16 +2,16 @@ package keeper
 
 import (
 	"fmt"
+	"math"
+
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
 	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 	markettypes "github.com/osmosis-labs/osmosis/v23/x/market/types"
-	"math"
-
-	"github.com/cometbft/cometbft/libs/log"
-
 	"github.com/osmosis-labs/osmosis/v23/x/treasury/types"
 )
 
@@ -112,7 +112,7 @@ func (k Keeper) RefillExchangePool(ctx sdk.Context) sdk.Dec {
 // If reserve is insufficient, the fee multiplier is increased based on the percentage difference.
 func (k Keeper) UpdateReserveFee(ctx sdk.Context) sdk.Dec {
 	currentTaxRate := k.GetTaxRate(ctx)
-	newTaxRate := currentTaxRate
+	newTaxRate := sdk.ZeroDec()
 	reserveAmount := k.GetReservePoolBalance(ctx).Amount.ToLegacyDec()
 	exchangeRequirement := k.marketKeeper.GetExchangeRequirement(ctx)
 	if reserveAmount.LT(exchangeRequirement) {
@@ -126,8 +126,6 @@ func (k Keeper) UpdateReserveFee(ctx sdk.Context) sdk.Dec {
 			// Double the base fee to fill the remaining difference
 			newTaxRate = currentTaxRate.Mul(sdk.NewDec(2))
 		}
-	} else {
-		newTaxRate = sdk.ZeroDec()
 	}
 	k.SetTaxRate(ctx, newTaxRate)
 	return newTaxRate

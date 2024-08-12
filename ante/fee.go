@@ -139,7 +139,6 @@ func DeductFees(txFeesKeeper txfeestypes.TxFeesKeeper, bankKeeper BankKeeper, ct
 		if err != nil {
 			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
-
 	} else {
 		// sends to FeeCollectorForStakingRewardsName module account
 		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), txfeestypes.NonNativeTxFeeCollectorName, fees)
