@@ -54,6 +54,7 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v23/x/protorev"
 	treasurykeeper "github.com/osmosis-labs/osmosis/v23/x/treasury/keeper"
+	treasurytypes "github.com/osmosis-labs/osmosis/v23/x/treasury/types"
 	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
@@ -552,6 +553,16 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.MarketKeeper = &marketKeeper
 
+	treasuryKeeper := treasurykeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[treasurytypes.StoreKey],
+		appKeepers.GetSubspace(treasurytypes.ModuleName),
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.MarketKeeper,
+		appKeepers.OracleKeeper)
+	appKeepers.TreasuryKeeper = &treasuryKeeper
+
 	// Pass the contract keeper to all the structs (generally ICS4Wrappers for ibc middlewares) that need it
 	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
 	appKeepers.RateLimitingICS4Wrapper.ContractKeeper = appKeepers.ContractKeeper
@@ -750,6 +761,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(poolmanagertypes.ModuleName)
 	paramsKeeper.Subspace(oracletypes.ModuleName)
 	paramsKeeper.Subspace(markettypes.ModuleName)
+	paramsKeeper.Subspace(treasurytypes.ModuleName)
 	paramsKeeper.Subspace(gammtypes.ModuleName)
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
@@ -872,6 +884,7 @@ func KVStoreKeys() []string {
 		poolmanagertypes.StoreKey,
 		oracletypes.StoreKey,
 		markettypes.StoreKey,
+		treasurytypes.StoreKey,
 		authzkeeper.StoreKey,
 		txfeestypes.StoreKey,
 		superfluidtypes.StoreKey,
