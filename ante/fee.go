@@ -105,6 +105,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 
 	ctx.EventManager().EmitEvents(sdk.Events{sdk.NewEvent(sdk.EventTypeTx,
 		sdk.NewAttribute(sdk.AttributeKeyFee, fees.String()),
+		sdk.NewAttribute("taxes", taxes.String()),
 	)})
 
 	return next(ctx, tx, simulate)
@@ -128,7 +129,7 @@ func DeductFees(txFeesKeeper txfeestypes.TxFeesKeeper, bankKeeper BankKeeper, ct
 		found, tax := taxes.Find(baseDenom)
 		if found {
 			fees = fees.Sub(tax)
-			err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), treasurytypes.ModuleName, fees)
+			err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), treasurytypes.ModuleName, taxes)
 			if err != nil {
 				return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 			}
