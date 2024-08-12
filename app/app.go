@@ -386,6 +386,8 @@ func NewSymphonyApp(
 		app.GetKey(wasmtypes.StoreKey),
 		app.AccountKeeper,
 		app.BankKeeper,
+		app.OracleKeeper,
+		app.TreasuryKeeper,
 		app.TxFeesKeeper,
 		app.GAMMKeeper,
 		ante.DefaultSigVerificationGasConsumer,
