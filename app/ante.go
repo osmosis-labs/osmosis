@@ -34,6 +34,7 @@ func NewAnteHandler(
 	txCounterStoreKey storetypes.StoreKey,
 	ak ante.AccountKeeper,
 	bankKeeper txfeestypes.BankKeeper,
+	oracleKeeper osmoante.OracleKeeper,
 	txFeesKeeper *txfeeskeeper.Keeper,
 	spotPriceCalculator txfeestypes.SpotPriceCalculator,
 	sigGasConsumer ante.SignatureVerificationGasConsumer,
@@ -58,6 +59,7 @@ func NewAnteHandler(
 		ante.NewValidateBasicDecorator(),
 		ante.TxTimeoutHeightDecorator{},
 		ante.NewValidateMemoDecorator(ak),
+		osmoante.NewSpammingPreventionDecorator(oracleKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(ak),
 		deductFeeDecorator,
 
