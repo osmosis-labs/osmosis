@@ -40,6 +40,7 @@ func TestKeeper_UpdateReserveFee(t *testing.T) {
 		// Update the reserve
 		newTaxRate := input.TreasuryKeeper.UpdateReserveFee(input.Ctx)
 		require.True(t, newTaxRate.GT(sdk.ZeroDec()), "reserve is empty so we should apply the tax rate")
+		require.True(t, newTaxRate.LTE(input.TreasuryKeeper.GetParams(input.Ctx).MaxFeeMultiplier))
 	})
 	t.Run("reserve is full", func(t *testing.T) {
 		input := CreateTestInput(t)
