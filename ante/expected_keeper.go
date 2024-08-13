@@ -12,6 +12,8 @@ type TreasuryKeeper interface {
 // OracleKeeper for feeder validation
 type OracleKeeper interface {
 	ValidateFeeder(ctx sdk.Context, feederAddr sdk.AccAddress, validatorAddr sdk.ValAddress) error
+	// GetMelodyExchangeRate returns the exchange rate of the given denom to melody. Returned value is in melody.
+	GetMelodyExchangeRate(ctx sdk.Context, denom string) (price sdk.Dec, err error)
 }
 
 // BankKeeper defines the contract needed for supply related APIs (noalias)

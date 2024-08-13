@@ -87,3 +87,7 @@ func (ok dummyOracleKeeper) ValidateFeeder(_ sdk.Context, feederAddr sdk.AccAddr
 
 	return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "cannot ensure feeder right")
 }
+
+func (ok dummyOracleKeeper) GetMelodyExchangeRate(_ sdk.Context, _ string) (sdk.Dec, error) {
+	return sdk.NewDecWithPrec(1, 1), nil
+}

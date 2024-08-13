@@ -27,7 +27,7 @@ func (s *AnteTestSuite) TestDeductFeeDecorator_ZeroGas() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewDeductFeeDecorator(s.app.TxFeesKeeper, s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.TreasuryKeeper)
+	mfd := ante.NewDeductFeeDecorator(s.app.TxFeesKeeper, s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.TreasuryKeeper, s.app.OracleKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
@@ -61,7 +61,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFees() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewDeductFeeDecorator(s.app.TxFeesKeeper, s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.TreasuryKeeper)
+	mfd := ante.NewDeductFeeDecorator(s.app.TxFeesKeeper, s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.TreasuryKeeper, s.app.OracleKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
@@ -145,7 +145,7 @@ func (s *AnteTestSuite) TestDeductFees() {
 	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
 	s.Require().NoError(err)
 
-	dfd := ante.NewDeductFeeDecorator(s.app.TxFeesKeeper, s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.TreasuryKeeper)
+	dfd := ante.NewDeductFeeDecorator(s.app.TxFeesKeeper, s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.TreasuryKeeper, s.app.OracleKeeper)
 	antehandler := sdk.ChainAnteDecorators(dfd)
 
 	_, err = antehandler(s.ctx, tx, false)
@@ -166,7 +166,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesSend() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewDeductFeeDecorator(s.app.TxFeesKeeper, s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.TreasuryKeeper)
+	mfd := ante.NewDeductFeeDecorator(s.app.TxFeesKeeper, s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.TreasuryKeeper, s.app.OracleKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
@@ -217,7 +217,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesSwapSend() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewDeductFeeDecorator(s.app.TxFeesKeeper, s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.TreasuryKeeper)
+	mfd := ante.NewDeductFeeDecorator(s.app.TxFeesKeeper, s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.TreasuryKeeper, s.app.OracleKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
@@ -267,7 +267,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesMultiSend() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewDeductFeeDecorator(s.app.TxFeesKeeper, s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.TreasuryKeeper)
+	mfd := ante.NewDeductFeeDecorator(s.app.TxFeesKeeper, s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.TreasuryKeeper, s.app.OracleKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
@@ -331,7 +331,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesInstantiateContract() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewDeductFeeDecorator(s.app.TxFeesKeeper, s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.TreasuryKeeper)
+	mfd := ante.NewDeductFeeDecorator(s.app.TxFeesKeeper, s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.TreasuryKeeper, s.app.OracleKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
@@ -387,7 +387,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesExecuteContract() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewDeductFeeDecorator(s.app.TxFeesKeeper, s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.TreasuryKeeper)
+	mfd := ante.NewDeductFeeDecorator(s.app.TxFeesKeeper, s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.TreasuryKeeper, s.app.OracleKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
@@ -442,7 +442,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesAuthzExec() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewDeductFeeDecorator(s.app.TxFeesKeeper, s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.TreasuryKeeper)
+	mfd := ante.NewDeductFeeDecorator(s.app.TxFeesKeeper, s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.TreasuryKeeper, s.app.OracleKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
@@ -668,7 +668,7 @@ func (s *AnteTestSuite) TestTaxExemption() {
 		fmt.Printf("CASE = %s \n", c.name)
 		s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-		mfd := ante.NewDeductFeeDecorator(s.app.TxFeesKeeper, s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.TreasuryKeeper)
+		mfd := ante.NewDeductFeeDecorator(s.app.TxFeesKeeper, s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.TreasuryKeeper, s.app.OracleKeeper)
 		antehandler := sdk.ChainAnteDecorators(mfd)
 
 		for i := 0; i < 4; i++ {
@@ -706,7 +706,7 @@ func (s *AnteTestSuite) TestOracleZeroFee() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewDeductFeeDecorator(s.app.TxFeesKeeper, s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.TreasuryKeeper)
+	mfd := ante.NewDeductFeeDecorator(s.app.TxFeesKeeper, s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.TreasuryKeeper, s.app.OracleKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses

@@ -21,16 +21,18 @@ type DeductFeeDecorator struct {
 	bankKeeper     BankKeeper
 	feegrantKeeper ante.FeegrantKeeper
 	txFeesKeeper   txfeestypes.TxFeesKeeper
+	oracleKeeper   OracleKeeper
 	treasuryKeeper TreasuryKeeper
 }
 
-func NewDeductFeeDecorator(txk txfeestypes.TxFeesKeeper, ak ante.AccountKeeper, bk BankKeeper, fk ante.FeegrantKeeper, tk TreasuryKeeper) DeductFeeDecorator {
+func NewDeductFeeDecorator(txk txfeestypes.TxFeesKeeper, ak ante.AccountKeeper, bk BankKeeper, fk ante.FeegrantKeeper, tk TreasuryKeeper, ok OracleKeeper) DeductFeeDecorator {
 	return DeductFeeDecorator{
 		ak:             ak,
 		bankKeeper:     bk,
 		feegrantKeeper: fk,
 		txFeesKeeper:   txk,
 		treasuryKeeper: tk,
+		oracleKeeper:   ok,
 	}
 }
 
@@ -50,8 +52,24 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 		return ctx, fmt.Errorf("fee collector for staking module account (%s) has not been set", txfeestypes.NonNativeTxFeeCollectorName)
 	}
 
+	baseDenom, err := dfd.txFeesKeeper.GetBaseDenom(ctx)
+	if err != nil {
+		return ctx, fmt.Errorf("could not retrieve base denom: %w", err)
+	}
+
 	msgs := feeTx.GetMsgs()
 	taxes := FilterMsgAndComputeTax(ctx, dfd.treasuryKeeper, msgs...)
+	taxesInBaseDenom := sdk.NewCoin(baseDenom, taxes.AmountOf(baseDenom))
+	for _, denom := range taxes.Denoms() {
+		if denom == baseDenom {
+			continue
+		}
+		exchangeRate, err := dfd.oracleKeeper.GetMelodyExchangeRate(ctx, denom)
+		if err != nil {
+			return ctx, fmt.Errorf("could not retrieve exchange rate for %s: %w", denom, err)
+		}
+		taxesInBaseDenom = taxesInBaseDenom.AddAmount(taxes.AmountOf(denom).ToLegacyDec().Mul(exchangeRate).TruncateInt())
+	}
 
 	// fee can be in any denom (checked for validity later)
 	fee := feeTx.GetFee()
@@ -97,7 +115,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 
 	// deducts the fees and transfer them to the module account
 	if !fees.IsZero() {
-		err = DeductFees(dfd.txFeesKeeper, dfd.bankKeeper, ctx, deductFeesFromAcc, fees, taxes)
+		err = DeductFees(dfd.txFeesKeeper, dfd.bankKeeper, ctx, deductFeesFromAcc, fees, taxesInBaseDenom)
 		if err != nil {
 			return ctx, err
 		}
@@ -112,7 +130,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 }
 
 // DeductFees deducts fees from the given account and transfers them to the set module account.
-func DeductFees(txFeesKeeper txfeestypes.TxFeesKeeper, bankKeeper BankKeeper, ctx sdk.Context, acc authtypes.AccountI, fees sdk.Coins, taxes sdk.Coins) error {
+func DeductFees(txFeesKeeper txfeestypes.TxFeesKeeper, bankKeeper BankKeeper, ctx sdk.Context, acc authtypes.AccountI, fees sdk.Coins, baseDenomTax sdk.Coin) error {
 	// Checks the validity of the fee tokens (sorted, have positive amount, valid and unique denomination)
 	if !fees.IsValid() {
 		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
@@ -126,17 +144,16 @@ func DeductFees(txFeesKeeper txfeestypes.TxFeesKeeper, bankKeeper BankKeeper, ct
 
 	// checks if input fee is NOTE (assumes only one fee token exists in the fees array (as per the check in mempoolFeeDecorator))
 	if fees[0].Denom == baseDenom {
-		found, tax := taxes.Find(baseDenom)
-		if found {
-			fees = fees.Sub(tax)
-			err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), treasurytypes.ModuleName, taxes)
+		fees = fees.Sub(baseDenomTax)
+		if baseDenomTax.IsPositive() {
+			err = bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), treasurytypes.ModuleName, sdk.Coins{baseDenomTax})
 			if err != nil {
 				return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 			}
 		}
 
 		// sends to FeeCollectorName module account, which distributes staking rewards
-		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), authtypes.FeeCollectorName, fees)
+		err = bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), authtypes.FeeCollectorName, fees)
 		if err != nil {
 			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
