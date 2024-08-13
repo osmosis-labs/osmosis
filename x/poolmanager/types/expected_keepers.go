@@ -97,6 +97,11 @@ type PoolModuleI interface {
 	GetTotalLiquidity(ctx sdk.Context) (sdk.Coins, error)
 }
 
+type ConcentratedI interface {
+	PoolModuleI
+	GetWhitelistedAddresses(ctx sdk.Context) []string
+}
+
 type PoolIncentivesKeeperI interface {
 	IsPoolIncentivized(ctx sdk.Context, poolId uint64) (bool, error)
 }
