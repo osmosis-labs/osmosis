@@ -152,3 +152,7 @@ func (k Keeper) SetAuthorizedQuoteDenoms(ctx sdk.Context, authorizedQuoteDenoms 
 	params.AuthorizedQuoteDenoms = authorizedQuoteDenoms
 	k.poolmanagerKeeper.SetParams(ctx, params)
 }
+
+func (k Keeper) GetWhitelistedAddresses(ctx sdk.Context) []string {
+	return k.GetParams(ctx).UnrestrictedPoolCreatorWhitelist
+}

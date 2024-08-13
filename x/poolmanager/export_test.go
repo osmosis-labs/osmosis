@@ -150,3 +150,7 @@ func (k *Keeper) SetCacheTrackers(takerFeeShareAgreement map[string]types.TakerF
 		k.cachedRegisteredAlloyPoolByAlloyDenomMap = registeredAlloyPoolToState
 	}
 }
+
+func (k Keeper) FundCommunityPoolIfNotWhitelisted(ctx sdk.Context, sender sdk.AccAddress) error {
+	return k.fundCommunityPoolIfNotWhitelisted(ctx, sender)
+}

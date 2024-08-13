@@ -8,6 +8,8 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
@@ -429,6 +431,63 @@ func (s *KeeperTestSuite) TestEndBlock() {
 			}
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedTakerFeeShareAgreements, takerFeeShareState.TakerFeeShareAgreements)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestFundCommunityPoolIfNotWhitelisted() {
+	tests := []struct {
+		name           string
+		whitelist      []string
+		sender         sdk.AccAddress
+		expectFundCall bool
+	}{
+		{
+			name:           "sender is whitelisted",
+			whitelist:      []string{"osmo1044qatzg4a0wm63jchrfdnn2u8nwdgxxt6e524"},
+			sender:         sdk.MustAccAddressFromBech32("osmo1044qatzg4a0wm63jchrfdnn2u8nwdgxxt6e524"),
+			expectFundCall: false,
+		},
+		{
+			name:           "sender is not whitelisted",
+			whitelist:      []string{"osmo1044qatzg4a0wm63jchrfdnn2u8nwdgxxt6e524"},
+			sender:         sdk.MustAccAddressFromBech32("osmo1j537vtv60wz322n2sgfm4st7y3dm8e4e9js57h"),
+			expectFundCall: true,
+		},
+		{
+			name:           "whitelist is empty",
+			whitelist:      []string{},
+			sender:         sdk.MustAccAddressFromBech32("osmo1j537vtv60wz322n2sgfm4st7y3dm8e4e9js57h"),
+			expectFundCall: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			oldParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+			oldParams.UnrestrictedPoolCreatorWhitelist = tc.whitelist
+			s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, oldParams)
+
+			// Fund the sender with pool creation fee
+			poolCreationFee := s.App.PoolManagerKeeper.GetParams(s.Ctx).PoolCreationFee
+			s.FundAcc(tc.sender, poolCreationFee)
+
+			// Get the community pool balance
+			preCommunityPoolBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName))
+
+			err := s.App.PoolManagerKeeper.FundCommunityPoolIfNotWhitelisted(s.Ctx, tc.sender)
+			s.Require().NoError(err)
+
+			// Get the community pool balance after the function call
+			postCommunityPoolBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName))
+
+			if tc.expectFundCall {
+				s.Require().Equal(postCommunityPoolBalance, preCommunityPoolBalance.Add(poolCreationFee...))
+			} else {
+				s.Require().Equal(preCommunityPoolBalance, postCommunityPoolBalance)
+			}
 		})
 	}
 }
