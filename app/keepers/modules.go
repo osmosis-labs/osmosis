@@ -7,6 +7,8 @@ import (
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
 	tendermint "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+	"github.com/osmosis-labs/osmosis/v23/x/market"
+	"github.com/osmosis-labs/osmosis/v23/x/oracle"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -110,8 +112,8 @@ var AppModuleBasics = []module.AppModuleBasic{
 	vesting.AppModuleBasic{},
 	gamm.AppModuleBasic{},
 	poolmanager.AppModuleBasic{},
-	//oracle.AppModuleBasic{}, TODO: yurii: enable oracle
-	// market.AppModuleBasic{}, TODO: yurii: enable swaps
+	oracle.AppModuleBasic{},
+	market.AppModuleBasic{},
 	twapmodule.AppModuleBasic{},
 	concentratedliquidity.AppModuleBasic{},
 	protorev.AppModuleBasic{},

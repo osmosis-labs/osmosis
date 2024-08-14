@@ -5,7 +5,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 
 	"github.com/osmosis-labs/osmosis/v23/x/market/types"
 )
@@ -53,4 +55,22 @@ func NewKeeper(
 		BankKeeper:    bankKeeper,
 		OracleKeeper:  oracleKeeper,
 	}
+}
+
+func (k Keeper) GetExchangePoolBalance(ctx sdk.Context) sdk.Coin {
+	account := k.GetMarketAccount(ctx)
+	if account == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+	}
+
+	return k.BankKeeper.GetBalance(ctx, account.GetAddress(), appparams.BaseCoinUnit)
+}
+
+func (k Keeper) GetReservePoolBalance(ctx sdk.Context) sdk.Coin {
+	account := k.GetReserveMarketAccount(ctx)
+	if account == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+	}
+
+	return k.BankKeeper.GetBalance(ctx, account.GetAddress(), appparams.BaseCoinUnit)
 }

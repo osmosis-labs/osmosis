@@ -48,10 +48,11 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 		})
 
 		// Clear all exchange rates
-		k.IterateNoteExchangeRates(ctx, func(denom string, _ sdk.Dec) (stop bool) {
-			k.DeleteMelodyExchangeRate(ctx, denom)
-			return false
-		})
+		// TODO: yurii: enable cleaning of exchange rates
+		//k.IterateNoteExchangeRates(ctx, func(denom string, _ sdk.Dec) (stop bool) {
+		//	k.DeleteMelodyExchangeRate(ctx, denom)
+		//	return false
+		//})
 
 		// Organize votes to ballot by denom
 		// NOTE: **Filter out inactive or jailed validators**
@@ -116,6 +117,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	// Do slash who did miss voting over threshold and
 	// reset miss counters of all validators at the last block of slash window
 	if appparams.IsPeriodLastBlock(ctx, params.SlashWindow) {
-		k.SlashAndResetMissCounters(ctx)
+		// TODO: yurii: enable slashing
+		//k.SlashAndResetMissCounters(ctx)
 	}
 }

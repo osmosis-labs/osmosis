@@ -4,7 +4,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	appParams "github.com/osmosis-labs/osmosis/v23/app/params"
-
 	"github.com/osmosis-labs/osmosis/v23/x/market/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -14,42 +13,43 @@ import (
 // exchange rate registered with the oracle.
 // Returns an Error if the swap is recursive, or the coins to be traded are unknown by the oracle, or the amount
 // to trade is too small.
-func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string) (retDecCoin sdk.DecCoin, spread sdk.Dec, err error) {
+func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string) (sdk.DecCoin, sdk.Dec, error) {
 	// Return invalid recursive swap err
 	if offerCoin.Denom == askDenom {
-		return sdk.DecCoin{}, sdk.ZeroDec(), errorsmod.Wrap(types.ErrRecursiveSwap, askDenom)
+		return sdk.DecCoin{}, sdk.Dec{}, errorsmod.Wrap(types.ErrRecursiveSwap, askDenom)
 	}
 	// Get swap amount based on the oracle price
-	retDecCoin, err = k.ComputeInternalSwap(ctx, sdk.NewDecCoinFromCoin(offerCoin), askDenom)
+	retDecCoin, err := k.ComputeInternalSwap(ctx, sdk.NewDecCoinFromCoin(offerCoin), askDenom)
 	if err != nil {
 		return sdk.DecCoin{}, sdk.Dec{}, err
 	}
 
 	// Symphony => Symphony swap
 	// Apply only tobin tax without constant product spread
-	if offerCoin.Denom != appParams.BaseCoinUnit && askDenom != appParams.BaseCoinUnit {
-		var tobinTax sdk.Dec
-		offerTobinTax, err2 := k.OracleKeeper.GetTobinTax(ctx, offerCoin.Denom)
-		if err2 != nil {
-			return sdk.DecCoin{}, sdk.Dec{}, err2
-		}
-
-		askTobinTax, err2 := k.OracleKeeper.GetTobinTax(ctx, askDenom)
-		if err2 != nil {
-			return sdk.DecCoin{}, sdk.Dec{}, err2
-		}
-
-		// Apply highest tobin tax for the denoms in the swap operation
-		if askTobinTax.GT(offerTobinTax) {
-			tobinTax = askTobinTax
-		} else {
-			tobinTax = offerTobinTax
-		}
-
-		spread = tobinTax
-		return retDecCoin, spread, nil
-	}
-	return retDecCoin, spread, nil
+	// TODO: yurii: revisit stable => stable swaps, apply tobix tax if needed.
+	//if offerCoin.Denom != appParams.BaseCoinUnit && askDenom != appParams.BaseCoinUnit {
+	//	var tobinTax sdk.Dec
+	//	offerTobinTax, err2 := k.OracleKeeper.GetTobinTax(ctx, offerCoin.Denom)
+	//	if err2 != nil {
+	//		return sdk.DecCoin{}, sdk.Dec{}, err2
+	//	}
+	//
+	//	askTobinTax, err2 := k.OracleKeeper.GetTobinTax(ctx, askDenom)
+	//	if err2 != nil {
+	//		return sdk.DecCoin{}, sdk.Dec{}, err2
+	//	}
+	//
+	//	// Apply highest tobin tax for the denoms in the swap operation
+	//	if askTobinTax.GT(offerTobinTax) {
+	//		tobinTax = askTobinTax
+	//	} else {
+	//		tobinTax = offerTobinTax
+	//	}
+	//
+	//	spread := tobinTax
+	//	return retDecCoin, spread, nil
+	//}
+	return retDecCoin, sdk.ZeroDec(), nil
 }
 
 // ComputeInternalSwap returns the amount of asked DecCoin should be returned for a given offerCoin at the effective
@@ -60,14 +60,31 @@ func (k Keeper) ComputeInternalSwap(ctx sdk.Context, offerCoin sdk.DecCoin, askD
 		return offerCoin, nil
 	}
 
-	offerRate, err := k.OracleKeeper.GetMelodyExchangeRate(ctx, offerCoin.Denom)
-	if err != nil {
-		return sdk.DecCoin{}, errorsmod.Wrap(types.ErrNoEffectivePrice, offerCoin.Denom)
-	}
+	askRate := sdk.NewDec(1)
+	offerRate := sdk.NewDec(1)
+	if offerCoin.Denom == appParams.BaseCoinUnit { // melody -> stable
+		exchangeRatio, err := k.OracleKeeper.GetMelodyExchangeRate(ctx, askDenom)
+		if err != nil {
+			return sdk.DecCoin{}, errorsmod.Wrap(types.ErrNoEffectivePrice, askDenom)
+		}
+		offerRate = exchangeRatio
+	} else if askDenom == appParams.BaseCoinUnit { // stable -> melody
+		exchangeRatio, err := k.OracleKeeper.GetMelodyExchangeRate(ctx, offerCoin.Denom)
+		if err != nil {
+			return sdk.DecCoin{}, errorsmod.Wrap(types.ErrNoEffectivePrice, offerCoin.Denom)
+		}
+		askRate = exchangeRatio
+	} else { // stable -> stable
+		var err error
+		askRate, err = k.OracleKeeper.GetMelodyExchangeRate(ctx, offerCoin.Denom)
+		if err != nil {
+			return sdk.DecCoin{}, errorsmod.Wrap(types.ErrNoEffectivePrice, offerCoin.Denom)
+		}
 
-	askRate, err := k.OracleKeeper.GetMelodyExchangeRate(ctx, askDenom)
-	if err != nil {
-		return sdk.DecCoin{}, errorsmod.Wrap(types.ErrNoEffectivePrice, askDenom)
+		offerRate, err = k.OracleKeeper.GetMelodyExchangeRate(ctx, askDenom)
+		if err != nil {
+			return sdk.DecCoin{}, errorsmod.Wrap(types.ErrNoEffectivePrice, askDenom)
+		}
 	}
 
 	retAmount := offerCoin.Amount.Mul(askRate).Quo(offerRate)

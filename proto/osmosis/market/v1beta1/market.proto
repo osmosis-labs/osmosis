@@ -10,14 +10,19 @@ message Params {
   option (gogoproto.equal) = true;
   option (gogoproto.goproto_stringer) = false;
 
-  bytes base_pool = 1 [
-    (gogoproto.moretags) = "yaml:\"base_pool\"",
+  bytes exchange_pool = 1 [
+    (gogoproto.moretags) = "yaml:\"exchange_pool\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  uint64 pool_recovery_period = 2
+  bytes reserve_pool = 2 [
+    (gogoproto.moretags) = "yaml:\"reserve_pool\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  uint64 pool_recovery_period = 3
       [ (gogoproto.moretags) = "yaml:\"pool_recovery_period\"" ];
-  bytes min_stability_spread = 3 [
+  bytes min_stability_spread = 4 [
     (gogoproto.moretags) = "yaml:\"min_stability_spread\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false

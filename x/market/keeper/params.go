@@ -6,12 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// BasePool is liquidity pool(usdr unit) which will be made available per PoolRecoveryPeriod
-func (k Keeper) BasePool(ctx sdk.Context) (res sdk.Dec) {
-	k.paramSpace.Get(ctx, types.KeyBasePool, &res)
-	return
-}
-
 // MinStabilitySpread is the minimum spread applied to swaps to / from Note.
 // Intended to prevent swing trades exploiting oracle period delays
 func (k Keeper) MinStabilitySpread(ctx sdk.Context) (res sdk.Dec) {
@@ -28,6 +22,8 @@ func (k Keeper) PoolRecoveryPeriod(ctx sdk.Context) (res uint64) {
 // GetParams returns the total set of market parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	k.paramSpace.GetParamSetIfExists(ctx, &params)
+	params.ExchangePool = k.GetExchangePoolBalance(ctx).Amount.ToLegacyDec()
+	params.ReservePool = k.GetReservePoolBalance(ctx).Amount.ToLegacyDec()
 	return params
 }
 

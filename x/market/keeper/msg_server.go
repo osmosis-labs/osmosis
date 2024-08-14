@@ -6,6 +6,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 	"github.com/osmosis-labs/osmosis/v23/x/market/types"
 )
@@ -130,15 +132,26 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 			panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 		}
 
-		marketVaultBalance := k.BankKeeper.GetBalance(ctx, marketAcc.GetAddress(), appparams.BaseCoinUnit)
-
+		marketVaultBalance := k.GetExchangePoolBalance(ctx)
+		var neededBalanceFromReserve = osmomath.ZeroInt()
 		if marketVaultBalance.Amount.LT(calculatedAskCoin.Amount) {
-			return nil, errorsmod.Wrapf(types.ErrNotEnoughBalanceOnMarketVaults, "Market vaults do not have enough coins to swap. Available amount: %v, needed amount: %v", marketVaultBalance.Amount, calculatedAskCoin.Amount)
+			neededBalanceFromReserve = calculatedAskCoin.Amount.Sub(marketVaultBalance.Amount)
+			reserveVaultBalance := k.GetReservePoolBalance(ctx)
+			if reserveVaultBalance.Amount.LT(neededBalanceFromReserve) {
+				return nil, errorsmod.Wrapf(types.ErrNotEnoughBalanceOnMarketVaults, "Market vaults do not have enough coins to swap. Available amount: (main: %v), (reserve: %v), needed amount: %v",
+					marketVaultBalance.Amount, reserveVaultBalance.Amount, calculatedAskCoin.Amount)
+			}
 		}
 
-		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiver, sdk.NewCoins(swapCoin))
+		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiver, sdk.NewCoins(swapCoin.SubAmount(neededBalanceFromReserve)))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("could not send from main vault to recipient: %w", err)
+		}
+		if neededBalanceFromReserve.IsPositive() {
+			err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ReserveModuleName, receiver, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, neededBalanceFromReserve)))
+			if err != nil {
+				return nil, fmt.Errorf("could not send from reserve vault to recipient: %w", err)
+			}
 		}
 	}
 
