@@ -26,6 +26,7 @@ func GetQueryCmd() *cobra.Command {
 	marketQueryCmd.AddCommand(
 		GetCmdQuerySwap(),
 		GetCmdQueryParams(),
+		GetCmdQueryExchangeRequirements(),
 	)
 
 	return marketQueryCmd
@@ -96,5 +97,31 @@ func GetCmdQueryParams() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func GetCmdQueryExchangeRequirements() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "exchange-requirements",
+		Args:  cobra.NoArgs,
+		Short: "Query the current exchange requirements",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.ExchangeRequirements(context.Background(), &types.QueryExchangeRequirementsRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
 	return cmd
 }
