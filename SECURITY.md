@@ -2,15 +2,17 @@
 
 ## Introduction
 
-Security researchers are essential in identifying vulnerabilities that may impact the Osmosis ecosystem. If you have discovered a security vulnerability in the Osmosis chain or any repository managed by Osmosis, we encourage you to notify us using one of the methods outlined below.
+Security researchers are essential in identifying vulnerabilities that may impact the Symphony ecosystem. If you have discovered a security vulnerability in the Symphony chain or any repository managed by Symphony, we encourage you to notify us using one of the methods outlined below.
+
 
 ### Guidelines for Responsible Vulnerability Testing and Reporting
 
 1. **Refrain from testing vulnerabilities on our publicly accessible environments**, including but not limited to:
-  - Osmosis mainnet `osmosis-1` 
-  - Osmosis frontend: `app.osmosis.zone` 
-  - Osmosis public testnets
-  - Osmosis testnet frontend
+
+- Symphony mainnet `symphony-1`
+- Symphony frontend: `orchestralabs.org`
+- Symphony public testnets
+- Symphony testnet frontend
 
 2. **Avoid reporting security vulnerabilities through public channels, including GitHub issues**
 
@@ -20,11 +22,11 @@ To privately report a security vulnerability, please choose one of the following
 
 ### 1. Email
 
-Send your detailed vulnerability report to `security@osmosis.team`.
+Send your detailed vulnerability report to `dblackstone@orchestralabs.org`.
 
 ### 2. GitHub Private Vulnerability Reporting
 
-Utilize [GitHub's Private Vulnerability Reporting](https://github.com/osmosis-labs/osmosis/security/advisories/new) for confidential disclosure.
+Utilize [GitHub's Private Vulnerability Reporting](https://github.com/Orchestra-Labs/symphony/security/advisories/new) for confidential disclosure.
 
 ## Submit Vulnerability Report
 
@@ -49,12 +51,12 @@ During the vulnerability disclosure process, we ask security researchers to keep
 During this time:
 
 - Avoid exploiting any vulnerabilities you discover.
-- Demonstrate good faith by not disrupting or degrading Osmosis's services.
+- Demonstrate good faith by not disrupting or degrading Symphony's services.
 
 ## Severity Characterization
 
 | Severity     | Description                                                             |
-|--------------|-------------------------------------------------------------------------|
+| ------------ | ----------------------------------------------------------------------- |
 | **CRITICAL** | Immediate threat to critical systems (e.g., chain halts, funds at risk) |
 | **HIGH**     | Significant impact on major functionality                               |
 | **MEDIUM**   | Impacts minor features or exposes non-sensitive data                    |
@@ -64,9 +66,9 @@ During this time:
 
 Though we don't have an official bug bounty program, we generally offer rewards to security researchers who responsibly disclose vulnerabilities to us. Bounties are generally awarded for vulnerabilities classified as **high** or **critical** severity. Bounty amounts will be determined during the disclosure process, after the severity has been assessed.
 
-> [!WARNING] 
+> [!WARNING]
 > Targeting our production environments will disqualify you from receiving any bounty.
 
 ## Feedback on this Policy
 
-For recommendations on how to improve this policy, either submit a pull request or send an email to `security@osmosis.team`.
+For recommendations on how to improve this policy, either submit a pull request or send an email to `dblackstone@orchestralabs.org`.
