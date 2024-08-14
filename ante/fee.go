@@ -144,10 +144,9 @@ func DeductFees(txFeesKeeper txfeestypes.TxFeesKeeper, bankKeeper BankKeeper, ct
 
 	// checks if input fee is NOTE (assumes only one fee token exists in the fees array (as per the check in mempoolFeeDecorator))
 	if fees[0].Denom == baseDenom {
-		var enoughTax bool
-		fees, enoughTax = fees.SafeSub(baseDenomTax)
-		if !enoughTax {
-			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees to apply tax %s: %s", baseDenomTax, fees)
+		deductedFees, anyNegative := fees.SafeSub(baseDenomTax)
+		if anyNegative {
+			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees (%s) to apply tax (%s)", fees[0], baseDenomTax)
 		}
 		if baseDenomTax.IsPositive() {
 			err = bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), treasurytypes.ModuleName, sdk.Coins{baseDenomTax})
@@ -157,7 +156,7 @@ func DeductFees(txFeesKeeper txfeestypes.TxFeesKeeper, bankKeeper BankKeeper, ct
 		}
 
 		// sends to FeeCollectorName module account, which distributes staking rewards
-		err = bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), authtypes.FeeCollectorName, fees)
+		err = bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), authtypes.FeeCollectorName, deductedFees)
 		if err != nil {
 			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
