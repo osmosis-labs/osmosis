@@ -3,6 +3,8 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
 	"time"
 
@@ -214,6 +216,22 @@ func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessag
 	}
 	appState[txfeestypes.ModuleName] = txfeesGenStateBz
 
+	// auth module
+	authGenState := &genesisParams.AuthState
+	authGenStateBz, err := cdc.MarshalJSON(authGenState)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal auth genesis state: %w", err)
+	}
+	appState[authtypes.ModuleName] = authGenStateBz
+
+	// bank module
+	bankGenState := &genesisParams.BankState
+	bankGenStateBz, err := cdc.MarshalJSON(bankGenState)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal bank genesis state: %w", err)
+	}
+	appState[banktypes.ModuleName] = bankGenStateBz
+
 	// return appState and genDoc
 	return appState, genDoc, nil
 }
@@ -228,6 +246,9 @@ type GenesisParams struct {
 	GenesisTime         time.Time
 	NativeCoinMetadatas []banktypes.Metadata
 
+	AuthState          authtypes.GenesisState
+	BankState          banktypes.GenesisState
+	OracleState        oracletypes.GenesisState
 	StakingParams      stakingtypes.Params
 	MintParams         minttypes.Params
 	DistributionParams distributiontypes.Params
@@ -250,6 +271,10 @@ func MainnetGenesisParams() GenesisParams {
 
 	//genParams.AirdropSupply = osmomath.NewIntWithDecimal(5, 13)           // 5*10^13 note, 5*10^7 (50 million) melody
 	genParams.GenesisTime = time.Now()
+
+	genParams.BankState = *banktypes.DefaultGenesisState()
+	genParams.AuthState = *authtypes.DefaultGenesisState()
+	genParams.OracleState = *oracletypes.DefaultGenesisState()
 
 	genParams.NativeCoinMetadatas = []banktypes.Metadata{
 		{
@@ -370,40 +395,80 @@ func TestnetGenesisParams() GenesisParams {
 
 	genParams.GenesisTime = time.Now()
 
-	genParams.Epochs = append(genParams.Epochs, epochstypes.EpochInfo{
-		Identifier:            "15min",
-		StartTime:             time.Time{},
-		Duration:              15 * time.Minute,
-		CurrentEpoch:          0,
-		CurrentEpochStartTime: time.Time{},
-		EpochCountingStarted:  false,
-	})
-
-	for _, epoch := range genParams.Epochs {
-		epoch.StartTime = genParams.GenesisTime
-	}
+	//genParams.Epochs = append(genParams.Epochs, epochstypes.EpochInfo{
+	//	Identifier:            "15min",
+	//	StartTime:             time.Time{},
+	//	Duration:              15 * time.Minute,
+	//	CurrentEpoch:          0,
+	//	CurrentEpochStartTime: time.Time{},
+	//	EpochCountingStarted:  false,
+	//})
+	//
+	//for _, epoch := range genParams.Epochs {
+	//	epoch.StartTime = genParams.GenesisTime
+	//}
 
 	genParams.StakingParams.UnbondingTime = time.Hour * 24 * 7 * 2 // 2 weeks
 
-	genParams.MintParams.EpochIdentifier = "15min"     // 15min
-	genParams.MintParams.ReductionPeriodInEpochs = 192 // 2 days
+	//genParams.MintParams.EpochIdentifier = "15min"     // 15min
+	//genParams.MintParams.ReductionPeriodInEpochs = 192 // 2 days
+	//
+	//genParams.GovParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(
+	//	genParams.NativeCoinMetadatas[0].Base,
+	//	osmomath.NewInt(1000000), // 1 OSMO
+	//))
+	//genParams.GovParams.Quorum = "0.0000000001"           // 0.00000001%
+	//*genParams.GovParams.VotingPeriod = time.Second * 300 // 300 seconds
+	//
+	//genParams.IncentivesGenesis = *incentivestypes.DefaultGenesis()
+	//genParams.IncentivesGenesis.Params.DistrEpochIdentifier = "15min"
+	//genParams.IncentivesGenesis.LockableDurations = []time.Duration{
+	//	time.Minute * 30, // 30 min
+	//	time.Hour * 1,    // 1 hour
+	//	time.Hour * 2,    // 2 hours
+	//}
+	//
+	//genParams.PoolIncentivesGenesis.LockableDurations = genParams.IncentivesGenesis.LockableDurations
 
-	genParams.GovParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(
-		genParams.NativeCoinMetadatas[0].Base,
-		osmomath.NewInt(1000000), // 1 OSMO
-	))
-	genParams.GovParams.Quorum = "0.0000000001"           // 0.00000001%
-	*genParams.GovParams.VotingPeriod = time.Second * 300 // 300 seconds
-
-	genParams.IncentivesGenesis = *incentivestypes.DefaultGenesis()
-	genParams.IncentivesGenesis.Params.DistrEpochIdentifier = "15min"
-	genParams.IncentivesGenesis.LockableDurations = []time.Duration{
-		time.Minute * 30, // 30 min
-		time.Hour * 1,    // 1 hour
-		time.Hour * 2,    // 2 hours
+	err := createTestnetAccounts(&genParams)
+	if err != nil {
+		panic(err)
 	}
 
-	genParams.PoolIncentivesGenesis.LockableDurations = genParams.IncentivesGenesis.LockableDurations
-
 	return genParams
+}
+
+func createTestnetAccounts(genParams *GenesisParams) error {
+	var accs authtypes.GenesisAccounts
+	var bankBalances []banktypes.Balance
+	genesisBalances := map[string]sdk.Coins{
+		"symphony13luum7djwdhkqg3tw9rae04an6rl036095d7qr": sdk.NewCoins(sdk.NewCoin("note", sdk.NewInt(10_000_000*appParams.MicroUnit))), // 10 million note
+		"symphony1qdvzqujxqd0pqwcdtpxgfcqcvxn777kax7mu86": sdk.NewCoins(sdk.NewCoin("note", sdk.NewInt(1_000_000*appParams.MicroUnit))),  // 1 million note to faucet
+		"symphony1nkdh6l5wkygv7cuw6kfalknpus6fqmsr746f6k": sdk.NewCoins(sdk.NewCoin("note", sdk.NewInt(1_000*appParams.MicroUnit))),      // 1,000 note to validator
+		"symphony16agv74asz2zlcyq4eusk4h0hkxwpp0hxex83jk": sdk.NewCoins(sdk.NewCoin("note", sdk.NewInt(1_000*appParams.MicroUnit))),      // 1,000 note to validator
+		"symphony1dmlepawltn5hrvmz6humx99rrh48jdst4dce86": sdk.NewCoins(sdk.NewCoin("note", sdk.NewInt(1_000*appParams.MicroUnit))),      // 1,000 note to validator
+		"symphony1vhhgnhmnw0x9zfslv4m2plchx8ecgthugemp74": sdk.NewCoins(sdk.NewCoin("note", sdk.NewInt(1_000*appParams.MicroUnit))),      // 1,000 note to validator
+	}
+
+	for addr, coins := range genesisBalances {
+		addr := sdk.MustAccAddressFromBech32(addr)
+		balances := banktypes.Balance{Address: addr.String(), Coins: coins.Sort()}
+		baseAccount := authtypes.NewBaseAccount(addr, nil, 0, 0)
+		if err := baseAccount.Validate(); err != nil {
+			return fmt.Errorf("failed to validate new genesis account: %w", err)
+		}
+		accs = append(accs, baseAccount)
+		bankBalances = append(bankBalances, balances)
+	}
+
+	accs = authtypes.SanitizeGenesisAccounts(accs)
+
+	genAccs, err := authtypes.PackAccounts(accs)
+	if err != nil {
+		return fmt.Errorf("failed to convert accounts into any's: %w", err)
+	}
+	genParams.AuthState.Accounts = genAccs
+	genParams.BankState.Balances = banktypes.SanitizeGenesisBalances(bankBalances)
+
+	return nil
 }
