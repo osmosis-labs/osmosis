@@ -11,8 +11,3 @@ import (
 func (k Keeper) GetMarketAccount(ctx sdk.Context) authtypes.ModuleAccountI {
 	return k.AccountKeeper.GetModuleAccount(ctx, types.ModuleName)
 }
-
-// GetReserveMarketAccount returns reserve market ModuleAccount
-func (k Keeper) GetReserveMarketAccount(ctx sdk.Context) authtypes.ModuleAccountI {
-	return k.AccountKeeper.GetModuleAccount(ctx, types.ReserveModuleName)
-}

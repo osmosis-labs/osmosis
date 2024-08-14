@@ -9,6 +9,7 @@ import (
 	tendermint "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	"github.com/osmosis-labs/osmosis/v23/x/market"
 	"github.com/osmosis-labs/osmosis/v23/x/oracle"
+	"github.com/osmosis-labs/osmosis/v23/x/treasury"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -114,6 +115,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 	poolmanager.AppModuleBasic{},
 	oracle.AppModuleBasic{},
 	market.AppModuleBasic{},
+	treasury.AppModuleBasic{},
 	twapmodule.AppModuleBasic{},
 	concentratedliquidity.AppModuleBasic{},
 	protorev.AppModuleBasic{},

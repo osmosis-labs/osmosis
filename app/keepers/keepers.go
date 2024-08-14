@@ -38,9 +38,6 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
-	marketkeeper "github.com/osmosis-labs/osmosis/v23/x/market/keeper"
-	markettypes "github.com/osmosis-labs/osmosis/v23/x/market/types"
-
 	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
@@ -49,11 +46,15 @@ import (
 	"github.com/osmosis-labs/osmosis/v23/x/gamm"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v23/x/ibc-rate-limit"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v23/x/ibc-rate-limit/types"
+	marketkeeper "github.com/osmosis-labs/osmosis/v23/x/market/keeper"
+	markettypes "github.com/osmosis-labs/osmosis/v23/x/market/types"
 	oraclekeeper "github.com/osmosis-labs/osmosis/v23/x/oracle/keeper"
 	oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
 	"github.com/osmosis-labs/osmosis/v23/x/poolmanager"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v23/x/protorev"
+	treasurykeeper "github.com/osmosis-labs/osmosis/v23/x/treasury/keeper"
+	treasurytypes "github.com/osmosis-labs/osmosis/v23/x/treasury/types"
 	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
@@ -166,8 +167,9 @@ type AppKeepers struct {
 	ContractKeeper               *wasmkeeper.PermissionedKeeper
 	TokenFactoryKeeper           *tokenfactorykeeper.Keeper
 	PoolManagerKeeper            *poolmanager.Keeper
-	MarketKeeper                 *marketkeeper.Keeper
 	OracleKeeper                 *oraclekeeper.Keeper
+	MarketKeeper                 *marketkeeper.Keeper
+	TreasuryKeeper               *treasurykeeper.Keeper
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
 	ConcentratedLiquidityKeeper  *concentratedliquidity.Keeper
 	CosmwasmPoolKeeper           *cosmwasmpool.Keeper
@@ -551,6 +553,16 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.MarketKeeper = &marketKeeper
 
+	treasuryKeeper := treasurykeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[treasurytypes.StoreKey],
+		appKeepers.GetSubspace(treasurytypes.ModuleName),
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.MarketKeeper,
+		appKeepers.OracleKeeper)
+	appKeepers.TreasuryKeeper = &treasuryKeeper
+
 	// Pass the contract keeper to all the structs (generally ICS4Wrappers for ibc middlewares) that need it
 	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
 	appKeepers.RateLimitingICS4Wrapper.ContractKeeper = appKeepers.ContractKeeper
@@ -749,6 +761,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(poolmanagertypes.ModuleName)
 	paramsKeeper.Subspace(oracletypes.ModuleName)
 	paramsKeeper.Subspace(markettypes.ModuleName)
+	paramsKeeper.Subspace(treasurytypes.ModuleName)
 	paramsKeeper.Subspace(gammtypes.ModuleName)
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
@@ -871,6 +884,7 @@ func KVStoreKeys() []string {
 		poolmanagertypes.StoreKey,
 		oracletypes.StoreKey,
 		markettypes.StoreKey,
+		treasurytypes.StoreKey,
 		authzkeeper.StoreKey,
 		txfeestypes.StoreKey,
 		superfluidtypes.StoreKey,

@@ -19,6 +19,12 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/osmosis/market/v1beta1/params";
   }
+
+  rpc ExchangeRequirements(QueryExchangeRequirementsRequest)
+      returns (QueryExchangeRequirementsResponse) {
+    option (google.api.http).get =
+        "/osmosis/market/v1beta1/exchange_requirements";
+  }
 }
 
 // QuerySwapRequest is the request type for the Query/Swap RPC method.
@@ -45,4 +51,25 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params defines the parameters of the module.
   Params params = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryExchangeRequirementsRequest is the request type for the
+// Query/ExchangeRequirements RPC method.
+message QueryExchangeRequirementsRequest {}
+
+// QueryExchangeRequirementsResponse is the response type for the
+// Query/ExchangeRequirements RPC method.
+message QueryExchangeRequirementsResponse {
+  repeated ExchangeRequirement exchange_requirements = 1
+      [ (gogoproto.nullable) = false ];
+  cosmos.base.v1beta1.Coin total = 2 [ (gogoproto.nullable) = false ];
+}
+
+message ExchangeRequirement {
+  cosmos.base.v1beta1.Coin base_currency = 1 [ (gogoproto.nullable) = false ];
+  string exchange_rate = 2 [
+    (gogoproto.moretags) = "yaml:\"exchange_rate\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
 }

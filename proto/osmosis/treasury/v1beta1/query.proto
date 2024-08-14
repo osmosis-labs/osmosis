@@ -1,0 +1,48 @@
+syntax = "proto3";
+package osmosis.treasury.v1beta1;
+
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+
+import "osmosis/treasury/v1beta1/treasury.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v23/x/treasury/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // TaxRate return the current tax rate
+  rpc TaxRate(QueryTaxRateRequest) returns (QueryTaxRateResponse) {
+    option (google.api.http).get = "/osmosis/treasury/v1beta1/tax_rate";
+  }
+
+  // Params queries all parameters.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/osmosis/treasury/v1beta1/params";
+  }
+}
+
+// QueryTaxRateRequest is the request type for the Query/TaxRate RPC method.
+message QueryTaxRateRequest {}
+
+// QueryTaxRateResponse is response type for the
+// Query/TaxRate RPC method.
+message QueryTaxRateResponse {
+  string tax_rate = 1 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params defines the parameters of the module.
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}

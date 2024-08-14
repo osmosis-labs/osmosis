@@ -77,6 +77,11 @@ type BankKeeper interface {
 	SendCoins(ctx sdk.Context, from, to sdk.AccAddress, amt sdk.Coins) error
 }
 
+// OracleKeeper for feeder validation
+type OracleKeeper interface {
+	ValidateFeeder(ctx sdk.Context, feederAddr sdk.AccAddress, validatorAddr sdk.ValAddress) error
+}
+
 // TxFeesKeeper defines the expected transaction fee keeper
 type TxFeesKeeper interface {
 	ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin, error)

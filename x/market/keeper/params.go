@@ -23,7 +23,6 @@ func (k Keeper) PoolRecoveryPeriod(ctx sdk.Context) (res uint64) {
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	k.paramSpace.GetParamSetIfExists(ctx, &params)
 	params.ExchangePool = k.GetExchangePoolBalance(ctx).Amount.ToLegacyDec()
-	params.ReservePool = k.GetReservePoolBalance(ctx).Amount.ToLegacyDec()
 	return params
 }
 

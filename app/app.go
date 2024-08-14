@@ -33,8 +33,7 @@ import (
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	markettypes "github.com/osmosis-labs/osmosis/v23/x/market/types"
-	oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
-
+	treasurytypes "github.com/osmosis-labs/osmosis/v23/x/treasury/types"
 	//oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
 
 	"github.com/osmosis-labs/osmosis/v23/ingest/sqs"
@@ -129,10 +128,9 @@ var (
 
 	// module accounts that are allowed to receive tokens.
 	allowedReceivingModAcc = map[string]bool{
-		protorevtypes.ModuleName:      true,
-		oracletypes.ModuleName:        true,
-		markettypes.ModuleName:        true,
-		markettypes.ReserveModuleName: true,
+		protorevtypes.ModuleName: true,
+		markettypes.ModuleName:   true,
+		treasurytypes.ModuleName: true,
 	}
 
 	// TODO: Refactor wasm items into a wasm.go file
@@ -387,6 +385,8 @@ func NewSymphonyApp(
 		app.GetKey(wasmtypes.StoreKey),
 		app.AccountKeeper,
 		app.BankKeeper,
+		app.OracleKeeper,
+		app.TreasuryKeeper,
 		app.TxFeesKeeper,
 		app.GAMMKeeper,
 		ante.DefaultSigVerificationGasConsumer,
