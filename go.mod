@@ -18,7 +18,7 @@ require (
 	cosmossdk.io/x/upgrade v0.1.4
 	github.com/CosmWasm/wasmd v0.52.0
 	github.com/CosmWasm/wasmvm v1.5.4
-	github.com/CosmWasm/wasmvm/v2 v2.1.0
+	github.com/CosmWasm/wasmvm/v2 v2.1.1
 	github.com/cometbft/cometbft v0.38.10
 	github.com/cometbft/cometbft-db v0.12.0
 	github.com/cosmos/cosmos-db v1.0.2
@@ -288,7 +288,7 @@ replace (
 
 	// UNFORKING v2 TOOD: Need to manually define these until we tag, it keeps trying to "upgrade" which actually downgrades us to the old sdk submodules logic
 	github.com/osmosis-labs/osmosis/osmomath => github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240517165907-1625703bc16d
-	github.com/osmosis-labs/osmosis/osmoutils => github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240624163106-4c70b0253af8
+	github.com/osmosis-labs/osmosis/osmoutils => github.com/osmosis-labs/osmosis/osmoutils v0.0.12-0.20240814114813-131c58911ab6
 	github.com/osmosis-labs/osmosis/x/epochs => github.com/osmosis-labs/osmosis/x/epochs v0.0.8-0.20240517165907-1625703bc16d
 	github.com/osmosis-labs/osmosis/x/ibc-hooks => github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20240517165907-1625703bc16d
 
