@@ -53,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8581](https://github.com/osmosis-labs/osmosis/pull/8581) Add ledger signing to smart account module
 * [#8573](https://github.com/osmosis-labs/osmosis/pull/8573) Increase unauthenticated gas to fix fee token issue
 * [#8609](https://github.com/osmosis-labs/osmosis/pull/8609) Exempt `UnrestrictedPoolCreatorWhitelist` addresses from pool creation fee
+* [#8616](https://github.com/osmosis-labs/osmosis/pull/8616) chore: upgrade wasmd to v0.52.0 and wasmvm to v2.1.1
 
 ### Config
 
