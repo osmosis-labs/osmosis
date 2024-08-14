@@ -1,11 +1,11 @@
 package types
 
 import (
-	fmt "fmt"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
