@@ -37,11 +37,6 @@ func NewKeeper(
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
-	// ensure reserve market module account is set
-	if addr := accountKeeper.GetModuleAddress(types.ReserveModuleName); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.ReserveModuleName))
-	}
-
 	// set KeyTable if it has not already been set
 	if !paramstore.HasKeyTable() {
 		paramstore = paramstore.WithKeyTable(types.ParamKeyTable())
@@ -66,11 +61,24 @@ func (k Keeper) GetExchangePoolBalance(ctx sdk.Context) sdk.Coin {
 	return k.BankKeeper.GetBalance(ctx, account.GetAddress(), appparams.BaseCoinUnit)
 }
 
-func (k Keeper) GetReservePoolBalance(ctx sdk.Context) sdk.Coin {
-	account := k.GetReserveMarketAccount(ctx)
-	if account == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+// GetExchangeRequirement calculates the total amount of Melody asset required to back the assets in the oracle module.
+func (k Keeper) GetExchangeRequirement(ctx sdk.Context) sdk.Dec {
+	total := sdk.ZeroDec()
+	for _, req := range k.getExchangeRates(ctx) {
+		total = total.Add(req.BaseCurrency.Amount.ToLegacyDec().Mul(req.ExchangeRate))
 	}
+	return total
+}
 
-	return k.BankKeeper.GetBalance(ctx, account.GetAddress(), appparams.BaseCoinUnit)
+func (k Keeper) getExchangeRates(ctx sdk.Context) []types.ExchangeRequirement {
+	var result []types.ExchangeRequirement
+	k.OracleKeeper.IterateNoteExchangeRates(ctx, func(denom string, exchangeRate sdk.Dec) (stop bool) {
+		supply := k.BankKeeper.GetSupply(ctx, denom)
+		result = append(result, types.ExchangeRequirement{
+			BaseCurrency: supply,
+			ExchangeRate: exchangeRate,
+		})
+		return false
+	})
+	return result
 }

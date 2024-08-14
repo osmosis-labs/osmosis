@@ -30,10 +30,7 @@ var _ paramstypes.ParamSet = &Params{}
 
 // DefaultParams creates default market module parameters
 func DefaultParams() Params {
-	return Params{
-		PoolRecoveryPeriod: DefaultPoolRecoveryPeriod,
-		MinStabilitySpread: DefaultMinStabilitySpread,
-	}
+	return Params{}
 }
 
 // ParamKeyTable returns the parameter key table.
@@ -50,25 +47,13 @@ func (p Params) String() string {
 // ParamSetPairs implements the ParamSet interface and returns all the key/value pairs
 // pairs of market module's parameters.
 func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
-	return paramstypes.ParamSetPairs{
-		paramstypes.NewParamSetPair(KeyPoolRecoveryPeriod, &p.PoolRecoveryPeriod, validatePoolRecoveryPeriod),
-		paramstypes.NewParamSetPair(KeyMinStabilitySpread, &p.MinStabilitySpread, validateMinStabilitySpread),
-	}
+	return paramstypes.ParamSetPairs{}
 }
 
 // Validate a set of params
 func (p Params) Validate() error {
 	if p.ExchangePool.IsNegative() {
 		return fmt.Errorf("exchange pool should be positive or zero, is %s", p.ExchangePool)
-	}
-	if p.ReservePool.IsNegative() {
-		return fmt.Errorf("reserve pool should be positive or zero, is %s", p.ReservePool)
-	}
-	if p.PoolRecoveryPeriod == 0 {
-		return fmt.Errorf("pool recovery period should be positive, is %d", p.PoolRecoveryPeriod)
-	}
-	if p.MinStabilitySpread.IsNegative() || p.MinStabilitySpread.GT(sdk.OneDec()) {
-		return fmt.Errorf("market minimum stability spead should be a value between [0,1], is %s", p.MinStabilitySpread)
 	}
 
 	return nil

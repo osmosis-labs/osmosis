@@ -14,6 +14,8 @@ import (
 	markettypes "github.com/osmosis-labs/osmosis/v23/x/market/types"
 	"github.com/osmosis-labs/osmosis/v23/x/oracle"
 	oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/v23/x/treasury"
+	treasurytypes "github.com/osmosis-labs/osmosis/v23/x/treasury/types"
 
 	ibcwasm "github.com/cosmos/ibc-go/modules/light-clients/08-wasm"
 	ibcwasmtypes "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
@@ -136,7 +138,7 @@ var moduleAccountPermissions = map[string][]string{
 	valsetpreftypes.ModuleName:               {authtypes.Staking},
 	poolmanagertypes.ModuleName:              nil,
 	markettypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
-	markettypes.ReserveModuleName:            nil,
+	treasurytypes.ModuleName:                 nil,
 	oracletypes.ModuleName:                   nil,
 	cosmwasmpooltypes.ModuleName:             nil,
 }
@@ -178,8 +180,9 @@ func appModules(
 		app.RawIcs20TransferAppModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		poolmanager.NewAppModule(*app.PoolManagerKeeper, app.GAMMKeeper),
-		oracle.NewAppModule(appCodec, *app.OracleKeeper, app.AccountKeeper, app.BankKeeper),
 		market.NewAppModule(*app.MarketKeeper, app.AccountKeeper, app.BankKeeper, app.OracleKeeper),
+		oracle.NewAppModule(appCodec, *app.OracleKeeper, app.AccountKeeper, app.BankKeeper),
+		treasury.NewAppModule(appCodec, *app.TreasuryKeeper),
 		twapmodule.NewAppModule(*app.TwapKeeper),
 		concentratedliquidity.NewAppModule(appCodec, *app.ConcentratedLiquidityKeeper),
 		protorev.NewAppModule(appCodec, *app.ProtoRevKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper, app.GAMMKeeper),
@@ -272,6 +275,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		poolmanagertypes.ModuleName,
 		markettypes.ModuleName,
 		oracletypes.ModuleName,
+		treasurytypes.ModuleName,
 		protorevtypes.ModuleName,
 		twaptypes.ModuleName,
 		txfeestypes.ModuleName,
