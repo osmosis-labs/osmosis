@@ -354,7 +354,8 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithHomeDir(homeDir).
 		WithViper("OSMOSIS")
 
-	tempApp := osmosis.NewOsmosisApp(log.NewNopLogger(), cosmosdb.NewMemDB(), nil, true, map[int64]bool{}, osmosis.DefaultNodeHome, 5, sims.EmptyAppOptions{}, osmosis.EmptyWasmOpts, baseapp.SetChainID("osmosis-1"))
+	tempDir := ".temp-osmosis"
+	tempApp := osmosis.NewOsmosisApp(log.NewNopLogger(), cosmosdb.NewMemDB(), nil, true, map[int64]bool{}, tempDir, 5, sims.EmptyAppOptions{}, osmosis.EmptyWasmOpts, baseapp.SetChainID("osmosis-1"))
 
 	// Allows you to add extra params to your client.toml
 	// gas, gas-price, gas-adjustment, and human-readable-denoms
@@ -471,6 +472,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	if err := autoCliOpts(initClientCtx, tempApp).EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}
+	os.RemoveAll(tempDir)
 
 	return rootCmd, encodingConfig
 }
