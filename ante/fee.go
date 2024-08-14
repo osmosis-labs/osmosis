@@ -144,7 +144,11 @@ func DeductFees(txFeesKeeper txfeestypes.TxFeesKeeper, bankKeeper BankKeeper, ct
 
 	// checks if input fee is NOTE (assumes only one fee token exists in the fees array (as per the check in mempoolFeeDecorator))
 	if fees[0].Denom == baseDenom {
-		fees = fees.Sub(baseDenomTax)
+		var enoughTax bool
+		fees, enoughTax = fees.SafeSub(baseDenomTax)
+		if !enoughTax {
+			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees to apply tax %s: %s", baseDenomTax, fees)
+		}
 		if baseDenomTax.IsPositive() {
 			err = bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), treasurytypes.ModuleName, sdk.Coins{baseDenomTax})
 			if err != nil {
