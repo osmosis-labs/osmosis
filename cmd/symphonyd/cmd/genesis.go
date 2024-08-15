@@ -232,6 +232,14 @@ func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessag
 	}
 	appState[banktypes.ModuleName] = bankGenStateBz
 
+	// oracle module
+	oracleGenState := &genesisParams.OracleState
+	oracleGenStateBz, err := cdc.MarshalJSON(oracleGenState)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal oracle genesis state: %w", err)
+	}
+	appState[oracletypes.ModuleName] = oracleGenStateBz
+
 	// return appState and genDoc
 	return appState, genDoc, nil
 }
@@ -293,6 +301,9 @@ func MainnetGenesisParams() GenesisParams {
 			},
 			Base:    appParams.BaseCoinUnit,
 			Display: appParams.HumanCoinUnit,
+		},
+		{
+			Description: "The native token of Symphony",
 		},
 	}
 
@@ -386,6 +397,19 @@ func MainnetGenesisParams() GenesisParams {
 
 	genParams.TxFees = *txfeestypes.DefaultGenesis()
 	genParams.TxFees.Basedenom = genParams.NativeCoinMetadatas[0].Base
+
+	// oracle
+	defaultTobixTax := sdk.ZeroDec()
+	genParams.OracleState.TobinTaxes = []oracletypes.TobinTax{
+		{Denom: appParams.MicroUSDDenom, TobinTax: defaultTobixTax},
+		{Denom: appParams.MicroHKDDenom, TobinTax: defaultTobixTax},
+		{Denom: appParams.MicroVNDDenom, TobinTax: defaultTobixTax},
+	}
+	genParams.OracleState.ExchangeRates = oracletypes.ExchangeRateTuples{
+		{Denom: appParams.MicroUSDDenom, ExchangeRate: sdk.NewDecWithPrec(10, 0)},    // 1 USD = 10 MLD
+		{Denom: appParams.MicroHKDDenom, ExchangeRate: sdk.NewDecWithPrec(12820, 4)}, // 1 HKD = 1,2820 MLD
+		{Denom: appParams.MicroVNDDenom, ExchangeRate: sdk.NewDecWithPrec(399, 6)},   // 1 VND = 0,000399 MLD
+	}
 
 	return genParams
 }
