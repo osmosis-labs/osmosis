@@ -26,7 +26,7 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data *types.GenesisState
 	treasuryCoins := sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 10_000_000*appparams.MicroUnit))
 	err := keeper.BankKeeper.MintCoins(ctx, types.ModuleName, treasuryCoins) // 10 mil to treasury
 	if err != nil {
-		panic("could not found genesis treasury coins")
+		panic("could not mint genesis treasury coins")
 	}
 }
 
