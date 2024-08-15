@@ -391,8 +391,8 @@ func (uc *UpgradeConfigurer) runForkUpgrade() {
 func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHeight int64) error {
 	// upgrade containers to the locally compiled daemon
 	uc.t.Logf("starting upgrade for chain-id: %s...", chainConfig.Id)
-	uc.containerManager.OsmosisRepository = containers.CurrentBranchOsmoRepository
-	uc.containerManager.OsmosisTag = containers.CurrentBranchOsmoTag
+	uc.containerManager.SymphonyRepository = containers.CurrentBranchOsmoRepository
+	uc.containerManager.SymphonyTag = containers.CurrentBranchOsmoTag
 
 	for _, node := range chainConfig.NodeConfigs {
 		if err := node.Run(); err != nil {

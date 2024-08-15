@@ -480,8 +480,8 @@ func (m *Manager) RunNodeResource(chainId string, containerName, valCondifDir st
 
 	runOpts := &dockertest.RunOptions{
 		Name:       containerName,
-		Repository: m.OsmosisRepository,
-		Tag:        m.OsmosisTag,
+		Repository: m.SymphonyRepository,
+		Tag:        m.SymphonyTag,
 		NetworkID:  m.network.Network.ID,
 		User:       "root:root",
 		Cmd:        []string{"start"},

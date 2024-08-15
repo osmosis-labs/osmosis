@@ -6,8 +6,8 @@ type ImageConfig struct {
 	InitRepository string
 	InitTag        string
 
-	OsmosisRepository string
-	OsmosisTag        string
+	SymphonyRepository string
+	SymphonygTag       string
 
 	RelayerRepository string
 	RelayerTag        string
@@ -46,8 +46,8 @@ func NewImageConfig(isUpgrade, isFork bool) ImageConfig {
 		// If upgrade is not tested, we do not need InitRepository and InitTag
 		// because we directly call the initialization logic without
 		// the need for Docker.
-		config.OsmosisRepository = CurrentBranchOsmoRepository
-		config.OsmosisTag = CurrentBranchOsmoTag
+		config.SymphonyRepository = CurrentBranchOsmoRepository
+		config.SymphonyTag = CurrentBranchOsmoTag
 		return config
 	}
 
@@ -61,16 +61,16 @@ func NewImageConfig(isUpgrade, isFork bool) ImageConfig {
 		// Normally, validators switch the binaries pre-fork height
 		// Then, once the fork height is reached, the state breaking-logic
 		// is run.
-		config.OsmosisRepository = CurrentBranchOsmoRepository
-		config.OsmosisTag = CurrentBranchOsmoTag
+		config.SymphonyRepository = CurrentBranchOsmoRepository
+		config.SymphonyTag = CurrentBranchOsmoTag
 	} else {
 		// Upgrades are run at the time when upgrade height is reached
 		// and are submitted via a governance proposal. Therefore, we
 		// must start running the previous Osmosis version. Then, the node
 		// should auto-upgrade, at which point we can restart the updated
 		// Osmosis validator container.
-		config.OsmosisRepository = previousVersionOsmoRepository
-		config.OsmosisTag = previousVersionOsmoTag
+		config.SymphonyRepository = previousVersionOsmoRepository
+		config.SymphonyTag = previousVersionOsmoTag
 	}
 
 	return config
