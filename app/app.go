@@ -2,6 +2,8 @@ package app
 
 import (
 	"fmt"
+	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
+	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
 	"io"
 	"net/http"
 	"os"
@@ -592,6 +594,17 @@ func InitSymphonyAppForTestnet(app *SymphonyApp, newValAddr bytes.HexBytes, newV
 	weekEpochInfo.CurrentEpochStartHeight = app.LastBlockHeight()
 	app.EpochsKeeper.DeleteEpochInfo(ctx, "week")
 	err = app.EpochsKeeper.AddEpochInfo(ctx, weekEpochInfo)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+
+	// fund reserve
+	treasuryCoins := sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 10_000_000*appparams.MicroUnit))
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, treasuryCoins) // 10 mil to treasury
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+	err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, treasurytypes.ModuleName, treasuryCoins)
 	if err != nil {
 		tmos.Exit(err.Error())
 	}
