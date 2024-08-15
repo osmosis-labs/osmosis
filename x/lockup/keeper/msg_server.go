@@ -139,6 +139,8 @@ func createBeginUnlockEvent(lock *types.PeriodLock) sdk.Event {
 		types.TypeEvtBeginUnlock,
 		sdk.NewAttribute(types.AttributePeriodLockID, osmoutils.Uint64ToString(lock.ID)),
 		sdk.NewAttribute(types.AttributePeriodLockOwner, lock.Owner),
+		sdk.NewAttribute(types.AttributePeriodLockDenom, lock.Coins[0].Denom),
+		sdk.NewAttribute(types.AttributePeriodLockAmount, lock.Coins[0].Amount.String()),
 		sdk.NewAttribute(types.AttributePeriodLockDuration, lock.Duration.String()),
 		sdk.NewAttribute(types.AttributePeriodLockUnlockTime, lock.EndTime.String()),
 	)

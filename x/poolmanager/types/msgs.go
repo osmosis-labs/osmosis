@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -8,11 +10,13 @@ import (
 
 // constants.
 const (
-	TypeMsgSwapExactAmountIn            = "swap_exact_amount_in"
-	TypeMsgSwapExactAmountOut           = "swap_exact_amount_out"
-	TypeMsgSplitRouteSwapExactAmountIn  = "split_route_swap_exact_amount_in"
-	TypeMsgSplitRouteSwapExactAmountOut = "split_route_swap_exact_amount_out"
-	TypeMsgSetDenomPairTakerFee         = "set_denom_pair_taker_fee"
+	TypeMsgSwapExactAmountIn                     = "swap_exact_amount_in"
+	TypeMsgSwapExactAmountOut                    = "swap_exact_amount_out"
+	TypeMsgSplitRouteSwapExactAmountIn           = "split_route_swap_exact_amount_in"
+	TypeMsgSplitRouteSwapExactAmountOut          = "split_route_swap_exact_amount_out"
+	TypeMsgSetDenomPairTakerFee                  = "set_denom_pair_taker_fee"
+	TypeMsgSetTakerFeeShareAgreementForDenomPair = "set_taker_fee_share_agreement_for_denom_pair"
+	TypeMsgSetRegisteredAlloyedPool              = "set_registered_alloyed_pool"
 )
 
 var _ sdk.Msg = &MsgSwapExactAmountIn{}
@@ -167,6 +171,71 @@ func (msg MsgSetDenomPairTakerFee) ValidateBasic() error {
 }
 
 func (msg MsgSetDenomPairTakerFee) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgSetTakerFeeShareAgreementForDenom{}
+
+func (msg MsgSetTakerFeeShareAgreementForDenom) Route() string { return RouterKey }
+func (msg MsgSetTakerFeeShareAgreementForDenom) Type() string {
+	return TypeMsgSetTakerFeeShareAgreementForDenomPair
+}
+
+func (msg MsgSetTakerFeeShareAgreementForDenom) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return InvalidSenderError{Sender: msg.Sender}
+	}
+
+	_, err = sdk.AccAddressFromBech32(msg.SkimAddress)
+	if err != nil {
+		return fmt.Errorf("invalid skim address: %s", msg.SkimAddress)
+	}
+
+	if msg.SkimPercent.GT(OneDec) || msg.SkimPercent.IsNegative() {
+		return fmt.Errorf("invalid skim percent: %s", msg.SkimPercent)
+	}
+
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (msg MsgSetTakerFeeShareAgreementForDenom) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgSetRegisteredAlloyedPool{}
+
+func (msg MsgSetRegisteredAlloyedPool) Route() string { return RouterKey }
+func (msg MsgSetRegisteredAlloyedPool) Type() string {
+	return TypeMsgSetRegisteredAlloyedPool
+}
+
+func (msg MsgSetRegisteredAlloyedPool) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return InvalidSenderError{Sender: msg.Sender}
+	}
+
+	if msg.PoolId <= 0 {
+		return fmt.Errorf("invalid pool id: %d", msg.PoolId)
+	}
+
+	return nil
+}
+
+func (msg MsgSetRegisteredAlloyedPool) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)

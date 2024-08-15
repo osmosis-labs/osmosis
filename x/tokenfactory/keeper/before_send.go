@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"encoding/json"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -26,6 +27,28 @@ func (k Keeper) setBeforeSendHook(ctx sdk.Context, denom string, cosmwasmAddress
 	if cosmwasmAddress == "" {
 		store.Delete([]byte(types.BeforeSendHookAddressPrefixKey))
 		return nil
+	} else {
+		// if a contract is being set, call the contract using cache context
+		// to test if the contract is an existing, valid contract.
+		cacheCtx, _ := ctx.CacheContext()
+
+		cwAddr, err := sdk.AccAddressFromBech32(cosmwasmAddress)
+		if err != nil {
+			return err
+		}
+
+		tempMsg := types.TrackBeforeSendSudoMsg{
+			TrackBeforeSend: types.TrackBeforeSendMsg{},
+		}
+		msgBz, err := json.Marshal(tempMsg)
+		if err != nil {
+			return err
+		}
+		_, err = k.contractKeeper.Sudo(cacheCtx, cwAddr, msgBz)
+
+		if err != nil && strings.Contains(err.Error(), "no such contract") {
+			return err
+		}
 	}
 
 	_, err = sdk.AccAddressFromBech32(cosmwasmAddress)

@@ -144,12 +144,12 @@ var (
 		{
 			Section: "consensus",
 			Key:     "timeout_commit",
-			Value:   "600ms",
+			Value:   "500ms",
 		},
 		{
 			Section: "consensus",
 			Key:     "timeout_propose",
-			Value:   "2s",
+			Value:   "1.8s",
 		},
 		{
 			Section: "consensus",
@@ -468,7 +468,6 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 	initRootCmd(rootCmd, encodingConfig, tempApp)
 
-	// UNFORKING v2 TODO: I don't think we have an option but to implement this. With out, the sdk queries do not show up in the CLI.
 	if err := autoCliOpts(initClientCtx, tempApp).EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}
@@ -524,7 +523,7 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 		}()
 
 		// Check if the file is writable
-		if fileInfo.Mode()&os.FileMode(0200) != 0 {
+		if fileInfo.Mode()&os.FileMode(0o200) != 0 {
 			// It will be re-read in server.InterceptConfigsPreRunHandler
 			// this may panic for permissions issues. So we catch the panic.
 			// Note that this exits with a non-zero exit code if fails to write the file.
@@ -585,7 +584,7 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 		}
 
 		// Check if the file is writable
-		if fileInfo.Mode()&os.FileMode(0200) != 0 {
+		if fileInfo.Mode()&os.FileMode(0o200) != 0 {
 			// It will be re-read in server.InterceptConfigsPreRunHandler
 			// this may panic for permissions issues. So we catch the panic.
 			// Note that this exits with a non-zero exit code if fails to write the file.
@@ -637,10 +636,12 @@ func initAppConfig() (string, interface{}) {
 
 		IndexerConfig indexer.Config `mapstructure:"osmosis-indexer"`
 
+		OTELConfig osmosis.OTELConfig `mapstructure:"otel"`
+
 		WasmConfig wasmtypes.WasmConfig `mapstructure:"wasm"`
 	}
 
-	var DefaultOsmosisMempoolConfig = OsmosisMempoolConfig{
+	DefaultOsmosisMempoolConfig := OsmosisMempoolConfig{
 		MaxGasWantedPerTx:         "60000000",
 		MinGasPriceForArbitrageTx: ".1",
 		MinGasPriceForHighGasTx:   ".0025",
@@ -726,6 +727,20 @@ token-supply-topic-id = "{{ .IndexerConfig.TokenSupplyTopicId }}"
 # The topic id to use for the publishing token supply offset data
 token-supply-offset-topic-id = "{{ .IndexerConfig.TokenSupplyOffsetTopicId }}"
 
+# The topic id to use for publishing pair metadata
+pair-topic-id = "{{ .IndexerConfig.PairTopicId }}"
+
+###############################################################################
+###              OpenTelemetry (OTEL) Configuration                         ###
+###############################################################################
+[otel]
+
+# Flag that enables OTEL
+enabled = "{{ .OTELConfig.Enabled }}"
+
+# The service name to use for OTEL
+service-name = "{{ .OTELConfig.ServiceName }}"
+
 ###############################################################################
 ###                            Wasm Configuration                           ###
 ###############################################################################
@@ -809,10 +824,11 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, t
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
 		server.StatusCommand(),
-		queryCommand(tempApp.ModuleBasics),
+		queryCommand(),
 		txCommand(tempApp.ModuleBasics),
 		keys.Commands(),
 	)
+	rootCmd.AddCommand(CmdListQueries(rootCmd))
 	// add rosetta
 	rootCmd.AddCommand(rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
 }
@@ -821,6 +837,28 @@ func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
 	wasm.AddModuleInitFlags(startCmd)
 	startCmd.Flags().Bool(FlagRejectConfigDefaults, false, "Reject some select recommended default values from being automatically set in the config.toml and app.toml")
+}
+
+// CmdListQueries list all available modules' queries
+func CmdListQueries(rootCmd *cobra.Command) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list-queries",
+		Short: "listing all available modules' queries",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			for _, cmd := range rootCmd.Commands() {
+				if cmd.Name() != "query" {
+					continue
+				}
+				for _, cmd := range cmd.Commands() {
+					for _, cmd := range cmd.Commands() {
+						fmt.Println(cmd.CommandPath())
+					}
+				}
+			}
+			return nil
+		},
+	}
+	return cmd
 }
 
 func CmdModuleNameToAddress() *cobra.Command {
@@ -841,7 +879,7 @@ func CmdModuleNameToAddress() *cobra.Command {
 }
 
 // queryCommand adds transaction and account querying commands.
-func queryCommand(moduleBasics module.BasicManager) *cobra.Command {
+func queryCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "query",
 		Aliases:                    []string{"q"},
@@ -859,8 +897,6 @@ func queryCommand(moduleBasics module.BasicManager) *cobra.Command {
 		CmdModuleNameToAddress(),
 	)
 
-	// UNFORKING v2 TODO: Auto CLI claims we can remove this, but was having issues with AddTxCommands counterpart. See line for comment.
-	moduleBasics.AddQueryCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -887,8 +923,8 @@ func txCommand(moduleBasics module.BasicManager) *cobra.Command {
 		authcmd.GetDecodeCommand(),
 	)
 
-	// UNFORKING v2 TODO: Auto CLI claims we can remove this, but if we do, then the legacy proposal sub commands will not be available.
 	moduleBasics.AddTxCommands(cmd)
+
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd

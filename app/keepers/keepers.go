@@ -445,6 +445,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.DistrKeeper,
 		appKeepers.StakingKeeper,
 		appKeepers.ProtoRevKeeper,
+		appKeepers.WasmKeeper,
 	)
 	appKeepers.PoolManagerKeeper.SetStakingKeeper(appKeepers.StakingKeeper)
 	appKeepers.GAMMKeeper.SetPoolManager(appKeepers.PoolManagerKeeper)
@@ -567,7 +568,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.SuperfluidKeeper = superfluidkeeper.NewKeeper(
 		appKeepers.keys[superfluidtypes.StoreKey], appKeepers.GetSubspace(superfluidtypes.ModuleName),
 		*appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.StakingKeeper, appKeepers.DistrKeeper, appKeepers.EpochsKeeper, appKeepers.LockupKeeper, appKeepers.GAMMKeeper, appKeepers.IncentivesKeeper,
-		lockupkeeper.NewMsgServerImpl(appKeepers.LockupKeeper), appKeepers.ConcentratedLiquidityKeeper, appKeepers.PoolManagerKeeper, appKeepers.ValidatorSetPreferenceKeeper, appKeepers.TwapKeeper)
+		lockupkeeper.NewMsgServerImpl(appKeepers.LockupKeeper), appKeepers.ConcentratedLiquidityKeeper, appKeepers.PoolManagerKeeper, appKeepers.ValidatorSetPreferenceKeeper)
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
@@ -598,6 +599,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.WasmKeeper = &wasmKeeper
 	appKeepers.CosmwasmPoolKeeper.SetWasmKeeper(appKeepers.WasmKeeper)
+	appKeepers.PoolManagerKeeper.SetWasmKeeper(appKeepers.WasmKeeper)
 
 	// Pass the contract keeper to all the structs (generally ICS4Wrappers for ibc middlewares) that need it
 	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
@@ -624,11 +626,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	govRouter := govtypesv1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govtypesv1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(*appKeepers.ParamsKeeper)).
-		// UNFORKING v2 TODO: Verify that removing the two ibc routes are okay (they use the new v1 gov props)
-		// Also verify that NewSoftwareUpgradeProposalHandler is okay to remove here, as it should be done with new v1 gov props
-		// AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(appKeepers.IBCKeeper.ClientKeeper)).
-		// AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(appKeepers.UpgradeKeeper)).
-		// AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(appKeepers.IBCKeeper.ClientKeeper)).
 		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(*appKeepers.PoolIncentivesKeeper)).
 		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*appKeepers.TxFeesKeeper)).
 		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(*appKeepers.SuperfluidKeeper, *appKeepers.EpochsKeeper, *appKeepers.GAMMKeeper)).

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -151,16 +152,6 @@ func (k Keeper) validateLockForSF(lock *lockuptypes.PeriodLock, sender string) e
 	return nil
 }
 
-func (k Keeper) ValidateNativeAsset(asset types.SuperfluidAsset) error {
-	if asset.AssetType == types.SuperfluidAssetTypeNative {
-		if len(asset.PriceRoute) == 0 ||
-			strings.TrimSpace(asset.PriceRoute[0].TokenOutDenom) == "" {
-			return errorsmod.Wrap(types.ErrNonSuperfluidAsset, "asset is not properly configured for superfluid staking: missing or empty price route")
-		}
-	}
-	return nil
-}
-
 // validateLockForSFDelegate runs the following sanity checks on the lock:
 // - the sender is the owner of the lock
 // - the lock is consisted of a single coin
@@ -177,13 +168,8 @@ func (k Keeper) validateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.Per
 	denom := lock.Coins[0].Denom
 
 	// ensure that the locks underlying denom is for an existing superfluid asset
-	asset, err := k.GetSuperfluidAsset(ctx, denom)
+	_, err = k.GetSuperfluidAsset(ctx, denom)
 	if err != nil {
-		return err
-	}
-
-	// ensure that the asset is properly configured
-	if err := k.ValidateNativeAsset(asset); err != nil {
 		return err
 	}
 
@@ -360,10 +346,10 @@ func (k Keeper) SuperfluidUndelegateAndUnbondLock(ctx sdk.Context, lockID uint64
 
 	coins := sdk.Coins{sdk.NewCoin(lock.Coins[0].Denom, amount)}
 	if coins[0].IsZero() {
-		return 0, fmt.Errorf("amount to unlock must be greater than 0")
+		return 0, errors.New("amount to unlock must be greater than 0")
 	}
 	if lock.Coins[0].IsLT(coins[0]) {
-		return 0, fmt.Errorf("requested amount to unlock exceeds locked tokens")
+		return 0, errors.New("requested amount to unlock exceeds locked tokens")
 	}
 
 	// get intermediary account before connection is deleted in SuperfluidUndelegate
@@ -611,7 +597,7 @@ func (k Keeper) IterateDelegations(context context.Context, delegator sdk.AccAdd
 		}
 
 		// get osmo-equivalent token amount
-		amount, err := k.GetSuperfluidOSMOTokensIfNonNative(ctx, interim.Denom, coin.Amount)
+		amount, err := k.GetSuperfluidOSMOTokens(ctx, interim.Denom, coin.Amount)
 		if err != nil {
 			ctx.Logger().Error("failed to get osmo equivalent of token", "Denom", interim.Denom, "Amount", coin.Amount, "Error", err)
 			return err
@@ -683,7 +669,7 @@ func (k Keeper) UnbondConvertAndStake(ctx sdk.Context, lockID uint64, sender, va
 	} else if migrationType == Unlocked { // liquid gamm shares without locks
 		totalAmtConverted, err = k.convertUnlockedToStake(ctx, senderAddr, valAddr, sharesToConvert, minAmtToStake)
 	} else { // any other types of migration should fail
-		return osmomath.Int{}, fmt.Errorf("unsupported staking conversion type")
+		return osmomath.Int{}, errors.New("unsupported staking conversion type")
 	}
 
 	if err != nil {
@@ -803,7 +789,7 @@ func (k Keeper) convertGammSharesToOsmoAndStake(
 
 	// iterate over non-bond denom coins and swap them into bond denom
 	for _, coinToConvert := range nonOsmoCoins {
-		tokenOutAmt, err := k.pmk.SwapExactAmountIn(ctx, sender, poolIdLeaving, coinToConvert, bondDenom, osmomath.ZeroInt())
+		tokenOutAmt, _, err := k.pmk.SwapExactAmountIn(ctx, sender, poolIdLeaving, coinToConvert, bondDenom, osmomath.ZeroInt())
 		if err != nil {
 			return osmomath.Int{}, err
 		}

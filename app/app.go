@@ -10,6 +10,14 @@ import (
 	"reflect"
 	"time"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/propagation"
+
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/skip-mev/block-sdk/v2/block"
 	"github.com/skip-mev/block-sdk/v2/block/base"
@@ -38,6 +46,7 @@ import (
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
 
+	"github.com/osmosis-labs/osmosis/v25/ingest/common/poolextractor"
 	"github.com/osmosis-labs/osmosis/v25/ingest/common/pooltracker"
 	"github.com/osmosis-labs/osmosis/v25/ingest/common/writelistener"
 	"github.com/osmosis-labs/osmosis/v25/ingest/indexer"
@@ -46,6 +55,7 @@ import (
 	indexerwritelistener "github.com/osmosis-labs/osmosis/v25/ingest/indexer/service/writelistener"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
+	poolstransformer "github.com/osmosis-labs/osmosis/v25/ingest/sqs/pools/transformer"
 
 	sqsservice "github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
 	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
@@ -135,6 +145,7 @@ import (
 
 	blocksdkabci "github.com/skip-mev/block-sdk/v2/abci"
 	"github.com/skip-mev/block-sdk/v2/abci/checktx"
+	"github.com/skip-mev/block-sdk/v2/block/utils"
 
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
@@ -248,6 +259,25 @@ func NewOsmosisApp(
 	wasmOpts []wasmkeeper.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
+	// Handler OTEL configuration.
+	OTELConfig := NewOTELConfigFromOptions(appOpts)
+	if OTELConfig.Enabled {
+		ctx := context.Background()
+
+		res, err := resource.New(ctx, resource.WithContainer(),
+			resource.WithAttributes(semconv.ServiceNameKey.String(OTELConfig.ServiceName)),
+			resource.WithFromEnv(),
+		)
+		if err != nil {
+			panic(err)
+		}
+
+		_, err = initOTELTracer(ctx, res)
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	initReusablePackageInjections() // This should run before anything else to make sure the variables are properly initialized
 	overrideWasmVariables()
 	encodingConfig := GetEncodingConfig()
@@ -323,15 +353,20 @@ func NewOsmosisApp(
 			ConcentratedKeeper: app.ConcentratedLiquidityKeeper,
 		}
 
-		// Initialize the SQS ingester.
-		sqsIngester, err := sqsConfig.Initialize(appCodec, sqsKeepers)
-		if err != nil {
-			panic(err)
-		}
-
 		// Create pool tracker that tracks pool updates
 		// made by the write listenetrs.
 		poolTracker := pooltracker.NewMemory()
+
+		// Create pool extractor
+		poolExtractor := poolextractor.New(sqsKeepers, poolTracker)
+
+		// Create pools ingester
+		poolsTransformer := poolstransformer.NewPoolTransformer(sqsKeepers, sqs.DefaultUSDCUOSMOPool)
+
+		blockProcessStrategyManager := commondomain.NewBlockProcessStrategyManager()
+
+		// Create sqs grpc client
+		sqsGRPCClient := sqsservice.NewGRPCCLient(sqsConfig.GRPCIngestAddress, sqsConfig.GRPCIngestMaxCallSizeBytes, appCodec)
 
 		// Create write listeners for the SQS service.
 		writeListeners, storeKeyMap := getSQSServiceWriteListeners(app, appCodec, poolTracker, app.WasmKeeper)
@@ -345,7 +380,11 @@ func NewOsmosisApp(
 
 		// Create the SQS streaming service by setting up the write listeners,
 		// the SQS ingester, and the pool tracker.
-		sqsStreamingService := sqsservice.New(writeListeners, storeKeyMap, sqsIngester, poolTracker, nodeStatusChecker)
+		blockUpdatesProcessUtils := &commondomain.BlockUpdateProcessUtils{
+			WriteListeners: writeListeners,
+			StoreKeyMap:    storeKeyMap,
+		}
+		sqsStreamingService := sqsservice.New(blockUpdatesProcessUtils, poolExtractor, poolsTransformer, poolTracker, sqsGRPCClient, blockProcessStrategyManager, nodeStatusChecker)
 
 		streamingServices = append(streamingServices, sqsStreamingService)
 	}
@@ -361,18 +400,38 @@ func NewOsmosisApp(
 		pubSubCtx := context.Background()
 
 		// Create cold start manager
-		coldStartManager := indexerdomain.NewColdStartManager()
+		blockProcessStrategyManager := commondomain.NewBlockProcessStrategyManager()
+
+		// Create pool tracker that tracks pool updates
+		// made by the write listenetrs.
+		poolTracker := pooltracker.NewMemory()
 
 		// Create write listeners for the indexer service.
-		writeListeners, storeKeyMap := getIndexerServiceWriteListeners(pubSubCtx, app, indexerPublisher, coldStartManager)
+		writeListeners, storeKeyMap := getIndexerServiceWriteListeners(pubSubCtx, app, appCodec, poolTracker, app.WasmKeeper, indexerPublisher, blockProcessStrategyManager)
 
 		// Create keepers for the indexer service.
 		keepers := indexerdomain.Keepers{
-			BankKeeper: app.BankKeeper,
+			BankKeeper:        app.BankKeeper,
+			PoolManagerKeeper: app.PoolManagerKeeper,
+		}
+
+		poolKeepers := commondomain.PoolExtractorKeepers{
+			GammKeeper:         app.GAMMKeeper,
+			CosmWasmPoolKeeper: app.CosmwasmPoolKeeper,
+			WasmKeeper:         app.WasmKeeper,
+			BankKeeper:         app.BankKeeper,
+			ProtorevKeeper:     app.ProtoRevKeeper,
+			PoolManagerKeeper:  app.PoolManagerKeeper,
+			ConcentratedKeeper: app.ConcentratedLiquidityKeeper,
 		}
 
 		// Create the indexer streaming service.
-		indexerStreamingService := indexerservice.New(writeListeners, coldStartManager, indexerPublisher, storeKeyMap, keepers)
+		blockUpdatesProcessUtils := &commondomain.BlockUpdateProcessUtils{
+			WriteListeners: writeListeners,
+			StoreKeyMap:    storeKeyMap,
+		}
+		poolExtractor := poolextractor.New(poolKeepers, poolTracker)
+		indexerStreamingService := indexerservice.New(blockUpdatesProcessUtils, blockProcessStrategyManager, indexerPublisher, storeKeyMap, poolExtractor, poolTracker, keepers, app.GetTxConfig().TxDecoder(), logger)
 
 		// Register the SQS streaming service with the app.
 		streamingServices = append(streamingServices, indexerStreamingService)
@@ -417,9 +476,7 @@ func NewOsmosisApp(
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
 
-	// UNFORKING v2 TODO: https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md#set-preblocker
-	// The upgrading doc says we need to add upgrade types to pre blocker (done here), but also says we
-	// need to remove it from begin blocker. If we need to actually remove it, we need to change the SetOrderBeginBlockers logic.
+	// Upgrades from v0.50.x onwards happen in pre block
 	app.mm.SetOrderPreBlockers(upgradetypes.ModuleName)
 
 	// Tell the app's module manager how to set the order of BeginBlockers, which are run at the beginning of every block.
@@ -438,22 +495,15 @@ func NewOsmosisApp(
 		panic(err)
 	}
 
-	// UNFORKING v2 TODO: Verify that the NewBasicManagerFromManager call is correct.
-	// Notice I have to override the gov ModuleBasic with all the custom proposal handers, otherwise we lose them in the CLI.
+	// Override the gov ModuleBasic with all the custom proposal handers, otherwise we lose them in the CLI.
 	app.ModuleBasics = module.NewBasicManagerFromManager(
 		app.mm,
 		map[string]module.AppModuleBasic{
 			"gov": gov.NewAppModuleBasic(
 				[]govclient.ProposalHandler{
 					paramsclient.ProposalHandler,
-					// UNFORKING v2 TODO: Verify it is okay to remove these
-					// upgradeclient.LegacyProposalHandler,
-					// upgradeclient.LegacyCancelProposalHandler,
 					poolincentivesclient.UpdatePoolIncentivesHandler,
 					poolincentivesclient.ReplacePoolIncentivesHandler,
-					// UNFORKING v2 TODO: Verify it is okay to remove these
-					// ibcclientclient.UpdateClientProposalHandler,
-					// ibcclientclient.UpgradeProposalHandler,
 					superfluidclient.SetSuperfluidAssetsProposalHandler,
 					superfluidclient.RemoveSuperfluidAssetsProposalHandler,
 					superfluidclient.UpdateUnpoolWhitelistProposalHandler,
@@ -549,7 +599,7 @@ func NewOsmosisApp(
 
 	// ABCI handlers
 	// prepare proposal
-	proposalHandler := blocksdkabci.NewProposalHandler(
+	proposalHandler := blocksdkabci.NewDefaultProposalHandler(
 		app.Logger(),
 		txConfig.TxDecoder(),
 		txConfig.TxEncoder(),
@@ -564,10 +614,15 @@ func NewOsmosisApp(
 	// this ProcessProposal always returns ACCEPT.
 	app.SetProcessProposal(baseapp.NoOpProcessProposal())
 
+	cacheDecoder, err := utils.NewDefaultCacheTxDecoder(txConfig.TxDecoder())
+	if err != nil {
+		panic(err)
+	}
+
 	// check-tx
 	mevCheckTxHandler := checktx.NewMEVCheckTxHandler(
 		app,
-		txConfig.TxDecoder(),
+		cacheDecoder.TxDecoder(),
 		mevLane,
 		anteHandler,
 		app.BaseApp.CheckTx,
@@ -577,8 +632,9 @@ func NewOsmosisApp(
 	parityCheckTx := checktx.NewMempoolParityCheckTx(
 		app.Logger(),
 		lanedMempool,
-		txConfig.TxDecoder(),
+		cacheDecoder.TxDecoder(),
 		mevCheckTxHandler.CheckTx(),
+		app,
 	)
 
 	app.SetCheckTx(parityCheckTx.CheckTx())
@@ -632,6 +688,25 @@ func NewOsmosisApp(
 
 // getSQSServiceWriteListeners returns the write listeners for the app that are specific to the SQS service.
 func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker, wasmkeeper *wasmkeeper.Keeper) (map[storetypes.StoreKey][]commondomain.WriteListener, map[string]storetypes.StoreKey) {
+	return getPoolWriteListeners(app, appCodec, blockPoolUpdateTracker, wasmkeeper)
+}
+
+// getIndexerServiceWriteListeners returns the write listeners for the app that are specific to the indexer service.
+func getIndexerServiceWriteListeners(ctx context.Context, app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker, wasmkeeper *wasmkeeper.Keeper, client indexerdomain.Publisher, blockProcessStrategyManager commondomain.BlockProcessStrategyManager) (map[storetypes.StoreKey][]commondomain.WriteListener, map[string]storetypes.StoreKey) {
+	writeListeners, storeKeyMap := getPoolWriteListeners(app, appCodec, blockPoolUpdateTracker, wasmkeeper)
+
+	// Add write listeners for the bank module.
+	writeListeners[app.GetKey(banktypes.ModuleName)] = []commondomain.WriteListener{
+		indexerwritelistener.NewBank(ctx, client, blockProcessStrategyManager),
+	}
+
+	storeKeyMap[banktypes.ModuleName] = app.GetKey(banktypes.ModuleName)
+
+	return writeListeners, storeKeyMap
+}
+
+// getPoolWriteListeners returns the write listeners for the app that are specific to monitoring the pools.
+func getPoolWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker, wasmkeeper *wasmkeeper.Keeper) (map[storetypes.StoreKey][]commondomain.WriteListener, map[string]storetypes.StoreKey) {
 	writeListeners := make(map[storetypes.StoreKey][]commondomain.WriteListener)
 	storeKeyMap := make(map[string]storetypes.StoreKey)
 
@@ -652,21 +727,6 @@ func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoo
 	storeKeyMap[gammtypes.StoreKey] = app.GetKey(gammtypes.StoreKey)
 	storeKeyMap[cosmwasmpooltypes.StoreKey] = app.GetKey(cosmwasmpooltypes.StoreKey)
 	storeKeyMap[banktypes.StoreKey] = app.GetKey(banktypes.StoreKey)
-
-	return writeListeners, storeKeyMap
-}
-
-// getIndexerServiceWriteListeners returns the write listeners for the app that are specific to the indexer service.
-func getIndexerServiceWriteListeners(ctx context.Context, app *OsmosisApp, client indexerdomain.Publisher, coldStartManager indexerdomain.ColdStartManager) (map[storetypes.StoreKey][]commondomain.WriteListener, map[string]storetypes.StoreKey) {
-	writeListeners := make(map[storetypes.StoreKey][]commondomain.WriteListener)
-	storeKeyMap := make(map[string]storetypes.StoreKey)
-
-	// Add write listeners for the bank module.
-	writeListeners[app.GetKey(banktypes.ModuleName)] = []commondomain.WriteListener{
-		indexerwritelistener.NewBank(ctx, client, coldStartManager),
-	}
-
-	storeKeyMap[banktypes.ModuleName] = app.GetKey(banktypes.ModuleName)
 
 	return writeListeners, storeKeyMap
 }
@@ -1207,4 +1267,23 @@ func GetMaccPerms() map[string][]string {
 	}
 
 	return dupMaccPerms
+}
+
+// initOTELTracer initializes the OTEL tracer
+// and wires it up with the Sentry exporter.
+func initOTELTracer(ctx context.Context, res *resource.Resource) (*sdktrace.TracerProvider, error) {
+	exporter, err := otlptracegrpc.New(ctx, otlptracegrpc.WithInsecure())
+	if err != nil {
+		return nil, err
+	}
+
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithResource(res),
+	)
+
+	otel.SetTracerProvider(tp)
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+
+	return tp, nil
 }

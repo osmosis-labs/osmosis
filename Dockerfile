@@ -1,5 +1,7 @@
 # syntax=docker/dockerfile:1
 
+# Please, when adding/editing this Dockerfile also take care of Dockerfile.cosmovisor as well
+
 ARG GO_VERSION="1.22"
 ARG RUNNER_IMAGE="gcr.io/distroless/static-debian11"
 ARG BUILD_TAGS="netgo,ledger,muslc"
@@ -8,7 +10,7 @@ ARG BUILD_TAGS="netgo,ledger,muslc"
 # Builder
 # --------------------------------------------------------
 
-FROM golang:${GO_VERSION}-alpine3.18 as builder
+FROM golang:${GO_VERSION}-alpine3.20 as builder
 
 ARG GIT_VERSION
 ARG GIT_COMMIT
@@ -63,7 +65,7 @@ FROM ${RUNNER_IMAGE}
 
 COPY --from=builder /osmosis/build/osmosisd /bin/osmosisd
 
-ENV HOME /osmosis
+ENV HOME=/osmosis
 WORKDIR $HOME
 
 EXPOSE 26656

@@ -30,6 +30,10 @@ func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
 	cmd.AddCommand(GetQueryArithmeticCommand())
 	cmd.AddCommand(GetQueryGeometricCommand())
+	cmd.AddCommand(
+		osmocli.GetParams[*queryproto.ParamsRequest](
+			types.ModuleName, queryproto.NewQueryClient),
+	)
 
 	return cmd
 }
