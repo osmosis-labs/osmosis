@@ -18,13 +18,13 @@ const (
 	// Current Git branch osmosis repo/version. It is meant to be built locally.
 	// It is used when skipping upgrade by setting OSMOSIS_E2E_SKIP_UPGRADE to true).
 	// This image should be pre-built with `make e2e-docker-build-debug` either in CI or locally.
-	CurrentBranchOsmoRepository = "osmosis"
-	CurrentBranchOsmoTag        = "debug"
+	CurrentBranchSymphonyRepository = "osmosis"
+	CurrentBranchSymphonyTag        = "debug"
 	// Pre-upgrade osmosis repo/tag to pull.
 	// It should be uploaded to Docker Hub. OSMOSIS_E2E_SKIP_UPGRADE should be unset
 	// for this functionality to be used.
-	previousVersionOsmoRepository = "osmolabs/osmosis"
-	previousVersionOsmoTag        = "23.0.0-rc1-alpine"
+	previousVersionSymphonyRepository = "osmolabs/osmosis"
+	previousVersionSymphonyTag        = "23.0.0-rc1-alpine"
 	// Pre-upgrade repo/tag for osmosis initialization (this should be one version below upgradeVersion)
 	previousVersionInitRepository = "osmolabs/osmosis-e2e-init-chain"
 	previousVersionInitTag        = "23.0.0-rc1-temp"
@@ -46,8 +46,8 @@ func NewImageConfig(isUpgrade, isFork bool) ImageConfig {
 		// If upgrade is not tested, we do not need InitRepository and InitTag
 		// because we directly call the initialization logic without
 		// the need for Docker.
-		config.SymphonyRepository = CurrentBranchOsmoRepository
-		config.SymphonyTag = CurrentBranchOsmoTag
+		config.SymphonyRepository = CurrentBranchSymphonyRepository
+		config.SymphonyTag = CurrentBranchSymphonyTag
 		return config
 	}
 
@@ -61,16 +61,16 @@ func NewImageConfig(isUpgrade, isFork bool) ImageConfig {
 		// Normally, validators switch the binaries pre-fork height
 		// Then, once the fork height is reached, the state breaking-logic
 		// is run.
-		config.SymphonyRepository = CurrentBranchOsmoRepository
-		config.SymphonyTag = CurrentBranchOsmoTag
+		config.SymphonyRepository = CurrentBranchSymphonyRepository
+		config.SymphonyTag = CurrentBranchSymphonyTag
 	} else {
 		// Upgrades are run at the time when upgrade height is reached
 		// and are submitted via a governance proposal. Therefore, we
 		// must start running the previous Osmosis version. Then, the node
 		// should auto-upgrade, at which point we can restart the updated
 		// Osmosis validator container.
-		config.SymphonyRepository = previousVersionOsmoRepository
-		config.SymphonyTag = previousVersionOsmoTag
+		config.SymphonyRepository = previousVersionSymphonyRepository
+		config.SymphonyTag = previousVersionSymphonyTag
 	}
 
 	return config
