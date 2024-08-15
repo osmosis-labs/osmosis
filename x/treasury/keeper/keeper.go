@@ -22,7 +22,7 @@ type Keeper struct {
 	paramSpace paramstypes.Subspace
 
 	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
+	BankKeeper    types.BankKeeper
 	marketKeeper  types.MarketKeeper
 	oracleKeeper  types.OracleKeeper
 }
@@ -52,7 +52,7 @@ func NewKeeper(
 		storeKey:      storeKey,
 		paramSpace:    paramSpace,
 		accountKeeper: accountKeeper,
-		bankKeeper:    bankKeeper,
+		BankKeeper:    bankKeeper,
 		marketKeeper:  marketKeeper,
 		oracleKeeper:  oracleKeeper,
 	}
@@ -96,7 +96,7 @@ func (k Keeper) RefillExchangePool(ctx sdk.Context) sdk.Dec {
 		if sdk.NewDec(percentMissing).GT(params.ReserveAllowableOffset) {
 			refillAmount := sdk.MinDec(reserveAmount, exchangeRequirement.Sub(exchangeAmount))
 			if refillAmount.IsPositive() {
-				err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, markettypes.ModuleName,
+				err := k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, markettypes.ModuleName,
 					sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, refillAmount.TruncateInt())))
 				if err != nil {
 					panic(err)

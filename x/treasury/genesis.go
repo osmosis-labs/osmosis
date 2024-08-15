@@ -2,6 +2,7 @@ package treasury
 
 import (
 	"fmt"
+	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -19,6 +20,13 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data *types.GenesisState
 	moduleAcc := keeper.GetTreasuryModuleAccount(ctx)
 	if moduleAcc == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+	}
+
+	// fund reserve
+	treasuryCoins := sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 10_000_000*appparams.MicroUnit))
+	err := keeper.BankKeeper.MintCoins(ctx, types.ModuleName, treasuryCoins) // 10 mil to treasury
+	if err != nil {
+		panic("could not mint genesis treasury coins")
 	}
 }
 

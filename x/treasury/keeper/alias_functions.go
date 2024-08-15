@@ -14,5 +14,5 @@ func (k Keeper) GetTreasuryModuleAccount(ctx sdk.Context) authtypes.ModuleAccoun
 
 // GetReservePoolBalance returns the amount of Melody in the reserve pool.
 func (k Keeper) GetReservePoolBalance(ctx sdk.Context) sdk.Coin {
-	return k.bankKeeper.GetBalance(ctx, k.GetTreasuryModuleAccount(ctx).GetAddress(), appparams.BaseCoinUnit)
+	return k.BankKeeper.GetBalance(ctx, k.GetTreasuryModuleAccount(ctx).GetAddress(), appparams.BaseCoinUnit)
 }

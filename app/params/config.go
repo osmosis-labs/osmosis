@@ -21,6 +21,12 @@ const (
 	Bech32PrefixAccAddr = "symphony"
 )
 
+const (
+	MicroUSDDenom = "uusd"
+	MicroHKDDenom = "ukhd"
+	MicroVNDDenom = "uvnd"
+)
+
 const MicroUnit = int64(1e6)
 
 const (
