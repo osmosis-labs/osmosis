@@ -138,7 +138,7 @@ var moduleAccountPermissions = map[string][]string{
 	valsetpreftypes.ModuleName:               {authtypes.Staking},
 	poolmanagertypes.ModuleName:              nil,
 	markettypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
-	treasurytypes.ModuleName:                 nil,
+	treasurytypes.ModuleName:                 {authtypes.Minter},
 	oracletypes.ModuleName:                   nil,
 	cosmwasmpooltypes.ModuleName:             nil,
 }
