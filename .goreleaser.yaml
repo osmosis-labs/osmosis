@@ -153,7 +153,7 @@ archives:
     files:
       - none*
 snapshot:
-  name_template: 'v0.2.1'
+  name_template: 'v0.3.0'
 
 checksum:
   name_template: "sha256sum.txt"
