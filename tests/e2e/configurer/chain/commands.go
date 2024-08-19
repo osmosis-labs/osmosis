@@ -397,6 +397,7 @@ func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight 
 	return n.SubmitProposal(cmd, false, fmt.Sprintf("upgrade proposal %s for height %d", upgradeVersion, upgradeHeight), true)
 }
 
+// TODO: Remove in v27 once comfortable with new gov message
 func (n *NodeConfig) SubmitSuperfluidProposal(asset string, isLegacy bool) int {
 	cmd := []string{"set-superfluid-assets-proposal", fmt.Sprintf("--superfluid-assets=%s", asset), "--title=\"superfluid asset prop\"", fmt.Sprintf("--summary=\"%s superfluid asset\"", asset), "--from=val", "--gas=700000", "--fees=5000uosmo"}
 

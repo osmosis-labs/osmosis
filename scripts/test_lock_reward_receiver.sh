@@ -68,6 +68,7 @@ osmosisd tx lockup lock-tokens 10000000000000000000gamm/pool/1 --duration=360h -
 sleep 7
 
 # register superfluid asset through governance
+# TODO: Remove in v27 once comfortable with new gov message
 osmosisd tx gov submit-proposal set-superfluid-assets-proposal --title="set superfluid assets" --description="set superfluid assets description" --superfluid-assets="gamm/pool/1" --deposit=10000000stake --from=validator --chain-id=testing --keyring-backend=test --broadcast-mode=block --yes --fees=10000stake
 sleep 7
 osmosisd tx gov deposit 1 10000000stake --from=validator --keyring-backend=test --chain-id=testing --broadcast-mode=block --yes --fees=10000stake 

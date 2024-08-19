@@ -30,6 +30,7 @@ type (
 
 		channelKeeper  types.ChannelKeeper
 		ContractKeeper *wasmkeeper.PermissionedKeeper
+		accountKeeper  types.AccountKeeper
 	}
 )
 
@@ -39,6 +40,7 @@ func NewKeeper(
 	paramSpace paramtypes.Subspace,
 	channelKeeper types.ChannelKeeper,
 	contractKeeper *wasmkeeper.PermissionedKeeper,
+	accountKeeper types.AccountKeeper,
 ) *Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -48,6 +50,7 @@ func NewKeeper(
 		paramSpace:     paramSpace,
 		channelKeeper:  channelKeeper,
 		ContractKeeper: contractKeeper,
+		accountKeeper:  accountKeeper,
 	}
 }
 

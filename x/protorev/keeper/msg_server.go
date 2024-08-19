@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/v25/x/protorev/types"
 )
@@ -177,4 +178,19 @@ func (m MsgServer) AdminCheck(ctx sdk.Context, admin string) error {
 	}
 
 	return nil
+}
+
+// Gov messages
+
+func (m MsgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	govAddr := m.k.accountKeeper.GetModuleAddress(govtypes.ModuleName)
+	if msg.Sender != govAddr.String() {
+		return nil, fmt.Errorf("unauthorized: expected sender to be %s, got %s", govAddr, msg.Sender)
+	}
+
+	m.k.SetParams(ctx, msg.Params)
+
+	return &types.MsgUpdateParamsResponse{}, nil
 }

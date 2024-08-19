@@ -10,6 +10,7 @@ func (k Keeper) HandleReplacePoolIncentivesProposal(ctx sdk.Context, p *types.Re
 	return k.ReplaceDistrRecords(ctx, p.Records...)
 }
 
+// TODO: Remove in v27 once comfortable with new gov message
 func (k Keeper) HandleUpdatePoolIncentivesProposal(ctx sdk.Context, p *types.UpdatePoolIncentivesProposal) error {
 	return k.UpdateDistrRecords(ctx, p.Records...)
 }

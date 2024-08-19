@@ -1,0 +1,48 @@
+syntax = "proto3";
+package osmosis.poolincentives.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "amino/amino.proto";
+import "google/protobuf/timestamp.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "osmosis/lockup/lock.proto";
+import "cosmos/msg/v1/msg.proto";
+import "osmosis/poolincentives/v1beta1/incentives.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types";
+
+service Msg {}
+
+message MsgUpdateDistrRecords {
+  option (amino.name) = "osmosis/UpdatePoolIncentives";
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  // create_groups are the groups to be created
+  repeated DistrRecord records = 2 [ (gogoproto.nullable) = false ];
+}
+
+message MsgUpdateDistrRecordsResponse {}
+
+message MsgReplaceDistrRecords {
+  option (amino.name) = "osmosis/ReplacePoolIncentives";
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  // create_groups are the groups to be created
+  repeated DistrRecord records = 2 [ (gogoproto.nullable) = false ];
+}
+
+message MsgReplaceDistrRecordsResponse {}
+
+// Gov messages
+
+message MsgUpdateParams {
+  option (amino.name) = "osmosis/poolincentives-update-params";
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  Params params = 2 [ (gogoproto.nullable) = false ];
+}
+
+message MsgUpdateParamsResponse {}

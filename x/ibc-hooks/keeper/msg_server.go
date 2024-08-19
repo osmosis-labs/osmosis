@@ -2,9 +2,13 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 )
 
@@ -38,4 +42,19 @@ func (m msgServer) EmitIBCAck(goCtx context.Context, msg *types.MsgEmitIBCAck) (
 	}
 
 	return &types.MsgEmitIBCAckResponse{ContractResult: string(ack), IbcAck: string(ack)}, nil
+}
+
+// Gov messages
+
+func (server msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	govAddr := server.Keeper.accountKeeper.GetModuleAddress(govtypes.ModuleName)
+	if msg.Sender != govAddr.String() {
+		return nil, fmt.Errorf("unauthorized: expected sender to be %s, got %s", govAddr, msg.Sender)
+	}
+
+	server.Keeper.SetParams(ctx, msg.Params)
+
+	return &types.MsgUpdateParamsResponse{}, nil
 }

@@ -2,8 +2,10 @@ package concentrated_liquidity
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
@@ -197,4 +199,17 @@ func (server msgServer) TransferPositions(goCtx context.Context, msg *types.MsgT
 	})
 
 	return &types.MsgTransferPositionsResponse{}, nil
+}
+
+func (server msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	govAddr := server.keeper.accountKeeper.GetModuleAccount(ctx, govtypes.ModuleName)
+	if msg.Sender != govAddr.GetAddress().String() {
+		return nil, fmt.Errorf("unauthorized: expected sender to be %s, got %s", govAddr, msg.Sender)
+	}
+
+	server.keeper.SetParams(ctx, msg.Params)
+
+	return &types.MsgUpdateParamsResponse{}, nil
 }

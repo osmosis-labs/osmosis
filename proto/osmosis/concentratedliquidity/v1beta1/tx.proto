@@ -5,6 +5,7 @@ import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
 import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "osmosis/concentratedliquidity/params.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types";
 
@@ -244,3 +245,13 @@ message MsgTransferPositions {
 }
 
 message MsgTransferPositionsResponse {}
+
+message MsgUpdateParams {
+  option (amino.name) = "osmosis/cl-update-params";
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  Params params = 2 [ (gogoproto.nullable) = false ];
+}
+
+message MsgUpdateParamsResponse {}

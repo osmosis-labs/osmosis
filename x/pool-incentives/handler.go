@@ -32,6 +32,7 @@ func handleReplacePoolIncentivesProposal(ctx sdk.Context, k keeper.Keeper, p *ty
 }
 
 // handleUpdatePoolIncentivesProposal is a handler for updating pool incentives governance proposals
+// TODO: Remove in v27 once comfortable with new gov message
 func handleUpdatePoolIncentivesProposal(ctx sdk.Context, k keeper.Keeper, p *types.UpdatePoolIncentivesProposal) error {
 	return k.HandleUpdatePoolIncentivesProposal(ctx, p)
 }

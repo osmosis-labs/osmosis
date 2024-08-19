@@ -109,6 +109,8 @@ func (server msgServer) SetDenomPairTakerFee(goCtx context.Context, msg *types.M
 	return &types.MsgSetDenomPairTakerFeeResponse{Success: true}, nil
 }
 
+// Gov messages
+
 func (server msgServer) SetTakerFeeShareAgreementForDenom(goCtx context.Context, msg *types.MsgSetTakerFeeShareAgreementForDenom) (*types.MsgSetTakerFeeShareAgreementForDenomResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

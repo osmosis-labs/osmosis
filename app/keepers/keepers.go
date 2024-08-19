@@ -312,6 +312,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GetSubspace(ibchookstypes.ModuleName),
 		appKeepers.IBCKeeper.ChannelKeeper,
 		nil,
+		appKeepers.AccountKeeper,
 	)
 	appKeepers.IBCHooksKeeper = hooksKeeper
 

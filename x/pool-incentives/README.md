@@ -100,6 +100,7 @@ type UpdatePoolIncentivesProposal struct {
 `DistrRecord`s.
 
 ```shell
+// TODO: Remove in v27 once comfortable with new gov message
 osmosisd tx gov submit-proposal update-pool-incentives [gaugeIds] [weights]
 ```
 
@@ -108,6 +109,7 @@ For example, to designate 100 weight to gauge id 2 and 200 weight to
 gauge id 3, the following command can be used.
 
 ```shell
+// TODO: Remove in v27 once comfortable with new gov message
 osmosisd tx gov submit-proposal update-pool-incentives 2,3 100,200
 ```
 
@@ -116,6 +118,7 @@ osmosisd tx gov submit-proposal update-pool-incentives 2,3 100,200
 ### replace-pool-incentives 
 
 ```sh
+// TODO: Remove in v27 once comfortable with new gov message
 osmosisd tx poolincentives replace-pool-incentives [gaugeIds] [weights] [flags]
 ```
 
@@ -124,6 +127,7 @@ osmosisd tx poolincentives replace-pool-incentives [gaugeIds] [weights] [flags]
 Fully replace records for pool incentives:
 
 ```bash
+// TODO: Remove in v27 once comfortable with new gov message
 osmosisd tx poolincentives replace-pool-incentives proposal.json --from --chain-id
 ```
 
@@ -158,6 +162,7 @@ The proposal.json would look as follows:
 Update the weight of specified pool gauges in regards to their share of incentives (by creating a proposal)
 
 ```sh
+// TODO: Remove in v27 once comfortable with new gov message
 osmosisd tx poolincentives update-pool-incentives [gaugeIds] [weights] [flags] --from --chain-id
 ```
 
@@ -166,6 +171,7 @@ osmosisd tx poolincentives update-pool-incentives [gaugeIds] [weights] [flags] -
 Update the pool incentives for `gauge_id` 0 and 1:
 
 ```bash
+// TODO: Remove in v27 once comfortable with new gov message
 osmosisd tx gov submit-proposal update-pool-incentives proposal.json --from WALLET_NAME --chain-id CHAIN_ID
 ```
 

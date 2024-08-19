@@ -15,6 +15,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgAddToGauge{}, "osmosis/incentives/add-to-gauge", nil)
 
 	// gov proposals
+	// TODO: Remove in v27 once comfortable with new gov message
 	cdc.RegisterConcrete(&CreateGroupsProposal{}, "osmosis/create-groups-proposal", nil)
 }
 
@@ -26,6 +27,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgAddToGauge{},
 	)
 
+	// TODO: Remove in v27 once comfortable with new gov message
 	registry.RegisterImplementations(
 		(*govtypesv1.Content)(nil),
 		&CreateGroupsProposal{},

@@ -14,3 +14,7 @@ type ChannelKeeper interface {
 	LookupModuleByChannel(ctx sdk.Context, portID, channelID string) (string, *capabilitytypes.Capability, error)
 	WriteAcknowledgement(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI, acknowledgement exported.Acknowledgement) error
 }
+
+type AccountKeeper interface {
+	GetModuleAddress(moduleName string) sdk.AccAddress
+}

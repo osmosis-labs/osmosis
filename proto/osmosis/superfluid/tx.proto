@@ -8,6 +8,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
 import "osmosis/superfluid/superfluid.proto";
 import "cosmos/msg/v1/msg.proto";
+import "osmosis/superfluid/params.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v25/x/superfluid/types";
 
@@ -294,3 +295,48 @@ message MsgUnbondConvertAndStakeResponse {
     (gogoproto.nullable) = false
   ];
 }
+
+// Gov messages
+
+message MsgSetSuperfluidAssets {
+  option (amino.name) = "osmosis/set-superfluid-assets";
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  repeated SuperfluidAsset assets = 2 [ (gogoproto.nullable) = false ];
+}
+
+message MsgSetSuperfluidAssetsResponse {}
+
+message MsgRemoveSuperfluidAssets {
+  option (amino.name) = "osmosis/remove-superfluid-assets";
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  repeated string superfluid_asset_denoms = 2;
+}
+
+message MsgRemoveSuperfluidAssetsResponse {}
+
+message MsgUpdateUnpoolWhitelist {
+  // Note: we use osmosis/update-unpool-whitelist for the proposal so we need
+  // to differentiate the name here.
+  option (amino.name) = "osmosis/update-unpool-whitelist-msg";
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  repeated uint64 ids = 2;
+  bool is_overwrite = 3;
+}
+
+message MsgUpdateUnpoolWhitelistResponse {}
+
+message MsgUpdateParams {
+  option (amino.name) = "osmosis/superfluid-update-params";
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  Params params = 2 [ (gogoproto.nullable) = false ];
+}
+
+message MsgUpdateParamsResponse {}

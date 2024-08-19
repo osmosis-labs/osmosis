@@ -14,8 +14,10 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgLockAndSuperfluidDelegate{}, "osmosis/lock-and-superfluid-delegate", nil)
 	cdc.RegisterConcrete(&MsgSuperfluidUnbondLock{}, "osmosis/superfluid-unbond-lock", nil)
 	cdc.RegisterConcrete(&MsgSuperfluidUndelegateAndUnbondLock{}, "osmosis/sf-undelegate-and-unbond-lock", nil)
+	// TODO: Remove in v27 once comfortable with new gov message
 	cdc.RegisterConcrete(&SetSuperfluidAssetsProposal{}, "osmosis/set-superfluid-assets-proposal", nil)
 	cdc.RegisterConcrete(&UpdateUnpoolWhiteListProposal{}, "osmosis/update-unpool-whitelist", nil)
+	// TODO: Remove in v27 once comfortable with new gov message
 	cdc.RegisterConcrete(&RemoveSuperfluidAssetsProposal{}, "osmosis/del-superfluid-assets-proposal", nil)
 	cdc.RegisterConcrete(&MsgUnPoolWhitelistedPool{}, "osmosis/unpool-whitelisted-pool", nil)
 	cdc.RegisterConcrete(&MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{}, "osmosis/unlock-and-migrate", nil)

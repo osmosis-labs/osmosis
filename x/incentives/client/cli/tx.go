@@ -150,6 +150,7 @@ func NewCreateGroupCmd() *cobra.Command {
 }
 
 // NewCmdHandleCreateGroupsProposal implements a command handler for the group creation proposal transaction.
+// TODO: Remove in v27 once comfortable with new gov message
 func NewCmdHandleCreateGroupsProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-groups-proposal [pool-id-pairs] [flags]",

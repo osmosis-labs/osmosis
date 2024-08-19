@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
@@ -9,6 +10,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // msgServer provides a way to reference keeper pointer in the message server interface.
@@ -100,4 +102,47 @@ func (server msgServer) CreateGroup(goCtx context.Context, msg *types.MsgCreateG
 	})
 
 	return &types.MsgCreateGroupResponse{GroupId: groupID}, nil
+}
+
+// Gov messages
+
+func (server msgServer) CreateGroups(goCtx context.Context, msg *types.MsgCreateGroups) (*types.MsgCreateGroupsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	govAddr := server.keeper.ak.GetModuleAddress(govtypes.ModuleName)
+	if msg.Sender != govAddr.String() {
+		return nil, fmt.Errorf("unauthorized: expected sender to be %s, got %s", govAddr, msg.Sender)
+	}
+
+	groupIds := make([]uint64, len(msg.CreateGroups))
+	for i, group := range msg.CreateGroups {
+		incentivesModuleAddress := server.keeper.ak.GetModuleAddress(types.ModuleName)
+		// N.B: We force internal gauge creation here only because we don't have a straightforward
+		// way to escrow the funds from the prop creator to be used at time of prop execution (or returned if the prop fails).
+		// Once we have a way to do this, we can change the CreateGroups proto to allow for coins and numEpochsPaidOver and
+		// then modify it here as well.
+		// Note: do not replace with CreateGroupAsIncentivesModuleAcc as that implementation does not attempt to sync weights
+		// We still want to sync the weights here to ensure that the pools are valid and have the associated volume at group creation time.
+		groupId, err := server.keeper.CreateGroup(ctx, sdk.Coins{}, types.PerpetualNumEpochsPaidOver, incentivesModuleAddress, group.PoolIds)
+		if err != nil {
+			return nil, err
+		}
+
+		groupIds[i] = groupId
+	}
+
+	return &types.MsgCreateGroupsResponse{GroupId: groupIds}, nil
+}
+
+func (server msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	govAddr := server.keeper.ak.GetModuleAddress(govtypes.ModuleName)
+	if msg.Sender != govAddr.String() {
+		return nil, fmt.Errorf("unauthorized: expected sender to be %s, got %s", govAddr, msg.Sender)
+	}
+
+	server.keeper.SetParams(ctx, msg.Params)
+
+	return &types.MsgUpdateParamsResponse{}, nil
 }

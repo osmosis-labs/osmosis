@@ -2,8 +2,11 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/stableswap"
@@ -237,4 +240,19 @@ func (server msgServer) ExitSwapShareAmountIn(goCtx context.Context, msg *types.
 	// Swap and LP events are handled elsewhere
 
 	return &types.MsgExitSwapShareAmountInResponse{TokenOutAmount: tokenOutAmount}, nil
+}
+
+// Gov messages
+
+func (server msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	govAddr := server.keeper.accountKeeper.GetModuleAccount(ctx, govtypes.ModuleName)
+	if msg.Sender != govAddr.GetAddress().String() {
+		return nil, fmt.Errorf("unauthorized: expected sender to be %s, got %s", govAddr, msg.Sender)
+	}
+
+	server.keeper.setParams(ctx, msg.Params)
+
+	return &types.MsgUpdateParamsResponse{}, nil
 }

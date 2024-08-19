@@ -2,8 +2,11 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/v25/x/tokenfactory/types"
 )
@@ -230,4 +233,17 @@ func (server msgServer) SetBeforeSendHook(goCtx context.Context, msg *types.MsgS
 	})
 
 	return &types.MsgSetBeforeSendHookResponse{}, nil
+}
+
+func (server msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	govAddr := server.Keeper.accountKeeper.GetModuleAccount(ctx, govtypes.ModuleName)
+	if msg.Sender != govAddr.GetAddress().String() {
+		return nil, fmt.Errorf("unauthorized: expected sender to be %s, got %s", govAddr, msg.Sender)
+	}
+
+	server.Keeper.SetParams(ctx, msg.Params)
+
+	return &types.MsgUpdateParamsResponse{}, nil
 }

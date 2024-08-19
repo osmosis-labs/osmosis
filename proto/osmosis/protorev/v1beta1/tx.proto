@@ -7,6 +7,7 @@ import "google/api/annotations.proto";
 import "osmosis/protorev/v1beta1/protorev.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
+import "osmosis/protorev/v1beta1/params.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v25/x/protorev/types";
 
@@ -175,3 +176,15 @@ message MsgSetBaseDenoms {
 
 // MsgSetBaseDenomsResponse defines the Msg/SetBaseDenoms response type.
 message MsgSetBaseDenomsResponse {}
+
+// Gov messages
+
+message MsgUpdateParams {
+  option (amino.name) = "osmosis/protorev-update-params";
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  Params params = 2 [ (gogoproto.nullable) = false ];
+}
+
+message MsgUpdateParamsResponse {}

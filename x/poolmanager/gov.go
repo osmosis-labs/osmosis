@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
+// TODO: Remove in v27 once comfortable with new gov message
 func (k Keeper) HandleDenomPairTakerFeeProposal(ctx sdk.Context, p *types.DenomPairTakerFeeProposal) error {
 	for _, denomPair := range p.DenomPairTakerFee {
 		k.SetDenomPairTakerFee(ctx, denomPair.TokenInDenom, denomPair.TokenOutDenom, denomPair.TakerFee)

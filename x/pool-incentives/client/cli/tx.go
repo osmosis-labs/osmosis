@@ -15,6 +15,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
 )
 
+// TODO: Remove in v27 once comfortable with new gov message
 func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-pool-incentives [gaugeIds] [weights]",
@@ -74,6 +75,7 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 	return cmd
 }
 
+// TODO: Remove in v27 once comfortable with new gov message
 func NewCmdSubmitReplacePoolIncentivesProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "replace-pool-incentives [gaugeIds] [weights]",

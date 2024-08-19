@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
 )
 
+// TODO: Remove in v27 once comfortable with new gov message
 func (k Keeper) HandleCreateGaugeProposal(ctx sdk.Context, p *types.CreateGroupsProposal) error {
 	for _, group := range p.CreateGroups {
 		incentivesModuleAddress := k.ak.GetModuleAddress(types.ModuleName)
@@ -27,6 +28,7 @@ func (k Keeper) HandleCreateGaugeProposal(ctx sdk.Context, p *types.CreateGroups
 	return nil
 }
 
+// TODO: Remove in v27 once comfortable with new gov message
 func NewIncentivesProposalHandler(k Keeper) govtypesv1.Handler {
 	return func(ctx sdk.Context, content govtypesv1.Content) error {
 		switch c := content.(type) {

@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "amino/amino.proto";
 import "osmosis/txfees/v1beta1/feetoken.proto";
 import "cosmos/msg/v1/msg.proto";
+import "osmosis/txfees/v1beta1/params.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v25/x/txfees/types";
 
@@ -25,3 +26,13 @@ message MsgSetFeeTokens {
 }
 
 message MsgSetFeeTokensResponse {}
+
+message MsgUpdateParams {
+  option (amino.name) = "osmosis/txfees-update-params";
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  Params params = 2 [ (gogoproto.nullable) = false ];
+}
+
+message MsgUpdateParamsResponse {}

@@ -14,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// TODO: Remove in v27 once comfortable with new gov message
 func HandleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, ek types.EpochKeeper, p *types.SetSuperfluidAssetsProposal) error {
 	for _, asset := range p.Assets {
 		// Add check to ensure concentrated LP shares are formatted correctly
@@ -30,6 +31,7 @@ func HandleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, ek type
 	return nil
 }
 
+// TODO: Remove in v27 once comfortable with new gov message
 func HandleRemoveSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, p *types.RemoveSuperfluidAssetsProposal) error {
 	for _, denom := range p.SuperfluidAssetDenoms {
 		asset, err := k.GetSuperfluidAsset(ctx, denom)
@@ -50,6 +52,7 @@ func HandleRemoveSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, p *t
 // If IsOverwrite flag is set, the whitelist is completely overridden. Otherwise, it is merged with pre-existing whitelisted pool ids.
 // Any duplicates are removed and the pool ids are sorted prior to being written to state.
 // Returns nil on success, error on failure.
+// TODO: Remove in v27 once comfortable with new gov message
 func HandleUnpoolWhiteListChange(ctx sdk.Context, k keeper.Keeper, gammKeeper types.GammKeeper, p *types.UpdateUnpoolWhiteListProposal) error {
 	allPoolIds := make([]uint64, 0, len(p.Ids))
 

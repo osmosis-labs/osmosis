@@ -8,6 +8,8 @@ import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/incentives/gauge.proto";
 import "osmosis/lockup/lock.proto";
 import "cosmos/msg/v1/msg.proto";
+import "osmosis/incentives/group.proto";
+import "osmosis/incentives/params.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v25/x/incentives/types";
 
@@ -95,7 +97,34 @@ message MsgCreateGroup {
   // pool_ids are the IDs of pools that the group is comprised of
   repeated uint64 pool_ids = 4;
 }
+
 message MsgCreateGroupResponse {
   // group_id is the ID of the group that is created from this msg
   uint64 group_id = 1;
 }
+
+message MsgCreateGroups {
+  option (amino.name) = "osmosis/incentives/create-groups";
+  option (cosmos.msg.v1.signer) = "sender";
+
+  // sender is the group owner's address
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  // create_groups are the groups to be created
+  repeated osmosis.incentives.CreateGroup create_groups = 2
+      [ (gogoproto.nullable) = false ];
+}
+
+message MsgCreateGroupsResponse {
+  // group_id is the ID of the group that is created from this msg
+  repeated uint64 group_id = 1;
+}
+
+message MsgUpdateParams {
+  option (amino.name) = "osmosis/incentives-update-params";
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  Params params = 2 [ (gogoproto.nullable) = false ];
+}
+
+message MsgUpdateParamsResponse {}

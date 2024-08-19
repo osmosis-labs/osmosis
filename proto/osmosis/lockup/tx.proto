@@ -7,6 +7,7 @@ import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/lockup/lock.proto";
 import "cosmos/msg/v1/msg.proto";
+import "osmosis/lockup/params.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v25/x/lockup/types";
 
@@ -120,3 +121,15 @@ message MsgSetRewardReceiverAddress {
       [ (gogoproto.moretags) = "yaml:\"reward_receiver\"" ];
 }
 message MsgSetRewardReceiverAddressResponse { bool success = 1; }
+
+// Gov messages
+
+message MsgUpdateParams {
+  option (amino.name) = "osmosis/lockup-update-params";
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  Params params = 2 [ (gogoproto.nullable) = false ];
+}
+
+message MsgUpdateParamsResponse {}

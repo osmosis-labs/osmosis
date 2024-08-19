@@ -6,6 +6,7 @@ import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/poolmanager/v1beta1/swap_route.proto";
 import "cosmos/msg/v1/msg.proto";
+import "osmosis/gamm/v1beta1/params.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v25/x/gamm/types";
 
@@ -267,3 +268,15 @@ message MsgExitSwapExternAmountOutResponse {
     (gogoproto.nullable) = false
   ];
 }
+
+// Gov messages
+
+message MsgUpdateParams {
+  option (amino.name) = "osmosis/gamm-update-params";
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  Params params = 2 [ (gogoproto.nullable) = false ];
+}
+
+message MsgUpdateParamsResponse {}

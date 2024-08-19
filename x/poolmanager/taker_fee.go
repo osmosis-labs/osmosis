@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 
@@ -50,15 +51,7 @@ func (k Keeper) SetDenomPairTakerFee(ctx sdk.Context, denom0, denom1 string, tak
 // SenderValidationSetDenomPairTakerFee sets the taker fee for the given trading pair iff the sender's address
 // also exists in the pool manager taker fee admin address list.
 func (k Keeper) SenderValidationSetDenomPairTakerFee(ctx sdk.Context, sender, denom0, denom1 string, takerFee osmomath.Dec) error {
-	adminAddresses := k.GetParams(ctx).TakerFeeParams.AdminAddresses
-	isAdmin := false
-	for _, admin := range adminAddresses {
-		if admin == sender {
-			isAdmin = true
-			break
-		}
-	}
-	if !isAdmin {
+	if !k.isAdminOrGov(ctx, sender) {
 		return fmt.Errorf("%s is not in the pool manager taker fee admin address list", sender)
 	}
 
@@ -76,6 +69,18 @@ func (k Keeper) SenderValidationSetDenomPairTakerFee(ctx sdk.Context, sender, de
 	})
 
 	return nil
+}
+
+func (k Keeper) isAdminOrGov(ctx sdk.Context, sender string) bool {
+	adminAddresses := k.GetParams(ctx).TakerFeeParams.AdminAddresses
+	for _, admin := range adminAddresses {
+		if admin == sender {
+			return true
+		}
+	}
+
+	govAddr := k.accountKeeper.GetModuleAccount(ctx, govtypes.ModuleName)
+	return sender == govAddr.GetAddress().String()
 }
 
 // GetTradingPairTakerFee returns the taker fee for the given trading pair.

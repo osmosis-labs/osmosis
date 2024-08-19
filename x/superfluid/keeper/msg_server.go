@@ -3,11 +3,18 @@ package keeper
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
 
@@ -268,4 +275,113 @@ func (server msgServer) UnbondConvertAndStake(goCtx context.Context, msg *types.
 	}
 
 	return &types.MsgUnbondConvertAndStakeResponse{TotalAmtStaked: totalAmtConverted}, nil
+}
+
+// Gov messages
+
+func (server msgServer) SetSuperfluidAssets(goCtx context.Context, msg *types.MsgSetSuperfluidAssets) (*types.MsgSetSuperfluidAssetsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	govAddr := server.keeper.ak.GetModuleAddress(govtypes.ModuleName)
+	if msg.Sender != govAddr.String() {
+		return nil, fmt.Errorf("unauthorized: expected sender to be %s, got %s", govAddr, msg.Sender)
+	}
+
+	for _, asset := range msg.Assets {
+		// Add check to ensure concentrated LP shares are formatted correctly
+		if strings.HasPrefix(asset.Denom, cltypes.ConcentratedLiquidityTokenPrefix) {
+			if asset.AssetType != types.SuperfluidAssetTypeConcentratedShare {
+				return nil, fmt.Errorf("concentrated LP share denom (%s) must have asset type %s", asset.Denom, types.SuperfluidAssetTypeConcentratedShare)
+			}
+		}
+		if err := server.keeper.AddNewSuperfluidAsset(ctx, asset); err != nil {
+			return nil, err
+		}
+		events.EmitSetSuperfluidAssetEvent(ctx, asset.Denom, asset.AssetType)
+	}
+
+	return &types.MsgSetSuperfluidAssetsResponse{}, nil
+}
+
+func (server msgServer) RemoveSuperfluidAssets(goCtx context.Context, msg *types.MsgRemoveSuperfluidAssets) (*types.MsgRemoveSuperfluidAssetsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	govAddr := server.keeper.ak.GetModuleAddress(govtypes.ModuleName)
+	if msg.Sender != govAddr.String() {
+		return nil, fmt.Errorf("unauthorized: expected sender to be %s, got %s", govAddr, msg.Sender)
+	}
+
+	for _, denom := range msg.SuperfluidAssetDenoms {
+		asset, err := server.keeper.GetSuperfluidAsset(ctx, denom)
+		if err != nil {
+			return nil, err
+		}
+		dummyAsset := types.SuperfluidAsset{}
+		if asset.Equal(dummyAsset) {
+			return nil, fmt.Errorf("superfluid asset %s doesn't exist", denom)
+		}
+		server.keeper.BeginUnwindSuperfluidAsset(ctx, 0, asset)
+		events.EmitRemoveSuperfluidAsset(ctx, denom)
+	}
+
+	return &types.MsgRemoveSuperfluidAssetsResponse{}, nil
+}
+
+func (server msgServer) HandleUnpoolWhiteList(goCtx context.Context, msg *types.MsgUpdateUnpoolWhitelist) (*types.MsgUpdateUnpoolWhitelistResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	govAddr := server.keeper.ak.GetModuleAddress(govtypes.ModuleName)
+	if msg.Sender != govAddr.String() {
+		return nil, fmt.Errorf("unauthorized: expected sender to be %s, got %s", govAddr, msg.Sender)
+	}
+
+	allPoolIds := make([]uint64, 0, len(msg.Ids))
+
+	// if overwrite flag is not set, we merge the old white list with the
+	// newly added pool ids.
+	if !msg.IsOverwrite {
+		allPoolIds = append(allPoolIds, server.keeper.GetUnpoolAllowedPools(ctx)...)
+	}
+
+	for _, newId := range msg.Ids {
+		if newId == 0 {
+			return nil, errors.New("pool id 0 is not allowed. Pool ids start from 0")
+		}
+
+		if _, err := server.keeper.gk.GetPoolAndPoke(ctx, newId); err != nil {
+			return nil, fmt.Errorf("failed to get pool with id (%d), likely does not exist: %w", newId, err)
+		}
+		allPoolIds = append(allPoolIds, newId)
+	}
+
+	// Sort
+	sort.Slice(allPoolIds, func(i, j int) bool {
+		return allPoolIds[i] < allPoolIds[j]
+	})
+
+	// Remove duplicates, if any
+	duplicatesRemovedIds := make([]uint64, 0, len(allPoolIds))
+	for i, curId := range allPoolIds {
+		if i < len(allPoolIds)-1 && curId == allPoolIds[i+1] {
+			continue
+		}
+		duplicatesRemovedIds = append(duplicatesRemovedIds, curId)
+	}
+
+	server.keeper.SetUnpoolAllowedPools(ctx, duplicatesRemovedIds)
+
+	return &types.MsgUpdateUnpoolWhitelistResponse{}, nil
+}
+
+func (server msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	govAddr := server.keeper.ak.GetModuleAddress(govtypes.ModuleName)
+	if msg.Sender != govAddr.String() {
+		return nil, fmt.Errorf("unauthorized: expected sender to be %s, got %s", govAddr, msg.Sender)
+	}
+
+	server.keeper.SetParams(ctx, msg.Params)
+
+	return &types.MsgUpdateParamsResponse{}, nil
 }
