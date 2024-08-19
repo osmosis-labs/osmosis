@@ -14,7 +14,7 @@ const (
 	// MaximumUnauthenticatedGas for smart account transactions to verify the fee payer
 	MaximumUnauthenticatedGas = uint64(250_000)
 
-	// BlockMaxBytes is the max bytes for a block, 2mb
+	// BlockMaxBytes is the max bytes for a block, 3mb
 	BlockMaxBytes = int64(3000000)
 
 	// BlockMaxGas is the max gas allowed in a block
