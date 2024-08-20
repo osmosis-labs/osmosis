@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	"fmt"
+	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -171,7 +174,9 @@ func TestIncentivesExportGenesis(t *testing.T) {
 
 // TestIncentivesInitGenesis takes a genesis state and tests initializing that genesis for the incentives module.
 func TestIncentivesInitGenesis(t *testing.T) {
-	app := osmoapp.Setup(false)
+	dirName := fmt.Sprintf("%d", rand.Int())
+	app := osmoapp.SetupWithCustomHome(false, dirName)
+
 	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 
 	// checks that the default genesis parameters pass validation
@@ -228,6 +233,8 @@ func TestIncentivesInitGenesis(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, groups, 1)
 	require.Equal(t, expectedGroups, groups)
+
+	os.RemoveAll(dirName)
 }
 
 func createAllGaugeTypes(t *testing.T, app *osmoapp.OsmosisApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins, startTime time.Time) {

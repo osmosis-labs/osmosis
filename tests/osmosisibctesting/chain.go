@@ -36,8 +36,16 @@ type TestChain struct {
 	*ibctesting.TestChain
 }
 
+// NOTE: we create a global variable here to deal with testing directories,
+// this is necessary as there is now a lock file in the latest wasm that will panics our tests,
+// this is a workaround, we should do something smarter that sets the home dir and removes the home dir
+var TestingDirectories []string
+
 func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
-	osmosisApp := app.Setup(false)
+	// TODO: find a better way to do this, the likely hood that this will collide is small but not 0
+	dirName := fmt.Sprintf("%d", rand.Int())
+	osmosisApp := app.SetupWithCustomHome(false, dirName)
+	TestingDirectories = append(TestingDirectories, dirName)
 	return osmosisApp, app.NewDefaultGenesisState()
 }
 

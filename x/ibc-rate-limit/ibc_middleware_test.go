@@ -2,11 +2,13 @@ package ibc_rate_limit_test
 
 import (
 	"fmt"
-	abci "github.com/cometbft/cometbft/abci/types"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 
@@ -78,6 +80,10 @@ func (suite *MiddlewareTestSuite) SetupTest() {
 // TODO: This needs to get removed. Waiting on https://github.com/cosmos/ibc-go/issues/3123
 func (suite *MiddlewareTestSuite) TearDownSuite() {
 	txfeetypes.ConsensusMinFee = oldConsensusMinFee
+
+	for _, dir := range osmosisibctesting.TestingDirectories {
+		os.RemoveAll(dir)
+	}
 }
 
 // Helpers

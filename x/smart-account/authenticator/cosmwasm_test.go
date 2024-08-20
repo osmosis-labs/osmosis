@@ -3,6 +3,7 @@ package authenticator_test
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 	"testing"
 	"time"
@@ -36,6 +37,7 @@ type CosmwasmAuthenticatorTest struct {
 	Store          prefix.Store
 	EncodingConfig params.EncodingConfig
 	CosmwasmAuth   authenticator.CosmwasmAuthenticator
+	HomeDir        string
 }
 
 func TestCosmwasmAuthenticatorTest(t *testing.T) {
@@ -43,12 +45,17 @@ func TestCosmwasmAuthenticatorTest(t *testing.T) {
 }
 
 func (s *CosmwasmAuthenticatorTest) SetupTest() {
-	s.OsmosisApp = app.Setup(false)
+	s.HomeDir = fmt.Sprintf("%d", rand.Int())
+	s.OsmosisApp = app.SetupWithCustomHome(false, s.HomeDir)
 	s.Ctx = s.OsmosisApp.NewContextLegacy(false, tmproto.Header{})
 	s.Ctx = s.Ctx.WithGasMeter(storetypes.NewGasMeter(10_000_000))
 	s.EncodingConfig = app.MakeEncodingConfig()
 
 	s.CosmwasmAuth = authenticator.NewCosmwasmAuthenticator(s.OsmosisApp.ContractKeeper, s.OsmosisApp.AccountKeeper, s.OsmosisApp.AppCodec())
+}
+
+func (s *CosmwasmAuthenticatorTest) TearDownTest() {
+	os.RemoveAll(s.HomeDir)
 }
 
 func (s *CosmwasmAuthenticatorTest) TestOnAuthenticatorAdded() {

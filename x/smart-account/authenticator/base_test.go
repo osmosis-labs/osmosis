@@ -3,6 +3,7 @@ package authenticator_test
 import (
 	"encoding/hex"
 	"fmt"
+	"math/rand"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -35,6 +36,7 @@ type BaseAuthenticatorSuite struct {
 	TestKeys                     []string
 	TestAccAddress               []sdk.AccAddress
 	TestPrivKeys                 []*secp256k1.PrivKey
+	HomeDir                      string
 }
 
 func (s *BaseAuthenticatorSuite) SetupKeys() {
@@ -44,7 +46,8 @@ func (s *BaseAuthenticatorSuite) SetupKeys() {
 		"0dd4d1506e18a5712080708c338eb51ecf2afdceae01e8162e890b126ac190fe",
 		"49006a359803f0602a7ec521df88bf5527579da79112bb71f285dd3e7d438033",
 	}
-	s.OsmosisApp = app.Setup(false)
+	s.HomeDir = fmt.Sprintf("%d", rand.Int())
+	s.OsmosisApp = app.SetupWithCustomHome(false, s.HomeDir)
 	s.EncodingConfig = app.MakeEncodingConfig()
 
 	s.Ctx = s.OsmosisApp.NewContextLegacy(false, tmproto.Header{})
@@ -64,7 +67,6 @@ func (s *BaseAuthenticatorSuite) SetupKeys() {
 		// add the test accounts to array for later use
 		s.TestAccAddress = append(s.TestAccAddress, accAddress)
 	}
-
 }
 
 func (s *BaseAuthenticatorSuite) GenSimpleTx(msgs []sdk.Msg, signers []cryptotypes.PrivKey) (sdk.Tx, error) {
