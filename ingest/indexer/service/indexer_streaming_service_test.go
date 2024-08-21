@@ -398,27 +398,28 @@ func (s *IndexerServiceTestSuite) TestAddTokenLiquidity() {
 
 			// Assert the "liquidity_{denom}"" event attribute
 			denoms := pool.GetPoolDenoms(s.Ctx)
-			liquidityKey0 := liquidityAttributePrefix + denoms[0]
-			liquidityKey1 := liquidityAttributePrefix + denoms[1]
-			var foundKey0, foundKey1 bool
-			for _, attribute := range event.Attributes {
-				if attribute.Key == liquidityKey0 {
-					foundKey0 = true
-					continue
-				}
-				if attribute.Key == liquidityKey1 {
-					foundKey1 = true
-					continue
-				}
-			}
-			if tc.expectedLiquidity {
-				s.Require().True(foundKey0)
-				s.Require().True(foundKey1)
-			} else {
-				s.Require().False(foundKey0)
-				s.Require().False(foundKey1)
-			}
+			s.Require().Equal(tc.expectedLiquidity, checkIfLiquidityAttributeExists(event, denoms))
 
 		})
 	}
+}
+
+// checkIfLiquidityAttributeExists checks if the liquidity attribute exists in the event attributes
+// as they should be appended by the AddTokenLiquidity method in the indexer streaming service.
+// i.e. "liquidity_{denom}" must exist in the event.Attributes where {denom} is the pool denoms
+func checkIfLiquidityAttributeExists(event abcitypes.Event, denoms []string) bool {
+	liquidityKey0 := liquidityAttributePrefix + denoms[0]
+	liquidityKey1 := liquidityAttributePrefix + denoms[1]
+	var foundKey0, foundKey1 bool
+	for _, attribute := range event.Attributes {
+		if attribute.Key == liquidityKey0 {
+			foundKey0 = true
+			continue
+		}
+		if attribute.Key == liquidityKey1 {
+			foundKey1 = true
+			continue
+		}
+	}
+	return foundKey0 && foundKey1
 }
