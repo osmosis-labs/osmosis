@@ -20,10 +20,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v25/wasmbinding/bindings"
 )
 
-func SetupCustomApp(t *testing.T, addr sdk.AccAddress) (*app.OsmosisApp, sdk.Context) {
+func SetupCustomApp(t *testing.T, addr sdk.AccAddress) (*app.OsmosisApp, sdk.Context, string) {
 	t.Helper()
 
-	osmosis, ctx := CreateTestInput()
+	osmosis, ctx, homeDir := CreateTestInput()
 	wasmKeeper := osmosis.WasmKeeper
 
 	storeReflectCode(t, ctx, osmosis, addr)
@@ -31,13 +31,14 @@ func SetupCustomApp(t *testing.T, addr sdk.AccAddress) (*app.OsmosisApp, sdk.Con
 	cInfo := wasmKeeper.GetCodeInfo(ctx, 1)
 	require.NotNil(t, cInfo)
 
-	return osmosis, ctx
+	return osmosis, ctx, homeDir
 }
 
 func TestQueryFullDenom(t *testing.T) {
 	apptesting.SkipIfWSL(t)
 	actor := RandomAccountAddress()
-	osmosis, ctx := SetupCustomApp(t, actor)
+	osmosis, ctx, homeDir := SetupCustomApp(t, actor)
+	defer os.RemoveAll(homeDir)
 
 	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
 	require.NotEmpty(t, reflect)
@@ -54,6 +55,7 @@ func TestQueryFullDenom(t *testing.T) {
 
 	expected := fmt.Sprintf("factory/%s/ustart", reflect.String())
 	require.EqualValues(t, expected, resp.Denom)
+
 }
 
 type ReflectQuery struct {

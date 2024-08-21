@@ -3,6 +3,8 @@ package wasmbinding_test
 import (
 	"encoding/hex"
 	"fmt"
+	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -34,13 +36,19 @@ import (
 type StargateTestSuite struct {
 	suite.Suite
 
-	ctx sdk.Context
-	app *app.OsmosisApp
+	ctx     sdk.Context
+	app     *app.OsmosisApp
+	HomeDir string
 }
 
-func (suite *StargateTestSuite) SetupTest() {
-	suite.app = app.Setup(false)
+func (suite *StargateTestSuite) SetupTestInternal() {
+	suite.HomeDir = fmt.Sprintf("%d", rand.Int())
+	suite.app = app.SetupWithCustomHome(false, suite.HomeDir)
 	suite.ctx = suite.app.BaseApp.NewContextLegacy(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+}
+
+func (suite *StargateTestSuite) TearDownTestInternal() {
+	os.RemoveAll(suite.HomeDir)
 }
 
 func TestStargateTestSuite(t *testing.T) {
@@ -244,7 +252,8 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
-			suite.SetupTest()
+			suite.SetupTestInternal()
+			defer suite.TearDownTestInternal()
 			if tc.testSetup != nil {
 				tc.testSetup()
 			}
@@ -327,7 +336,8 @@ func (suite *StargateTestSuite) TestConvertProtoToJsonMarshal() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
-			suite.SetupTest()
+			suite.SetupTestInternal()
+			defer suite.TearDownTestInternal()
 
 			originalVersionBz, err := hex.DecodeString(tc.originalResponse)
 			suite.Require().NoError(err)
@@ -452,7 +462,8 @@ func (suite *StargateTestSuite) TestDeterministicJsonMarshal() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
-			suite.SetupTest()
+			suite.SetupTestInternal()
+			defer suite.TearDownTestInternal()
 
 			if tc.testSetup != nil {
 				tc.testSetup()
