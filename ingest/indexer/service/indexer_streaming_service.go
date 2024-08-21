@@ -134,12 +134,12 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 		var includedEvents []domain.EventWrapper
 		for i, event := range events {
 			// Add the token liquidity to the event
-			err := s.AddTokenLiquidity(ctx, &event)
+			err := s.addTokenLiquidity(ctx, &event)
 			if err != nil {
 				s.logger.Error("Error adding token liquidity to event", "error", err)
 				return err
 			}
-			err = s.AdjustTokenInAmountBySpreadFactor(ctx, &event)
+			err = s.adjustTokenInAmountBySpreadFactor(ctx, &event)
 			if err != nil {
 				s.logger.Error("Error adjusting amount by spread factor", "error", err)
 				continue
@@ -173,7 +173,7 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 
 // addTokenLiquidity adds the token liquidity to the event.
 // It refers to the pooled amount of each asset after a swap event has occurred.
-func (s *indexerStreamingService) AddTokenLiquidity(ctx context.Context, event *abci.Event) error {
+func (s *indexerStreamingService) addTokenLiquidity(ctx context.Context, event *abci.Event) error {
 	if event.Type != gammtypes.TypeEvtTokenSwapped {
 		return nil
 	}
@@ -213,7 +213,7 @@ func (s *indexerStreamingService) AddTokenLiquidity(ctx context.Context, event *
 // as the amount in the event is the amount AFTER the spread factor is applied.
 // therefore, we need to adjust the amount by the spread factor to get the amount BEFORE the spread factor is applied.
 // NOTE: This applies to CL pools only
-func (s *indexerStreamingService) AdjustTokenInAmountBySpreadFactor(ctx context.Context, event *abci.Event) error {
+func (s *indexerStreamingService) adjustTokenInAmountBySpreadFactor(ctx context.Context, event *abci.Event) error {
 	if event.Type != gammtypes.TypeEvtTokenSwapped {
 		return nil
 	}
