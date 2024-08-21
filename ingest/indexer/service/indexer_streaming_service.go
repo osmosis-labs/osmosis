@@ -190,11 +190,11 @@ func (s *indexerStreamingService) addTokenLiquidity(ctx context.Context, event *
 	if poolIdStr == "" {
 		return errors.New("pool id not found")
 	}
-	poolId, err := strconv.ParseInt(poolIdStr, 10, 64)
+	poolId, err := strconv.ParseUint(poolIdStr, 10, 64)
 	if err != nil {
 		return err
 	}
-	coins, err := s.keepers.PoolManagerKeeper.GetTotalPoolLiquidity(sdkCtx, uint64(poolId))
+	coins, err := s.keepers.PoolManagerKeeper.GetTotalPoolLiquidity(sdkCtx, poolId)
 	if err != nil {
 		return err
 	}
