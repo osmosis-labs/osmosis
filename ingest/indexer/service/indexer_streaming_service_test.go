@@ -13,6 +13,7 @@ import (
 
 	"github.com/osmosis-labs/sqs/sqsdomain"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
 	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
 	indexermocks "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain/mocks"
@@ -156,7 +157,7 @@ func (s *IndexerServiceTestSuite) TestAdjustTokenInAmountBySpreadFactor() {
 			blockProcessStrategyManager := commondomain.NewBlockProcessStrategyManager()
 
 			// Initialize a concentrated pool with spread factor
-			sf, _ := math.LegacyNewDecFromStr(defaultSpreadFactor)
+			sf, _ := osmomath.NewDecFromStr(defaultSpreadFactor)
 			s.CreateConcentratedPoolsAndFullRangePositionWithSpreadFactor(defaultPoolDenoms, []math.LegacyDec{sf})
 			pools, err := s.App.ConcentratedLiquidityKeeper.GetPools(s.Ctx)
 			s.Require().NoError(err)
