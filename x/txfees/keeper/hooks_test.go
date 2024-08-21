@@ -382,7 +382,6 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom_SimpleCases() {
 	// in the initial balance. Some of these tokens successfully swap, others do not and are silently skipped.
 	// The denomToSwapTo in the initial balance is also silently skipped
 	s.Run("multiple tokens", func() {
-		//s.Setup()
 
 		denomToSwapTo := defaultTxFeesDenom
 
