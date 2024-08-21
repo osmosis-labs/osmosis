@@ -206,7 +206,7 @@ func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *types.QuerySw
 		Use:   "estimate-swap-exact-amount-in",
 		Short: "Query estimate-swap-exact-amount-in",
 		Long: `Query estimate-swap-exact-amount-in.{{.ExampleHeader}}
-{{.CommandPrefix}} estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 1000stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
+{{.CommandPrefix}} estimate-swap-exact-amount-in 2040 1000uosmo --swap-route-pool-ids 2040 --swap-route-denoms ibc/FD506CCA1FC574F2A8175FB574C981E9F6351E194AA48AC219BD67FF934E2F33 --node https://osmosis-rpc.quickapi.com:443`,
 		ParseQuery:          EstimateSwapExactAmountInParseArgs,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
 		QueryFnName:         "EstimateSwapExactAmountIn",
@@ -220,7 +220,7 @@ func GetCmdEstimateSwapExactAmountOut() (*osmocli.QueryDescriptor, *types.QueryS
 		Use:   "estimate-swap-exact-amount-out",
 		Short: "Query estimate-swap-exact-amount-out",
 		Long: `Query estimate-swap-exact-amount-out.{{.ExampleHeader}}
-{{.CommandPrefix}} estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 1000stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
+{{.CommandPrefix}} estimate-swap-exact-amount-out 2040 1000uosmo --swap-route-pool-ids 2040 --swap-route-denoms ibc/FD506CCA1FC574F2A8175FB574C981E9F6351E194AA48AC219BD67FF934E2F33 --node https://osmosis-rpc.quickapi.com:443`,
 		ParseQuery:          EstimateSwapExactAmountOutParseArgs,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
 		QueryFnName:         "EstimateSwapExactAmountOut",
