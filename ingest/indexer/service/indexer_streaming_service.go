@@ -133,20 +133,21 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 		events := res.GetEvents()
 		var includedEvents []domain.EventWrapper
 		for i, event := range events {
+			clonedEvent := deepCloneEvent(&event)
 			// Add the token liquidity to the event
-			err := s.addTokenLiquidity(ctx, &event)
+			err := s.addTokenLiquidity(ctx, clonedEvent)
 			if err != nil {
 				s.logger.Error("Error adding token liquidity to event", "error", err)
 				return err
 			}
-			err = s.adjustTokenInAmountBySpreadFactor(ctx, &event)
+			err = s.adjustTokenInAmountBySpreadFactor(ctx, clonedEvent)
 			if err != nil {
 				s.logger.Error("Error adjusting amount by spread factor", "error", err)
 				continue
 			}
-			eventType := event.Type
+			eventType := clonedEvent.Type
 			if eventType == gammtypes.TypeEvtTokenSwapped || eventType == gammtypes.TypeEvtPoolJoined || eventType == gammtypes.TypeEvtPoolExited || eventType == concentratedliquiditytypes.TypeEvtCreatePosition || eventType == concentratedliquiditytypes.TypeEvtWithdrawPosition {
-				includedEvents = append(includedEvents, domain.EventWrapper{Index: i, Event: event})
+				includedEvents = append(includedEvents, domain.EventWrapper{Index: i, Event: *clonedEvent})
 			}
 		}
 
@@ -327,4 +328,12 @@ func (s *indexerStreamingService) ListenCommit(ctx context.Context, res abci.Res
 // Stream implements baseapp.StreamingService.
 func (s *indexerStreamingService) Stream(wg *sync.WaitGroup) error {
 	return nil
+}
+
+// deepCloneEvent deep clones the event.
+func deepCloneEvent(event *abci.Event) *abci.Event {
+	clone := *event
+	clone.Attributes = make([]abci.EventAttribute, len(event.Attributes))
+	copy(clone.Attributes, event.Attributes)
+	return &clone
 }
