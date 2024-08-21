@@ -66,7 +66,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	// 1. We are in CheckTx, and
 	// 2. Block height is NOT in the range of 16841115 to 17004043 exclusively, where AppHash happened during v25 sync.
 	bh := ctx.BlockHeight()
-	if ctx.IsCheckTx() && (bh <= 16841115 || bh >= 17004043) {
+	if bh <= 16841115 || bh >= 17004043 {
 		msgs := tx.GetMsgs()
 		for _, msg := range msgs {
 			// If one of the msgs is an IBC Transfer msg, limit it's size due to current spam potential.
