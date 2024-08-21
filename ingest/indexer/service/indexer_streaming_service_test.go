@@ -45,13 +45,13 @@ func TestIndexerServiceTestSuite(t *testing.T) {
 
 func (s *IndexerServiceTestSuite) TestAdjustTokenInAmountBySpreadFactor() {
 	testCases := []struct {
-		name                  string
-		eventType             string
-		havePoolIDAttribute   bool
-		haveTokensInAttribute bool
-		useCLPoolID           bool
-		expectedError         bool
-		expectedAdjustedAmt   bool
+		name                  string // Test case name
+		eventType             string // Event type to be tested. Only gammtypes.TypeEvtTokenSwapped is valid
+		havePoolIDAttribute   bool   // Decide whether pool_id attribute should be appended in the event attributes during test data preparation
+		haveTokensInAttribute bool   // Decide whether tokens_in attribute should be appended in the event attributes during test data preparation
+		useCLPoolID           bool   // Decide whether to use the pool_id from the concentrated liquidity pool or a random pool_id
+		expectedError         bool   // Expected error flag
+		expectedAdjustedAmt   bool   // Expected adjusted amount flag
 	}{
 		{
 			name:                  "happy path",
@@ -243,12 +243,12 @@ func (s *IndexerServiceTestSuite) TestAdjustTokenInAmountBySpreadFactor() {
 
 func (s *IndexerServiceTestSuite) TestAddTokenLiquidity() {
 	testCases := []struct {
-		name                string
-		eventType           string
-		havePoolIDAttribute bool
-		useCLPoolID         bool
-		expectedError       bool
-		expectedLiquidity   bool
+		name                string // Test case name
+		eventType           string // Event type to be tested. Only gammtypes.TypeEvtTokenSwapped is valid
+		havePoolIDAttribute bool   // Decide whether pool_id attribute should be appended in the event attributes during test data preparation
+		useCLPoolID         bool   // Decide whether to use the pool_id from the concentrated liquidity pool or a random pool_id
+		expectedError       bool   // Expected error flag
+		expectedLiquidity   bool   // Expected liquidity flag
 	}{
 		{
 			name:                "happy path",
