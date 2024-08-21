@@ -420,14 +420,12 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom_SimpleCases() {
 // - All resulting parameter denom tokens get sent to the community pool.
 // - Any non-native tokens that did not have associated pool stay in the balance of community pool fee collector.
 func (s *KeeperTestSuite) TestAfterEpochEnd() {
-	//	s.Setup()
+	s.Setup()
 
 	var (
 		stakingDenom, _    = s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
 		communityPoolDenom = s.App.PoolManagerKeeper.GetParams(s.Ctx).TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo
 	)
-
-	s.Setup()
 
 	// Prepares the initial balance of the fee collector for swapping to the given denom
 	// as well as the pools and links between denoms and pool ids.
