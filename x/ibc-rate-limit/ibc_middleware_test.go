@@ -8,8 +8,6 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
