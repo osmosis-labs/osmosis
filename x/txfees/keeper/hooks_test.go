@@ -343,7 +343,6 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom_SimpleCases() {
 			tc := tc
 
 			s.Run(tc.name, func() {
-				//s.Setup()
 
 				// Sets up account with no balance
 				testAccount := apptesting.CreateRandomAccounts(1)[0]
