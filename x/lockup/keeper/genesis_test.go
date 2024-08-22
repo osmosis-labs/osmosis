@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	"fmt"
+	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -82,7 +85,9 @@ func TestInitGenesis(t *testing.T) {
 }
 
 func TestExportGenesis(t *testing.T) {
-	app := osmoapp.Setup(false)
+	dirName := fmt.Sprintf("%d", rand.Int())
+	app := osmoapp.SetupWithCustomHome(false, dirName)
+
 	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
@@ -135,10 +140,13 @@ func TestExportGenesis(t *testing.T) {
 	require.Equal(t, genesisExported.Params, &types.Params{
 		ForceUnlockAllowedAddresses: []string{acc1.String(), acc2.String()},
 	})
+	os.RemoveAll(dirName)
 }
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
-	app := osmoapp.Setup(false)
+	dirName := fmt.Sprintf("%d", rand.Int())
+	app := osmoapp.SetupWithCustomHome(false, dirName)
+
 	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 
@@ -152,6 +160,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	require.NoError(t, err)
 
 	genesisExported := am.ExportGenesis(ctx, appCodec)
+	os.RemoveAll(dirName)
 	assert.NotPanics(t, func() {
 		app := osmoapp.Setup(false)
 		ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})

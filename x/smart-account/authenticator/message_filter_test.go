@@ -2,6 +2,7 @@ package authenticator_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/CosmWasm/wasmd/x/wasm/types"
@@ -34,6 +35,10 @@ func (s *MessageFilterTest) SetupTest() {
 	s.SetupKeys()
 	s.EncodingConfig = app.MakeEncodingConfig()
 	s.MessageFilter = authenticator.NewMessageFilter(s.EncodingConfig)
+}
+
+func (s *MessageFilterTest) TearDownTest() {
+	os.RemoveAll(s.HomeDir)
 }
 
 // TestBankSend tests the MessageFilter with multiple bank send messages

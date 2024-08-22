@@ -2,6 +2,7 @@ package authenticator_test
 
 import (
 	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -39,6 +40,10 @@ func (s *SigVerifyAuthenticationSuite) SetupTest() {
 	s.SigVerificationAuthenticator = authenticator.NewSignatureVerification(
 		ak,
 	)
+}
+
+func (s *SigVerifyAuthenticationSuite) TearDownTest() {
+	os.RemoveAll(s.HomeDir)
 }
 
 type SignatureVerificationTestData struct {

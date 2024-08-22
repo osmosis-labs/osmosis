@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -45,6 +46,7 @@ type AuthenticatorAnteSuite struct {
 	TestKeys               []string
 	TestAccAddress         []sdk.AccAddress
 	TestPrivKeys           []*secp256k1.PrivKey
+	HomeDir                string
 }
 
 func TestAuthenticatorAnteSuite(t *testing.T) {
@@ -60,7 +62,8 @@ func (s *AuthenticatorAnteSuite) SetupTest() {
 	}
 	s.EncodingConfig = app.MakeEncodingConfig()
 
-	s.OsmosisApp = app.Setup(false)
+	s.HomeDir = fmt.Sprintf("%d", rand.Int())
+	s.OsmosisApp = app.SetupWithCustomHome(false, s.HomeDir)
 
 	s.Ctx = s.OsmosisApp.NewContextLegacy(false, tmproto.Header{})
 
@@ -89,6 +92,10 @@ func (s *AuthenticatorAnteSuite) SetupTest() {
 		deductFeeDecorator,
 	)
 	s.Ctx = s.Ctx.WithGasMeter(storetypes.NewGasMeter(1_000_000))
+}
+
+func (s *AuthenticatorAnteSuite) TearDownTest() {
+	os.RemoveAll(s.HomeDir)
 }
 
 // TestSignatureVerificationNoAuthenticatorInStore test a non-smart account signature verification
