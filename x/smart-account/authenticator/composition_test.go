@@ -3,6 +3,7 @@ package authenticator_test
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -74,6 +75,10 @@ func (s *AggregatedAuthenticatorsTest) SetupTest() {
 	am.RegisterAuthenticator(s.approveAndBlock)
 	am.RegisterAuthenticator(s.rejectAndConfirm)
 	am.RegisterAuthenticator(s.spyAuth)
+}
+
+func (s *AggregatedAuthenticatorsTest) TearDownTest() {
+	os.RemoveAll(s.HomeDir)
 }
 
 func (s *AggregatedAuthenticatorsTest) TestAnyOf() {

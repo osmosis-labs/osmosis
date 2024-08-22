@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	"fmt"
+	"math/rand"
+	"os"
 	"testing"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -365,7 +368,10 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 				MintingRewardsDistributionStartEpoch: tc.mintStartEpoch,
 			}
 
-			app := osmoapp.Setup(false)
+			dirName := fmt.Sprintf("%d", rand.Int())
+			app := osmoapp.SetupWithCustomHome(false, dirName)
+			defer os.RemoveAll(dirName)
+
 			ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 
 			mintKeeper := app.MintKeeper

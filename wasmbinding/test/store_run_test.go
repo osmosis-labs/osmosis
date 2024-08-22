@@ -22,7 +22,8 @@ import (
 
 func TestNoStorageWithoutProposal(t *testing.T) {
 	// we use default config
-	osmosis, ctx := CreateTestInput()
+	osmosis, ctx, homeDir := CreateTestInput()
+	defer os.RemoveAll(homeDir)
 
 	wasmKeeper := osmosis.WasmKeeper
 	// this wraps wasmKeeper, providing interfaces exposed to external messages
@@ -61,7 +62,9 @@ func storeCodeViaProposal(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp
 
 func TestStoreCodeProposal(t *testing.T) {
 	apptesting.SkipIfWSL(t)
-	osmosis, ctx := CreateTestInput()
+	osmosis, ctx, homeDir := CreateTestInput()
+	defer os.RemoveAll(homeDir)
+
 	wasmKeeper := osmosis.WasmKeeper
 
 	govModuleAccount := osmosis.AccountKeeper.GetModuleAccount(ctx, govtypes.ModuleName).GetAddress()
@@ -88,7 +91,9 @@ type HackatomExampleInitMsg struct {
 
 func TestInstantiateContract(t *testing.T) {
 	apptesting.SkipIfWSL(t)
-	osmosis, ctx := CreateTestInput()
+	osmosis, ctx, homeDir := CreateTestInput()
+	defer os.RemoveAll(homeDir)
+
 	instantiator := RandomAccountAddress()
 	benefit, arb := RandomAccountAddress(), RandomAccountAddress()
 	FundAccount(t, ctx, osmosis, instantiator)

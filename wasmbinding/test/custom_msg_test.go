@@ -3,6 +3,7 @@ package wasmbinding
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -11,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v25/app"
@@ -21,7 +22,9 @@ import (
 func TestCreateDenomMsg(t *testing.T) {
 	apptesting.SkipIfWSL(t)
 	creator := RandomAccountAddress()
-	osmosis, ctx := SetupCustomApp(t, creator)
+
+	osmosis, ctx, homeDir := SetupCustomApp(t, creator)
+	defer os.RemoveAll(homeDir)
 
 	lucky := RandomAccountAddress()
 	reflect := instantiateReflectContract(t, ctx, osmosis, lucky)
@@ -49,7 +52,9 @@ func TestCreateDenomMsg(t *testing.T) {
 func TestMintMsg(t *testing.T) {
 	apptesting.SkipIfWSL(t)
 	creator := RandomAccountAddress()
-	osmosis, ctx := SetupCustomApp(t, creator)
+
+	osmosis, ctx, homeDir := SetupCustomApp(t, creator)
+	defer os.RemoveAll(homeDir)
 
 	lucky := RandomAccountAddress()
 	reflect := instantiateReflectContract(t, ctx, osmosis, lucky)
@@ -174,7 +179,8 @@ func TestMintMsg(t *testing.T) {
 func TestBurnMsg(t *testing.T) {
 	apptesting.SkipIfWSL(t)
 	creator := RandomAccountAddress()
-	osmosis, ctx := SetupCustomApp(t, creator)
+	osmosis, ctx, homeDir := SetupCustomApp(t, creator)
+	defer os.RemoveAll(homeDir)
 
 	lucky := RandomAccountAddress()
 	reflect := instantiateReflectContract(t, ctx, osmosis, lucky)

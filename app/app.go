@@ -43,6 +43,7 @@ import (
 	"github.com/cosmos/ibc-go/modules/capability"
 	ibcwasmkeeper "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/keeper"
 	ibcwasmtypes "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
+
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
 
@@ -305,7 +306,7 @@ func NewOsmosisApp(
 	wasmDir := filepath.Join(homePath, "wasm")
 	ibcWasmConfig := ibcwasmtypes.WasmConfig{
 		DataDir:               filepath.Join(homePath, "ibc_08-wasm"),
-		SupportedCapabilities: "iterator,stargate,abort",
+		SupportedCapabilities: []string{"iterator", "stargate", "abort"},
 		ContractDebugMode:     false,
 	}
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
