@@ -117,6 +117,10 @@ func (s *SpendLimitAuthenticatorTest) SetupTest() {
 	)
 }
 
+func (s *SpendLimitAuthenticatorTest) TearDownTest() {
+	os.RemoveAll(s.HomeDir)
+}
+
 func (s *SpendLimitAuthenticatorTest) TestSpendLimit() {
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorAnteDecorator)
 	postHandler := sdk.ChainPostDecorators(s.AuthenticatorPostDecorator)

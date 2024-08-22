@@ -3,6 +3,7 @@ package authenticator_test
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	txfeetypes "github.com/osmosis-labs/osmosis/v25/x/txfees/types"
@@ -72,6 +73,12 @@ func (s *AuthenticatorSuite) SetupTest() {
 
 	// Initialize a test account with the first private key
 	s.Account = s.CreateAccount(s.PrivKeys[0], 500_000)
+}
+
+func (suite *AuthenticatorSuite) TearDownSuite() {
+	for _, dir := range osmosisibctesting.TestingDirectories {
+		os.RemoveAll(dir)
+	}
 }
 
 func (s *AuthenticatorSuite) CreateAccount(privKey cryptotypes.PrivKey, amount int) sdk.AccountI {

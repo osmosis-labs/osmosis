@@ -343,7 +343,6 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom_SimpleCases() {
 			tc := tc
 
 			s.Run(tc.name, func() {
-				s.Setup()
 
 				// Sets up account with no balance
 				testAccount := apptesting.CreateRandomAccounts(1)[0]
@@ -382,7 +381,6 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom_SimpleCases() {
 	// in the initial balance. Some of these tokens successfully swap, others do not and are silently skipped.
 	// The denomToSwapTo in the initial balance is also silently skipped
 	s.Run("multiple tokens", func() {
-		s.Setup()
 
 		denomToSwapTo := defaultTxFeesDenom
 
@@ -426,8 +424,6 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 		stakingDenom, _    = s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
 		communityPoolDenom = s.App.PoolManagerKeeper.GetParams(s.Ctx).TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo
 	)
-
-	s.Setup()
 
 	// Prepares the initial balance of the fee collector for swapping to the given denom
 	// as well as the pools and links between denoms and pool ids.

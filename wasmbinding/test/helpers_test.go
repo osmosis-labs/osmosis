@@ -1,6 +1,8 @@
 package wasmbinding
 
 import (
+	"fmt"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -18,10 +20,11 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 )
 
-func CreateTestInput() (*app.OsmosisApp, sdk.Context) {
-	osmosis := app.Setup(false)
+func CreateTestInput() (*app.OsmosisApp, sdk.Context, string) {
+	homeDir := fmt.Sprintf("%d", rand.Int())
+	osmosis := app.SetupWithCustomHome(false, homeDir)
 	ctx := osmosis.BaseApp.NewContextLegacy(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
-	return osmosis, ctx
+	return osmosis, ctx, homeDir
 }
 
 func FundAccount(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, acct sdk.AccAddress) {
