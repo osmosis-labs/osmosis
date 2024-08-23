@@ -131,12 +131,12 @@ var (
 		{
 			Section: "consensus",
 			Key:     "timeout_commit",
-			Value:   "600ms",
+			Value:   "500ms",
 		},
 		{
 			Section: "consensus",
 			Key:     "timeout_propose",
-			Value:   "2s",
+			Value:   "1.8s",
 		},
 		{
 			Section: "consensus",
@@ -617,6 +617,8 @@ func initAppConfig() (string, interface{}) {
 
 		IndexerConfig indexer.Config `mapstructure:"osmosis-indexer"`
 
+		OTELConfig osmosis.OTELConfig `mapstructure:"otel"`
+
 		WasmConfig wasmtypes.WasmConfig `mapstructure:"wasm"`
 	}
 
@@ -708,6 +710,17 @@ token-supply-offset-topic-id = "{{ .IndexerConfig.TokenSupplyOffsetTopicId }}"
 
 # The topic id to use for publishing pair metadata
 pair-topic-id = "{{ .IndexerConfig.PairTopicId }}"
+
+###############################################################################
+###              OpenTelemetry (OTEL) Configuration                         ###
+###############################################################################
+[otel]
+
+# Flag that enables OTEL
+enabled = "{{ .OTELConfig.Enabled }}"
+
+# The service name to use for OTEL
+service-name = "{{ .OTELConfig.ServiceName }}"
 
 ###############################################################################
 ###                            Wasm Configuration                           ###
