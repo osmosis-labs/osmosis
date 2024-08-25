@@ -5,10 +5,10 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
+	"github.com/osmosis-labs/osmosis/v26/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/model"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
 )
 
 var _ commondomain.WriteListener = (*concentratedPoolWriteListener)(nil)

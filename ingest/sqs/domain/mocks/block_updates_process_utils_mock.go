@@ -3,7 +3,7 @@ package mocks
 import (
 	"cosmossdk.io/store/types"
 
-	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
 )
 
 type BlockUpdateProcessUtilsMock struct {

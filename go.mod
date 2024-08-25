@@ -1,4 +1,4 @@
-module github.com/osmosis-labs/osmosis/v25
+module github.com/osmosis-labs/osmosis/v26
 
 go 1.22.4
 

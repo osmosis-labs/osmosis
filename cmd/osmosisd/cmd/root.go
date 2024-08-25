@@ -27,10 +27,10 @@ import (
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/app/params"
-	v23 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v23" // should be automated to be updated to current version every upgrade
-	"github.com/osmosis-labs/osmosis/v25/ingest/indexer"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs"
+	"github.com/osmosis-labs/osmosis/v26/app/params"
+	v23 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v23" // should be automated to be updated to current version every upgrade
+	"github.com/osmosis-labs/osmosis/v26/ingest/indexer"
+	"github.com/osmosis-labs/osmosis/v26/ingest/sqs"
 
 	"cosmossdk.io/log"
 	tmcfg "github.com/cometbft/cometbft/config"
@@ -75,7 +75,7 @@ import (
 
 	"github.com/joho/godotenv"
 
-	osmosis "github.com/osmosis-labs/osmosis/v25/app"
+	osmosis "github.com/osmosis-labs/osmosis/v26/app"
 )
 
 type AssetList struct {
