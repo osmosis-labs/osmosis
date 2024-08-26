@@ -1,8 +1,11 @@
 package domain
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 )
 
@@ -30,6 +33,11 @@ type BlockPoolUpdateTracker interface {
 	// TrackCosmWasmPoolsAddressToPoolMap tracks the CosmWasm pools address to the pool object map.
 	TrackCosmWasmPoolsAddressToPoolMap(pool poolmanagertypes.PoolI)
 
+	// TrackCreatedPoolID tracks whenever a new pool is created.
+	// CONTRACT: the caller calls this method only once per pool creation as observed
+	// by poolmanagertypes.TypeEvtPoolCreated
+	TrackCreatedPoolID(poolID uint64, blockHeight int64, blockTime time.Time, txnHash string)
+
 	// GetConcentratedPools returns the tracked concentrated pools.
 	GetConcentratedPools() []poolmanagertypes.PoolI
 
@@ -44,6 +52,9 @@ type BlockPoolUpdateTracker interface {
 
 	// GetCosmWasmPoolsAddressToIDMap returns the tracked CosmWasm pools address to pool object map.
 	GetCosmWasmPoolsAddressToIDMap() map[string]poolmanagertypes.PoolI
+
+	// GetCreatedPoolIDs returns the tracked pool IDs that were created in the block.
+	GetCreatedPoolIDs() map[uint64]commondomain.PoolCreation
 
 	// Reset clears the internal state.
 	Reset()
