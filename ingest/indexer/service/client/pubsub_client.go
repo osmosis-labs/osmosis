@@ -13,6 +13,7 @@ import (
 
 // PubSubClient is a client for publishing messages to a PubSub topic.
 type PubSubClient struct {
+	maxPublishDelay          int
 	projectId                string
 	blockTopicId             string
 	transactionTopicId       string
@@ -28,8 +29,9 @@ const (
 )
 
 // NewPubSubCLient creates a new PubSubClient.
-func NewPubSubCLient(projectId, blockTopicId, transactionTopicId, poolTopicId, tokenSupplyTopicId, tokenSupplyOffsetTopicId, pairTopicID string) *PubSubClient {
+func NewPubSubCLient(maxPublishDelay int, projectId, blockTopicId, transactionTopicId, poolTopicId, tokenSupplyTopicId, tokenSupplyOffsetTopicId, pairTopicID string) *PubSubClient {
 	return &PubSubClient{
+		maxPublishDelay:          maxPublishDelay,
 		projectId:                projectId,
 		blockTopicId:             blockTopicId,
 		transactionTopicId:       transactionTopicId,
@@ -62,7 +64,7 @@ func (p *PubSubClient) publish(ctx context.Context, message any, topicId string)
 	// are high enough that the message may seem undelivered or lost.
 	// To mitigate this, it's essential to reduce the DelayThreshold to a lower value, such as 4 seconds, to ensure timely delivery.
 	topic := p.pubsubClient.Topic(topicId)
-	topic.PublishSettings.DelayThreshold = MAX_PUBLISH_DELAY
+	topic.PublishSettings.DelayThreshold = time.Duration(p.maxPublishDelay) * time.Second
 	topic.Publish(ctx, &pubsub.Message{
 		Data: msgBytes,
 	})
