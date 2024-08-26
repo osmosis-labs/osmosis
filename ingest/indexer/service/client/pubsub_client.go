@@ -58,7 +58,7 @@ func (p *PubSubClient) publish(ctx context.Context, message any, topicId string)
 	}
 
 	// Publish message to the topic. When the message publishing rate is very low, messages may remain pending and stale within the Pub/Sub SDK.
-	// For example, if only one message is published over a span of several minutes, the default DelayThreshold and CountThreshold values 
+	// For example, if only one message is published over a span of several minutes, the default DelayThreshold and CountThreshold values
 	// are high enough that the message may seem undelivered or lost.
 	// To mitigate this, it's essential to reduce the DelayThreshold to a lower value, such as 4 seconds, to ensure timely delivery.
 	topic := p.pubsubClient.Topic(topicId)
