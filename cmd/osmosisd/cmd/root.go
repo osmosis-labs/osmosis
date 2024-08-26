@@ -690,6 +690,11 @@ grpc-ingest-max-call-size-bytes = "{{ .SidecarQueryServerConfig.GRPCIngestMaxCal
 # The indexer service is disabled by default.
 is-enabled = "{{ .IndexerConfig.IsEnabled }}"
 
+# Max publish delay in seconds for the indexer service.
+# Migitate the issue of messages remaining pending when the publishing rate is low,
+# ensuring timely delivery and preventing messages from appearing undelivered
+max-publish-delay = "{{ .IndexerConfig.MaxPublishDelay }}"
+
 # The GCP project id to use for the indexer service.
 gcp-project-id = "{{ .IndexerConfig.GCPProjectId }}"
 
