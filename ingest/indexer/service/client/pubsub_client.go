@@ -24,10 +24,6 @@ type PubSubClient struct {
 	pubsubClient             *pubsub.Client
 }
 
-const (
-	MAX_PUBLISH_DELAY = 4 * time.Second
-)
-
 // NewPubSubCLient creates a new PubSubClient.
 func NewPubSubCLient(maxPublishDelay int, projectId, blockTopicId, transactionTopicId, poolTopicId, tokenSupplyTopicId, tokenSupplyOffsetTopicId, pairTopicID string) *PubSubClient {
 	return &PubSubClient{
