@@ -11,6 +11,7 @@ import (
 // Config defines the config for the indexer.
 type Config struct {
 	IsEnabled                bool   `mapstructure:"enabled"`
+	MaxPublishDelay          int    `mapstructure:"max-publish-delay"`
 	GCPProjectId             string `mapstructure:"gcp-project-id"`
 	BlockTopicId             string `mapstructure:"block-topic-id"`
 	TransactionTopicId       string `mapstructure:"transaction-topic-id"`
@@ -28,6 +29,7 @@ const (
 // DefaultConfig defines the default config for the indexer client.
 var DefaultConfig = Config{
 	IsEnabled:                false,
+	MaxPublishDelay:          4,
 	GCPProjectId:             "",
 	BlockTopicId:             "",
 	TransactionTopicId:       "",
@@ -46,6 +48,7 @@ func NewConfigFromOptions(opts servertypes.AppOptions) Config {
 		}
 	}
 
+	maxPublishDelay := osmoutils.ParseInt(opts, groupOptName, "max-publish-delay")
 	gcpProjectId := osmoutils.ParseString(opts, groupOptName, "gcp-project-id")
 	blockTopicId := osmoutils.ParseString(opts, groupOptName, "block-topic-id")
 	transactionTopicId := osmoutils.ParseString(opts, groupOptName, "transaction-topic-id")
@@ -56,6 +59,7 @@ func NewConfigFromOptions(opts servertypes.AppOptions) Config {
 
 	return Config{
 		IsEnabled:                isEnabled,
+		MaxPublishDelay:          maxPublishDelay,
 		GCPProjectId:             gcpProjectId,
 		BlockTopicId:             blockTopicId,
 		TransactionTopicId:       transactionTopicId,
@@ -68,6 +72,6 @@ func NewConfigFromOptions(opts servertypes.AppOptions) Config {
 
 // Initialize initializes the indexer by creating a new PubSubClient and returning a new IndexerIngester.
 func (c Config) Initialize() domain.Publisher {
-	pubSubClient := service.NewPubSubCLient(c.GCPProjectId, c.BlockTopicId, c.TransactionTopicId, c.PoolTopicId, c.TokenSupplyTopicId, c.TokenSupplyOffsetTopicId, c.PairTopicId)
+	pubSubClient := service.NewPubSubCLient(c.MaxPublishDelay, c.GCPProjectId, c.BlockTopicId, c.TransactionTopicId, c.PoolTopicId, c.TokenSupplyTopicId, c.TokenSupplyOffsetTopicId, c.PairTopicId)
 	return NewIndexerPublisher(*pubSubClient)
 }
