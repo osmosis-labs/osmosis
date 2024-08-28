@@ -270,7 +270,7 @@ func (q Querier) getGaugeFromIDJsonBytes(ctx sdk.Context, refValue []byte) ([]ty
 	return gauges, nil
 }
 
-// GaugeFilterFn is used to apply a filter on gauges
+// GaugesFilterFn is used to apply a filter on gauges
 // It must be used in query.FilterPaginate as a condition to add the gauge to the response data
 type GaugesFilterFn func(gauge *types.Gauge) bool
 
