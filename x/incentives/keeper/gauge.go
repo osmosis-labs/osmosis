@@ -27,14 +27,6 @@ var byGroupQueryCondition = lockuptypes.QueryCondition{LockQueryType: lockuptype
 
 // getGaugesFromIterator iterates over everything in a gauge's iterator, until it reaches the end. Return all gauges iterated over.
 func (k Keeper) getGaugesFromIterator(ctx sdk.Context, iterator db.Iterator) []types.Gauge {
-	return k.getGaugesFromIteratorAndFilter(ctx, iterator, func(_ *types.Gauge) bool { return true })
-}
-
-// GaugeFilterFn is a function returning true if the Gauge has the expected values
-type GaugeFilterFn func(*types.Gauge) bool
-
-// getGaugesFromIterator iterates over everything in a gauge's iterator, until it reaches the end. Return all gauges iterated over.
-func (k Keeper) getGaugesFromIteratorAndFilter(ctx sdk.Context, iterator db.Iterator, filter GaugeFilterFn) []types.Gauge {
 	gauges := []types.Gauge{}
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -48,9 +40,7 @@ func (k Keeper) getGaugesFromIteratorAndFilter(ctx sdk.Context, iterator db.Iter
 			if err != nil {
 				panic(err)
 			}
-			if filter(gauge) {
-				gauges = append(gauges, *gauge)
-			}
+			gauges = append(gauges, *gauge)
 		}
 	}
 	return gauges
