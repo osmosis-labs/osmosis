@@ -62,11 +62,6 @@ func (gauge Gauge) IsLastNonPerpetualDistribution() bool {
 	return !gauge.IsPerpetual && gauge.FilledEpochs+1 >= gauge.NumEpochsPaidOver
 }
 
-// IsNoLockGauge returns true if the Gauge LockQueryType is NoLock
-func (gauge Gauge) IsNoLockGauge() bool {
-	return gauge.DistributeTo.LockQueryType == lockuptypes.NoLock
-}
-
 func (gauge Gauge) IsDurationLockGauge() bool {
 	return gauge.DistributeTo.LockQueryType == lockuptypes.ByDuration
 }
