@@ -21,16 +21,16 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
-	gammv2types "github.com/osmosis-labs/osmosis/v25/x/gamm/v2types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
+	gammv2types "github.com/osmosis-labs/osmosis/v26/x/gamm/v2types"
 
-	"github.com/osmosis-labs/osmosis/v25/app"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v26/app"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
-	"github.com/osmosis-labs/osmosis/v25/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v26/wasmbinding"
 )
 
 type StargateTestSuite struct {

@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/osmosis-labs/osmosis/v25/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v26/x/tokenfactory/types"
 )
 
 func (k Keeper) mintTo(ctx sdk.Context, amount sdk.Coin, mintTo string) error {
@@ -42,6 +42,10 @@ func (k Keeper) burnFrom(ctx sdk.Context, amount sdk.Coin, burnFrom string) erro
 	addr, err := sdk.AccAddressFromBech32(burnFrom)
 	if err != nil {
 		return err
+	}
+
+	if k.IsModuleAcc(ctx, addr) {
+		return types.ErrBurnFromModuleAccount
 	}
 
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx,
@@ -95,4 +99,9 @@ func (k Keeper) forceTransfer(ctx sdk.Context, amount sdk.Coin, fromAddr string,
 	}
 
 	return k.bankKeeper.SendCoins(ctx, fromSdkAddr, toSdkAddr, sdk.NewCoins(amount))
+}
+
+// IsModuleAcc checks if a given address is restricted
+func (k Keeper) IsModuleAcc(ctx sdk.Context, addr sdk.AccAddress) bool {
+	return k.permAddrMap[addr.String()]
 }

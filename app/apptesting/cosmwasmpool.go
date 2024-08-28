@@ -11,11 +11,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
-	"github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/cosmwasm/msg"
-	"github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/cosmwasm/msg/transmuter"
-	"github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/cosmwasm/msg"
+	"github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/cosmwasm/msg/transmuter"
+	"github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/model"
 
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/types"
 )
 
 const (
@@ -85,17 +85,30 @@ func (s *KeeperTestHelper) PrepareCustomTransmuterPoolCustomProject(owner sdk.Ac
 // PrepareCustomTransmuterPoolV3 sets up a transmuter pool with the custom parameters for version 3 of the transmuter contract (alloyed assets).
 // It initializes the pool with the provided ratio for the given denoms, using a default normalization factor of "1" for each denom.
 func (s *KeeperTestHelper) PrepareCustomTransmuterPoolV3(owner sdk.AccAddress, denoms []string, ratio []uint16) cosmwasmpooltypes.CosmWasmExtension {
+	return s.PrepareCustomTransmuterPoolV3CustomProject(owner, denoms, ratio, osmosisRepository, osmosisRepoTransmuterPath)
+}
+
+// PrepareCustomTransmuterPoolV3CustomProject sets up a transmuter pool for version 3 with the custom parameters.
+// Gives flexibility for the helper to be reused outside of the Osmosis repository by providing custom
+// project name and bytecode path.
+func (s *KeeperTestHelper) PrepareCustomTransmuterPoolV3CustomProject(owner sdk.AccAddress, denoms []string, ratio []uint16, projectName, byteCodePath string) cosmwasmpooltypes.CosmWasmExtension {
 	normalizationFactors := make([]string, len(denoms))
 	for i := range normalizationFactors {
 		normalizationFactors[i] = "1"
 	}
-	return s.PrepareCustomTransmuterPoolV3WithNormalization(owner, denoms, normalizationFactors, ratio)
+	return s.PrepareCustomTransmuterPoolV3WithNormalizationCustomProject(owner, denoms, normalizationFactors, ratio, projectName, byteCodePath)
 }
 
 // PrepareCustomTransmuterPoolV3WithNormalization sets up a transmuter pool with the custom parameters for version 3 of the transmuter contract (alloyed assets).
 // It initializes the pool with the provided ratio for the given denoms and their respective normalization factors.
 func (s *KeeperTestHelper) PrepareCustomTransmuterPoolV3WithNormalization(owner sdk.AccAddress, denoms []string, normalizationFactors []string, ratio []uint16) cosmwasmpooltypes.CosmWasmExtension {
-	pool := s.PrepareTransmuterPool(owner, denoms, normalizationFactors, osmosisRepository, osmosisRepoTransmuterPath, TransmuterV3ContractName, s.GetTransmuterInstantiateMsgBytesV3)
+	return s.PrepareCustomTransmuterPoolV3WithNormalizationCustomProject(owner, denoms, normalizationFactors, ratio, osmosisRepository, osmosisRepoTransmuterPath)
+}
+
+// PrepareCustomTransmuterPoolV3WithNormalization sets up a transmuter pool with the custom parameters for version 3 of the transmuter contract (alloyed assets).
+// It initializes the pool with the provided ratio for the given denoms and their respective normalization factors.
+func (s *KeeperTestHelper) PrepareCustomTransmuterPoolV3WithNormalizationCustomProject(owner sdk.AccAddress, denoms []string, normalizationFactors []string, ratio []uint16, projectName, byteCodePath string) cosmwasmpooltypes.CosmWasmExtension {
+	pool := s.PrepareTransmuterPool(owner, denoms, normalizationFactors, projectName, byteCodePath, TransmuterV3ContractName, s.GetTransmuterInstantiateMsgBytesV3)
 	s.AddRatioFundsToTransmuterPool(s.TestAccs[0], denoms, ratio, pool.GetId())
 	pool, err := s.App.CosmwasmPoolKeeper.GetPoolById(s.Ctx, pool.GetId())
 	s.Require().NoError(err)

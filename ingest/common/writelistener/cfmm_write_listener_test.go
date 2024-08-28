@@ -1,9 +1,9 @@
 package writelistener_test
 
 import (
-	"github.com/osmosis-labs/osmosis/v25/ingest/common/pooltracker"
-	"github.com/osmosis-labs/osmosis/v25/ingest/common/writelistener"
-	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v26/ingest/common/pooltracker"
+	"github.com/osmosis-labs/osmosis/v26/ingest/common/writelistener"
+	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
 )
 
 // Tests that the concentrated write listener correctly tracks pool and tick updates.
