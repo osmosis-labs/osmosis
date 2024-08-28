@@ -7,7 +7,7 @@ import (
 
 	"github.com/osmosis-labs/sqs/sqsdomain"
 
-	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
 )
 
 // PoolsTransformer is an interface that defines the methods for the pool transformer

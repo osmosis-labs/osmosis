@@ -3,7 +3,7 @@ package mocks
 import (
 	"context"
 
-	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
+	indexerdomain "github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain"
 )
 
 // PublisherMock is a mock for Publisher.

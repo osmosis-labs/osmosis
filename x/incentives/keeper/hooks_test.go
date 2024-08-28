@@ -10,10 +10,10 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v26/x/incentives/types"
 )
 
 var (

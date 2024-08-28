@@ -16,8 +16,8 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/ingest/sqs/domain"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 type GRPCClient struct {

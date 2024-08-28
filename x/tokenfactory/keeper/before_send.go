@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v25/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v26/x/tokenfactory/types"
 
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
@@ -165,6 +165,13 @@ func (k Keeper) callBeforeSendListener(context context.Context, from, to sdk.Acc
 			childCtx := ctx.WithGasMeter(storetypes.NewGasMeter(types.BeforeSendHookGasLimit))
 			_, err = k.contractKeeper.Sudo(childCtx.WithEventManager(em), cwAddr, msgBz)
 			if err != nil {
+				if strings.Contains(err.Error(), "no such contract") {
+					return nil
+				}
+				if k.IsModuleAcc(ctx, from) {
+					return nil
+				}
+
 				return errorsmod.Wrapf(err, "failed to call before send hook for denom %s", coin.Denom)
 			}
 

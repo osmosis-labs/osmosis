@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 // TokenSupplyPublisher is an interface for publishing token supply data.
