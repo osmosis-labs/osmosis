@@ -14,17 +14,17 @@ import (
 	"github.com/osmosis-labs/sqs/sqsdomain"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
-	indexermocks "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain/mocks"
-	indexerservice "github.com/osmosis-labs/osmosis/v25/ingest/indexer/service"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain/mocks"
-	sqsmocks "github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain/mocks"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	indexerdomain "github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain"
+	indexermocks "github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain/mocks"
+	indexerservice "github.com/osmosis-labs/osmosis/v26/ingest/indexer/service"
+	"github.com/osmosis-labs/osmosis/v26/ingest/sqs/domain/mocks"
+	sqsmocks "github.com/osmosis-labs/osmosis/v26/ingest/sqs/domain/mocks"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
 
-	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
-	"github.com/osmosis-labs/osmosis/v25/ingest/common/pooltracker"
+	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
+	"github.com/osmosis-labs/osmosis/v26/ingest/common/pooltracker"
 )
 
 var (

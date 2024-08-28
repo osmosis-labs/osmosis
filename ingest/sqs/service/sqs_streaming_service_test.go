@@ -10,12 +10,12 @@ import (
 
 	"github.com/osmosis-labs/sqs/sqsdomain"
 
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/service"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v26/ingest/sqs/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v26/ingest/sqs/service"
 
-	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
-	"github.com/osmosis-labs/osmosis/v25/ingest/common/pooltracker"
+	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
+	"github.com/osmosis-labs/osmosis/v26/ingest/common/pooltracker"
 )
 
 var (

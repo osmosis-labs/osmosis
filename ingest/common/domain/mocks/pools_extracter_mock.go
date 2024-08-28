@@ -3,7 +3,7 @@ package mocks
 import (
 	"github.com/cosmos/cosmos-sdk/types"
 
-	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
 )
 
 type PoolsExtractorMock struct {
