@@ -337,15 +337,17 @@ func (q Querier) getGaugesWithFilter(ctx sdk.Context, keyPrefix []byte, pageReq 
 		if err != nil {
 			return false, err
 		}
+		var hit bool
 		if accumulate {
 			for _, gauge := range newGauges {
 				if !filter(&gauge) {
 					continue
 				}
 				gauges = append(gauges, gauge)
+				hit = true
 			}
 		}
-		return true, nil
+		return hit, nil
 	})
 	if err != nil {
 		return nil, nil, err
