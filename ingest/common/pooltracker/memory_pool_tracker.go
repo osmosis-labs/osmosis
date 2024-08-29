@@ -95,7 +95,6 @@ func (pt *poolBlockUpdateTracker) Reset() {
 	pt.cfmmPools = map[uint64]poolmanagertypes.PoolI{}
 	pt.cosmwasmPools = map[uint64]poolmanagertypes.PoolI{}
 	pt.concentratedPoolIDTickChange = map[uint64]struct{}{}
-	pt.cosmwasmPoolsAddressToPoolMap = map[string]poolmanagertypes.PoolI{}
 	pt.createdPoolIDs = map[uint64]commondomain.PoolCreation{}
 }
 
