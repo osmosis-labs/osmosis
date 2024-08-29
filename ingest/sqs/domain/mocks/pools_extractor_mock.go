@@ -15,10 +15,16 @@ type PoolsExtractorMock struct {
 	IsProcessAllBlockDataCalled bool
 	// IsProcessAllChangedDataCalled is a flag indicating if ProcessChangedBlockData was called.
 	IsProcessAllChangedDataCalled bool
+	// IsProcessAllCreatedDataCalled is a flag indicating if ProcessAllCreatedDataCalled was called.
+	IsProcessAllCreatedDataCalled bool
+	// IsPoolTrackerReset is a flag indicating if ResetPoolTracker was called.
+	IsPoolTrackerReset bool
 	// If this is non-empty, ProcessAllBlockData(...) will panic with this message.
 	ProcessAllBlockDataPanicMsg string
 	// Block pools to return
 	BlockPools commondomain.BlockPools
+	// CreatedPoolIDs is the map of pool IDs that were created in the block.
+	CreatedPoolIDs map[uint64]commondomain.PoolCreation
 }
 
 var _ commondomain.PoolExtractor = &PoolsExtractorMock{}
@@ -41,10 +47,11 @@ func (p *PoolsExtractorMock) ExtractChanged(ctx types.Context) (commondomain.Blo
 
 // ExtractCreated implements commondomain.PoolExtractor.
 func (p *PoolsExtractorMock) ExtractCreated(ctx types.Context) (commondomain.BlockPools, map[uint64]commondomain.PoolCreation, error) {
-	panic("unimplemented")
+	p.IsProcessAllCreatedDataCalled = true
+	return p.BlockPools, p.CreatedPoolIDs, nil
 }
 
 // ResetPoolTracker implements commondomain.PoolExtractor.
 func (p *PoolsExtractorMock) ResetPoolTracker(ctx types.Context) {
-	panic("unimplemented")
+	p.IsPoolTrackerReset = true
 }

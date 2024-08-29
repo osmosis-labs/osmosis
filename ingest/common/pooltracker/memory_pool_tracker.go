@@ -1,8 +1,6 @@
 package pooltracker
 
 import (
-	"time"
-
 	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
@@ -15,10 +13,7 @@ type poolBlockUpdateTracker struct {
 	cfmmPools                     map[uint64]poolmanagertypes.PoolI
 	cosmwasmPools                 map[uint64]poolmanagertypes.PoolI
 	cosmwasmPoolsAddressToPoolMap map[string]poolmanagertypes.PoolI
-
 	// Tracks the pool IDs that were created in the block.
-	// CONTRACT: the caller calls this method only once per pool creation as observed
-	// by poolmanagertypes.TypeEvtPoolCreated
 	createdPoolIDs map[uint64]commondomain.PoolCreation
 }
 
@@ -60,12 +55,8 @@ func (pt *poolBlockUpdateTracker) TrackConcentratedPoolIDTickChange(poolID uint6
 }
 
 // TrackCreatedPoolID implements domain.BlockPoolUpdateTracker.
-func (pt *poolBlockUpdateTracker) TrackCreatedPoolID(poolID uint64, blockHeight int64, blockTime time.Time, txnHash string) {
-	pt.createdPoolIDs[poolID] = commondomain.PoolCreation{
-		BlockHeight: blockHeight,
-		BlockTime:   blockTime,
-		TxnHash:     txnHash,
-	}
+func (pt *poolBlockUpdateTracker) TrackCreatedPoolID(poolCreation commondomain.PoolCreation) {
+	pt.createdPoolIDs[poolCreation.PoolId] = poolCreation
 }
 
 // GetConcentratedPools implements PoolTracker.

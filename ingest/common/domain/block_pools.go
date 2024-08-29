@@ -8,6 +8,7 @@ import (
 
 // PoolCreation contains the information about a pool creation.
 type PoolCreation struct {
+	PoolId      uint64
 	BlockHeight int64
 	BlockTime   time.Time
 	TxnHash     string
