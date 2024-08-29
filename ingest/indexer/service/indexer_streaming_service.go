@@ -345,19 +345,52 @@ func deepCloneEvent(event *types.Event) *types.Event {
 // If the pool ID is not found in the event attributes, it logs an error.
 // If the pool ID is found, it parses the pool ID to uint64 and tracks it.
 func (s *indexerStreamingService) trackCreatedPoolID(event types.Event, blockHeight int64, blockTime time.Time, txHash string) {
+	// Check if the event is pool created event
+	if event.Type != poolmanagertypes.TypeEvtPoolCreated {
+		s.logger.Error("Event type is not pool created event")
+		return
+	}
+
+	// Check if block height, block time or tx hash is empty
+	if blockHeight == 0 || blockTime.IsZero() || txHash == "" {
+		s.logger.Error("Block height, block time or tx hash is empty")
+	}
+
+	// Check if event attributes are empty
 	if len(event.Attributes) == 0 {
 		s.logger.Error("Event attributes are empty for pool created event")
 		return
 	}
 
-	poolIDAttribute := event.Attributes[0]
+	// Find the pool ID attribute from the event attributes
+	poolIDStr := ""
+	for _, attribute := range event.Attributes {
+		if attribute.Key == poolmanagertypes.AttributeKeyPoolId {
+			poolIDStr = attribute.Value
+			break
+		}
+	}
+
+	// Check if the pool ID attribute is empty
+	if poolIDStr == "" {
+		s.logger.Error("Pool ID attribute is not found in event attributes")
+		return
+	}
 
 	// Parse to uint64
-	createdPoolID, err := strconv.ParseUint(poolIDAttribute.Value, 10, 64)
+	createdPoolID, err := strconv.ParseUint(poolIDStr, 10, 64)
 	if err != nil {
 		s.logger.Error("Error parsing pool ID from event attributes", err)
 		return
 	}
 
-	s.poolTracker.TrackCreatedPoolID(createdPoolID, blockHeight, blockTime, txHash)
+	// Send the pool creation data to the pool tracker
+	poolCreation := commondomain.PoolCreation{
+		PoolId:      createdPoolID,
+		BlockHeight: blockHeight,
+		BlockTime:   blockTime,
+		TxnHash:     txHash,
+	}
+
+	s.poolTracker.TrackCreatedPoolID(poolCreation)
 }

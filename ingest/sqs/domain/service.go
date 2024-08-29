@@ -1,8 +1,6 @@
 package domain
 
 import (
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
@@ -36,7 +34,7 @@ type BlockPoolUpdateTracker interface {
 	// TrackCreatedPoolID tracks whenever a new pool is created.
 	// CONTRACT: the caller calls this method only once per pool creation as observed
 	// by poolmanagertypes.TypeEvtPoolCreated
-	TrackCreatedPoolID(poolID uint64, blockHeight int64, blockTime time.Time, txnHash string)
+	TrackCreatedPoolID(commondomain.PoolCreation)
 
 	// GetConcentratedPools returns the tracked concentrated pools.
 	GetConcentratedPools() []poolmanagertypes.PoolI

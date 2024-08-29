@@ -3,6 +3,7 @@ package service_test
 import (
 	"strconv"
 	"testing"
+	"time"
 
 	"cosmossdk.io/math"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
@@ -21,6 +22,7 @@ import (
 	sqsmocks "github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain/mocks"
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
 
 	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v25/ingest/common/pooltracker"
@@ -399,6 +401,195 @@ func (s *IndexerServiceTestSuite) TestAddTokenLiquidity() {
 			// Assert the "liquidity_{denom}"" event attribute
 			denoms := pool.GetPoolDenoms(s.Ctx)
 			s.Require().Equal(tc.expectedLiquidity, checkIfLiquidityAttributeExists(event, denoms))
+
+		})
+	}
+}
+
+func (s *IndexerServiceTestSuite) TestTrackCreatedPoolID() {
+	testCases := []struct {
+		name                     string    // Test case name
+		eventType                string    // Event type to be tested. Only poolmanagertypes.TypeEvtPoolCreated is valid type to be tracked
+		blockHeight              int64     // Block height to be used in the test
+		blockTime                time.Time // Block time to be used in the test
+		txnHash                  string    // Transaction hash to be used in the test
+		havePoolIDAttribute      bool      // Decide whether pool_id attribute should be appended in the event attributes during test data preparation
+		expectedError            bool      // Expected error flag
+		expectedPoolBeingTracked bool      // Expected whether the pool is being tracked
+	}{
+		{
+			name:                     "happy path",
+			eventType:                poolmanagertypes.TypeEvtPoolCreated,
+			blockHeight:              1000,
+			blockTime:                time.Now().UTC(),
+			txnHash:                  "txnhash",
+			havePoolIDAttribute:      true,
+			expectedPoolBeingTracked: true,
+		},
+		{
+			name:                     "Should not track with non pool_created event",
+			eventType:                gammtypes.TypeEvtTokenSwapped,
+			blockHeight:              1000,
+			blockTime:                time.Now().UTC(),
+			txnHash:                  "txnhash",
+			havePoolIDAttribute:      true,
+			expectedPoolBeingTracked: false,
+		},
+		{
+			name:                     "Should not track with no pool_id attribute",
+			eventType:                gammtypes.TypeEvtTokenSwapped,
+			blockHeight:              1000,
+			blockTime:                time.Now().UTC(),
+			txnHash:                  "txnhash",
+			havePoolIDAttribute:      false,
+			expectedPoolBeingTracked: false,
+		},
+		{
+			name:                     "Should not track with no block height",
+			eventType:                gammtypes.TypeEvtTokenSwapped,
+			blockHeight:              0,
+			blockTime:                time.Now().UTC(),
+			txnHash:                  "txnhash",
+			havePoolIDAttribute:      true,
+			expectedPoolBeingTracked: false,
+		},
+		{
+			name:                     "Should not track with no block time",
+			eventType:                gammtypes.TypeEvtTokenSwapped,
+			blockHeight:              1000,
+			blockTime:                time.Unix(0, 0),
+			txnHash:                  "txnhash",
+			havePoolIDAttribute:      true,
+			expectedPoolBeingTracked: false,
+		},
+		{
+			name:                     "Should not track with no txn hash",
+			eventType:                gammtypes.TypeEvtTokenSwapped,
+			blockHeight:              1000,
+			blockTime:                time.Now().UTC(),
+			txnHash:                  "",
+			havePoolIDAttribute:      true,
+			expectedPoolBeingTracked: false,
+		},
+	}
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			s.Setup()
+
+			// This test suite is to test the trackCreatedPoolID method in the indexer streaming service.
+			// where it applies to: pool_created event only, i.e. poolmanagertypes.TypeEvtPoolCreated
+			// It then looks for the pool_id attribute (concentratedliquiditytypes.AttributeKeyPoolId) in the
+			// event attribute map.  With the pool_id, it then passes the pool_id to the TrackCreatedPoolID method
+			// and in return the underlying pool tracker will track the pool_id. The tests will assert
+			// whether the pool is being tracked or not.
+
+			// Initialized chain pools
+			s.PrepareAllSupportedPools()
+
+			// Get all chain pools from state for asserting later
+			concentratedPools, err := s.App.ConcentratedLiquidityKeeper.GetPools(s.Ctx)
+
+			s.Require().NoError(err)
+
+			cfmmPools, err := s.App.GAMMKeeper.GetPools(s.Ctx)
+			s.Require().NoError(err)
+
+			cosmWasmPools, err := s.App.CosmwasmPoolKeeper.GetPoolsWithWasmKeeper(s.Ctx)
+			s.Require().NoError(err)
+
+			blockPools := commondomain.BlockPools{
+				ConcentratedPools: concentratedPools,
+				CFMMPools:         cfmmPools,
+				CosmWasmPools:     cosmWasmPools,
+			}
+
+			transformedPools := []sqsdomain.PoolI{}
+			for _, pool := range blockPools.GetAll() {
+				// Note: balances are irrelevant for the test so we supply empty balances
+				transformedPool := sqsdomain.NewPool(pool, pool.GetSpreadFactor(s.Ctx), sdk.Coins{})
+				transformedPools = append(transformedPools, transformedPool)
+			}
+
+			// Initialize an empty pool tracker
+			poolTracker := pooltracker.NewMemory()
+
+			// Initialize a mock pool extractor
+			poolExtractorMock := &sqsmocks.PoolsExtractorMock{
+				BlockPools: commondomain.BlockPools{
+					ConcentratedPools: concentratedPools,
+					CFMMPools:         cfmmPools,
+					CosmWasmPools:     cosmWasmPools,
+				},
+			}
+
+			// Initialize a block process strategy manager
+			blockProcessStrategyManager := commondomain.NewBlockProcessStrategyManager()
+
+			// Initialize a concentrated pool with spread factor
+			sf, _ := math.LegacyNewDecFromStr(defaultSpreadFactor)
+			s.CreateConcentratedPoolsAndFullRangePositionWithSpreadFactor(defaultPoolDenoms, []math.LegacyDec{sf})
+			pools, err := s.App.ConcentratedLiquidityKeeper.GetPools(s.Ctx)
+			s.Require().NoError(err)
+			pool := pools[1]
+			poolID := pool.GetId()
+
+			// Initialize keepers
+			keepers := indexerdomain.Keepers{
+				PoolManagerKeeper: s.App.PoolManagerKeeper,
+			}
+
+			// Initialize tx decoder and logger
+			txDecoder := s.App.GetTxConfig().TxDecoder()
+			logger := s.App.Logger()
+
+			// Initialize a mock publisher
+			publisherMock := &indexermocks.PublisherMock{}
+
+			// Initialize an indexer streaming service
+			indexerStreamingService := indexerservice.New(
+				emptyWriteListeners,
+				blockProcessStrategyManager,
+				publisherMock,
+				poolExtractorMock,
+				poolTracker,
+				keepers,
+				txDecoder,
+				logger)
+
+			// Create the event based on the test cases attributes
+			event := abcitypes.Event{
+				Type: tc.eventType,
+				Attributes: func() []abcitypes.EventAttribute {
+					if tc.havePoolIDAttribute {
+						return []abcitypes.EventAttribute{
+							{
+								Key: concentratedliquiditytypes.AttributeKeyPoolId,
+								Value: func() string {
+									return strconv.Itoa(int(poolID))
+								}(),
+								Index: false,
+							},
+						}
+					} else {
+						return []abcitypes.EventAttribute{}
+					}
+				}(),
+			}
+
+			// Pass the event to the trackCreatedPoolID method
+			indexerStreamingService.TrackCreatedPoolID(event, tc.blockHeight, tc.blockTime, tc.txnHash)
+			createdPoolIDs := poolTracker.GetCreatedPoolIDs()
+			s.Require().NotNil(createdPoolIDs)
+			if tc.expectedPoolBeingTracked {
+				s.Require().NotNil(createdPoolIDs[poolID])
+				poolCreation := createdPoolIDs[poolID]
+				s.Require().Equal(tc.expectedPoolBeingTracked, poolCreation.PoolId == poolID)
+				s.Require().Equal(tc.blockHeight, poolCreation.BlockHeight)
+				s.Require().Equal(tc.blockTime, poolCreation.BlockTime)
+				s.Require().Equal(tc.txnHash, poolCreation.TxnHash)
+			} else {
+				s.Require().Empty(createdPoolIDs)
+			}
 
 		})
 	}
