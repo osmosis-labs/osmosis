@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -102,6 +103,7 @@ func (s *indexerStreamingService) publishBlock(ctx context.Context, req abci.Req
 func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	txns := req.GetTxs()
+	// Iterate through the transactions in the block
 	for txnIndex, txByteArr := range txns {
 		// Decode the transaction
 		tx, err := s.txDecoder(txByteArr)
@@ -120,53 +122,54 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 		fee := feeTx.GetFee()
 
 		// Message type
-		// TO BE VERIFIED - This may not be the correct way to obtain message type
 		txMessages := tx.GetMsgs()
-		msgType := txMessages[0].String()
-
-		// Include these events only:
-		// - token_swapped
-		// - pool_joined
-		// - pool_exited
-		// - create_position
-		// - withdraw_position
-		events := res.GetEvents()
-		var includedEvents []domain.EventWrapper
-		for i, event := range events {
-			clonedEvent := deepCloneEvent(&event)
-			// Add the token liquidity to the event
-			err := s.addTokenLiquidity(ctx, clonedEvent)
+		msgType := proto.MessageName(txMessages[0])
+		txResults := res.GetTxResults()
+		for _, txResult := range txResults {
+			events := txResult.GetEvents()
+			// Iterate through the events in the transaction
+			// Include these events only:
+			// - token_swapped
+			// - pool_joined
+			// - pool_exited
+			// - create_position
+			// - withdraw_position
+			var includedEvents []domain.EventWrapper
+			for i, event := range events {
+				clonedEvent := deepCloneEvent(&event)
+				// Add the token liquidity to the event
+				err := s.addTokenLiquidity(ctx, clonedEvent)
+				if err != nil {
+					s.logger.Error("Error adding token liquidity to event", "error", err)
+					return err
+				}
+				err = s.adjustTokenInAmountBySpreadFactor(ctx, clonedEvent)
+				if err != nil {
+					s.logger.Error("Error adjusting amount by spread factor", "error", err)
+					continue
+				}
+				eventType := clonedEvent.Type
+				if eventType == gammtypes.TypeEvtTokenSwapped || eventType == gammtypes.TypeEvtPoolJoined || eventType == gammtypes.TypeEvtPoolExited || eventType == concentratedliquiditytypes.TypeEvtCreatePosition || eventType == concentratedliquiditytypes.TypeEvtWithdrawPosition {
+					includedEvents = append(includedEvents, domain.EventWrapper{Index: i, Event: *clonedEvent})
+				}
+			}
+			// Publish the transaction
+			txn := domain.Transaction{
+				Height:             uint64(sdkCtx.BlockHeight()),
+				BlockTime:          sdkCtx.BlockTime().UTC(),
+				GasWanted:          uint64(gasWanted),
+				GasUsed:            uint64(gasUsed),
+				Fees:               fee,
+				MessageType:        msgType,
+				TransactionHash:    txHash,
+				TransactionIndexId: txnIndex,
+				Events:             includedEvents,
+			}
+			err = s.client.PublishTransaction(sdkCtx, txn)
 			if err != nil {
-				s.logger.Error("Error adding token liquidity to event", "error", err)
+				// if there is an error in publishing the transaction, return the error
 				return err
 			}
-			err = s.adjustTokenInAmountBySpreadFactor(ctx, clonedEvent)
-			if err != nil {
-				s.logger.Error("Error adjusting amount by spread factor", "error", err)
-				continue
-			}
-			eventType := clonedEvent.Type
-			if eventType == gammtypes.TypeEvtTokenSwapped || eventType == gammtypes.TypeEvtPoolJoined || eventType == gammtypes.TypeEvtPoolExited || eventType == concentratedliquiditytypes.TypeEvtCreatePosition || eventType == concentratedliquiditytypes.TypeEvtWithdrawPosition {
-				includedEvents = append(includedEvents, domain.EventWrapper{Index: i, Event: *clonedEvent})
-			}
-		}
-
-		// Publish the transaction
-		txn := domain.Transaction{
-			Height:             uint64(sdkCtx.BlockHeight()),
-			BlockTime:          sdkCtx.BlockTime().UTC(),
-			GasWanted:          uint64(gasWanted),
-			GasUsed:            uint64(gasUsed),
-			Fees:               fee,
-			MessageType:        msgType,
-			TransactionHash:    txHash,
-			TransactionIndexId: txnIndex,
-			Events:             includedEvents,
-		}
-		err = s.client.PublishTransaction(sdkCtx, txn)
-		if err != nil {
-			// if there is an error in publishing the transaction, return the error
-			return err
 		}
 	}
 	return nil
