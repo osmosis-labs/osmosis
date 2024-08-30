@@ -19,22 +19,39 @@ type PoolsExtractorMock struct {
 	ProcessAllBlockDataPanicMsg string
 	// Block pools to return
 	BlockPools commondomain.BlockPools
+	// CreatedPoolIDs is the map of created pool IDs to return when ExtractCreated is called.
+	CreatedPoolIDs map[uint64]commondomain.PoolCreation
+	// CreatedPoolsError is the error to return when ExtractCreated is called.
+	CreatedPoolsError error
+	// IsProcessCreatedCalled is a flag indicating if ProcessCreated was called.
+	IsProcessCreatedCalled bool
 }
 
 var _ commondomain.PoolExtractor = &PoolsExtractorMock{}
 
 // ExtractAll implements commondomain.PoolExtractor.
-func (p *PoolsExtractorMock) ExtractAll(ctx types.Context) (commondomain.BlockPools, error) {
+func (p *PoolsExtractorMock) ExtractAll(ctx types.Context) (commondomain.BlockPools, map[uint64]commondomain.PoolCreation, error) {
 	if p.ProcessAllBlockDataPanicMsg != "" {
 		panic(p.ProcessAllBlockDataPanicMsg)
 	}
 
 	p.IsProcessAllBlockDataCalled = true
-	return p.BlockPools, p.AllBlockDataError
+	return p.BlockPools, p.CreatedPoolIDs, p.AllBlockDataError
 }
 
 // ExtractChanged implements commondomain.PoolExtractor.
 func (p *PoolsExtractorMock) ExtractChanged(ctx types.Context) (commondomain.BlockPools, error) {
 	p.IsProcessAllChangedDataCalled = true
 	return p.BlockPools, p.ChangedBlockDataError
+}
+
+// ExtractCreated implements commondomain.PoolExtractor.
+func (p *PoolsExtractorMock) ExtractCreated(ctx types.Context) (commondomain.BlockPools, map[uint64]commondomain.PoolCreation, error) {
+	p.IsProcessCreatedCalled = true
+	return p.BlockPools, p.CreatedPoolIDs, p.CreatedPoolsError
+}
+
+// ResetPoolTracker implements commondomain.PoolExtractor.
+func (p *PoolsExtractorMock) ResetPoolTracker(ctx types.Context) {
+	panic("unimplemented")
 }
