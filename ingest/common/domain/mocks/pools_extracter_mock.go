@@ -30,13 +30,13 @@ type PoolsExtractorMock struct {
 var _ commondomain.PoolExtractor = &PoolsExtractorMock{}
 
 // ExtractAll implements commondomain.PoolExtractor.
-func (p *PoolsExtractorMock) ExtractAll(ctx types.Context) (commondomain.BlockPools, error) {
+func (p *PoolsExtractorMock) ExtractAll(ctx types.Context) (commondomain.BlockPools, map[uint64]commondomain.PoolCreation, error) {
 	if p.ProcessAllBlockDataPanicMsg != "" {
 		panic(p.ProcessAllBlockDataPanicMsg)
 	}
 
 	p.IsProcessAllBlockDataCalled = true
-	return p.BlockPools, p.AllBlockDataError
+	return p.BlockPools, p.CreatedPoolIDs, p.AllBlockDataError
 }
 
 // ExtractChanged implements commondomain.PoolExtractor.

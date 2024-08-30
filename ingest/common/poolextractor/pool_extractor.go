@@ -22,26 +22,30 @@ func New(keepers commondomain.PoolExtractorKeepers, poolTracker domain.BlockPool
 }
 
 // ExtractAll implements commondomain.PoolExtractor.
-func (p *poolExtractor) ExtractAll(ctx sdk.Context) (commondomain.BlockPools, error) {
+func (p *poolExtractor) ExtractAll(ctx sdk.Context) (commondomain.BlockPools, map[uint64]commondomain.PoolCreation, error) {
+	// If cold start, we process all the pools in the chain.
+	// Get the pool IDs that were created in the block where cold start happens
+	createdPoolIDs := p.poolTracker.GetCreatedPoolIDs()
+
 	// Concentrated pools
 
 	concentratedPools, err := p.keepers.ConcentratedKeeper.GetPools(ctx)
 	if err != nil {
-		return commondomain.BlockPools{}, err
+		return commondomain.BlockPools{}, nil, err
 	}
 
 	// CFMM pools
 
 	cfmmPools, err := p.keepers.GammKeeper.GetPools(ctx)
 	if err != nil {
-		return commondomain.BlockPools{}, err
+		return commondomain.BlockPools{}, nil, err
 	}
 
 	// CosmWasm pools
 
 	cosmWasmPools, err := p.keepers.CosmWasmPoolKeeper.GetPoolsWithWasmKeeper(ctx)
 	if err != nil {
-		return commondomain.BlockPools{}, err
+		return commondomain.BlockPools{}, nil, err
 	}
 
 	// Generate the initial cwPool address to pool mapping
@@ -55,7 +59,7 @@ func (p *poolExtractor) ExtractAll(ctx sdk.Context) (commondomain.BlockPools, er
 		CFMMPools:         cfmmPools,
 	}
 
-	return blockPools, nil
+	return blockPools, createdPoolIDs, nil
 }
 
 // ExtractChanged implements commondomain.PoolExtractor.

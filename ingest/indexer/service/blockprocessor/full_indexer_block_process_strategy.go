@@ -96,7 +96,7 @@ func (f *fullIndexerBlockProcessStrategy) publishAllSupplies(ctx sdk.Context) {
 
 // processPools publishes all the pools in the block.
 func (f *fullIndexerBlockProcessStrategy) processPools(ctx sdk.Context) error {
-	blockPools, err := f.poolExtractor.ExtractAll(ctx)
+	blockPools, createdPoolIDs, err := f.poolExtractor.ExtractAll(ctx)
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func (f *fullIndexerBlockProcessStrategy) processPools(ctx sdk.Context) error {
 	pools := blockPools.GetAll()
 
 	// Process pool pairs
-	if err := f.poolPairPublisher.PublishPoolPairs(ctx, pools, nil); err != nil {
+	if err := f.poolPairPublisher.PublishPoolPairs(ctx, pools, createdPoolIDs); err != nil {
 		return err
 	}
 

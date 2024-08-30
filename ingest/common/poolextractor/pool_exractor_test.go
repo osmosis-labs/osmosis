@@ -66,7 +66,7 @@ func (s *PoolExtractorTestSuite) TestExtractor() {
 	extractor := poolextractor.New(keepers, poolTracker)
 
 	// System under test #1
-	blockPools, err := extractor.ExtractAll(s.Ctx)
+	blockPools, createdPoolIDs, err := extractor.ExtractAll(s.Ctx)
 	s.Require().NoError(err)
 
 	// Validate all pools are extracted
