@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -151,6 +152,19 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 				eventType := clonedEvent.Type
 				if eventType == gammtypes.TypeEvtTokenSwapped || eventType == gammtypes.TypeEvtPoolJoined || eventType == gammtypes.TypeEvtPoolExited || eventType == concentratedliquiditytypes.TypeEvtCreatePosition || eventType == concentratedliquiditytypes.TypeEvtWithdrawPosition {
 					includedEvents = append(includedEvents, domain.EventWrapper{Index: i, Event: *clonedEvent})
+				}
+				// Track the newly created pool ID
+				// IMPORTANT NOTE:
+				// 1. Using event attributes in a transaction, ONLY pool ID of the newly created pool is available and being tracked by the underlying pool tracker.
+				// 2. For the other pool metadata of the newly created pool, such as denoms and fees, they are available and tracked thru OnWrite listeners in the common/writelistener package.
+				// 3. OnWrite callback is triggered AFTER ListenEndBlock callback. As a result, we can't publish the newly created pool data, during ListenEndBlock callback
+				//    of the block where the pool is created, because the pool metadata is not available yet.
+				// 4. Therefore, we DON"T always reset the pool tracker in ListenEndBlock callback.
+				// 5. Instead, We wait until the next block, when both pool ID and pool metadata are available in the pool tracker, to publish the newly created pool data.
+				//    After publishing the newly created pool data, we then reset the pool tracker.
+				// 6. See: block_updates_indexer_block_process_strategy.go::publishCreatedPools for more details.
+				if eventType == poolmanagertypes.TypeEvtPoolCreated {
+					s.trackCreatedPoolID(event, sdkCtx.BlockHeight(), sdkCtx.BlockTime().UTC(), txHash)
 				}
 			}
 			// Publish the transaction
@@ -345,4 +359,58 @@ func deepCloneEvent(event *abci.Event) *abci.Event {
 	clone.Attributes = make([]abci.EventAttribute, len(event.Attributes))
 	copy(clone.Attributes, event.Attributes)
 	return &clone
+}
+
+// trackCreatedPoolID tracks the created pool ID.
+// If the pool ID is not found in the event attributes, it logs an error.
+// If the pool ID is found, it parses the pool ID to uint64 and tracks it.
+func (s *indexerStreamingService) trackCreatedPoolID(event abci.Event, blockHeight int64, blockTime time.Time, txHash string) {
+	// Check if the event is pool created event
+	if event.Type != poolmanagertypes.TypeEvtPoolCreated {
+		s.logger.Error("Event type is not pool created event")
+		return
+	}
+
+	// Check if block height, block time or tx hash is empty
+	if blockHeight == 0 || blockTime.IsZero() || txHash == "" {
+		s.logger.Error("Block height, block time or tx hash is empty")
+	}
+
+	// Check if event attributes are empty
+	if len(event.Attributes) == 0 {
+		s.logger.Error("Event attributes are empty for pool created event")
+		return
+	}
+
+	// Find the pool ID attribute from the event attributes
+	poolIDStr := ""
+	for _, attribute := range event.Attributes {
+		if attribute.Key == poolmanagertypes.AttributeKeyPoolId {
+			poolIDStr = attribute.Value
+			break
+		}
+	}
+
+	// Check if the pool ID attribute is empty
+	if poolIDStr == "" {
+		s.logger.Error("Pool ID attribute is not found in event attributes")
+		return
+	}
+
+	// Parse to uint64
+	createdPoolID, err := strconv.ParseUint(poolIDStr, 10, 64)
+	if err != nil {
+		s.logger.Error("Error parsing pool ID from event attributes", err)
+		return
+	}
+
+	// Send the pool creation data to the pool tracker
+	poolCreation := commondomain.PoolCreation{
+		PoolId:      createdPoolID,
+		BlockHeight: blockHeight,
+		BlockTime:   blockTime,
+		TxnHash:     txHash,
+	}
+
+	s.poolTracker.TrackCreatedPoolID(poolCreation)
 }
