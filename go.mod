@@ -5,7 +5,7 @@ go 1.22.4
 require (
 	cloud.google.com/go/pubsub v1.42.0
 	cosmossdk.io/api v0.7.5
-	cosmossdk.io/client/v2 v2.0.0-beta.1
+	cosmossdk.io/client/v2 v2.0.0-beta.3
 	cosmossdk.io/core v0.12.1-0.20240725072823-6a2d039e1212
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
@@ -29,7 +29,7 @@ require (
 	github.com/cosmos/ibc-apps/modules/async-icq/v8 v8.0.0
 	github.com/cosmos/ibc-go/modules/capability v1.0.1
 	github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.4.2-0.20240730185033-ccd4dc278e72
-	github.com/cosmos/ibc-go/v8 v8.4.0
+	github.com/cosmos/ibc-go/v8 v8.5.0
 	github.com/cosmos/rosetta v0.50.9
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
@@ -60,7 +60,7 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.29.0
 	go.opentelemetry.io/otel/sdk v1.29.0
 	go.uber.org/multierr v1.11.0
-	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
+	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8
 	google.golang.org/genproto/googleapis/api v0.0.0-20240822170219-fc7c04adadcd
 	google.golang.org/grpc v1.65.0
 	google.golang.org/protobuf v1.34.2
@@ -100,7 +100,7 @@ require (
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v1.2.0 // indirect
-	github.com/cosmos/ics23/go v0.10.0 // indirect
+	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect
 	github.com/creachadair/atomicfile v0.3.1 // indirect
 	github.com/creachadair/tomledit v0.0.24 // indirect
