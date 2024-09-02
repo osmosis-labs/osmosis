@@ -134,7 +134,7 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 
 	// Determine if eligible to bypass taker fee.
 	if osmoutils.Contains(reducedFeeWhitelist, sender.String()) {
-		return tokenIn, sdk.Coin{}, nil
+		return tokenIn, sdk.NewCoin(tokenIn.Denom, osmomath.ZeroInt()), nil
 	}
 
 	takerFee, err := k.GetTradingPairTakerFee(ctx, tokenIn.Denom, tokenOutDenom)
