@@ -689,7 +689,12 @@ func NewOsmosisApp(
 
 // getSQSServiceWriteListeners returns the write listeners for the app that are specific to the SQS service.
 func getSQSServiceWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoolUpdateTracker domain.BlockPoolUpdateTracker, wasmkeeper *wasmkeeper.Keeper) (map[storetypes.StoreKey][]commondomain.WriteListener, map[string]storetypes.StoreKey) {
-	return getPoolWriteListeners(app, appCodec, blockPoolUpdateTracker, wasmkeeper)
+	writeListeners, storeKeyMap := getPoolWriteListeners(app, appCodec, blockPoolUpdateTracker, wasmkeeper)
+
+	// Register all applicable keys as listeners
+	registerStoreKeys(app, storeKeyMap)
+
+	return writeListeners, storeKeyMap
 }
 
 // getIndexerServiceWriteListeners returns the write listeners for the app that are specific to the indexer service.
@@ -702,6 +707,9 @@ func getIndexerServiceWriteListeners(ctx context.Context, app *OsmosisApp, appCo
 	}
 
 	storeKeyMap[banktypes.ModuleName] = app.GetKey(banktypes.ModuleName)
+
+	// Register all applicable keys as listeners
+	registerStoreKeys(app, storeKeyMap)
 
 	return writeListeners, storeKeyMap
 }
@@ -730,6 +738,18 @@ func getPoolWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoolUpdat
 	storeKeyMap[banktypes.StoreKey] = app.GetKey(banktypes.StoreKey)
 
 	return writeListeners, storeKeyMap
+}
+
+// registerStoreKeys register the store keys from the given store key map
+// on the app's commit multi store so that the chang sets from these stores are propagated
+// in ListenCommit().
+func registerStoreKeys(app *OsmosisApp, storeKeyMap map[string]storetypes.StoreKey) {
+	// Register all applicable keys as listeners
+	storeKeys := make([]storetypes.StoreKey, 0)
+	for _, storeKey := range storeKeyMap {
+		storeKeys = append(storeKeys, storeKey)
+	}
+	app.CommitMultiStore().AddListeners(storeKeys)
 }
 
 // we cache the reflectionService to save us time within tests.

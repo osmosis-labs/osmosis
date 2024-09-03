@@ -329,10 +329,16 @@ func (s *indexerStreamingService) ListenCommit(ctx context.Context, res abci.Res
 	defer func() {
 		// Reset the pool tracker after processing the block.
 		s.poolTracker.Reset()
+		// Reset change set upon processing the block.
+		s.blockUpdatesProcessUtils.SetChangeSet(nil)
 	}()
 
+	// Set change set on the block updates process utils.
+	// These are processed in PrpcessBlock(...) assumming "block updates" strategy.
+	s.blockUpdatesProcessUtils.SetChangeSet(changeSet)
+
 	// Create block processor
-	blockProcessor := blockprocessor.NewBlockProcessor(s.blockProcessStrategyManager, s.client, s.poolExtractor, s.keepers)
+	blockProcessor := blockprocessor.NewBlockProcessor(s.blockProcessStrategyManager, s.client, s.poolExtractor, s.keepers, s.blockUpdatesProcessUtils)
 
 	// Process block.
 	if err := blockProcessor.ProcessBlock(sdkCtx); err != nil {

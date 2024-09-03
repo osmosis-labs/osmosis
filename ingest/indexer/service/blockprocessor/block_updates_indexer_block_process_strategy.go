@@ -8,9 +8,10 @@ import (
 )
 
 type blockUpdatesIndexerBlockProcessStrategy struct {
-	client            domain.Publisher
-	poolExtractor     commondomain.PoolExtractor
-	poolPairPublisher domain.PairPublisher
+	client                  domain.Publisher
+	poolExtractor           commondomain.PoolExtractor
+	poolPairPublisher       domain.PairPublisher
+	blockUpdateProcessUtils commondomain.BlockUpdateProcessUtilsI
 }
 
 var _ commondomain.BlockProcessor = &blockUpdatesIndexerBlockProcessStrategy{}
@@ -32,6 +33,11 @@ func (f *blockUpdatesIndexerBlockProcessStrategy) ProcessBlock(ctx types.Context
 
 // publishCreatedPools publishes the pools that were created in the block.
 func (f *blockUpdatesIndexerBlockProcessStrategy) publishCreatedPools(ctx types.Context) error {
+	err := f.blockUpdateProcessUtils.ProcessBlockChangeSet()
+	if err != nil {
+		return err
+	}
+
 	// Extract the pools that were changed in the block
 	blockPools, createdPoolIDs, err := f.poolExtractor.ExtractCreated(ctx)
 	if err != nil {
