@@ -320,7 +320,7 @@ func (s *indexerStreamingService) ListenCommit(ctx context.Context, res abci.Res
 	}()
 
 	// Set change set on the block updates process utils.
-	// These are processed in PrpcessBlock(...) assumming "block updates" strategy.
+	// These are processed in PrpcessBlock(...) assuming "block updates" strategy.
 	s.blockUpdatesProcessUtils.SetChangeSet(changeSet)
 
 	// Create block processor
