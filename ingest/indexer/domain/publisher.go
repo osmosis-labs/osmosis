@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 // TokenSupplyPublisher is an interface for publishing token supply data.
@@ -20,7 +20,6 @@ type Publisher interface {
 
 	PublishBlock(ctx context.Context, block Block) error
 	PublishTransaction(ctx context.Context, txn Transaction) error
-	PublishPool(ctx context.Context, pool Pool) error
 	PublishPair(ctx context.Context, pair Pair) error
 }
 

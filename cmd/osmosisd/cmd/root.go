@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -26,10 +27,10 @@ import (
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/app/params"
-	v23 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v23" // should be automated to be updated to current version every upgrade
-	"github.com/osmosis-labs/osmosis/v25/ingest/indexer"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs"
+	"github.com/osmosis-labs/osmosis/v26/app/params"
+	v23 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v23" // should be automated to be updated to current version every upgrade
+	"github.com/osmosis-labs/osmosis/v26/ingest/indexer"
+	"github.com/osmosis-labs/osmosis/v26/ingest/sqs"
 
 	"cosmossdk.io/log"
 	tmcfg "github.com/cometbft/cometbft/config"
@@ -74,7 +75,7 @@ import (
 
 	"github.com/joho/godotenv"
 
-	osmosis "github.com/osmosis-labs/osmosis/v25/app"
+	osmosis "github.com/osmosis-labs/osmosis/v26/app"
 )
 
 type AssetList struct {
@@ -354,7 +355,8 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithHomeDir(homeDir).
 		WithViper("OSMOSIS")
 
-	tempApp := osmosis.NewOsmosisApp(log.NewNopLogger(), cosmosdb.NewMemDB(), nil, true, map[int64]bool{}, osmosis.DefaultNodeHome, 5, sims.EmptyAppOptions{}, osmosis.EmptyWasmOpts, baseapp.SetChainID("osmosis-1"))
+	tempDir := fmt.Sprintf("%s%d", ".temp-osmosis", rand.Int())
+	tempApp := osmosis.NewOsmosisApp(log.NewNopLogger(), cosmosdb.NewMemDB(), nil, true, map[int64]bool{}, tempDir, 5, sims.EmptyAppOptions{}, osmosis.EmptyWasmOpts, baseapp.SetChainID("osmosis-1"))
 
 	// Allows you to add extra params to your client.toml
 	// gas, gas-price, gas-adjustment, and human-readable-denoms
@@ -471,6 +473,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	if err := autoCliOpts(initClientCtx, tempApp).EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}
+	os.RemoveAll(tempDir)
 
 	return rootCmd, encodingConfig
 }
@@ -708,6 +711,11 @@ grpc-ingest-max-call-size-bytes = "{{ .SidecarQueryServerConfig.GRPCIngestMaxCal
 
 # The indexer service is disabled by default.
 is-enabled = "{{ .IndexerConfig.IsEnabled }}"
+
+# Max publish delay in seconds for the indexer service.
+# Migitate the issue of messages remaining pending when the publishing rate is low,
+# ensuring timely delivery and preventing messages from appearing undelivered
+max-publish-delay = "{{ .IndexerConfig.MaxPublishDelay }}"
 
 # The GCP project id to use for the indexer service.
 gcp-project-id = "{{ .IndexerConfig.GCPProjectId }}"

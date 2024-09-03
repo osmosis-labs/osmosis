@@ -10,12 +10,12 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	commondomain "github.com/osmosis-labs/osmosis/v25/ingest/common/domain"
-	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
-	indexerdomain "github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
-	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/service/writelistener"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
+	"github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain"
+	indexerdomain "github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain"
+	"github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v26/ingest/indexer/service/writelistener"
 )
 
 type WriteListenerTestSuite struct {
@@ -150,7 +150,7 @@ func (s *WriteListenerTestSuite) TestWriteListener_Bank() {
 			}
 
 			// Initialize token supply publisher mock
-			tokenSupplyPublisherMock := &mocks.TokenSupplyPublisherMock{
+			tokenSupplyPublisherMock := &mocks.PublisherMock{
 				ForceTokenSupplyError:       tc.forceTokenSupplyError,
 				ForceTokenSupplyOffsetError: tc.ForceTokenSupplyOffsetError,
 			}

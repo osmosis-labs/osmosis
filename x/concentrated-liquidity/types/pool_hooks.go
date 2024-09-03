@@ -1,11 +1,11 @@
 package types
 
 import (
-	fmt "fmt"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
@@ -80,23 +80,23 @@ type AfterSwapExactAmountOutSudoMsg struct {
 // --- Message structs ---
 
 type BeforeCreatePositionMsg struct {
-	PoolId         uint64            `json:"pool_id"`
-	Owner          sdk.AccAddress    `json:"owner"`
-	TokensProvided wasmvmtypes.Coins `json:"tokens_provided"`
-	Amount0Min     osmomath.Int      `json:"amount_0_min"`
-	Amount1Min     osmomath.Int      `json:"amount_1_min"`
-	LowerTick      int64             `json:"lower_tick"`
-	UpperTick      int64             `json:"upper_tick"`
+	PoolId         uint64             `json:"pool_id"`
+	Owner          sdk.AccAddress     `json:"owner"`
+	TokensProvided []wasmvmtypes.Coin `json:"tokens_provided"`
+	Amount0Min     osmomath.Int       `json:"amount_0_min"`
+	Amount1Min     osmomath.Int       `json:"amount_1_min"`
+	LowerTick      int64              `json:"lower_tick"`
+	UpperTick      int64              `json:"upper_tick"`
 }
 
 type AfterCreatePositionMsg struct {
-	PoolId         uint64            `json:"pool_id"`
-	Owner          sdk.AccAddress    `json:"owner"`
-	TokensProvided wasmvmtypes.Coins `json:"tokens_provided"`
-	Amount0Min     osmomath.Int      `json:"amount_0_min"`
-	Amount1Min     osmomath.Int      `json:"amount_1_min"`
-	LowerTick      int64             `json:"lower_tick"`
-	UpperTick      int64             `json:"upper_tick"`
+	PoolId         uint64             `json:"pool_id"`
+	Owner          sdk.AccAddress     `json:"owner"`
+	TokensProvided []wasmvmtypes.Coin `json:"tokens_provided"`
+	Amount0Min     osmomath.Int       `json:"amount_0_min"`
+	Amount1Min     osmomath.Int       `json:"amount_1_min"`
+	LowerTick      int64              `json:"lower_tick"`
+	UpperTick      int64              `json:"upper_tick"`
 }
 
 type BeforeWithdrawPositionMsg struct {

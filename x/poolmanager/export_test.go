@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	alloyedpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/cosmwasm/msg/v3"
-	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	alloyedpooltypes "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/cosmwasm/msg/v3"
+	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 var IntMaxValue = intMaxValue
@@ -149,4 +149,8 @@ func (k *Keeper) SetCacheTrackers(takerFeeShareAgreement map[string]types.TakerF
 	if registeredAlloyPoolToState != nil {
 		k.cachedRegisteredAlloyPoolByAlloyDenomMap = registeredAlloyPoolToState
 	}
+}
+
+func (k Keeper) FundCommunityPoolIfNotWhitelisted(ctx sdk.Context, sender sdk.AccAddress) error {
+	return k.fundCommunityPoolIfNotWhitelisted(ctx, sender)
 }

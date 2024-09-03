@@ -3,8 +3,8 @@ package indexer
 import (
 	"context"
 
-	"github.com/osmosis-labs/osmosis/v25/ingest/indexer/domain"
-	service "github.com/osmosis-labs/osmosis/v25/ingest/indexer/service/client"
+	"github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain"
+	service "github.com/osmosis-labs/osmosis/v26/ingest/indexer/service/client"
 )
 
 // indexerIngester is an implementation of domain.Publisher.
@@ -31,15 +31,6 @@ func (i *indexerPublisher) PublishBlock(ctx context.Context, block domain.Block)
 // PublishTransaction implements domain.Publisher.
 func (i *indexerPublisher) PublishTransaction(ctx context.Context, txn domain.Transaction) error {
 	err := i.pubsubClient.PublishTransaction(ctx, txn)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// PublishPool implements domain.Publisher.
-func (i *indexerPublisher) PublishPool(ctx context.Context, pool domain.Pool) error {
-	err := i.pubsubClient.PublishPool(ctx, pool)
 	if err != nil {
 		return err
 	}

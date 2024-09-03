@@ -5,7 +5,7 @@ import (
 
 	"github.com/osmosis-labs/sqs/sqsdomain"
 
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v26/ingest/sqs/domain"
 )
 
 type GRPCClientMock struct {

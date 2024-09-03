@@ -13,10 +13,10 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	mempool1559 "github.com/osmosis-labs/osmosis/v25/x/txfees/keeper/mempool-1559"
-	"github.com/osmosis-labs/osmosis/v25/x/txfees/keeper/txfee_filters"
-	"github.com/osmosis-labs/osmosis/v25/x/txfees/types"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	mempool1559 "github.com/osmosis-labs/osmosis/v26/x/txfees/keeper/mempool-1559"
+	"github.com/osmosis-labs/osmosis/v26/x/txfees/keeper/txfee_filters"
+	"github.com/osmosis-labs/osmosis/v26/x/txfees/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -63,7 +63,11 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	}
 
 	// Local mempool filter for improper ibc packets
-	if ctx.IsCheckTx() {
+	// Perform this only if
+	// 1. We are in CheckTx, and
+	// 2. Block height is NOT in the range of 16841115 to 17004043 exclusively, where AppHash happened during v25 sync.
+	bh := ctx.BlockHeight()
+	if ctx.IsCheckTx() && (bh <= 16841115 || bh >= 17004043) {
 		msgs := tx.GetMsgs()
 		for _, msg := range msgs {
 			// If one of the msgs is an IBC Transfer msg, limit it's size due to current spam potential.

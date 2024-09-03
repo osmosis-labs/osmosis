@@ -34,10 +34,10 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/app"
+	"github.com/osmosis-labs/osmosis/v26/app"
 
-	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
 
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
@@ -47,10 +47,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	lockupkeeper "github.com/osmosis-labs/osmosis/v25/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v25/x/mint/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v26/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v26/x/mint/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 type KeeperTestHelper struct {
@@ -185,7 +185,7 @@ func (s *KeeperTestHelper) PrepareAllSupportedPoolsCustomProject(projectName, tr
 		stableswapPoolID   = s.PrepareBasicStableswapPool()
 		cosmWasmPool       = s.PrepareCustomTransmuterPoolCustomProject(s.TestAccs[0], []string{DefaultTransmuterDenomA, DefaultTransmuterDenomB}, projectName, transmuterPath)
 		cosmWasmPoolID     = cosmWasmPool.GetId()
-		alloyedPool        = s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{DefaultTransmuterDenomA, DefaultTransmuterDenomB}, []uint16{1, 1})
+		alloyedPool        = s.PrepareCustomTransmuterPoolV3CustomProject(s.TestAccs[0], []string{DefaultTransmuterDenomA, DefaultTransmuterDenomB}, []uint16{1, 1}, projectName, transmuterPath)
 		alloyedPoolID      = alloyedPool.GetId()
 	)
 

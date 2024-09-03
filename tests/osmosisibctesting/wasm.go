@@ -15,7 +15,7 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v25/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v26/x/ibc-rate-limit/types"
 )
 
 func (chain *TestChain) StoreContractCode(suite *suite.Suite, path string) {
@@ -79,6 +79,12 @@ func (chain *TestChain) QueryContractJson(suite *suite.Suite, contract sdk.AccAd
 	json := gjson.Parse(string(state))
 	suite.Require().NoError(err)
 	return json
+}
+
+func (chain *TestChain) ExecuteContract(contract, sender sdk.AccAddress, msg []byte, funds sdk.Coins) ([]byte, error) {
+	osmosisApp := chain.GetOsmosisApp()
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
+	return contractKeeper.Execute(chain.GetContext(), contract, sender, msg, funds)
 }
 
 func (chain *TestChain) RegisterRateLimitingContract(addr []byte) {

@@ -7,7 +7,7 @@ import (
 	time "time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

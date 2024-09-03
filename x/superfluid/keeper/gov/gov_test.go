@@ -5,12 +5,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
-	minttypes "github.com/osmosis-labs/osmosis/v25/x/mint/types"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/keeper/gov"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	cltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
+	minttypes "github.com/osmosis-labs/osmosis/v26/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/keeper/gov"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) createGammPool(denoms []string) uint64 {

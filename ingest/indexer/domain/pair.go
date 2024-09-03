@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"strings"
 	"time"
 )
 
@@ -14,4 +15,14 @@ type Pair struct {
 	IdxDenom1  uint8     `json:"idx_denom_1"`
 	FeeBps     uint64    `json:"fee_bps"`
 	IngestedAt time.Time `json:"ingested_at"`
+}
+
+// ShouldFilterDenom returns true if the given denom should be filtered out.
+func ShouldFilterDenom(denom string) bool {
+	return denom == "" || strings.Contains(denom, "cl/pool") || strings.Contains(denom, "gamm/pool")
+}
+
+// IsMultiDenom returns true if the given denoms has >2 denoms
+func IsMultiDenom(denoms []string) bool {
+	return len(denoms) > 2
 }

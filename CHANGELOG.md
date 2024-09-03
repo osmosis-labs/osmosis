@@ -52,6 +52,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8494](https://github.com/osmosis-labs/osmosis/pull/8494) Add additional events in x/lockup, x/superfluid, x/concentratedliquidity
 * [#8581](https://github.com/osmosis-labs/osmosis/pull/8581) feat: add ledger signing to smart account module 
 * [#8573](https://github.com/osmosis-labs/osmosis/pull/8573) fix: increase unauthenticated gas to fix fee token issue
+* [#8598](https://github.com/osmosis-labs/osmosis/pull/8598) feat: param changes for block and cost per byte 
+* [#8609](https://github.com/osmosis-labs/osmosis/pull/8609) Exempt `UnrestrictedPoolCreatorWhitelist` addresses from pool creation fee
+* [#8615](https://github.com/osmosis-labs/osmosis/pull/8615) chore: add tagged cosmos-sdk version: v0.50.6-v26-osmo-1
+* [#8616](https://github.com/osmosis-labs/osmosis/pull/8616) chore: upgrade wasmd to v0.53.0 and wasmvm to v2.1.2
+* [#8628](https://github.com/osmosis-labs/osmosis/pull/8628) chore: add tagged cometbft version: v0.38.11-v26-osmo-1
+* [#8649](https://github.com/osmosis-labs/osmosis/pull/8649) chore: update to tagged submodules
+* [#8663](https://github.com/osmosis-labs/osmosis/pull/8663) fix: protorev throws a nil pointer
 
 ### Config
 

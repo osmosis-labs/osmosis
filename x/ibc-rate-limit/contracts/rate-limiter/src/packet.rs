@@ -1,4 +1,4 @@
-use crate::state::FlowType;
+use crate::state::flow::FlowType;
 use cosmwasm_std::{Addr, Deps, StdError, Uint256};
 use osmosis_std_derive::CosmwasmExt;
 use schemars::JsonSchema;
@@ -8,19 +8,19 @@ use sha2::{Digest, Sha256};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Height {
     /// Previously known as "epoch"
-    revision_number: Option<u64>,
+    pub revision_number: Option<u64>,
 
     /// The height of a block
-    revision_height: Option<u64>,
+    pub revision_height: Option<u64>,
 }
 
 // IBC transfer data
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct FungibleTokenData {
     pub denom: String,
-    amount: Uint256,
-    sender: Addr,
-    receiver: Addr,
+    pub amount: Uint256,
+    pub sender: Addr,
+    pub receiver: Addr,
 }
 
 // An IBC packet
@@ -225,9 +225,9 @@ pub mod tests {
     #[test]
     fn send_native() {
         let packet = Packet::mock(
-            format!("channel-17-local"),
-            format!("channel-42-counterparty"),
-            format!("uosmo"),
+            "channel-17-local".to_string(),
+            "channel-42-counterparty".to_string(),
+            "uosmo".to_string(),
             0_u128.into(),
         );
         assert_eq!(packet.local_denom(&FlowType::Out), "uosmo");
@@ -239,9 +239,9 @@ pub mod tests {
         // ibc/09E4864A262249507925831FBAD69DAD08F66FAAA0640714E765912A0751289A
         // to port/channel/denom before passing it along to the contrace
         let packet = Packet::mock(
-            format!("channel-17-local"),
-            format!("channel-42-counterparty"),
-            format!("transfer/channel-17-local/ujuno"),
+            "channel-17-local".to_string(),
+            "channel-42-counterparty".to_string(),
+            "transfer/channel-17-local/ujuno".to_string(),
             0_u128.into(),
         );
         assert_eq!(
@@ -254,9 +254,9 @@ pub mod tests {
     fn receive_non_native() {
         // The counterparty chain sends their own native token to us
         let packet = Packet::mock(
-            format!("channel-42-counterparty"), // The counterparty's channel is the source here
-            format!("channel-17-local"),        // Our channel is the dest channel
-            format!("ujuno"),                   // This is unwrapped. It is our job to wrap it
+            "channel-42-counterparty".to_string(), // The counterparty's channel is the source here
+            "channel-17-local".to_string(),        // Our channel is the dest channel
+            "ujuno".to_string(),                   // This is unwrapped. It is our job to wrap it
             0_u128.into(),
         );
         assert_eq!(
@@ -269,9 +269,9 @@ pub mod tests {
     fn receive_native() {
         // The counterparty chain sends us back our native token that they had wrapped
         let packet = Packet::mock(
-            format!("channel-42-counterparty"), // The counterparty's channel is the source here
-            format!("channel-17-local"),        // Our channel is the dest channel
-            format!("transfer/channel-42-counterparty/uosmo"),
+            "channel-42-counterparty".to_string(), // The counterparty's channel is the source here
+            "channel-17-local".to_string(),        // Our channel is the dest channel
+            "transfer/channel-42-counterparty/uosmo".to_string(),
             0_u128.into(),
         );
         assert_eq!(packet.local_denom(&FlowType::In), "uosmo");
@@ -297,20 +297,20 @@ pub mod tests {
 
         // uatom sent to osmosis
         let packet = Packet::mock(
-            format!("channel-141"), // from: hub
-            format!("channel-0"),   // to: osmosis
-            format!("uatom"),
+            "channel-141".to_string(), // from: hub
+            "channel-0".to_string(),   // to: osmosis
+            "uatom".to_string(),
             0_u128.into(),
         );
         assert_eq!(
             packet.local_denom(&FlowType::In),
-            WRAPPED_ATOM_ON_OSMOSIS_HASH.clone()
+            WRAPPED_ATOM_ON_OSMOSIS_HASH
         );
 
         // uatom on osmosis sent back to the hub
         let packet = Packet::mock(
-            format!("channel-0"),                      // from: osmosis
-            format!("channel-141"),                    // to: hub
+            "channel-0".to_string(),                   // from: osmosis
+            "channel-141".to_string(),                 // to: hub
             WRAPPED_ATOM_ON_OSMOSIS_TRACE.to_string(), // unwrapped before reaching the contract
             0_u128.into(),
         );
@@ -318,9 +318,9 @@ pub mod tests {
 
         // osmo sent to the hub
         let packet = Packet::mock(
-            format!("channel-0"),   // from: osmosis
-            format!("channel-141"), // to: hub
-            format!("uosmo"),
+            "channel-0".to_string(),   // from: osmosis
+            "channel-141".to_string(), // to: hub
+            "uosmo".to_string(),
             0_u128.into(),
         );
         assert_eq!(packet.local_denom(&FlowType::Out), "uosmo");
@@ -328,8 +328,8 @@ pub mod tests {
         // osmo on the hub sent back to osmosis
         // send
         let packet = Packet::mock(
-            format!("channel-141"),                // from: hub
-            format!("channel-0"),                  // to: osmosis
+            "channel-141".to_string(),             // from: hub
+            "channel-0".to_string(),               // to: osmosis
             WRAPPED_OSMO_ON_HUB_TRACE.to_string(), // unwrapped before reaching the contract
             0_u128.into(),
         );
@@ -337,8 +337,8 @@ pub mod tests {
 
         // receive
         let packet = Packet::mock(
-            format!("channel-141"),                // from: hub
-            format!("channel-0"),                  // to: osmosis
+            "channel-141".to_string(),             // from: hub
+            "channel-0".to_string(),               // to: osmosis
             WRAPPED_OSMO_ON_HUB_TRACE.to_string(), // unwrapped before reaching the contract
             0_u128.into(),
         );
@@ -349,17 +349,17 @@ pub mod tests {
         //
         // osmo sent to the hub
         let packet = Packet::mock(
-            format!("channel-0"),   // from: osmosis
-            format!("channel-141"), // to: hub
-            format!("uosmo"),
+            "channel-0".to_string(),   // from: osmosis
+            "channel-141".to_string(), // to: hub
+            "uosmo".to_string(),
             0_u128.into(),
         );
         assert_eq!(packet.local_denom(&FlowType::In), WRAPPED_OSMO_ON_HUB_HASH);
 
         // uosmo on the hub sent back to the osmosis
         let packet = Packet::mock(
-            format!("channel-141"),                // from: hub
-            format!("channel-0"),                  // to: osmosis
+            "channel-141".to_string(),             // from: hub
+            "channel-0".to_string(),               // to: osmosis
             WRAPPED_OSMO_ON_HUB_TRACE.to_string(), // unwrapped before reaching the contract
             0_u128.into(),
         );
@@ -367,9 +367,9 @@ pub mod tests {
 
         // uatom sent to osmosis
         let packet = Packet::mock(
-            format!("channel-141"), // from: hub
-            format!("channel-0"),   // to: osmosis
-            format!("uatom"),
+            "channel-141".to_string(), // from: hub
+            "channel-0".to_string(),   // to: osmosis
+            "uatom".to_string(),
             0_u128.into(),
         );
         assert_eq!(packet.local_denom(&FlowType::Out), "uatom");
@@ -377,8 +377,8 @@ pub mod tests {
         // utaom on the osmosis sent back to the hub
         // send
         let packet = Packet::mock(
-            format!("channel-0"),                      // from: osmosis
-            format!("channel-141"),                    // to: hub
+            "channel-0".to_string(),                   // from: osmosis
+            "channel-141".to_string(),                 // to: hub
             WRAPPED_ATOM_ON_OSMOSIS_TRACE.to_string(), // unwrapped before reaching the contract
             0_u128.into(),
         );
@@ -389,8 +389,8 @@ pub mod tests {
 
         // receive
         let packet = Packet::mock(
-            format!("channel-0"),                      // from: osmosis
-            format!("channel-141"),                    // to: hub
+            "channel-0".to_string(),                   // from: osmosis
+            "channel-141".to_string(),                 // to: hub
             WRAPPED_ATOM_ON_OSMOSIS_TRACE.to_string(), // unwrapped before reaching the contract
             0_u128.into(),
         );
@@ -407,8 +407,8 @@ pub mod tests {
         // Send uatom on stored on osmosis to juno
         // send
         let packet = Packet::mock(
-            format!("channel-42"),                     // from: osmosis
-            format!("channel-0"),                      // to: juno
+            "channel-42".to_string(),                  // from: osmosis
+            "channel-0".to_string(),                   // to: juno
             WRAPPED_ATOM_ON_OSMOSIS_TRACE.to_string(), // unwrapped before reaching the contract
             0_u128.into(),
         );
@@ -419,8 +419,8 @@ pub mod tests {
 
         // receive
         let packet = Packet::mock(
-            format!("channel-42"), // from: osmosis
-            format!("channel-0"),  // to: juno
+            "channel-42".to_string(), // from: osmosis
+            "channel-0".to_string(),  // to: juno
             WRAPPED_ATOM_ON_OSMOSIS_TRACE.to_string(),
             0_u128.into(),
         );
@@ -432,8 +432,8 @@ pub mod tests {
         // Send back that multi-wrapped token to osmosis
         // send
         let packet = Packet::mock(
-            format!("channel-0"),  // from: juno
-            format!("channel-42"), // to: osmosis
+            "channel-0".to_string(),  // from: juno
+            "channel-42".to_string(), // to: osmosis
             format!("{}{}", "transfer/channel-0/", WRAPPED_ATOM_ON_OSMOSIS_TRACE), // unwrapped before reaching the contract
             0_u128.into(),
         );
@@ -444,8 +444,8 @@ pub mod tests {
 
         // receive
         let packet = Packet::mock(
-            format!("channel-0"),  // from: juno
-            format!("channel-42"), // to: osmosis
+            "channel-0".to_string(),  // from: juno
+            "channel-42".to_string(), // to: osmosis
             format!("{}{}", "transfer/channel-0/", WRAPPED_ATOM_ON_OSMOSIS_TRACE), // unwrapped before reaching the contract
             0_u128.into(),
         );

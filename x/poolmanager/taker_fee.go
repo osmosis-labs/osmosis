@@ -12,9 +12,11 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v25/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v26/x/txfees/types"
 )
+
+var zero = osmomath.ZeroInt()
 
 func (k *Keeper) GetDefaultTakerFee(ctx sdk.Context) osmomath.Dec {
 	defaultTakerFeeBz := k.paramSpace.GetRaw(ctx, types.KeyDefaultTakerFee)
@@ -134,7 +136,7 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 
 	// Determine if eligible to bypass taker fee.
 	if osmoutils.Contains(reducedFeeWhitelist, sender.String()) {
-		return tokenIn, sdk.Coin{}, nil
+		return tokenIn, sdk.Coin{Denom: tokenIn.Denom, Amount: zero}, nil
 	}
 
 	takerFee, err := k.GetTradingPairTakerFee(ctx, tokenIn.Denom, tokenOutDenom)

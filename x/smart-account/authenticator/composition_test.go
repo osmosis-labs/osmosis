@@ -3,6 +3,7 @@ package authenticator_test
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -15,9 +16,9 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
-	"github.com/osmosis-labs/osmosis/v25/x/smart-account/testutils"
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v26/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v26/x/smart-account/testutils"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v26/x/smart-account/types"
 )
 
 type AggregatedAuthenticatorsTest struct {
@@ -74,6 +75,10 @@ func (s *AggregatedAuthenticatorsTest) SetupTest() {
 	am.RegisterAuthenticator(s.approveAndBlock)
 	am.RegisterAuthenticator(s.rejectAndConfirm)
 	am.RegisterAuthenticator(s.spyAuth)
+}
+
+func (s *AggregatedAuthenticatorsTest) TearDownTest() {
+	os.RemoveAll(s.HomeDir)
 }
 
 func (s *AggregatedAuthenticatorsTest) TestAnyOf() {
