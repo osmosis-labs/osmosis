@@ -174,6 +174,8 @@ message MsgSetBaseDenoms {
 }
 
 // MsgSetBaseDenomsResponse defines the Msg/SetBaseDenoms response type.
+// This is not used anymore, but must be retained in the file to allow indexers
+// to index blocks since genesis
 message MsgSetBaseDenomsResponse {}
 // MsgSetPoolWeights defines the Msg/SetPoolWeights request type.
 message MsgSetPoolWeights {

@@ -28,6 +28,8 @@ service Msg {
 }
 
 // ===================== MsgCreatePool
+// This is not used anymore, but must be retained in the file to allow indexers
+// to index blocks since genesis
 message MsgCreatePool {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
 
@@ -284,6 +286,8 @@ message MsgExitSwapExternAmountOutResponse {
   ];
 }
 
+// This is not used anymore, but must be retained in the file to allow indexers
+// to index blocks since genesis
 message MsgCreateBalancerPool {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
 

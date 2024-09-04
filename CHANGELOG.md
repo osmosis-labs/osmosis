@@ -44,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Bug Fixes
 
-* Add missing protobuf definitions to be able to decode old block messages
+* [#8600](https://github.com/osmosis-labs/osmosis/pull/8600) Add missing protobuf definitions to be able to decode old block messages
 
 ### State Breaking
 
