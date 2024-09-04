@@ -276,6 +276,9 @@ replace (
 	cosmossdk.io/core => cosmossdk.io/core v0.11.0
 
 	// Needs to be replaced due to iavlFastNodeModuleWhitelist feature
+	// Disabling fast nodes makes nodes sync faster.
+	// All nodes need to have the lockup fast nodes enabled though or else we process epoch slowly.
+	// Also, snapshot nodes need to have all fast nodes enabled in order to prune quickly.
 	cosmossdk.io/store => github.com/osmosis-labs/cosmos-sdk/store v0.1.0-alpha.1.0.20240509221435-b8feb2ffb728
 
 	// Direct cometbft branch link: https://github.com/osmosis-labs/cometbft/tree/osmo/v0.38.11, current branch: osmo/v0.38.11.
