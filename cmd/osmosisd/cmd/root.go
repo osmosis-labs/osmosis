@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -355,7 +354,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithHomeDir(homeDir).
 		WithViper("OSMOSIS")
 
-	tempDir := fmt.Sprintf("%s%d", ".temp-osmosis", rand.Int())
+	tempDir := tempDir()
 	tempApp := osmosis.NewOsmosisApp(log.NewNopLogger(), cosmosdb.NewMemDB(), nil, true, map[int64]bool{}, tempDir, 5, sims.EmptyAppOptions{}, osmosis.EmptyWasmOpts, baseapp.SetChainID("osmosis-1"))
 
 	// Allows you to add extra params to your client.toml
@@ -473,9 +472,19 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	if err := autoCliOpts(initClientCtx, tempApp).EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}
-	os.RemoveAll(tempDir)
 
 	return rootCmd, encodingConfig
+}
+
+// tempDir create a temporary directory to initialize the command line client
+func tempDir() string {
+	dir, err := os.MkdirTemp("", "osmosisd")
+	if err != nil {
+		dir = osmosis.DefaultNodeHome
+	}
+	defer os.RemoveAll(dir)
+
+	return dir
 }
 
 // overwriteConfigTomlValues overwrites config.toml values. Returns error if config.toml does not exist
