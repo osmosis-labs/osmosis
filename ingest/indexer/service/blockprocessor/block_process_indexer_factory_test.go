@@ -56,7 +56,7 @@ func (suite *IndexerBlockProcessorTestSuite) TestNewBlockProcessor() {
 			}
 
 			// System under test
-			newBlockProcessor := blockprocessor.NewBlockProcessor(blockStrategyManager, publisherMock, poolsExtracter, domain.Keepers{})
+			newBlockProcessor := blockprocessor.NewBlockProcessor(blockStrategyManager, publisherMock, poolsExtracter, domain.Keepers{}, nil)
 
 			// Check if the block processor is a full block processor
 			isFullBlockProcessor := newBlockProcessor.IsFullBlockProcessor()
