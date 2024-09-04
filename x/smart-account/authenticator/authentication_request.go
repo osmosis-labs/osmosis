@@ -245,8 +245,8 @@ func GenerateAuthenticationRequest(
 		AuthenticatorParams: nil,
 	}
 
-	// We do not generate the sign bytes if simulate is true
-	if simulate {
+	// We do not generate the sign bytes if simulate is true or isCheckTx is true
+	if simulate && ctx.IsCheckTx() {
 		return authRequest, nil
 	}
 
