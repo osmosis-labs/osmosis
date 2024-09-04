@@ -40,7 +40,7 @@ jobs:
       - name: Run update script
         run: ./scripts/update_asset_lists.sh
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v7
         with:
           title: "auto: update asset lists on branch ${{ inputs.target-branch || 'main' }}"
           commit-message: "auto: update asset lists"
