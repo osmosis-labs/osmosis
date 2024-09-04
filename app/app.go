@@ -741,7 +741,7 @@ func getPoolWriteListeners(app *OsmosisApp, appCodec codec.Codec, blockPoolUpdat
 }
 
 // registerStoreKeys register the store keys from the given store key map
-// on the app's commit multi store so that the chang sets from these stores are propagated
+// on the app's commit multi store so that the change sets from these stores are propagated
 // in ListenCommit().
 func registerStoreKeys(app *OsmosisApp, storeKeyMap map[string]storetypes.StoreKey) {
 	// Register all applicable keys as listeners
