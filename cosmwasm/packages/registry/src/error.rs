@@ -106,7 +106,7 @@ impl From<RegistryError> for StdError {
     }
 }
 
-// Everything bellow here is just boilerplate to make the error types compatible with PartialEq
+// Everything below here is just boilerplate to make the error types compatible with PartialEq
 
 // Wrap unherited serialization errors so that we can derive PartialEq
 #[derive(Debug)]
