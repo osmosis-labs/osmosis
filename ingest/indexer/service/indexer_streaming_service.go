@@ -125,6 +125,9 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 		// Message type
 		txMessages := tx.GetMsgs()
 		msgType := proto.MessageName(txMessages[0])
+
+		// Looping through the transaction results, each result has a list of events to be looped through
+		var includedEvents []domain.EventWrapper
 		txResults := res.GetTxResults()
 		for _, txResult := range txResults {
 			events := txResult.GetEvents()
@@ -135,7 +138,6 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 			// - pool_exited
 			// - create_position
 			// - withdraw_position
-			var includedEvents []domain.EventWrapper
 			for i, event := range events {
 				clonedEvent := deepCloneEvent(&event)
 				// Add the token liquidity to the event
@@ -167,23 +169,23 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 					s.trackCreatedPoolID(event, sdkCtx.BlockHeight(), sdkCtx.BlockTime().UTC(), txHash)
 				}
 			}
-			// Publish the transaction
-			txn := domain.Transaction{
-				Height:             uint64(sdkCtx.BlockHeight()),
-				BlockTime:          sdkCtx.BlockTime().UTC(),
-				GasWanted:          uint64(gasWanted),
-				GasUsed:            uint64(gasUsed),
-				Fees:               fee,
-				MessageType:        msgType,
-				TransactionHash:    txHash,
-				TransactionIndexId: txnIndex,
-				Events:             includedEvents,
-			}
-			err = s.client.PublishTransaction(sdkCtx, txn)
-			if err != nil {
-				// if there is an error in publishing the transaction, return the error
-				return err
-			}
+		}
+		// Publish the transaction
+		txn := domain.Transaction{
+			Height:             uint64(sdkCtx.BlockHeight()),
+			BlockTime:          sdkCtx.BlockTime().UTC(),
+			GasWanted:          uint64(gasWanted),
+			GasUsed:            uint64(gasUsed),
+			Fees:               fee,
+			MessageType:        msgType,
+			TransactionHash:    txHash,
+			TransactionIndexId: txnIndex,
+			Events:             includedEvents,
+		}
+		err = s.client.PublishTransaction(sdkCtx, txn)
+		if err != nil {
+			// if there is an error in publishing the transaction, return the error
+			return err
 		}
 	}
 	return nil
