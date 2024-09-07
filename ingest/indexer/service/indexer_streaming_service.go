@@ -159,12 +159,7 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 				// IMPORTANT NOTE:
 				// 1. Using event attributes in a transaction, ONLY pool ID of the newly created pool is available and being tracked by the underlying pool tracker.
 				// 2. For the other pool metadata of the newly created pool, such as denoms and fees, they are available and tracked thru OnWrite listeners in the common/writelistener package.
-				// 3. OnWrite callback is triggered AFTER ListenEndBlock callback. As a result, we can't publish the newly created pool data, during ListenEndBlock callback
-				//    of the block where the pool is created, because the pool metadata is not available yet.
-				// 4. Therefore, we DON"T always reset the pool tracker in ListenEndBlock callback.
-				// 5. Instead, We wait until the next block, when both pool ID and pool metadata are available in the pool tracker, to publish the newly created pool data.
-				//    After publishing the newly created pool data, we then reset the pool tracker.
-				// 6. See: block_updates_indexer_block_process_strategy.go::publishCreatedPools for more details.
+				// 3. See: block_updates_indexer_block_process_strategy.go::publishCreatedPools for more details.
 				if eventType == poolmanagertypes.TypeEvtPoolCreated {
 					s.trackCreatedPoolID(event, sdkCtx.BlockHeight(), sdkCtx.BlockTime().UTC(), txHash)
 				}

@@ -55,8 +55,5 @@ func (f *blockUpdatesIndexerBlockProcessStrategy) publishCreatedPools(ctx types.
 		return err
 	}
 
-	// Reset the pool tracker
-	f.poolExtractor.ResetPoolTracker(ctx)
-
 	return nil
 }
