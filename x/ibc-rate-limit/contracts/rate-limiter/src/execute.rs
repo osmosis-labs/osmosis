@@ -144,7 +144,7 @@ pub fn unset_denom_restrictions(
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-    use cosmwasm_std::{from_binary, Addr, StdError};
+    use cosmwasm_std::{from_json, Addr, StdError};
 
     use crate::contract::{execute, query};
     use crate::helpers::tests::verify_query_response;
@@ -199,7 +199,7 @@ mod tests {
 
         let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
 
-        let value: Vec<RateLimit> = from_binary(&res).unwrap();
+        let value: Vec<RateLimit> = from_json(&res).unwrap();
         verify_query_response(
             &value[0],
             "daily",
@@ -247,7 +247,7 @@ mod tests {
             denom: "denom".to_string(),
         };
         let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
-        let value: Vec<RateLimit> = from_binary(&res).unwrap();
+        let value: Vec<RateLimit> = from_json(&res).unwrap();
         assert_eq!(value.len(), 1);
         verify_query_response(
             &value[0],
@@ -279,7 +279,7 @@ mod tests {
             denom: "denom".to_string(),
         };
         let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
-        let value: Vec<RateLimit> = from_binary(&res).unwrap();
+        let value: Vec<RateLimit> = from_json(&res).unwrap();
         assert_eq!(value.len(), 1);
 
         verify_query_response(
@@ -398,7 +398,7 @@ mod tests {
             denom: denom.clone(),
         };
         let res = query(deps.as_ref(), mock_env(), query_msg).unwrap();
-        let returned_channels: Vec<String> = from_binary(&res).unwrap();
+        let returned_channels: Vec<String> = from_json(&res).unwrap();
         assert_eq!(returned_channels, allowed_channels);
     }
 

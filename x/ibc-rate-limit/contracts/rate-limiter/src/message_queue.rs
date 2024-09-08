@@ -146,7 +146,7 @@ fn try_process_message(
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{
-        from_binary,
+        from_json,
         testing::{mock_dependencies, mock_env},
         Addr, Timestamp, TransactionInfo,
     };
@@ -229,13 +229,13 @@ mod tests {
         };
         // get foobar's queued message, and validate the type is as expected + timelock delays
         let msg = get_queued_message(deps.storage, foobar_message_id.clone()).unwrap();
-        let msg: QueuedMessage = from_binary(&msg).unwrap();
+        let msg: QueuedMessage = from_json(&msg).unwrap();
         assert_eq!(msg.timelock_delay, 10);
         assert_eq!(msg.message, foobar_test_msg);
 
         // get foobarbaz's queued message, and validate the type is as expected + timelock delays
         let msg = get_queued_message(deps.storage, foobarbaz_message_id.clone()).unwrap();
-        let msg: QueuedMessage = from_binary(&msg).unwrap();
+        let msg: QueuedMessage = from_json(&msg).unwrap();
         assert_eq!(msg.timelock_delay, 1);
         assert_eq!(msg.message, foobarbaz_test_msg);
     }

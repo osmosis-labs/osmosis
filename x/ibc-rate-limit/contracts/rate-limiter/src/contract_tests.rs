@@ -4,7 +4,7 @@ use crate::packet::Packet;
 use crate::state::rbac::Roles;
 use crate::{contract::*, test_msg_recv, test_msg_send, ContractError};
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-use cosmwasm_std::{from_binary, Addr, Attribute, MessageInfo, Uint256};
+use cosmwasm_std::{from_json, Addr, Attribute, MessageInfo, Uint256};
 
 use crate::helpers::tests::verify_query_response;
 use crate::msg::{InstantiateMsg, MigrateMsg, PathMsg, QueryMsg, QuotaMsg, SudoMsg};
@@ -249,7 +249,7 @@ fn query_state() {
     };
 
     let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
-    let value: Vec<RateLimit> = from_binary(&res).unwrap();
+    let value: Vec<RateLimit> = from_json(&res).unwrap();
     assert_eq!(value[0].quota.name, "weekly");
     assert_eq!(value[0].quota.max_percentage_send, 10);
     assert_eq!(value[0].quota.max_percentage_recv, 10);
@@ -279,7 +279,7 @@ fn query_state() {
 
     // Query
     let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
-    let value: Vec<RateLimit> = from_binary(&res).unwrap();
+    let value: Vec<RateLimit> = from_json(&res).unwrap();
     verify_query_response(
         &value[0],
         "weekly",
@@ -319,7 +319,7 @@ fn bad_quotas() {
         denom: "denom".to_string(),
     };
     let res = query(deps.as_ref(), env.clone(), query_msg).unwrap();
-    let value: Vec<RateLimit> = from_binary(&res).unwrap();
+    let value: Vec<RateLimit> = from_json(&res).unwrap();
     verify_query_response(
         &value[0],
         "bad_quota",
