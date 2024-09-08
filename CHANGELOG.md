@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
+* [#8683](https://github.com/osmosis-labs/osmosis/pull/8683) run `cargo update` on all rust code
 * [#8274](https://github.com/osmosis-labs/osmosis/pull/8274) SDK v50 and Comet v0.38 upgrade
 * [#8375](https://github.com/osmosis-labs/osmosis/pull/8375) Enforce sub-authenticator to be greater than 1
 * [#8509](https://github.com/osmosis-labs/osmosis/pull/8509) Change LiquidityNetInDirection return type to sdk math
