@@ -28,7 +28,7 @@ impl RateLimitingContract {
     }
 
     pub fn sudo<T: Into<SudoMsg>>(&self, msg: T) -> cw_multi_test::SudoMsg {
-        let msg = to_json_binary(&msg.into())?;
+        let msg = to_json_binary(&msg.into()).unwrap();
         cw_multi_test::SudoMsg::Wasm(cw_multi_test::WasmSudo {
             contract_addr: self.addr(),
             msg,
