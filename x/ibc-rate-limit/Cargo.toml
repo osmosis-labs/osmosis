@@ -1,8 +1,6 @@
 [workspace]
 
-members = [
-  'contracts/*',
-]
+members = ['contracts/rate-limiter']
 
 [profile.release]
 codegen-units = 1
