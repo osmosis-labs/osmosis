@@ -67,6 +67,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
+
+* [#8681](https://github.com/osmosis-labs/osmosis/pull/8681) Bump cosmwasm dependencies for ibc rate limits and improve x/ibc-rate-limits/Cargo.toml
 * [#8494](https://github.com/osmosis-labs/osmosis/pull/8494) Add additional events in x/lockup, x/superfluid, x/concentratedliquidity
 * [#8543](https://github.com/osmosis-labs/osmosis/pull/8543) Add OTEL wiring and new configs in app.toml
 * [#8566](https://github.com/osmosis-labs/osmosis/pull/8566) Minor speedup to CalcExitCFMM shares
