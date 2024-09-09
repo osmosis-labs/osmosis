@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Bug Fixes
+
+* [#8600](https://github.com/osmosis-labs/osmosis/pull/8600) Add missing protobuf definitions to be able to decode old block messages
+
 ### State Breaking
 
 * [#8274](https://github.com/osmosis-labs/osmosis/pull/8274) SDK v50 and Comet v0.38 upgrade
