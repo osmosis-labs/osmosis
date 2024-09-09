@@ -71,6 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8543](https://github.com/osmosis-labs/osmosis/pull/8543) Add OTEL wiring and new configs in app.toml
 * [#8566](https://github.com/osmosis-labs/osmosis/pull/8566) Minor speedup to CalcExitCFMM shares
 * [#8665](https://github.com/osmosis-labs/osmosis/pull/8665) fix: smart account signing checktx error
+* [#8563](https://github.com/osmosis-labs/osmosis/pull/8563) Add additional queries to x/gauges
 
 
 ## v25.2.1
