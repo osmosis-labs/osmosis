@@ -117,7 +117,7 @@ Running an osmosis network with mainnet state is now as easy as setting up a sta
 
 You now have a network you own with the mainnet state on version X+1.
 
-## LocalOsmosis Accounts
+## LocalOsmosis Accounts and Keys
 
 LocalOsmosis is pre-configured with one validator and 9 accounts with ION and OSMO balances.
 
@@ -134,6 +134,16 @@ LocalOsmosis is pre-configured with one validator and 9 accounts with ION and OS
 | lo-test8  | `osmo1f4tvsdukfwh6s9swrc24gkuz23tp8pd3e9r5fa`                                                          | `cream sport mango believe inhale text fish rely elegant below earth april wall rug ritual blossom cherry detail length blind digital proof identify ride`                 |
 | lo-test9  | `osmo1myv43sqgnj5sm4zl98ftl45af9cfzk7nhjxjqh`                                                          | `index light average senior silent limit usual local involve delay update rack cause inmate wall render magnet common feature laundry exact casual resource hundred`       |
 | lo-test10 | `osmo14gs9zqh8m49yy9kscjqu9h72exyf295afg6kgk`                                                          | `prefer forget visit mistake mixture feel eyebrow autumn shop pair address airport diesel street pass vague innocent poem method awful require hurry unhappy shoulder`     |
+
+To list all keys in the keyring named `test`
+```bash
+osmosisd keys list --keyring-backend test
+```
+
+To import an account into the keyring `test`. NOTE: replace the address with any of the above user accounts. 
+```bash
+osmosisd keys add osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks --keyring-backend test --recover
+```
 
 ## Tests
 
@@ -183,6 +193,13 @@ services:
 ```
 
 2. Checkout the Osmosis repository to a different `ref` that includes the new version, and then rebuild and restart LocalOsmosis using `make localnet-start`. Make sure to don't delete your `~/.osmosisd-local` folder.
+
+### Create a pool 
+You can create a concentrated liquidity pool in `localosmosis`:
+```bash
+osmosisd tx concentratedliquidity create-pool uion uosmo 100 0.01 --from osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks --chain-id localosmosis -b sync --keyring-backend test --fees 3000uosmo --gas 1000000
+```
+NOTE: Check `--from` and `--keyring-backend`. See also: [LocalOsmosis Accounts and Keys](#localosmosis-accounts-and-keys)
 
 ## FAQ
 
