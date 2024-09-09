@@ -19,8 +19,16 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+
+	appmodule "cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
+	modulev1 "github.com/MANTRA-Chain/mantrachain/api/osmosis/tokenfactory/module/v1"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v26/simulation/simtypes"
@@ -185,4 +193,58 @@ func (am AppModule) Actions() []simtypes.Action {
 		simtypes.NewMsgBasedAction("burn token factory token", am.keeper, simulation.RandomMsgBurnDenom),
 		simtypes.NewMsgBasedAction("change admin token factory token", am.keeper, simulation.RandomMsgChangeAdmin),
 	}
+}
+
+// ----------------------------------------------------------------------------
+// App Wiring Setup
+// ----------------------------------------------------------------------------
+
+func init() {
+	appmodule.Register(
+		&modulev1.Module{},
+		appmodule.Provide(ProvideModule),
+	)
+}
+
+type ModuleInputs struct {
+	depinject.In
+
+	Cdc          codec.Codec
+	StoreService store.KVStoreService
+	Config       *modulev1.Module
+	Logger       log.Logger
+
+	AccountKeeper types.AccountKeeper
+	BankKeeper    types.BankKeeper
+}
+
+type ModuleOutputs struct {
+	depinject.Out
+
+	CoinfactoryKeeper keeper.Keeper
+	Module            appmodule.AppModule
+}
+
+func ProvideModule(in ModuleInputs) ModuleOutputs {
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
+	}
+	k := keeper.NewKeeper(
+		in.Cdc,
+		in.StoreService,
+		in.Config.KnownModules,
+		in.AccountKeeper,
+		in.BankKeeper,
+		nil,
+		authority.String(),
+	)
+	m := NewAppModule(
+		k,
+		in.AccountKeeper,
+		in.BankKeeper,
+	)
+
+	return ModuleOutputs{CoinfactoryKeeper: k, Module: m}
 }
