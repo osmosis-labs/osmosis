@@ -13,7 +13,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"cosmossdk.io/core/appmodule"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -28,7 +27,6 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	modulev1 "github.com/MANTRA-Chain/mantrachain/api/osmosis/tokenfactory/module/v1"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v26/simulation/simtypes"
