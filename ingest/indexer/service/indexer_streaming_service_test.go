@@ -465,7 +465,7 @@ func (s *IndexerServiceTestSuite) TestTrackCreatedPoolID() {
 			expectedPoolBeingTracked: false,
 		},
 		{
-			name:                     "Should not track with no block time",
+			name:                     "Should not track with no block time (zero time)",
 			eventType:                poolmanagertypes.TypeEvtPoolCreated,
 			blockHeight:              1000,
 			blockTime:                time.Unix(0, 0),

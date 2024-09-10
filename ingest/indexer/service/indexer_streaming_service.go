@@ -373,7 +373,7 @@ func (s *indexerStreamingService) trackCreatedPoolID(event abci.Event, blockHeig
 	}
 
 	// Check if block height, block time or tx hash is empty
-	if blockHeight == 0 || blockTime.IsZero() || txHash == "" {
+	if blockHeight == 0 || blockTime.Equal(time.Unix(0, 0)) || txHash == "" {
 		return fmt.Errorf("block height, block time or tx hash is empty")
 	}
 
