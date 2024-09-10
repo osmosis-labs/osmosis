@@ -65,6 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8663](https://github.com/osmosis-labs/osmosis/pull/8663) fix: protorev throws a nil pointer
 * [#8676](https://github.com/osmosis-labs/osmosis/pull/8676) fix: update enforce sub-authenticator to be greater than 1 error message
 * [#8682](https://github.com/osmosis-labs/osmosis/pull/8682) chore: bump cosmwasm-optimizer
+* [#8869](https://github.com/osmosis-labs/osmosis/pull/8689) add missing service annotation to tx proto files service section
 
 ### Config
 
