@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        contract:
+        contract: 
           [
             {
               workdir: ./x/ibc-rate-limit/,
@@ -74,7 +74,7 @@ jobs:
           docker run --rm -v "$(pwd)":/code \
             --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
             --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-            cosmwasm/workspace-optimizer:0.12.10
+            cosmwasm/workspace-optimizer:0.16.0
 
       - name: "Upload optimized contract artifact"
         uses: actions/upload-artifact@v3
@@ -102,7 +102,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        contract:
+        contract: 
           [
             {
               workdir: ./x/ibc-rate-limit/,
@@ -134,7 +134,7 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v4
       - name: Install toolchain
-        uses: dtolnay/rust-toolchain@1.69.0
+        uses: dtolnay/rust-toolchain@1.81.0
         with:
           target: wasm32-unknown-unknown
 
@@ -159,7 +159,7 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v4
       - name: Install toolchain
-        uses: dtolnay/rust-toolchain@1.69.0
+        uses: dtolnay/rust-toolchain@1.81.0
         with:
           components: rustfmt, clippy
 
