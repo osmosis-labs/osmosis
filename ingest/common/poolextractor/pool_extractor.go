@@ -149,8 +149,3 @@ func (p *poolExtractor) ExtractCreated(ctx sdk.Context) (commondomain.BlockPools
 
 	return result, createdPoolIDs, nil
 }
-
-// ResetPoolTracker implements commondomain.PoolExtractor
-func (p *poolExtractor) ResetPoolTracker(ctx sdk.Context) {
-	p.poolTracker.Reset()
-}

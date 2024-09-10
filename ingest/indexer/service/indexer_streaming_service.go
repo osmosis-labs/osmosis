@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"sync"
@@ -161,7 +162,11 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 				// 2. For the other pool metadata of the newly created pool, such as denoms and fees, they are available and tracked thru OnWrite listeners in the common/writelistener package.
 				// 3. See: block_updates_indexer_block_process_strategy.go::publishCreatedPools for more details.
 				if eventType == poolmanagertypes.TypeEvtPoolCreated {
-					s.trackCreatedPoolID(event, sdkCtx.BlockHeight(), sdkCtx.BlockTime().UTC(), txHash)
+					err := s.trackCreatedPoolID(event, sdkCtx.BlockHeight(), sdkCtx.BlockTime().UTC(), txHash)
+					if err != nil {
+						s.logger.Error("Error tracking newly created pool ID %v. event skipped.", err)
+						continue
+					}
 				}
 			}
 		}
@@ -361,22 +366,20 @@ func deepCloneEvent(event *abci.Event) *abci.Event {
 // trackCreatedPoolID tracks the created pool ID.
 // If the pool ID is not found in the event attributes, it logs an error.
 // If the pool ID is found, it parses the pool ID to uint64 and tracks it.
-func (s *indexerStreamingService) trackCreatedPoolID(event abci.Event, blockHeight int64, blockTime time.Time, txHash string) {
+func (s *indexerStreamingService) trackCreatedPoolID(event abci.Event, blockHeight int64, blockTime time.Time, txHash string) error {
 	// Check if the event is pool created event
 	if event.Type != poolmanagertypes.TypeEvtPoolCreated {
-		s.logger.Error("Event type is not pool created event")
-		return
+		return fmt.Errorf("event type is not pool created event")
 	}
 
 	// Check if block height, block time or tx hash is empty
 	if blockHeight == 0 || blockTime.IsZero() || txHash == "" {
-		s.logger.Error("Block height, block time or tx hash is empty")
+		return fmt.Errorf("block height, block time or tx hash is empty")
 	}
 
 	// Check if event attributes are empty
 	if len(event.Attributes) == 0 {
-		s.logger.Error("Event attributes are empty for pool created event")
-		return
+		return fmt.Errorf("event attributes are empty")
 	}
 
 	// Find the pool ID attribute from the event attributes
@@ -390,15 +393,13 @@ func (s *indexerStreamingService) trackCreatedPoolID(event abci.Event, blockHeig
 
 	// Check if the pool ID attribute is empty
 	if poolIDStr == "" {
-		s.logger.Error("Pool ID attribute is not found in event attributes")
-		return
+		return fmt.Errorf("pool ID attribute is not found in event attributes")
 	}
 
 	// Parse to uint64
 	createdPoolID, err := strconv.ParseUint(poolIDStr, 10, 64)
 	if err != nil {
-		s.logger.Error("Error parsing pool ID from event attributes", err)
-		return
+		return fmt.Errorf("error parsing pool ID from event attributes %v", err)
 	}
 
 	// Send the pool creation data to the pool tracker
@@ -410,4 +411,6 @@ func (s *indexerStreamingService) trackCreatedPoolID(event abci.Event, blockHeig
 	}
 
 	s.poolTracker.TrackCreatedPoolID(poolCreation)
+
+	return nil
 }

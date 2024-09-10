@@ -17,6 +17,6 @@ func (s *indexerStreamingService) AdjustTokenInAmountBySpreadFactor(ctx context.
 	return s.adjustTokenInAmountBySpreadFactor(ctx, event)
 }
 
-func (s *indexerStreamingService) TrackCreatedPoolID(event abci.Event, blockHeight int64, blockTime time.Time, txHash string) {
-	s.trackCreatedPoolID(event, blockHeight, blockTime, txHash)
+func (s *indexerStreamingService) TrackCreatedPoolID(event abci.Event, blockHeight int64, blockTime time.Time, txHash string) error {
+	return s.trackCreatedPoolID(event, blockHeight, blockTime, txHash)
 }

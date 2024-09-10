@@ -431,6 +431,7 @@ func (s *IndexerServiceTestSuite) TestTrackCreatedPoolID() {
 			blockTime:                time.Now().UTC(),
 			txnHash:                  "txnhash",
 			havePoolIDAttribute:      true,
+			expectedError:            false,
 			expectedPoolBeingTracked: true,
 		},
 		{
@@ -440,42 +441,47 @@ func (s *IndexerServiceTestSuite) TestTrackCreatedPoolID() {
 			blockTime:                time.Now().UTC(),
 			txnHash:                  "txnhash",
 			havePoolIDAttribute:      true,
+			expectedError:            true,
 			expectedPoolBeingTracked: false,
 		},
 		{
 			name:                     "Should not track with no pool_id attribute",
-			eventType:                gammtypes.TypeEvtTokenSwapped,
+			eventType:                poolmanagertypes.TypeEvtPoolCreated,
 			blockHeight:              1000,
 			blockTime:                time.Now().UTC(),
 			txnHash:                  "txnhash",
 			havePoolIDAttribute:      false,
+			expectedError:            true,
 			expectedPoolBeingTracked: false,
 		},
 		{
 			name:                     "Should not track with no block height",
-			eventType:                gammtypes.TypeEvtTokenSwapped,
+			eventType:                poolmanagertypes.TypeEvtPoolCreated,
 			blockHeight:              0,
 			blockTime:                time.Now().UTC(),
 			txnHash:                  "txnhash",
 			havePoolIDAttribute:      true,
+			expectedError:            true,
 			expectedPoolBeingTracked: false,
 		},
 		{
 			name:                     "Should not track with no block time",
-			eventType:                gammtypes.TypeEvtTokenSwapped,
+			eventType:                poolmanagertypes.TypeEvtPoolCreated,
 			blockHeight:              1000,
 			blockTime:                time.Unix(0, 0),
 			txnHash:                  "txnhash",
 			havePoolIDAttribute:      true,
+			expectedError:            true,
 			expectedPoolBeingTracked: false,
 		},
 		{
 			name:                     "Should not track with no txn hash",
-			eventType:                gammtypes.TypeEvtTokenSwapped,
+			eventType:                poolmanagertypes.TypeEvtPoolCreated,
 			blockHeight:              1000,
 			blockTime:                time.Now().UTC(),
 			txnHash:                  "",
 			havePoolIDAttribute:      true,
+			expectedError:            true,
 			expectedPoolBeingTracked: false,
 		},
 	}
@@ -556,7 +562,6 @@ func (s *IndexerServiceTestSuite) TestTrackCreatedPoolID() {
 			publisherMock := &indexermocks.PublisherMock{}
 
 			// Initialize an indexer streaming service
-			// Initialize an indexer streaming service
 			indexerStreamingService := indexerservice.New(
 				blockUpdatesProcessUtilsMock,
 				blockProcessStrategyManager,
@@ -589,7 +594,9 @@ func (s *IndexerServiceTestSuite) TestTrackCreatedPoolID() {
 			}
 
 			// Pass the event to the trackCreatedPoolID method
-			indexerStreamingService.TrackCreatedPoolID(event, tc.blockHeight, tc.blockTime, tc.txnHash)
+			err = indexerStreamingService.TrackCreatedPoolID(event, tc.blockHeight, tc.blockTime, tc.txnHash)
+			s.Require().Equal(tc.expectedError, err != nil)
+
 			createdPoolIDs := poolTracker.GetCreatedPoolIDs()
 			s.Require().NotNil(createdPoolIDs)
 			if tc.expectedPoolBeingTracked {
