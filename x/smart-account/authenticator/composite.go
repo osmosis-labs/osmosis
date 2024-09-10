@@ -49,7 +49,7 @@ func onSubAuthenticatorsAdded(ctx sdk.Context, account sdk.AccAddress, data []by
 	}
 
 	if len(initDatas) <= 1 {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no sub-authenticators provided")
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "at least 2 sub-authenticators must be provided, but got %d", len(initDatas))
 	}
 
 	baseId := authenticatorId
