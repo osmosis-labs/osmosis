@@ -40,5 +40,5 @@ type CommunityPoolKeeper interface {
 }
 
 type ContractKeeper interface {
-	Sudo(ctx sdk.Context, contractAddress sdk.AccAddress, msg []byte) ([]byte, error)
+	Sudo(ctx context.Context, contractAddress sdk.AccAddress, msg []byte) ([]byte, error)
 }
