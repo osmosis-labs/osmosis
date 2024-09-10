@@ -3,9 +3,6 @@ package osmosis.cosmwasmpool.v1beta1;
 
 import "cosmos/msg/v1/msg.proto";
 
-
 option go_package = "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/types";
 
-service Msg {
-  option (cosmos.msg.v1.service) = true;
-}
+service Msg { option (cosmos.msg.v1.service) = true; }
