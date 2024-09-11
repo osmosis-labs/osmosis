@@ -13,7 +13,6 @@ import (
 // Since bi-directional taker fee is supported, the taker fee for a denom pair is stored in both directions.
 // For example, the taker fees for a pair of denoms (A, B) is stored BOTH as (A, B) and (B, A).
 // If the taker fee for a denom pair already exists in the map, it is not retrieved again.
-// Note that the denoms in denomPair must always be lexicographically sorted to avoid duplicates.
 // Returns error if fails to retrieve taker fee from chain. Nil otherwise
 func retrieveTakerFeeToMapIfNotExists(ctx sdk.Context, denoms []string, denomPairToTakerFeeMap sqsdomain.TakerFeeMap, poolManagerKeeper commondomain.PoolManagerKeeper) error {
 	for i, denomI := range denoms {
