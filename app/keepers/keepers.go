@@ -39,6 +39,7 @@ import (
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
 	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
+	customwasmkeeper "github.com/osmosis-labs/osmosis/v23/custom/wasm/keeper"
 	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
 	downtimedetector "github.com/osmosis-labs/osmosis/v23/x/downtime-detector"
@@ -379,7 +380,13 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.GAMMKeeper = &gammKeeper
 	appKeepers.ConcentratedLiquidityKeeper.SetGammKeeper(appKeepers.GAMMKeeper)
 
-	appKeepers.CosmwasmPoolKeeper = cosmwasmpool.NewKeeper(appCodec, appKeepers.keys[cosmwasmpooltypes.StoreKey], appKeepers.GetSubspace(cosmwasmpooltypes.ModuleName), appKeepers.AccountKeeper, appKeepers.BankKeeper)
+	appKeepers.CosmwasmPoolKeeper = cosmwasmpool.NewKeeper(
+		appCodec,
+		appKeepers.keys[cosmwasmpooltypes.StoreKey],
+		appKeepers.GetSubspace(cosmwasmpooltypes.ModuleName),
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+	)
 
 	appKeepers.PoolManagerKeeper = poolmanager.NewKeeper(
 		appKeepers.keys[poolmanagertypes.StoreKey],
@@ -504,6 +511,21 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
 	supportedFeatures := "iterator,staking,stargate,symphony,cosmwasm_1_1,cosmwasm_1_2,cosmwasm_1_4"
+
+	wasmMsgHandler := customwasmkeeper.NewMessageHandler(
+		bApp.MsgServiceRouter(),
+		appKeepers.RateLimitingICS4Wrapper,
+		appKeepers.IBCKeeper.ChannelKeeper,
+		appKeepers.ScopedWasmKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.TreasuryKeeper,
+		*appKeepers.AccountKeeper,
+		appCodec,
+		appKeepers.TransferKeeper,
+	)
+
+	// the first slice will replace all default msh handler with custom one
+	wasmOpts = append([]wasmkeeper.Option{wasmkeeper.WithMessageHandler(wasmMsgHandler)}, wasmOpts...)
 
 	wasmOpts = append(owasm.RegisterCustomPlugins(appKeepers.BankKeeper, appKeepers.TokenFactoryKeeper), wasmOpts...)
 	wasmOpts = append(owasm.RegisterStargateQueries(*bApp.GRPCQueryRouter(), appCodec), wasmOpts...)
