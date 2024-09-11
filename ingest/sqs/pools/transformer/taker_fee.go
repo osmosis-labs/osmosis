@@ -16,7 +16,6 @@ import (
 // Note that the denoms in denomPair must always be lexicographically sorted to avoid duplicates.
 // Returns error if fails to retrieve taker fee from chain. Nil otherwise
 func retrieveTakerFeeToMapIfNotExists(ctx sdk.Context, denoms []string, denomPairToTakerFeeMap sqsdomain.TakerFeeMap, poolManagerKeeper commondomain.PoolManagerKeeper) error {
-
 	for i, denomI := range denoms {
 		for j, denomJ := range denoms {
 			if i != j {
