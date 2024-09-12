@@ -44,7 +44,7 @@ func (f *fullSQSBlockProcessStrategy) ProcessBlock(ctx sdk.Context) (err error) 
 		return domain.ErrNodeIsSyncing
 	}
 
-	pools, err := f.poolExtractor.ExtractAll(ctx)
+	pools, _, err := f.poolExtractor.ExtractAll(ctx)
 	if err != nil {
 		return err
 	}
