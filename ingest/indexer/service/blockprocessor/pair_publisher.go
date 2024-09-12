@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
@@ -39,7 +40,7 @@ func NewPairPublisher(client domain.Publisher, poolManagerKeeper domain.PoolMana
 // Returns error if at least one of the pairs failed to be published.
 // Nil otherwise.
 // TODO: unit test
-func (p PairPublisher) PublishPoolPairs(ctx sdk.Context, pools []poolmanagertypes.PoolI) error {
+func (p PairPublisher) PublishPoolPairs(ctx sdk.Context, pools []poolmanagertypes.PoolI, createdPoolIDs map[uint64]commondomain.PoolCreation) error {
 	result := make(chan error, len(pools))
 
 	// Use map to cache the taker fee for each denom pair
@@ -106,6 +107,11 @@ func (p PairPublisher) PublishPoolPairs(ctx sdk.Context, pools []poolmanagertype
 						Denom1:     denoms[j],
 						IdxDenom1:  uint8(j),
 						FeeBps:     takerFee.Add(spreadFactor).MulInt64(10000).TruncateInt().Uint64(),
+					}
+					if poolCreation, ok := createdPoolIDs[poolID]; ok {
+						pair.PairCreatedAt = poolCreation.BlockTime
+						pair.PairCreatedAtHeight = uint64(poolCreation.BlockHeight)
+						pair.PairCreatedAtTxnHash = poolCreation.TxnHash
 					}
 
 					publishPairWg.Add(1)
