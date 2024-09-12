@@ -1,3 +1,5 @@
+version: 2
+
 project_name: osmosisd
 
 env:
@@ -108,9 +110,9 @@ builds:
       - -mod=readonly
       - -trimpath
     ldflags:
-      - -X github.com/cosmos/cosmos-sdk/version.Name=osmosis 
-      - -X github.com/cosmos/cosmos-sdk/version.AppName=osmosisd 
-      - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }} 
+      - -X github.com/cosmos/cosmos-sdk/version.Name=osmosis
+      - -X github.com/cosmos/cosmos-sdk/version.AppName=osmosisd
+      - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }}
       - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
       - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,muslc,osusergo
       - -w -s
@@ -159,7 +161,7 @@ checksum:
 
 # Docs: https://goreleaser.com/customization/changelog/
 changelog:
-  skip: true
+  disable: true
 
 # Docs: https://goreleaser.com/customization/release/
 release:
