@@ -18,7 +18,7 @@ func GetTxCmd() *cobra.Command {
 		NewCreateDenomCmd(),
 		NewMintCmd(),
 		NewBurnCmd(),
-		// NewForceTransferCmd(),
+		NewForceTransferCmd(),
 		NewChangeAdminCmd(),
 		NewSetBeforeSendHookCmd(),
 		NewMsgSetDenomMetadata(),
