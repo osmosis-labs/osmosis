@@ -22,26 +22,30 @@ func New(keepers commondomain.PoolExtractorKeepers, poolTracker domain.BlockPool
 }
 
 // ExtractAll implements commondomain.PoolExtractor.
-func (p *poolExtractor) ExtractAll(ctx sdk.Context) (commondomain.BlockPools, error) {
+func (p *poolExtractor) ExtractAll(ctx sdk.Context) (commondomain.BlockPools, map[uint64]commondomain.PoolCreation, error) {
+	// If cold start, we process all the pools in the chain.
+	// Get the pool IDs that were created in the block where cold start happens
+	createdPoolIDs := p.poolTracker.GetCreatedPoolIDs()
+
 	// Concentrated pools
 
 	concentratedPools, err := p.keepers.ConcentratedKeeper.GetPools(ctx)
 	if err != nil {
-		return commondomain.BlockPools{}, err
+		return commondomain.BlockPools{}, nil, err
 	}
 
 	// CFMM pools
 
 	cfmmPools, err := p.keepers.GammKeeper.GetPools(ctx)
 	if err != nil {
-		return commondomain.BlockPools{}, err
+		return commondomain.BlockPools{}, nil, err
 	}
 
 	// CosmWasm pools
 
 	cosmWasmPools, err := p.keepers.CosmWasmPoolKeeper.GetPoolsWithWasmKeeper(ctx)
 	if err != nil {
-		return commondomain.BlockPools{}, err
+		return commondomain.BlockPools{}, nil, err
 	}
 
 	// Generate the initial cwPool address to pool mapping
@@ -55,7 +59,7 @@ func (p *poolExtractor) ExtractAll(ctx sdk.Context) (commondomain.BlockPools, er
 		CFMMPools:         cfmmPools,
 	}
 
-	return blockPools, nil
+	return blockPools, createdPoolIDs, nil
 }
 
 // ExtractChanged implements commondomain.PoolExtractor.
@@ -98,4 +102,50 @@ func (p *poolExtractor) ExtractChanged(ctx sdk.Context) (commondomain.BlockPools
 	}
 
 	return changedBlockPools, nil
+}
+
+// ExtractCreated implements commondomain.PoolExtractor.
+func (p *poolExtractor) ExtractCreated(ctx sdk.Context) (commondomain.BlockPools, map[uint64]commondomain.PoolCreation, error) {
+	changedPools, err := p.ExtractChanged(ctx)
+	if err != nil {
+		return commondomain.BlockPools{}, nil, err
+	}
+
+	createdPoolIDs := p.poolTracker.GetCreatedPoolIDs()
+
+	result := commondomain.BlockPools{
+		ConcentratedPoolIDTickChange: make(map[uint64]struct{}),
+	}
+
+	// Copy over the pools that were created in the block
+
+	// CFMM
+	for _, pool := range changedPools.CFMMPools {
+		if _, ok := createdPoolIDs[pool.GetId()]; ok {
+			result.CFMMPools = append(result.CFMMPools, pool)
+		}
+	}
+
+	// CosmWasm
+	for _, pool := range changedPools.CosmWasmPools {
+		if _, ok := createdPoolIDs[pool.GetId()]; ok {
+			result.CosmWasmPools = append(result.CosmWasmPools, pool)
+		}
+	}
+
+	// Concentrated
+	for _, pool := range changedPools.ConcentratedPools {
+		if _, ok := createdPoolIDs[pool.GetId()]; ok {
+			result.ConcentratedPools = append(result.ConcentratedPools, pool)
+		}
+	}
+
+	// Concentrated ticks
+	for poolID := range changedPools.ConcentratedPoolIDTickChange {
+		if _, ok := createdPoolIDs[poolID]; ok {
+			result.ConcentratedPoolIDTickChange[poolID] = struct{}{}
+		}
+	}
+
+	return result, createdPoolIDs, nil
 }
