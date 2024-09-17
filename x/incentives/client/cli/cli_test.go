@@ -96,3 +96,43 @@ func TestGetCmdUpcomingGaugesPerDenom(t *testing.T) {
 	}
 	osmocli.RunQueryTestCases(t, desc, tcs)
 }
+
+func TestGetCmdGaugesByPoolID(t *testing.T) {
+	desc, _ := GetCmdGaugesByPoolID()
+	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryGaugesByPoolIDRequest]{
+		"basic test": {
+			Cmd: "1",
+			ExpectedQuery: &types.QueryGaugesByPoolIDRequest{
+				Id:         1,
+				Pagination: &query.PageRequest{Key: []uint8{}, Offset: 0, Limit: 100},
+			},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
+}
+
+func TestGetCmdExternalGauges(t *testing.T) {
+	desc, _ := GetCmdExternalGauges()
+	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryExternalGaugesRequest]{
+		"basic test": {
+			Cmd: "",
+			ExpectedQuery: &types.QueryExternalGaugesRequest{
+				Pagination: &query.PageRequest{Key: []uint8{}, Offset: 0, Limit: 100},
+			},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
+}
+
+func TestGetCmdInternalGauges(t *testing.T) {
+	desc, _ := GetCmdInternalGauges()
+	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryInternalGaugesRequest]{
+		"basic test": {
+			Cmd: "",
+			ExpectedQuery: &types.QueryInternalGaugesRequest{
+				Pagination: &query.PageRequest{Key: []uint8{}, Offset: 0, Limit: 100},
+			},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
+}

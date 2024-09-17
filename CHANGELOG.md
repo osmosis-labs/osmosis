@@ -42,6 +42,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Bug Fixes
+
+* [#8600](https://github.com/osmosis-labs/osmosis/pull/8600) Add missing protobuf definitions to be able to decode old block messages
+
+### State Breaking
+
+* [#8682](https://github.com/osmosis-labs/osmosis/pull/8682) chore: bump cosmwasm-optimizer
+
+### Config
+
+
+### State Compatible
+
+* [#8563](https://github.com/osmosis-labs/osmosis/pull/8563) Add additional queries in x/gauges
+
+## v26.0.0
+
 ### State Breaking
 
 * [#8274](https://github.com/osmosis-labs/osmosis/pull/8274) SDK v50 and Comet v0.38 upgrade
@@ -60,6 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8649](https://github.com/osmosis-labs/osmosis/pull/8649) chore: update to tagged submodules
 * [#8663](https://github.com/osmosis-labs/osmosis/pull/8663) fix: protorev throws a nil pointer
 * [#8676](https://github.com/osmosis-labs/osmosis/pull/8676) fix: update enforce sub-authenticator to be greater than 1 error message
+* [#8682](https://github.com/osmosis-labs/osmosis/pull/8682) chore: bump cosmwasm-optimizer
 
 ### Config
 
@@ -73,7 +91,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8543](https://github.com/osmosis-labs/osmosis/pull/8543) Add OTEL wiring and new configs in app.toml
 * [#8566](https://github.com/osmosis-labs/osmosis/pull/8566) Minor speedup to CalcExitCFMM shares
 * [#8665](https://github.com/osmosis-labs/osmosis/pull/8665) fix: smart account signing checktx error
-
 
 ## v25.2.1
 * [#8546](https://github.com/osmosis-labs/osmosis/pull/8546) feat: reduce commit timeout to 500ms to enable faster blocks, and timeout propose to 1.8s
