@@ -10,7 +10,7 @@ import "osmosis/concentratedliquidity/v1beta1/position.proto";
 import "osmosis/concentratedliquidity/v1beta1/tick_info.proto";
 import "osmosis/concentratedliquidity/v1beta1/incentive_record.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types/genesis";
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types/genesis";
 
 // FullTick contains tick index and pool id along with other tick model
 // information.
@@ -74,6 +74,9 @@ message GenesisState {
   uint64 incentives_accumulator_pool_id_migration_threshold = 6
       [ (gogoproto.moretags) =
             "yaml:\"incentives_accumulator_pool_id_migration_threshold\"" ];
+  uint64 spread_factor_pool_id_migration_threshold = 7
+      [ (gogoproto.moretags) =
+            "yaml:\"spread_factor_pool_id_migration_threshold\"" ];
 }
 
 message AccumObject {

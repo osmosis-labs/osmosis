@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
 )
 
 // TestReverseRelationTickIndexToBytes tests if TickIndexToBytes and TickIndexFromBytes
@@ -127,4 +127,11 @@ func TestAddrKeyEncoding(t *testing.T) {
 	accAddr := sdk.AccAddress(addr)
 	bz := types.KeyUserPositions(accAddr)
 	require.Equal(t, "\x02|62797465735f756e6465726c79696e675f61646472657373|", string(bz))
+}
+
+func BenchmarkKeyPool(b *testing.B) {
+	maxPoolId := 65536
+	for i := 0; i < b.N; i++ {
+		types.KeyPool(uint64(i % maxPoolId))
+	}
 }

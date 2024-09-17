@@ -6,15 +6,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/osmosis-labs/osmosis/v23/ante"
+	"github.com/osmosis-labs/osmosis/v26/ante"
 
 	"github.com/cosmos/cosmos-sdk/client"
 
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/txfees/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v26/x/txfees/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/txfees/types"
 )
 
 var baseGas = uint64(10000)

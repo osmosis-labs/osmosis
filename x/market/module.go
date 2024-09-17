@@ -16,9 +16,9 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/osmosis-labs/osmosis/v23/x/market/client/cli"
-	"github.com/osmosis-labs/osmosis/v23/x/market/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/market/types"
+	"github.com/osmosis-labs/osmosis/v26/x/market/client/cli"
+	"github.com/osmosis-labs/osmosis/v26/x/market/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/market/types"
 )
 
 var (
@@ -104,6 +104,12 @@ func NewAppModule(
 	}
 }
 
+// IsAppModule implements the appmodule.AppModule interface.
+func (AppModule) IsAppModule() {}
+
+// IsOnePerModuleType is a marker function just indicates that this is a one-per-module type.
+func (AppModule) IsOnePerModuleType() {}
+
 // Name returns the market module's name.
 func (AppModule) Name() string { return types.ModuleName }
 
@@ -139,13 +145,5 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
-
-// BeginBlock returns the begin blocker for the market module.
-func (am AppModule) BeginBlock(sdk.Context, abci.RequestBeginBlock) {}
-
-// EndBlock returns the end blocker for the market module.
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
-}
 
 // ____________________________________________________________________________

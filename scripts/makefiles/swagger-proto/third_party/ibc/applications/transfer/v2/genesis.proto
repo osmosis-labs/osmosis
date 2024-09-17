@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package ibc.applications.transfer.v2;
+
+option go_package = "github.com/cosmos/ibc-go/v9/modules/apps/transfer/types";
+
+import "ibc/applications/transfer/v1/transfer.proto";
+import "ibc/applications/transfer/v2/token.proto";
+import "ibc/core/channel/v1/channel.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "gogoproto/gogo.proto";
+
+// GenesisState defines the ibc-transfer genesis state
+message GenesisState {
+  string                              port_id = 1;
+  repeated Denom                      denoms  = 2 [(gogoproto.castrepeated) = "Denoms", (gogoproto.nullable) = false];
+  ibc.applications.transfer.v1.Params params  = 3 [(gogoproto.nullable) = false];
+  // total_escrowed contains the total amount of tokens escrowed
+  // by the transfer module
+  repeated cosmos.base.v1beta1.Coin total_escrowed = 4
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  // forwarded_packets contains the forwarded packets stored as part of the
+  // packet forwarding lifecycle
+  repeated ForwardedPacket forwarded_packets = 5 [(gogoproto.nullable) = false];
+}
+
+// ForwardedPacket defines the genesis type necessary to retrieve and store forwarded packets.
+message ForwardedPacket {
+  ibc.core.channel.v1.PacketId forward_key = 1 [(gogoproto.nullable) = false];
+  ibc.core.channel.v1.Packet   packet      = 2 [(gogoproto.nullable) = false];
+}

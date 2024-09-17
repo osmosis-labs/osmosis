@@ -3,12 +3,14 @@ package concentrated_liquidity
 import (
 	"encoding/json"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	types "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	types "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
 )
 
 // --- Pool Hooks ---
@@ -124,7 +126,7 @@ func (k Keeper) callPoolActionListener(ctx sdk.Context, msgBuilderFn msgBuilderF
 	//
 	// We ensure this limit only applies to this call by creating a child context with a gas
 	// limit and then metering the gas used in parent context once the operation is completed.
-	childCtx := ctx.WithGasMeter(sdk.NewGasMeter(k.GetParams(ctx).HookGasLimit))
+	childCtx := ctx.WithGasMeter(storetypes.NewGasMeter(k.GetParams(ctx).HookGasLimit))
 	_, err = k.contractKeeper.Sudo(childCtx.WithEventManager(em), cwAddr, msgBz)
 	if err != nil {
 		return err
@@ -140,7 +142,7 @@ func (k Keeper) callPoolActionListener(ctx sdk.Context, msgBuilderFn msgBuilderF
 
 // nolint: unused
 // getPoolHookPrefixStore returns the substore for a specific pool ID where hook-related data is stored.
-func (k Keeper) getPoolHookPrefixStore(ctx sdk.Context, poolID uint64) sdk.KVStore {
+func (k Keeper) getPoolHookPrefixStore(ctx sdk.Context, poolID uint64) store.KVStore {
 	store := ctx.KVStore(k.storeKey)
 	return prefix.NewStore(store, types.GetPoolPrefixStoreKey(poolID))
 }
@@ -194,6 +196,6 @@ func (k Keeper) setPoolHookContract(ctx sdk.Context, poolID uint64, actionPrefix
 // deletePoolHookContract deletes the pool hook contract corresponding to the given action prefix from the passed in store.
 // It takes in a store directly instead of ctx and pool ID to avoid doing another read (to fetch pool hook prefix store) for
 // an abstraction that was primarily added for code readability reasons.
-func deletePoolHookContract(store sdk.KVStore, actionPrefix string) {
+func deletePoolHookContract(store store.KVStore, actionPrefix string) {
 	store.Delete([]byte(actionPrefix))
 }

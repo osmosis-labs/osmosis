@@ -1,8 +1,7 @@
 package cmd
 
 import (
-	// "fmt"
-
+	"bufio"
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -12,31 +11,40 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"time"
 
-	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
+	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
+	rosettaCmd "github.com/cosmos/rosetta/cmd"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/spf13/viper"
 
-	cometbftdb "github.com/cometbft/cometbft-db"
+	"cosmossdk.io/client/v2/autocli"
+	"cosmossdk.io/core/appmodule"
+	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
+
+	cosmosdb "github.com/cosmos/cosmos-db"
+
+	confixcmd "cosmossdk.io/tools/confix/cmd"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/params"
-	v23 "github.com/osmosis-labs/osmosis/v23/app/upgrades/v23" // should be automated to be updated to current version every upgrade
-	"github.com/osmosis-labs/osmosis/v23/ingest/sqs"
+	"github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v26/ingest/indexer"
 
+	"cosmossdk.io/log"
 	tmcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/libs/bytes"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
-	"github.com/cometbft/cometbft/libs/log"
-	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/snapshot"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	"cosmossdk.io/store"
+	"cosmossdk.io/store/snapshots"
+	snapshottypes "cosmossdk.io/store/snapshots/types"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -48,19 +56,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/snapshots"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
-	genutil "github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -68,7 +71,7 @@ import (
 
 	"github.com/joho/godotenv"
 
-	symphony "github.com/osmosis-labs/osmosis/v23/app"
+	symphony "github.com/osmosis-labs/osmosis/v26/app"
 )
 
 type AssetList struct {
@@ -99,34 +102,78 @@ type DenomUnitMap struct {
 	Exponent uint64 `json:"exponent"`
 }
 
-const (
-	mempoolConfigName            = "symphony-mempool"
-	arbitrageMinGasFeeConfigName = "arbitrage-min-gas-fee"
-	oldArbitrageMinGasFeeValue   = ".005"
-	newArbitrageMinGasFeeValue   = "0.1"
+type SectionKeyValue struct {
+	Section string
+	Key     string
+	Value   any
+}
 
-	consensusConfigName     = "consensus"
-	timeoutCommitConfigName = "timeout_commit"
+var (
+	recommendedAppTomlValues = []SectionKeyValue{
+		{
+			Section: "",
+			Key:     "minimum-gas-prices",
+			Value:   "0uosmo",
+		},
+		{
+			Section: "symphony-mempool",
+			Key:     "arbitrage-min-gas-fee",
+			Value:   "0.1",
+		},
+		{
+			Section: "symphony-mempool",
+			Key:     "max-gas-wanted-per-tx",
+			Value:   "60000000",
+		},
+		{
+			Section: "wasm",
+			Key:     "memory_cache_size",
+			Value:   1000,
+		},
+	}
+
+	recommendedConfigTomlValues = []SectionKeyValue{
+		{
+			Section: "p2p",
+			Key:     "flush_throttle_timeout",
+			Value:   "80ms",
+		},
+		{
+			Section: "consensus",
+			Key:     "timeout_commit",
+			Value:   "500ms",
+		},
+		{
+			Section: "consensus",
+			Key:     "timeout_propose",
+			Value:   "1.8s",
+		},
+		{
+			Section: "consensus",
+			Key:     "peer_gossip_sleep_duration",
+			Value:   "50ms",
+		},
+	}
 )
 
 var (
 	//go:embed "symphony-1-assetlist.json" "melody-test-5-assetlist.json"
-	assetFS           embed.FS
-	mainnetId         = "symphony-1"
-	testnetId         = "melody-test-5"
-	fiveSecondsString = (5 * time.Second).String()
+	assetFS   embed.FS
+	mainnetId = "symphony-1"
+	testnetId = "symphony-test-5"
 )
 
 func loadAssetList(initClientCtx client.Context, cmd *cobra.Command, basedenomToIBC, IBCtoBasedenom bool) (map[string]DenomUnitMap, map[string]string) {
 	var assetList AssetList
 
 	chainId := GetChainId(initClientCtx, cmd)
+	homeDir := initClientCtx.HomeDir
 
 	fileName := ""
 	if chainId == mainnetId || chainId == "" {
-		fileName = "cmd/symphonyd/cmd/symphony-1-assetlist-manual.json"
+		fileName = filepath.Join(homeDir, "config", "symphony-1-assetlist-manual.json")
 	} else if chainId == testnetId {
-		fileName = "cmd/symphonyd/cmd/melody-test-5-assetlist-manual.json"
+		fileName = filepath.Join(homeDir, "config", "osmo-test-5-assetlist-manual.json")
 	} else {
 		return nil, nil
 	}
@@ -140,7 +187,7 @@ func loadAssetList(initClientCtx client.Context, cmd *cobra.Command, basedenomTo
 		if chainId == mainnetId || chainId == "" {
 			fileName = "symphony-1-assetlist.json"
 		} else if chainId == testnetId {
-			fileName = "melody-test-5-assetlist.json"
+			fileName = "osmo-test-5-assetlist.json"
 		} else {
 			return nil, nil
 		}
@@ -299,10 +346,13 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
 		WithInput(os.Stdin).
-		WithAccountRetriever(types.AccountRetriever{}).
+		WithAccountRetriever(authtypes.AccountRetriever{}).
 		WithBroadcastMode(flags.BroadcastSync).
 		WithHomeDir(homeDir).
-		WithViper("OSMOSIS")
+		WithViper("SYMPHONY")
+
+	tempDir := tempDir()
+	tempApp := symphony.NewSymphonyApp(log.NewNopLogger(), cosmosdb.NewMemDB(), nil, true, map[int64]bool{}, tempDir, 5, sims.EmptyAppOptions{}, symphony.EmptyWasmOpts, baseapp.SetChainID("symphony-1"))
 
 	// Allows you to add extra params to your client.toml
 	// gas, gas-price, gas-adjustment, and human-readable-denoms
@@ -414,12 +464,35 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 	genAutoCompleteCmd(rootCmd)
 
-	initRootCmd(rootCmd, encodingConfig)
+	initRootCmd(rootCmd, encodingConfig, tempApp)
+
+	if err := autoCliOpts(initClientCtx, tempApp).EnhanceRootCommand(rootCmd); err != nil {
+		panic(err)
+	}
 
 	return rootCmd, encodingConfig
 }
 
-// overwrites config.toml values if it exists, otherwise it writes the default config.toml
+// tempDir create a temporary directory to initialize the command line client
+func tempDir() string {
+	dir, err := os.MkdirTemp("", "symphonyd")
+	if err != nil {
+		dir = symphony.DefaultNodeHome
+	}
+	defer os.RemoveAll(dir)
+
+	return dir
+}
+
+// overwriteConfigTomlValues overwrites config.toml values. Returns error if config.toml does not exist
+//
+// Currently, overwrites:
+// - timeout_commit
+//
+// Also overwrites the respective viper config value.
+//
+// Silently handles and skips any error/panic due to write permission issues.
+// No-op otherwise.
 func overwriteConfigTomlValues(serverCtx *server.Context) error {
 	// Get paths to config.toml and config parent directory
 	rootDir := serverCtx.Viper.GetString(tmcli.HomeFlag)
@@ -427,48 +500,29 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 	configParentDirPath := filepath.Join(rootDir, "config")
 	configFilePath := filepath.Join(configParentDirPath, "config.toml")
 
-	// Initialize default config
-	tmcConfig := tmcfg.DefaultConfig()
-
 	fileInfo, err := os.Stat(configFilePath)
 	if err != nil {
 		// something besides a does not exist error
 		if !os.IsNotExist(err) {
 			return fmt.Errorf("failed to read in %s: %w", configFilePath, err)
 		}
-
-		// It does not exist, so we update the default config.toml to update
-		// We modify the default config.toml to have faster block times
-		// It will be written by server.InterceptConfigsPreRunHandler
-		tmcConfig.Consensus.TimeoutCommit = 4 * time.Second
 	} else {
 		// config.toml exists
 
-		// Create a copy since the original viper from serverCtx
-		// contains app.toml config values that would get overwritten
-		// by ReadInConfig below.
-		viperCopy := viper.New()
+		// Check if each key is already set to the recommended value
+		// If it is, we don't need to overwrite it and can also skip the app.toml overwrite
+		var sectionKeyValuesToWrite []SectionKeyValue
 
-		viperCopy.SetConfigType("toml")
-		viperCopy.SetConfigName("config")
-		viperCopy.AddConfigPath(configParentDirPath)
-
-		// We read it in and modify the consensus timeout commit
-		// and write it back.
-		if err := viperCopy.ReadInConfig(); err != nil {
-			return fmt.Errorf("failed to read in %s: %w", configFilePath, err)
-		}
-
-		consensusValues := viperCopy.GetStringMapString(consensusConfigName)
-		timeoutCommitValue, ok := consensusValues[timeoutCommitConfigName]
-		if !ok {
-			return fmt.Errorf("failed to get %s.%s from %s: %w", consensusConfigName, timeoutCommitValue, configFilePath, err)
-		}
-
-		// The original default is 5s and is set in Cosmos SDK.
-		// We lower it to 4s for faster block times.
-		if timeoutCommitValue == fiveSecondsString {
-			serverCtx.Config.Consensus.TimeoutCommit = 4 * time.Second
+		// Set aside which keys need to be updated in the config.toml
+		for _, rec := range recommendedConfigTomlValues {
+			currentValue := serverCtx.Viper.Get(rec.Section + "." + rec.Key)
+			if currentValue != rec.Value {
+				// Current value in config.toml is not the recommended value
+				// Set the value in viper to the recommended value
+				// and add it to the list of key values we will overwrite in the config.toml
+				serverCtx.Viper.Set(rec.Section+"."+rec.Key, rec.Value)
+				sectionKeyValuesToWrite = append(sectionKeyValuesToWrite, rec)
+			}
 		}
 
 		defer func() {
@@ -478,84 +532,81 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 		}()
 
 		// Check if the file is writable
-		if fileInfo.Mode()&os.FileMode(0200) != 0 {
+		if fileInfo.Mode()&os.FileMode(0o200) != 0 {
 			// It will be re-read in server.InterceptConfigsPreRunHandler
 			// this may panic for permissions issues. So we catch the panic.
 			// Note that this exits with a non-zero exit code if fails to write the file.
-			tmcfg.WriteConfigFile(configFilePath, serverCtx.Config)
+
+			// Write the new config.toml file
+			if len(sectionKeyValuesToWrite) > 0 {
+				err := OverwriteWithCustomConfig(configFilePath, sectionKeyValuesToWrite)
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			fmt.Printf("config.toml is not writable. Cannot apply update. Please consider manually changing to the following: %v\n", recommendedConfigTomlValues)
 		}
 	}
 	return nil
 }
 
-// overwrites app.toml values. Returns error if app.toml does not exist
+// overwriteAppTomlValues overwrites app.toml values. Returns error if app.toml does not exist
 //
-// Currently, overwrites arbitrage-min-gas-fee value in app.toml if it is set to 0.005. Similarly,
-// overwrites the given viper config value.
+// Currently, overwrites:
+// - arbitrage-min-gas-fee
+// - max-gas-wanted-per-tx
+//
+// Also overwrites the respective viper config value.
+//
 // Silently handles and skips any error/panic due to write permission issues.
 // No-op otherwise.
 func overwriteAppTomlValues(serverCtx *server.Context) error {
-	// Get paths to config.toml and config parent directory
+	// Get paths to app.toml and config parent directory
 	rootDir := serverCtx.Viper.GetString(tmcli.HomeFlag)
 
 	configParentDirPath := filepath.Join(rootDir, "config")
-	configFilePath := filepath.Join(configParentDirPath, "app.toml")
+	appFilePath := filepath.Join(configParentDirPath, "app.toml")
 
-	fileInfo, err := os.Stat(configFilePath)
+	fileInfo, err := os.Stat(appFilePath)
 	if err != nil {
-		return fmt.Errorf("failed to read in %s: %w", configFilePath, err)
+		// something besides a does not exist error
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("failed to read in %s: %w", appFilePath, err)
+		}
 	} else {
 		// app.toml exists
 
-		// Get setting
-		currentArbitrageMinGasFeeValue := serverCtx.Viper.Get(mempoolConfigName + "." + arbitrageMinGasFeeConfigName)
+		// Check if each key is already set to the recommended value
+		// If it is, we don't need to overwrite it and can also skip the app.toml overwrite
+		var sectionKeyValuesToWrite []SectionKeyValue
 
-		// .x format at 0.x format are both valid.
-		if currentArbitrageMinGasFeeValue == oldArbitrageMinGasFeeValue || currentArbitrageMinGasFeeValue == "0"+oldArbitrageMinGasFeeValue {
-			// Set new value in viper
-			serverCtx.Viper.Set(mempoolConfigName+"."+arbitrageMinGasFeeConfigName, newArbitrageMinGasFeeValue)
-
-			defer func() {
-				if err := recover(); err != nil {
-					fmt.Printf("failed to write to %s: %s\n", configFilePath, err)
-				}
-			}()
-
-			// Check if the file is writable
-			if fileInfo.Mode()&os.FileMode(0200) != 0 {
-				// Read the entire content of the file
-				content, err := os.ReadFile(configFilePath)
-				if err != nil {
-					return err
-				}
-
-				// Convert the content to a string
-				fileContent := string(content)
-
-				// Find the index of the search line
-				index := strings.Index(fileContent, arbitrageMinGasFeeConfigName)
-				if index == -1 {
-					return fmt.Errorf("search line not found in the file")
-				}
-
-				// Find the opening and closing quotes
-				openQuoteIndex := strings.Index(fileContent[index:], "\"")
-				openQuoteIndex += index
-
-				closingQuoteIndex := strings.Index(fileContent[openQuoteIndex+1:], "\"")
-				closingQuoteIndex += openQuoteIndex + 1
-
-				// Replace the old value with the new value
-				newFileContent := fileContent[:openQuoteIndex+1] + newArbitrageMinGasFeeValue + fileContent[closingQuoteIndex:]
-
-				// Write the modified content back to the file
-				err = os.WriteFile(configFilePath, []byte(newFileContent), 0644)
-				if err != nil {
-					return err
-				}
-			} else {
-				fmt.Println("app.toml is not writable. Cannot apply update. Please consder manually changing arbitrage-min-gas-fee to " + newArbitrageMinGasFeeValue)
+		for _, rec := range recommendedAppTomlValues {
+			currentValue := serverCtx.Viper.Get(rec.Section + "." + rec.Key)
+			if currentValue != rec.Value {
+				// Current value in app.toml is not the recommended value
+				// Set the value in viper to the recommended value
+				// and add it to the list of key values we will overwrite in the app.toml
+				serverCtx.Viper.Set(rec.Section+"."+rec.Key, rec.Value)
+				sectionKeyValuesToWrite = append(sectionKeyValuesToWrite, rec)
 			}
+		}
+
+		// Check if the file is writable
+		if fileInfo.Mode()&os.FileMode(0o200) != 0 {
+			// It will be re-read in server.InterceptConfigsPreRunHandler
+			// this may panic for permissions issues. So we catch the panic.
+			// Note that this exits with a non-zero exit code if fails to write the file.
+
+			// Write the new app.toml file
+			if len(sectionKeyValuesToWrite) > 0 {
+				err := OverwriteWithCustomConfig(appFilePath, sectionKeyValuesToWrite)
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			fmt.Printf("app.toml is not writable. Cannot apply update. Please consider manually changing to the following: %v\n", recommendedAppTomlValues)
 		}
 	}
 	return nil
@@ -579,7 +630,10 @@ func getHomeEnvironment() string {
 // return "", nil if no custom configuration is required for the application.
 func initAppConfig() (string, interface{}) {
 	type SymphonyMempoolConfig struct {
-		ArbitrageMinGasPrice string `mapstructure:"arbitrage-min-gas-fee"`
+		MaxGasWantedPerTx         string `mapstructure:"max-gas-wanted-per-tx"`
+		MinGasPriceForArbitrageTx string `mapstructure:"arbitrage-min-gas-fee"`
+		MinGasPriceForHighGasTx   string `mapstructure:"min-gas-price-for-high-gas-tx"`
+		Mempool1559Enabled        string `mapstructure:"adaptive-fee-enabled"`
 	}
 
 	type CustomAppConfig struct {
@@ -587,27 +641,33 @@ func initAppConfig() (string, interface{}) {
 
 		SymphonyMempoolConfig SymphonyMempoolConfig `mapstructure:"symphony-mempool"`
 
-		SidecarQueryServerConfig sqs.Config `mapstructure:"symphony-sqs"`
+		IndexerConfig indexer.Config `mapstructure:"symphony-indexer"`
 
-		Wasm wasmtypes.WasmConfig `mapstructure:"wasm"`
+		WasmConfig wasmtypes.WasmConfig `mapstructure:"wasm"`
 	}
 
+	DefaultSymphonyMempoolConfig := SymphonyMempoolConfig{
+		MaxGasWantedPerTx:         "60000000",
+		MinGasPriceForArbitrageTx: ".1",
+		MinGasPriceForHighGasTx:   ".0025",
+		Mempool1559Enabled:        "true",
+	}
 	// Optionally allow the chain developer to overwrite the SDK's default
 	// server config.
 	srvCfg := serverconfig.DefaultConfig()
 	srvCfg.API.Enable = true
-	srvCfg.StateSync.SnapshotInterval = 1500
-	srvCfg.StateSync.SnapshotKeepRecent = 2
-	srvCfg.MinGasPrices = "0note"
+	srvCfg.MinGasPrices = "0uosmo"
 
 	// 128MB IAVL cache
 	srvCfg.IAVLCacheSize = 781250
 
-	memCfg := SymphonyMempoolConfig{ArbitrageMinGasPrice: "0.1"}
+	memCfg := DefaultSymphonyMempoolConfig
 
-	sqsConfig := sqs.DefaultConfig
+	indexCfg := indexer.DefaultConfig
 
-	SymphonyAppCfg := CustomAppConfig{Config: *srvCfg, SymphonyMempoolConfig: memCfg, SidecarQueryServerConfig: sqsConfig, Wasm: wasmtypes.DefaultWasmConfig()}
+	wasmCfg := wasmtypes.DefaultWasmConfig()
+
+	SymphonyAppCfg := CustomAppConfig{Config: *srvCfg, SymphonyMempoolConfig: memCfg, IndexerConfig: indexCfg, WasmConfig: wasmCfg}
 
 	SymphonyAppTemplate := serverconfig.DefaultConfigTemplate + `
 ###############################################################################
@@ -617,34 +677,55 @@ func initAppConfig() (string, interface{}) {
 [symphony-mempool]
 # This is the max allowed gas any tx.
 # This is only for local mempool purposes, and thus	is only ran on check tx.
-max-gas-wanted-per-tx = "25000000"
+max-gas-wanted-per-tx = "{{ .SymphonyMempoolConfig.MaxGasWantedPerTx }}"
 
-# This is the minimum gas fee any arbitrage tx should have, denominated in note per gas
-# Default value of ".1" then means that a tx with 1 million gas costs (.1 note/gas) * 1_000_000 gas = .1 melody
-arbitrage-min-gas-fee = ".1"
+# This is the minimum gas fee any arbitrage tx should have, denominated in uosmo per gas
+# Default value of ".1" then means that a tx with 1 million gas costs (.1 uosmo/gas) * 1_000_000 gas = .1 osmo
+arbitrage-min-gas-fee = "{{ .SymphonyMempoolConfig.MinGasPriceForArbitrageTx }}"
 
-# This is the minimum gas fee any tx with high gas demand should have, denominated in note per gas
-# Default value of ".0025" then means that a tx with 1 million gas costs (.0025 note/gas) * 1_000_000 gas = .0025 melody
-min-gas-price-for-high-gas-tx = ".0025"
+# This is the minimum gas fee any tx with high gas demand should have, denominated in uosmo per gas
+# Default value of ".0025" then means that a tx with 1 million gas costs (.0025 uosmo/gas) * 1_000_000 gas = .0025 osmo
+min-gas-price-for-high-gas-tx = "{{ .SymphonyMempoolConfig.MinGasPriceForHighGasTx }}"
 
 # This parameter enables EIP-1559 like fee market logic in the mempool
-adaptive-fee-enabled = "true"
+adaptive-fee-enabled = "{{ .SymphonyMempoolConfig.Mempool1559Enabled }}"
 
 ###############################################################################
-###              Symphony Sidecar Query Server Configuration                 ###
+###              Symphony Indexer Configuration                              ###
 ###############################################################################
+[symphony-indexer]
 
-[symphony-sqs]
+# The indexer service is disabled by default.
+is-enabled = "{{ .IndexerConfig.IsEnabled }}"
 
-# SQS service is disabled by default.
-is-enabled = "false"
+# Max publish delay in seconds for the indexer service.
+# Migitate the issue of messages remaining pending when the publishing rate is low,
+# ensuring timely delivery and preventing messages from appearing undelivered
+max-publish-delay = "{{ .IndexerConfig.MaxPublishDelay }}"
 
-# The hostname and address of the sidecar query server storage.
-db-host = "{{ .SidecarQueryServerConfig.StorageHost }}"
-db-port = "{{ .SidecarQueryServerConfig.StoragePort }}"
+# The GCP project id to use for the indexer service.
+gcp-project-id = "{{ .IndexerConfig.GCPProjectId }}"
+
+# The topic id to use for the publishing block data
+block-topic-id = "{{ .IndexerConfig.BlockTopicId }}"
+
+# The topic id to use for the publishing transaction data
+transaction-topic-id = "{{ .IndexerConfig.TransactionTopicId }}"
+
+# The topic id to use for the publishing pool data
+pool-topic-id = "{{ .IndexerConfig.PoolTopicId }}"
+
+# The topic id to use for the publishing token supply data
+token-supply-topic-id = "{{ .IndexerConfig.TokenSupplyTopicId }}"
+
+# The topic id to use for the publishing token supply offset data
+token-supply-offset-topic-id = "{{ .IndexerConfig.TokenSupplyOffsetTopicId }}"
+
+# The topic id to use for publishing pair metadata
+pair-topic-id = "{{ .IndexerConfig.PairTopicId }}"
 
 ###############################################################################
-###              		       Wasm Configuration    					    ###
+###                            Wasm Configuration                           ###
 ###############################################################################
 ` + wasmtypes.DefaultConfigTemplate()
 
@@ -652,7 +733,7 @@ db-port = "{{ .SidecarQueryServerConfig.StoragePort }}"
 }
 
 // initRootCmd initializes root commands when creating a new root command for simd.
-func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
+func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, tempApp *symphony.SymphonyApp) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 
@@ -660,37 +741,33 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	debugCmd.AddCommand(ConvertBech32Cmd())
 	debugCmd.AddCommand(DebugProtoMarshalledBytes())
 
-	gentxModule, ok := symphony.ModuleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
-	if !ok {
-		panic(fmt.Errorf("expected %s module to be an instance of type %T", genutiltypes.ModuleName, genutil.AppModuleBasic{}))
-	}
-
+	valOperAddressCodec := address.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix())
 	rootCmd.AddCommand(
-		// genutilcli.InitCmd(symphony.ModuleBasics, symphony.DefaultNodeHome),
+		// genutilcli.InitCmd(tempApp.ModuleBasics, symphony.DefaultNodeHome),
 		forceprune(),
-		InitCmd(symphony.ModuleBasics, symphony.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, symphony.DefaultNodeHome, gentxModule.GenTxValidator),
-		genutilcli.MigrateGenesisCmd(),
+		moduleHashByHeightQuery(newApp),
+		InitCmd(tempApp.ModuleBasics, symphony.DefaultNodeHome),
+		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, symphony.DefaultNodeHome, genutiltypes.DefaultMessageValidator, valOperAddressCodec),
 		ExportDeriveBalancesCmd(),
 		StakedToCSVCmd(),
 		AddGenesisAccountCmd(symphony.DefaultNodeHome),
-		genutilcli.GenTxCmd(symphony.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, symphony.DefaultNodeHome),
-		genutilcli.ValidateGenesisCmd(symphony.ModuleBasics),
-		PrepareGenesisCmd(symphony.DefaultNodeHome, symphony.ModuleBasics),
+		genutilcli.GenTxCmd(tempApp.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, symphony.DefaultNodeHome, valOperAddressCodec),
+		genutilcli.ValidateGenesisCmd(tempApp.ModuleBasics),
+		PrepareGenesisCmd(symphony.DefaultNodeHome, tempApp.ModuleBasics),
 		tmcli.NewCompletionCmd(rootCmd, true),
-		testnetCmd(symphony.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+		testnetCmd(tempApp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debugCmd,
-		ConfigCmd(),
+		confixcmd.ConfigCommand(),
 		ChangeEnvironmentCmd(),
 		PrintEnvironmentCmd(),
 		PrintAllEnvironmentCmd(),
-		UpdateAssetListCmd(symphony.DefaultNodeHome, symphony.ModuleBasics),
+		UpdateAssetListCmd(symphony.DefaultNodeHome, tempApp.ModuleBasics),
 		snapshot.Cmd(newApp),
 		pruning.Cmd(newApp, symphony.DefaultNodeHome),
 	)
 
 	server.AddCommands(rootCmd, symphony.DefaultNodeHome, newApp, createSymphonyAppAndExport, addModuleInitFlags)
-	server.AddTestnetCreatorCommand(rootCmd, symphony.DefaultNodeHome, newTestnetApp, addModuleInitFlags)
+	server.AddTestnetCreatorCommand(rootCmd, newTestnetApp, addModuleInitFlags)
 
 	for i, cmd := range rootCmd.Commands() {
 		if cmd.Name() == "start" {
@@ -700,16 +777,23 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 			cmd.RunE = func(cmd *cobra.Command, args []string) error {
 				serverCtx := server.GetServerContextFromCmd(cmd)
 
-				// overwrite config.toml values
-				err := overwriteConfigTomlValues(serverCtx)
-				if err != nil {
-					return err
-				}
+				// Get flag value for rejecting config defaults
+				rejectConfigDefaults := serverCtx.Viper.GetBool(FlagRejectConfigDefaults)
 
-				// overwrite app.toml values
-				err = overwriteAppTomlValues(serverCtx)
-				if err != nil {
-					return err
+				// overwrite config.toml and app.toml values, if rejectConfigDefaults is false
+				if !rejectConfigDefaults {
+					// Add ctx logger line to indicate that config.toml and app.toml values are being overwritten
+					serverCtx.Logger.Info("Overwriting config.toml and app.toml values with some recommended defaults. To prevent this, set the --reject-config-defaults flag to true.")
+
+					err := overwriteConfigTomlValues(serverCtx)
+					if err != nil {
+						return err
+					}
+
+					err = overwriteAppTomlValues(serverCtx)
+					if err != nil {
+						return err
+					}
 				}
 
 				return startRunE(cmd, args)
@@ -722,11 +806,12 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
-		rpc.StatusCommand(),
+		server.StatusCommand(),
 		queryCommand(),
-		txCommand(),
-		keys.Commands(symphony.DefaultNodeHome),
+		txCommand(tempApp.ModuleBasics),
+		keys.Commands(),
 	)
+	rootCmd.AddCommand(CmdListQueries(rootCmd))
 	// add rosetta
 	rootCmd.AddCommand(rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
 }
@@ -734,6 +819,46 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
 	wasm.AddModuleInitFlags(startCmd)
+	startCmd.Flags().Bool(FlagRejectConfigDefaults, false, "Reject some select recommended default values from being automatically set in the config.toml and app.toml")
+}
+
+// CmdListQueries list all available modules' queries
+func CmdListQueries(rootCmd *cobra.Command) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list-queries",
+		Short: "listing all available modules' queries",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			for _, cmd := range rootCmd.Commands() {
+				if cmd.Name() != "query" {
+					continue
+				}
+				for _, cmd := range cmd.Commands() {
+					for _, cmd := range cmd.Commands() {
+						fmt.Println(cmd.CommandPath())
+					}
+				}
+			}
+			return nil
+		},
+	}
+	return cmd
+}
+
+func CmdModuleNameToAddress() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "module-name-to-address [module-name]",
+		Short: "module name to address",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			address := authtypes.NewModuleAddress(args[0])
+			return clientCtx.PrintString(address.String())
+		},
+	}
+
+	flags.AddPaginationFlagsToCmd(cmd, cmd.Use)
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // queryCommand adds transaction and account querying commands.
@@ -748,21 +873,20 @@ func queryCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		authcmd.GetAccountCmd(),
 		rpc.ValidatorCommand(),
-		rpc.BlockCommand(),
+		server.QueryBlockCmd(),
 		authcmd.QueryTxsByEventsCmd(),
 		authcmd.QueryTxCmd(),
+		CmdModuleNameToAddress(),
 	)
 
-	symphony.ModuleBasics.AddQueryCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
 }
 
 // txCommand adds transaction signing, encoding / decoding, and broadcasting commands.
-func txCommand() *cobra.Command {
+func txCommand(moduleBasics module.BasicManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "tx",
 		Short:                      "Transactions subcommands",
@@ -782,15 +906,16 @@ func txCommand() *cobra.Command {
 		authcmd.GetDecodeCommand(),
 	)
 
-	symphony.ModuleBasics.AddTxCommands(cmd)
+	moduleBasics.AddTxCommands(cmd)
+
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
 }
 
 // newApp initializes and returns a new Symphony app.
-func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
-	var cache sdk.MultiStorePersistentCache
+func newApp(logger log.Logger, db cosmosdb.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
+	var cache storetypes.MultiStorePersistentCache
 
 	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
 		cache = store.NewCommitKVStoreCacheManager()
@@ -807,7 +932,7 @@ func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts s
 	}
 
 	snapshotDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "snapshots")
-	snapshotDB, err := cometbftdb.NewGoLevelDB("metadata", snapshotDir)
+	snapshotDB, err := cosmosdb.NewGoLevelDB("metadata", snapshotDir, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -824,7 +949,7 @@ func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts s
 	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
 	if chainID == "" {
 		// fallback to genesis chain-id
-		appGenesis, err := tmtypes.GenesisDocFromFile(filepath.Join(homeDir, "config", "genesis.json"))
+		appGenesis, err := genutiltypes.AppGenesisFromFile(filepath.Join(homeDir, "config", "genesis.json"))
 		if err != nil {
 			panic(err)
 		}
@@ -836,6 +961,8 @@ func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts s
 	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
 		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
 	}
+
+	fastNodeModuleWhitelist := server.ParseModuleWhitelist(appOpts)
 
 	baseAppOptions := []func(*baseapp.BaseApp){
 		baseapp.SetPruning(pruningOpts),
@@ -850,14 +977,13 @@ func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts s
 		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(server.FlagIAVLCacheSize))),
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))),
-		baseapp.SetIAVLFastNodeModuleWhitelist(cast.ToStringSlice(appOpts.Get(server.FlagIAVLFastNodeModuleWhitelist))),
+		baseapp.SetIAVLFastNodeModuleWhitelist(fastNodeModuleWhitelist),
 		baseapp.SetChainID(chainID),
 	}
 
 	// If this is an in place testnet, set any new stores that may exist
 	if cast.ToBool(appOpts.Get(server.KeyIsTestnet)) {
-		version := store.NewCommitMultiStore(db).LatestVersion() + 1
-		baseAppOptions = append(baseAppOptions, baseapp.SetStoreLoader(upgradetypes.UpgradeStoreLoader(version, &v23.Upgrade.StoreUpgrades)))
+		baseAppOptions = append(baseAppOptions)
 	}
 
 	return symphony.NewSymphonyApp(
@@ -872,7 +998,7 @@ func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts s
 
 // newTestnetApp starts by running the normal newApp method. From there, the app interface returned is modified in order
 // for a testnet to be created from the provided app.
-func newTestnetApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
+func newTestnetApp(logger log.Logger, db cosmosdb.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
 	// Create an app and type cast to an SymphonyApp
 	app := newApp(logger, db, traceStore, appOpts)
 	symphonyApp, ok := app.(*symphony.SymphonyApp)
@@ -903,7 +1029,7 @@ func newTestnetApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, ap
 
 // createSymphonyAppAndExport creates and exports the new Symphony app, returns the state of the new Symphony app for a genesis file.
 func createSymphonyAppAndExport(
-	logger log.Logger, db cometbftdb.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailWhiteList []string,
+	logger log.Logger, db cosmosdb.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailWhiteList []string,
 	appOpts servertypes.AppOptions, modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
 	encCfg := symphony.MakeEncodingConfig() // Ideally, we would reuse the one created by NewRootCmd.
@@ -927,20 +1053,31 @@ func UpdateAssetListCmd(defaultNodeHome string, mbm module.BasicManager) *cobra.
 		Short: "Updates asset list used by the CLI to replace ibc denoms with human readable names",
 		Long: `Updates asset list used by the CLI to replace ibc denoms with human readable names.
 Outputs:
-	- cmd/symphonyd/cmd/symphony-1-assetlist-manual.json for symphony-1
-	- cmd/symphonyd/cmd/melody-test-5-assetlist-manual.json for melody-test-5
+	- symphonydHomeDir + /config/symphony-1-assetlist-manual.json for symphony-1
+	- symphonydHomeDir + /config/osmo-test-5-assetlist-manual.json for osmo-test-5
 `,
-		Args: cobra.ExactArgs(1),
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			assetListURL := ""
 			fileName := ""
 
-			if args[0] == mainnetId || args[0] == "" {
-				assetListURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/symphony-1/symphony-1.assetlist.json"
-				fileName = "cmd/symphonyd/cmd/symphony-1-assetlist-manual.json"
-			} else if args[0] == testnetId {
-				assetListURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/melody-test-5/melody-test-5.assetlist.json"
-				fileName = "cmd/symphonyd/cmd/melody-test-5-assetlist-manual.json"
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			homeDir := clientCtx.HomeDir
+
+			chainID := ""
+			if len(args) > 0 {
+				chainID = args[0]
+			} else {
+				fmt.Println("No chain ID provided, defaulting to mainnet")
+				chainID = mainnetId
+			}
+
+			if chainID == mainnetId {
+				assetListURL = "https://raw.githubusercontent.com/symphony-labs/assetlists/main/symphony-1/symphony-1.assetlist.json"
+				fileName = filepath.Join(homeDir, "config", "symphony-1-assetlist-manual.json")
+			} else if chainID == testnetId {
+				assetListURL = "https://raw.githubusercontent.com/symphony-labs/assetlists/main/osmo-test-5/osmo-test-5.assetlist.json"
+				fileName = filepath.Join(homeDir, "config", "osmo-test-5-assetlist-manual.json")
 			} else {
 				return nil
 			}
@@ -1003,7 +1140,7 @@ source ~/.zshrc
 }
 
 // transformCoinValueToBaseInt transforms a cli input that has been split into a number and a denom into it's base int value and base denom.
-// i.e. 10.7melody -> 10700000note
+// i.e. 10.7osmo -> 10700000uosmo
 // 12atom -> 12000000uatom
 // 15000000uakt -> 15000000uakt (does nothing since it's already in base denom format)
 func transformCoinValueToBaseInt(coinValue, coinDenom string, assetMap map[string]DenomUnitMap) (string, error) {
@@ -1025,4 +1162,108 @@ func transformCoinValueToBaseInt(coinValue, coinDenom string, assetMap map[strin
 		}
 	}
 	return "", fmt.Errorf("denom %s not found in asset map", coinDenom)
+}
+
+// OverwriteWithCustomConfig searches the respective config file for the given section and key and overwrites the current value with the given value.
+func OverwriteWithCustomConfig(configFilePath string, sectionKeyValues []SectionKeyValue) error {
+	// Open the file for reading and writing
+	file, err := os.OpenFile(configFilePath, os.O_RDWR, 0o644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Create a map from the sectionKeyValues array
+	// This map will be used to quickly look up the new values for each section and key
+	configMap := make(map[string]map[string]string)
+	for _, skv := range sectionKeyValues {
+		// If the section does not exist in the map, create it
+		if _, ok := configMap[skv.Section]; !ok {
+			configMap[skv.Section] = make(map[string]string)
+		}
+		// Add the key and value to the section in the map
+		// If the value is a string, add quotes around it
+		switch v := skv.Value.(type) {
+		case string:
+			configMap[skv.Section][skv.Key] = "\"" + v + "\""
+		default:
+			configMap[skv.Section][skv.Key] = fmt.Sprintf("%v", v)
+		}
+	}
+
+	// Read the file line by line
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	currentSection := ""
+	for scanner.Scan() {
+		line := scanner.Text()
+		// If the line is a section header, update the current section
+		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
+			currentSection = line[1 : len(line)-1]
+		} else if configMap[currentSection] != nil {
+			// If the line is in a section that needs to be overwritten, check each key
+			for key, value := range configMap[currentSection] {
+				// Split the line into key and value parts
+				parts := strings.SplitN(line, "=", 2)
+				if len(parts) != 2 {
+					continue
+				}
+				// Trim spaces and compare the key part with the target key
+				if strings.TrimSpace(parts[0]) == key {
+					// If the keys match, overwrite the line with the new key-value pair
+					line = key + " = " + value
+					break
+				}
+			}
+		}
+		// Add the line to the lines slice, whether it was overwritten or not
+		lines = append(lines, line)
+	}
+
+	// Check for errors from the scanner
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
+	// Seek to the beginning of the file
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		return err
+	}
+
+	// Truncate the file to remove the old content
+	err = file.Truncate(0)
+	if err != nil {
+		return err
+	}
+
+	// Write the new lines to the file
+	for _, line := range lines {
+		if _, err := file.WriteString(line + "\n"); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func autoCliOpts(initClientCtx client.Context, tempApp *symphony.SymphonyApp) autocli.AppOptions {
+	modules := make(map[string]appmodule.AppModule, 0)
+	for _, m := range tempApp.ModuleManager().Modules {
+		if moduleWithName, ok := m.(module.HasName); ok {
+			moduleName := moduleWithName.Name()
+			if appModule, ok := moduleWithName.(appmodule.AppModule); ok {
+				modules[moduleName] = appModule
+			}
+		}
+	}
+
+	return autocli.AppOptions{
+		Modules:               modules,
+		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(tempApp.ModuleManager().Modules),
+		AddressCodec:          authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
+		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
+		ConsensusAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
+		ClientCtx:             initClientCtx,
+	}
 }

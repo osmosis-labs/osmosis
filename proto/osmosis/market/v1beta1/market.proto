@@ -3,7 +3,7 @@ package osmosis.market.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v23/x/market/types";
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/market/types";
 
 // Params defines the parameters for the market module.
 message Params {
@@ -12,7 +12,7 @@ message Params {
 
   bytes exchange_pool = 1 [
     (gogoproto.moretags) = "yaml:\"exchange_pool\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }

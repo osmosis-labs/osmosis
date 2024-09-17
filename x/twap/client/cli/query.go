@@ -11,9 +11,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	poolmanager "github.com/osmosis-labs/osmosis/v23/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v23/x/twap/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
+	poolmanager "github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v26/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v26/x/twap/types"
 )
 
 // twapQueryParseArgs represents the outcome
@@ -30,6 +30,10 @@ func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
 	cmd.AddCommand(GetQueryArithmeticCommand())
 	cmd.AddCommand(GetQueryGeometricCommand())
+	cmd.AddCommand(
+		osmocli.GetParams[*queryproto.ParamsRequest](
+			types.ModuleName, queryproto.NewQueryClient),
+	)
 
 	return cmd
 }
@@ -43,8 +47,8 @@ func GetQueryArithmeticCommand() *cobra.Command {
 		Long: osmocli.FormatLongDescDirect(`Query arithmetic twap for pool. Start time must be unix time. End time can be unix time or duration.
 
 Example:
-{{.CommandPrefix}} arithmetic 1 note 1667088000 24h
-{{.CommandPrefix}} arithmetic 1 note 1667088000 1667174400
+{{.CommandPrefix}} arithmetic 1 uosmo 1667088000 24h
+{{.CommandPrefix}} arithmetic 1 uosmo 1667088000 1667174400
 `, types.ModuleName),
 		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -91,8 +95,8 @@ func GetQueryGeometricCommand() *cobra.Command {
 		Long: osmocli.FormatLongDescDirect(`Query geometric twap for pool. Start time must be unix time. End time can be unix time or duration.
 
 Example:
-{{.CommandPrefix}} geometric 1 note 1667088000 24h
-{{.CommandPrefix}} geometric 1 note 1667088000 1667174400
+{{.CommandPrefix}} geometric 1 uosmo 1667088000 24h
+{{.CommandPrefix}} geometric 1 uosmo 1667088000 1667174400
 `, types.ModuleName),
 		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {

@@ -4,6 +4,7 @@ package stableswap
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
@@ -11,9 +12,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/internal/cfmm_common"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/internal/cfmm_common"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 var (
@@ -652,7 +653,7 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 			expectPass:      false,
 		},
 		"single asset pool, no-swap join attempt with one asset": {
-			tokensIn:        sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(sdk.MaxSortableDec.TruncateInt64()))),
+			tokensIn:        sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(math.LegacyMaxSortableDec.TruncateInt64()))),
 			poolAssets:      sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(1))),
 			scalingFactors:  []uint64{1},
 			expNumShare:     osmomath.NewIntFromUint64(0),

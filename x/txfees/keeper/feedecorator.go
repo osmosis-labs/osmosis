@@ -7,10 +7,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
-	mempool1559 "github.com/osmosis-labs/osmosis/v23/x/txfees/keeper/mempool-1559"
-	"github.com/osmosis-labs/osmosis/v23/x/txfees/keeper/txfee_filters"
-	"github.com/osmosis-labs/osmosis/v23/x/txfees/types"
+	mempool1559 "github.com/osmosis-labs/osmosis/v26/x/txfees/keeper/mempool-1559"
+	"github.com/osmosis-labs/osmosis/v26/x/txfees/keeper/txfee_filters"
+	"github.com/osmosis-labs/osmosis/v26/x/txfees/types"
 )
 
 // MempoolFeeDecorator will check if the transaction's fee is at least as large
@@ -54,7 +57,47 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		}
 	}
 
-	// UNFORKINGTODO C: Added this logic so that we can create gentx's without having to pay a fee.
+	// Local mempool filter for improper ibc packets
+	// Perform this only if
+	// 1. We are in CheckTx, and
+	// 2. Block height is NOT in the range of 16841115 to 17004043 exclusively, where AppHash happened during v25 sync.
+	bh := ctx.BlockHeight()
+	if ctx.IsCheckTx() && (bh <= 16841115 || bh >= 17004043) {
+		msgs := tx.GetMsgs()
+		for _, msg := range msgs {
+			// If one of the msgs is an IBC Transfer msg, limit it's size due to current spam potential.
+			// 500KB for entire msg
+			// 400KB for memo
+			// 65KB for receiver
+			if transferMsg, ok := msg.(*ibctransfertypes.MsgTransfer); ok {
+				if transferMsg.Size() > 500000 { // 500KB
+					return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "msg size is too large")
+				}
+
+				if len([]byte(transferMsg.Memo)) > 400000 { // 400KB
+					return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "memo is too large")
+				}
+
+				if len(transferMsg.Receiver) > 65000 { // 65KB
+					return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "receiver address is too large")
+				}
+			}
+
+			// If one of the msgs is from ICA, limit it's size due to current spam potential.
+			// 500KB for packet data
+			// 65KB for sender
+			if icaMsg, ok := msg.(*icacontrollertypes.MsgSendTx); ok {
+				if icaMsg.PacketData.Size() > 500000 { // 500KB
+					return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "packet data is too large")
+				}
+
+				if len([]byte(icaMsg.Owner)) > 65000 { // 65KB
+					return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "owner address is too large")
+				}
+			}
+		}
+	}
+
 	// If this is genesis height, don't check the fee.
 	// This is needed so that gentx's can be created without having to pay a fee (chicken/egg problem).
 	if ctx.BlockHeight() == 0 {
@@ -102,7 +145,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee,
 			"Expected 1 fee denom attached, got %d", len(feeCoins))
 	}
-	// The minimum base gas price is in note, convert the fee denom's worth to note terms.
+	// The minimum base gas price is in uosmo, convert the fee denom's worth to uosmo terms.
 	// Then compare if its sufficient for paying the tx fee.
 	err = mfd.TxFeesKeeper.IsSufficientFee(ctx, minBaseGasPrice, feeTx.GetGas(), feeCoins[0])
 	if err != nil {
@@ -118,18 +161,16 @@ func (mfd MempoolFeeDecorator) getMinBaseGasPrice(ctx sdk.Context, baseDenom str
 	// If we are in CheckTx, a separate function is ran locally to ensure sufficient fees for entering our mempool.
 	// So we ensure that the provided fees meet a minimum threshold for the validator
 	if (ctx.IsCheckTx() || ctx.IsReCheckTx()) && !simulate {
-		minBaseGasPrice = sdk.MaxDec(minBaseGasPrice, mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, feeTx))
+		minBaseGasPrice = osmomath.MaxDec(minBaseGasPrice, mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, feeTx))
 	}
 	// If we are in genesis or are simulating a tx, then we actually override all of the above, to set it to 0.
-	// UNFORKINGTODO OQ: look into what we should use in place of ctx.IsGenesis() here
-	// if ctx.IsGenesis() || simulate {
-	if simulate {
+	if ctx.BlockHeight() == 0 || simulate {
 		minBaseGasPrice = osmomath.ZeroDec()
 	}
 	return minBaseGasPrice
 }
 
-// IsSufficientFee checks if the feeCoin provided (in any asset), is worth enough melody at current spot prices
+// IsSufficientFee checks if the feeCoin provided (in any asset), is worth enough osmo at current spot prices
 // to pay the gas cost of this tx.
 func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice osmomath.Dec, gasRequested uint64, feeCoin sdk.Coin) error {
 	baseDenom, err := k.GetBaseDenom(ctx)
@@ -162,18 +203,18 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 	cfgMinGasPrice := ctx.MinGasPrices().AmountOf(baseDenom)
 	// the check below prevents tx gas from getting over HighGasTxThreshold which is default to 1_000_000
 	if tx.GetGas() >= mfd.Opts.HighGasTxThreshold {
-		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForHighGasTx)
+		cfgMinGasPrice = osmomath.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForHighGasTx)
 	}
 	if txfee_filters.IsArbTxLoose(tx) {
-		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForArbitrageTx)
+		cfgMinGasPrice = osmomath.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForArbitrageTx)
 	}
 	// Initial tx only, no recheck
 	if is1559enabled && ctx.IsCheckTx() && !ctx.IsReCheckTx() {
-		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mempool1559.CurEipState.GetCurBaseFee())
+		cfgMinGasPrice = osmomath.MaxDec(cfgMinGasPrice, mempool1559.CurEipState.GetCurBaseFee())
 	}
 	// RecheckTx only
 	if is1559enabled && ctx.IsReCheckTx() {
-		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mempool1559.CurEipState.GetCurRecheckBaseFee())
+		cfgMinGasPrice = osmomath.MaxDec(cfgMinGasPrice, mempool1559.CurEipState.GetCurRecheckBaseFee())
 	}
 	return cfgMinGasPrice
 }

@@ -8,14 +8,15 @@ import (
 	"google.golang.org/grpc/status"
 
 	errorsmod "cosmossdk.io/errors"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v26/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -235,6 +236,17 @@ func (q Querier) CurrentWeightByGroupGaugeID(goCtx context.Context, req *types.Q
 	return &types.QueryCurrentWeightByGroupGaugeIDResponse{GaugeWeight: gaugeWeights}, nil
 }
 
+func (q Querier) Params(goCtx context.Context, req *types.ParamsRequest) (*types.ParamsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	params := q.Keeper.GetParams(ctx)
+	return &types.ParamsResponse{
+		Params: params,
+	}, nil
+}
+
 // getGaugeFromIDJsonBytes returns gauges from the json bytes of gaugeIDs.
 func (q Querier) getGaugeFromIDJsonBytes(ctx sdk.Context, refValue []byte) ([]types.Gauge, error) {
 	gauges := []types.Gauge{}
@@ -305,7 +317,7 @@ func (k Keeper) queryWeightSplitGroup(ctx sdk.Context, group types.Group) ([]typ
 		if updatedGroup.InternalGaugeInfo.TotalWeight.IsZero() {
 			gaugeVolumes[i] = types.GaugeWeight{
 				GaugeId:     gaugeRecord.GaugeId,
-				WeightRatio: sdk.ZeroDec(),
+				WeightRatio: osmomath.ZeroDec(),
 			}
 		} else {
 			gaugeVolumes[i] = types.GaugeWeight{

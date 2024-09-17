@@ -1,8 +1,10 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v26/x/txfees/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -88,7 +90,7 @@ func (s *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 		sdk.NewInt64Coin("uion", 500),
 	)
 
-	// Make pool with fee token but no MELODY and make sure governance proposal fails
+	// Make pool with fee token but no OSMO and make sure governance proposal fails
 	noBasePoolId := s.PrepareBalancerPoolWithCoins(
 		sdk.NewInt64Coin("uion", 500),
 		sdk.NewInt64Coin("foo", 500),
@@ -277,6 +279,101 @@ func (s *KeeperTestSuite) TestFeeTokenConversions() {
 				s.Require().Equal(tc.expectedOutput, converted)
 			} else {
 				s.Require().Error(err, "test: %s", tc.name)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestSenderValidationSetFeeTokens() {
+	s.SetupTest(false)
+
+	baseDenom, _ := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
+
+	tests := []struct {
+		name              string
+		isWhitelistedAddr bool
+		prepareFeePools   bool
+		feeTokensToSet    []types.FeeToken
+		expectedError     error
+	}{
+		{
+			name: "Set multiple fee tokens with whitelisted address",
+			feeTokensToSet: []types.FeeToken{
+				{Denom: "foo", PoolID: 1},
+				{Denom: "bar", PoolID: 2},
+			},
+			prepareFeePools:   true,
+			isWhitelistedAddr: true,
+		},
+		{
+			name: "Set single fee token with whitelisted address",
+			feeTokensToSet: []types.FeeToken{
+				{Denom: "foo", PoolID: 1},
+			},
+			prepareFeePools:   true,
+			isWhitelistedAddr: true,
+		},
+		{
+			name: "Error: Set multiple fee tokens with non-whitelisted address",
+			feeTokensToSet: []types.FeeToken{
+				{Denom: "foo", PoolID: 1},
+				{Denom: "bar", PoolID: 2},
+			},
+			prepareFeePools:   true,
+			isWhitelistedAddr: false,
+			expectedError:     types.ErrNotWhitelistedFeeTokenSetter,
+		},
+		{
+			name: "Error: Set single fee token with non-whitelisted address",
+			feeTokensToSet: []types.FeeToken{
+				{Denom: "foo", PoolID: 1},
+			},
+			prepareFeePools:   true,
+			isWhitelistedAddr: false,
+			expectedError:     types.ErrNotWhitelistedFeeTokenSetter,
+		},
+		{
+			name: "Error: Set single fee token with whitelisted address with fee pool not set",
+			feeTokensToSet: []types.FeeToken{
+				{Denom: "foo", PoolID: 1},
+			},
+			prepareFeePools:   false,
+			isWhitelistedAddr: true,
+			expectedError:     fmt.Errorf("failed to find route for pool id (1)"),
+		},
+	}
+
+	for _, tc := range tests {
+		s.SetupTest(false)
+
+		s.Run(tc.name, func() {
+			if tc.prepareFeePools {
+				for _, feeToken := range tc.feeTokensToSet {
+					s.PrepareBalancerPoolWithCoins(sdk.NewInt64Coin(baseDenom, 100), sdk.NewInt64Coin(feeToken.Denom, 100))
+				}
+			}
+
+			if tc.isWhitelistedAddr {
+				s.App.TxFeesKeeper.SetParam(s.Ctx, types.KeyWhitelistedFeeTokenSetters, []string{s.TestAccs[0].String()})
+			}
+
+			// Retrieve fee tokens before setting
+			feeTokensBefore := s.App.TxFeesKeeper.GetFeeTokens(s.Ctx)
+
+			err := s.App.TxFeesKeeper.SenderValidationSetFeeTokens(s.Ctx, s.TestAccs[0].String(), tc.feeTokensToSet)
+
+			// Retrieve fee tokens after setting
+			feeTokensAfter := s.App.TxFeesKeeper.GetFeeTokens(s.Ctx)
+
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedError.Error())
+				// Ensure that the fee tokens are the same
+				s.Require().Equal(len(feeTokensAfter), len(feeTokensBefore))
+			} else {
+				s.Require().NoError(err)
+				// Ensure that the fee tokens now include the new fee tokens
+				s.Require().Equal(len(feeTokensAfter), len(feeTokensBefore)+len(tc.feeTokensToSet))
 			}
 		})
 	}

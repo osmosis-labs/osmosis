@@ -6,7 +6,7 @@ import "google/api/annotations.proto";
 import "osmosis/oracle/v1beta1/oracle.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v23/x/oracle/types";
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/oracle/types";
 
 // Query defines the gRPC querier service.
 service Query {
@@ -109,7 +109,7 @@ message QueryExchangeRateResponse {
   // exchange_rate defines the exchange rate of Luna denominated in various
   // Terra
   string exchange_rate = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }
@@ -143,7 +143,7 @@ message QueryTobinTaxRequest {
 message QueryTobinTaxResponse {
   // tobin_taxe defines the tobin tax of a denom
   string tobin_tax = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }

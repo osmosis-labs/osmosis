@@ -10,7 +10,7 @@ The treasury module will define two proposals to add or remove tax exemption lis
 type TaxRateUpdateProposal struct {
 	Title       string  // Title of the Proposal
 	Description string  // Description of the Proposal
-	TaxRate     sdk.Dec // target TaxRate
+	TaxRate     osmomath.Dec // target TaxRate
 }
 ```
 
@@ -33,7 +33,7 @@ type TaxRateUpdateProposal struct {
 type RewardWeightUpdateProposal struct {
 	Title        string  // Title of the Proposal
 	Description  string  // Description of the Proposal
-	RewardWeight sdk.Dec // target RewardWeight
+	RewardWeight osmomath.Dec // target RewardWeight
 }
 ```
 

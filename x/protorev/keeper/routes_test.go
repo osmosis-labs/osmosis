@@ -2,8 +2,8 @@ package keeper_test
 
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/x/protorev/types"
 )
 
 type TestRoute struct {
@@ -14,6 +14,7 @@ type TestRoute struct {
 
 // TestBuildRoutes tests the BuildRoutes function
 func (s *KeeperTestSuite) TestBuildRoutes() {
+	s.SetupPoolsTest()
 	cases := []struct {
 		description    string
 		inputDenom     string
@@ -33,9 +34,9 @@ func (s *KeeperTestSuite) TestBuildRoutes() {
 					{PoolId: 4, InputDenom: "bitcoin", OutputDenom: "Atom"},
 				},
 				{
-					{PoolId: 25, InputDenom: types.SymphonyDenomination, OutputDenom: "Atom"},
+					{PoolId: 25, InputDenom: types.OsmosisDenomination, OutputDenom: "Atom"},
 					{PoolId: 1, InputDenom: "Atom", OutputDenom: "akash"},
-					{PoolId: 7, InputDenom: "akash", OutputDenom: types.SymphonyDenomination},
+					{PoolId: 7, InputDenom: "akash", OutputDenom: types.OsmosisDenomination},
 				},
 			},
 		},
@@ -46,9 +47,9 @@ func (s *KeeperTestSuite) TestBuildRoutes() {
 			poolID:      55,
 			expectedRoutes: [][]TestRoute{
 				{
-					{PoolId: 25, InputDenom: types.SymphonyDenomination, OutputDenom: "Atom"},
+					{PoolId: 25, InputDenom: types.OsmosisDenomination, OutputDenom: "Atom"},
 					{PoolId: 55, InputDenom: "Atom", OutputDenom: "bitcoin"},
-					{PoolId: 10, InputDenom: "bitcoin", OutputDenom: types.SymphonyDenomination},
+					{PoolId: 10, InputDenom: "bitcoin", OutputDenom: types.OsmosisDenomination},
 				},
 				{
 					{PoolId: 55, InputDenom: "Atom", OutputDenom: "bitcoin"},
@@ -63,9 +64,9 @@ func (s *KeeperTestSuite) TestBuildRoutes() {
 			poolID:      19,
 			expectedRoutes: [][]TestRoute{
 				{
-					{PoolId: 9, InputDenom: types.SymphonyDenomination, OutputDenom: "ethereum"},
+					{PoolId: 9, InputDenom: types.OsmosisDenomination, OutputDenom: "ethereum"},
 					{PoolId: 19, InputDenom: "ethereum", OutputDenom: "bitcoin"},
-					{PoolId: 10, InputDenom: "bitcoin", OutputDenom: types.SymphonyDenomination},
+					{PoolId: 10, InputDenom: "bitcoin", OutputDenom: types.OsmosisDenomination},
 				},
 				{
 					{PoolId: 3, InputDenom: "Atom", OutputDenom: "ethereum"},
@@ -75,8 +76,8 @@ func (s *KeeperTestSuite) TestBuildRoutes() {
 			},
 		},
 		{
-			description:    "No route exists for swap in melody and swap out Atom",
-			inputDenom:     types.SymphonyDenomination,
+			description:    "No route exists for swap in osmo and swap out Atom",
+			inputDenom:     types.OsmosisDenomination,
 			outputDenom:    "Atom",
 			poolID:         25,
 			expectedRoutes: [][]TestRoute{},
@@ -84,29 +85,29 @@ func (s *KeeperTestSuite) TestBuildRoutes() {
 		{
 			description: "Route exists for swap on stable pool",
 			inputDenom:  "usdc",
-			outputDenom: types.SymphonyDenomination,
+			outputDenom: types.OsmosisDenomination,
 			poolID:      29,
 			expectedRoutes: [][]TestRoute{
 				{
-					{PoolId: 29, InputDenom: types.SymphonyDenomination, OutputDenom: "usdc"},
+					{PoolId: 29, InputDenom: types.OsmosisDenomination, OutputDenom: "usdc"},
 					{PoolId: 40, InputDenom: "usdc", OutputDenom: "busd"},
-					{PoolId: 30, InputDenom: "busd", OutputDenom: types.SymphonyDenomination},
+					{PoolId: 30, InputDenom: "busd", OutputDenom: types.OsmosisDenomination},
 				},
 			},
 		},
 		{
-			description: "Two Pool Route exists for (melody, atom)",
+			description: "Two Pool Route exists for (osmo, atom)",
 			inputDenom:  "Atom",
-			outputDenom: types.SymphonyDenomination,
+			outputDenom: types.OsmosisDenomination,
 			poolID:      51,
 			expectedRoutes: [][]TestRoute{
 				{
-					{PoolId: 51, InputDenom: types.SymphonyDenomination, OutputDenom: "Atom"},
-					{PoolId: 25, InputDenom: "Atom", OutputDenom: types.SymphonyDenomination},
+					{PoolId: 51, InputDenom: types.OsmosisDenomination, OutputDenom: "Atom"},
+					{PoolId: 25, InputDenom: "Atom", OutputDenom: types.OsmosisDenomination},
 				},
 				{
-					{PoolId: 25, InputDenom: "Atom", OutputDenom: types.SymphonyDenomination},
-					{PoolId: 51, InputDenom: types.SymphonyDenomination, OutputDenom: "Atom"},
+					{PoolId: 25, InputDenom: "Atom", OutputDenom: types.OsmosisDenomination},
+					{PoolId: 51, InputDenom: types.OsmosisDenomination, OutputDenom: "Atom"},
 				},
 			},
 		},
@@ -129,6 +130,7 @@ func (s *KeeperTestSuite) TestBuildRoutes() {
 
 // TestBuildHighestLiquidityRoute tests the BuildHighestLiquidityRoute function
 func (s *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
+	s.SetupPoolsTest()
 	cases := []struct {
 		description              string
 		swapDenom                string
@@ -141,36 +143,36 @@ func (s *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
 	}{
 		{
 			description: "Route exists for swap in Atom and swap out Akash",
-			swapDenom:   types.SymphonyDenomination,
+			swapDenom:   types.OsmosisDenomination,
 			swapIn:      "Atom",
 			swapOut:     "akash",
 			poolId:      1,
 			expectedRoute: []TestRoute{
-				{7, types.SymphonyDenomination, "akash"},
+				{7, types.OsmosisDenomination, "akash"},
 				{1, "akash", "Atom"},
-				{25, "Atom", types.SymphonyDenomination},
+				{25, "Atom", types.OsmosisDenomination},
 			},
 			hasRoute:                 true,
 			expectedRoutePointPoints: 6,
 		},
 		{
 			description: "Route exists for swap in Akash and swap out Atom",
-			swapDenom:   types.SymphonyDenomination,
+			swapDenom:   types.OsmosisDenomination,
 			swapIn:      "akash",
 			swapOut:     "Atom",
 			poolId:      1,
 			expectedRoute: []TestRoute{
-				{25, types.SymphonyDenomination, "Atom"},
+				{25, types.OsmosisDenomination, "Atom"},
 				{1, "Atom", "akash"},
-				{7, "akash", types.SymphonyDenomination},
+				{7, "akash", types.OsmosisDenomination},
 			},
 			hasRoute:                 true,
 			expectedRoutePointPoints: 6,
 		},
 		{
-			description:              "Route does not exist for swap in melody and swap out Atom because the pool does not exist",
-			swapDenom:                types.SymphonyDenomination,
-			swapIn:                   "melody",
+			description:              "Route does not exist for swap in Terra and swap out Atom because the pool does not exist",
+			swapDenom:                types.OsmosisDenomination,
+			swapIn:                   "terra",
 			swapOut:                  "Atom",
 			poolId:                   7,
 			expectedRoute:            []TestRoute{},
@@ -178,38 +180,38 @@ func (s *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
 			expectedRoutePointPoints: 0,
 		},
 		{
-			description: "Route exists for swap in Melody and swap out Akash",
+			description: "Route exists for swap in Osmo and swap out Akash",
 			swapDenom:   "Atom",
-			swapIn:      types.SymphonyDenomination,
+			swapIn:      types.OsmosisDenomination,
 			swapOut:     "akash",
 			poolId:      7,
 			expectedRoute: []TestRoute{
 				{1, "Atom", "akash"},
-				{7, "akash", types.SymphonyDenomination},
-				{25, types.SymphonyDenomination, "Atom"},
+				{7, "akash", types.OsmosisDenomination},
+				{25, types.OsmosisDenomination, "Atom"},
 			},
 			hasRoute:                 true,
 			expectedRoutePointPoints: 6,
 		},
 		{
-			description: "Route exists for swap in Akash and swap out Melody",
+			description: "Route exists for swap in Akash and swap out Osmo",
 			swapDenom:   "Atom",
 			swapIn:      "akash",
-			swapOut:     types.SymphonyDenomination,
+			swapOut:     types.OsmosisDenomination,
 			poolId:      7,
 			expectedRoute: []TestRoute{
-				{25, "Atom", types.SymphonyDenomination},
-				{7, types.SymphonyDenomination, "akash"},
+				{25, "Atom", types.OsmosisDenomination},
+				{7, types.OsmosisDenomination, "akash"},
 				{1, "akash", "Atom"},
 			},
 			hasRoute:                 true,
 			expectedRoutePointPoints: 6,
 		},
 		{
-			description:              "Route does not exist for swap in Terra and swap out Melody because the pool does not exist",
+			description:              "Route does not exist for swap in Terra and swap out Osmo because the pool does not exist",
 			swapDenom:                "Atom",
-			swapIn:                   "melody",
-			swapOut:                  types.SymphonyDenomination,
+			swapIn:                   "terra",
+			swapOut:                  types.OsmosisDenomination,
 			poolId:                   7,
 			expectedRoute:            []TestRoute{},
 			hasRoute:                 false,
@@ -243,6 +245,7 @@ func (s *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
 
 // TestBuildTwoPoolRoute tests the BuildTwoPoolRoute function
 func (s *KeeperTestSuite) TestBuildTwoPoolRoute() {
+	s.SetupPoolsTest()
 	cases := []struct {
 		description   string
 		swapDenom     types.BaseDenom
@@ -255,41 +258,41 @@ func (s *KeeperTestSuite) TestBuildTwoPoolRoute() {
 		{
 			description: "two pool route can be created with base as token out",
 			swapDenom: types.BaseDenom{
-				Denom:    types.SymphonyDenomination,
+				Denom:    types.OsmosisDenomination,
 				StepSize: osmomath.NewInt(1_000_000),
 			},
 			tokenIn:  "stake",
-			tokenOut: types.SymphonyDenomination,
+			tokenOut: types.OsmosisDenomination,
 			poolId:   54,
 			expectedRoute: []TestRoute{
-				{PoolId: 54, InputDenom: types.SymphonyDenomination, OutputDenom: "stake"},
-				{PoolId: 55, InputDenom: "stake", OutputDenom: types.SymphonyDenomination},
+				{PoolId: 54, InputDenom: types.OsmosisDenomination, OutputDenom: "stake"},
+				{PoolId: 55, InputDenom: "stake", OutputDenom: types.OsmosisDenomination},
 			},
 			hasRoute: true,
 		},
 		{
 			description: "two pool route can be created with base as token in",
 			swapDenom: types.BaseDenom{
-				Denom:    types.SymphonyDenomination,
+				Denom:    types.OsmosisDenomination,
 				StepSize: osmomath.NewInt(1_000_000),
 			},
-			tokenIn:  types.SymphonyDenomination,
+			tokenIn:  types.OsmosisDenomination,
 			tokenOut: "stake",
 			poolId:   54,
 			expectedRoute: []TestRoute{
-				{PoolId: 55, InputDenom: types.SymphonyDenomination, OutputDenom: "stake"},
-				{PoolId: 54, InputDenom: "stake", OutputDenom: types.SymphonyDenomination},
+				{PoolId: 55, InputDenom: types.OsmosisDenomination, OutputDenom: "stake"},
+				{PoolId: 54, InputDenom: "stake", OutputDenom: types.OsmosisDenomination},
 			},
 			hasRoute: true,
 		},
 		{
 			description: "two pool route where swap is on the highest liquidity pool",
 			swapDenom: types.BaseDenom{
-				Denom:    types.SymphonyDenomination,
+				Denom:    types.OsmosisDenomination,
 				StepSize: osmomath.NewInt(1_000_000),
 			},
 			tokenIn:       "stake",
-			tokenOut:      types.SymphonyDenomination,
+			tokenOut:      types.OsmosisDenomination,
 			poolId:        55,
 			expectedRoute: []TestRoute{},
 			hasRoute:      false,
@@ -297,11 +300,11 @@ func (s *KeeperTestSuite) TestBuildTwoPoolRoute() {
 		{
 			description: "trade executes on pool not tracked by the module",
 			swapDenom: types.BaseDenom{
-				Denom:    types.SymphonyDenomination,
+				Denom:    types.OsmosisDenomination,
 				StepSize: osmomath.NewInt(1_000_000),
 			},
 			tokenIn:       "stake",
-			tokenOut:      types.SymphonyDenomination,
+			tokenOut:      types.OsmosisDenomination,
 			poolId:        1000000,
 			expectedRoute: []TestRoute{},
 			hasRoute:      false,
@@ -336,6 +339,7 @@ func (s *KeeperTestSuite) TestBuildTwoPoolRoute() {
 
 // TestBuildHotRoutes tests the BuildHotRoutes function
 func (s *KeeperTestSuite) TestBuildHotRoutes() {
+	s.SetupPoolsTest()
 	cases := []struct {
 		description             string
 		swapIn                  string
@@ -370,8 +374,8 @@ func (s *KeeperTestSuite) TestBuildHotRoutes() {
 			expectedRoutes: [][]TestRoute{
 				{
 					{34, "Atom", "test/1"},
-					{35, "test/1", types.SymphonyDenomination},
-					{36, types.SymphonyDenomination, "test/2"},
+					{35, "test/1", types.OsmosisDenomination},
+					{36, types.OsmosisDenomination, "test/2"},
 					{10, "test/2", "Atom"},
 				},
 			},
@@ -416,6 +420,7 @@ func (s *KeeperTestSuite) TestBuildHotRoutes() {
 
 // TestCalculateRoutePoolPoints tests the CalculateRoutePoolPoints function
 func (s *KeeperTestSuite) TestCalculateRoutePoolPoints() {
+	s.SetupPoolsTest()
 	cases := []struct {
 		description             string
 		route                   poolmanagertypes.SwapAmountInRoutes
@@ -466,12 +471,10 @@ func (s *KeeperTestSuite) TestCalculateRoutePoolPoints() {
 		},
 	}
 
+	s.Require().NoError(s.App.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, 25))
+	s.Require().NoError(s.App.ProtoRevKeeper.SetMaxPointsPerBlock(s.Ctx, 100))
 	for _, tc := range cases {
 		s.Run(tc.description, func() {
-			s.SetupTest()
-			s.Require().NoError(s.App.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, 25))
-			s.Require().NoError(s.App.ProtoRevKeeper.SetMaxPointsPerBlock(s.Ctx, 100))
-
 			routePoolPoints, err := s.App.ProtoRevKeeper.CalculateRoutePoolPoints(s.Ctx, tc.route)
 			if tc.expectedPass {
 				s.Require().NoError(err)

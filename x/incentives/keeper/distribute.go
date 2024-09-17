@@ -6,24 +6,32 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/armon/go-metrics"
-	db "github.com/cometbft/cometbft-db"
+	db "github.com/cosmos/cosmos-db"
+	"github.com/hashicorp/go-metrics"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
-	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 
 	sdkmath "cosmossdk.io/math"
 )
 
 var (
 	millisecondsInSecDec = osmomath.NewDec(1000)
+	zeroInt              = osmomath.ZeroInt()
 )
+
+// DistributionValueCache is a cache for when we calculate the minimum value
+// an underlying token must be to be distributed.
+type DistributionValueCache struct {
+	minDistrValue      sdk.Coin
+	denomToMinValueMap map[string]osmomath.Int
+}
 
 // AllocateAcrossGauges for every gauge in the input, it updates the weights according to the splitting
 // policy and allocates the coins to the underlying gauges per the updated weights.
@@ -388,7 +396,7 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 // the distrInfo struct. It also updates the gauge for the distribution.
 // locks is expected to be the correct set of lock recipients for this gauge.
 func (k Keeper) distributeSyntheticInternal(
-	ctx sdk.Context, gauge types.Gauge, locks []*lockuptypes.PeriodLock, distrInfo *distributionInfo,
+	ctx sdk.Context, gauge types.Gauge, locks []*lockuptypes.PeriodLock, distrInfo *distributionInfo, minDistrValueCache *DistributionValueCache,
 ) (sdk.Coins, error) {
 	qualifiedLocks := k.lk.GetLocksLongerThanDurationDenom(ctx, gauge.DistributeTo.Denom, gauge.DistributeTo.Duration)
 
@@ -425,7 +433,7 @@ func (k Keeper) distributeSyntheticInternal(
 		sortedAndTrimmedQualifiedLocks[v.index] = &v.lock
 	}
 
-	return k.distributeInternal(ctx, gauge, sortedAndTrimmedQualifiedLocks, distrInfo)
+	return k.distributeInternal(ctx, gauge, sortedAndTrimmedQualifiedLocks, distrInfo, minDistrValueCache)
 }
 
 // syncGroupWeights updates the individual and total weights of the group records based on the splitting policy.
@@ -454,7 +462,7 @@ func (k Keeper) syncGroupWeights(ctx sdk.Context, group types.Group) error {
 // calculateGroupWeights calculates the updated weights of the group records based on the pool volumes.
 // It returns the updated group and an error if any. It does not mutate the passed in object.
 func (k Keeper) calculateGroupWeights(ctx sdk.Context, group types.Group) (types.Group, error) {
-	totalWeight := sdk.ZeroInt()
+	totalWeight := zeroInt
 
 	// We operate on a deep copy of the given group because we expect to handle specific errors quietly
 	// and want to avoid the scenario where the original group gauge is partially mutated in such cases.
@@ -497,7 +505,7 @@ func (k Keeper) calculateGroupWeights(ctx sdk.Context, group types.Group) (types
 		}
 
 		// Get new volume for pool. Assert GTE gauge's weight
-		cumulativePoolVolume := k.pmk.GetMelodyVolumeForPool(ctx, poolId)
+		cumulativePoolVolume := k.pmk.GetOsmoVolumeForPool(ctx, poolId)
 
 		// If new volume is 0, there was an issue with volume tracking. Return error.
 		// We expect this to be handled quietly in update logic but not in init logic.
@@ -611,9 +619,13 @@ func (k Keeper) getNoLockGaugeUptime(ctx sdk.Context, gauge types.Gauge, poolId 
 //
 // CONTRACT: gauge passed in as argument must be an active gauge.
 func (k Keeper) distributeInternal(
-	ctx sdk.Context, gauge types.Gauge, locks []*lockuptypes.PeriodLock, distrInfo *distributionInfo,
+	ctx sdk.Context, gauge types.Gauge, locks []*lockuptypes.PeriodLock, distrInfo *distributionInfo, minDistrValueCache *DistributionValueCache,
 ) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
+
+	// Retrieve the min value for distribution.
+	// If any distribution amount is valued less than what the param is set, it will be skipped.
+	minValueForDistr := minDistrValueCache.minDistrValue
 
 	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins...)
 
@@ -662,7 +674,7 @@ func (k Keeper) distributeInternal(
 			remainCoinPerEpoch := sdk.NewCoin(remainCoin.Denom, remainAmountPerEpoch)
 
 			// emissionRate calculates amount of tokens to emit per second
-			// for ex: 10000note to be distributed over 1day epoch will be 1000 tokens ÷ 86,400 seconds ≈ 0.01157 tokens per second (truncated)
+			// for ex: 10000uosmo to be distributed over 1day epoch will be 1000 tokens ÷ 86,400 seconds ≈ 0.01157 tokens per second (truncated)
 			// Note: reason why we do millisecond conversion is because floats are non-deterministic.
 			emissionRate := osmomath.NewDecFromInt(remainAmountPerEpoch).QuoTruncateMut(osmomath.NewDec(currentEpoch.Duration.Milliseconds()).QuoMut(millisecondsInSecDec))
 
@@ -722,6 +734,58 @@ func (k Keeper) distributeInternal(
 				// which is bounded to an Int. So we can safely skip this.
 
 				amtIntBi.Quo(amtIntBi, lockSumTimesRemainingEpochsBi)
+
+				// Determine if the value to distribute is worth enough in minValueForDistr denom to be distributed.
+				if coin.Denom == minValueForDistr.Denom {
+					// If the denom is the same as the minValueForDistr param, no transformation is needed.
+					if amtInt.LT(minValueForDistr.Amount) {
+						continue
+					}
+				} else {
+					// If the denom is not the minValueForDistr denom, we need to transform the underlying to it.
+					// Check if the denom exists in the cached values
+					value, ok := minDistrValueCache.denomToMinValueMap[coin.Denom]
+					if !ok {
+						// Cache miss, figure out the value and add it to the cache
+						poolId, err := k.prk.GetPoolForDenomPairNoOrder(ctx, minValueForDistr.Denom, coin.Denom)
+						if err != nil {
+							// If the pool denom pair pool route does not exist in protorev, we add a zero value to cache to avoid
+							// querying the pool again.
+							minDistrValueCache.denomToMinValueMap[coin.Denom] = zeroInt
+							continue
+						}
+						swapModule, pool, err := k.pmk.GetPoolModuleAndPool(ctx, poolId)
+						if err != nil {
+							return nil, err
+						}
+
+						minTokenRequiredForDistr, err := swapModule.CalcOutAmtGivenIn(ctx, pool, minValueForDistr, coin.Denom, osmomath.ZeroDec())
+						if err != nil {
+							return nil, err
+						}
+
+						// Add min token required for distribution to the cache
+						minDistrValueCache.denomToMinValueMap[coin.Denom] = minTokenRequiredForDistr.Amount
+
+						// Check if the value is worth enough in the token to be distributed.
+						if amtInt.LT(minTokenRequiredForDistr.Amount) {
+							// The value is not worth enough, continue
+							continue
+						}
+					} else {
+						// Cache hit, use the value
+
+						// This route does not exist in protorev so a zero value has been added when a cache miss occurred
+						if value.IsZero() {
+							continue
+						}
+						// Check if the underlying is worth enough in the token to be distributed.
+						if amtInt.LT(value) {
+							continue
+						}
+					}
+				}
+
 				if amtInt.Sign() == 1 {
 					newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amtInt}
 					distrCoins = distrCoins.Add(newlyDistributedCoin)
@@ -858,6 +922,15 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 	totalDistributedCoins := sdk.NewCoins()
 	scratchSlice := make([]*lockuptypes.PeriodLock, 0, 50000)
 
+	// Instead of re-fetching the minimum value an underlying token must be to meet the minimum
+	// requirement for distribution, we cache the values here.
+	// While this isn't precise as it doesn't account for price impact, it is good enough for the sole
+	// purpose of determining if we should distribute the token or not.
+	minDistrValueCache := &DistributionValueCache{
+		minDistrValue:      k.GetParams(ctx).MinValueForDistribution,
+		denomToMinValueMap: make(map[string]osmomath.Int),
+	}
+
 	for _, gauge := range gauges {
 		var gaugeDistributedCoins sdk.Coins
 		filteredLocks := k.getDistributeToBaseLocks(ctx, gauge, locksByDenomCache, &scratchSlice)
@@ -865,14 +938,14 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 		var err error
 		if lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom) {
 			ctx.Logger().Debug("distributeSyntheticInternal, gauge id %d, %d", "module", types.ModuleName, "gaugeId", gauge.Id, "height", ctx.BlockHeight())
-			gaugeDistributedCoins, err = k.distributeSyntheticInternal(ctx, gauge, filteredLocks, &distrInfo)
+			gaugeDistributedCoins, err = k.distributeSyntheticInternal(ctx, gauge, filteredLocks, &distrInfo, minDistrValueCache)
 		} else {
 			// Do not distribute if LockQueryType = Group, because if we distribute here we will be double distributing.
 			if gauge.DistributeTo.LockQueryType == lockuptypes.ByGroup {
 				continue
 			}
 
-			gaugeDistributedCoins, err = k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo)
+			gaugeDistributedCoins, err = k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo, minDistrValueCache)
 		}
 		if err != nil {
 			return nil, err

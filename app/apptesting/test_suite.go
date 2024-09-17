@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -32,17 +31,17 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app"
+	"github.com/osmosis-labs/osmosis/v26/app"
 
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
 
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
-	lockupkeeper "github.com/osmosis-labs/osmosis/v23/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v26/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v26/x/mint/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 type KeeperTestHelper struct {

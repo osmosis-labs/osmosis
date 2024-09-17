@@ -3,13 +3,13 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmomath"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // NewGenesisState creates a new GenesisState object
-func NewGenesisState(params Params, taxRate sdk.Dec) *GenesisState {
+func NewGenesisState(params Params, taxRate osmomath.Dec) *GenesisState {
 	return &GenesisState{
 		Params:  params,
 		TaxRate: taxRate,
@@ -27,7 +27,7 @@ func DefaultGenesisState() *GenesisState {
 // ValidateGenesis validates the provided oracle genesis state to ensure the
 // expected invariants holds. (i.e. params in correct bounds, no duplicate validators)
 func ValidateGenesis(data *GenesisState) error {
-	if data.TaxRate.LT(sdk.ZeroDec()) {
+	if data.TaxRate.LT(osmomath.ZeroDec()) {
 		return fmt.Errorf("tax_rate must be positive, is %s", data.TaxRate)
 	}
 	if data.TaxRate.GT(data.Params.MaxFeeMultiplier) {

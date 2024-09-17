@@ -4,28 +4,29 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v26/x/tokenfactory/types"
 )
 
 func (s *KeeperTestSuite) TestGenesis() {
 	genesisState := types.GenesisState{
 		FactoryDenoms: []types.GenesisDenom{
 			{
-				Denom: "factory/symphony1p822vyk8ylf3hpwh9qgv6p6dft7hedntyqyw7w/bitcoin",
+				Denom: "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/bitcoin",
 				AuthorityMetadata: types.DenomAuthorityMetadata{
-					Admin: "symphony1p822vyk8ylf3hpwh9qgv6p6dft7hedntyqyw7w",
+					Admin: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
 				},
 			},
 			{
-				Denom: "factory/symphony1p822vyk8ylf3hpwh9qgv6p6dft7hedntyqyw7w/diff-admin",
+				Denom: "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/diff-admin",
 				AuthorityMetadata: types.DenomAuthorityMetadata{
-					Admin: "symphony167psfumv4erluc3ksfw23n2pdrx6zx3rj2guvl",
+					Admin: "osmo15czt5nhlnvayqq37xun9s9yus0d6y26dw9xnzn",
 				},
 			},
 			{
-				Denom: "factory/symphony1p822vyk8ylf3hpwh9qgv6p6dft7hedntyqyw7w/litecoin",
+				Denom: "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/litecoin",
 				AuthorityMetadata: types.DenomAuthorityMetadata{
-					Admin: "symphony1p822vyk8ylf3hpwh9qgv6p6dft7hedntyqyw7w",
+					Admin: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
 				},
 			},
 		},
@@ -55,7 +56,7 @@ func (s *KeeperTestSuite) TestGenesis() {
 	tokenfactoryModuleAccount := app.AccountKeeper.GetAccount(s.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
 	s.Require().Nil(tokenfactoryModuleAccount)
 
-	app.TokenFactoryKeeper.SetParams(s.Ctx, types.Params{DenomCreationFee: sdk.Coins{sdk.NewInt64Coin("note", 100)}})
+	app.TokenFactoryKeeper.SetParams(s.Ctx, types.Params{DenomCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 100)}})
 	app.TokenFactoryKeeper.InitGenesis(s.Ctx, genesisState)
 
 	// check that the module account is now initialized

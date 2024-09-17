@@ -10,11 +10,12 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
 )
 
 var (
@@ -32,7 +33,7 @@ var (
 	defaultPoolAssets []balancer.PoolAsset = []balancer.PoolAsset{defaultFooAsset, defaultBondDenomAsset}
 	defaultAcctFunds  sdk.Coins            = sdk.NewCoins(
 		sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000000)),
-		sdk.NewCoin("note", osmomath.NewInt(10000000000)),
+		sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000000000)),
 		sdk.NewCoin("foo", osmomath.NewInt(10000000)),
 		sdk.NewCoin("bar", osmomath.NewInt(10000000)),
 		sdk.NewCoin("baz", osmomath.NewInt(10000000)),
@@ -101,7 +102,7 @@ func (s *KeeperTestSuite) TestUnpool() {
 			poolCreateAcc := delAddrs[0]
 			poolJoinAcc := delAddrs[1]
 			for _, acc := range delAddrs {
-				err := testutil.FundAccount(bankKeeper, ctx, acc, defaultAcctFunds)
+				err := testutil.FundAccount(ctx, bankKeeper, acc, defaultAcctFunds)
 				s.Require().NoError(err)
 			}
 
@@ -144,7 +145,8 @@ func (s *KeeperTestSuite) TestUnpool() {
 			superfluidKeeper.SetUnpoolAllowedPools(ctx, whitelistedPool)
 
 			coinsToLock := poolShareOut
-			unbondingDuration := stakingKeeper.GetParams(ctx).UnbondingTime
+			stakingParams, err := stakingKeeper.GetParams(ctx)
+			unbondingDuration := stakingParams.UnbondingTime
 
 			// create lock
 			lockID := s.LockTokens(poolJoinAcc, sdk.NewCoins(coinsToLock), unbondingDuration)
@@ -244,8 +246,8 @@ func (s *KeeperTestSuite) TestUnpool() {
 				// s.Require().Equal(synthLock.EndTime, ctx.BlockTime().Add(unbondingDuration))
 
 				// check if delegation has reduced from intermediary account
-				delegation, found := stakingKeeper.GetDelegation(ctx, intermediaryAcc.GetAccAddress(), valAddr)
-				s.Require().False(found, "expected no delegation, found delegation w/ %d shares", delegation.Shares)
+				delegation, err := stakingKeeper.GetDelegation(ctx, intermediaryAcc.GetAccAddress(), valAddr)
+				s.Require().Error(err, "expected err, instead found delegation w/ %d shares", delegation.Shares)
 			}
 		})
 	}

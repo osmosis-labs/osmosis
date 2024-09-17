@@ -6,9 +6,11 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v26/x/txfees/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	osmoutils "github.com/osmosis-labs/osmosis/osmoutils"
 )
 
 // ConvertToBaseToken converts a fee amount in a whitelisted fee token to the base fee token amount.
@@ -61,7 +63,7 @@ func (k Keeper) CalcFeeSpotPrice(ctx sdk.Context, inputDenom string) (osmomath.B
 }
 
 // GetFeeToken returns the fee token record for a specific denom,
-// In our case the baseDenom is note.
+// In our case the baseDenom is uosmo.
 func (k Keeper) GetBaseDenom(ctx sdk.Context) (denom string, err error) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -185,4 +187,18 @@ func (k Keeper) SetFeeTokens(ctx sdk.Context, feetokens []types.FeeToken) error 
 		}
 	}
 	return nil
+}
+
+// SenderValidationSetFeeTokens first checks to see if the sender is whitelisted to set fee tokens.
+// If the sender is whitelisted, it sets the fee tokens.
+// If the sender is not whitelisted, it returns an error.
+func (k Keeper) SenderValidationSetFeeTokens(ctx sdk.Context, sender string, feetokens []types.FeeToken) error {
+	whitelistedAddresses := k.GetParams(ctx).WhitelistedFeeTokenSetters
+
+	isWhitelisted := osmoutils.Contains(whitelistedAddresses, sender)
+	if !isWhitelisted {
+		return errorsmod.Wrapf(types.ErrNotWhitelistedFeeTokenSetter, "%s", sender)
+	}
+
+	return k.SetFeeTokens(ctx, feetokens)
 }

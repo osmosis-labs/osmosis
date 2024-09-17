@@ -8,11 +8,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/twap"
+	"github.com/osmosis-labs/osmosis/v26/x/twap"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
+	storetypes "cosmossdk.io/store/types"
+
+	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/x/twap/types"
 )
 
 var (
@@ -264,10 +266,10 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 		"get entry (exact) w/ a subsequent entry": {
 			[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(tMin1), tMin1Record, nil,
 		},
-		"get sandwitched entry (exact)": {
+		"get sandwiched entry (exact)": {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultInputAt(baseTime), baseRecord, nil,
 		},
-		"rev sandwitched entry (exact)": {
+		"rev sandwiched entry (exact)": {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultRevInputAt(baseTime), baseRecord, nil,
 		},
 
@@ -925,7 +927,7 @@ func (s *TestSuite) prepPoolsAndRemoveRecords(poolCoins []sdk.Coins) {
 
 	twapStoreKey := s.App.AppKeepers.GetKey(types.StoreKey)
 	store := s.Ctx.KVStore(twapStoreKey)
-	iter := sdk.KVStoreReversePrefixIterator(store, []byte(types.HistoricalTWAPPoolIndexPrefix))
+	iter := storetypes.KVStoreReversePrefixIterator(store, []byte(types.HistoricalTWAPPoolIndexPrefix))
 	defer iter.Close()
 	for iter.Valid() {
 		store.Delete(iter.Key())

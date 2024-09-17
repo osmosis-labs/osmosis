@@ -8,12 +8,13 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	cltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v26/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
@@ -27,36 +28,36 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 		expectedZeroMultipler bool
 	}{
 		{
-			name:               "update LP token Melody equivalent successfully",
+			name:               "update LP token Osmo equivalent successfully",
 			asset:              types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
 			expectedMultiplier: osmomath.MustNewDecFromStr("0.01"),
 		},
 		{
-			name:             "update LP token Melody equivalent with pool unexpectedly deleted",
+			name:             "update LP token Osmo equivalent with pool unexpectedly deleted",
 			asset:            types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
 			poolDoesNotExist: true,
 			expectedError:    gammtypes.PoolDoesNotExistError{PoolId: 1},
 		},
 		{
-			name:               "update LP token Melody equivalent with pool unexpectedly removed Melody",
+			name:               "update LP token Osmo equivalent with pool unexpectedly removed Osmo",
 			asset:              types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
 			removeStakingAsset: true,
-			expectedError:      errors.New("pool 1 has zero MELODY amount"),
+			expectedError:      errors.New("pool 1 has zero OSMO amount"),
 		},
 		{
-			name:               "update concentrated share Melody equivalent successfully",
+			name:               "update concentrated share Osmo equivalent successfully",
 			asset:              types.SuperfluidAsset{Denom: cltypes.GetConcentratedLockupDenomFromPoolId(1), AssetType: types.SuperfluidAssetTypeConcentratedShare},
 			expectedMultiplier: osmomath.MustNewDecFromStr("1"),
 		},
 		{
-			name:             "update concentrated share Melody equivalent with pool unexpectedly deleted",
+			name:             "update concentrated share Osmo equivalent with pool unexpectedly deleted",
 			asset:            types.SuperfluidAsset{Denom: cltypes.GetConcentratedLockupDenomFromPoolId(1), AssetType: types.SuperfluidAssetTypeConcentratedShare},
 			poolDoesNotExist: true,
 			// Note: this does not error since CL errors are surrounded in `ApplyFuncIfNoError`
 			expectedZeroMultipler: true,
 		},
 		{
-			name:               "update concentrated share Melody equivalent with pool unexpectedly removed Melody",
+			name:               "update concentrated share Osmo equivalent with pool unexpectedly removed Osmo",
 			asset:              types.SuperfluidAsset{Denom: cltypes.GetConcentratedLockupDenomFromPoolId(1), AssetType: types.SuperfluidAssetTypeConcentratedShare},
 			removeStakingAsset: true,
 			// Note: this does not error since CL errors are surrounded in `ApplyFuncIfNoError`
@@ -72,7 +73,8 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 			superfluidKeeper := s.App.SuperfluidKeeper
 
 			// Switch the default staking denom to something else if the test case requires it
-			stakeDenom := s.App.StakingKeeper.BondDenom(ctx)
+			stakeDenom, err := s.App.StakingKeeper.BondDenom(ctx)
+			s.Require().NoError(err)
 			if tc.removeStakingAsset {
 				stakeDenom = "bar"
 			}
@@ -92,7 +94,7 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 			}
 
 			// System under test
-			err := superfluidKeeper.UpdateOsmoEquivalentMultipliers(ctx, tc.asset, 1)
+			err = superfluidKeeper.UpdateOsmoEquivalentMultipliers(ctx, tc.asset, 1)
 
 			if tc.expectedError != nil {
 				s.Require().Error(err)
@@ -141,13 +143,13 @@ type distributionTestCase struct {
 var (
 	// distributed coin when there is one account receiving from one gauge
 	// since val tokens is 11000000 and reward is 20000, we get 18181stake
-	defaultSingleLockDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 18181))
+	defaultSingleLockDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin(STAKE, 18181))
 	// distributed coins when there is two account receiving from one gauge
 	// since val tokens is 2100000 and reward is 20000, we get 9523stake
-	defaultTwoLockDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 9523))
+	defaultTwoLockDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin(STAKE, 9523))
 	// distributed coins when there is one account receiving from two gauge
 	// two lock distribution * 2
-	defaultTwoGaugeDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 19046))
+	defaultTwoGaugeDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin(STAKE, 19046))
 	distributionTestCases           = []distributionTestCase{
 		{
 			"happy path with single validator and delegator",
@@ -200,6 +202,10 @@ func (s *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 		s.Run(tc.name, func() {
 			s.SetupTest()
 
+			// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+			// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+			s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, STAKE, 9999)
+
 			// setup validators
 			valAddrs := s.SetupValidators(tc.validatorStats)
 
@@ -207,7 +213,9 @@ func (s *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 
 			// setup superfluid delegations
 			_, intermediaryAccs, _ := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
-			unbondingDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
+			stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+			s.Require().NoError(err)
+			unbondingDuration := stakingParams.UnbondingTime
 
 			// allocate rewards to designated validators
 			for _, valIndex := range tc.rewardedVals {
@@ -259,6 +267,11 @@ func (s *KeeperTestSuite) TestDistributeSuperfluidGauges() {
 
 			s.Run(tc.name, func() {
 				s.SetupTest()
+
+				// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+				// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+				s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, STAKE, 9999)
+
 				// create one more account to set reward receiver as arbitrary account
 				thirdTestAcc := CreateRandomAccounts(1)
 				s.TestAccs = append(s.TestAccs, thirdTestAcc...)
@@ -322,7 +335,8 @@ func (s *KeeperTestSuite) TestDistributeSuperfluidGauges() {
 					s.Require().Equal(gauge.IsPerpetual, true)
 					s.Require().Equal(gauge.NumEpochsPaidOver, uint64(1))
 
-					bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+					bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
+					s.Require().NoError(err)
 
 					moduleAddress := s.App.AccountKeeper.GetModuleAddress(incentivestypes.ModuleName)
 					moduleBalanceAfter := s.App.BankKeeper.GetBalance(s.Ctx, moduleAddress, bondDenom)

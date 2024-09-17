@@ -7,13 +7,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	clmodel "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
-	cwmodel "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
-	stableswap "github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/stableswap"
-	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	clmodel "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/model"
+	cwmodel "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
+	stableswap "github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/stableswap"
+	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 func (s *KeeperTestSuite) TestPoolCreationFee() {
@@ -76,7 +77,9 @@ func (s *KeeperTestSuite) TestPoolCreationFee() {
 		s.FundAcc(sender, apptesting.DefaultAcctFunds)
 
 		// note starting balances for community fee pool and pool creator account
-		feePoolBalBeforeNewPool := distributionKeeper.GetFeePoolCommunityCoins(s.Ctx)
+		feePoolBalBeforeNewPoolStruct, err := distributionKeeper.FeePool.Get(s.Ctx)
+		s.Require().NoError(err, "test: %v", test.name)
+		feePoolBalBeforeNewPool := feePoolBalBeforeNewPoolStruct.CommunityPool
 		senderBalBeforeNewPool := bankKeeper.GetAllBalances(s.Ctx, sender)
 
 		// attempt to create a pool with the given NewMsgCreateBalancerPool message
@@ -93,7 +96,9 @@ func (s *KeeperTestSuite) TestPoolCreationFee() {
 			)
 
 			// make sure pool creation fee is correctly sent to community pool
-			feePool := distributionKeeper.GetFeePoolCommunityCoins(s.Ctx)
+			feePoolStruct, err := distributionKeeper.FeePool.Get(s.Ctx)
+			s.Require().NoError(err, "test: %v", test.name)
+			feePool := feePoolStruct.CommunityPool
 			s.Require().Equal(feePool, feePoolBalBeforeNewPool.Add(sdk.NewDecCoinsFromCoins(test.poolCreationFee...)...))
 			// get expected tokens in new pool and corresponding pool shares
 			expectedPoolTokens := sdk.Coins{}
@@ -312,7 +317,7 @@ func (s *KeeperTestSuite) TestCreatePoolZeroLiquidityNoCreationFee() {
 
 			// Note: this is necessary for gauge creation in the after pool created hook.
 			// There is a check requiring positive supply existing on-chain.
-			s.MintCoins(sdk.NewCoins(sdk.NewCoin("note", osmomath.OneInt())))
+			s.MintCoins(sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.OneInt())))
 
 			pool, err := poolmanagerKeeper.CreateConcentratedPoolAsPoolManager(ctx, tc.msg)
 

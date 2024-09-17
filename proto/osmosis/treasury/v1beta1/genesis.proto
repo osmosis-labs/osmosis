@@ -7,14 +7,14 @@ import "gogoproto/gogo.proto";
 
 import "osmosis/treasury/v1beta1/treasury.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v23/x/treasury/types";
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/treasury/types";
 
 // GenesisState defines the oracle module's genesis state.
 message GenesisState {
   Params params = 1 [ (gogoproto.nullable) = false ];
   string tax_rate = 2 [
     (cosmos_proto.scalar) = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }

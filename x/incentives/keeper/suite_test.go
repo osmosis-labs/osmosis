@@ -5,26 +5,33 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v26/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
-	defaultLPDenom           string        = "lptoken"
-	defaultLPSyntheticDenom  string        = "lptoken/superbonding"
-	defaultLPTokens          sdk.Coins     = sdk.Coins{sdk.NewInt64Coin(defaultLPDenom, 10)}
-	defaultLPSyntheticTokens sdk.Coins     = sdk.Coins{sdk.NewInt64Coin(defaultLPSyntheticDenom, 10)}
-	defaultLiquidTokens      sdk.Coins     = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
-	defaultLockDuration      time.Duration = time.Second
-	oneLockupUser            userLocks     = userLocks{
+	defaultLPDenom                    string        = "lptoken"
+	defaultLPSyntheticDenom           string        = "lptoken/superbonding"
+	defaultLPTokens                   sdk.Coins     = sdk.Coins{sdk.NewInt64Coin(defaultLPDenom, 10)}
+	defaultLPTokensDoubleAmt          sdk.Coins     = sdk.Coins{sdk.NewInt64Coin(defaultLPDenom, 20)}
+	defaultLPSyntheticTokens          sdk.Coins     = sdk.Coins{sdk.NewInt64Coin(defaultLPSyntheticDenom, 10)}
+	defaultLPSyntheticTokensDoubleAmt sdk.Coins     = sdk.Coins{sdk.NewInt64Coin(defaultLPSyntheticDenom, 20)}
+	defaultLiquidTokens               sdk.Coins     = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
+	defaultLockDuration               time.Duration = time.Second
+	oneLockupUser                     userLocks     = userLocks{
 		lockDurations: []time.Duration{time.Second},
 		lockAmounts:   []sdk.Coins{defaultLPTokens},
 	}
 	twoLockupUser userLocks = userLocks{
 		lockDurations: []time.Duration{defaultLockDuration, 2 * defaultLockDuration},
 		lockAmounts:   []sdk.Coins{defaultLPTokens, defaultLPTokens},
+	}
+	twoLockupUserDoubleAmt userLocks = userLocks{
+		lockDurations: []time.Duration{defaultLockDuration, 2 * defaultLockDuration},
+		lockAmounts:   []sdk.Coins{defaultLPTokensDoubleAmt, defaultLPTokensDoubleAmt},
 	}
 	oneSyntheticLockupUser userLocks = userLocks{
 		lockDurations: []time.Duration{time.Second},
@@ -33,6 +40,10 @@ var (
 	twoSyntheticLockupUser userLocks = userLocks{
 		lockDurations: []time.Duration{defaultLockDuration, 2 * defaultLockDuration},
 		lockAmounts:   []sdk.Coins{defaultLPSyntheticTokens, defaultLPSyntheticTokens},
+	}
+	twoSyntheticLockupUserDoubleAmt userLocks = userLocks{
+		lockDurations: []time.Duration{defaultLockDuration, 2 * defaultLockDuration},
+		lockAmounts:   []sdk.Coins{defaultLPSyntheticTokensDoubleAmt, defaultLPSyntheticTokensDoubleAmt},
 	}
 	defaultRewardDenom string = "rewardDenom"
 	otherDenom         string = "someOtherDenom"
@@ -102,7 +113,6 @@ func (s *KeeperTestSuite) SetupChangeRewardReceiver(changeRewardReceivers []chan
 // SetupUserSyntheticLocks takes an array of user locks and creates synthetic locks based on this array, then returns the respective account address byte array.
 func (s *KeeperTestSuite) SetupUserSyntheticLocks(users []userLocks) (accs []sdk.AccAddress) {
 	accs = make([]sdk.AccAddress, len(users))
-	coins := sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}
 	lockupID := uint64(1)
 	for i, user := range users {
 		s.Assert().Equal(len(user.lockDurations), len(user.lockAmounts))
@@ -112,6 +122,7 @@ func (s *KeeperTestSuite) SetupUserSyntheticLocks(users []userLocks) (accs []sdk
 		}
 		accs[i] = s.setupAddr(i, "", totalLockAmt)
 		for j := 0; j < len(user.lockAmounts); j++ {
+			coins := sdk.Coins{sdk.NewInt64Coin("lptoken", user.lockAmounts[j][0].Amount.Int64())}
 			s.LockTokens(accs[i], coins, user.lockDurations[j])
 			err := s.App.LockupKeeper.CreateSyntheticLockup(s.Ctx, lockupID, "lptoken/superbonding", user.lockDurations[j], false)
 			lockupID++
@@ -134,6 +145,12 @@ func (s *KeeperTestSuite) SetupGauges(gaugeDescriptors []perpGaugeDesc, denom st
 
 // CreateGauge creates a gauge struct given the required params.
 func (s *KeeperTestSuite) CreateGauge(isPerpetual bool, addr sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpoch uint64) (uint64, *types.Gauge) {
+	// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+	// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+	for _, coin := range coins {
+		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+	}
+
 	s.FundAcc(addr, coins)
 	gaugeID, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, isPerpetual, addr, coins, distrTo, startTime, numEpoch, 0)
 	s.Require().NoError(err)
@@ -144,6 +161,12 @@ func (s *KeeperTestSuite) CreateGauge(isPerpetual bool, addr sdk.AccAddress, coi
 
 // AddToGauge adds coins to the specified gauge.
 func (s *KeeperTestSuite) AddToGauge(coins sdk.Coins, gaugeID uint64) uint64 {
+	// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+	// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+	for _, coin := range coins {
+		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+	}
+
 	addr := sdk.AccAddress([]byte("addrx---------------"))
 	s.FundAcc(addr, coins)
 	err := s.App.IncentivesKeeper.AddToGaugeRewards(s.Ctx, addr, coins, gaugeID)
@@ -168,6 +191,12 @@ func (s *KeeperTestSuite) setupNewGaugeWithDuration(isPerpetual bool, coins sdk.
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         denom,
 		Duration:      duration,
+	}
+
+	// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+	// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+	for _, coin := range coins {
+		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
 	}
 
 	// mints coins so supply exists on chain

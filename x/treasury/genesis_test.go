@@ -1,21 +1,19 @@
 package treasury
 
 import (
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/osmosis-labs/osmosis/v23/x/treasury/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/treasury/keeper"
 )
 
 func TestExportInitGenesis(t *testing.T) {
 	input := keeper.CreateTestInput(t)
 	input.Ctx = input.Ctx.WithBlockHeight(int64(appparams.BlocksPerWeek) * 3)
 
-	input.TreasuryKeeper.SetTaxRate(input.Ctx, sdk.NewDec(5435))
+	input.TreasuryKeeper.SetTaxRate(input.Ctx, osmomath.NewDec(5435))
 	genesis := ExportGenesis(input.Ctx, input.TreasuryKeeper)
 
 	newInput := keeper.CreateTestInput(t)

@@ -1,14 +1,17 @@
 package keeper
 
 import (
+	"context"
 	"encoding/json"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v26/x/tokenfactory/types"
 
 	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 )
 
 func (k Keeper) setBeforeSendHook(ctx sdk.Context, denom string, cosmwasmAddress string) error {
@@ -24,6 +27,28 @@ func (k Keeper) setBeforeSendHook(ctx sdk.Context, denom string, cosmwasmAddress
 	if cosmwasmAddress == "" {
 		store.Delete([]byte(types.BeforeSendHookAddressPrefixKey))
 		return nil
+	} else {
+		// if a contract is being set, call the contract using cache context
+		// to test if the contract is an existing, valid contract.
+		cacheCtx, _ := ctx.CacheContext()
+
+		cwAddr, err := sdk.AccAddressFromBech32(cosmwasmAddress)
+		if err != nil {
+			return err
+		}
+
+		tempMsg := types.TrackBeforeSendSudoMsg{
+			TrackBeforeSend: types.TrackBeforeSendMsg{},
+		}
+		msgBz, err := json.Marshal(tempMsg)
+		if err != nil {
+			return err
+		}
+		_, err = k.contractKeeper.Sudo(cacheCtx, cwAddr, msgBz)
+
+		if err != nil && strings.Contains(err.Error(), "no such contract") {
+			return err
+		}
 	}
 
 	_, err = sdk.AccAddressFromBech32(cosmwasmAddress)
@@ -78,12 +103,12 @@ func (k Keeper) Hooks() Hooks {
 }
 
 // TrackBeforeSend calls the before send listener contract suppresses any errors
-func (h Hooks) TrackBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins) {
+func (h Hooks) TrackBeforeSend(ctx context.Context, from, to sdk.AccAddress, amount sdk.Coins) {
 	_ = h.k.callBeforeSendListener(ctx, from, to, amount, false)
 }
 
 // TrackBeforeSend calls the before send listener contract returns any errors
-func (h Hooks) BlockBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins) error {
+func (h Hooks) BlockBeforeSend(ctx context.Context, from, to sdk.AccAddress, amount sdk.Coins) error {
 	return h.k.callBeforeSendListener(ctx, from, to, amount, true)
 }
 
@@ -91,13 +116,14 @@ func (h Hooks) BlockBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount 
 // If blockBeforeSend is true, sudoMsg wraps BlockBeforeSendMsg, otherwise sudoMsg wraps TrackBeforeSendMsg.
 // Note that we gas meter trackBeforeSend to prevent infinite contract calls.
 // CONTRACT: this should not be called in beginBlock or endBlock since out of gas will cause this method to panic.
-func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins, blockBeforeSend bool) (err error) {
+func (k Keeper) callBeforeSendListener(context context.Context, from, to sdk.AccAddress, amount sdk.Coins, blockBeforeSend bool) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = errorsmod.Wrapf(types.ErrBeforeSendHookOutOfGas, "%v", r)
 		}
 	}()
 
+	ctx := sdk.UnwrapSDKContext(context)
 	for _, coin := range amount {
 		cosmwasmAddress := k.GetBeforeSendHook(ctx, coin.Denom)
 		if cosmwasmAddress != "" {
@@ -136,9 +162,16 @@ func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress,
 			}
 			em := sdk.NewEventManager()
 
-			childCtx := ctx.WithGasMeter(sdk.NewGasMeter(types.BeforeSendHookGasLimit))
+			childCtx := ctx.WithGasMeter(storetypes.NewGasMeter(types.BeforeSendHookGasLimit))
 			_, err = k.contractKeeper.Sudo(childCtx.WithEventManager(em), cwAddr, msgBz)
 			if err != nil {
+				if strings.Contains(err.Error(), "no such contract") {
+					return nil
+				}
+				if k.IsModuleAcc(ctx, from) {
+					return nil
+				}
+
 				return errorsmod.Wrapf(err, "failed to call before send hook for denom %s", coin.Denom)
 			}
 

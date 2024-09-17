@@ -8,8 +8,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v23/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v26/x/txfees/types"
 )
 
 type QueryTestSuite struct {
@@ -23,7 +24,7 @@ func (s *QueryTestSuite) SetupSuite() {
 
 	// set up pool
 	poolAssets := []sdk.Coin{
-		sdk.NewInt64Coin("note", 1000000),
+		sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000000),
 		sdk.NewInt64Coin("stake", 120000000),
 	}
 	s.PrepareBalancerPoolWithCoins(poolAssets...)
@@ -34,7 +35,7 @@ func (s *QueryTestSuite) SetupSuite() {
 		"test",
 		[]types.FeeToken{
 			{
-				Denom:  "note",
+				Denom:  appparams.BaseCoinUnit,
 				PoolID: 1,
 			},
 		},
@@ -61,13 +62,13 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 		{
 			"Query poolID by denom",
 			"/osmosis.txfees.v1beta1.Query/DenomPoolId",
-			&types.QueryDenomPoolIdRequest{Denom: "note"},
+			&types.QueryDenomPoolIdRequest{Denom: appparams.BaseCoinUnit},
 			&types.QueryDenomPoolIdResponse{},
 		},
 		{
 			"Query spot price by denom",
 			"/osmosis.txfees.v1beta1.Query/DenomSpotPrice",
-			&types.QueryDenomSpotPriceRequest{Denom: "note"},
+			&types.QueryDenomSpotPriceRequest{Denom: appparams.BaseCoinUnit},
 			&types.QueryDenomSpotPriceResponse{},
 		},
 		{

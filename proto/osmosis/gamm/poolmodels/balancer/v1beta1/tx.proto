@@ -6,8 +6,9 @@ import "amino/amino.proto";
 import "osmosis/gamm/v1beta1/balancerPool.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
+import "cosmos/msg/v1/msg.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer";
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer";
 
 service Msg {
   rpc CreateBalancerPool(MsgCreateBalancerPool)
@@ -17,6 +18,7 @@ service Msg {
 // ===================== MsgCreatePool
 message MsgCreateBalancerPool {
   option (amino.name) = "osmosis/gamm/create-balancer-pool";
+  option (cosmos.msg.v1.signer) = "sender";
 
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
 

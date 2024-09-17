@@ -7,8 +7,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	clmodel "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	clmodel "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
 )
 
 type msgServer struct {
@@ -148,7 +148,7 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 	totalCollectedIncentives := sdk.NewCoins()
 	totalForefeitedIncentives := sdk.NewCoins()
 	for _, positionId := range msg.PositionIds {
-		collectedIncentives, forfeitedIncentives, err := server.keeper.collectIncentives(ctx, sender, positionId)
+		collectedIncentives, forfeitedIncentives, _, err := server.keeper.collectIncentives(ctx, sender, positionId)
 		if err != nil {
 			return nil, err
 		}

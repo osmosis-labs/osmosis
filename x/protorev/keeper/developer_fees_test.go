@@ -6,8 +6,8 @@ import (
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v26/x/protorev/types"
 )
 
 var (
@@ -28,7 +28,7 @@ func (suite *KeeperTestSuite) TestDistributeProfit() {
 		{
 			description:       "Send with unset developer account",
 			alterState:        func() {},
-			denom:             types.SymphonyDenomination,
+			denom:             types.OsmosisDenomination,
 			expectedErr:       true,
 			expectedDevProfit: sdk.Coin{},
 			expectedBurnBal:   sdk.Coin{},
@@ -40,14 +40,14 @@ func (suite *KeeperTestSuite) TestDistributeProfit() {
 				account := apptesting.CreateRandomAccounts(1)[0]
 				suite.App.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, account)
 
-				err := suite.pseudoExecuteTrade(types.SymphonyDenomination, arbProfit, 100)
+				err := suite.pseudoExecuteTrade(types.OsmosisDenomination, arbProfit, 100)
 				suite.Require().NoError(err)
 			},
-			denom:             types.SymphonyDenomination,
+			denom:             types.OsmosisDenomination,
 			expectedErr:       false,
-			expectedDevProfit: sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(200)),
-			expectedBurnBal:   sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(800)),
-			expectedCommBal:   sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(0)),
+			expectedDevProfit: sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(200)),
+			expectedBurnBal:   sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(800)),
+			expectedCommBal:   sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(0)),
 		},
 		{
 			description: "Send with set developer account in second phase",
@@ -55,14 +55,14 @@ func (suite *KeeperTestSuite) TestDistributeProfit() {
 				account := apptesting.CreateRandomAccounts(1)[0]
 				suite.App.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, account)
 
-				err := suite.pseudoExecuteTrade(types.SymphonyDenomination, arbProfit, 500)
+				err := suite.pseudoExecuteTrade(types.OsmosisDenomination, arbProfit, 500)
 				suite.Require().NoError(err)
 			},
-			denom:             types.SymphonyDenomination,
+			denom:             types.OsmosisDenomination,
 			expectedErr:       false,
-			expectedDevProfit: sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(100)),
-			expectedBurnBal:   sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(900)),
-			expectedCommBal:   sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(0)),
+			expectedDevProfit: sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(100)),
+			expectedBurnBal:   sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(900)),
+			expectedCommBal:   sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(0)),
 		},
 		{
 			description: "Send with set developer account in third (final) phase",
@@ -70,14 +70,14 @@ func (suite *KeeperTestSuite) TestDistributeProfit() {
 				account := apptesting.CreateRandomAccounts(1)[0]
 				suite.App.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, account)
 
-				err := suite.pseudoExecuteTrade(types.SymphonyDenomination, arbProfit, 1000)
+				err := suite.pseudoExecuteTrade(types.OsmosisDenomination, arbProfit, 1000)
 				suite.Require().NoError(err)
 			},
-			denom:             types.SymphonyDenomination,
+			denom:             types.OsmosisDenomination,
 			expectedErr:       false,
-			expectedDevProfit: sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(50)),
-			expectedBurnBal:   sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(950)),
-			expectedCommBal:   sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(0)),
+			expectedDevProfit: sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(50)),
+			expectedBurnBal:   sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(950)),
+			expectedCommBal:   sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(0)),
 		},
 		{
 			description: "Send with set developer account in first phase with non-osmo profit",
@@ -128,7 +128,7 @@ func (suite *KeeperTestSuite) TestDistributeProfit() {
 
 	for _, tc := range cases {
 		suite.Run(tc.description, func() {
-			suite.SetupTest()
+			suite.SetupNoPools()
 
 			commAccount := suite.App.AppKeepers.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName)
 			commBalanceBefore := suite.App.AppKeepers.BankKeeper.GetBalance(suite.Ctx, commAccount, tc.denom)

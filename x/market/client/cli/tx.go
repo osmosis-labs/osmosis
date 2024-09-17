@@ -9,7 +9,7 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v23/x/market/types"
+	"github.com/osmosis-labs/osmosis/v26/x/market/types"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -57,13 +57,13 @@ func NewSwapMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.
 			return nil, err
 		}
 
-		msg = types.NewMsgSwapSend(fromAddress, toAddress, offerCoin, askDenom)
-		if err = msg.ValidateBasic(); err != nil {
+		innerMsg := types.NewMsgSwapSend(fromAddress, toAddress, offerCoin, askDenom)
+		if err = innerMsg.ValidateBasic(); err != nil {
 			return nil, err
 		}
 	} else {
-		msg = types.NewMsgSwap(fromAddress, offerCoin, askDenom)
-		if err = msg.ValidateBasic(); err != nil {
+		innerMsg := types.NewMsgSwap(fromAddress, offerCoin, askDenom)
+		if err = innerMsg.ValidateBasic(); err != nil {
 			return nil, err
 		}
 	}

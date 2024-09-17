@@ -16,13 +16,13 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/initialization"
-	"github.com/osmosis-labs/osmosis/v23/tests/e2e/util"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v26/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v26/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v26/tests/e2e/util"
 
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v23/x/ibc-rate-limit/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v26/x/ibc-rate-limit/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -31,7 +31,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/stretchr/testify/require"
 
-	app "github.com/osmosis-labs/osmosis/v23/app"
+	app "github.com/osmosis-labs/osmosis/v26/app"
 
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 )
@@ -119,13 +119,13 @@ func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick strin
 
 	// Check if we found a match
 	if len(matches) < 2 {
-		return 0, sdk.ZeroDec()
+		return 0, osmomath.ZeroDec()
 	}
 
 	// Convert the position_id from string to int
 	positionID, err := strconv.Atoi(matches[1])
 	if err != nil {
-		return 0, sdk.ZeroDec()
+		return 0, osmomath.ZeroDec()
 	}
 
 	// Extract the liquidity from the response
@@ -134,7 +134,7 @@ func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick strin
 
 	// Check if we found a match
 	if len(matches) < 2 {
-		return 0, sdk.ZeroDec()
+		return 0, osmomath.ZeroDec()
 	}
 
 	// Convert the liquidity from string to Dec

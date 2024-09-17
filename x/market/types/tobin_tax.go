@@ -1,15 +1,14 @@
 package types
 
 import (
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"gopkg.in/yaml.v2"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // TobinTax - struct to store tobin tax for the specific denom with high volatility
 type TobinTax struct {
-	Denom   string  `json:"denom" yaml:"denom"`
-	TaxRate sdk.Dec `json:"tax_rate" yaml:"tax_rate"`
+	Denom   string       `json:"denom" yaml:"denom"`
+	TaxRate osmomath.Dec `json:"tax_rate" yaml:"tax_rate"`
 }
 
 // String implements fmt.Stringer interface

@@ -1,8 +1,10 @@
 package osmoutils_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 )
@@ -39,7 +41,7 @@ func (s *TestSuite) TestCacheCtxConsumeGas() {
 	}
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			ctx := s.ctx.WithGasMeter(sdk.NewGasMeter(tc.gasLimit))
+			ctx := s.ctx.WithGasMeter(storetypes.NewGasMeter(tc.gasLimit))
 			ctx.GasMeter().ConsumeGas(tc.gasUsedPreCtx, "pre ctx")
 			var err error
 			f := func() {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
 )
 
 func TestParseExchangeRateTuples(t *testing.T) {

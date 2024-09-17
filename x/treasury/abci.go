@@ -6,9 +6,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
-	"github.com/osmosis-labs/osmosis/v23/x/treasury/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/treasury/types"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v26/x/treasury/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/treasury/types"
 )
 
 // EndBlocker is called at the end of every block

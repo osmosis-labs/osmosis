@@ -13,7 +13,7 @@ var (
 )
 
 func (s *KeeperTestSuite) measureLockGas(addr sdk.AccAddress, coins sdk.Coins, dur time.Duration) uint64 {
-	// fundAccount outside of gas measurement
+	// fundAccount outside of gas measurement. TODO: Do one batch fundAcc.
 	s.FundAcc(addr, coins)
 	// start measuring gas
 	alreadySpent := s.Ctx.GasMeter().GasConsumed()
@@ -51,8 +51,8 @@ func (s *KeeperTestSuite) TestRepeatedLockTokensGas() {
 
 	coinsFn := func(int) sdk.Coins { return defaultCoins }
 	durFn := func(int) time.Duration { return time.Second }
-	startAveragingAt := 1000
-	totalNumLocks := 10000
+	startAveragingAt := 500
+	totalNumLocks := 4000
 
 	firstLockGasAmount := s.measureLockGas(defaultAddr, defaultCoins, time.Second)
 	s.Assert().LessOrEqual(int(firstLockGasAmount), 100000)
@@ -62,7 +62,7 @@ func (s *KeeperTestSuite) TestRepeatedLockTokensGas() {
 	}
 	avgGas, maxGas := s.measureAvgAndMaxLockGas(totalNumLocks-startAveragingAt, defaultAddr, coinsFn, durFn)
 	fmt.Printf("test deets: total locks created %d, begin average at %d\n", totalNumLocks, startAveragingAt)
-	s.Assert().LessOrEqual(int(avgGas), 100000, "average gas / lock")
+	s.Assert().LessOrEqual(int(avgGas), 60000, "average gas / lock")
 	s.Assert().LessOrEqual(int(maxGas), 100000, "max gas / lock")
 }
 
@@ -71,10 +71,10 @@ func (s *KeeperTestSuite) TestRepeatedLockTokensDistinctDurationGas() {
 
 	coinsFn := func(int) sdk.Coins { return defaultCoins }
 	durFn := func(i int) time.Duration { return time.Duration(i+1) * time.Second }
-	totalNumLocks := 10000
+	totalNumLocks := 4000
 
 	avgGas, maxGas := s.measureAvgAndMaxLockGas(totalNumLocks, defaultAddr, coinsFn, durFn)
 	fmt.Printf("test deets: total locks created %d\n", totalNumLocks)
-	s.Assert().LessOrEqual(int(avgGas), 150000, "average gas / lock")
-	s.Assert().LessOrEqual(int(maxGas), 300000, "max gas / lock")
+	s.Assert().LessOrEqual(int(avgGas), 105000, "average gas / lock")
+	s.Assert().LessOrEqual(int(maxGas), 250000, "max gas / lock")
 }

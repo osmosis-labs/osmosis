@@ -13,8 +13,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
 )
 
 const (
@@ -259,7 +259,7 @@ func tickAmtChange(r *rand.Rand, targetAmount osmomath.Dec) osmomath.Dec {
 	randChangePercent := osmomath.NewDec(r.Int63n(1)).QuoInt64(1000)
 	change := targetAmount.Mul(randChangePercent)
 
-	change = sdk.MaxDec(osmomath.NewDec(1), randChangePercent)
+	change = osmomath.MaxDec(osmomath.NewDec(1), randChangePercent)
 
 	switch changeType {
 	case 0:

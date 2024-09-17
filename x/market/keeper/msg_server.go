@@ -3,12 +3,13 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmomath"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
-	"github.com/osmosis-labs/osmosis/v23/x/market/types"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v26/x/market/types"
 )
 
 type msgServer struct {
@@ -74,7 +75,7 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 	if spread.IsPositive() {
 		feeDecCoin = sdk.NewDecCoinFromDec(swapDecCoin.Denom, spread.Mul(swapDecCoin.Amount))
 	} else {
-		feeDecCoin = sdk.NewDecCoin(swapDecCoin.Denom, sdk.ZeroInt())
+		feeDecCoin = sdk.NewDecCoin(swapDecCoin.Denom, osmomath.ZeroInt())
 	}
 
 	// Subtract fee from the swap coin

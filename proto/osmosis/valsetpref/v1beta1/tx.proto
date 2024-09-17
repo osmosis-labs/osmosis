@@ -6,8 +6,9 @@ import "amino/amino.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/valsetpref/v1beta1/state.proto";
+import "cosmos/msg/v1/msg.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v23/x/valset-pref/types";
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/valset-pref/types";
 
 // Msg defines the valset-pref module's gRPC message service.
 service Msg {
@@ -53,6 +54,7 @@ service Msg {
 // MsgCreateValidatorSetPreference is a list that holds validator-set.
 message MsgSetValidatorSetPreference {
   option (amino.name) = "osmosis/MsgSetValidatorSetPreference";
+  option (cosmos.msg.v1.signer) = "delegator";
 
   // delegator is the user who is trying to create a validator-set.
   string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
@@ -70,6 +72,7 @@ message MsgSetValidatorSetPreferenceResponse {}
 // validator-set
 message MsgDelegateToValidatorSet {
   option (amino.name) = "osmosis/MsgDelegateToValidatorSet";
+  option (cosmos.msg.v1.signer) = "delegator";
 
   // delegator is the user who is trying to delegate.
   string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
@@ -88,6 +91,7 @@ message MsgDelegateToValidatorSetResponse {}
 
 message MsgUndelegateFromValidatorSet {
   option (amino.name) = "osmosis/MsgUndelegateFromValidatorSet";
+  option (cosmos.msg.v1.signer) = "delegator";
 
   // delegator is the user who is trying to undelegate.
   string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
@@ -107,6 +111,7 @@ message MsgUndelegateFromValidatorSetResponse {}
 
 message MsgUndelegateFromRebalancedValidatorSet {
   option (amino.name) = "osmosis/MsgUndelegateFromRebalValset";
+  option (cosmos.msg.v1.signer) = "delegator";
 
   // delegator is the user who is trying to undelegate.
   string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
@@ -128,6 +133,7 @@ message MsgUndelegateFromRebalancedValidatorSetResponse {}
 
 message MsgRedelegateValidatorSet {
   option (amino.name) = "osmosis/MsgRedelegateValidatorSet";
+  option (cosmos.msg.v1.signer) = "delegator";
 
   // delegator is the user who is trying to create a validator-set.
   string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
@@ -145,6 +151,7 @@ message MsgRedelegateValidatorSetResponse {}
 // validator set.
 message MsgWithdrawDelegationRewards {
   option (amino.name) = "osmosis/MsgWithdrawDelegationRewards";
+  option (cosmos.msg.v1.signer) = "delegator";
 
   // delegator is the user who is trying to claim staking rewards.
   string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
@@ -156,6 +163,9 @@ message MsgWithdrawDelegationRewardsResponse {}
 // length <= 2 weeks and takes all that osmo and delegates according to
 // delegator's current validator set preference.
 message MsgDelegateBondedTokens {
+  option (amino.name) = "osmosis/MsgDelegateBondedTokens";
+  option (cosmos.msg.v1.signer) = "delegator";
+
   // delegator is the user who is trying to force unbond osmo and delegate.
   string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
   // lockup id of osmo in the pool

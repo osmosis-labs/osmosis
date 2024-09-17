@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 // validateCreatedPool checks that the pool was created with the correct pool ID and address.
@@ -45,10 +45,9 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 		return 0, err
 	}
 
-	// Send pool creation fee from pool creator to community pool
-	poolCreationFee := k.GetParams(ctx).PoolCreationFee
 	sender := msg.PoolCreator()
-	if err := k.communityPoolKeeper.FundCommunityPool(ctx, poolCreationFee, sender); err != nil {
+	err = k.fundCommunityPoolIfNotWhitelisted(ctx, sender)
+	if err != nil {
 		return 0, err
 	}
 
@@ -151,9 +150,35 @@ func (k Keeper) getNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 	return nextPoolId
 }
 
-func (k Keeper) SetPoolRoute(ctx sdk.Context, poolId uint64, poolType types.PoolType) {
+func (k *Keeper) SetPoolRoute(ctx sdk.Context, poolId uint64, poolType types.PoolType) {
 	store := ctx.KVStore(k.storeKey)
 	osmoutils.MustSet(store, types.FormatModuleRouteKey(poolId), &types.ModuleRoute{PoolType: poolType})
+	k.cachedPoolModules.Delete(poolId)
+}
+
+type poolModuleCacheValue struct {
+	pooltype types.PoolType
+	module   types.PoolModuleI
+	gasFlat  uint64
+	gasKey   uint64
+	gasValue uint64
+}
+
+func (k *Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (types.PoolType, error) {
+	poolModuleCandidate, cacheHit := k.cachedPoolModules.Load(poolId)
+	if !cacheHit {
+		_, err := k.GetPoolModule(ctx, poolId)
+		if err != nil {
+			return 0, err
+		}
+		poolModuleCandidate, _ = k.cachedPoolModules.Load(poolId)
+	}
+	v, _ := poolModuleCandidate.(poolModuleCacheValue)
+	if cacheHit {
+		osmoutils.ChargeMockReadGas(ctx, v.gasFlat, v.gasKey, v.gasValue)
+	}
+
+	return v.pooltype, nil
 }
 
 // GetPoolModule returns the swap module for the given pool ID.
@@ -164,11 +189,17 @@ func (k Keeper) SetPoolRoute(ctx sdk.Context, poolId uint64, poolType types.Pool
 // in poolmanager's keeper constructor.
 // TODO: unexport after concentrated-liqudity upgrade. Currently, it is exported
 // for the upgrade handler logic and tests.
-func (k Keeper) GetPoolModule(ctx sdk.Context, poolId uint64) (types.PoolModuleI, error) {
+func (k *Keeper) GetPoolModule(ctx sdk.Context, poolId uint64) (types.PoolModuleI, error) {
+	poolModuleCandidate, ok := k.cachedPoolModules.Load(poolId)
+	if ok {
+		v, _ := poolModuleCandidate.(poolModuleCacheValue)
+		osmoutils.ChargeMockReadGas(ctx, v.gasFlat, v.gasKey, v.gasValue)
+		return v.module, nil
+	}
 	store := ctx.KVStore(k.storeKey)
 
 	moduleRoute := &types.ModuleRoute{}
-	found, err := osmoutils.Get(store, types.FormatModuleRouteKey(poolId), moduleRoute)
+	found, gasFlat, gasKey, gasVal, err := osmoutils.TrackGasUsedInGet(store, types.FormatModuleRouteKey(poolId), moduleRoute)
 	if err != nil {
 		return nil, err
 	}
@@ -180,6 +211,14 @@ func (k Keeper) GetPoolModule(ctx sdk.Context, poolId uint64) (types.PoolModuleI
 	if !routeExists {
 		return nil, types.UndefinedRouteError{PoolType: moduleRoute.PoolType, PoolId: poolId}
 	}
+
+	k.cachedPoolModules.Store(poolId, poolModuleCacheValue{
+		pooltype: moduleRoute.PoolType,
+		module:   swapModule,
+		gasFlat:  gasFlat,
+		gasKey:   gasKey,
+		gasValue: gasVal,
+	})
 
 	return swapModule, nil
 }
@@ -208,4 +247,30 @@ func parsePoolRouteWithKey(key []byte, value []byte) (types.ModuleRoute, error) 
 	}
 	parsedValue.PoolId = poolId
 	return parsedValue, nil
+}
+
+// fundCommunityPoolIfNotWhitelisted checks if the sender is in the UnrestrictedPoolCreatorWhitelist
+// and funds the community pool if the sender is not whitelisted.
+func (k Keeper) fundCommunityPoolIfNotWhitelisted(ctx sdk.Context, sender sdk.AccAddress) error {
+	// Get the UnrestrictedPoolCreatorWhitelist from the concentrated pool module
+	whitelist := k.concentratedKeeper.GetWhitelistedAddresses(ctx)
+
+	// Check if sender is in the whitelist
+	isWhitelisted := false
+	for _, addr := range whitelist {
+		if addr == sender.String() {
+			isWhitelisted = true
+			break
+		}
+	}
+
+	// Run FundCommunityPool logic if sender is not in the whitelist
+	if !isWhitelisted {
+		poolCreationFee := k.GetParams(ctx).PoolCreationFee
+		if err := k.communityPoolKeeper.FundCommunityPool(ctx, poolCreationFee, sender); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -3,13 +3,14 @@ package keeper_test
 import (
 	"time"
 
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -474,7 +475,7 @@ func (s *KeeperTestSuite) TestOutOfGasError() {
 	s.Require().NoError(err)
 	foocoin := sdk.NewCoin("foo", osmomath.NewInt(10))
 	spreadFactor := pool.GetSpreadFactor(s.Ctx)
-	ctx := s.Ctx.WithGasMeter(sdk.NewGasMeter(10))
+	ctx := s.Ctx.WithGasMeter(storetypes.NewGasMeter(10))
 	_, err = s.App.GAMMKeeper.SwapExactAmountIn(ctx, s.TestAccs[0], pool, foocoin, "bar", osmomath.ZeroInt(), spreadFactor)
 	s.Require().Error(err)
 	s.Require().Contains(err.Error(), "lack of gas")

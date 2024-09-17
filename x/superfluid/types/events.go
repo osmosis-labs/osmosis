@@ -30,6 +30,8 @@ const (
 	AttributeDenom               = "denom"
 	AttributeSuperfluidAssetType = "superfluid_asset_type"
 	AttributeLockId              = "lock_id"
+	AttributeLockAmount          = "lock_amount"
+	AttributeLockDenom           = "lock_denom"
 	AttributeValidator           = "validator"
 	AttributeAmount              = "amount"
 )

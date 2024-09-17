@@ -1,17 +1,17 @@
 package keeper
 
 import (
+	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-	dbm "github.com/cometbft/cometbft-db"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
-	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/codec"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/std"
-	"github.com/cosmos/cosmos-sdk/store"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -31,15 +31,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting/assets"
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
-	"github.com/osmosis-labs/osmosis/v23/x/market"
-	marketkeeper "github.com/osmosis-labs/osmosis/v23/x/market/keeper"
-	markettypes "github.com/osmosis-labs/osmosis/v23/x/market/types"
-	"github.com/osmosis-labs/osmosis/v23/x/oracle"
-	oraclekeeper "github.com/osmosis-labs/osmosis/v23/x/oracle/keeper"
-	oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
-	"github.com/osmosis-labs/osmosis/v23/x/treasury/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/noapptest"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting/assets"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v26/x/market"
+	marketkeeper "github.com/osmosis-labs/osmosis/v26/x/market/keeper"
+	markettypes "github.com/osmosis-labs/osmosis/v26/x/market/types"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle"
+	oraclekeeper "github.com/osmosis-labs/osmosis/v26/x/oracle/keeper"
+	oracletypes "github.com/osmosis-labs/osmosis/v26/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/v26/x/treasury/types"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -119,31 +121,28 @@ type TestInput struct {
 
 func CreateTestInput(t *testing.T) TestInput {
 	t.Helper()
-	keyAcc := sdk.NewKVStoreKey(authtypes.StoreKey)
-	keyBank := sdk.NewKVStoreKey(banktypes.StoreKey)
-	keyParams := sdk.NewKVStoreKey(paramstypes.StoreKey)
-	tKeyParams := sdk.NewTransientStoreKey(paramstypes.TStoreKey)
-	keyOracle := sdk.NewKVStoreKey(oracletypes.StoreKey)
-	keyStaking := sdk.NewKVStoreKey(stakingtypes.StoreKey)
-	keyDistr := sdk.NewKVStoreKey(distrtypes.StoreKey)
-	keyMarket := sdk.NewKVStoreKey(types.StoreKey)
+	keyAcc := storetypes.NewKVStoreKey(authtypes.StoreKey)
+	keyBank := storetypes.NewKVStoreKey(banktypes.StoreKey)
+	keyParams := storetypes.NewKVStoreKey(paramstypes.StoreKey)
+	tKeyParams := storetypes.NewTransientStoreKey(paramstypes.TStoreKey)
+	keyOracle := storetypes.NewKVStoreKey(oracletypes.StoreKey)
+	keyStaking := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
+	keyDistr := storetypes.NewKVStoreKey(distrtypes.StoreKey)
+	keyMarket := storetypes.NewKVStoreKey(types.StoreKey)
 
-	db := dbm.NewMemDB()
-	ms := store.NewCommitMultiStore(db)
-	ctx := sdk.NewContext(ms, tmproto.Header{Time: time.Now().UTC()}, false, log.NewNopLogger())
 	encodingConfig := MakeEncodingConfig(t)
 	appCodec, legacyAmino := encodingConfig.Marshaler, encodingConfig.Amino
 
-	ms.MountStoreWithDB(keyAcc, storetypes.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(keyBank, storetypes.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(tKeyParams, storetypes.StoreTypeTransient, db)
-	ms.MountStoreWithDB(keyParams, storetypes.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(keyOracle, storetypes.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(keyStaking, storetypes.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(keyDistr, storetypes.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(keyMarket, storetypes.StoreTypeIAVL, db)
-
-	require.NoError(t, ms.LoadLatestVersion())
+	ctx := noapptest.CtxWithStoreKeys([]storetypes.StoreKey{
+		keyAcc,
+		keyBank,
+		tKeyParams,
+		keyParams,
+		keyOracle,
+		keyStaking,
+		keyDistr,
+		keyMarket,
+	}, tmproto.Header{Time: time.Now().UTC()}, false)
 
 	blackListAddrs := map[string]bool{
 		faucetAccountName:              true,
@@ -165,8 +164,23 @@ func CreateTestInput(t *testing.T) TestInput {
 	}
 
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, keyParams, tKeyParams)
-	accountKeeper := authkeeper.NewAccountKeeper(appCodec, keyAcc, authtypes.ProtoBaseAccount, maccPerms, sdk.GetConfig().GetBech32AccountAddrPrefix(), authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	bankKeeper := bankkeeper.NewBaseKeeper(appCodec, keyBank, accountKeeper, blackListAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	accountKeeper := authkeeper.NewAccountKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keyAcc),
+		authtypes.ProtoBaseAccount,
+		maccPerms,
+		addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
+		"melody",
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+	bankKeeper := bankkeeper.NewBaseKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keyBank),
+		accountKeeper,
+		blackListAddrs,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		log.NewNopLogger(),
+	)
 
 	totalSupply := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, InitTokens.MulRaw(int64(len(Addrs)*10))))
 	err := bankKeeper.MintCoins(ctx, faucetAccountName, totalSupply)
@@ -179,10 +193,12 @@ func CreateTestInput(t *testing.T) TestInput {
 
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec,
-		keyStaking,
+		runtime.NewKVStoreService(keyStaking),
 		accountKeeper,
 		bankKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
+		addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
 	)
 
 	stakingParams := stakingtypes.DefaultParams()
@@ -191,18 +207,22 @@ func CreateTestInput(t *testing.T) TestInput {
 	require.NoError(t, err)
 
 	distrKeeper := distrkeeper.NewKeeper(
-		appCodec, keyDistr,
-		accountKeeper, bankKeeper, stakingKeeper,
+		appCodec,
+		runtime.NewKVStoreService(keyDistr),
+		accountKeeper,
+		bankKeeper,
+		stakingKeeper,
 		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	distrKeeper.SetFeePool(ctx, distrtypes.InitialFeePool())
+	err = distrKeeper.FeePool.Set(ctx, distrtypes.InitialFeePool())
+	require.NoError(t, err)
 	distrParams := distrtypes.DefaultParams()
-	distrParams.CommunityTax = sdk.NewDecWithPrec(2, 2)
-	distrParams.BaseProposerReward = sdk.NewDecWithPrec(1, 2)
-	distrParams.BonusProposerReward = sdk.NewDecWithPrec(4, 2)
-	err = distrKeeper.SetParams(ctx, distrParams)
+	distrParams.CommunityTax = osmomath.NewDecWithPrec(2, 2)
+	distrParams.BaseProposerReward = osmomath.NewDecWithPrec(1, 2)
+	distrParams.BonusProposerReward = osmomath.NewDecWithPrec(4, 2)
+	err = distrKeeper.Params.Set(ctx, distrParams)
 	require.NoError(t, err)
 	stakingKeeper.SetHooks(stakingtypes.NewMultiStakingHooks(distrKeeper.Hooks()))
 
@@ -245,10 +265,10 @@ func CreateTestInput(t *testing.T) TestInput {
 	oracleDefaultParams := oracletypes.DefaultParams()
 	oracleDefaultParams.Whitelist = oracletypes.DenomList{oracletypes.Denom{
 		Name:     assets.MicroSDRDenom,
-		TobinTax: sdk.ZeroDec(),
+		TobinTax: osmomath.ZeroDec(),
 	}}
 	oracleKeeper.SetParams(ctx, oracleDefaultParams)
-	oracleKeeper.SetMelodyExchangeRate(ctx, assets.MicroSDRDenom, sdk.NewDecWithPrec(1, 1))
+	oracleKeeper.SetMelodyExchangeRate(ctx, assets.MicroSDRDenom, osmomath.NewDecWithPrec(1, 1))
 
 	for _, denom := range oracleDefaultParams.Whitelist {
 		oracleKeeper.SetTobinTax(ctx, denom.Name, denom.TobinTax)

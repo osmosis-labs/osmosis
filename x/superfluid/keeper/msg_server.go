@@ -8,11 +8,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
 
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/keeper/internal/events"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
 )
 
 type msgServer struct {
@@ -36,9 +36,9 @@ var _ types.MsgServer = msgServer{}
 // - lock should not be unlocking
 // - lock should not have a different superfluid staking position
 // - lock duration should be greater or equal to the staking.Unbonding time
-// Note that the amount of delegation is not equal to the equivalent amount of melody within the lock.
-// Instead, we use the melody equivalent multiplier stored in the latest epoch, calculate how much
-// melody equivalent is in lock, and use the risk adjusted melody value. The minimum risk ratio works as a parameter
+// Note that the amount of delegation is not equal to the equivalent amount of osmo within the lock.
+// Instead, we use the osmo equivalent multiplier stored in the latest epoch, calculate how much
+// osmo equivalent is in lock, and use the risk adjusted osmo value. The minimum risk ratio works as a parameter
 // to better incentivize and balance between superfluid staking and vanilla staking.
 // Delegation does not happen directly from msg.Sender, but instead delegation is done via intermediary account.
 func (server msgServer) SuperfluidDelegate(goCtx context.Context, msg *types.MsgSuperfluidDelegate) (*types.MsgSuperfluidDelegateResponse, error) {
@@ -46,7 +46,11 @@ func (server msgServer) SuperfluidDelegate(goCtx context.Context, msg *types.Msg
 
 	err := server.keeper.SuperfluidDelegate(ctx, msg.Sender, msg.LockId, msg.ValAddr)
 	if err == nil {
-		events.EmitSuperfluidDelegateEvent(ctx, msg.LockId, msg.ValAddr)
+		lock, err := server.keeper.lk.GetLockByID(ctx, msg.LockId)
+		if err != nil {
+			return &types.MsgSuperfluidDelegateResponse{}, err
+		}
+		events.EmitSuperfluidDelegateEvent(ctx, msg.LockId, msg.ValAddr, lock.Coins)
 	}
 	return &types.MsgSuperfluidDelegateResponse{}, err
 }
@@ -61,7 +65,11 @@ func (server msgServer) SuperfluidUndelegate(goCtx context.Context, msg *types.M
 
 	err := server.keeper.SuperfluidUndelegate(ctx, msg.Sender, msg.LockId)
 	if err == nil {
-		events.EmitSuperfluidUndelegateEvent(ctx, msg.LockId)
+		lock, err := server.keeper.lk.GetLockByID(ctx, msg.LockId)
+		if err != nil {
+			return &types.MsgSuperfluidUndelegateResponse{}, err
+		}
+		events.EmitSuperfluidUndelegateEvent(ctx, msg.LockId, lock.Coins)
 	}
 	return &types.MsgSuperfluidUndelegateResponse{}, err
 }
@@ -108,10 +116,14 @@ func (server msgServer) SuperfluidUndelegateAndUnbondLock(goCtx context.Context,
 // `SuperfluidDelegate` from the superfluid module msg server.
 func (server msgServer) LockAndSuperfluidDelegate(goCtx context.Context, msg *types.MsgLockAndSuperfluidDelegate) (*types.MsgLockAndSuperfluidDelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	stakingParams, err := server.keeper.sk.GetParams(ctx)
+	if err != nil {
+		return &types.MsgLockAndSuperfluidDelegateResponse{}, err
+	}
 
 	lockupMsg := lockuptypes.MsgLockTokens{
 		Owner:    msg.Sender,
-		Duration: server.keeper.sk.GetParams(ctx).UnbondingTime,
+		Duration: stakingParams.UnbondingTime,
 		Coins:    msg.Coins,
 	}
 
@@ -167,12 +179,16 @@ func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.
 
 func (server msgServer) CreateFullRangePositionAndSuperfluidDelegate(goCtx context.Context, msg *types.MsgCreateFullRangePositionAndSuperfluidDelegate) (*types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	stakingParams, err := server.keeper.sk.GetParams(ctx)
+	if err != nil {
+		return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}, err
+	}
 
 	address, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}, err
 	}
-	positionData, lockId, err := server.keeper.clk.CreateFullRangePositionLocked(ctx, msg.PoolId, address, msg.Coins, server.keeper.sk.GetParams(ctx).UnbondingTime)
+	positionData, lockId, err := server.keeper.clk.CreateFullRangePositionLocked(ctx, msg.PoolId, address, msg.Coins, stakingParams.UnbondingTime)
 	if err != nil {
 		return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}, err
 	}

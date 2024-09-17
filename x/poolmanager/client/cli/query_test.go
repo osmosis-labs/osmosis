@@ -4,13 +4,14 @@ import (
 	gocontext "context"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v23/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/queryproto"
 )
 
 type QueryTestSuite struct {
@@ -64,10 +65,10 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 			"/osmosis.poolmanager.v1beta1.Query/EstimateTradeBasedOnPriceImpact",
 			&poolmanagerqueryproto.EstimateTradeBasedOnPriceImpactRequest{
 				PoolId:         1,
-				FromCoin:       sdk.NewCoin("bar", sdk.NewInt(10)),
+				FromCoin:       sdk.NewCoin("bar", osmomath.NewInt(10)),
 				ToCoinDenom:    "baz",
-				MaxPriceImpact: sdk.MustNewDecFromStr("0.001"),
-				ExternalPrice:  sdk.MustNewDecFromStr("1.02"),
+				MaxPriceImpact: osmomath.MustNewDecFromStr("0.001"),
+				ExternalPrice:  osmomath.MustNewDecFromStr("1.02"),
 			},
 			&poolmanagerqueryproto.EstimateTradeBasedOnPriceImpactResponse{},
 		},
@@ -129,12 +130,12 @@ func (s *QueryTestSuite) TestSimplifiedQueries() {
 	tradeImpact := &poolmanagerqueryproto.EstimateTradeBasedOnPriceImpactRequest{
 		FromCoin: sdk.Coin{
 			Denom:  "bar",
-			Amount: sdk.NewInt(100),
+			Amount: osmomath.NewInt(100),
 		},
 		ToCoinDenom:    "baz",
 		PoolId:         1,
-		MaxPriceImpact: sdk.MustNewDecFromStr("0.01"),
-		ExternalPrice:  sdk.MustNewDecFromStr("0.02"),
+		MaxPriceImpact: osmomath.MustNewDecFromStr("0.01"),
+		ExternalPrice:  osmomath.MustNewDecFromStr("0.02"),
 	}
 	output5 := &poolmanagerqueryproto.EstimateTradeBasedOnPriceImpactResponse{}
 	err = s.QueryHelper.Invoke(gocontext.Background(),

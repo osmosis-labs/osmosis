@@ -34,7 +34,7 @@ type MsgSwapSend struct {
 ### ComputeSwap
 
 ```go
-func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string) (retDecCoin sdk.DecCoin, spread sdk.Dec, err error)
+func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string) (retDecCoin sdk.DecCoin, spread osmomath.Dec, err error)
 ```
 
 This function detects the swap type from the offer and ask denominations and returns:

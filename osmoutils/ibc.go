@@ -2,12 +2,11 @@ package osmoutils
 
 import (
 	"encoding/json"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
-	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 )
 
 const IbcAcknowledgementErrorType = "ibc-acknowledgement-error"
@@ -31,13 +30,10 @@ func NewSuccessAckRepresentingAnError(ctx sdk.Context, err error, errorContent [
 
 // EmitIBCErrorEvents Emit and Log errors
 func EmitIBCErrorEvents(ctx sdk.Context, err error, errorContexts []string) {
-	logger := ctx.Logger().With("module", IbcAcknowledgementErrorType)
-
 	attributes := make([]sdk.Attribute, len(errorContexts)+1)
 	attributes[0] = sdk.NewAttribute("error", err.Error())
 	for i, s := range errorContexts {
 		attributes[i+1] = sdk.NewAttribute("error-context", s)
-		logger.Error(fmt.Sprintf("error-context: %v", s))
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{

@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting/assets"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting/assets"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
@@ -15,7 +15,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
 )
 
 func TestToMap(t *testing.T) {
@@ -27,19 +27,19 @@ func TestToMap(t *testing.T) {
 			{
 				Voter:        sdk.ValAddress(secp256k1.GenPrivKey().PubKey().Address()),
 				Denom:        assets.MicroKRWDenom,
-				ExchangeRate: sdk.NewDec(1600),
+				ExchangeRate: osmomath.NewDec(1600),
 				Power:        100,
 			},
 			{
 				Voter:        sdk.ValAddress(secp256k1.GenPrivKey().PubKey().Address()),
 				Denom:        assets.MicroKRWDenom,
-				ExchangeRate: sdk.ZeroDec(),
+				ExchangeRate: osmomath.ZeroDec(),
 				Power:        100,
 			},
 			{
 				Voter:        sdk.ValAddress(secp256k1.GenPrivKey().PubKey().Address()),
 				Denom:        assets.MicroKRWDenom,
-				ExchangeRate: sdk.NewDec(1500),
+				ExchangeRate: osmomath.NewDec(1500),
 				Power:        100,
 			},
 		},
@@ -61,24 +61,24 @@ func TestToMap(t *testing.T) {
 
 func TestToCrossRate(t *testing.T) {
 	data := []struct {
-		base     sdk.Dec
-		quote    sdk.Dec
-		expected sdk.Dec
+		base     osmomath.Dec
+		quote    osmomath.Dec
+		expected osmomath.Dec
 	}{
 		{
-			base:     sdk.NewDec(1600),
-			quote:    sdk.NewDec(100),
-			expected: sdk.NewDec(16),
+			base:     osmomath.NewDec(1600),
+			quote:    osmomath.NewDec(100),
+			expected: osmomath.NewDec(16),
 		},
 		{
-			base:     sdk.NewDec(0),
-			quote:    sdk.NewDec(100),
-			expected: sdk.NewDec(16),
+			base:     osmomath.NewDec(0),
+			quote:    osmomath.NewDec(100),
+			expected: osmomath.NewDec(16),
 		},
 		{
-			base:     sdk.NewDec(1600),
-			quote:    sdk.NewDec(0),
-			expected: sdk.NewDec(16),
+			base:     osmomath.NewDec(1600),
+			quote:    osmomath.NewDec(0),
+			expected: osmomath.NewDec(16),
 		},
 	}
 
@@ -96,7 +96,7 @@ func TestToCrossRate(t *testing.T) {
 		if !data.base.IsZero() && !data.quote.IsZero() {
 			cb = append(cb, types.NewVoteForTally(data.base.Quo(data.quote), assets.MicroKRWDenom, valAddr, 100))
 		} else {
-			cb = append(cb, types.NewVoteForTally(sdk.ZeroDec(), assets.MicroKRWDenom, valAddr, 0))
+			cb = append(cb, types.NewVoteForTally(osmomath.ZeroDec(), assets.MicroKRWDenom, valAddr, 0))
 		}
 	}
 
@@ -109,15 +109,15 @@ func TestToCrossRate(t *testing.T) {
 }
 
 func TestSqrt(t *testing.T) {
-	num := sdk.NewDecWithPrec(144, 4)
+	num := osmomath.NewDecWithPrec(144, 4)
 	floatNum, err := strconv.ParseFloat(num.String(), 64)
 	require.NoError(t, err)
 
 	floatNum = math.Sqrt(floatNum)
-	num, err = sdk.NewDecFromStr(fmt.Sprintf("%f", floatNum))
+	num, err = osmomath.NewDecFromStr(fmt.Sprintf("%f", floatNum))
 	require.NoError(t, err)
 
-	require.Equal(t, sdk.NewDecWithPrec(12, 2), num)
+	require.Equal(t, osmomath.NewDecWithPrec(12, 2), num)
 }
 
 func TestPBPower(t *testing.T) {
@@ -129,7 +129,7 @@ func TestPBPower(t *testing.T) {
 	for i := 0; i < len(sk.Validators()); i++ {
 		power := sk.Validator(ctx, valAccAddrs[i]).GetConsensusPower(sdk.DefaultPowerReduction)
 		vote := types.NewVoteForTally(
-			sdk.ZeroDec(),
+			osmomath.ZeroDec(),
 			assets.MicroSDRDenom,
 			valAccAddrs[i],
 			power,
@@ -148,7 +148,7 @@ func TestPBPower(t *testing.T) {
 	pubKey := secp256k1.GenPrivKey().PubKey()
 	faceValAddr := sdk.ValAddress(pubKey.Address())
 	fakeVote := types.NewVoteForTally(
-		sdk.OneDec(),
+		osmomath.OneDec(),
 		assets.MicroSDRDenom,
 		faceValAddr,
 		0,
@@ -163,7 +163,7 @@ func TestPBWeightedMedian(t *testing.T) {
 		inputs      []int64
 		weights     []int64
 		isValidator []bool
-		median      sdk.Dec
+		median      osmomath.Dec
 		panic       bool
 	}{
 		{
@@ -171,7 +171,7 @@ func TestPBWeightedMedian(t *testing.T) {
 			[]int64{1, 2, 10, 100000},
 			[]int64{1, 1, 100, 1},
 			[]bool{true, true, true, true},
-			sdk.NewDec(10),
+			osmomath.NewDec(10),
 			false,
 		},
 		{
@@ -179,7 +179,7 @@ func TestPBWeightedMedian(t *testing.T) {
 			[]int64{1, 2, 10, 100000, 10000000000},
 			[]int64{1, 1, 100, 1, 10000},
 			[]bool{true, true, true, true, false},
-			sdk.NewDec(10),
+			osmomath.NewDec(10),
 			false,
 		},
 		{
@@ -187,7 +187,7 @@ func TestPBWeightedMedian(t *testing.T) {
 			[]int64{1, 2, 3, 4},
 			[]int64{1, 100, 100, 1},
 			[]bool{true, true, true, true},
-			sdk.NewDec(2),
+			osmomath.NewDec(2),
 			false,
 		},
 		{
@@ -195,7 +195,7 @@ func TestPBWeightedMedian(t *testing.T) {
 			[]int64{},
 			[]int64{},
 			[]bool{true, true, true, true},
-			sdk.NewDec(0),
+			osmomath.NewDec(0),
 			false,
 		},
 		{
@@ -203,7 +203,7 @@ func TestPBWeightedMedian(t *testing.T) {
 			[]int64{2, 1, 10, 100000},
 			[]int64{1, 1, 100, 1},
 			[]bool{true, true, true, true},
-			sdk.NewDec(10),
+			osmomath.NewDec(10),
 			true,
 		},
 	}
@@ -219,7 +219,7 @@ func TestPBWeightedMedian(t *testing.T) {
 			}
 
 			vote := types.NewVoteForTally(
-				sdk.NewDec(input),
+				osmomath.NewDec(input),
 				assets.MicroSDRDenom,
 				valAddr,
 				power,
@@ -245,35 +245,35 @@ func TestPBStandardDeviation(t *testing.T) {
 		inputs            []float64
 		weights           []int64
 		isValidator       []bool
-		standardDeviation sdk.Dec
+		standardDeviation osmomath.Dec
 	}{
 		{
 			// Supermajority one number
 			[]float64{1.0, 2.0, 10.0, 100000.0},
 			[]int64{1, 1, 100, 1},
 			[]bool{true, true, true, true},
-			sdk.NewDecWithPrec(4999500036300, types.OracleDecPrecision),
+			osmomath.NewDecWithPrec(4999500036300, types.OracleDecPrecision),
 		},
 		{
 			// Adding fake validator doesn't change outcome
 			[]float64{1.0, 2.0, 10.0, 100000.0, 10000000000},
 			[]int64{1, 1, 100, 1, 10000},
 			[]bool{true, true, true, true, false},
-			sdk.NewDecWithPrec(447213595075100600, types.OracleDecPrecision),
+			osmomath.NewDecWithPrec(447213595075100600, types.OracleDecPrecision),
 		},
 		{
 			// Tie votes
 			[]float64{1.0, 2.0, 3.0, 4.0},
 			[]int64{1, 100, 100, 1},
 			[]bool{true, true, true, true},
-			sdk.NewDecWithPrec(122474500, types.OracleDecPrecision),
+			osmomath.NewDecWithPrec(122474500, types.OracleDecPrecision),
 		},
 		{
 			// No votes
 			[]float64{},
 			[]int64{},
 			[]bool{true, true, true, true},
-			sdk.NewDecWithPrec(0, 0),
+			osmomath.NewDecWithPrec(0, 0),
 		},
 	}
 
@@ -289,7 +289,7 @@ func TestPBStandardDeviation(t *testing.T) {
 			}
 
 			vote := types.NewVoteForTally(
-				sdk.NewDecWithPrec(int64(input*base), int64(types.OracleDecPrecision)),
+				osmomath.NewDecWithPrec(int64(input*base), int64(types.OracleDecPrecision)),
 				assets.MicroSDRDenom,
 				valAddr,
 				power,
@@ -304,11 +304,11 @@ func TestPBStandardDeviation(t *testing.T) {
 
 func TestPBStandardDeviationOverflow(t *testing.T) {
 	valAddr := sdk.ValAddress(secp256k1.GenPrivKey().PubKey().Address())
-	exchangeRate, err := sdk.NewDecFromStr("100000000000000000000000000000000000000000000000000000000.0")
+	exchangeRate, err := osmomath.NewDecFromStr("100000000000000000000000000000000000000000000000000000000.0")
 	require.NoError(t, err)
 
 	pb := types.ExchangeRateBallot{types.NewVoteForTally(
-		sdk.ZeroDec(),
+		osmomath.ZeroDec(),
 		assets.MicroSDRDenom,
 		valAddr,
 		2,
@@ -319,7 +319,7 @@ func TestPBStandardDeviationOverflow(t *testing.T) {
 		1,
 	)}
 
-	require.Equal(t, sdk.ZeroDec(), pb.StandardDeviation(pb.WeightedMedian()))
+	require.Equal(t, osmomath.ZeroDec(), pb.StandardDeviation(pb.WeightedMedian()))
 }
 
 func TestNewClaim(t *testing.T) {

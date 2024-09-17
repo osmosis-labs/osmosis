@@ -6,10 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
 
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
 )
 
 // Returns a list of newly created lockIDs, or an error.
@@ -59,7 +59,7 @@ func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolI
 	}
 
 	// 6) ExitPool with these unlocked LP shares
-	// minOutCoins is set to 0 for now, because no sandwitching can really be done atm for UST pools
+	// minOutCoins is set to 0 for now, because no sandwiching can really be done atm for UST pools
 	minOutCoins := sdk.NewCoins()
 	exitedCoins, err := k.gk.ExitPool(ctx, sender, poolId, gammSharesInLock.Amount, minOutCoins)
 	if err != nil {

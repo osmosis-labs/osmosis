@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -17,7 +18,7 @@ func NewTokenPairArbRoutes(routes []Route, tokenA, tokenB string) TokenPairArbRo
 
 func ValidateTokenPairArbRoutes(tokenPairArbRoutes []TokenPairArbRoutes) error {
 	if tokenPairArbRoutes == nil {
-		return fmt.Errorf("token pair arb routes cannot be nil")
+		return errors.New("token pair arb routes cannot be nil")
 	}
 
 	seenPairs := make(map[string]bool)
@@ -39,22 +40,22 @@ func ValidateTokenPairArbRoutes(tokenPairArbRoutes []TokenPairArbRoutes) error {
 
 func (tp *TokenPairArbRoutes) Validate() error {
 	if tp == nil {
-		return fmt.Errorf("token pair cannot be nil")
+		return errors.New("token pair cannot be nil")
 	}
 
 	// Validate that the token pair is valid
 	if tp.TokenIn == "" || tp.TokenOut == "" {
-		return fmt.Errorf("token names cannot be empty")
+		return errors.New("token names cannot be empty")
 	}
 
 	if tp.ArbRoutes == nil || len(tp.ArbRoutes) == 0 {
-		return fmt.Errorf("there must be at least one route")
+		return errors.New("there must be at least one route")
 	}
 
 	// Iterate through all of the possible routes for this pool
 	for _, route := range tp.ArbRoutes {
 		if route.StepSize.IsNil() || route.StepSize.LT(osmomath.OneInt()) {
-			return fmt.Errorf("step size must be greater than 0")
+			return errors.New("step size must be greater than 0")
 		}
 
 		// Validate that the route is valid
@@ -76,12 +77,12 @@ func (tp *TokenPairArbRoutes) Validate() error {
 func isValidRoute(route Route) error {
 	// support routes of varying length (with the exception of length 1)
 	if len(route.Trades) <= 1 {
-		return fmt.Errorf("there must be at least two trades (hops) per route")
+		return errors.New("there must be at least two trades (hops) per route")
 	}
 
 	// Out and in denoms must match
 	if route.Trades[0].TokenIn != route.Trades[len(route.Trades)-1].TokenOut {
-		return fmt.Errorf("the first and last trades must have matching denoms")
+		return errors.New("the first and last trades must have matching denoms")
 	}
 
 	// Iterate through all of the trades in the route
@@ -89,7 +90,7 @@ func isValidRoute(route Route) error {
 	for _, trade := range route.Trades[1:] {
 		// Validate that the denoms match
 		if prevDenom != trade.TokenIn {
-			return fmt.Errorf("the denoms must match across hops")
+			return errors.New("the denoms must match across hops")
 		}
 
 		// Update the previous denom
@@ -115,11 +116,11 @@ func hasPlaceholderPool(swapInDenom, swapOutDenom string, trades []Trade) error 
 	}
 
 	if !foundPair {
-		return fmt.Errorf("the token pair that is going to be arbitraged must appear in each route")
+		return errors.New("the token pair that is going to be arbitraged must appear in each route")
 	}
 
 	if !foundPlaceholder {
-		return fmt.Errorf("there must be a placeholder pool id of 0 for the token pair that we are arbitraging")
+		return errors.New("there must be a placeholder pool id of 0 for the token pair that we are arbitraging")
 	}
 
 	return nil

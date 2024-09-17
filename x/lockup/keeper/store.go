@@ -8,9 +8,10 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v26/x/lockup/types"
 
 	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -56,7 +57,7 @@ func syntheticLockTimeStoreKey(lockID uint64, synthDenom string, endTime time.Ti
 // nolint: unused
 func (k Keeper) getLockRefs(ctx sdk.Context, key []byte) []uint64 {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, key)
+	iterator := storetypes.KVStorePrefixIterator(store, key)
 	defer iterator.Close()
 
 	lockIDs := []uint64{}

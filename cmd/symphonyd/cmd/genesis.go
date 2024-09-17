@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
+	oracletypes "github.com/osmosis-labs/osmosis/v26/x/oracle/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v26/x/txfees/types"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -29,11 +29,11 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appParams "github.com/osmosis-labs/osmosis/v23/app/params"
+	appParams "github.com/osmosis-labs/osmosis/v26/app/params"
 
-	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
-	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v26/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v26/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v26/x/pool-incentives/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -111,7 +111,7 @@ Example:
 	return cmd
 }
 
-func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessage, genDoc *tmtypes.GenesisDoc, genesisParams GenesisParams, chainID string) (map[string]json.RawMessage, *tmtypes.GenesisDoc, error) {
+func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessage, genDoc *genutiltypes.AppGenesis, genesisParams GenesisParams, chainID string) (map[string]json.RawMessage, *genutiltypes.AppGenesis, error) {
 	depCdc := clientCtx.Codec
 	cdc := depCdc
 
@@ -119,7 +119,7 @@ func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessag
 	genDoc.ChainID = chainID
 	genDoc.GenesisTime = genesisParams.GenesisTime
 
-	genDoc.ConsensusParams = genesisParams.ConsensusParams
+	genDoc.Consensus.Params = genesisParams.ConsensusParams
 
 	// ---
 	// staking module genesis
@@ -399,16 +399,16 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.TxFees.Basedenom = genParams.NativeCoinMetadatas[0].Base
 
 	// oracle
-	defaultTobixTax := sdk.ZeroDec()
+	defaultTobixTax := osmomath.ZeroDec()
 	genParams.OracleState.TobinTaxes = []oracletypes.TobinTax{
 		{Denom: appParams.MicroUSDDenom, TobinTax: defaultTobixTax},
 		{Denom: appParams.MicroHKDDenom, TobinTax: defaultTobixTax},
 		{Denom: appParams.MicroVNDDenom, TobinTax: defaultTobixTax},
 	}
 	genParams.OracleState.ExchangeRates = oracletypes.ExchangeRateTuples{
-		{Denom: appParams.MicroUSDDenom, ExchangeRate: sdk.NewDecWithPrec(10, 0)},    // 1 USD = 10 MLD
-		{Denom: appParams.MicroHKDDenom, ExchangeRate: sdk.NewDecWithPrec(12820, 4)}, // 1 HKD = 1,2820 MLD
-		{Denom: appParams.MicroVNDDenom, ExchangeRate: sdk.NewDecWithPrec(399, 6)},   // 1 VND = 0,000399 MLD
+		{Denom: appParams.MicroUSDDenom, ExchangeRate: osmomath.NewDecWithPrec(10, 0)},    // 1 USD = 10 MLD
+		{Denom: appParams.MicroHKDDenom, ExchangeRate: osmomath.NewDecWithPrec(12820, 4)}, // 1 HKD = 1,2820 MLD
+		{Denom: appParams.MicroVNDDenom, ExchangeRate: osmomath.NewDecWithPrec(399, 6)},   // 1 VND = 0,000399 MLD
 	}
 
 	return genParams
@@ -466,12 +466,12 @@ func createTestnetAccounts(genParams *GenesisParams) error {
 	var accs authtypes.GenesisAccounts
 	var bankBalances []banktypes.Balance
 	genesisBalances := map[string]sdk.Coins{
-		"symphony13luum7djwdhkqg3tw9rae04an6rl036095d7qr": sdk.NewCoins(sdk.NewCoin("note", sdk.NewInt(10_000_000*appParams.MicroUnit))), // 10 million note
-		"symphony1qdvzqujxqd0pqwcdtpxgfcqcvxn777kax7mu86": sdk.NewCoins(sdk.NewCoin("note", sdk.NewInt(1_000_000*appParams.MicroUnit))),  // 1 million note to faucet
-		"symphony1nkdh6l5wkygv7cuw6kfalknpus6fqmsr746f6k": sdk.NewCoins(sdk.NewCoin("note", sdk.NewInt(1_000*appParams.MicroUnit))),      // 1,000 note to validator
-		"symphony16agv74asz2zlcyq4eusk4h0hkxwpp0hxex83jk": sdk.NewCoins(sdk.NewCoin("note", sdk.NewInt(1_000*appParams.MicroUnit))),      // 1,000 note to validator
-		"symphony1dmlepawltn5hrvmz6humx99rrh48jdst4dce86": sdk.NewCoins(sdk.NewCoin("note", sdk.NewInt(1_000*appParams.MicroUnit))),      // 1,000 note to validator
-		"symphony1vhhgnhmnw0x9zfslv4m2plchx8ecgthugemp74": sdk.NewCoins(sdk.NewCoin("note", sdk.NewInt(1_000*appParams.MicroUnit))),      // 1,000 note to validator
+		"symphony13luum7djwdhkqg3tw9rae04an6rl036095d7qr": sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(10_000_000*appParams.MicroUnit))), // 10 million note
+		"symphony1qdvzqujxqd0pqwcdtpxgfcqcvxn777kax7mu86": sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(1_000_000*appParams.MicroUnit))),  // 1 million note to faucet
+		"symphony1nkdh6l5wkygv7cuw6kfalknpus6fqmsr746f6k": sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(1_000*appParams.MicroUnit))),      // 1,000 note to validator
+		"symphony16agv74asz2zlcyq4eusk4h0hkxwpp0hxex83jk": sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(1_000*appParams.MicroUnit))),      // 1,000 note to validator
+		"symphony1dmlepawltn5hrvmz6humx99rrh48jdst4dce86": sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(1_000*appParams.MicroUnit))),      // 1,000 note to validator
+		"symphony1vhhgnhmnw0x9zfslv4m2plchx8ecgthugemp74": sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(1_000*appParams.MicroUnit))),      // 1,000 note to validator
 	}
 
 	createTestnetAirdropAccounts(genesisBalances)
@@ -729,6 +729,6 @@ func createTestnetAirdropAccounts(genesisBalances map[string]sdk.Coins) {
 	}
 
 	for _, acc := range airDropAccounts {
-		genesisBalances[acc] = sdk.NewCoins(sdk.NewCoin("note", sdk.NewInt(appParams.MicroUnit))) // 1 MLD
+		genesisBalances[acc] = sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(appParams.MicroUnit))) // 1 MLD
 	}
 }

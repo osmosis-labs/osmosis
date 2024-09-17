@@ -5,8 +5,9 @@ import "cosmos/base/v1beta1/coin.proto";
 import "gogoproto/gogo.proto";
 import "amino/amino.proto";
 import "osmosis/gamm/poolmodels/stableswap/v1beta1/stableswap_pool.proto";
+import "cosmos/msg/v1/msg.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/stableswap";
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/stableswap";
 
 service Msg {
   rpc CreateStableswapPool(MsgCreateStableswapPool)
@@ -18,6 +19,7 @@ service Msg {
 // ===================== MsgCreatePool
 message MsgCreateStableswapPool {
   option (amino.name) = "osmosis/gamm/create-stableswap-pool";
+  option (cosmos.msg.v1.signer) = "sender";
 
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
 
@@ -47,6 +49,7 @@ message MsgCreateStableswapPoolResponse {
 // succeed. Adjusts stableswap scaling factors.
 message MsgStableSwapAdjustScalingFactors {
   option (amino.name) = "osmosis/gamm/stableswap-adjust-scaling-factors";
+  option (cosmos.msg.v1.signer) = "sender";
 
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 pool_id = 2 [ (gogoproto.customname) = "PoolID" ];

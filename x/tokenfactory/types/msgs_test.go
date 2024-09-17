@@ -8,8 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v26/x/tokenfactory"
+	"github.com/osmosis-labs/osmosis/v26/x/tokenfactory/types"
 
 	"github.com/cometbft/cometbft/crypto/ed25519"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -51,13 +52,13 @@ func TestAuthzMsg(t *testing.T) {
 			msg: &types.MsgChangeAdmin{
 				Sender:   addr1,
 				Denom:    "denom",
-				NewAdmin: "symphony1c7n9lu0jxzwgk8z0nrqknexsmtwxpjwavvryz6",
+				NewAdmin: "osmo1q8tq5qhrhw6t970egemuuwywhlhpnmdmts6xnu",
 			},
 		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			apptesting.TestMessageAuthzSerialization(t, tc.msg)
+			apptesting.TestMessageAuthzSerialization(t, tc.msg, tokenfactory.AppModuleBasic{})
 		})
 	}
 }

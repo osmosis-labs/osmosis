@@ -3,7 +3,7 @@ package osmosis.oracle.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v23/x/oracle/types";
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/oracle/types";
 
 // Params defines the parameters for the oracle module.
 message Params {
@@ -13,12 +13,12 @@ message Params {
   uint64 vote_period = 1 [ (gogoproto.moretags) = "yaml:\"vote_period\"" ];
   string vote_threshold = 2 [
     (gogoproto.moretags) = "yaml:\"vote_threshold\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
   string reward_band = 3 [
     (gogoproto.moretags) = "yaml:\"reward_band\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
   uint64 reward_distribution_window = 4
@@ -30,13 +30,13 @@ message Params {
   ];
   string slash_fraction = 6 [
     (gogoproto.moretags) = "yaml:\"slash_fraction\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
   uint64 slash_window = 7 [ (gogoproto.moretags) = "yaml:\"slash_window\"" ];
   string min_valid_per_window = 8 [
     (gogoproto.moretags) = "yaml:\"min_valid_per_window\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }
@@ -50,7 +50,7 @@ message Denom {
   string name = 1 [ (gogoproto.moretags) = "yaml:\"name\"" ];
   string tobin_tax = 2 [
     (gogoproto.moretags) = "yaml:\"tobin_tax\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }
@@ -94,7 +94,7 @@ message ExchangeRateTuple {
   string denom = 1 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
   string exchange_rate = 2 [
     (gogoproto.moretags) = "yaml:\"exchange_rate\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }

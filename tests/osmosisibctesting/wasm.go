@@ -12,10 +12,10 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v23/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v26/x/ibc-rate-limit/types"
 )
 
 func (chain *TestChain) StoreContractCode(suite *suite.Suite, path string) {
@@ -23,9 +23,9 @@ func (chain *TestChain) StoreContractCode(suite *suite.Suite, path string) {
 }
 
 func (chain *TestChain) InstantiateRLContract(suite *suite.Suite, quotas string) sdk.AccAddress {
-	symphonyApp := chain.GetSymphonyApp()
-	transferModule := symphonyApp.AccountKeeper.GetModuleAddress(transfertypes.ModuleName)
-	govModule := symphonyApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
+	osmosisApp := chain.GetOsmosisApp()
+	transferModule := osmosisApp.AccountKeeper.GetModuleAddress(transfertypes.ModuleName)
+	govModule := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
 
 	initMsgBz := []byte(fmt.Sprintf(`{
            "gov_module":  "%s",
@@ -34,18 +34,18 @@ func (chain *TestChain) InstantiateRLContract(suite *suite.Suite, quotas string)
         }`,
 		govModule, transferModule, quotas))
 
-	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(symphonyApp.WasmKeeper)
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
 	codeID := uint64(1)
-	creator := symphonyApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
+	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
 	addr, _, err := contractKeeper.Instantiate(chain.GetContext(), codeID, creator, creator, initMsgBz, "rate limiting contract", nil)
 	suite.Require().NoError(err)
 	return addr
 }
 
 func (chain *TestChain) StoreContractCodeDirect(suite *suite.Suite, path string) uint64 {
-	symphonyApp := chain.GetSymphonyApp()
-	govKeeper := wasmkeeper.NewGovPermissionKeeper(symphonyApp.WasmKeeper)
-	creator := symphonyApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
+	osmosisApp := chain.GetOsmosisApp()
+	govKeeper := wasmkeeper.NewGovPermissionKeeper(osmosisApp.WasmKeeper)
+	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
 
 	wasmCode, err := os.ReadFile(path)
 	suite.Require().NoError(err)
@@ -56,24 +56,24 @@ func (chain *TestChain) StoreContractCodeDirect(suite *suite.Suite, path string)
 }
 
 func (chain *TestChain) InstantiateContract(suite *suite.Suite, msg string, codeID uint64) sdk.AccAddress {
-	symphonyApp := chain.GetSymphonyApp()
-	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(symphonyApp.WasmKeeper)
-	creator := symphonyApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
+	osmosisApp := chain.GetOsmosisApp()
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
+	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
 	addr, _, err := contractKeeper.Instantiate(chain.GetContext(), codeID, creator, creator, []byte(msg), "contract", nil)
 	suite.Require().NoError(err)
 	return addr
 }
 
 func (chain *TestChain) QueryContract(suite *suite.Suite, contract sdk.AccAddress, key []byte) string {
-	symphonyApp := chain.GetSymphonyApp()
-	state, err := symphonyApp.WasmKeeper.QuerySmart(chain.GetContext(), contract, key)
+	osmosisApp := chain.GetOsmosisApp()
+	state, err := osmosisApp.WasmKeeper.QuerySmart(chain.GetContext(), contract, key)
 	suite.Require().NoError(err)
 	return string(state)
 }
 
 func (chain *TestChain) QueryContractJson(suite *suite.Suite, contract sdk.AccAddress, key []byte) gjson.Result {
-	symphonyApp := chain.GetSymphonyApp()
-	state, err := symphonyApp.WasmKeeper.QuerySmart(chain.GetContext(), contract, key)
+	osmosisApp := chain.GetOsmosisApp()
+	state, err := osmosisApp.WasmKeeper.QuerySmart(chain.GetContext(), contract, key)
 	suite.Require().NoError(err)
 	suite.Require().True(gjson.Valid(string(state)))
 	json := gjson.Parse(string(state))
@@ -81,13 +81,19 @@ func (chain *TestChain) QueryContractJson(suite *suite.Suite, contract sdk.AccAd
 	return json
 }
 
+func (chain *TestChain) ExecuteContract(contract, sender sdk.AccAddress, msg []byte, funds sdk.Coins) ([]byte, error) {
+	osmosisApp := chain.GetOsmosisApp()
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
+	return contractKeeper.Execute(chain.GetContext(), contract, sender, msg, funds)
+}
+
 func (chain *TestChain) RegisterRateLimitingContract(addr []byte) {
-	addrStr, err := sdk.Bech32ifyAddressBytes("symphony", addr)
-	require.NoError(chain.T, err)
+	addrStr, err := sdk.Bech32ifyAddressBytes("osmo", addr)
+	require.NoError(chain.TB, err)
 	params, err := types.NewParams(addrStr)
-	require.NoError(chain.T, err)
-	symphonyApp := chain.GetSymphonyApp()
-	paramSpace, ok := symphonyApp.AppKeepers.ParamsKeeper.GetSubspace(types.ModuleName)
-	require.True(chain.T, ok)
+	require.NoError(chain.TB, err)
+	osmosisApp := chain.GetOsmosisApp()
+	paramSpace, ok := osmosisApp.AppKeepers.ParamsKeeper.GetSubspace(types.ModuleName)
+	require.True(chain.TB, ok)
 	paramSpace.SetParamSet(chain.GetContext(), &params)
 }

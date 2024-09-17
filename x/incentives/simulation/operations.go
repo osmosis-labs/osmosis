@@ -5,17 +5,17 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmosimtypes "github.com/osmosis-labs/osmosis/v23/simulation/simtypes"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v26/simulation/simtypes"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
-	"github.com/osmosis-labs/osmosis/v23/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v26/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
@@ -30,6 +30,11 @@ const (
 	OpWeightMsgAddToGauge           = "op_weight_msg_add_to_gauge"
 )
 
+var (
+	typeMsgCreateGauge = sdk.MsgTypeURL(&types.MsgCreateGauge{})
+	typeMsgAddToGauge  = sdk.MsgTypeURL(&types.MsgAddToGauge{})
+)
+
 // WeightedOperations returns all the operations from the module with their respective weights.
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak stakingTypes.AccountKeeper,
@@ -40,13 +45,16 @@ func WeightedOperations(
 		weightMsgAddToGauge  int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgCreateGauge, &weightMsgCreateGauge, nil,
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	protoCdc := codec.NewProtoCodec(interfaceRegistry)
+
+	appParams.GetOrGenerate(OpWeightMsgCreateGauge, &weightMsgCreateGauge, nil,
 		func(_ *rand.Rand) {
 			weightMsgCreateGauge = stakingsim.DefaultWeightMsgCreateValidator
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgAddToGauge, &weightMsgAddToGauge, nil,
+	appParams.GetOrGenerate(OpWeightMsgAddToGauge, &weightMsgAddToGauge, nil,
 		func(_ *rand.Rand) {
 			weightMsgAddToGauge = stakingsim.DefaultWeightMsgCreateValidator
 		},
@@ -55,11 +63,11 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgCreateGauge,
-			SimulateMsgCreateGauge(ak, bk, ek, k),
+			SimulateMsgCreateGauge(protoCdc, ak, bk, ek, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgAddToGauge,
-			SimulateMsgAddToGauge(ak, bk, k),
+			SimulateMsgAddToGauge(protoCdc, ak, bk, k),
 		),
 	}
 }
@@ -122,7 +130,7 @@ func Max(x, y int) int {
 }
 
 // SimulateMsgCreateGauge generates and executes a MsgCreateGauge with random parameters
-func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk osmosimtypes.BankKeeper, ek types.EpochKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgCreateGauge(cdc *codec.ProtoCodec, ak stakingTypes.AccountKeeper, bk osmosimtypes.BankKeeper, ek types.EpochKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -154,14 +162,17 @@ func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk osmosimtypes.BankK
 			NumEpochsPaidOver: numEpochsPaidOver,
 		}
 
-		txGen := testutil.MakeTestEncodingConfig().TxConfig
-		return osmosimtypes.GenAndDeliverTxWithRandFees(
-			r, app, txGen, &msg, rewards, ctx, simAccount, ak, bk, types.ModuleName)
+		opMsg, err := osmosimtypes.GenerateAndDeliverTx(r, app, ctx, chainID, cdc, ak, bk, simAccount, types.ModuleName, &msg, typeMsgCreateGauge, false)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreateGauge, "unable to generate and deliver tx"), nil, err
+		}
+
+		return opMsg, nil, nil
 	}
 }
 
 // SimulateMsgAddToGauge generates and executes a MsgAddToGauge with random parameters
-func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk osmosimtypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgAddToGauge(cdc *codec.ProtoCodec, ak stakingTypes.AccountKeeper, bk osmosimtypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -189,10 +200,12 @@ func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk osmosimtypes.BankKe
 			Rewards: rewards,
 		}
 
-		txGen := testutil.MakeTestEncodingConfig().TxConfig
-		return osmosimtypes.GenAndDeliverTxWithRandFees(
-			r, app, txGen, &msg, rewards, ctx, simAccount, ak, bk, types.ModuleName,
-		)
+		opMsg, err := osmosimtypes.GenerateAndDeliverTx(r, app, ctx, chainID, cdc, ak, bk, simAccount, types.ModuleName, &msg, typeMsgAddToGauge, false)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgAddToGauge, "unable to generate and deliver tx"), nil, err
+		}
+
+		return opMsg, nil, nil
 	}
 }
 

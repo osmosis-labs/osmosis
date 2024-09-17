@@ -2,9 +2,9 @@ package types
 
 import (
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmomath"
 
 	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // query endpoints supported by the auth Querier
@@ -44,8 +44,8 @@ type TaxCapsQueryResponse []TaxCapsResponseItem
 
 // IndicatorQueryResponse query response body
 type IndicatorQueryResponse struct {
-	TRLYear  sdk.Dec `json:"trl_year"`
-	TRLMonth sdk.Dec `json:"trl_month"`
+	TRLYear  osmomath.Dec `json:"trl_year"`
+	TRLMonth osmomath.Dec `json:"trl_month"`
 }
 
 // String implements fmt.Stringer interface

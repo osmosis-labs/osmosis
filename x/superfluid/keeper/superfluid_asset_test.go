@@ -2,7 +2,7 @@ package keeper_test
 
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestSuperfluidAssetSetGetDeleteFlow() {
@@ -42,10 +42,10 @@ func (s *KeeperTestSuite) TestSuperfluidAssetSetGetDeleteFlow() {
 	s.Require().Len(assets, 0)
 }
 
-func (s *KeeperTestSuite) TestGetRiskAdjustedMelodyValue() {
+func (s *KeeperTestSuite) TestGetRiskAdjustedOsmoValue() {
 	s.SetupTest()
 
-	adjustedValue := s.App.SuperfluidKeeper.GetRiskAdjustedMelodyValue(
+	adjustedValue := s.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(
 		s.Ctx,
 		osmomath.NewInt(100),
 	)

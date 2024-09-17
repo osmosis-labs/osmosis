@@ -3,11 +3,11 @@ package concentrated_liquidity
 import (
 	"strconv"
 
-	"github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	"github.com/hashicorp/go-metrics"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	types "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	types "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
 )
 
 // emitAccumulatorUpdateTelemetry emits telemetry for accumulator updates

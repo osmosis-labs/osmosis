@@ -7,10 +7,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 const (
@@ -24,8 +24,6 @@ var (
 	TwoHundredFooCoins      = sdk.NewDecCoin("foo", osmomath.NewInt(200))
 	TwoHundredBarCoins      = sdk.NewDecCoin("bar", osmomath.NewInt(200))
 	PerUnitLiqScalingFactor = perUnitLiqScalingFactor
-
-	OneDecScalingFactor = oneDecScalingFactor
 )
 
 func (k Keeper) SetPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) error {
@@ -44,7 +42,7 @@ func (k Keeper) GetPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedP
 	return k.getPoolById(ctx, poolId)
 }
 
-func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64, nextTickInfo *model.TickInfo, swapStateSpreadRewardGrowth sdk.DecCoin, spreadRewardAccumValue sdk.DecCoins, uptimeAccums []*accum.AccumulatorObject) (liquidityDelta osmomath.Dec, err error) {
+func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64, nextTickInfo *model.TickInfo, swapStateSpreadRewardGrowth sdk.DecCoin, spreadRewardAccumValue sdk.DecCoins, uptimeAccums []*accum.AccumulatorObject) (err error) {
 	return k.crossTick(ctx, poolId, tickIndex, nextTickInfo, swapStateSpreadRewardGrowth, spreadRewardAccumValue, uptimeAccums)
 }
 
@@ -203,8 +201,8 @@ func (k Keeper) AddToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 	return k.addToPosition(ctx, owner, positionId, amount0Added, amount1Added, amount0Min, amount1Min)
 }
 
-func (ss *SwapState) UpdateSpreadRewardGrowthGlobal(spreadRewardChargeTotal osmomath.Dec) osmomath.Dec {
-	return ss.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal)
+func (ss *SwapState) UpdateSpreadRewardGrowthGlobal(spreadRewardChargeTotal, spreadFactor osmomath.Dec) (osmomath.Dec, error) {
+	return ss.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal, spreadFactor)
 }
 
 // Test helpers.
@@ -258,7 +256,7 @@ func (k Keeper) GetAllIncentiveRecordsForUptime(ctx sdk.Context, poolId uint64, 
 	return k.getAllIncentiveRecordsForUptime(ctx, poolId, minUptime)
 }
 
-func (k Keeper) CollectIncentives(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, sdk.Coins, error) {
+func (k Keeper) CollectIncentives(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, sdk.Coins, []sdk.Coins, error) {
 	return k.collectIncentives(ctx, owner, positionId)
 }
 
@@ -270,7 +268,7 @@ func UpdateAccumAndClaimRewards(accum *accum.AccumulatorObject, positionKey stri
 	return updateAccumAndClaimRewards(accum, positionKey, growthOutside)
 }
 
-func (k Keeper) PrepareClaimAllIncentivesForPosition(ctx sdk.Context, positionId uint64) (sdk.Coins, sdk.Coins, error) {
+func (k Keeper) PrepareClaimAllIncentivesForPosition(ctx sdk.Context, positionId uint64) (sdk.Coins, sdk.Coins, []sdk.Coins, error) {
 	return k.prepareClaimAllIncentivesForPosition(ctx, positionId)
 }
 
@@ -336,6 +334,10 @@ func (k Keeper) SetPoolHookContract(ctx sdk.Context, poolID uint64, actionPrefix
 	return k.setPoolHookContract(ctx, poolID, actionPrefix, cosmwasmAddress)
 }
 
+func (k Keeper) GetIncentiveScalingFactorForPool(ctx sdk.Context, poolID uint64) (osmomath.Dec, error) {
+	return k.getIncentiveScalingFactorForPool(ctx, poolID)
+}
+
 func (k Keeper) CallPoolActionListener(ctx sdk.Context, msgBuilderFn func(poolId uint64) ([]byte, error), poolId uint64, actionPrefix string) (err error) {
 	return k.callPoolActionListener(ctx, msgBuilderFn, poolId, actionPrefix)
 }
@@ -352,6 +354,14 @@ func ComputeTotalIncentivesToEmit(timeElapsedSeconds osmomath.Dec, emissionRate 
 	return computeTotalIncentivesToEmit(timeElapsedSeconds, emissionRate)
 }
 
-func (k Keeper) GetIncentiveScalingFactorForPool(ctx sdk.Context, poolID uint64) (osmomath.Dec, error) {
-	return k.getIncentiveScalingFactorForPool(ctx, poolID)
+func ScaleDownIncentiveAmount(incentiveAmount osmomath.Int, scalingFactor osmomath.Dec) (scaledTotalEmittedAmount osmomath.Int) {
+	return scaleDownIncentiveAmount(incentiveAmount, scalingFactor)
+}
+
+func ScaleDownSpreadRewardAmount(incentiveAmount osmomath.Int, scalingFactor osmomath.Dec) (scaledTotalEmittedAmount osmomath.Int) {
+	return scaleDownSpreadRewardAmount(incentiveAmount, scalingFactor)
+}
+
+func (k Keeper) RedepositForfeitedIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, scaledForfeitedIncentivesByUptime []sdk.Coins, totalForefeitedIncentives sdk.Coins) error {
+	return k.redepositForfeitedIncentives(ctx, poolId, owner, scaledForfeitedIncentivesByUptime, totalForefeitedIncentives)
 }

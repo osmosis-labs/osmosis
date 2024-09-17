@@ -1,27 +1,27 @@
 package types
 
 import (
+	context "context"
 	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	cltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
-	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 
-	HasSupply(ctx sdk.Context, denom string) bool
+	HasSupply(ctx context.Context, denom string) bool
 
-	SendCoinsFromModuleToManyAccounts(
-		ctx sdk.Context, senderModule string, recipientAddrs []sdk.AccAddress, amts []sdk.Coins,
-	) error
-	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	SendCoinsFromModuleToManyAccounts(ctx context.Context, senderModule string, recipientAddrs []sdk.AccAddress, amts []sdk.Coins) error
+
+	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 }
 
 // LockupKeeper defines the expected interface needed to retrieve locks.
@@ -39,7 +39,7 @@ type EpochKeeper interface {
 
 // CommunityPoolKeeper defines the contract needed to be fulfilled for distribution keeper.
 type CommunityPoolKeeper interface {
-	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
+	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
 
 // TxFeesKeeper defines the expected interface needed to managing transaction fees.
@@ -70,5 +70,10 @@ type GAMMKeeper interface {
 
 type PoolManagerKeeper interface {
 	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
-	GetMelodyVolumeForPool(ctx sdk.Context, poolId uint64) osmomath.Int
+	GetOsmoVolumeForPool(ctx sdk.Context, poolId uint64) osmomath.Int
+	GetPoolModuleAndPool(ctx sdk.Context, poolId uint64) (swapModule poolmanagertypes.PoolModuleI, pool poolmanagertypes.PoolI, err error)
+}
+
+type ProtorevKeeper interface {
+	GetPoolForDenomPairNoOrder(ctx sdk.Context, denom1, denom2 string) (uint64, error)
 }

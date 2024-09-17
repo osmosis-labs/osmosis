@@ -4,8 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestGenesisValidation(t *testing.T) {
@@ -13,15 +11,15 @@ func TestGenesisValidation(t *testing.T) {
 	require.NoError(t, ValidateGenesis(genState))
 
 	// Error - tax_rate range error
-	genState.TaxRate = sdk.NewDec(-1)
+	genState.TaxRate = osmomath.NewDec(-1)
 	require.Error(t, ValidateGenesis(genState))
 
 	// Error - tax_rate range error
-	genState.TaxRate = genState.Params.MaxFeeMultiplier.Add(sdk.NewDecWithPrec(1, 1))
+	genState.TaxRate = genState.Params.MaxFeeMultiplier.Add(osmomath.NewDecWithPrec(1, 1))
 	require.Error(t, ValidateGenesis(genState))
 
 	// Valid
-	genState.TaxRate = sdk.NewDecWithPrec(1, 2)
+	genState.TaxRate = osmomath.NewDecWithPrec(1, 2)
 	require.NoError(t, ValidateGenesis(genState))
 
 	// Valid

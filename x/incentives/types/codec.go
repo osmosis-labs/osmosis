@@ -5,23 +5,17 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-)
-
-var (
-	amino     = codec.NewLegacyAmino()
-	ModuleCdc = codec.NewAminoCodec(amino)
 )
 
 // RegisterCodec registers the necessary x/incentives interfaces and concrete types on the provided
 // LegacyAmino codec. These types are used for Amino JSON serialization.
 func RegisterCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgCreateGauge{}, "symphony/incentives/create-gauge", nil)
-	cdc.RegisterConcrete(&MsgAddToGauge{}, "symphony/incentives/add-to-gauge", nil)
+	cdc.RegisterConcrete(&MsgCreateGauge{}, "osmosis/incentives/create-gauge", nil)
+	cdc.RegisterConcrete(&MsgAddToGauge{}, "osmosis/incentives/add-to-gauge", nil)
 
 	// gov proposals
-	cdc.RegisterConcrete(&CreateGroupsProposal{}, "symphony/create-groups-proposal", nil)
+	cdc.RegisterConcrete(&CreateGroupsProposal{}, "osmosis/create-groups-proposal", nil)
 }
 
 // RegisterInterfaces registers interfaces and implementations of the incentives module.
@@ -38,14 +32,4 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
-}
-
-func init() {
-	RegisterCodec(amino)
-	// Register all Amino interfaces and concrete types on the authz Amino codec so that this can later be
-	// used to properly serialize MsgGrant and MsgExec instances
-	sdk.RegisterLegacyAminoCodec(amino)
-	RegisterCodec(authzcodec.Amino)
-
-	amino.Seal()
 }

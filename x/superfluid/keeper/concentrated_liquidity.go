@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
 )
 
 // addToConcentratedLiquiditySuperfluidPosition adds the specified amounts of tokens to an existing superfluid staked
@@ -70,13 +70,16 @@ func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, se
 	if lock.Owner != sender.String() {
 		return cltypes.CreateFullRangePositionData{}, 0, types.LockOwnerMismatchError{LockId: lockId, LockOwner: lock.Owner, ProvidedOwner: sender.String()}
 	}
-	unbondingDuration := k.sk.UnbondingTime(ctx)
+	unbondingDuration, err := k.sk.UnbondingTime(ctx)
+	if err != nil {
+		return cltypes.CreateFullRangePositionData{}, 0, err
+	}
 	if lock.Duration != unbondingDuration || !lock.EndTime.IsZero() {
 		return cltypes.CreateFullRangePositionData{}, 0, types.LockImproperStateError{LockId: lockId, UnbondingDuration: unbondingDuration.String()}
 	}
 
 	// Superfluid undelegate the superfluid delegated position.
-	// This deletes the connection between the lock and the intermediate account, deletes the synthetic lock, and burns the synthetic melody.
+	// This deletes the connection between the lock and the intermediate account, deletes the synthetic lock, and burns the synthetic osmo.
 	intermediateAccount, err := k.SuperfluidUndelegateToConcentratedPosition(ctx, sender.String(), lockId)
 	if err != nil {
 		return cltypes.CreateFullRangePositionData{}, 0, err
@@ -126,6 +129,7 @@ func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, se
 		sdk.NewEvent(
 			types.TypeEvtAddToConcentratedLiquiditySuperfluidPosition,
 			sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(position.PoolId, 10)),
 			sdk.NewAttribute(types.AttributePositionId, strconv.FormatUint(positionId, 10)),
 			sdk.NewAttribute(types.AttributeNewPositionId, strconv.FormatUint(positionData.ID, 10)),
 			sdk.NewAttribute(types.AttributeAmount0, positionData.Amount0.String()),

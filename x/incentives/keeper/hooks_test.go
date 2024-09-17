@@ -10,9 +10,10 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v26/x/incentives/types"
 )
 
 var (
@@ -20,7 +21,7 @@ var (
 	ETH   = apptesting.ETH
 	BAR   = apptesting.BAR
 	FOO   = apptesting.FOO
-	NOTE = apptesting.NOTE
+	UOSMO = appparams.BaseCoinUnit
 
 	defaultAmount = osmomath.NewInt(100_000_000_000)
 
@@ -422,7 +423,7 @@ func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_CreateGroupsBetween() {
 
 // This test focuses on configuring volume by swapping instead of using
 // a direct volume setter helper in poolmanager contrary to all other tests.
-// Since we track volume in bond denom (MELODY), we first setup 2 pools that are paired with the bond denom.
+// Since we track volume in bond denom (OSMO), we first setup 2 pools that are paired with the bond denom.
 // Next, we setup two pools that are to be packaged in group. One of the tokens in the pool is a token that is also
 // paired with bond denom in one of the first 2 pools.
 // Increase volume by swapping in the second pair of pools.
@@ -431,24 +432,25 @@ func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_CreateGroupsBetween() {
 // Call AfterEpochEnd hook.
 // Validate that the distribution is correct.
 func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_SwapAndDistribute() {
-	// Setup NOTE as bond denom
-	stakingParams := s.App.StakingKeeper.GetParams(s.Ctx)
-	stakingParams.BondDenom = NOTE
+	// Setup UOSMO as bond denom
+	stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	s.Require().NoError(err)
+	stakingParams.BondDenom = UOSMO
 	s.App.StakingKeeper.SetParams(s.Ctx, stakingParams)
 
-	// Create NOTE / USDC pool
+	// Create UOSMO / USDC pool
 	s.PrepareCustomBalancerPool([]balancer.PoolAsset{
-		{Token: sdk.NewCoin(NOTE, defaultAmount), Weight: sdk.OneInt()},
-		{Token: sdk.NewCoin(USDC, defaultAmount), Weight: sdk.OneInt()},
+		{Token: sdk.NewCoin(UOSMO, defaultAmount), Weight: osmomath.OneInt()},
+		{Token: sdk.NewCoin(USDC, defaultAmount), Weight: osmomath.OneInt()},
 	}, balancer.PoolParams{
 		SwapFee: osmomath.ZeroDec(),
 		ExitFee: osmomath.ZeroDec(),
 	})
 
-	// Create NOTE / BAR pool
+	// Create UOSMO / BAR pool
 	s.PrepareCustomBalancerPool([]balancer.PoolAsset{
-		{Token: sdk.NewCoin(NOTE, defaultAmount), Weight: sdk.OneInt()},
-		{Token: sdk.NewCoin(BAR, defaultAmount), Weight: sdk.OneInt()},
+		{Token: sdk.NewCoin(UOSMO, defaultAmount), Weight: osmomath.OneInt()},
+		{Token: sdk.NewCoin(BAR, defaultAmount), Weight: osmomath.OneInt()},
 	}, balancer.PoolParams{
 		SwapFee: osmomath.ZeroDec(),
 		ExitFee: osmomath.ZeroDec(),
@@ -472,7 +474,7 @@ func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_SwapAndDistribute() {
 	s.increaseVolumeBySwap(fooBARPoolID, barCoinIn, defaultAmount, FOO)
 
 	// Create a perpetual group.
-	_, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], []uint64{ethUSDCPoolID, fooBARPoolID})
+	_, err = s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], []uint64{ethUSDCPoolID, fooBARPoolID})
 	s.Require().NoError(err)
 
 	distrEpochIdentifier := s.App.IncentivesKeeper.GetParams(s.Ctx).DistrEpochIdentifier
@@ -499,12 +501,12 @@ func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_SwapAndDistribute() {
 func (s *KeeperTestSuite) increaseVolumeBySwap(poolID uint64, tokeInCoin sdk.Coin, expectedVolumeAmtIncrease osmomath.Int, denomOut string) {
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(tokeInCoin))
 
-	originalVoume := s.App.PoolManagerKeeper.GetMelodyVolumeForPool(s.Ctx, poolID)
+	originalVoume := s.App.PoolManagerKeeper.GetOsmoVolumeForPool(s.Ctx, poolID)
 
-	_, err := s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], poolID, tokeInCoin, denomOut, osmomath.ZeroInt())
+	_, _, err := s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], poolID, tokeInCoin, denomOut, osmomath.ZeroInt())
 	s.Require().NoError(err)
 
-	finalVolume := s.App.PoolManagerKeeper.GetMelodyVolumeForPool(s.Ctx, poolID)
+	finalVolume := s.App.PoolManagerKeeper.GetOsmoVolumeForPool(s.Ctx, poolID)
 	s.Require().NotEqual(osmomath.ZeroInt().String(), finalVolume.String())
 	s.Require().Equal(expectedVolumeAmtIncrease.String(), finalVolume.Sub(originalVoume).String())
 }
@@ -546,7 +548,7 @@ func (*KeeperTestSuite) computeExpectedDistributonAmountsFromVolume(poolIDToVolu
 		currentDistribution := coinutil.MulDec(defaultCoins, volume.ToLegacyDec().Quo(totalVolumeDec))
 
 		// Note, the reason we do this is because otherwise
-		// the validation fails with 0note expected vs "" actual
+		// the validation fails with 0uosmo expected vs "" actual
 		// Since these are the same things, we equate the expected to an empty coins.
 		if currentDistribution.IsZero() {
 			currentDistribution = sdk.NewCoins()

@@ -10,13 +10,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v26/x/incentives"
+	"github.com/osmosis-labs/osmosis/v26/x/incentives/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v26/x/incentives/types"
 
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
 
-	appParams "github.com/osmosis-labs/osmosis/v23/app/params"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	appParams "github.com/osmosis-labs/osmosis/v26/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
 )
 
 // TestMsgCreateGauge tests if valid/invalid create gauge messages are properly validated/invalidated
@@ -417,7 +418,7 @@ func TestAuthzMsg(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			apptesting.TestMessageAuthzSerialization(t, tc.incentivesMsg)
+			apptesting.TestMessageAuthzSerialization(t, tc.incentivesMsg, incentives.AppModuleBasic{})
 		})
 	}
 }

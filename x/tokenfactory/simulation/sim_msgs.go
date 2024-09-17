@@ -7,9 +7,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v23/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v26/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v26/x/tokenfactory/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/tokenfactory/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

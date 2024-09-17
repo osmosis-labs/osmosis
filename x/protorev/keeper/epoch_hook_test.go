@@ -5,9 +5,14 @@ import (
 	"strings"
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v26/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/protorev/types"
 )
 
 // BenchmarkEpochHook benchmarks the epoch hook. In particular, it benchmarks the UpdatePools function.
@@ -18,7 +23,7 @@ func BenchmarkEpochHook(b *testing.B) {
 	// Setup the test suite
 	s := new(KeeperTestSuite)
 	s.SetT(&testing.T{})
-	s.SetupTest()
+	s.SetupPoolsTest()
 
 	for i := 0; i < b.N; i++ {
 		b.StartTimer()
@@ -37,12 +42,13 @@ func BenchmarkEpochHook(b *testing.B) {
 // again to only include the pools that have the highest liquidity. The pools are then checked to see if the pool IDs are correctly set in the
 // DenomPairToPool stores.
 func (s *KeeperTestSuite) TestEpochHook() {
+	s.SetupPoolsTest()
 	// All of the pools initialized in the setup function are available in keeper_test.go
-	// akash <-> types.SymphonyDenomination
-	// juno <-> types.SymphonyDenomination
-	// ethereum <-> types.SymphonyDenomination
-	// bitcoin <-> types.SymphonyDenomination
-	// canto <-> types.SymphonyDenomination
+	// akash <-> types.OsmosisDenomination
+	// juno <-> types.OsmosisDenomination
+	// ethereum <-> types.OsmosisDenomination
+	// bitcoin <-> types.OsmosisDenomination
+	// canto <-> types.OsmosisDenomination
 	// and so on...
 
 	totalNumberExpected := 0
@@ -131,7 +137,7 @@ func (s *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 		expectedBaseDenomPools map[string]map[string]keeper.LiquidityPoolStruct
 	}{
 		{
-			// There are 2 pools with epochOne and note as denoms, both in the GAMM module.
+			// There are 2 pools with epochOne and uosmo as denoms, both in the GAMM module.
 			// pool with ID 46 has a liquidity value of 1,000,000
 			// pool with ID 47 has a liquidity value of 2,000,000
 			// pool with ID 47 should be returned as the highest liquidity pool
@@ -143,12 +149,12 @@ func (s *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 			},
 			expectedBaseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
 				"epochOne": {
-					"note": {Liquidity: osmomath.NewInt(2000000), PoolId: 47},
+					"uosmo": {Liquidity: osmomath.NewInt(2000000), PoolId: 47},
 				},
 			},
 		},
 		{
-			// There are 2 pools with epochTwo and note as denoms,
+			// There are 2 pools with epochTwo and uosmo as denoms,
 			// One in the GAMM module and one in the Concentrated Liquidity module.
 			// pool with ID 48 has a liquidity value of 1,000,000
 			// pool with ID 50 has a liquidity value of 2,000,000
@@ -161,7 +167,7 @@ func (s *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 			},
 			expectedBaseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
 				"epochTwo": {
-					"note": {Liquidity: osmomath.Int(osmomath.NewUintFromString("999999000000000001000000000000000000")), PoolId: 50},
+					"uosmo": {Liquidity: osmomath.Int(osmomath.NewUintFromString("999999000000000001000000000000000000")), PoolId: 50},
 				},
 			},
 		},
@@ -172,7 +178,7 @@ func (s *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 		s.Run(tc.name, func() {
 			// SetupTest creates all the pools used in the ProtoRev test suite,
 			// including the pools with "epoch" prefixed denoms used in this test
-			s.SetupTest()
+			s.SetupPoolsTest()
 
 			err := s.App.ProtoRevKeeper.UpdateHighestLiquidityPools(s.Ctx, tc.inputBaseDenomPools)
 			s.Require().NoError(err)
@@ -188,4 +194,111 @@ func contains(baseDenoms []types.BaseDenom, denomToMatch string) bool {
 		}
 	}
 	return false
+}
+
+func (s *KeeperTestSuite) TestAfterEpochEnd() {
+	tests := []struct {
+		name       string
+		arbProfits sdk.Coins
+	}{
+		{
+			name:       "osmo denom only",
+			arbProfits: sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100000000))),
+		},
+		{
+			name: "osmo denom and another base denom",
+			arbProfits: sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100000000)),
+				sdk.NewCoin("juno", osmomath.NewInt(100000000))),
+		},
+		{
+			name: "osmo denom, another base denom, and a non base denom",
+			arbProfits: sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100000000)),
+				sdk.NewCoin("juno", osmomath.NewInt(100000000)),
+				sdk.NewCoin("eth", osmomath.NewInt(100000000))),
+		},
+		{
+			name:       "no profits",
+			arbProfits: sdk.Coins{},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupPoolsTest()
+
+			// Set base denoms
+			baseDenoms := []types.BaseDenom{
+				{
+					Denom:    types.OsmosisDenomination,
+					StepSize: osmomath.NewInt(1_000_000),
+				},
+				{
+					Denom:    "juno",
+					StepSize: osmomath.NewInt(1_000_000),
+				},
+			}
+			s.App.ProtoRevKeeper.SetBaseDenoms(s.Ctx, baseDenoms)
+
+			// Set protorev developer account
+			devAccount := apptesting.CreateRandomAccounts(1)[0]
+			s.App.ProtoRevKeeper.SetDeveloperAccount(s.Ctx, devAccount)
+
+			err := s.App.BankKeeper.MintCoins(s.Ctx, types.ModuleName, tc.arbProfits)
+			s.Require().NoError(err)
+
+			communityPoolBalancePre := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName))
+
+			// System under test
+			err = s.App.ProtoRevKeeper.EpochHooks().AfterEpochEnd(s.Ctx, "day", 1)
+
+			expectedDevProfit := sdk.Coins{}
+			expectedOsmoBurn := sdk.Coins{}
+			arbProfitsBaseDenoms := sdk.Coins{}
+			arbProfitsNonBaseDenoms := sdk.Coins{}
+
+			// Split the profits into base and non base denoms
+			for _, coin := range tc.arbProfits {
+				isBaseDenom := false
+				for _, baseDenom := range baseDenoms {
+					if coin.Denom == baseDenom.Denom {
+						isBaseDenom = true
+						break
+					}
+				}
+				if isBaseDenom {
+					arbProfitsBaseDenoms = append(arbProfitsBaseDenoms, coin)
+				} else {
+					arbProfitsNonBaseDenoms = append(arbProfitsNonBaseDenoms, coin)
+				}
+			}
+			profitSplit := types.ProfitSplitPhase1
+			for _, arbProfit := range arbProfitsBaseDenoms {
+				devProfitAmount := arbProfit.Amount.MulRaw(profitSplit).QuoRaw(100)
+				expectedDevProfit = append(expectedDevProfit, sdk.NewCoin(arbProfit.Denom, devProfitAmount))
+			}
+
+			// Get the developer account balance
+			devAccountBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, devAccount)
+			s.Require().Equal(expectedDevProfit, devAccountBalance)
+
+			// Get the burn address balance
+			burnAddressBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, types.DefaultNullAddress)
+			if arbProfitsBaseDenoms.AmountOf(types.OsmosisDenomination).IsPositive() {
+				expectedOsmoBurn = sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, arbProfitsBaseDenoms.AmountOf(types.OsmosisDenomination).Sub(expectedDevProfit.AmountOf(types.OsmosisDenomination))))
+				s.Require().Equal(expectedOsmoBurn, burnAddressBalance)
+			} else {
+				s.Require().Equal(sdk.Coins{}, burnAddressBalance)
+			}
+
+			// Get the community pool balance
+			communityPoolBalancePost := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName))
+			actualCommunityPool := communityPoolBalancePost.Sub(communityPoolBalancePre...)
+			expectedCommunityPool := arbProfitsBaseDenoms.Sub(expectedDevProfit...).Sub(expectedOsmoBurn...)
+			s.Require().Equal(expectedCommunityPool, actualCommunityPool)
+
+			// The protorev module account should only contain the non base denoms if there are any
+			protorevModuleAccount := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(types.ModuleName))
+			s.Require().Equal(arbProfitsNonBaseDenoms, protorevModuleAccount)
+		})
+	}
 }

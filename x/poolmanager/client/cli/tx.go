@@ -25,9 +25,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -50,7 +50,7 @@ func NewSwapExactAmountInCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountIn)
 	return &osmocli.TxCliDesc{
 		Use:     "swap-exact-amount-in",
 		Short:   "swap exact amount in",
-		Example: "symphonyd tx poolmanager swap-exact-amount-in 2000000note 1 --swap-route-pool-ids 5 --swap-route-denoms uion --from val --keyring-backend test -b=block --chain-id=localsymphony --fees 10000note",
+		Example: "osmosisd tx poolmanager swap-exact-amount-in 2000000uosmo 1 --swap-route-pool-ids 5 --swap-route-denoms uion --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo",
 		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
 			"Routes": osmocli.FlagOnlyParser(swapAmountInRoutes),
 		},
@@ -63,7 +63,7 @@ func NewSwapExactAmountOutCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountOu
 	return &osmocli.TxCliDesc{
 		Use:              "swap-exact-amount-out",
 		Short:            "swap exact amount out",
-		Example:          "symphonyd tx poolmanager swap-exact-amount-out 100uion 1000000 --swap-route-pool-ids 1 --swap-route-denoms note --from val --keyring-backend test -b=block --chain-id=localsymphony --fees 10000note",
+		Example:          "osmosisd tx poolmanager swap-exact-amount-out 100uion 1000000 --swap-route-pool-ids 1 --swap-route-denoms uosmo --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo",
 		NumArgs:          2,
 		ParseAndBuildMsg: NewBuildSwapExactAmountOutMsg,
 		Flags:            osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
@@ -74,7 +74,7 @@ func NewSplitRouteSwapExactAmountIn() (*osmocli.TxCliDesc, *types.MsgSplitRouteS
 	return &osmocli.TxCliDesc{
 		Use:   "split-route-swap-exact-amount-in",
 		Short: "split route swap exact amount in",
-		Example: `symphonyd tx poolmanager split-route-swap-exact-amount-in note 1 --routes-file="./routes.json" --from val --keyring-backend test -b=block --chain-id=localsymphony --fees 10000note
+		Example: `osmosisd tx poolmanager split-route-swap-exact-amount-in uosmo 1 --routes-file="./routes.json" --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo
 		- routes.json
 		{
 			"Route": [
@@ -86,7 +86,7 @@ func NewSplitRouteSwapExactAmountIn() (*osmocli.TxCliDesc, *types.MsgSplitRouteS
 				},
 				{
 				"pool_id": 2,
-				"token_out_denom": "note"
+				"token_out_denom": "uosmo"
 				}
 			  ],
 			  "token_in_amount": 1000
@@ -99,7 +99,7 @@ func NewSplitRouteSwapExactAmountIn() (*osmocli.TxCliDesc, *types.MsgSplitRouteS
 				},
 				{
 				"pool_id": 4,
-				"token_out_denom": "note"
+				"token_out_denom": "uosmo"
 				}
 			  ],
 			  "token_in_amount": 999
@@ -120,7 +120,7 @@ func NewSplitRouteSwapExactAmountOut() (*osmocli.TxCliDesc, *types.MsgSplitRoute
 	return &osmocli.TxCliDesc{
 		Use:   "split-route-swap-exact-amount-out",
 		Short: "split route swap exact amount out",
-		Example: `symphonyd tx poolmanager split-route-swap-exact-amount-out note 1 --routes-file="./routes.json" --from val --keyring-backend test -b=block --chain-id=localsymphony --fees 10000note
+		Example: `osmosisd tx poolmanager split-route-swap-exact-amount-out uosmo 1 --routes-file="./routes.json" --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo
 		- routes.json
 		{
 			"route": [
@@ -132,7 +132,7 @@ func NewSplitRouteSwapExactAmountOut() (*osmocli.TxCliDesc, *types.MsgSplitRoute
 					},
 					{
 					"pool_id": 2,
-					"token_in_denom": "note"
+					"token_in_denom": "uosmo"
 					}
 				],
 				"token_out_amount": 1000
@@ -145,7 +145,7 @@ func NewSplitRouteSwapExactAmountOut() (*osmocli.TxCliDesc, *types.MsgSplitRoute
 					},
 					{
 					"pool_id": 4,
-					"token_in_denom": "note"
+					"token_in_denom": "uosmo"
 					}
 				],
 				"token_out_amount": 999
@@ -251,8 +251,8 @@ func NewCreatePoolCmd() *cobra.Command {
 		Long:  `Must provide path to a pool JSON file (--pool-file) describing the pool to be created`,
 		Example: `Sample pool JSON file contents:
 {
-	"weights": "4uatom,4melody,2uakt",
-	"initial-deposit": "100uatom,5melody,20uakt",
+	"weights": "4uatom,4osmo,2uakt",
+	"initial-deposit": "100uatom,5osmo,20uakt",
 	"swap-fee": "0.01",
 	"exit-fee": "0.01",
 	"future-governor": "168h"
@@ -467,10 +467,10 @@ func NewCmdHandleDenomPairTakerFeeProposal() *cobra.Command {
 		Long: strings.TrimSpace(`Submit a denom pair taker fee proposal.
 
 Passing in denom-pairs-with-taker-fee separated by commas would be parsed automatically to pairs of denomPairTakerFee records.
-Ex) denom-pair-taker-fee-proposal uion,note,0.0016,stake,note,0.005,uatom,note,0.0015 ->
-[uion<>note, takerFee 0.16%]
-[stake<>note, takerFee 0.5%]
-[uatom<>note, removes from state since its being set to the default takerFee value]
+Ex) denom-pair-taker-fee-proposal uion,uosmo,0.0016,stake,uosmo,0.005,uatom,uosmo,0.0015 ->
+[uion<>uosmo, takerFee 0.16%]
+[stake<>uosmo, takerFee 0.5%]
+[uatom<>uosmo, removes from state since its being set to the default takerFee value]
 
 		`),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -511,10 +511,15 @@ func NewSetDenomPairTakerFeeCmd() *cobra.Command {
 		Long: strings.TrimSpace(`Allows admin addresses to set the taker fee for a denom pair.
 
 Passing in set-denom-pair-taker-fee separated by commas would be parsed automatically to pairs of denomPairTakerFee records.
-Ex) set-denom-pair-taker-fee uion,note,0.0016,stake,note,0.005,uatom,note,0.0015 ->
-[uion<>note, takerFee 0.16%]
-[stake<>note, takerFee 0.5%]
-[uatom<>note, removes from state since its being set to the default takerFee value]
+Ex) set-denom-pair-taker-fee uion,uosmo,0.0016,stake,uosmo,0.005,uatom,uosmo,0.0015 ->
+
+[uion->uosmo, takerFee 0.16%]
+[stake->uosmo, takerFee 0.5%]
+[uatom->uosmo, removes from state since its being set to the default takerFee value]
+
+NOTE: Denom pair taker fees are now uni-directional, so if you want a new taker fee to be charged in both directions, you need to set two records.
+In other words, to set a taker fee for uosmo<->uion, you need to set it as follows:
+set-denom-pair-taker-fee uosmo,uion,0.0016,uion,uosmo,0.0016
 
 		`),
 		Args: cobra.ExactArgs(1),
@@ -582,14 +587,14 @@ func ParseDenomPairTakerFee(arg string) ([]types.DenomPairTakerFee, error) {
 	denomPairTakerFeeRecords := strings.Split(arg, ",")
 
 	if len(denomPairTakerFeeRecords)%3 != 0 {
-		return nil, fmt.Errorf("denomPairTakerFeeRecords must be a list of denom0, denom1, and takerFee separated by commas")
+		return nil, fmt.Errorf("denomPairTakerFeeRecords must be a list of tokenInDenom, tokenOutDenom, and takerFee separated by commas")
 	}
 
 	finaldenomPairTakerFeeRecordsRecords := []types.DenomPairTakerFee{}
 	i := 0
 	for i < len(denomPairTakerFeeRecords) {
-		denom0 := denomPairTakerFeeRecords[i]
-		denom1 := denomPairTakerFeeRecords[i+1]
+		tokenInDenom := denomPairTakerFeeRecords[i]
+		tokenOutDenom := denomPairTakerFeeRecords[i+1]
 
 		takerFeeStr := denomPairTakerFeeRecords[i+2]
 		takerFee, err := osmomath.NewDecFromStr(takerFeeStr)
@@ -598,9 +603,9 @@ func ParseDenomPairTakerFee(arg string) ([]types.DenomPairTakerFee, error) {
 		}
 
 		finaldenomPairTakerFeeRecordsRecords = append(finaldenomPairTakerFeeRecordsRecords, types.DenomPairTakerFee{
-			Denom0:   denom0,
-			Denom1:   denom1,
-			TakerFee: takerFee,
+			TokenInDenom:  tokenInDenom,
+			TokenOutDenom: tokenOutDenom,
+			TakerFee:      takerFee,
 		})
 
 		// increase counter by the next 3

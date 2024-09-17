@@ -2,13 +2,14 @@ package keeper
 
 import (
 	"context"
+	"github.com/osmosis-labs/osmosis/osmomath"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
 )
 
 // querier is used as Keeper will have duplicate methods if used directly, and gRPC names take precedence over q
@@ -54,7 +55,7 @@ func (q querier) ExchangeRates(c context.Context, _ *types.QueryExchangeRatesReq
 	ctx := sdk.UnwrapSDKContext(c)
 
 	var exchangeRates sdk.DecCoins
-	q.IterateNoteExchangeRates(ctx, func(denom string, rate sdk.Dec) (stop bool) {
+	q.IterateNoteExchangeRates(ctx, func(denom string, rate osmomath.Dec) (stop bool) {
 		exchangeRates = append(exchangeRates, sdk.NewDecCoinFromDec(denom, rate))
 		return false
 	})
@@ -86,7 +87,7 @@ func (q querier) TobinTaxes(c context.Context, _ *types.QueryTobinTaxesRequest) 
 	ctx := sdk.UnwrapSDKContext(c)
 
 	var tobinTaxes types.DenomList
-	q.IterateTobinTaxes(ctx, func(denom string, rate sdk.Dec) (stop bool) {
+	q.IterateTobinTaxes(ctx, func(denom string, rate osmomath.Dec) (stop bool) {
 		tobinTaxes = append(tobinTaxes, types.Denom{
 			Name:     denom,
 			TobinTax: rate,
@@ -102,7 +103,7 @@ func (q querier) Actives(c context.Context, _ *types.QueryActivesRequest) (*type
 	ctx := sdk.UnwrapSDKContext(c)
 
 	denoms := []string{}
-	q.IterateNoteExchangeRates(ctx, func(denom string, rate sdk.Dec) (stop bool) {
+	q.IterateNoteExchangeRates(ctx, func(denom string, rate osmomath.Dec) (stop bool) {
 		denoms = append(denoms, denom)
 		return false
 	})

@@ -17,12 +17,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/client/cli"
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/simulation"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/client/cli"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/simulation"
 
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/keeper"
 
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
 )
 
 var (
@@ -107,6 +107,12 @@ func NewAppModule(
 	}
 }
 
+// IsAppModule implements the appmodule.AppModule interface.
+func (AppModule) IsAppModule() {}
+
+// IsOnePerModuleType is a marker function just indicates that this is a one-per-module type.
+func (AppModule) IsOnePerModuleType() {}
+
 // Name returns the oracle module's name.
 func (AppModule) Name() string { return types.ModuleName }
 
@@ -143,13 +149,11 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
-// BeginBlock returns the begin blocker for the oracle module.
-func (AppModule) BeginBlock(sdk.Context, abci.RequestBeginBlock) {}
-
 // EndBlock returns the end blocker for the oracle module.
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+func (am AppModule) EndBlock(context context.Context) error {
+	ctx := sdk.UnwrapSDKContext(context)
 	EndBlocker(ctx, am.keeper)
-	return []abci.ValidatorUpdate{}
+	return nil
 }
 
 // ____________________________________________________________________________

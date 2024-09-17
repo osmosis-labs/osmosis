@@ -9,10 +9,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v23/x/gamm/types/migration"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v26/x/gamm/types/migration"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v26/x/pool-incentives/types"
 )
 
 const (
@@ -25,7 +26,7 @@ var (
 
 	defaultDaiAmount, _ = osmomath.NewIntFromString("73000000000000000000000")
 	defaultDenom0mount  = osmomath.NewInt(10000000000)
-	desiredDenom0       = "note"
+	desiredDenom0       = appparams.BaseCoinUnit
 	desiredDenom0Coin   = sdk.NewCoin(desiredDenom0, defaultDenom0mount)
 	daiCoin             = sdk.NewCoin(DAIIBCDenom, defaultDaiAmount)
 	usdcCoin            = sdk.NewCoin(USDCIBCDenom, defaultDaiAmount)
@@ -398,7 +399,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 					ClPoolId:       3,
 				},
 			},
-			overwriteBalancerDenom0: "note",
+			overwriteBalancerDenom0: appparams.BaseCoinUnit,
 			expectErr:               true,
 		},
 		{
@@ -409,7 +410,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 					ClPoolId:       3,
 				},
 			},
-			overwriteBalancerDenom1: "note",
+			overwriteBalancerDenom1: appparams.BaseCoinUnit,
 			expectErr:               true,
 		},
 		{
@@ -655,7 +656,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 					ClPoolId:       6,
 				},
 			},
-			overwriteBalancerDenom0: "melody",
+			overwriteBalancerDenom0: "osmo",
 			isPreexistingRecordsSet: false,
 			expectErr:               true,
 		},
@@ -667,7 +668,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 					ClPoolId:       6,
 				},
 			},
-			overwriteBalancerDenom1: "melody",
+			overwriteBalancerDenom1: "osmo",
 			isPreexistingRecordsSet: false,
 			expectErr:               true,
 		},

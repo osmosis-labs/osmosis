@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -68,14 +68,12 @@ where "symphony1..." is the address you want to delegate your voting rights to.
 				return err
 			}
 
-			msgs := []sdk.Msg{types.NewMsgDelegateFeedConsent(validator, feeder)}
-			for _, msg := range msgs {
-				if err := msg.ValidateBasic(); err != nil {
-					return err
-				}
+			msg := types.NewMsgDelegateFeedConsent(validator, feeder)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msgs...)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -132,14 +130,12 @@ $ symphonyd tx oracle aggregate-prevote 1234 8888.0ukrw,1.243uusd,0.99usdr symph
 			}
 
 			hash := types.GetAggregateVoteHash(salt, exchangeRatesStr, validator)
-			msgs := []sdk.Msg{types.NewMsgAggregateExchangeRatePrevote(hash, voter, validator)}
-			for _, msg := range msgs {
-				if err := msg.ValidateBasic(); err != nil {
-					return err
-				}
+			msg := types.NewMsgAggregateExchangeRatePrevote(hash, voter, validator)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msgs...)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -194,14 +190,12 @@ $ symphonyd tx oracle aggregate-vote 1234 8888.0ukrw,1.243uusd,0.99usdr symphony
 				validator = parsedVal
 			}
 
-			msgs := []sdk.Msg{types.NewMsgAggregateExchangeRateVote(salt, exchangeRatesStr, voter, validator)}
-			for _, msg := range msgs {
-				if err := msg.ValidateBasic(); err != nil {
-					return err
-				}
+			msg := types.NewMsgAggregateExchangeRateVote(salt, exchangeRatesStr, voter, validator)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msgs...)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 

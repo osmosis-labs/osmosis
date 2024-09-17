@@ -7,10 +7,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 
-	simexec "github.com/osmosis-labs/osmosis/v23/simulation/executor"
+	simexec "github.com/osmosis-labs/osmosis/v26/simulation/executor"
 
-	"github.com/osmosis-labs/osmosis/v23/app"
-	"github.com/osmosis-labs/osmosis/v23/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v26/app"
+	"github.com/osmosis-labs/osmosis/v26/simulation/simtypes"
 )
 
 func SymphonyAppCreator(logger log.Logger, db db.DB) simtypes.AppCreator {

@@ -1,13 +1,14 @@
 package oracle
 
 import (
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"time"
 
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
 
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/keeper"
 
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,34 +23,44 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 		// Build claim map over all validators in active set
 		validatorClaimMap := make(map[string]types.Claim)
 
-		maxValidators := k.StakingKeeper.MaxValidators(ctx)
-		iterator := k.StakingKeeper.ValidatorsPowerStoreIterator(ctx)
+		maxValidators, err := k.StakingKeeper.MaxValidators(ctx)
+		if err != nil {
+			panic("cannot get max validators")
+		}
+		iterator, err := k.StakingKeeper.ValidatorsPowerStoreIterator(ctx)
 		defer iterator.Close()
+		if err != nil {
+			panic("cannot get validators power store iterator")
+		}
 
 		powerReduction := k.StakingKeeper.PowerReduction(ctx)
 
 		i := 0
 		for ; iterator.Valid() && i < int(maxValidators); iterator.Next() {
-			validator := k.StakingKeeper.Validator(ctx, iterator.Value())
+			validator, err := k.StakingKeeper.GetValidator(ctx, iterator.Value())
 
 			// Exclude not bonded validator
-			if validator.IsBonded() {
-				valAddr := validator.GetOperator()
-				validatorClaimMap[valAddr.String()] = types.NewClaim(validator.GetConsensusPower(powerReduction), 0, 0, valAddr)
+			if err != nil && validator.IsBonded() {
+				valAddrStr := validator.GetOperator()
+				valAddr, err := sdk.ValAddressFromBech32(valAddrStr)
+				if err != nil {
+					panic("invalid validator address")
+				}
+				validatorClaimMap[valAddrStr] = types.NewClaim(validator.GetConsensusPower(powerReduction), 0, 0, valAddr)
 				i++
 			}
 		}
 
 		// Denom-TobinTax map
-		voteTargets := make(map[string]sdk.Dec)
-		k.IterateTobinTaxes(ctx, func(denom string, tobinTax sdk.Dec) bool {
+		voteTargets := make(map[string]osmomath.Dec)
+		k.IterateTobinTaxes(ctx, func(denom string, tobinTax osmomath.Dec) bool {
 			voteTargets[denom] = tobinTax
 			return false
 		})
 
 		// Clear all exchange rates
 		// TODO: yurii: enable cleaning of exchange rates
-		//k.IterateNoteExchangeRates(ctx, func(denom string, _ sdk.Dec) (stop bool) {
+		//k.IterateNoteExchangeRates(ctx, func(denom string, _ osmomath.Dec) (stop bool) {
 		//	k.DeleteMelodyExchangeRate(ctx, denom)
 		//	return false
 		//})
@@ -59,7 +70,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 		// NOTE: **Make abstain votes to have zero vote power**
 		voteMap := k.OrganizeBallotByDenom(ctx, validatorClaimMap)
 
-		if referenceSymphony := PickReferenceSymphony(ctx, k, voteTargets, voteMap); referenceSymphony != "" {
+		if referenceSymphony, err := PickReferenceSymphony(ctx, k, voteTargets, voteMap); err != nil && referenceSymphony != "" {
 			// make voteMap of Reference Symphony to calculate cross exchange rates
 			ballotRT := voteMap[referenceSymphony]
 			voteMapRT := ballotRT.ToMap()

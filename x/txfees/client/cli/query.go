@@ -4,7 +4,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v23/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v26/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v26/x/txfees/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
@@ -15,6 +16,8 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdFeeTokens(),
 		GetCmdDenomPoolID(),
 		GetCmdBaseDenom(),
+		osmocli.GetParams[*queryproto.ParamsRequest](
+			types.ModuleName, queryproto.NewQueryClient),
 	)
 
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdQueryBaseFee)

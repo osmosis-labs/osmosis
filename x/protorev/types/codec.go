@@ -10,22 +10,21 @@ import (
 )
 
 var (
-	amino     = codec.NewLegacyAmino()
-	ModuleCdc = codec.NewProtoCodec(cdctypes.NewInterfaceRegistry())
+	amino = codec.NewLegacyAmino()
 )
 
 const (
 	// msgs
-	setHotRoutes             = "symphony/MsgSetHotRoutes"
-	setDeveloperAccount      = "symphony/MsgSetDeveloperAccount"
-	setMaxPoolPointsPerTx    = "symphony/MsgSetMaxPoolPointsPerTx"
-	setMaxPoolPointsPerBlock = "symphony/MsgSetMaxPoolPointsPerBlock"
-	setInfoByPoolType        = "symphony/MsgSetInfoByPoolType"
-	setBaseDenoms            = "symphony/MsgSetBaseDenoms"
+	setHotRoutes             = "osmosis/MsgSetHotRoutes"
+	setDeveloperAccount      = "osmosis/MsgSetDeveloperAccount"
+	setMaxPoolPointsPerTx    = "osmosis/MsgSetMaxPoolPointsPerTx"
+	setMaxPoolPointsPerBlock = "osmosis/MsgSetMaxPoolPointsPerBlock"
+	setInfoByPoolType        = "osmosis/MsgSetInfoByPoolType"
+	setBaseDenoms            = "osmosis/MsgSetBaseDenoms"
 
 	// proposals
-	setProtoRevEnabledProposal      = "symphony/SetProtoRevEnabledProposal"
-	setProtoRevAdminAccountProposal = "symphony/SetProtoRevAdminAccountProposal"
+	setProtoRevEnabledProposal      = "osmosis/SetProtoRevEnabledProposal"
+	setProtoRevAdminAccountProposal = "osmosis/SetProtoRevAdminAccountProposal"
 )
 
 func init() {

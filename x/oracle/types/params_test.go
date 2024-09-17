@@ -6,9 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
 )
 
 func TestParamsEqual(t *testing.T) {
@@ -23,25 +21,25 @@ func TestParamsEqual(t *testing.T) {
 
 	// small vote threshold
 	p2 := types.DefaultParams()
-	p2.VoteThreshold = sdk.ZeroDec()
+	p2.VoteThreshold = osmomath.ZeroDec()
 	err = p2.Validate()
 	require.Error(t, err)
 
 	// negative reward band
 	p3 := types.DefaultParams()
-	p3.RewardBand = sdk.NewDecWithPrec(-1, 2)
+	p3.RewardBand = osmomath.NewDecWithPrec(-1, 2)
 	err = p3.Validate()
 	require.Error(t, err)
 
 	// negative slash fraction
 	p4 := types.DefaultParams()
-	p4.SlashFraction = sdk.NewDec(-1)
+	p4.SlashFraction = osmomath.NewDec(-1)
 	err = p4.Validate()
 	require.Error(t, err)
 
 	// negative min valid per window
 	p5 := types.DefaultParams()
-	p5.MinValidPerWindow = sdk.NewDec(-1)
+	p5.MinValidPerWindow = osmomath.NewDec(-1)
 	err = p5.Validate()
 	require.Error(t, err)
 
@@ -65,7 +63,7 @@ func TestParamsEqual(t *testing.T) {
 
 	// invalid name tobin tax
 	p9 := types.DefaultParams()
-	p9.Whitelist[0].TobinTax = sdk.NewDec(-1)
+	p9.Whitelist[0].TobinTax = osmomath.NewDec(-1)
 	err = p9.Validate()
 	require.Error(t, err)
 
@@ -92,41 +90,41 @@ func TestValidate(t *testing.T) {
 			require.Error(t, pair.ValidatorFn("invalid"))
 			require.Error(t, pair.ValidatorFn(uint64(0)))
 		case bytes.Equal(types.KeyVoteThreshold, pair.Key):
-			require.NoError(t, pair.ValidatorFn(sdk.NewDecWithPrec(33, 2)))
+			require.NoError(t, pair.ValidatorFn(osmomath.NewDecWithPrec(33, 2)))
 			require.Error(t, pair.ValidatorFn("invalid"))
-			require.Error(t, pair.ValidatorFn(sdk.NewDecWithPrec(32, 2)))
-			require.Error(t, pair.ValidatorFn(sdk.NewDecWithPrec(101, 2)))
+			require.Error(t, pair.ValidatorFn(osmomath.NewDecWithPrec(32, 2)))
+			require.Error(t, pair.ValidatorFn(osmomath.NewDecWithPrec(101, 2)))
 		case bytes.Equal(types.KeyRewardBand, pair.Key) ||
 			bytes.Equal(types.KeySlashFraction, pair.Key) ||
 			bytes.Equal(types.KeyMinValidPerWindow, pair.Key):
-			require.NoError(t, pair.ValidatorFn(sdk.NewDecWithPrec(7, 2)))
+			require.NoError(t, pair.ValidatorFn(osmomath.NewDecWithPrec(7, 2)))
 			require.Error(t, pair.ValidatorFn("invalid"))
-			require.Error(t, pair.ValidatorFn(sdk.NewDecWithPrec(-1, 2)))
-			require.Error(t, pair.ValidatorFn(sdk.NewDecWithPrec(101, 2)))
+			require.Error(t, pair.ValidatorFn(osmomath.NewDecWithPrec(-1, 2)))
+			require.Error(t, pair.ValidatorFn(osmomath.NewDecWithPrec(101, 2)))
 		case bytes.Equal(types.KeyWhitelist, pair.Key):
 			require.NoError(t, pair.ValidatorFn(types.DenomList{
 				{
 					Name:     "denom",
-					TobinTax: sdk.NewDecWithPrec(10, 2),
+					TobinTax: osmomath.NewDecWithPrec(10, 2),
 				},
 			}))
 			require.Error(t, pair.ValidatorFn("invalid"))
 			require.Error(t, pair.ValidatorFn(types.DenomList{
 				{
 					Name:     "",
-					TobinTax: sdk.NewDecWithPrec(10, 2),
+					TobinTax: osmomath.NewDecWithPrec(10, 2),
 				},
 			}))
 			require.Error(t, pair.ValidatorFn(types.DenomList{
 				{
 					Name:     "denom",
-					TobinTax: sdk.NewDecWithPrec(101, 2),
+					TobinTax: osmomath.NewDecWithPrec(101, 2),
 				},
 			}))
 			require.Error(t, pair.ValidatorFn(types.DenomList{
 				{
 					Name:     "denom",
-					TobinTax: sdk.NewDecWithPrec(-1, 2),
+					TobinTax: osmomath.NewDecWithPrec(-1, 2),
 				},
 			}))
 		}

@@ -5,24 +5,22 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
 )
 
 func Test_DenomList(t *testing.T) {
 	denoms := types.DenomList{
 		types.Denom{
 			Name:     "denom1",
-			TobinTax: sdk.NewDec(100),
+			TobinTax: osmomath.NewDec(100),
 		},
 		types.Denom{
 			Name:     "denom2",
-			TobinTax: sdk.NewDec(200),
+			TobinTax: osmomath.NewDec(200),
 		},
 		types.Denom{
 			Name:     "denom3",
-			TobinTax: sdk.NewDec(300),
+			TobinTax: osmomath.NewDec(300),
 		},
 	}
 

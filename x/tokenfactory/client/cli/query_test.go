@@ -8,8 +8,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v26/x/tokenfactory/types"
 )
 
 type QueryTestSuite struct {
@@ -47,7 +47,7 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 		{
 			"Query denom with encoded values",
 			"/osmosis.tokenfactory.v1beta1.Query/DenomAuthorityMetadata",
-			&types.QueryDenomAuthorityMetadataRequest{Denom: "factory%2Fsymphony1c4zx9pmtn3j4a2eus2mmpclpllpqzgzezte7yz%2Fdenom"},
+			&types.QueryDenomAuthorityMetadataRequest{Denom: "factory%2Fosmo1zs0txy03pv5crj2rvty8wemd3zhrka2ne8u05n%2Fdenom"},
 			&types.QueryDenomAuthorityMetadataResponse{},
 		},
 		{
