@@ -14,3 +14,21 @@ SQS is meant to offload the query load from the chain node to a separate server.
 
 Follow [this link](https://hackmd.io/@3DOBr1TJQ3mQAFDEO0BXgg/S1bsqPAr6) to find a guide on how to 
 integrate with the sidecar query server.
+
+
+### PubSub Client
+
+
+#### Set Up
+
+```go
+gcloud init
+
+gcloud projects create osmosis-ingest
+
+// Create the topic
+gcloud pubsub topics create sqs-pools
+
+// Create the subscription
+gcloud pubsub subscriptions create sqs --topic sqs-pools
+```

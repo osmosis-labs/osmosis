@@ -353,7 +353,7 @@ func NewOsmosisApp(
 		blockProcessStrategyManager := commondomain.NewBlockProcessStrategyManager()
 
 		// Create sqs grpc client
-		sqsGRPCClient := sqsservice.NewGRPCCLient(sqsConfig.GRPCIngestAddress, sqsConfig.GRPCIngestMaxCallSizeBytes, appCodec)
+		sqsGRPCClient := sqsservice.NewPubSubCLient(appCodec)
 
 		// Create write listeners for the SQS service.
 		writeListeners := getSQSServiceWriteListeners(app, appCodec, poolTracker, app.WasmKeeper)

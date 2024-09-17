@@ -73,7 +73,7 @@ func (g *GRPCClient) PushData(ctx context.Context, height uint64, pools []sqsdom
 	}
 
 	// Marshal pools
-	poolData, err := g.marshalPools(pools)
+	poolData, err := marshalPools(g.appCodec, pools)
 	if err != nil {
 		return err
 	}
@@ -109,12 +109,12 @@ func (g *GRPCClient) PushData(ctx context.Context, height uint64, pools []sqsdom
 }
 
 // marshalPools marshals pools into a format that can be sent over gRPC.
-func (g *GRPCClient) marshalPools(pools []sqsdomain.PoolI) ([]*prototypes.PoolData, error) {
+func marshalPools(appCodec codec.Codec, pools []sqsdomain.PoolI) ([]*prototypes.PoolData, error) {
 	// Marshal pools
 	poolData := make([]*prototypes.PoolData, 0, len(pools))
 	for _, pool := range pools {
 		// Serialize chain pool
-		chainPoolBz, err := g.appCodec.MarshalInterfaceJSON(pool.GetUnderlyingPool())
+		chainPoolBz, err := appCodec.MarshalInterfaceJSON(pool.GetUnderlyingPool())
 		if err != nil {
 			return nil, err
 		}
