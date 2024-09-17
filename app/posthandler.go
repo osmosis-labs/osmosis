@@ -20,7 +20,7 @@ func NewPostHandler(
 	sigModeHandler *txsigning.HandlerMap,
 ) sdk.PostHandler {
 	return sdk.ChainPostDecorators(
-		protorevkeeper.NewProtoRevDecorator(*protoRevKeeper),
+		//protorevkeeper.NewProtoRevDecorator(*protoRevKeeper), // TODO: yurii - protorev is disabled
 		smartaccountpost.NewAuthenticatorPostDecorator(
 			cdc,
 			smartAccountKeeper,

@@ -26,7 +26,7 @@ func (s *KeeperTestHelper) RunBasicSwap(poolId uint64) {
 	}
 
 	poolManagerMsgServer := poolmanager.NewMsgServerImpl(s.App.PoolManagerKeeper)
-	_, err = poolManagerMsgServer.SwapExactAmountIn(sdk.WrapSDKContext(s.Ctx), &msg)
+	_, err = poolManagerMsgServer.SwapExactAmountIn(s.Ctx, &msg)
 	s.Require().NoError(err)
 }
 

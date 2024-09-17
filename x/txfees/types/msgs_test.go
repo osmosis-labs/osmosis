@@ -44,7 +44,7 @@ func runValidateBasicTest(t *testing.T, name string, msg extMsg, expectPass bool
 		require.Equal(t, msg.Route(), types.RouterKey)
 		require.Equal(t, msg.Type(), expType)
 		aminoCodec := codec.NewLegacyAmino()
-		interfaceRegistry := cdcutil.CodecOptions{AccAddressPrefix: "osmo", ValAddressPrefix: "osmovaloper"}.NewInterfaceRegistry()
+		interfaceRegistry := cdcutil.CodecOptions{AccAddressPrefix: "symphony", ValAddressPrefix: "symphonyvaloper"}.NewInterfaceRegistry()
 		codec := codec.NewProtoCodec(interfaceRegistry)
 
 		encCfg := testutil.TestEncodingConfig{

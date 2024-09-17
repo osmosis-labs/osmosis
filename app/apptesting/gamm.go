@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
 	gammkeeper "github.com/osmosis-labs/osmosis/v26/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/stableswap"
@@ -15,12 +16,11 @@ const (
 	BAR   = "bar"
 	BAZ   = "baz"
 	FOO   = "foo"
-	NOTE  = "note"
 	STAKE = "stake"
 )
 
 var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
-	sdk.NewCoin(NOTE, osmomath.NewInt(10000000000)),
+	sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000000000)),
 	sdk.NewCoin(FOO, osmomath.NewInt(10000000000)),
 	sdk.NewCoin(BAR, osmomath.NewInt(10000000000)),
 	sdk.NewCoin(BAZ, osmomath.NewInt(10000000000)),
@@ -41,7 +41,7 @@ var DefaultPoolAssets = []balancer.PoolAsset{
 	},
 	{
 		Weight: osmomath.NewInt(400),
-		Token:  sdk.NewCoin(NOTE, osmomath.NewInt(5000000)),
+		Token:  sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(5000000)),
 	},
 }
 
@@ -161,7 +161,7 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer
 // PrepareCustomBalancerPool sets up a Balancer pool with an array of assets and given parameters
 func (s *KeeperTestHelper) PrepareCustomBalancerPool(assets []balancer.PoolAsset, params balancer.PoolParams) uint64 {
 	// Add coins for pool creation fee + coins needed to mint balances
-	fundCoins := sdk.NewCoins(sdk.NewCoin(NOTE, osmomath.NewInt(10000000000)))
+	fundCoins := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000000000)))
 	for _, a := range assets {
 		fundCoins = fundCoins.Add(a.Token)
 	}
@@ -216,7 +216,7 @@ func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice osmoma
 		}
 
 		gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)
-		_, err = gammMsgServer.SwapExactAmountIn(sdk.WrapSDKContext(s.Ctx), &msg)
+		_, err = gammMsgServer.SwapExactAmountIn(s.Ctx, &msg)
 		s.Require().NoError(err)
 	} else {
 		swapOut := sdk.NewCoins(sdk.NewCoin(quoteDenom, osmomath.NewInt(amountTrade.RoundInt64()).Abs()))
@@ -232,7 +232,7 @@ func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice osmoma
 		}
 
 		gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)
-		_, err = gammMsgServer.SwapExactAmountOut(sdk.WrapSDKContext(s.Ctx), &msg)
+		_, err = gammMsgServer.SwapExactAmountOut(s.Ctx, &msg)
 		s.Require().NoError(err)
 	}
 }
@@ -249,7 +249,7 @@ func (s *KeeperTestHelper) RunBasicExit(poolId uint64) {
 	}
 
 	gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)
-	_, err := gammMsgServer.ExitPool(sdk.WrapSDKContext(s.Ctx), &msg)
+	_, err := gammMsgServer.ExitPool(s.Ctx, &msg)
 	s.Require().NoError(err)
 }
 
@@ -274,7 +274,7 @@ func (s *KeeperTestHelper) RunBasicJoin(poolId uint64) {
 	}
 
 	gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)
-	_, err = gammMsgServer.JoinPool(sdk.WrapSDKContext(s.Ctx), &msg)
+	_, err = gammMsgServer.JoinPool(s.Ctx, &msg)
 	s.Require().NoError(err)
 }
 

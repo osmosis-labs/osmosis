@@ -81,7 +81,7 @@ update_genesis '.app_state["mint"]["params"]["mint_denom"]="note"'
 update_genesis '.app_state["mint"]["params"]["epoch_identifier"]="day"'
 
 # update gamm genesis
-update_genesis '.app_state["gamm"]["params"]["pool_creation_fee"][0]["denom"]="note"'
+#update_genesis '.app_state["gamm"]["params"]["pool_creation_fee"][0]["denom"]="note"'
 
 # update concentratedliquidity genesis
 update_genesis '.app_state["concentratedliquidity"]["params"]["is_permissionless_pool_creation_enabled"]=true'
