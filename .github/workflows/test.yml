@@ -103,7 +103,14 @@ jobs:
         run: |
           VERSION=$(echo $(git describe --tags) | sed 's/^v//') || VERSION=${GITHUB_SHA}
           TESTS=$(cat pkgs.txt.part.${{ matrix.part }})
-          VERSION=$VERSION SKIP_WASM_WSL_TESTS="false" go test -race -mod=readonly -tags='ledger test_ledger_mock norace' $TESTS
+          VERSION=$VERSION SKIP_WASM_WSL_TESTS="false" go test -coverprofile=coverage.out -covermode=count -json -race -mod=readonly -tags='ledger test_ledger_mock norace' $TESTS > report.json;
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v4
+        with:          
+          name: code-coverage-report
+          path: |
+            coverage.out   
+            report.json  
 
   e2e:
     needs: get_diff
@@ -155,3 +162,37 @@ jobs:
         with:
           name: logs.tgz
           path: ./logs.tgz
+
+  sonarCloudTrigger:
+      needs: go
+      name: SonarCloud Trigger
+      runs-on: ubuntu-latest
+      steps:
+        - name: Clone Repository
+          uses: actions/checkout@master
+          with:
+            fetch-depth: 0
+        - name: Download code coverage results
+          uses: actions/download-artifact@v4
+          with:
+            name: code-coverage-report
+            #path: app
+        - name: Analyze with SonarCloud
+          uses: sonarsource/sonarcloud-github-action@master
+          with:
+            projectBaseDir: app
+            args: >
+              -Dsonar.projectKey=osmosis-labs-osmosis
+              -Dsonar.organization=osmosis-labs-polaris
+              -Dsonar.host.url=https://sonarcloud.io            
+              -Dsonar.go.coverage.reportPaths=coverage.out            
+              -Dsonar.go.tests.reportPaths=report.json
+              -Dsonar.sources=.
+              -Dsonar.tests=.
+              -Dsonar.test.inclusions=**/*_test.go,**/testdata/**
+              -Dsonar.language=go                        
+              -Dsonar.go.exclusions=**/vendor/**,**/*_mock.go
+              -Dsonar.coverage.exclusions=**/mock*/**,**/mock*.go,commands/debug.go              
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
