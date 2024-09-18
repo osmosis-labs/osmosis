@@ -103,7 +103,13 @@ jobs:
         run: |
           VERSION=$(echo $(git describe --tags) | sed 's/^v//') || VERSION=${GITHUB_SHA}
           TESTS=$(cat pkgs.txt.part.${{ matrix.part }})
-          VERSION=$VERSION SKIP_WASM_WSL_TESTS="false" go test -coverprofile=coverage.out -covermode=count -json -race -mod=readonly -tags='ledger test_ledger_mock norace' $TESTS > report.json;
+          VERSION=$VERSION SKIP_WASM_WSL_TESTS="false" go test -json -race -mod=readonly -tags='ledger test_ledger_mock norace' $TESTS
+       # re-run the tests to produce sonarcloud code coverage as covermode count is not compatible with -race option
+      - name: Code coverage report creation
+        run: |
+          VERSION=$(echo $(git describe --tags) | sed 's/^v//') || VERSION=${GITHUB_SHA}
+          TESTS=$(cat pkgs.txt.part.${{ matrix.part }})
+          VERSION=$VERSION SKIP_WASM_WSL_TESTS="false" go test -coverprofile=coverage.out -covermode=count -json -mod=readonly -tags='ledger test_ledger_mock norace' $TESTS > report.json;          
       - name: Archive code coverage results
         uses: actions/upload-artifact@v4
         with:          
