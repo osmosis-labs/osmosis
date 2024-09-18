@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"math"
 	"sort"
 	"strconv"
@@ -127,7 +128,9 @@ func TestPBPower(t *testing.T) {
 	ballotPower := int64(0)
 
 	for i := 0; i < len(sk.Validators()); i++ {
-		power := sk.Validator(ctx, valAccAddrs[i]).GetConsensusPower(sdk.DefaultPowerReduction)
+		val, err := sk.GetValidator(ctx, valAccAddrs[i])
+		require.NoError(t, err)
+		power := val.GetConsensusPower(sdk.DefaultPowerReduction)
 		vote := types.NewVoteForTally(
 			osmomath.ZeroDec(),
 			assets.MicroSDRDenom,

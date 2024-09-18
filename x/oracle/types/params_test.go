@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"bytes"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"testing"
 
 	"github.com/stretchr/testify/require"

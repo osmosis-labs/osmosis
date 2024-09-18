@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"bytes"
 	"encoding/hex"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/stretchr/testify/require"
 	"strconv"
 	"testing"
 
@@ -75,7 +77,8 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.Setup()
 
 	// Set the bond denom to be note to make volume tracking tests more readable.
-	skParams := s.App.StakingKeeper.GetParams(s.Ctx)
+	skParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	require.NoError(s.T(), err)
 	skParams.BondDenom = appparams.BaseCoinUnit
 	s.App.StakingKeeper.SetParams(s.Ctx, skParams)
 	s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, "note")
@@ -100,7 +103,7 @@ func (s *KeeperTestSuite) SetupTest() {
 }
 
 // NewTestMsgCreateValidator test msg creator
-func (s *KeeperTestSuite) NewTestMsgCreateValidator(address sdk.ValAddress, pubKey cryptotypes.PubKey, amt sdk.Int) *stakingtypes.MsgCreateValidator {
+func (s *KeeperTestSuite) NewTestMsgCreateValidator(address sdk.ValAddress, pubKey cryptotypes.PubKey, amt osmomath.Int) *stakingtypes.MsgCreateValidator {
 	commission := stakingtypes.NewCommissionRates(osmomath.ZeroDec(), osmomath.ZeroDec(), osmomath.ZeroDec())
 	msg, _ := stakingtypes.NewMsgCreateValidator(
 		address, pubKey, sdk.NewCoin(appparams.BaseCoinUnit, amt),

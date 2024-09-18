@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"sort"
 
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"

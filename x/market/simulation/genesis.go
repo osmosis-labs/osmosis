@@ -5,6 +5,7 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -38,13 +39,13 @@ func GenMinSpread(r *rand.Rand) osmomath.Dec {
 func RandomizedGenState(simState *module.SimulationState) {
 	var poolRecoveryPeriod uint64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, poolRecoveryPeriodKey, &poolRecoveryPeriod, simState.Rand,
+		poolRecoveryPeriodKey, &poolRecoveryPeriod, simState.Rand,
 		func(r *rand.Rand) { poolRecoveryPeriod = GenPoolRecoveryPeriod(r) },
 	)
 
 	var minStabilitySpread osmomath.Dec
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, minStabilitySpreadKey, &minStabilitySpread, simState.Rand,
+		minStabilitySpreadKey, &minStabilitySpread, simState.Rand,
 		func(r *rand.Rand) { minStabilitySpread = GenMinSpread(r) },
 	)
 

@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	customante "github.com/osmosis-labs/osmosis/v26/ante"
 
 	"github.com/cosmos/cosmos-sdk/client"
 
@@ -79,7 +80,8 @@ func (s *KeeperTestHelper) SetupTxFeeAnteHandlerAndChargeFee(clientCtx client.Co
 	tx := s.BuildTx(txBuilder, msgs, sigV2, "", txFee, gasLimit)
 
 	mfd := keeper.NewMempoolFeeDecorator(*s.App.TxFeesKeeper, mempoolFeeOpts)
-	dfd := keeper.NewDeductFeeDecorator(*s.App.TxFeesKeeper, *s.App.AccountKeeper, s.App.BankKeeper, nil)
+	dfd := customante.NewDeductFeeDecorator(*s.App.TxFeesKeeper, *s.App.AccountKeeper, s.App.BankKeeper, nil,
+		s.App.TreasuryKeeper, s.App.OracleKeeper)
 	antehandlerMFD := sdk.ChainAnteDecorators(mfd, dfd)
 	_, err = antehandlerMFD(s.Ctx, tx, isSimulate)
 	return err

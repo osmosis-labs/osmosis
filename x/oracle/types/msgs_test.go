@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"math/rand"
 	"testing"
 
