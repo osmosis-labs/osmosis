@@ -552,6 +552,8 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn
 		// get locked coin from the lock ID
 		interim, ok := k.GetIntermediaryAccountFromLockId(ctx, lock.UnderlyingLockId)
 		if !ok {
+			fmt.Println("intermediary account not found for lock id", lock.UnderlyingLockId)
+			ctx.Logger().Error("intermediary account not found for lock id", "lockID", lock.UnderlyingLockId)
 			continue
 		}
 
