@@ -581,7 +581,7 @@ func (k Keeper) IterateDelegations(context context.Context, delegator sdk.AccAdd
 		// get locked coin from the lock ID
 		interim, ok := k.GetIntermediaryAccountFromLockId(ctx, lock.UnderlyingLockId)
 		if !ok {
-			ctx.Logger().Error("intermediary account not found for lock id %d", lock.UnderlyingLockId)
+			ctx.Logger().Error("intermediary account not found for lock id", "lockID", lock.UnderlyingLockId)
 			continue
 		}
 
