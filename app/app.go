@@ -4,7 +4,17 @@ import (
 	"context"
 	storetypes "cosmossdk.io/store/types"
 	"fmt"
+	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
+	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	"github.com/osmosis-labs/osmosis/osmomath"
+	clclient "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/client"
+	cwpoolclient "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/client"
+	gammclient "github.com/osmosis-labs/osmosis/v26/x/gamm/client"
+	incentivesclient "github.com/osmosis-labs/osmosis/v26/x/incentives/client"
+	poolincentivesclient "github.com/osmosis-labs/osmosis/v26/x/pool-incentives/client"
+	poolmanagerclient "github.com/osmosis-labs/osmosis/v26/x/poolmanager/client"
+	superfluidclient "github.com/osmosis-labs/osmosis/v26/x/superfluid/client"
+	txfeesclient "github.com/osmosis-labs/osmosis/v26/x/txfees/client"
 	"io"
 	"net/http"
 	"os"
@@ -317,6 +327,34 @@ func NewSymphonyApp(
 	if err != nil {
 		panic(err)
 	}
+
+	// Override the gov ModuleBasic with all the custom proposal handers, otherwise we lose them in the CLI.
+	app.ModuleBasics = module.NewBasicManagerFromManager(
+		app.mm,
+		map[string]module.AppModuleBasic{
+			"gov": gov.NewAppModuleBasic(
+				[]govclient.ProposalHandler{
+					paramsclient.ProposalHandler,
+					poolincentivesclient.UpdatePoolIncentivesHandler,
+					poolincentivesclient.ReplacePoolIncentivesHandler,
+					superfluidclient.SetSuperfluidAssetsProposalHandler,
+					superfluidclient.RemoveSuperfluidAssetsProposalHandler,
+					superfluidclient.UpdateUnpoolWhitelistProposalHandler,
+					gammclient.ReplaceMigrationRecordsProposalHandler,
+					gammclient.UpdateMigrationRecordsProposalHandler,
+					gammclient.CreateCLPoolAndLinkToCFMMProposalHandler,
+					gammclient.SetScalingFactorControllerProposalHandler,
+					clclient.CreateConcentratedLiquidityPoolProposalHandler,
+					clclient.TickSpacingDecreaseProposalHandler,
+					cwpoolclient.UploadCodeIdAndWhitelistProposalHandler,
+					cwpoolclient.MigratePoolContractsProposalHandler,
+					txfeesclient.SubmitUpdateFeeTokenProposalHandler,
+					poolmanagerclient.DenomPairTakerFeeProposalHandler,
+					incentivesclient.HandleCreateGroupsProposal,
+				},
+			),
+		},
+	)
 
 	app.setupUpgradeHandlers()
 

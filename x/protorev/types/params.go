@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	DefaultEnableModule = true
+	DefaultEnableModule = false
 	// Currently configured to be the Skip dev team's address
 	// See https://github.com/osmosis-labs/osmosis/issues/4349 for more details
 	// Note that governance has full ability to change this live on-chain, and this admin can at most prevent protorev from working.
@@ -38,7 +38,7 @@ func NewParams(enable bool, admin string) Params {
 
 // DefaultParams returns a default set of parameters
 func DefaultParams() Params {
-	return NewParams(DefaultEnableModule, DefaultAdminAccount)
+	return NewParams(DefaultEnableModule, DefaultNullAddress.String())
 }
 
 // ParamSetPairs get the params.ParamSet

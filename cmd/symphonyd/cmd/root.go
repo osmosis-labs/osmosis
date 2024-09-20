@@ -352,7 +352,18 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithViper("SYMPHONY")
 
 	tempDir := tempDir()
-	tempApp := symphony.NewSymphonyApp(log.NewNopLogger(), cosmosdb.NewMemDB(), nil, true, map[int64]bool{}, tempDir, 5, sims.EmptyAppOptions{}, symphony.EmptyWasmOpts, baseapp.SetChainID("symphony-1"))
+	tempApp := symphony.NewSymphonyApp(
+		log.NewNopLogger(),
+		cosmosdb.NewMemDB(),
+		nil,
+		true,
+		map[int64]bool{},
+		tempDir,
+		5,
+		sims.EmptyAppOptions{},
+		symphony.EmptyWasmOpts,
+		baseapp.SetChainID("symphony-1"),
+	)
 
 	// Allows you to add extra params to your client.toml
 	// gas, gas-price, gas-adjustment, and human-readable-denoms

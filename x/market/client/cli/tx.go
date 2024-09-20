@@ -61,11 +61,13 @@ func NewSwapMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.
 		if err = innerMsg.ValidateBasic(); err != nil {
 			return nil, err
 		}
+		msg = innerMsg
 	} else {
 		innerMsg := types.NewMsgSwap(fromAddress, offerCoin, askDenom)
 		if err = innerMsg.ValidateBasic(); err != nil {
 			return nil, err
 		}
+		msg = innerMsg
 	}
 	return msg, nil
 }
