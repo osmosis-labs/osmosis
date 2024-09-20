@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"testing"
 
 	"github.com/stretchr/testify/require"

@@ -182,14 +182,7 @@ func CreateTestInput(t *testing.T) TestInput {
 		log.NewNopLogger(),
 	)
 
-	totalSupply := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, InitTokens.MulRaw(int64(len(Addrs)*10))))
-	err := bankKeeper.MintCoins(ctx, faucetAccountName, totalSupply)
-	require.NoError(t, err)
-
-	// mint stable
-	totalSupply = sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, sdkmath.NewInt(10_000*1e6)))
-	err = bankKeeper.MintCoins(ctx, faucetAccountName, totalSupply)
-	require.NoError(t, err)
+	var err error
 
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec,
@@ -232,21 +225,39 @@ func CreateTestInput(t *testing.T) TestInput {
 	distrAcc := authtypes.NewEmptyModuleAccount(distrtypes.ModuleName)
 	oracleAcc := authtypes.NewEmptyModuleAccount(oracletypes.ModuleName)
 	marketAcc := authtypes.NewEmptyModuleAccount(markettypes.ModuleName, authtypes.Burner, authtypes.Minter)
-	treasuryAcc := authtypes.NewEmptyModuleAccount(types.ModuleName)
+	treasuryAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Minter)
+	faucetAcc := authtypes.NewEmptyModuleAccount(faucetAccountName, authtypes.Minter)
+
+	for index, acc := range []*authtypes.ModuleAccount{
+		faucetAcc,
+		feeCollectorAcc,
+		bondPool,
+		notBondedPool,
+		distrAcc,
+		oracleAcc,
+		marketAcc,
+		treasuryAcc,
+	} {
+		acc.AccountNumber = uint64(index)
+		accountKeeper.SetModuleAccount(ctx, acc)
+	}
+
+	totalSupply := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, InitTokens.MulRaw(int64(len(Addrs)*10))))
+	err = bankKeeper.MintCoins(ctx, faucetAccountName, totalSupply)
+	require.NoError(t, err)
+
+	// mint stable
+	totalSupply = sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, sdkmath.NewInt(10_000*1e6)))
+	err = bankKeeper.MintCoins(ctx, faucetAccountName, totalSupply)
+	require.NoError(t, err)
 
 	err = bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, InitTokens.MulRaw(int64(len(Addrs))))))
 	require.NoError(t, err)
 
-	accountKeeper.SetModuleAccount(ctx, feeCollectorAcc)
-	accountKeeper.SetModuleAccount(ctx, bondPool)
-	accountKeeper.SetModuleAccount(ctx, notBondedPool)
-	accountKeeper.SetModuleAccount(ctx, distrAcc)
-	accountKeeper.SetModuleAccount(ctx, oracleAcc)
-	accountKeeper.SetModuleAccount(ctx, marketAcc)
-	accountKeeper.SetModuleAccount(ctx, treasuryAcc)
-
-	for _, addr := range Addrs {
-		accountKeeper.SetAccount(ctx, authtypes.NewBaseAccountWithAddress(addr))
+	for index, addr := range Addrs {
+		acc := authtypes.NewBaseAccountWithAddress(addr)
+		acc.AccountNumber = uint64(index + 1000)
+		accountKeeper.SetAccount(ctx, acc)
 		err := bankKeeper.SendCoinsFromModuleToAccount(ctx, faucetAccountName, addr, InitCoins)
 		require.NoError(t, err)
 		require.Equal(t, bankKeeper.GetAllBalances(ctx, addr), InitCoins)

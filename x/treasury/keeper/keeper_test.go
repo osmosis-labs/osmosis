@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
 	markettypes "github.com/osmosis-labs/osmosis/v26/x/market/types"
 	"testing"

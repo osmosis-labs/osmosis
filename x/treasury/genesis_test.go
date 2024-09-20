@@ -1,6 +1,7 @@
 package treasury
 
 import (
+	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
 	"testing"
 

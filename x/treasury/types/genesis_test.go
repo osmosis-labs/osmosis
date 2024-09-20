@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
