@@ -20,19 +20,19 @@ service Query {
   // Pools returns all concentrated liquidity pools
   rpc Pools(PoolsRequest) returns (PoolsResponse) {
     option (google.api.http).get =
-        "/osmosis/concentratedliquidity/v1beta1/pools";
+        "/symphony/concentratedliquidity/v1beta1/pools";
   }
 
   // Params returns concentrated liquidity module params.
   rpc Params(ParamsRequest) returns (ParamsResponse) {
     option (google.api.http).get =
-        "/osmosis/concentratedliquidity/v1beta1/params";
+        "/symphony/concentratedliquidity/v1beta1/params";
   }
 
   // UserPositions returns all concentrated positions of some address.
   rpc UserPositions(UserPositionsRequest) returns (UserPositionsResponse) {
     option (google.api.http).get =
-        "/osmosis/concentratedliquidity/v1beta1/positions/{address}";
+        "/symphony/concentratedliquidity/v1beta1/positions/{address}";
   }
 
   // LiquidityPerTickRange returns the amount of liquidity per every tick range
@@ -40,7 +40,7 @@ service Query {
   rpc LiquidityPerTickRange(LiquidityPerTickRangeRequest)
       returns (LiquidityPerTickRangeResponse) {
     option (google.api.http).get =
-        "/osmosis/concentratedliquidity/v1beta1/liquidity_per_tick_range";
+        "/symphony/concentratedliquidity/v1beta1/liquidity_per_tick_range";
   }
 
   // LiquidityNetInDirection returns liquidity net in the direction given.
@@ -48,7 +48,7 @@ service Query {
   // depending on the direction.
   rpc LiquidityNetInDirection(LiquidityNetInDirectionRequest)
       returns (LiquidityNetInDirectionResponse) {
-    option (google.api.http).get = "/osmosis/concentratedliquidity/v1beta1/"
+    option (google.api.http).get = "/symphony/concentratedliquidity/v1beta1/"
                                    "liquidity_net_in_direction";
   }
 
@@ -57,7 +57,7 @@ service Query {
   rpc ClaimableSpreadRewards(ClaimableSpreadRewardsRequest)
       returns (ClaimableSpreadRewardsResponse) {
     option (google.api.http).get =
-        "/osmosis/concentratedliquidity/v1beta1/claimable_spread_rewards";
+        "/symphony/concentratedliquidity/v1beta1/claimable_spread_rewards";
   };
 
   // ClaimableIncentives returns the amount of incentives that can be claimed
@@ -65,13 +65,13 @@ service Query {
   rpc ClaimableIncentives(ClaimableIncentivesRequest)
       returns (ClaimableIncentivesResponse) {
     option (google.api.http).get =
-        "/osmosis/concentratedliquidity/v1beta1/claimable_incentives";
+        "/symphony/concentratedliquidity/v1beta1/claimable_incentives";
   };
 
   // PositionById returns a position with the given id.
   rpc PositionById(PositionByIdRequest) returns (PositionByIdResponse) {
     option (google.api.http).get =
-        "/osmosis/concentratedliquidity/v1beta1/position_by_id";
+        "/symphony/concentratedliquidity/v1beta1/position_by_id";
   };
 
   // PoolAccumulatorRewards returns the pool-global accumulator rewards.
@@ -79,14 +79,14 @@ service Query {
   rpc PoolAccumulatorRewards(PoolAccumulatorRewardsRequest)
       returns (PoolAccumulatorRewardsResponse) {
     option (google.api.http).get =
-        "/osmosis/concentratedliquidity/v1beta1/pool_accum_rewards";
+        "/symphony/concentratedliquidity/v1beta1/pool_accum_rewards";
   }
 
   // IncentiveRecords returns the incentive records for a given poolId
   rpc IncentiveRecords(IncentiveRecordsRequest)
       returns (IncentiveRecordsResponse) {
     option (google.api.http).get =
-        "/osmosis/concentratedliquidity/v1beta1/incentive_records";
+        "/symphony/concentratedliquidity/v1beta1/incentive_records";
   };
 
   // TickAccumulatorTrackers returns the tick accumulator trackers.
@@ -94,7 +94,7 @@ service Query {
   rpc TickAccumulatorTrackers(TickAccumulatorTrackersRequest)
       returns (TickAccumulatorTrackersResponse) {
     option (google.api.http).get =
-        "/osmosis/concentratedliquidity/v1beta1/tick_accum_trackers";
+        "/symphony/concentratedliquidity/v1beta1/tick_accum_trackers";
   };
 
   // CFMMPoolIdLinkFromConcentratedPoolId returns the pool id of the CFMM
@@ -102,7 +102,7 @@ service Query {
   rpc CFMMPoolIdLinkFromConcentratedPoolId(
       CFMMPoolIdLinkFromConcentratedPoolIdRequest)
       returns (CFMMPoolIdLinkFromConcentratedPoolIdResponse) {
-    option (google.api.http).get = "/osmosis/concentratedliquidity/v1beta1/"
+    option (google.api.http).get = "/symphony/concentratedliquidity/v1beta1/"
                                    "cfmm_pool_id_link_from_concentrated/"
                                    "{concentrated_pool_id}";
   }
@@ -111,7 +111,7 @@ service Query {
   // positions of the given address.
   rpc UserUnbondingPositions(UserUnbondingPositionsRequest)
       returns (UserUnbondingPositionsResponse) {
-    option (google.api.http).get = "/osmosis/concentratedliquidity/v1beta1/"
+    option (google.api.http).get = "/symphony/concentratedliquidity/v1beta1/"
                                    "user_unbonding_positions/"
                                    "{address}";
   }
@@ -120,14 +120,14 @@ service Query {
   rpc GetTotalLiquidity(GetTotalLiquidityRequest)
       returns (GetTotalLiquidityResponse) {
     option (google.api.http).get =
-        "/osmosis/concentratedliquidity/v1beta1/get_total_liquidity";
+        "/symphony/concentratedliquidity/v1beta1/get_total_liquidity";
   }
 
   // NumNextInitializedTicks returns the provided number of next initialized
   // ticks in the direction of swapping the token in denom.
   rpc NumNextInitializedTicks(NumNextInitializedTicksRequest)
       returns (NumNextInitializedTicksResponse) {
-    option (google.api.http).get = "/osmosis/concentratedliquidity/v1beta1/"
+    option (google.api.http).get = "/symphony/concentratedliquidity/v1beta1/"
                                    "num_next_initialized_ticks";
   }
 }

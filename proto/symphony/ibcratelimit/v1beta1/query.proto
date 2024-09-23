@@ -13,7 +13,7 @@ service Query {
   // Params defines a gRPC query method that returns the ibc-rate-limit module's
   // parameters.
   rpc Params(ParamsRequest) returns (ParamsResponse) {
-    option (google.api.http).get = "/osmosis/ibc-rate-limit/v1beta1/params";
+    option (google.api.http).get = "/symphony/ibc-rate-limit/v1beta1/params";
   }
 }
 

@@ -12,18 +12,18 @@ option go_package = "github.com/osmosis-labs/osmosis/v26/x/market/types";
 service Query {
   // Swap returns simulated swap amount.
   rpc Swap(QuerySwapRequest) returns (QuerySwapResponse) {
-    option (google.api.http).get = "/osmosis/market/v1beta1/swap";
+    option (google.api.http).get = "/symphony/market/v1beta1/swap";
   }
 
   // Params queries all parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/osmosis/market/v1beta1/params";
+    option (google.api.http).get = "/symphony/market/v1beta1/params";
   }
 
   rpc ExchangeRequirements(QueryExchangeRequirementsRequest)
       returns (QueryExchangeRequirementsResponse) {
     option (google.api.http).get =
-        "/osmosis/market/v1beta1/exchange_requirements";
+        "/symphony/market/v1beta1/exchange_requirements";
   }
 }
 

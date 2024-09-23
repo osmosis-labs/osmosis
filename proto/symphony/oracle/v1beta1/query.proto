@@ -14,82 +14,82 @@ service Query {
   rpc ExchangeRate(QueryExchangeRateRequest)
       returns (QueryExchangeRateResponse) {
     option (google.api.http).get =
-        "/osmosis/oracle/v1beta1/denoms/{denom}/exchange_rate";
+        "/symphony/oracle/v1beta1/denoms/{denom}/exchange_rate";
   }
 
   // ExchangeRates returns exchange rates of all denoms
   rpc ExchangeRates(QueryExchangeRatesRequest)
       returns (QueryExchangeRatesResponse) {
     option (google.api.http).get =
-        "/osmosis/oracle/v1beta1/denoms/exchange_rates";
+        "/symphony/oracle/v1beta1/denoms/exchange_rates";
   }
 
   // TobinTax returns tobin tax of a denom
   rpc TobinTax(QueryTobinTaxRequest) returns (QueryTobinTaxResponse) {
     option (google.api.http).get =
-        "/osmosis/oracle/v1beta1/denoms/{denom}/tobin_tax";
+        "/symphony/oracle/v1beta1/denoms/{denom}/tobin_tax";
   }
 
   // TobinTaxes returns tobin taxes of all denoms
   rpc TobinTaxes(QueryTobinTaxesRequest) returns (QueryTobinTaxesResponse) {
-    option (google.api.http).get = "/osmosis/oracle/v1beta1/denoms/tobin_taxes";
+    option (google.api.http).get = "/symphony/oracle/v1beta1/denoms/tobin_taxes";
   }
 
   // Actives returns all active denoms
   rpc Actives(QueryActivesRequest) returns (QueryActivesResponse) {
-    option (google.api.http).get = "/osmosis/oracle/v1beta1/denoms/actives";
+    option (google.api.http).get = "/symphony/oracle/v1beta1/denoms/actives";
   }
 
   // VoteTargets returns all vote target denoms
   rpc VoteTargets(QueryVoteTargetsRequest) returns (QueryVoteTargetsResponse) {
     option (google.api.http).get =
-        "/osmosis/oracle/v1beta1/denoms/vote_targets";
+        "/symphony/oracle/v1beta1/denoms/vote_targets";
   }
 
   // FeederDelegation returns feeder delegation of a validator
   rpc FeederDelegation(QueryFeederDelegationRequest)
       returns (QueryFeederDelegationResponse) {
     option (google.api.http).get =
-        "/osmosis/oracle/v1beta1/validators/{validator_addr}/feeder";
+        "/symphony/oracle/v1beta1/validators/{validator_addr}/feeder";
   }
 
   // MissCounter returns oracle miss counter of a validator
   rpc MissCounter(QueryMissCounterRequest) returns (QueryMissCounterResponse) {
     option (google.api.http).get =
-        "/osmosis/oracle/v1beta1/validators/{validator_addr}/miss";
+        "/symphony/oracle/v1beta1/validators/{validator_addr}/miss";
   }
 
   // AggregatePrevote returns an aggregate prevote of a validator
   rpc AggregatePrevote(QueryAggregatePrevoteRequest)
       returns (QueryAggregatePrevoteResponse) {
     option (google.api.http).get =
-        "/osmosis/oracle/v1beta1/validators/{validator_addr}/aggregate_prevote";
+        "/symphony/oracle/v1beta1/validators/{validator_addr}/aggregate_prevote";
   }
 
   // AggregatePrevotes returns aggregate prevotes of all validators
   rpc AggregatePrevotes(QueryAggregatePrevotesRequest)
       returns (QueryAggregatePrevotesResponse) {
     option (google.api.http).get =
-        "/osmosis/oracle/v1beta1/validators/aggregate_prevotes";
+        "/symphony/oracle/v1beta1/validators/aggregate_prevotes";
   }
 
   // AggregateVote returns an aggregate vote of a validator
   rpc AggregateVote(QueryAggregateVoteRequest)
       returns (QueryAggregateVoteResponse) {
     option (google.api.http).get =
-        "/osmosis/oracle/v1beta1/valdiators/{validator_addr}/aggregate_vote";
+        "/symphony/oracle/v1beta1/valdiators/{validator_addr}/aggregate_vote";
   }
 
   // AggregateVotes returns aggregate votes of all validators
   rpc AggregateVotes(QueryAggregateVotesRequest)
       returns (QueryAggregateVotesResponse) {
     option (google.api.http).get =
-        "/osmosis/oracle/v1beta1/validators/aggregate_votes";
+        "/symphony/oracle/v1beta1/validators/aggregate_votes";
   }
 
   // Params queries all parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/osmosis/oracle/v1beta1/params";
+    option (google.api.http).get = "/symphony/oracle/v1beta1/params";
   }
 }
 

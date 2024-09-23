@@ -14,14 +14,14 @@ service Msg {
   // SetHotRoutes sets the hot routes that will be explored when creating
   // cyclic arbitrage routes. Can only be called by the admin account.
   rpc SetHotRoutes(MsgSetHotRoutes) returns (MsgSetHotRoutesResponse) {
-    option (google.api.http).post = "/osmosis/protorev/set_hot_routes";
+    option (google.api.http).post = "/symphony/protorev/set_hot_routes";
   };
 
   // SetDeveloperAccount sets the account that can withdraw a portion of the
   // profits from the protorev module. This will be Skip's address.
   rpc SetDeveloperAccount(MsgSetDeveloperAccount)
       returns (MsgSetDeveloperAccountResponse) {
-    option (google.api.http).post = "/osmosis/protorev/set_developer_account";
+    option (google.api.http).post = "/symphony/protorev/set_developer_account";
   };
 
   // SetMaxPoolPointsPerTx sets the maximum number of pool points that can be
@@ -29,7 +29,7 @@ service Msg {
   rpc SetMaxPoolPointsPerTx(MsgSetMaxPoolPointsPerTx)
       returns (MsgSetMaxPoolPointsPerTxResponse) {
     option (google.api.http).post =
-        "/osmosis/protorev/set_max_pool_points_per_tx";
+        "/symphony/protorev/set_max_pool_points_per_tx";
   };
 
   // SetMaxPoolPointsPerBlock sets the maximum number of pool points that can be
@@ -37,20 +37,20 @@ service Msg {
   rpc SetMaxPoolPointsPerBlock(MsgSetMaxPoolPointsPerBlock)
       returns (MsgSetMaxPoolPointsPerBlockResponse) {
     option (google.api.http).post =
-        "/osmosis/protorev/set_max_pool_points_per_block";
+        "/symphony/protorev/set_max_pool_points_per_block";
   };
 
   // SetInfoByPoolType sets the pool type information needed to make smart
   // assumptions about swapping on different pool types
   rpc SetInfoByPoolType(MsgSetInfoByPoolType)
       returns (MsgSetInfoByPoolTypeResponse) {
-    option (google.api.http).post = "/osmosis/protorev/set_info_by_pool_type";
+    option (google.api.http).post = "/symphony/protorev/set_info_by_pool_type";
   };
 
   // SetBaseDenoms sets the base denoms that will be used to create cyclic
   // arbitrage routes. Can only be called by the admin account.
   rpc SetBaseDenoms(MsgSetBaseDenoms) returns (MsgSetBaseDenomsResponse) {
-    option (google.api.http).post = "/osmosis/protorev/set_base_denoms";
+    option (google.api.http).post = "/symphony/protorev/set_base_denoms";
   };
 }
 

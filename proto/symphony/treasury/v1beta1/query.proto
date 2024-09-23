@@ -16,12 +16,12 @@ option go_package = "github.com/osmosis-labs/osmosis/v26/x/treasury/types";
 service Query {
   // TaxRate return the current tax rate
   rpc TaxRate(QueryTaxRateRequest) returns (QueryTaxRateResponse) {
-    option (google.api.http).get = "/osmosis/treasury/v1beta1/tax_rate";
+    option (google.api.http).get = "/symphony/treasury/v1beta1/tax_rate";
   }
 
   // Params queries all parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/osmosis/treasury/v1beta1/params";
+    option (google.api.http).get = "/symphony/treasury/v1beta1/params";
   }
 }
 

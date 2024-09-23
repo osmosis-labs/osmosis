@@ -181,7 +181,7 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_UserValidatorPreferences_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"osmosis", "valset-pref", "v1beta1", "address"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_UserValidatorPreferences_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"symphony", "valset-pref", "v1beta1", "address"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

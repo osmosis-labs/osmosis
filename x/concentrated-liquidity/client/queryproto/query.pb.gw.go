@@ -1305,35 +1305,35 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Pools_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "concentratedliquidity", "v1beta1", "pools"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_Pools_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"symphony", "concentratedliquidity", "v1beta1", "pools"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "concentratedliquidity", "v1beta1", "params"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"symphony", "concentratedliquidity", "v1beta1", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_UserPositions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "concentratedliquidity", "v1beta1", "positions", "address"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_UserPositions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"symphony", "concentratedliquidity", "v1beta1", "positions", "address"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_LiquidityPerTickRange_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "concentratedliquidity", "v1beta1", "liquidity_per_tick_range"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_LiquidityPerTickRange_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"symphony", "concentratedliquidity", "v1beta1", "liquidity_per_tick_range"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_LiquidityNetInDirection_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "concentratedliquidity", "v1beta1", "liquidity_net_in_direction"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_LiquidityNetInDirection_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"symphony", "concentratedliquidity", "v1beta1", "liquidity_net_in_direction"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ClaimableSpreadRewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "concentratedliquidity", "v1beta1", "claimable_spread_rewards"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_ClaimableSpreadRewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"symphony", "concentratedliquidity", "v1beta1", "claimable_spread_rewards"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ClaimableIncentives_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "concentratedliquidity", "v1beta1", "claimable_incentives"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_ClaimableIncentives_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"symphony", "concentratedliquidity", "v1beta1", "claimable_incentives"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_PositionById_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "concentratedliquidity", "v1beta1", "position_by_id"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_PositionById_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"symphony", "concentratedliquidity", "v1beta1", "position_by_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_PoolAccumulatorRewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "concentratedliquidity", "v1beta1", "pool_accum_rewards"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_PoolAccumulatorRewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"symphony", "concentratedliquidity", "v1beta1", "pool_accum_rewards"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_IncentiveRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "concentratedliquidity", "v1beta1", "incentive_records"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_IncentiveRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"symphony", "concentratedliquidity", "v1beta1", "incentive_records"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_TickAccumulatorTrackers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "concentratedliquidity", "v1beta1", "tick_accum_trackers"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_TickAccumulatorTrackers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"symphony", "concentratedliquidity", "v1beta1", "tick_accum_trackers"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_CFMMPoolIdLinkFromConcentratedPoolId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "concentratedliquidity", "v1beta1", "cfmm_pool_id_link_from_concentrated", "concentrated_pool_id"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_CFMMPoolIdLinkFromConcentratedPoolId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"symphony", "concentratedliquidity", "v1beta1", "cfmm_pool_id_link_from_concentrated", "concentrated_pool_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_UserUnbondingPositions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "concentratedliquidity", "v1beta1", "user_unbonding_positions", "address"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_UserUnbondingPositions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"symphony", "concentratedliquidity", "v1beta1", "user_unbonding_positions", "address"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetTotalLiquidity_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "concentratedliquidity", "v1beta1", "get_total_liquidity"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetTotalLiquidity_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"symphony", "concentratedliquidity", "v1beta1", "get_total_liquidity"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_NumNextInitializedTicks_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "concentratedliquidity", "v1beta1", "num_next_initialized_ticks"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_NumNextInitializedTicks_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"symphony", "concentratedliquidity", "v1beta1", "num_next_initialized_ticks"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

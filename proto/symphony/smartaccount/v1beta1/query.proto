@@ -13,19 +13,19 @@ option go_package = "github.com/osmosis-labs/osmosis/v26/x/smart-account/types";
 service Query {
   // Parameters queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/osmosis/smartaccount/params";
+    option (google.api.http).get = "/symphony/smartaccount/params";
   }
 
   rpc GetAuthenticator(GetAuthenticatorRequest)
       returns (GetAuthenticatorResponse) {
     option (google.api.http).get =
-        "/osmosis/smartaccount/authenticator/{account}/{authenticator_id}";
+        "/symphony/smartaccount/authenticator/{account}/{authenticator_id}";
   }
 
   rpc GetAuthenticators(GetAuthenticatorsRequest)
       returns (GetAuthenticatorsResponse) {
     option (google.api.http).get =
-        "/osmosis/smartaccount/authenticators/{account}";
+        "/symphony/smartaccount/authenticators/{account}";
   }
 }
 

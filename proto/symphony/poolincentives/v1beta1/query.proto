@@ -13,38 +13,38 @@ service Query {
   // GaugeIds takes the pool id and returns the matching gauge ids and durations
   rpc GaugeIds(QueryGaugeIdsRequest) returns (QueryGaugeIdsResponse) {
     option (google.api.http).get =
-        "/osmosis/pool-incentives/v1beta1/gauge-ids/{pool_id}";
+        "/symphony/pool-incentives/v1beta1/gauge-ids/{pool_id}";
   }
   // DistrInfo returns the pool's matching gauge ids and weights.
   rpc DistrInfo(QueryDistrInfoRequest) returns (QueryDistrInfoResponse) {
     option (google.api.http).get =
-        "/osmosis/pool-incentives/v1beta1/distr_info";
+        "/symphony/pool-incentives/v1beta1/distr_info";
   }
 
   // Params returns pool incentives params.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/osmosis/pool-incentives/v1beta1/params";
+    option (google.api.http).get = "/symphony/pool-incentives/v1beta1/params";
   }
 
   // LockableDurations returns lock durations for pools.
   rpc LockableDurations(QueryLockableDurationsRequest)
       returns (QueryLockableDurationsResponse) {
     option (google.api.http).get =
-        "/osmosis/pool-incentives/v1beta1/lockable_durations";
+        "/symphony/pool-incentives/v1beta1/lockable_durations";
   }
 
   // IncentivizedPools returns currently incentivized pools
   rpc IncentivizedPools(QueryIncentivizedPoolsRequest)
       returns (QueryIncentivizedPoolsResponse) {
     option (google.api.http).get =
-        "/osmosis/pool-incentives/v1beta1/incentivized_pools";
+        "/symphony/pool-incentives/v1beta1/incentivized_pools";
   }
 
   // ExternalIncentiveGauges returns external incentive gauges.
   rpc ExternalIncentiveGauges(QueryExternalIncentiveGaugesRequest)
       returns (QueryExternalIncentiveGaugesResponse) {
     option (google.api.http).get =
-        "/osmosis/pool-incentives/v1beta1/external_incentive_gauges";
+        "/symphony/pool-incentives/v1beta1/external_incentive_gauges";
   }
 }
 

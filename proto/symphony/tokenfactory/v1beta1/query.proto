@@ -14,7 +14,7 @@ service Query {
   // Params defines a gRPC query method that returns the tokenfactory module's
   // parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/osmosis/tokenfactory/v1beta1/params";
+    option (google.api.http).get = "/symphony/tokenfactory/v1beta1/params";
   }
 
   // DenomAuthorityMetadata defines a gRPC query method for fetching
@@ -22,7 +22,7 @@ service Query {
   rpc DenomAuthorityMetadata(QueryDenomAuthorityMetadataRequest)
       returns (QueryDenomAuthorityMetadataResponse) {
     option (google.api.http).get =
-        "/osmosis/tokenfactory/v1beta1/denoms/{denom}/authority_metadata";
+        "/symphony/tokenfactory/v1beta1/denoms/{denom}/authority_metadata";
   }
 
   // DenomsFromCreator defines a gRPC query method for fetching all
@@ -30,7 +30,7 @@ service Query {
   rpc DenomsFromCreator(QueryDenomsFromCreatorRequest)
       returns (QueryDenomsFromCreatorResponse) {
     option (google.api.http).get =
-        "/osmosis/tokenfactory/v1beta1/denoms_from_creator/{creator}";
+        "/symphony/tokenfactory/v1beta1/denoms_from_creator/{creator}";
   }
 
   // BeforeSendHookAddress defines a gRPC query method for
@@ -38,7 +38,7 @@ service Query {
   rpc BeforeSendHookAddress(QueryBeforeSendHookAddressRequest)
       returns (QueryBeforeSendHookAddressResponse) {
     option (google.api.http).get =
-        "/osmosis/tokenfactory/v1beta1/denoms/{denom}/before_send_hook";
+        "/symphony/tokenfactory/v1beta1/denoms/{denom}/before_send_hook";
   }
 
   // AllBeforeSendHooksAddresses defines a gRPC query method for
@@ -49,7 +49,7 @@ service Query {
   rpc AllBeforeSendHooksAddresses(QueryAllBeforeSendHooksAddressesRequest)
       returns (QueryAllBeforeSendHooksAddressesResponse) {
     option (google.api.http).get =
-        "/osmosis/tokenfactory/v1beta1/all_before_send_hooks";
+        "/symphony/tokenfactory/v1beta1/all_before_send_hooks";
   }
 }
 

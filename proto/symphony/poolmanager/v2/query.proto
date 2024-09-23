@@ -18,7 +18,7 @@ service Query {
   // zeroes.
   rpc SpotPriceV2(SpotPriceRequest) returns (SpotPriceResponse) {
     option (google.api.http).get =
-        "/osmosis/poolmanager/v2/pools/{pool_id}/prices";
+        "/symphony/poolmanager/v2/pools/{pool_id}/prices";
   }
 }
 

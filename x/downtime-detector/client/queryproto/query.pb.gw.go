@@ -163,7 +163,7 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_RecoveredSinceDowntimeOfLength_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "downtime-detector", "v1beta1", "RecoveredSinceDowntimeOfLength"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_RecoveredSinceDowntimeOfLength_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"symphony", "downtime-detector", "v1beta1", "RecoveredSinceDowntimeOfLength"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

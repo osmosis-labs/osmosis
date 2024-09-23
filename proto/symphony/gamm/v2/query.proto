@@ -16,7 +16,7 @@ service Query {
   // Deprecated: please use alternate in x/poolmanager
   rpc SpotPrice(QuerySpotPriceRequest) returns (QuerySpotPriceResponse) {
     option deprecated = true;
-    option (google.api.http).get = "/osmosis/gamm/v2/pools/{pool_id}/prices";
+    option (google.api.http).get = "/symphony/gamm/v2/pools/{pool_id}/prices";
   }
 }
 

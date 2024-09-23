@@ -11,7 +11,7 @@ option go_package = "github.com/osmosis-labs/osmosis/v26/x/bridge/types";
 service Query {
   // Params returns x/bridge module params.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/osmosis/bridge/v1beta1/params";
+    option (google.api.http).get = "/symphony/bridge/v1beta1/params";
   }
 }
 

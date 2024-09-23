@@ -558,17 +558,17 @@ func RegisterMsgHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 }
 
 var (
-	pattern_Msg_SetHotRoutes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"osmosis", "protorev", "set_hot_routes"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Msg_SetHotRoutes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"symphony", "protorev", "set_hot_routes"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Msg_SetDeveloperAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"osmosis", "protorev", "set_developer_account"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Msg_SetDeveloperAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"symphony", "protorev", "set_developer_account"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Msg_SetMaxPoolPointsPerTx_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"osmosis", "protorev", "set_max_pool_points_per_tx"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Msg_SetMaxPoolPointsPerTx_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"symphony", "protorev", "set_max_pool_points_per_tx"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Msg_SetMaxPoolPointsPerBlock_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"osmosis", "protorev", "set_max_pool_points_per_block"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Msg_SetMaxPoolPointsPerBlock_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"symphony", "protorev", "set_max_pool_points_per_block"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Msg_SetInfoByPoolType_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"osmosis", "protorev", "set_info_by_pool_type"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Msg_SetInfoByPoolType_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"symphony", "protorev", "set_info_by_pool_type"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Msg_SetBaseDenoms_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"osmosis", "protorev", "set_base_denoms"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Msg_SetBaseDenoms_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"symphony", "protorev", "set_base_denoms"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

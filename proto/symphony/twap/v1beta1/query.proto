@@ -16,21 +16,21 @@ option go_package = "github.com/osmosis-labs/osmosis/v26/x/twap/client/queryprot
 
 service Query {
   rpc Params(ParamsRequest) returns (ParamsResponse) {
-    option (google.api.http).get = "/osmosis/twap/v1beta1/Params";
+    option (google.api.http).get = "/symphony/twap/v1beta1/Params";
   }
   rpc ArithmeticTwap(ArithmeticTwapRequest) returns (ArithmeticTwapResponse) {
-    option (google.api.http).get = "/osmosis/twap/v1beta1/ArithmeticTwap";
+    option (google.api.http).get = "/symphony/twap/v1beta1/ArithmeticTwap";
   }
   rpc ArithmeticTwapToNow(ArithmeticTwapToNowRequest)
       returns (ArithmeticTwapToNowResponse) {
-    option (google.api.http).get = "/osmosis/twap/v1beta1/ArithmeticTwapToNow";
+    option (google.api.http).get = "/symphony/twap/v1beta1/ArithmeticTwapToNow";
   }
   rpc GeometricTwap(GeometricTwapRequest) returns (GeometricTwapResponse) {
-    option (google.api.http).get = "/osmosis/twap/v1beta1/GeometricTwap";
+    option (google.api.http).get = "/symphony/twap/v1beta1/GeometricTwap";
   }
   rpc GeometricTwapToNow(GeometricTwapToNowRequest)
       returns (GeometricTwapToNowResponse) {
-    option (google.api.http).get = "/osmosis/twap/v1beta1/GeometricTwapToNow";
+    option (google.api.http).get = "/symphony/twap/v1beta1/GeometricTwapToNow";
   }
 }
 

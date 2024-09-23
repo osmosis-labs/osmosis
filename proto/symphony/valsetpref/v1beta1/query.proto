@@ -13,7 +13,7 @@ service Query {
   // Returns the list of ValidatorPreferences for the user.
   rpc UserValidatorPreferences(UserValidatorPreferencesRequest)
       returns (UserValidatorPreferencesResponse) {
-    option (google.api.http).get = "/osmosis/valset-pref/v1beta1/{address}";
+    option (google.api.http).get = "/symphony/valset-pref/v1beta1/{address}";
   }
 }
 

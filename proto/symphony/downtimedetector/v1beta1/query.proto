@@ -19,7 +19,7 @@ service Query {
   rpc RecoveredSinceDowntimeOfLength(RecoveredSinceDowntimeOfLengthRequest)
       returns (RecoveredSinceDowntimeOfLengthResponse) {
     option (google.api.http).get =
-        "/osmosis/downtime-detector/v1beta1/RecoveredSinceDowntimeOfLength";
+        "/symphony/downtime-detector/v1beta1/RecoveredSinceDowntimeOfLength";
   }
 }
 

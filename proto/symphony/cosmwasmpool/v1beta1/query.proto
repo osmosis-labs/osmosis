@@ -14,18 +14,18 @@ option go_package = "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/client/q
 service Query {
   // Pools returns all cosmwasm pools
   rpc Pools(PoolsRequest) returns (PoolsResponse) {
-    option (google.api.http).get = "/osmosis/cosmwasmpool/v1beta1/pools";
+    option (google.api.http).get = "/symphony/cosmwasmpool/v1beta1/pools";
   }
 
   // Params returns the parameters of the x/cosmwasmpool module.
   rpc Params(ParamsRequest) returns (ParamsResponse) {
-    option (google.api.http).get = "/osmosis/cosmwasmpool/v1beta1/params";
+    option (google.api.http).get = "/symphony/cosmwasmpool/v1beta1/params";
   }
 
   rpc ContractInfoByPoolId(ContractInfoByPoolIdRequest)
       returns (ContractInfoByPoolIdResponse) {
     option (google.api.http).get =
-        "/osmosis/cosmwasmpool/v1beta1/contract_info";
+        "/symphony/cosmwasmpool/v1beta1/contract_info";
   }
 }
 

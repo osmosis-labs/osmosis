@@ -11,13 +11,13 @@ option go_package = "github.com/osmosis-labs/osmosis/v26/x/mint/types";
 service Query {
   // Params returns the total set of minting parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/osmosis/mint/v1beta1/params";
+    option (google.api.http).get = "/symphony/mint/v1beta1/params";
   }
 
   // EpochProvisions returns the current minting epoch provisions value.
   rpc EpochProvisions(QueryEpochProvisionsRequest)
       returns (QueryEpochProvisionsResponse) {
-    option (google.api.http).get = "/osmosis/mint/v1beta1/epoch_provisions";
+    option (google.api.http).get = "/symphony/mint/v1beta1/epoch_provisions";
   }
 }
 

@@ -19,86 +19,86 @@ service Query {
   rpc ModuleToDistributeCoins(ModuleToDistributeCoinsRequest)
       returns (ModuleToDistributeCoinsResponse) {
     option (google.api.http).get =
-        "/osmosis/incentives/v1beta1/module_to_distribute_coins";
+        "/symphony/incentives/v1beta1/module_to_distribute_coins";
   }
   // GaugeByID returns gauges by their respective ID
   rpc GaugeByID(GaugeByIDRequest) returns (GaugeByIDResponse) {
     option (google.api.http).get =
-        "/osmosis/incentives/v1beta1/gauge_by_id/{id}";
+        "/symphony/incentives/v1beta1/gauge_by_id/{id}";
   }
   // Gauges returns both upcoming and active gauges
   rpc Gauges(GaugesRequest) returns (GaugesResponse) {
-    option (google.api.http).get = "/osmosis/incentives/v1beta1/gauges";
+    option (google.api.http).get = "/symphony/incentives/v1beta1/gauges";
   }
   // ActiveGauges returns active gauges
   rpc ActiveGauges(ActiveGaugesRequest) returns (ActiveGaugesResponse) {
-    option (google.api.http).get = "/osmosis/incentives/v1beta1/active_gauges";
+    option (google.api.http).get = "/symphony/incentives/v1beta1/active_gauges";
   }
   // ActiveGaugesPerDenom returns active gauges by denom
   rpc ActiveGaugesPerDenom(ActiveGaugesPerDenomRequest)
       returns (ActiveGaugesPerDenomResponse) {
     option (google.api.http).get =
-        "/osmosis/incentives/v1beta1/active_gauges_per_denom";
+        "/symphony/incentives/v1beta1/active_gauges_per_denom";
   }
   // Returns scheduled gauges that have not yet occurred
   rpc UpcomingGauges(UpcomingGaugesRequest) returns (UpcomingGaugesResponse) {
     option (google.api.http).get =
-        "/osmosis/incentives/v1beta1/upcoming_gauges";
+        "/symphony/incentives/v1beta1/upcoming_gauges";
   }
   // UpcomingGaugesPerDenom returns scheduled gauges that have not yet occurred
   // by denom
   rpc UpcomingGaugesPerDenom(UpcomingGaugesPerDenomRequest)
       returns (UpcomingGaugesPerDenomResponse) {
     option (google.api.http).get =
-        "/osmosis/incentives/v1beta1/upcoming_gauges_per_denom";
+        "/symphony/incentives/v1beta1/upcoming_gauges_per_denom";
   }
   // RewardsEst returns an estimate of the rewards from now until a specified
   // time in the future The querier either provides an address or a set of locks
   // for which they want to find the associated rewards
   rpc RewardsEst(RewardsEstRequest) returns (RewardsEstResponse) {
     option (google.api.http).get =
-        "/osmosis/incentives/v1beta1/rewards_est/{owner}";
+        "/symphony/incentives/v1beta1/rewards_est/{owner}";
   }
   // LockableDurations returns lockable durations that are valid to distribute
   // incentives for
   rpc LockableDurations(QueryLockableDurationsRequest)
       returns (QueryLockableDurationsResponse) {
     option (google.api.http).get =
-        "/osmosis/incentives/v1beta1/lockable_durations";
+        "/symphony/incentives/v1beta1/lockable_durations";
   }
   // AllGroups returns all groups
   rpc AllGroups(QueryAllGroupsRequest) returns (QueryAllGroupsResponse) {
-    option (google.api.http).get = "/osmosis/incentives/v1beta1/all_groups";
+    option (google.api.http).get = "/symphony/incentives/v1beta1/all_groups";
   }
   // AllGroupsGauges returns all group gauges
   rpc AllGroupsGauges(QueryAllGroupsGaugesRequest)
       returns (QueryAllGroupsGaugesResponse) {
     option (google.api.http).get =
-        "/osmosis/incentives/v1beta1/all_groups_gauges";
+        "/symphony/incentives/v1beta1/all_groups_gauges";
   }
   // AllGroupsWithGauge returns all groups with their group gauge
   rpc AllGroupsWithGauge(QueryAllGroupsWithGaugeRequest)
       returns (QueryAllGroupsWithGaugeResponse) {
     option (google.api.http).get =
-        "/osmosis/incentives/v1beta1/all_groups_with_gauge";
+        "/symphony/incentives/v1beta1/all_groups_with_gauge";
   }
   // GroupByGroupGaugeID returns a group given its group gauge ID
   rpc GroupByGroupGaugeID(QueryGroupByGroupGaugeIDRequest)
       returns (QueryGroupByGroupGaugeIDResponse) {
     option (google.api.http).get =
-        "/osmosis/incentives/v1beta1/group_by_group_gauge_id/{id}";
+        "/symphony/incentives/v1beta1/group_by_group_gauge_id/{id}";
   }
   // CurrentWeightByGroupGaugeID returns the current weight since the
   // the last epoch given a group gauge ID
   rpc CurrentWeightByGroupGaugeID(QueryCurrentWeightByGroupGaugeIDRequest)
       returns (QueryCurrentWeightByGroupGaugeIDResponse) {
     option (google.api.http).get =
-        "/osmosis/incentives/v1beta1/current_weight_by_group_gauge_id/"
+        "/symphony/incentives/v1beta1/current_weight_by_group_gauge_id/"
         "{group_gauge_id}";
   }
   // Params returns incentives module params.
   rpc Params(ParamsRequest) returns (ParamsResponse) {
-    option (google.api.http).get = "/osmosis/incentives/v1beta1/params";
+    option (google.api.http).get = "/symphony/incentives/v1beta1/params";
   }
 }
 

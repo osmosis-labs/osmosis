@@ -18,14 +18,14 @@ option go_package = "github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/qu
 
 service Query {
   rpc Params(ParamsRequest) returns (ParamsResponse) {
-    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/Params";
+    option (google.api.http).get = "/symphony/poolmanager/v1beta1/Params";
   }
 
   // Estimates swap amount out given in.
   rpc EstimateSwapExactAmountIn(EstimateSwapExactAmountInRequest)
       returns (EstimateSwapExactAmountInResponse) {
     option (google.api.http).get =
-        "/osmosis/poolmanager/v1beta1/{pool_id}/estimate/swap_exact_amount_in";
+        "/symphony/poolmanager/v1beta1/{pool_id}/estimate/swap_exact_amount_in";
   }
 
   // EstimateSwapExactAmountInWithPrimitiveTypes is an alternative query for
@@ -42,14 +42,14 @@ service Query {
       EstimateSwapExactAmountInWithPrimitiveTypesRequest)
       returns (EstimateSwapExactAmountInResponse) {
     option (google.api.http).get =
-        "/osmosis/poolmanager/v1beta1/{pool_id}/estimate/"
+        "/symphony/poolmanager/v1beta1/{pool_id}/estimate/"
         "swap_exact_amount_in_with_primitive_types";
   }
 
   rpc EstimateSinglePoolSwapExactAmountIn(
       EstimateSinglePoolSwapExactAmountInRequest)
       returns (EstimateSwapExactAmountInResponse) {
-    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/{pool_id}/"
+    option (google.api.http).get = "/symphony/poolmanager/v1beta1/{pool_id}/"
                                    "estimate/single_pool_swap_exact_amount_in";
   }
 
@@ -57,7 +57,7 @@ service Query {
   rpc EstimateSwapExactAmountOut(EstimateSwapExactAmountOutRequest)
       returns (EstimateSwapExactAmountOutResponse) {
     option (google.api.http).get =
-        "/osmosis/poolmanager/v1beta1/{pool_id}/estimate/swap_exact_amount_out";
+        "/symphony/poolmanager/v1beta1/{pool_id}/estimate/swap_exact_amount_out";
   }
 
   // Estimates swap amount in given out.
@@ -65,7 +65,7 @@ service Query {
       EstimateSwapExactAmountOutWithPrimitiveTypesRequest)
       returns (EstimateSwapExactAmountOutResponse) {
     option (google.api.http).get =
-        "/osmosis/poolmanager/v1beta1/{pool_id}/estimate/"
+        "/symphony/poolmanager/v1beta1/{pool_id}/estimate/"
         "swap_exact_amount_out_with_primitive_types";
   }
 
@@ -73,64 +73,64 @@ service Query {
       EstimateSinglePoolSwapExactAmountOutRequest)
       returns (EstimateSwapExactAmountOutResponse) {
     option (google.api.http).get =
-        "/osmosis/poolmanager/v1beta1/{pool_id}/estimate_out/"
+        "/symphony/poolmanager/v1beta1/{pool_id}/estimate_out/"
         "single_pool_swap_exact_amount_out";
   }
 
   // Returns the total number of pools existing in Osmosis.
   rpc NumPools(NumPoolsRequest) returns (NumPoolsResponse) {
-    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/num_pools";
+    option (google.api.http).get = "/symphony/poolmanager/v1beta1/num_pools";
   }
 
   // Pool returns the Pool specified by the pool id
   rpc Pool(PoolRequest) returns (PoolResponse) {
     option (google.api.http).get =
-        "/osmosis/poolmanager/v1beta1/pools/{pool_id}";
+        "/symphony/poolmanager/v1beta1/pools/{pool_id}";
   }
 
   // AllPools returns all pools on the Osmosis chain sorted by IDs.
   rpc AllPools(AllPoolsRequest) returns (AllPoolsResponse) {
-    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/all-pools";
+    option (google.api.http).get = "/symphony/poolmanager/v1beta1/all-pools";
   }
   // ListPoolsByDenom return all pools by denom
   rpc ListPoolsByDenom(ListPoolsByDenomRequest)
       returns (ListPoolsByDenomResponse) {
     option (google.api.http).get =
-        "/osmosis/poolmanager/v1beta1/list-pools-by-denom";
+        "/symphony/poolmanager/v1beta1/list-pools-by-denom";
   }
 
   // SpotPrice defines a gRPC query handler that returns the spot price given
   // a base denomination and a quote denomination.
   rpc SpotPrice(SpotPriceRequest) returns (SpotPriceResponse) {
     option (google.api.http).get =
-        "/osmosis/poolmanager/pools/{pool_id}/prices";
+        "/symphony/poolmanager/pools/{pool_id}/prices";
   }
 
   // TotalPoolLiquidity returns the total liquidity of the specified pool.
   rpc TotalPoolLiquidity(TotalPoolLiquidityRequest)
       returns (TotalPoolLiquidityResponse) {
     option (google.api.http).get =
-        "/osmosis/poolmanager/v1beta1/pools/{pool_id}/total_pool_liquidity";
+        "/symphony/poolmanager/v1beta1/pools/{pool_id}/total_pool_liquidity";
   }
 
   // TotalLiquidity returns the total liquidity across all pools.
   rpc TotalLiquidity(TotalLiquidityRequest) returns (TotalLiquidityResponse) {
     option (google.api.http).get =
-        "/osmosis/poolmanager/v1beta1/total_liquidity";
+        "/symphony/poolmanager/v1beta1/total_liquidity";
   }
 
   // TotalVolumeForPool returns the total volume of the specified pool.
   rpc TotalVolumeForPool(TotalVolumeForPoolRequest)
       returns (TotalVolumeForPoolResponse) {
     option (google.api.http).get =
-        "/osmosis/poolmanager/v1beta1/pools/{pool_id}/total_volume";
+        "/symphony/poolmanager/v1beta1/pools/{pool_id}/total_volume";
   }
 
   // TradingPairTakerFee returns the taker fee for a given set of denoms
   rpc TradingPairTakerFee(TradingPairTakerFeeRequest)
       returns (TradingPairTakerFeeResponse) {
     option (google.api.http).get =
-        "/osmosis/poolmanager/v1beta1/trading_pair_takerfee";
+        "/symphony/poolmanager/v1beta1/trading_pair_takerfee";
   }
 
   // EstimateTradeBasedOnPriceImpact returns an estimated trade based on price
@@ -139,7 +139,7 @@ service Query {
   rpc EstimateTradeBasedOnPriceImpact(EstimateTradeBasedOnPriceImpactRequest)
       returns (EstimateTradeBasedOnPriceImpactResponse) {
     option (google.api.http).get =
-        "/osmosis/poolmanager/v1beta1/{pool_id}/estimate_trade";
+        "/symphony/poolmanager/v1beta1/{pool_id}/estimate_trade";
   }
 
   // AllTakerFeeShareAgreements returns all taker fee share agreements.
@@ -150,7 +150,7 @@ service Query {
   rpc AllTakerFeeShareAgreements(AllTakerFeeShareAgreementsRequest)
       returns (AllTakerFeeShareAgreementsResponse) {
     option (google.api.http).get =
-        "/osmosis/poolmanager/v1beta1/all_taker_fee_share_agreements";
+        "/symphony/poolmanager/v1beta1/all_taker_fee_share_agreements";
   }
 
   // TakerFeeShareAgreementFromDenom returns the taker fee share agreement for a
@@ -160,7 +160,7 @@ service Query {
   // taker fees are sent to at epoch.
   rpc TakerFeeShareAgreementFromDenom(TakerFeeShareAgreementFromDenomRequest)
       returns (TakerFeeShareAgreementFromDenomResponse) {
-    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/{denom}/"
+    option (google.api.http).get = "/symphony/poolmanager/v1beta1/{denom}/"
                                    "taker_fee_share_agreement_from_denom";
   }
 
@@ -171,7 +171,7 @@ service Query {
       TakerFeeShareDenomsToAccruedValueRequest)
       returns (TakerFeeShareDenomsToAccruedValueResponse) {
     option (google.api.http).get =
-        "/osmosis/poolmanager/v1beta1/{takerFeeDenom}/{denom}/"
+        "/symphony/poolmanager/v1beta1/{takerFeeDenom}/{denom}/"
         "taker_fee_share_denoms_to_accrued_value";
   }
 
@@ -182,7 +182,7 @@ service Query {
   rpc AllTakerFeeShareAccumulators(AllTakerFeeShareAccumulatorsRequest)
       returns (AllTakerFeeShareAccumulatorsResponse) {
     option (google.api.http).get =
-        "/osmosis/poolmanager/v1beta1/all_taker_fee_share_accumulators";
+        "/symphony/poolmanager/v1beta1/all_taker_fee_share_accumulators";
   }
 
   // RegisteredAlloyedPoolFromDenom returns the registered alloyed pool state
@@ -191,7 +191,7 @@ service Query {
   // fee share denoms within the alloyed pool.
   rpc RegisteredAlloyedPoolFromDenom(RegisteredAlloyedPoolFromDenomRequest)
       returns (RegisteredAlloyedPoolFromDenomResponse) {
-    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/{denom}/"
+    option (google.api.http).get = "/symphony/poolmanager/v1beta1/{denom}/"
                                    "registered_alloyed_pool_from_denom";
   }
 
@@ -201,7 +201,7 @@ service Query {
   // fee share denoms within the alloyed pool.
   rpc RegisteredAlloyedPoolFromPoolId(RegisteredAlloyedPoolFromPoolIdRequest)
       returns (RegisteredAlloyedPoolFromPoolIdResponse) {
-    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/{pool_id}/"
+    option (google.api.http).get = "/symphony/poolmanager/v1beta1/{pool_id}/"
                                    "registered_alloyed_pool_from_pool_id";
   }
 
@@ -212,7 +212,7 @@ service Query {
   rpc AllRegisteredAlloyedPools(AllRegisteredAlloyedPoolsRequest)
       returns (AllRegisteredAlloyedPoolsResponse) {
     option (google.api.http).get =
-        "/osmosis/poolmanager/v1beta1/all_registered_alloyed_pools";
+        "/symphony/poolmanager/v1beta1/all_registered_alloyed_pools";
   }
 }
 
