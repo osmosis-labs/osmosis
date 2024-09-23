@@ -2,20 +2,21 @@ package keeper_test
 
 import (
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmomath"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting/assets"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting/assets"
 
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
 
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 var (
 	stakingAmt         = sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
-	randomExchangeRate = sdk.NewDec(1700)
+	randomExchangeRate = osmomath.NewDec(1700)
 )
 
 func (s *KeeperTestSuite) setupServer() types.MsgServer {

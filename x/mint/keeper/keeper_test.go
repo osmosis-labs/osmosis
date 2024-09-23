@@ -16,10 +16,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v23/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v26/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v26/x/pool-incentives/types"
 )
 
 type KeeperTestSuite struct {
@@ -119,10 +120,11 @@ func (s *KeeperTestSuite) TestGetProportions() {
 		},
 		{
 			name:       "54617981 * .131/.273osmomath.NewInt(.62",
-			mintedCoin: sdk.NewCoin("note", osmomath.NewInt(54617981)),
+			mintedCoin: sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(54617981)),
 			ratio:      complexRatioDec, // .131/.273
 			// TODO: Should not be truncated. Remove truncation after rounding errors are addressed and resolved.
-			expectedCoin: sdk.NewCoin("note", osmomath.NewInt(54617981).ToLegacyDec().Mul(complexRatioDec).TruncateInt()),
+			// Ref: https://github.com/osmosis-osmomath.NewInt(s/issues/1917
+			expectedCoin: sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(54617981).ToLegacyDec().Mul(complexRatioDec).TruncateInt()),
 		},
 		{
 			name:         "1 * 1 = 1",
@@ -249,11 +251,11 @@ func (s *KeeperTestSuite) TestDistributeMintedCoin() {
 
 			// validate pool incentives distributions.
 			actualPoolIncentivesBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(poolincentivestypes.ModuleName), sdk.DefaultBondDenom).Amount.ToLegacyDec()
-			s.Require().True(expectedPoolIncentivesAmount.Equal(actualPoolIncentivesBalance))
+			s.Require().Equal(expectedPoolIncentivesAmount, actualPoolIncentivesBalance)
 
 			// validate distributions to community pool.
 			actualCommunityPoolBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distributiontypes.ModuleName), sdk.DefaultBondDenom).Amount.ToLegacyDec()
-			s.Require().True(expectedCommunityPoolAmount.Equal(actualCommunityPoolBalanceAmount))
+			s.Require().Equal(expectedCommunityPoolAmount, actualCommunityPoolBalanceAmount)
 
 			// validate distributions to developer addresses.
 			for i, weightedAddress := range tc.weightedAddresses {

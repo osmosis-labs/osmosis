@@ -3,18 +3,19 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 
 	errorsmod "cosmossdk.io/errors"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v26/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v26/x/pool-incentives/types"
+
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v23/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
 )
 
 // Keeper of the mint store.
@@ -281,6 +282,7 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.
 // getProportions gets the balance of the `MintedDenom` from minted coins and returns coins according to the
 // allocation ratio. Returns error if ratio is greater than 1.
 // TODO: this currently rounds down and is the cause of rounding discrepancies.
+// To be fixed in: https://github.com/osmosis-losmomath.Decosis/issues/1917
 func getProportions(mintedCoin sdk.Coin, ratio osmomath.Dec) (sdk.Coin, error) {
 	if ratio.GT(osmomath.OneDec()) {
 		return sdk.Coin{}, invalidRatioError{ratio}
@@ -305,7 +307,12 @@ func (k Keeper) createDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.
 
 	moduleAcc := authtypes.NewEmptyModuleAccount(
 		types.DeveloperVestingModuleAcctName, authtypes.Minter)
-	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
+	maccI, ok := (k.accountKeeper.NewAccount(ctx, moduleAcc)).(sdk.ModuleAccountI) // this sets the account number
+	if !ok {
+		return fmt.Errorf("account of type %T doesn't implement sdk.ModuleAccountI", moduleAcc)
+	}
+
+	k.accountKeeper.SetModuleAccount(ctx, maccI)
 
 	err := k.bankKeeper.MintCoins(ctx, types.DeveloperVestingModuleAcctName, sdk.NewCoins(amount))
 	if err != nil {

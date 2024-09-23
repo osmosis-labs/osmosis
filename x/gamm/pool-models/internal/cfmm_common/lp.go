@@ -6,9 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/types"
 )
 
 const errMsgFormatSharesLargerThanMax = "cannot exit all shares in a pool. Attempted to exit %s shares, max allowed is %s"
@@ -25,7 +26,7 @@ func CalcExitPool(ctx sdk.Context, pool types.CFMMPoolI, exitingShares osmomath.
 	var refundedShares osmomath.Dec
 	if !exitFee.IsZero() {
 		// exitingShares * (1 - exit fee)
-		oneSubExitFee := osmomath.OneDec().Sub(exitFee)
+		oneSubExitFee := osmomath.OneDec().SubMut(exitFee)
 		refundedShares = oneSubExitFee.MulIntMut(exitingShares)
 	} else {
 		refundedShares = exitingShares.ToLegacyDec()
@@ -33,8 +34,8 @@ func CalcExitPool(ctx sdk.Context, pool types.CFMMPoolI, exitingShares osmomath.
 
 	shareOutRatio := refundedShares.QuoInt(totalShares)
 	// exitedCoins = shareOutRatio * pool liquidity
-	exitedCoins := sdk.Coins{}
 	poolLiquidity := pool.GetTotalPoolLiquidity(ctx)
+	exitedCoins := make(sdk.Coins, 0, len(poolLiquidity))
 
 	for _, asset := range poolLiquidity {
 		// round down here, due to not wanting to over-exit
@@ -45,7 +46,7 @@ func CalcExitPool(ctx sdk.Context, pool types.CFMMPoolI, exitingShares osmomath.
 		if exitAmt.GTE(asset.Amount) {
 			return sdk.Coins{}, errors.New("too many shares out")
 		}
-		exitedCoins = exitedCoins.Add(sdk.NewCoin(asset.Denom, exitAmt))
+		exitedCoins = append(exitedCoins, sdk.Coin{Denom: asset.Denom, Amount: exitAmt})
 	}
 
 	return exitedCoins, nil
@@ -65,7 +66,7 @@ func CalcExitPool(ctx sdk.Context, pool types.CFMMPoolI, exitingShares osmomath.
 //  3. calculate the number of shares that could be joined (total share * min share ratio), return the remaining coins
 func MaximalExactRatioJoin(p types.CFMMPoolI, ctx sdk.Context, tokensIn sdk.Coins) (numShares osmomath.Int, remCoins sdk.Coins, err error) {
 	coinShareRatios := make([]osmomath.Dec, len(tokensIn))
-	minShareRatio := sdk.MaxSortableDec
+	minShareRatio := math.LegacyMaxSortableDec
 	maxShareRatio := osmomath.ZeroDec()
 
 	poolLiquidity := p.GetTotalPoolLiquidity(ctx)
@@ -85,7 +86,7 @@ func MaximalExactRatioJoin(p types.CFMMPoolI, ctx sdk.Context, tokensIn sdk.Coin
 		coinShareRatios[i] = shareRatio
 	}
 
-	if minShareRatio.Equal(sdk.MaxSortableDec) {
+	if minShareRatio.Equal(math.LegacyMaxSortableDec) {
 		return numShares, remCoins, errors.New("unexpected error in MaximalExactRatioJoin")
 	}
 

@@ -4,7 +4,7 @@ package osmosis.oracle.v1beta1;
 import "gogoproto/gogo.proto";
 import "osmosis/oracle/v1beta1/oracle.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v23/x/oracle/types";
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/oracle/types";
 
 // GenesisState defines the oracle module's genesis state.
 message GenesisState {
@@ -43,7 +43,7 @@ message MissCounter {
 message TobinTax {
   string denom = 1;
   string tobin_tax = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }

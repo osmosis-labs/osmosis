@@ -7,9 +7,9 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v23/app"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v23/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/v26/app"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v26/x/lockup/keeper"
 )
 
 type KeeperTestSuite struct {
@@ -22,7 +22,9 @@ type KeeperTestSuite struct {
 func (s *KeeperTestSuite) SetupTest() {
 	s.Setup()
 	s.querier = keeper.NewQuerier(*s.App.LockupKeeper)
-	unbondingDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
+	stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	s.Require().NoError(err)
+	unbondingDuration := stakingParams.UnbondingTime
 	s.App.IncentivesKeeper.SetLockableDurations(s.Ctx, []time.Duration{
 		time.Hour * 24 * 14,
 		time.Hour,
@@ -34,7 +36,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 func (s *KeeperTestSuite) SetupTestWithLevelDb() {
 	s.App, s.cleanup = app.SetupTestingAppWithLevelDb(false)
-	s.Ctx = s.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "symphony-1", Time: time.Now().UTC()})
+	s.Ctx = s.App.BaseApp.NewContextLegacy(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
 }
 
 func (s *KeeperTestSuite) Cleanup() {

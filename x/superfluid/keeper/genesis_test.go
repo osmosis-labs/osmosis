@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	"fmt"
+	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -9,9 +12,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	simapp "github.com/osmosis-labs/osmosis/v23/app"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	simapp "github.com/osmosis-labs/osmosis/v26/app"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
 )
 
 var now = time.Now().UTC()
@@ -36,21 +39,23 @@ var testGenesis = types.GenesisState{
 	IntermediaryAccounts: []types.SuperfluidIntermediaryAccount{
 		{
 			Denom:   DefaultGammAsset,
-			ValAddr: "symphonyvaloper1h9vcjg5nfmq20h8dd2flx6wtf7ezvdjtgvq39z",
+			ValAddr: "osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n",
 			GaugeId: 1,
 		},
 	},
 	IntemediaryAccountConnections: []types.LockIdIntermediaryAccountConnection{
 		{
 			LockId:              1,
-			IntermediaryAccount: "symphony1h9vcjg5nfmq20h8dd2flx6wtf7ezvdjtmwgkjj",
+			IntermediaryAccount: "osmo1hpgapnfl3thkevvl0jp3wqtk8jw7mpqumuuc2f",
 		},
 	},
 }
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	dirName := fmt.Sprintf("%d", rand.Int())
+	app := simapp.SetupWithCustomHome(false, dirName)
+
+	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 
 	encodingConfig := simapp.MakeEncodingConfig()
@@ -60,9 +65,11 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	app.SuperfluidKeeper.InitGenesis(ctx, genesis)
 
 	genesisExported := am.ExportGenesis(ctx, appCodec)
+	os.RemoveAll(dirName)
+
 	assert.NotPanics(t, func() {
 		app := simapp.Setup(false)
-		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+		ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 		ctx = ctx.WithBlockTime(now.Add(time.Second))
 		am := superfluid.NewAppModule(*app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper, app.EpochsKeeper, app.ConcentratedLiquidityKeeper)
 		am.InitGenesis(ctx, appCodec, genesisExported)
@@ -70,8 +77,10 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 }
 
 func TestInitGenesis(t *testing.T) {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	dirName := fmt.Sprintf("%d", rand.Int())
+	app := simapp.SetupWithCustomHome(false, dirName)
+
+	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
 	app.SuperfluidKeeper.InitGenesis(ctx, genesis)
@@ -90,11 +99,14 @@ func TestInitGenesis(t *testing.T) {
 
 	connections := app.SuperfluidKeeper.GetAllLockIdIntermediaryAccountConnections(ctx)
 	require.Equal(t, connections, genesis.IntemediaryAccountConnections)
+	os.RemoveAll(dirName)
 }
 
 func TestExportGenesis(t *testing.T) {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	dirName := fmt.Sprintf("%d", rand.Int())
+	app := simapp.SetupWithCustomHome(false, dirName)
+
+	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
 	app.SuperfluidKeeper.InitGenesis(ctx, genesis)
@@ -114,4 +126,6 @@ func TestExportGenesis(t *testing.T) {
 	require.Equal(t, genesis.OsmoEquivalentMultipliers, genesis.OsmoEquivalentMultipliers)
 	require.Equal(t, genesis.IntermediaryAccounts, genesis.IntermediaryAccounts)
 	require.Equal(t, genesis.IntemediaryAccountConnections, genesis.IntemediaryAccountConnections)
+
+	os.RemoveAll(dirName)
 }

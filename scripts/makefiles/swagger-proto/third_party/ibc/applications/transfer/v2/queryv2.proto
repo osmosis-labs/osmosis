@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package ibc.applications.transfer.v2;
+
+option go_package = "github.com/cosmos/ibc-go/v9/modules/apps/transfer/types";
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "ibc/applications/transfer/v2/token.proto";
+import "google/api/annotations.proto";
+
+// QueryV2 provides defines the gRPC querier service for ics20-v2.
+service QueryV2 {
+  // Denoms queries all denominations
+  rpc Denoms(QueryDenomsRequest) returns (QueryDenomsResponse) {
+    option (google.api.http).get = "/ibc/apps/transfer/v2/denoms";
+  }
+
+  // Denom queries a denomination
+  rpc Denom(QueryDenomRequest) returns (QueryDenomResponse) {
+    option (google.api.http).get = "/ibc/apps/transfer/v2/denoms/{hash=**}";
+  }
+}
+
+// QueryDenomRequest is the request type for the Query/Denom RPC
+// method
+message QueryDenomRequest {
+  // hash (in hex format) or denom (full denom with ibc prefix) of the on chain denomination.
+  string hash = 1;
+}
+
+// QueryDenomResponse is the response type for the Query/Denom RPC
+// method.
+message QueryDenomResponse {
+  // denom returns the requested denomination.
+  Denom denom = 1;
+}
+
+// QueryDenomsRequest is the request type for the Query/Denoms RPC
+// method
+message QueryDenomsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryDenomsResponse is the response type for the Query/Denoms RPC
+// method.
+message QueryDenomsResponse {
+  // denoms returns all denominations.
+  repeated Denom denoms = 1 [(gogoproto.castrepeated) = "Denoms", (gogoproto.nullable) = false];
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

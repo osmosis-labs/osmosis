@@ -11,7 +11,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 
-	"github.com/osmosis-labs/osmosis/v23/app"
+	"github.com/osmosis-labs/osmosis/v26/app"
 )
 
 const (

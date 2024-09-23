@@ -6,9 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	types "github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
+	types "github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
 )
 
 var (
@@ -69,12 +69,12 @@ func (k Keeper) ConvertLockToStake(ctx sdk.Context, sender sdk.AccAddress, valAd
 	return k.convertLockToStake(ctx, sender, valAddr, lockId, minAmtToStake)
 }
 
-func (k Keeper) ConvertGammSharesToMelodyAndStake(
+func (k Keeper) ConvertGammSharesToOsmoAndStake(
 	ctx sdk.Context,
 	sender sdk.AccAddress, valAddr string,
 	poolIdLeaving uint64, exitCoins sdk.Coins, minAmtToStake osmomath.Int, originalSuperfluidValAddr string,
 ) (totalAmtCoverted osmomath.Int, err error) {
-	return k.convertGammSharesToMelodyAndStake(ctx, sender, valAddr, poolIdLeaving, exitCoins, minAmtToStake, originalSuperfluidValAddr)
+	return k.convertGammSharesToOsmoAndStake(ctx, sender, valAddr, poolIdLeaving, exitCoins, minAmtToStake, originalSuperfluidValAddr)
 }
 
 func (k Keeper) ConvertUnlockedToStake(ctx sdk.Context, sender sdk.AccAddress, valAddr string, sharesToStake sdk.Coin,

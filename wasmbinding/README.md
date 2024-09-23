@@ -17,13 +17,13 @@ This package provides first class support for:
 - Commands
 
 ```sh
-  symphonyd tx wasm -h
+  osmosisd tx wasm -h
 ```
 
 - Query
 
 ```sh
-  symphonyd query wasm -h
+  osmosisd query wasm -h
 ```
 
 ## Tests

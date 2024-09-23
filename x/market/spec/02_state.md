@@ -18,5 +18,5 @@ LunaPool := (BasePool * BasePool) / OsmoPool
 - OsmosisPoolDelta: `0x01 -> amino(OsmosisPoolDelta)`
 
 ```go
-type OsmosisPoolDelta sdk.Dec // the gap between the OsmoPool and the BasePool
+type OsmosisPoolDelta osmomath.Dec // the gap between the OsmoPool and the BasePool
 ```

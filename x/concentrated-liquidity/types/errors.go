@@ -947,3 +947,12 @@ type IncentiveEmissionOvrflowError struct {
 func (e IncentiveEmissionOvrflowError) Error() string {
 	return fmt.Sprintf("either too much time has passed since last pool update or the emission rate is too high, causing overflow: %s", e.PanicMessage)
 }
+
+type InvalidForfeitedIncentivesLengthError struct {
+	ForfeitedIncentivesLength int
+	ExpectedLength            int
+}
+
+func (e InvalidForfeitedIncentivesLengthError) Error() string {
+	return fmt.Sprintf("attempted to redeposit incorrectly constructed forfeited incentives slice. forfeited incentives must have an entry for each supported uptime. forfeit entries: %d, expected: %d", e.ForfeitedIncentivesLength, e.ExpectedLength)
+}

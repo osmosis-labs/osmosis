@@ -1,9 +1,11 @@
 syntax = "proto3";
 package osmosis.cosmwasmpool.v1beta1;
 
+import "cosmos/msg/v1/msg.proto";
+import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/model";
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/model";
 
 service MsgCreator {
   rpc CreateCosmWasmPool(MsgCreateCosmWasmPool)
@@ -12,6 +14,9 @@ service MsgCreator {
 
 // ===================== MsgCreateCosmwasmPool
 message MsgCreateCosmWasmPool {
+  option (amino.name) = "osmosis/MsgCreateCosmWasmPool";
+  option (cosmos.msg.v1.signer) = "sender";
+
   uint64 code_id = 1 [ (gogoproto.moretags) = "yaml:\"code_id\"" ];
   bytes instantiate_msg = 2
       [ (gogoproto.moretags) = "yaml:\"instantiate_msg\"" ];

@@ -12,8 +12,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
 )
 
 type QueryTestSuite struct {
@@ -74,7 +74,7 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 			&types.AllIntermediaryAccountsResponse{},
 		},
 		{
-			"Query melody equivalent multiplier of an asset",
+			"Query osmo equivalent multiplier of an asset",
 			"/osmosis.superfluid.Query/AssetMultiplier",
 			&types.AssetMultiplierRequest{Denom: "gamm/pool/1"},
 			&types.AssetMultiplierResponse{},

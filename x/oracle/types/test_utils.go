@@ -1,24 +1,26 @@
 package types
 
 import (
+	"context"
+	storetypes "cosmossdk.io/store/types"
+	"fmt"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"math"
 	"math/rand"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
-	tmprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 )
 
 const OracleDecPrecision = 8
 
 func GenerateRandomTestCase() (rates []float64, valValAddrs []sdk.ValAddress, stakingKeeper DummyStakingKeeper) {
 	valValAddrs = []sdk.ValAddress{}
-	mockValidators := []MockValidator{}
+	mockValidators := []stakingtypes.Validator{}
 
 	base := math.Pow10(OracleDecPrecision)
 
@@ -46,102 +48,65 @@ var _ StakingKeeper = DummyStakingKeeper{}
 
 // DummyStakingKeeper dummy staking keeper to test ballot
 type DummyStakingKeeper struct {
-	validators []MockValidator
+	validators []stakingtypes.Validator
 }
 
 // NewDummyStakingKeeper returns new DummyStakingKeeper instance
-func NewDummyStakingKeeper(validators []MockValidator) DummyStakingKeeper {
+func NewDummyStakingKeeper(validators []stakingtypes.Validator) DummyStakingKeeper {
 	return DummyStakingKeeper{
 		validators: validators,
 	}
 }
 
-func (sk DummyStakingKeeper) Validators() []MockValidator {
-	return sk.validators
-}
-
-func (sk DummyStakingKeeper) Validator(_ sdk.Context, address sdk.ValAddress) stakingtypes.ValidatorI {
+func (sk DummyStakingKeeper) GetValidator(ctx context.Context, address sdk.ValAddress) (stakingtypes.Validator, error) {
 	for _, validator := range sk.validators {
-		if validator.GetOperator().Equals(address) {
-			return validator
+		if validator.GetOperator() == address.String() {
+			return validator, nil
 		}
 	}
+	return stakingtypes.Validator{}, fmt.Errorf("validator not found")
+}
 
+func (sk DummyStakingKeeper) TotalBondedTokens(ctx context.Context) (sdkmath.Int, error) {
+	return osmomath.ZeroInt(), nil
+}
+
+func (sk DummyStakingKeeper) Slash(ctx context.Context, address sdk.ConsAddress, i int64, i2 int64, dec osmomath.Dec) (sdkmath.Int, error) {
+	return osmomath.ZeroInt(), nil
+}
+
+func (sk DummyStakingKeeper) Jail(ctx context.Context, address sdk.ConsAddress) error {
 	return nil
 }
 
-func (DummyStakingKeeper) TotalBondedTokens(sdk.Context) sdkmath.Int {
-	return sdk.ZeroInt()
+func (sk DummyStakingKeeper) ValidatorsPowerStoreIterator(ctx context.Context) (storetypes.Iterator, error) {
+	return storetypes.KVStoreReversePrefixIterator(nil, nil), nil
 }
 
-func (DummyStakingKeeper) Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec) sdkmath.Int {
-	return sdk.ZeroInt()
+func (sk DummyStakingKeeper) MaxValidators(ctx context.Context) (uint32, error) {
+	return 100, nil
 }
 
-func (DummyStakingKeeper) ValidatorsPowerStoreIterator(sdk.Context) sdk.Iterator {
-	return sdk.KVStoreReversePrefixIterator(nil, nil)
+func (sk DummyStakingKeeper) PowerReduction(ctx context.Context) sdkmath.Int {
+	return sdk.DefaultPowerReduction
 }
 
-func (DummyStakingKeeper) Jail(sdk.Context, sdk.ConsAddress) {
+func (sk DummyStakingKeeper) Validators() []stakingtypes.Validator {
+	return sk.validators
 }
 
-func (sk DummyStakingKeeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) (power int64) {
-	return sk.Validator(ctx, operator).GetConsensusPower(sdk.DefaultPowerReduction)
+func (sk DummyStakingKeeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) int64 {
+	val, err := sk.GetValidator(ctx, operator)
+	if err != nil {
+		return 0
+	}
+	return val.GetConsensusPower(sdk.DefaultPowerReduction)
 }
 
-// MaxValidators returns the maximum amount of bonded validators
-func (DummyStakingKeeper) MaxValidators(sdk.Context) uint32 {
-	return 100
-}
-
-// PowerReduction - is the amount of staking tokens required for 1 unit of consensus-engine power
-func (DummyStakingKeeper) PowerReduction(sdk.Context) (res sdkmath.Int) {
-	res = sdk.DefaultPowerReduction
-	return
-}
-
-type MockValidator struct {
-	power    int64
-	operator sdk.ValAddress
-}
-
-var _ stakingtypes.ValidatorI = MockValidator{}
-
-func (MockValidator) IsJailed() bool                          { return false }
-func (MockValidator) GetMoniker() string                      { return "" }
-func (MockValidator) GetStatus() stakingtypes.BondStatus      { return stakingtypes.Bonded }
-func (MockValidator) IsBonded() bool                          { return true }
-func (MockValidator) IsUnbonded() bool                        { return false }
-func (MockValidator) IsUnbonding() bool                       { return false }
-func (v MockValidator) GetOperator() sdk.ValAddress           { return v.operator }
-func (MockValidator) ConsPubKey() (cryptotypes.PubKey, error) { return nil, nil }
-func (MockValidator) TmConsPublicKey() (tmprotocrypto.PublicKey, error) {
-	return tmprotocrypto.PublicKey{}, nil
-}
-func (MockValidator) GetConsAddr() (sdk.ConsAddress, error) { return nil, nil }
-func (v MockValidator) GetTokens() sdkmath.Int {
-	return sdk.TokensFromConsensusPower(v.power, sdk.DefaultPowerReduction)
-}
-
-func (v MockValidator) GetBondedTokens() sdkmath.Int {
-	return sdk.TokensFromConsensusPower(v.power, sdk.DefaultPowerReduction)
-}
-func (v MockValidator) GetConsensusPower(_ sdkmath.Int) int64           { return v.power }
-func (v *MockValidator) SetConsensusPower(power int64)                  { v.power = power }
-func (v MockValidator) GetCommission() sdk.Dec                          { return sdk.ZeroDec() }
-func (v MockValidator) GetMinSelfDelegation() sdkmath.Int               { return sdk.OneInt() }
-func (v MockValidator) GetDelegatorShares() sdk.Dec                     { return sdk.NewDec(v.power) }
-func (v MockValidator) TokensFromShares(sdk.Dec) sdk.Dec                { return sdk.ZeroDec() }
-func (v MockValidator) TokensFromSharesTruncated(sdk.Dec) sdk.Dec       { return sdk.ZeroDec() }
-func (v MockValidator) TokensFromSharesRoundUp(sdk.Dec) sdk.Dec         { return sdk.ZeroDec() }
-func (v MockValidator) SharesFromTokens(_ sdkmath.Int) (sdk.Dec, error) { return sdk.ZeroDec(), nil }
-func (v MockValidator) SharesFromTokensTruncated(_ sdkmath.Int) (sdk.Dec, error) {
-	return sdk.ZeroDec(), nil
-}
-
-func NewMockValidator(valAddr sdk.ValAddress, power int64) MockValidator {
-	return MockValidator{
-		power:    power,
-		operator: valAddr,
+func NewMockValidator(valAddr sdk.ValAddress, power int64) stakingtypes.Validator {
+	return stakingtypes.Validator{
+		Status:          stakingtypes.Bonded,
+		OperatorAddress: valAddr.String(),
+		Tokens:          sdk.TokensFromConsensusPower(power, sdk.DefaultPowerReduction),
 	}
 }

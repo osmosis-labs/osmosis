@@ -5,32 +5,37 @@ import (
 	"encoding/json"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/core/appmodule"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v23/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/client/cli"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/client/queryproto"
-	clmodel "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/simulation"
+	"github.com/osmosis-labs/osmosis/v26/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/client/cli"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/client/queryproto"
+	clmodel "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/simulation"
 
-	clkeeper "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
-	clclient "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/client"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/client/grpc"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types/genesis"
+	clkeeper "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity"
+	clclient "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/client"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/client/grpc"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types/genesis"
 )
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModuleBasic   = AppModuleBasic{}
+	_ module.HasGenesisBasics = AppModuleBasic{}
+
+	_ appmodule.AppModule        = AppModule{}
+	_ module.HasConsensusVersion = AppModule{}
+	_ module.HasGenesis          = AppModule{}
+	_ module.HasServices         = AppModule{}
 )
 
 type AppModuleBasic struct {
@@ -90,6 +95,12 @@ func NewAppModule(cdc codec.Codec, keeper clkeeper.Keeper) AppModule {
 	}
 }
 
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
+// IsOnePerModuleType is a marker function just indicates that this is a one-per-module type.
+func (am AppModule) IsOnePerModuleType() {}
+
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), clkeeper.NewMsgServerImpl(&am.keeper))
 	clmodel.RegisterMsgServer(cfg.MsgServer(), clkeeper.NewMsgCreatorServerImpl(&am.keeper))
@@ -104,14 +115,12 @@ func (AppModule) QuerierRoute() string { return types.RouterKey }
 
 // InitGenesis performs genesis initialization for the cl module.
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) {
 	var genState genesis.GenesisState
 	// Initialize global index to index in genesis state
 	cdc.MustUnmarshalJSON(gs, &genState)
 
 	am.keeper.InitGenesis(ctx, genState)
-
-	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the twap.
@@ -119,14 +128,6 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	genState := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(genState)
-}
-
-// BeginBlock performs a no-op.
-func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
-
-// EndBlock performs a no-op.
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.

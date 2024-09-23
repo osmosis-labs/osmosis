@@ -55,15 +55,15 @@ func NewParams(
 func DefaultParams() Params {
 	return Params{
 		MintDenom:               sdk.DefaultBondDenom,
-		GenesisEpochProvisions:  osmomath.NewDec(150250000000),
+		GenesisEpochProvisions:  osmomath.NewDec(5000000),
 		EpochIdentifier:         "week",                        // 1 week
-		ReductionPeriodInEpochs: 208,                           // 4 years
+		ReductionPeriodInEpochs: 156,                           // 3 years
 		ReductionFactor:         osmomath.NewDecWithPrec(5, 1), // 0.5
 		DistributionProportions: DistributionProportions{
-			Staking:          osmomath.NewDecWithPrec(7, 1),  // 0.7
-			PoolIncentives:   osmomath.NewDec(0),             // 0.0
-			DeveloperRewards: osmomath.NewDecWithPrec(25, 2), // 0.25
-			CommunityPool:    osmomath.NewDecWithPrec(5, 2),  // 0.05
+			Staking:          osmomath.NewDecWithPrec(4, 1), // 0.4
+			PoolIncentives:   osmomath.NewDecWithPrec(3, 1), // 0.3
+			DeveloperRewards: osmomath.NewDecWithPrec(2, 1), // 0.2
+			CommunityPool:    osmomath.NewDecWithPrec(1, 1), // 0.1
 		},
 		WeightedDeveloperRewardsReceivers:    []WeightedAddress{},
 		MintingRewardsDistributionStartEpoch: 0,

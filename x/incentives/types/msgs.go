@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -86,11 +86,6 @@ func (m MsgCreateGauge) ValidateBasic() error {
 	return nil
 }
 
-// GetSignBytes takes a create gauge message and turns it into a byte array.
-func (m MsgCreateGauge) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
-}
-
 // GetSigners takes a create gauge message and returns the owner in a byte array.
 func (m MsgCreateGauge) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
@@ -124,11 +119,6 @@ func (m MsgAddToGauge) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-// GetSignBytes takes an add to gauge message and turns it into a byte array.
-func (m MsgAddToGauge) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 // GetSigners takes an add to gauge message and returns the owner in a byte array.
@@ -179,11 +169,6 @@ func (m MsgCreateGroup) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-// GetSignBytes takes a create group message and turns it into a byte array.
-func (m MsgCreateGroup) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 // GetSigners takes a create group message and returns the owner in a byte array.

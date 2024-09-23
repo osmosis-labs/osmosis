@@ -7,12 +7,12 @@ import (
 
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 func (k Keeper) HandleDenomPairTakerFeeProposal(ctx sdk.Context, p *types.DenomPairTakerFeeProposal) error {
 	for _, denomPair := range p.DenomPairTakerFee {
-		k.SetDenomPairTakerFee(ctx, denomPair.Denom0, denomPair.Denom1, denomPair.TakerFee)
+		k.SetDenomPairTakerFee(ctx, denomPair.TokenInDenom, denomPair.TokenOutDenom, denomPair.TakerFee)
 	}
 	return nil
 }

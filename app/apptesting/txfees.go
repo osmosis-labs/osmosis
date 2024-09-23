@@ -6,15 +6,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/osmosis-labs/osmosis/v23/ante"
+	customante "github.com/osmosis-labs/osmosis/v26/ante"
 
 	"github.com/cosmos/cosmos-sdk/client"
 
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/txfees/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v26/x/txfees/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/txfees/types"
 )
 
 var baseGas = uint64(10000)
@@ -65,6 +65,7 @@ func (s *KeeperTestHelper) SetupTxFeeAnteHandlerAndChargeFee(clientCtx client.Co
 
 	gasLimit := gasRequested
 	sigV2, _ := clienttx.SignWithPrivKey(
+		s.Ctx,
 		1,
 		signerData,
 		txBuilder,
@@ -73,13 +74,14 @@ func (s *KeeperTestHelper) SetupTxFeeAnteHandlerAndChargeFee(clientCtx client.Co
 		accSeqs[0],
 	)
 
-	err = testutil.FundAccount(s.App.BankKeeper, s.Ctx, addr0, txFee)
+	err = testutil.FundAccount(s.Ctx, s.App.BankKeeper, addr0, txFee)
 	s.Require().NoError(err)
 
 	tx := s.BuildTx(txBuilder, msgs, sigV2, "", txFee, gasLimit)
 
 	mfd := keeper.NewMempoolFeeDecorator(*s.App.TxFeesKeeper, mempoolFeeOpts)
-	dfd := ante.NewDeductFeeDecorator(*s.App.TxFeesKeeper, *s.App.AccountKeeper, s.App.BankKeeper, nil, s.App.TreasuryKeeper)
+	dfd := customante.NewDeductFeeDecorator(*s.App.TxFeesKeeper, *s.App.AccountKeeper, s.App.BankKeeper, nil,
+		s.App.TreasuryKeeper, s.App.OracleKeeper)
 	antehandlerMFD := sdk.ChainAnteDecorators(mfd, dfd)
 	_, err = antehandlerMFD(s.Ctx, tx, isSimulate)
 	return err

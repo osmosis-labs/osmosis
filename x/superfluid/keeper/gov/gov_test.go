@@ -5,12 +5,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
-	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/keeper/gov"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	cltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
+	minttypes "github.com/osmosis-labs/osmosis/v26/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/keeper/gov"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) createGammPool(denoms []string) uint64 {
@@ -127,7 +127,7 @@ func (s *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 			s.SetupTest()
 
 			// initial check
-			resp, err := s.querier.AllAssets(sdk.WrapSDKContext(s.Ctx), &types.AllAssetsRequest{})
+			resp, err := s.querier.AllAssets(s.Ctx, &types.AllAssetsRequest{})
 			s.Require().NoError(err)
 			s.Require().Len(resp.Assets, 0)
 
@@ -169,13 +169,13 @@ func (s *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 
 				// check assets individually
 				for _, asset := range action.expectedAssets {
-					res, err := s.querier.AssetType(sdk.WrapSDKContext(s.Ctx), &types.AssetTypeRequest{Denom: asset.Denom})
+					res, err := s.querier.AssetType(s.Ctx, &types.AssetTypeRequest{Denom: asset.Denom})
 					s.Require().NoError(err)
 					s.Require().Equal(res.AssetType, asset.AssetType, "tcname %s, action num %d", tc.name, i)
 				}
 
 				// check assets
-				resp, err = s.querier.AllAssets(sdk.WrapSDKContext(s.Ctx), &types.AllAssetsRequest{})
+				resp, err = s.querier.AllAssets(s.Ctx, &types.AllAssetsRequest{})
 				s.Require().NoError(err)
 				s.Require().Equal(resp.Assets, action.expectedAssets)
 			}

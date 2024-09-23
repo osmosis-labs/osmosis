@@ -9,9 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/math"
-	types "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/math"
+	types "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
 )
 
 const noUnderlyingLockId = uint64(0)
@@ -268,7 +268,7 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		return osmomath.Int{}, osmomath.Int{}, err
 	}
 
-	_, _, err = k.collectIncentives(ctx, owner, positionId)
+	_, totalForefeitedIncentives, scaledForfeitedIncentivesByUptime, err := k.collectIncentives(ctx, owner, positionId)
 	if err != nil {
 		return osmomath.Int{}, osmomath.Int{}, err
 	}
@@ -289,15 +289,18 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		return osmomath.Int{}, osmomath.Int{}, err
 	}
 
+	// If the position has any forfeited incentives, re-deposit them into the pool.
+	err = k.redepositForfeitedIncentives(ctx, position.PoolId, owner, scaledForfeitedIncentivesByUptime, totalForefeitedIncentives)
+	if err != nil {
+		return osmomath.Int{}, osmomath.Int{}, err
+	}
+
 	// If the requested liquidity amount to withdraw is equal to the available liquidity, delete the position from state.
-	// Ensure we collect any outstanding spread factors and incentives prior to deleting the position from state. This claiming
-	// process also clears position records from spread factor and incentive accumulators.
+	// Ensure we collect any outstanding spread factors prior to deleting the position from state. Outstanding incentives
+	// should already be fully claimed by this point. This claiming process also clears position records from spread factor
+	// and incentive accumulators.
 	if requestedLiquidityAmountToWithdraw.Equal(position.Liquidity) {
 		if _, err := k.collectSpreadRewards(ctx, owner, positionId); err != nil {
-			return osmomath.Int{}, osmomath.Int{}, err
-		}
-
-		if _, _, err := k.collectIncentives(ctx, owner, positionId); err != nil {
 			return osmomath.Int{}, osmomath.Int{}, err
 		}
 
@@ -455,6 +458,7 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 			types.TypeEvtAddToPosition,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, owner.String()),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(positionId, 10)),
 			sdk.NewAttribute(types.AttributeKeyPositionId, strconv.FormatUint(positionId, 10)),
 			sdk.NewAttribute(types.AttributeKeyNewPositionId, strconv.FormatUint(newPositionData.ID, 10)),
 			sdk.NewAttribute(types.AttributeAmount0, newPositionData.Amount0.String()),
@@ -558,7 +562,7 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 	// Calculate the spot price and sqrt price from the amount provided
 	initialSpotPrice := amount1Desired.ToLegacyDec().Quo(amount0Desired.ToLegacyDec())
 	// TODO: any concerns with this being an osmomath.Dec?
-	initialCurSqrtPrice, err := osmomath.MonotonicSqrt(initialSpotPrice)
+	initialCurSqrtPrice, err := osmomath.MonotonicSqrtMut(initialSpotPrice)
 	if err != nil {
 		return err
 	}

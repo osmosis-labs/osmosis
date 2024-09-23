@@ -7,14 +7,16 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v23/app"
-	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/client/cli"
-	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/client/queryproto"
-	poolmanagertestutil "github.com/osmosis-labs/osmosis/v23/x/poolmanager/client/testutil"
-	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/app"
+	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/cli"
+	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/queryproto"
+	poolmanagertestutil "github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/testutil"
+	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -96,7 +98,7 @@ func TestNewSwapExactAmountOutCmd(t *testing.T) {
 // 		expectErr bool
 // 	}{
 // 		{
-// 			"query pool estimate swap exact amount in", // symphonyd query poolmanager estimate-swap-exact-amount-in 1 cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq 10.0stake --swap-route-pool-ids=1 --swap-route-denoms=node0token
+// 			"query pool estimate swap exact amount in", // osmosisd query poolmanager estimate-swap-exact-amount-in 1 cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq 10.0stake --swap-route-pool-ids=1 --swap-route-denoms=node0token
 // 			[]string{
 // 				"1",
 // 				"cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq",
@@ -137,7 +139,7 @@ func TestNewSwapExactAmountOutCmd(t *testing.T) {
 // 		expectErr bool
 // 	}{
 // 		{
-// 			"query pool estimate swap exact amount in", // symphonyd query poolmanager estimate-swap-exact-amount-in 1 cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq 10.0stake --swap-route-pool-ids=1 --swap-route-denoms=node0token
+// 			"query pool estimate swap exact amount in", // osmosisd query poolmanager estimate-swap-exact-amount-in 1 cosmos1n8skk06h3kyh550ad9qketlfhc2l5dsdevd3hq 10.0stake --swap-route-pool-ids=1 --swap-route-denoms=node0token
 // 			[]string{
 // 				"1",
 // 				val.Address.String(),
@@ -270,7 +272,9 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 		val.ClientCtx,
 		val.Address,
 		newAddr,
-		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 200000000), sdk.NewInt64Coin("node0token", 20000)), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 200000000), sdk.NewInt64Coin("node0token", 20000)),
+		addresscodec.NewBech32Codec("osmo"),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		osmoutils.DefaultFeeString(s.cfg),
 	)
@@ -339,7 +343,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			  "%s": "100node0token,100stake",
 			  "%s": "0.001",
 			  "%s": "0.001",
-			  "%s": "symphony1qxgkur7772gjk8wm7kta387wksn48ljh7v82da"
+			  "%s": "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
 			}
 			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
 			false, &sdk.TxResponse{}, 0,
@@ -553,12 +557,12 @@ func TestEstimateTradeBasedOnPriceImpact(t *testing.T) {
 			ExpectedQuery: &queryproto.EstimateTradeBasedOnPriceImpactRequest{
 				FromCoin: sdk.Coin{
 					Denom:  "node0token",
-					Amount: sdk.NewInt(100),
+					Amount: osmomath.NewInt(100),
 				},
 				ToCoinDenom:    "stake",
 				PoolId:         1,
-				MaxPriceImpact: sdk.MustNewDecFromStr("0.01"), // equivalent to 0.01
-				ExternalPrice:  sdk.MustNewDecFromStr("0.02"), // equivalent to 0.02
+				MaxPriceImpact: osmomath.MustNewDecFromStr("0.01"), // equivalent to 0.01
+				ExternalPrice:  osmomath.MustNewDecFromStr("0.02"), // equivalent to 0.02
 			},
 		},
 	}

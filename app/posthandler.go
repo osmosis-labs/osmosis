@@ -1,12 +1,33 @@
 package app
 
 import (
+	txsigning "cosmossdk.io/x/tx/signing"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
-	protorevkeeper "github.com/osmosis-labs/osmosis/v23/x/protorev/keeper"
+	smartaccountkeeper "github.com/osmosis-labs/osmosis/v26/x/smart-account/keeper"
+	smartaccountpost "github.com/osmosis-labs/osmosis/v26/x/smart-account/post"
+
+	protorevkeeper "github.com/osmosis-labs/osmosis/v26/x/protorev/keeper"
 )
 
-func NewPostHandler(protoRevKeeper *protorevkeeper.Keeper) sdk.PostHandler {
-	protoRevDecorator := protorevkeeper.NewProtoRevDecorator(*protoRevKeeper)
-	return sdk.ChainPostDecorators(protoRevDecorator)
+func NewPostHandler(
+	cdc codec.Codec,
+	protoRevKeeper *protorevkeeper.Keeper,
+	smartAccountKeeper *smartaccountkeeper.Keeper,
+	accountKeeper *authkeeper.AccountKeeper,
+	sigModeHandler *txsigning.HandlerMap,
+) sdk.PostHandler {
+	return sdk.ChainPostDecorators(
+		//protorevkeeper.NewProtoRevDecorator(*protoRevKeeper), // TODO: yurii - protorev is disabled
+		smartaccountpost.NewAuthenticatorPostDecorator(
+			cdc,
+			smartAccountKeeper,
+			accountKeeper,
+			sigModeHandler,
+			// Add an empty handler here to enable a circuit breaker pattern
+			sdk.ChainPostDecorators(sdk.Terminator{}), //nolint
+		),
+	)
 }

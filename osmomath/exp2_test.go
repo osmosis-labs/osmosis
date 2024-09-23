@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 )
 
 var (
@@ -163,7 +162,7 @@ func TestExp2ChebyshevRationalApprox(t *testing.T) {
 				resultExp2 := osmomath.Exp2(tc.exponent)
 				require.Equal(t, result, resultExp2)
 
-				osmoassert.Equal(t, tc.errTolerance, tc.expectedResult, result)
+				osmomath.Equal(t, tc.errTolerance, tc.expectedResult, result)
 			})
 		})
 	}
@@ -293,8 +292,39 @@ func TestExp2(t *testing.T) {
 				// System under test.
 				result := osmomath.Exp2(tc.exponent)
 
-				osmoassert.Equal(t, tc.errTolerance, tc.expectedResult, result)
+				osmomath.Equal(t, tc.errTolerance, tc.expectedResult, result)
 			})
 		})
+	}
+}
+
+var negativeExponents = []osmomath.BigDec{
+	// These could be the results from subtractions or somehow snuck in.
+	osmomath.MustNewBigDecFromStr("-1"),
+	osmomath.MustNewBigDecFromStr("-2"),
+	osmomath.MustNewBigDecFromStr("-17"),
+	osmomath.MustNewBigDecFromStr("-19"),
+	osmomath.MustNewBigDecFromStr("-20"),
+	osmomath.MustNewBigDecFromStr("-39"),
+	osmomath.MustNewBigDecFromStr("-200"),
+	osmomath.MustNewBigDecFromStr("-2000"),
+	osmomath.MustNewBigDecFromStr("-5000"),
+	osmomath.MustNewBigDecFromStr("-5007"),
+	osmomath.MustNewBigDecFromStr("-9007"),
+}
+
+func BenchmarkExp2Negatives(b *testing.B) {
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		for _, exp := range negativeExponents {
+			func() {
+				defer func() {
+					_ = recover()
+				}()
+
+				_ = osmomath.Exp2(exp)
+			}()
+		}
 	}
 }

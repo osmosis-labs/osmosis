@@ -5,12 +5,12 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"math/rand"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v23/x/treasury/types"
+	"github.com/osmosis-labs/osmosis/v26/x/treasury/types"
 )
 
 // Simulation parameter constants
@@ -43,31 +43,31 @@ func GenWindowProbation(r *rand.Rand) uint64 {
 func RandomizedGenState(simState *module.SimulationState) {
 	var windowShort uint64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, windowShortKey, &windowShort, simState.Rand,
+		windowShortKey, &windowShort, simState.Rand,
 		func(r *rand.Rand) { windowShort = GenWindowShort(r) },
 	)
 
 	var windowLong uint64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, windowLongKey, &windowLong, simState.Rand,
+		windowLongKey, &windowLong, simState.Rand,
 		func(r *rand.Rand) { windowLong = GenWindowLong(r) },
 	)
 
 	var windowProbation uint64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, windowProbationKey, &windowProbation, simState.Rand,
+		windowProbationKey, &windowProbation, simState.Rand,
 		func(r *rand.Rand) { windowProbation = GenWindowProbation(r) },
 	)
 
 	treasuryGenesis := types.NewGenesisState(
 		types.Params{
-			ReserveAllowableOffset: sdk.Dec{},
-			MaxFeeMultiplier:       sdk.Dec{},
+			ReserveAllowableOffset: osmomath.Dec{},
+			MaxFeeMultiplier:       osmomath.Dec{},
 			WindowShort:            windowShort,
 			WindowLong:             windowLong,
 			WindowProbation:        windowProbation,
 		},
-		sdk.Dec{},
+		osmomath.Dec{},
 	)
 
 	bz, err := json.MarshalIndent(&treasuryGenesis.Params, "", " ")

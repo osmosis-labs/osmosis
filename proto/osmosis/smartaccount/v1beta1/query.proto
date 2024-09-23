@@ -1,0 +1,58 @@
+syntax = "proto3";
+package osmosis.smartaccount.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "osmosis/smartaccount/v1beta1/params.proto";
+import "osmosis/smartaccount/v1beta1/models.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/smart-account/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Parameters queries the parameters of the module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/osmosis/smartaccount/params";
+  }
+
+  rpc GetAuthenticator(GetAuthenticatorRequest)
+      returns (GetAuthenticatorResponse) {
+    option (google.api.http).get =
+        "/osmosis/smartaccount/authenticator/{account}/{authenticator_id}";
+  }
+
+  rpc GetAuthenticators(GetAuthenticatorsRequest)
+      returns (GetAuthenticatorsResponse) {
+    option (google.api.http).get =
+        "/osmosis/smartaccount/authenticators/{account}";
+  }
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params holds all the parameters of this module.
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}
+
+// MsgGetAuthenticatorsRequest defines the Msg/GetAuthenticators request type.
+message GetAuthenticatorsRequest { string account = 1; }
+
+// MsgGetAuthenticatorsResponse defines the Msg/GetAuthenticators response type.
+message GetAuthenticatorsResponse {
+  repeated AccountAuthenticator account_authenticators = 1;
+}
+
+// MsgGetAuthenticatorRequest defines the Msg/GetAuthenticator request type.
+message GetAuthenticatorRequest {
+  string account = 1;
+  uint64 authenticator_id = 2;
+}
+
+// MsgGetAuthenticatorResponse defines the Msg/GetAuthenticator response type.
+message GetAuthenticatorResponse {
+  AccountAuthenticator account_authenticator = 1;
+}

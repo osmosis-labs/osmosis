@@ -14,10 +14,10 @@ import (
 
 	"github.com/cosmos/iavl"
 
-	dbm "github.com/cometbft/cometbft-db"
+	dbm "github.com/cosmos/cosmos-db"
 
-	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	iavlstore "cosmossdk.io/store/iavl"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
@@ -25,7 +25,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/wrapper"
 )
 
-func setupStore() sdk.KVStore {
+func setupStore() storetypes.KVStore {
 	db := wrapper.NewIAVLDB(dbm.NewMemDB())
 	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())
 	_, _, err := tree.SaveVersion()
@@ -95,13 +95,13 @@ type kvPair struct {
 	value []byte
 }
 
-func pair(iter sdk.Iterator) kvPair {
+func pair(iter storetypes.Iterator) kvPair {
 	res := kvPair{iter.Key(), iter.Value()}
 	iter.Next()
 	return res
 }
 
-func extract(store sdk.KVStore) (res []kvPair) {
+func extract(store storetypes.KVStore) (res []kvPair) {
 	res = []kvPair{}
 	iter := store.Iterator(nil, nil)
 	defer iter.Close()

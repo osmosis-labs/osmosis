@@ -6,7 +6,7 @@ import "google/api/annotations.proto";
 import "osmosis/market/v1beta1/market.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v23/x/market/types";
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/market/types";
 
 // Query defines the gRPC querier service.
 service Query {
@@ -69,7 +69,7 @@ message ExchangeRequirement {
   cosmos.base.v1beta1.Coin base_currency = 1 [ (gogoproto.nullable) = false ];
   string exchange_rate = 2 [
     (gogoproto.moretags) = "yaml:\"exchange_rate\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }

@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis
@@ -16,7 +16,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 		k.SetSuperfluidAsset(ctx, asset)
 	}
 
-	// initialize melody equivalent multipliers
+	// initialize osmo equivalent multipliers
 	for _, multiplierRecord := range genState.OsmoEquivalentMultipliers {
 		k.SetOsmoEquivalentMultiplier(ctx, multiplierRecord.EpochNumber, multiplierRecord.Denom, multiplierRecord.Multiplier)
 	}

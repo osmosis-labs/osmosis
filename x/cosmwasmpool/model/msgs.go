@@ -7,8 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 // constants.
@@ -47,10 +47,6 @@ func (msg MsgCreateCosmWasmPool) ValidateBasic() error {
 		return fmt.Errorf("InstantiateMsg is not a valid json")
 	}
 	return nil
-}
-
-func (msg MsgCreateCosmWasmPool) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgCreateCosmWasmPool) GetSigners() []sdk.AccAddress {

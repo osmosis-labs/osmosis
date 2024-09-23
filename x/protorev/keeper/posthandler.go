@@ -1,11 +1,14 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
@@ -43,7 +46,7 @@ func (protoRevDec ProtoRevDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simu
 	//
 	// 50M is chosen as a large enough number to ensure that the posthandler will not run out of gas,
 	// but will eventually terminate in event of an accidental infinite loop with some gas usage.
-	upperGasLimitMeter := sdk.NewGasMeter(sdk.Gas(50_000_000))
+	upperGasLimitMeter := storetypes.NewGasMeter(storetypes.Gas(50_000_000))
 	cacheCtx = cacheCtx.WithGasMeter(upperGasLimitMeter)
 
 	// Check if the protorev posthandler can be executed
@@ -67,7 +70,7 @@ func (protoRevDec ProtoRevDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simu
 	// Delete swaps to backrun for next transaction without consuming gas
 	// from the current transaction's gas meter, but instead from a new gas meter with 50mil gas.
 	// 50 mil gas was chosen as an arbitrary large number to ensure deletion does not run out of gas.
-	protoRevDec.ProtoRevKeeper.DeleteSwapsToBackrun(ctx.WithGasMeter(sdk.NewGasMeter(sdk.Gas(50_000_000))))
+	protoRevDec.ProtoRevKeeper.DeleteSwapsToBackrun(ctx.WithGasMeter(storetypes.NewGasMeter(storetypes.Gas(50_000_000))))
 
 	return next(ctx, tx, success, simulate)
 }
@@ -76,29 +79,29 @@ func (protoRevDec ProtoRevDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simu
 func (k Keeper) AnteHandleCheck(ctx sdk.Context) error {
 	// Only execute the posthandler if the module is enabled
 	if !k.GetProtoRevEnabled(ctx) {
-		return fmt.Errorf("protorev is not enabled")
+		return errors.New("protorev is not enabled")
 	}
 
 	latestBlockHeight, err := k.GetLatestBlockHeight(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get latest block height")
+		return errors.New("failed to get latest block height")
 	}
 
 	currentRouteCount, err := k.GetPointCountForBlock(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get current pool point count")
+		return errors.New("failed to get current pool point count")
 	}
 
 	maxRouteCount, err := k.GetMaxPointsPerBlock(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get max pool points per block")
+		return errors.New("failed to get max pool points per block")
 	}
 
 	// Only execute the posthandler if the number of routes to be processed per block has not been reached
 	blockHeight := uint64(ctx.BlockHeight())
 	if blockHeight == latestBlockHeight {
 		if currentRouteCount >= maxRouteCount {
-			return fmt.Errorf("max pool points for the current block has been reached")
+			return errors.New("max pool points for the current block has been reached")
 		}
 	} else {
 		// Reset the current pool point count

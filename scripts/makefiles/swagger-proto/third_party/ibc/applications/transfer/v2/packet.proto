@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package ibc.applications.transfer.v2;
+
+option go_package = "github.com/cosmos/ibc-go/v9/modules/apps/transfer/types";
+
+import "ibc/applications/transfer/v2/token.proto";
+import "gogoproto/gogo.proto";
+import "ibc/applications/transfer/v1/transfer.proto";
+
+// FungibleTokenPacketData defines a struct for the packet payload
+// See FungibleTokenPacketData spec:
+// https://github.com/cosmos/ibc/tree/master/spec/app/ics-020-fungible-token-transfer#data-structures
+message FungibleTokenPacketData {
+  // the token denomination to be transferred
+  string denom = 1;
+  // the token amount to be transferred
+  string amount = 2;
+  // the sender address
+  string sender = 3;
+  // the recipient address on the destination chain
+  string receiver = 4;
+  // optional memo
+  string memo = 5;
+}
+
+// FungibleTokenPacketDataV2 defines a struct for the packet payload
+// See FungibleTokenPacketDataV2 spec:
+// https://github.com/cosmos/ibc/tree/master/spec/app/ics-020-fungible-token-transfer#data-structures
+message FungibleTokenPacketDataV2 {
+  // the tokens to be transferred
+  repeated Token tokens = 1 [(gogoproto.nullable) = false];
+  // the sender address
+  string sender = 2;
+  // the recipient address on the destination chain
+  string receiver = 3;
+  // optional memo
+  string memo = 4;
+  // optional forwarding information
+  ForwardingPacketData forwarding = 5 [(gogoproto.nullable) = false];
+}
+
+// ForwardingPacketData defines a list of port ID, channel ID pairs determining the path
+// through which a packet must be forwarded, and the destination memo string to be used in the
+// final destination of the tokens.
+message ForwardingPacketData {
+  // optional memo consumed by final destination chain
+  string destination_memo = 1;
+  // optional intermediate path through which packet will be forwarded.
+  repeated ibc.applications.transfer.v1.Hop hops = 2 [(gogoproto.nullable) = false];
+}

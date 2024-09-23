@@ -2,10 +2,11 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"sort"
 	"strings"
 
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -73,7 +74,7 @@ func (k Keeper) ClearBallots(ctx sdk.Context, votePeriod uint64) {
 }
 
 // ApplyWhitelist update vote target denom list and set tobin tax with params whitelist
-func (k Keeper) ApplyWhitelist(ctx sdk.Context, whitelist types.DenomList, voteTargets map[string]sdk.Dec) {
+func (k Keeper) ApplyWhitelist(ctx sdk.Context, whitelist types.DenomList, voteTargets map[string]osmomath.Dec) {
 	// check is there any update in whitelist params
 	updateRequired := false
 	if len(voteTargets) != len(whitelist) {

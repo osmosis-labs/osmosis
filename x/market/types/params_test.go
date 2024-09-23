@@ -4,8 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestParamsEqual(t *testing.T) {
@@ -14,7 +12,7 @@ func TestParamsEqual(t *testing.T) {
 	require.NoError(t, err)
 
 	// invalid base pool
-	p1.BasePool = sdk.NewDec(-1)
+	p1.BasePool = osmomath.NewDec(-1)
 	err = p1.Validate()
 	require.Error(t, err)
 
@@ -26,7 +24,7 @@ func TestParamsEqual(t *testing.T) {
 
 	// invalid min spread
 	p4 := DefaultParams()
-	p4.MinStabilitySpread = sdk.NewDecWithPrec(-1, 2)
+	p4.MinStabilitySpread = osmomath.NewDecWithPrec(-1, 2)
 	err = p4.Validate()
 	require.Error(t, err)
 

@@ -3,8 +3,8 @@ package ante_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/osmosis-labs/osmosis/v23/ante"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting/assets"
+	"github.com/osmosis-labs/osmosis/v26/ante"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting/assets"
 	"os"
 	"time"
 
@@ -19,8 +19,8 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	markettypes "github.com/osmosis-labs/osmosis/v23/x/market/types"
-	oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
+	markettypes "github.com/osmosis-labs/osmosis/v26/x/market/types"
+	oracletypes "github.com/osmosis-labs/osmosis/v26/x/oracle/types"
 )
 
 func (s *AnteTestSuite) TestDeductFeeDecorator_ZeroGas() {
@@ -32,7 +32,7 @@ func (s *AnteTestSuite) TestDeductFeeDecorator_ZeroGas() {
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(300)))
+	coins := sdk.NewCoins(sdk.NewCoin("atom", osmomath.NewInt(300)))
 	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
 
 	// msg and signatures
@@ -66,7 +66,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFees() {
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(300)))
+	coins := sdk.NewCoins(sdk.NewCoin("atom", osmomath.NewInt(300)))
 	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
 
 	// msg and signatures
@@ -82,7 +82,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFees() {
 	s.Require().NoError(err)
 
 	// Set high gas price so standard test fee fails
-	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(20))
+	atomPrice := sdk.NewDecCoinFromDec("atom", osmomath.NewDec(20))
 	highGasPrice := []sdk.DecCoin{atomPrice}
 	s.ctx = s.ctx.WithMinGasPrices(highGasPrice)
 
@@ -108,7 +108,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFees() {
 	// Set IsCheckTx back to true for testing sufficient mempool fee
 	s.ctx = s.ctx.WithIsCheckTx(true)
 
-	atomPrice = sdk.NewDecCoinFromDec("atom", sdk.NewDec(0).Quo(sdk.NewDec(100000)))
+	atomPrice = sdk.NewDecCoinFromDec("atom", osmomath.NewDec(0).Quo(osmomath.NewDec(100000)))
 	lowGasPrice := []sdk.DecCoin{atomPrice}
 	s.ctx = s.ctx.WithMinGasPrices(lowGasPrice)
 
@@ -141,7 +141,7 @@ func (s *AnteTestSuite) TestDeductFees() {
 	// Set account with insufficient funds
 	acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
-	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(10)))
+	coins := sdk.NewCoins(sdk.NewCoin("atom", osmomath.NewInt(10)))
 	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
 	s.Require().NoError(err)
 
@@ -154,7 +154,7 @@ func (s *AnteTestSuite) TestDeductFees() {
 
 	// Set account with sufficient funds
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
-	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200))))
+	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", osmomath.NewInt(200))))
 	s.Require().NoError(err)
 
 	_, err = antehandler(s.ctx, tx, false)
@@ -171,7 +171,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesSend() {
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	coins := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, sdk.NewInt(1000000)))
+	coins := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, osmomath.NewInt(1000000)))
 	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
 
 	// msg and signatures
@@ -222,7 +222,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesSwapSend() {
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	coins := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, sdk.NewInt(1000000)))
+	coins := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, osmomath.NewInt(1000000)))
 	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
 
 	// msg and signatures
@@ -272,7 +272,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesMultiSend() {
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	coins := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, sdk.NewInt(1000000)))
+	coins := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, osmomath.NewInt(1000000)))
 	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
 
 	// msg and signatures
@@ -336,7 +336,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesInstantiateContract() {
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	coins := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, sdk.NewInt(1000000)))
+	coins := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, osmomath.NewInt(1000000)))
 	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
 
 	// msg and signatures
@@ -392,7 +392,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesExecuteContract() {
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	coins := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, sdk.NewInt(1000000)))
+	coins := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, osmomath.NewInt(1000000)))
 	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
 
 	// msg and signatures
@@ -447,7 +447,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesAuthzExec() {
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	coins := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, sdk.NewInt(1000000)))
+	coins := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, osmomath.NewInt(1000000)))
 	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
 
 	// msg and signatures
@@ -672,7 +672,7 @@ func (s *AnteTestSuite) TestTaxExemption() {
 		antehandler := sdk.ChainAnteDecorators(mfd)
 
 		for i := 0; i < 4; i++ {
-			coins := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, sdk.NewInt(10000000)))
+			coins := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, osmomath.NewInt(10000000)))
 			testutil.FundAccount(s.app.BankKeeper, s.ctx, addrs[i], coins)
 		}
 
@@ -694,11 +694,11 @@ func (s *AnteTestSuite) TestTaxExemption() {
 		feeCollector := ak.GetModuleAccount(s.ctx, authtypes.FeeCollectorName)
 		//treasuryCollector := ak.GetModuleAccount(s.ctx, authtypes.ModuleName)
 		amountFee := bk.GetBalance(s.ctx, feeCollector.GetAddress(), assets.MicroSDRDenom)
-		require.Equal(amountFee, sdk.NewCoin(assets.MicroSDRDenom, sdk.NewDec(c.minFeeAmount).TruncateInt()))
+		require.Equal(amountFee, sdk.NewCoin(assets.MicroSDRDenom, osmomath.NewDec(c.minFeeAmount).TruncateInt()))
 
 		// check tax proceeds
 		//taxProceeds := s.app.TreasuryKeeper.PeekEpochTaxProceeds(s.ctx)
-		//require.Equal(taxProceeds, sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, sdk.NewInt(c.expectProceeds))))
+		//require.Equal(taxProceeds, sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, osmomath.NewInt(c.expectProceeds))))
 	}
 }
 

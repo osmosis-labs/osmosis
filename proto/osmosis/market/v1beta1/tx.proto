@@ -3,8 +3,9 @@ package osmosis.market.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v23/x/market/types";
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/market/types";
 
 // Msg defines the market Msg service.
 service Msg {
@@ -21,6 +22,7 @@ service Msg {
 message MsgSwap {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
+  option (cosmos.msg.v1.signer) = "trader";
 
   string trader = 1 [ (gogoproto.moretags) = "yaml:\"trader\"" ];
   cosmos.base.v1beta1.Coin offer_coin = 2 [
@@ -47,6 +49,7 @@ message MsgSwapResponse {
 message MsgSwapSend {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
+  option (cosmos.msg.v1.signer) = "from_address";
 
   string from_address = 1 [ (gogoproto.moretags) = "yaml:\"from_address\"" ];
   string to_address = 2 [ (gogoproto.moretags) = "yaml:\"to_address\"" ];

@@ -46,7 +46,7 @@ So our constructed cosmwasm message that we execute will look like:
 ```go
 msg := MsgExecuteContract{
 	// Sender is the that actor that signed the messages
-	Sender: "symphony1-hash-of-channel-and-sender",
+	Sender: "osmo1-hash-of-channel-and-sender",
 	// Contract is the address of the smart contract
 	Contract: packet.data.memo["wasm"]["ContractAddress"],
 	// Msg json encoded message to be passed to the contract
@@ -70,7 +70,7 @@ ICS20 is JSON native, so we use JSON for the memo format.
         "receiver": "contract addr or blank",
     	"memo": {
            "wasm": {
-              "contract": "symphony1contractAddr",
+              "contract": "osmo1contractAddr",
               "msg": {
                 "raw_message_fields": "raw_message_data",
               }
@@ -142,7 +142,7 @@ hasn't failed (i.e.: returned an error ack notifying that the receiving change d
 
 For the callback to be processed, the transfer packet's memo should contain the following in its JSON:
 
-`{"ibc_callback": "symphony1contractAddr"}`
+`{"ibc_callback": "osmo1contractAddr"}`
 
 The wasm hooks will keep the mapping from the packet's channel and sequence to the contract in storage. When an ack is
 received, it will notify the specified contract via a sudo message.

@@ -2,14 +2,15 @@ package wasmbinding
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v23/wasmbinding"
-	"github.com/osmosis-labs/osmosis/v23/wasmbinding/bindings"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v26/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v26/wasmbinding/bindings"
 
 	"github.com/stretchr/testify/require"
 )
@@ -17,7 +18,8 @@ import (
 func TestCreateDenom(t *testing.T) {
 	apptesting.SkipIfWSL(t)
 	actor := RandomAccountAddress()
-	symphony, ctx := SetupCustomApp(t, actor)
+	osmosis, ctx, homeDir := SetupCustomApp(t, actor)
+	defer os.RemoveAll(homeDir)
 
 	specs := map[string]struct {
 		createDenom *bindings.CreateDenom
@@ -49,7 +51,7 @@ func TestCreateDenom(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			// when
-			gotErr := wasmbinding.PerformCreateDenom(symphony.TokenFactoryKeeper, symphony.BankKeeper, ctx, actor, spec.createDenom)
+			gotErr := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, spec.createDenom)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)
@@ -142,14 +144,15 @@ func TestChangeAdmin(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			symphony, ctx := SetupCustomApp(t, tokenCreator)
+			osmosis, ctx, homeDir := SetupCustomApp(t, tokenCreator)
+			defer os.RemoveAll(homeDir)
 
-			err := wasmbinding.PerformCreateDenom(symphony.TokenFactoryKeeper, symphony.BankKeeper, ctx, tokenCreator, &bindings.CreateDenom{
+			err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, tokenCreator, &bindings.CreateDenom{
 				Subdenom: validDenom,
 			})
 			require.NoError(t, err)
 
-			err = wasmbinding.ChangeAdmin(symphony.TokenFactoryKeeper, ctx, spec.actor, spec.changeAdmin)
+			err = wasmbinding.ChangeAdmin(osmosis.TokenFactoryKeeper, ctx, spec.actor, spec.changeAdmin)
 			if len(spec.expErrMsg) > 0 {
 				require.Error(t, err)
 				actualErrMsg := err.Error()
@@ -164,20 +167,21 @@ func TestChangeAdmin(t *testing.T) {
 func TestMint(t *testing.T) {
 	apptesting.SkipIfWSL(t)
 	creator := RandomAccountAddress()
-	symphony, ctx := SetupCustomApp(t, creator)
+	osmosis, ctx, homeDir := SetupCustomApp(t, creator)
+	defer os.RemoveAll(homeDir)
 
 	// Create denoms for valid mint tests
 	validDenom := bindings.CreateDenom{
 		Subdenom: "MOON",
 	}
-	err := wasmbinding.PerformCreateDenom(symphony.TokenFactoryKeeper, symphony.BankKeeper, ctx, creator, &validDenom)
+	err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &validDenom)
 	require.NoError(t, err)
 
 	// UNFORKINGNOTE: store now panics when attempting to search for nil key on bank keeper
 	// emptyDenom := bindings.CreateDenom{
 	// 	Subdenom: "",
 	// }
-	// err = wasmbinding.PerformCreateDenom(symphony.TokenFactoryKeeper, &symphony.BankKeeper, ctx, creator, &emptyDenom)
+	// err = wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, &osmosis.BankKeeper, ctx, creator, &emptyDenom)
 	// require.NoError(t, err)
 
 	validDenomStr := fmt.Sprintf("factory/%s/%s", creator.String(), validDenom.Subdenom)
@@ -187,7 +191,7 @@ func TestMint(t *testing.T) {
 	lucky := RandomAccountAddress()
 
 	// lucky was broke
-	balances := symphony.BankKeeper.GetAllBalances(ctx, lucky)
+	balances := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
 	require.Empty(t, balances)
 
 	amount, ok := osmomath.NewIntFromString("8080")
@@ -269,7 +273,7 @@ func TestMint(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			// when
-			gotErr := wasmbinding.PerformMint(symphony.TokenFactoryKeeper, symphony.BankKeeper, ctx, creator, spec.mint)
+			gotErr := wasmbinding.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, spec.mint)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)
@@ -283,26 +287,27 @@ func TestMint(t *testing.T) {
 func TestBurn(t *testing.T) {
 	apptesting.SkipIfWSL(t)
 	creator := RandomAccountAddress()
-	symphony, ctx := SetupCustomApp(t, creator)
+	osmosis, ctx, homeDir := SetupCustomApp(t, creator)
+	defer os.RemoveAll(homeDir)
 
 	// Create denoms for valid burn tests
 	validDenom := bindings.CreateDenom{
 		Subdenom: "MOON",
 	}
-	err := wasmbinding.PerformCreateDenom(symphony.TokenFactoryKeeper, symphony.BankKeeper, ctx, creator, &validDenom)
+	err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &validDenom)
 	require.NoError(t, err)
 
 	// UNFORKINGNOTE: store now panics when attempting to search for nil key on bank keeper
 	// emptyDenom := bindings.CreateDenom{
 	// 	Subdenom: "",
 	// }
-	// err = wasmbinding.PerformCreateDenom(symphony.TokenFactoryKeeper, &symphony.BankKeeper, ctx, creator, &emptyDenom)
+	// err = wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, &osmosis.BankKeeper, ctx, creator, &emptyDenom)
 	// require.NoError(t, err)
 
 	lucky := RandomAccountAddress()
 
 	// lucky was broke
-	balances := symphony.BankKeeper.GetAllBalances(ctx, lucky)
+	balances := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
 	require.Empty(t, balances)
 
 	validDenomStr := fmt.Sprintf("factory/%s/%s", creator.String(), validDenom.Subdenom)
@@ -387,7 +392,7 @@ func TestBurn(t *testing.T) {
 				Amount:        mintAmount,
 				MintToAddress: creator.String(),
 			}
-			err := wasmbinding.PerformMint(symphony.TokenFactoryKeeper, symphony.BankKeeper, ctx, creator, mintBinding)
+			err := wasmbinding.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, mintBinding)
 			require.NoError(t, err)
 
 			// UNFORKINGNOTE: store now panics when attempting to search for nil key on bank keeper
@@ -396,11 +401,11 @@ func TestBurn(t *testing.T) {
 			// 	Amount:        mintAmount,
 			// 	MintToAddress: creator.String(),
 			// }
-			// err = wasmbinding.PerformMint(symphony.TokenFactoryKeeper, &symphony.BankKeeper, ctx, creator, emptyDenomMintBinding)
+			// err = wasmbinding.PerformMint(osmosis.TokenFactoryKeeper, &osmosis.BankKeeper, ctx, creator, emptyDenomMintBinding)
 			// require.NoError(t, err)
 
 			// when
-			gotErr := wasmbinding.PerformBurn(symphony.TokenFactoryKeeper, ctx, creator, spec.burn)
+			gotErr := wasmbinding.PerformBurn(osmosis.TokenFactoryKeeper, ctx, creator, spec.burn)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)

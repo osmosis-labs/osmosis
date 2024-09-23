@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,12 +10,13 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
-	appParams "github.com/osmosis-labs/osmosis/v23/app/params"
-	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
-	incentivetypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	poolincentivetypes "github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	appParams "github.com/osmosis-labs/osmosis/v26/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v26/x/incentives/types"
+	incentivetypes "github.com/osmosis-labs/osmosis/v26/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
+	poolincentivetypes "github.com/osmosis-labs/osmosis/v26/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -59,7 +59,7 @@ var (
 	emptyCoins          = sdk.Coins{}
 	defaultVolumeAmount = osmomath.NewInt(300)
 
-	defaultCoins = sdk.NewCoins(sdk.NewCoin("note", osmomath.NewInt(100_000_000)))
+	defaultCoins = sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100_000_000)))
 
 	baseTime = time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)
 
@@ -87,16 +87,23 @@ type GroupCreationFields struct {
 // TestDistribute tests that when the distribute command is executed on a provided gauge
 // that the correct amount of rewards is sent to the correct lock owners.
 func (s *KeeperTestSuite) TestDistribute() {
+	nonBaseDenom := "bar"
 	defaultGauge := perpGaugeDesc{
 		lockDenom:    defaultLPDenom,
 		lockDuration: defaultLockDuration,
 		rewardAmount: sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)},
 	}
+	defaultGaugeNonBaseDenom := defaultGauge
+	defaultGaugeNonBaseDenom.rewardAmount = sdk.Coins{sdk.NewInt64Coin(nonBaseDenom, 3000)}
+
 	doubleLengthGauge := perpGaugeDesc{
 		lockDenom:    defaultLPDenom,
 		lockDuration: 2 * defaultLockDuration,
 		rewardAmount: sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)},
 	}
+	doubleLengthGaugeNonBaseDenom := doubleLengthGauge
+	doubleLengthGaugeNonBaseDenom.rewardAmount = sdk.Coins{sdk.NewInt64Coin(nonBaseDenom, 3000)}
+
 	noRewardGauge := perpGaugeDesc{
 		lockDenom:    defaultLPDenom,
 		lockDuration: defaultLockDuration,
@@ -104,13 +111,17 @@ func (s *KeeperTestSuite) TestDistribute() {
 	}
 	noRewardCoins := sdk.Coins{}
 	oneKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 1000)}
+	oneKRewardCoinsNonBaseDenom := sdk.Coins{sdk.NewInt64Coin(nonBaseDenom, 1000)}
 	twoKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 2000)}
 	threeKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)}
 	fiveKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 5000)}
+	fiveKRewardCoinsNonBaseDenom := sdk.Coins{sdk.NewInt64Coin(nonBaseDenom, 5000)}
+	fiveKFourHundredRewardCoinsNonBaseDenom := sdk.Coins{sdk.NewInt64Coin(nonBaseDenom, 5400)}
 	tests := []struct {
 		name                 string
 		users                []userLocks
 		gauges               []perpGaugeDesc
+		poolCoins            sdk.Coins
 		changeRewardReceiver []changeRewardReceiver
 		expectedRewards      []sdk.Coins
 	}{
@@ -212,9 +223,61 @@ func (s *KeeperTestSuite) TestDistribute() {
 			},
 			expectedRewards: []sdk.Coins{fiveKRewardCoins, oneKRewardCoins},
 		},
+		// Non base denom rewards test, sufficient rewards to distribute all.
+		// gauge 1 gives 3k coins. three locks, all eligible.
+		// gauge 2 gives 3k coins. one lock, to twoLockupUser.
+		// 1k should to oneLockupUser and 5k to twoLockupUser.
+		{
+			name:            "Non base denom, sufficient rewards to distribute all users",
+			users:           []userLocks{oneLockupUser, twoLockupUser},
+			gauges:          []perpGaugeDesc{defaultGaugeNonBaseDenom, doubleLengthGaugeNonBaseDenom},
+			poolCoins:       sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, osmomath.NewInt(10000)), sdk.NewCoin(nonBaseDenom, osmomath.NewInt(10000))), // 1 bar equals 1 defaultRewardDenom
+			expectedRewards: []sdk.Coins{oneKRewardCoinsNonBaseDenom, fiveKRewardCoinsNonBaseDenom},
+		},
+		// Non base denom rewards test, insufficient rewards to distribute for some.
+		// gauge 1 gives 3k coins. three locks, all eligible.
+		// we increased the lockup of twoLockupUser so it is eligible for distribution.
+		// the distribution should be 600 to user 1, and  1200 + 1200 to user 2, but only the last two 1200 get distributed due to limit of 1090.
+		// gauge 2 gives 3k coins. one lock, to twoLockupUser.
+		// the distribution should be all 3000 to twoLockupUser since it is passed the 1090 distribution threshold.
+		{
+			name:            "Non base denom, insufficient rewards to distribute to user 1, sufficient rewards to distribute to user 2",
+			users:           []userLocks{oneLockupUser, twoLockupUserDoubleAmt},
+			gauges:          []perpGaugeDesc{defaultGaugeNonBaseDenom, doubleLengthGaugeNonBaseDenom},
+			poolCoins:       sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, osmomath.NewInt(10000)), sdk.NewCoin(nonBaseDenom, osmomath.NewInt(12000))), // min amt for distribution is now equal to 1090bar
+			expectedRewards: []sdk.Coins{noRewardCoins, fiveKFourHundredRewardCoinsNonBaseDenom},
+		},
+		// Non base denom rewards test, insufficient rewards to distribute all locks
+		// gauge 1 gives 3k coins. three locks, all eligible.
+		// gauge 2 gives 3k coins. one lock, to twoLockupUser.
+		// All pending reward payouts (600, 1200, and 3000) are all below the min threshold of 4545, so no rewards are distributed.
+		{
+			name:            "Non base denom, insufficient rewards to distribute to all users",
+			users:           []userLocks{oneLockupUser, twoLockupUserDoubleAmt},
+			gauges:          []perpGaugeDesc{defaultGaugeNonBaseDenom, doubleLengthGaugeNonBaseDenom},
+			poolCoins:       sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, osmomath.NewInt(10000)), sdk.NewCoin(nonBaseDenom, osmomath.NewInt(50000))), // min amt for distribution is now equal to 4545bar
+			expectedRewards: []sdk.Coins{noRewardCoins, noRewardCoins},
+		},
+		// No pool exists for the first gauge, so only the second gauge should distribute rewards.
+		// gauge 1 gives 3k coins. three locks, all eligible, but no pool exists to determine underlying value so no rewards are distributed.
+		// gauge 2 gives 3k coins. one lock, to twoLockupUser.
+		{
+			name:            "Non base denom and base denom, no pool to determine non base denom value, only base denom distributes",
+			users:           []userLocks{oneLockupUser, twoLockupUserDoubleAmt},
+			gauges:          []perpGaugeDesc{defaultGaugeNonBaseDenom, doubleLengthGauge},
+			expectedRewards: []sdk.Coins{noRewardCoins, threeKRewardCoins},
+		},
 	}
 	for _, tc := range tests {
 		s.SetupTest()
+
+		// set the base denom and min value for distribution
+		err := s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, defaultRewardDenom)
+		s.Require().NoError(err)
+		s.App.IncentivesKeeper.SetParam(s.Ctx, types.KeyMinValueForDistr, sdk.NewCoin(defaultRewardDenom, osmomath.NewInt(1000)))
+		baseDenom, err := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
+		s.Require().NoError(err)
+
 		// setup gauges and the locks defined in the above tests, then distribute to them
 		gauges := s.SetupGauges(tc.gauges, defaultLPDenom)
 		addrs := s.SetupUserLocks(tc.users)
@@ -224,7 +287,13 @@ func (s *KeeperTestSuite) TestDistribute() {
 			s.SetupChangeRewardReceiver(tc.changeRewardReceiver, addrs)
 		}
 
-		_, err := s.App.IncentivesKeeper.Distribute(s.Ctx, gauges)
+		// if test requires it, set up a pool with the baseDenom and the underlying reward denom
+		if tc.poolCoins != nil {
+			poolID := s.PrepareBalancerPoolWithCoins(tc.poolCoins...)
+			s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, baseDenom, nonBaseDenom, poolID)
+		}
+
+		_, err = s.App.IncentivesKeeper.Distribute(s.Ctx, gauges)
 		s.Require().NoError(err)
 		// check expected rewards against actual rewards received
 		for i, addr := range addrs {
@@ -461,7 +530,7 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 		// expected
 		expectErr                              bool
 		expectedDistributions                  sdk.Coins
-		expectedRemainingAmountIncentiveRecord []sdk.Dec
+		expectedRemainingAmountIncentiveRecord []osmomath.Dec
 	}
 
 	defaultTest := test{
@@ -504,7 +573,7 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 		tempDistributions := make(sdk.Coins, len(tc.expectedDistributions))
 		copy(tempDistributions, tc.expectedDistributions)
 
-		tempRemainingAmountIncentiveRecord := make([]sdk.Dec, len(tc.expectedRemainingAmountIncentiveRecord))
+		tempRemainingAmountIncentiveRecord := make([]osmomath.Dec, len(tc.expectedRemainingAmountIncentiveRecord))
 		copy(tempRemainingAmountIncentiveRecord, tc.expectedRemainingAmountIncentiveRecord)
 
 		for i := range tc.expectedRemainingAmountIncentiveRecord {
@@ -663,16 +732,23 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 // TestSyntheticDistribute tests that when the distribute command is executed on a provided gauge
 // the correct amount of rewards is sent to the correct synthetic lock owners.
 func (s *KeeperTestSuite) TestSyntheticDistribute() {
+	nonBaseDenom := "bar"
 	defaultGauge := perpGaugeDesc{
 		lockDenom:    defaultLPSyntheticDenom,
 		lockDuration: defaultLockDuration,
 		rewardAmount: sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)},
 	}
+	defaultGaugeNonBaseDenom := defaultGauge
+	defaultGaugeNonBaseDenom.rewardAmount = sdk.Coins{sdk.NewInt64Coin(nonBaseDenom, 3000)}
+
 	doubleLengthGauge := perpGaugeDesc{
 		lockDenom:    defaultLPSyntheticDenom,
 		lockDuration: 2 * defaultLockDuration,
 		rewardAmount: sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)},
 	}
+	doubleLengthGaugeNonBaseDenom := doubleLengthGauge
+	doubleLengthGaugeNonBaseDenom.rewardAmount = sdk.Coins{sdk.NewInt64Coin(nonBaseDenom, 3000)}
+
 	noRewardGauge := perpGaugeDesc{
 		lockDenom:    defaultLPSyntheticDenom,
 		lockDuration: defaultLockDuration,
@@ -680,12 +756,17 @@ func (s *KeeperTestSuite) TestSyntheticDistribute() {
 	}
 	noRewardCoins := sdk.Coins{}
 	oneKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 1000)}
+	oneKRewardCoinsNonBaseDenom := sdk.Coins{sdk.NewInt64Coin(nonBaseDenom, 1000)}
 	twoKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 2000)}
+	threeKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)}
 	fiveKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 5000)}
+	fiveKRewardCoinsNonBaseDenom := sdk.Coins{sdk.NewInt64Coin(nonBaseDenom, 5000)}
+	fiveKFourHundredRewardCoinsNonBaseDenom := sdk.Coins{sdk.NewInt64Coin(nonBaseDenom, 5400)}
 	tests := []struct {
 		name            string
 		users           []userLocks
 		gauges          []perpGaugeDesc
+		poolCoins       sdk.Coins
 		expectedRewards []sdk.Coins
 	}{
 		// gauge 1 gives 3k coins. three locks, all eligible. 1k coins per lock.
@@ -722,24 +803,84 @@ func (s *KeeperTestSuite) TestSyntheticDistribute() {
 			gauges:          []perpGaugeDesc{noRewardGauge, defaultGauge},
 			expectedRewards: []sdk.Coins{oneKRewardCoins, twoKRewardCoins},
 		},
+		// Non base denom rewards test, sufficient rewards to distribute all.
+		// gauge 1 gives 3k coins. three locks, all eligible.
+		// gauge 2 gives 3k coins. one lock, to twoLockupUser.
+		// 1k should to oneLockupUser and 5k to twoLockupUser.
+		{
+			name:            "Non base denom, sufficient rewards to distribute all users",
+			users:           []userLocks{oneSyntheticLockupUser, twoSyntheticLockupUser},
+			gauges:          []perpGaugeDesc{defaultGaugeNonBaseDenom, doubleLengthGaugeNonBaseDenom},
+			poolCoins:       sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, osmomath.NewInt(10000)), sdk.NewCoin(nonBaseDenom, osmomath.NewInt(10000))), // 1 bar equals 1 defaultRewardDenom
+			expectedRewards: []sdk.Coins{oneKRewardCoinsNonBaseDenom, fiveKRewardCoinsNonBaseDenom},
+		},
+		// Non base denom rewards test, insufficient rewards to distribute for some.
+		// gauge 1 gives 3k coins. three locks, all eligible.
+		// we increased the lockup of twoLockupUser so it is eligible for distribution.
+		// the distribution should be 600 to user 1, and  1200 + 1200 to user 2, but only the last two 1200 get distributed due to limit of 1090.
+		// gauge 2 gives 3k coins. one lock, to twoLockupUser.
+		// the distribution should be all 3000 to twoLockupUser since it is passed the 1090 distribution threshold.
+		{
+			name:            "Non base denom, insufficient rewards to distribute to user 1, sufficient rewards to distribute to user 2",
+			users:           []userLocks{oneSyntheticLockupUser, twoSyntheticLockupUserDoubleAmt},
+			gauges:          []perpGaugeDesc{defaultGaugeNonBaseDenom, doubleLengthGaugeNonBaseDenom},
+			poolCoins:       sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, osmomath.NewInt(10000)), sdk.NewCoin(nonBaseDenom, osmomath.NewInt(12000))), // min amt for distribution is now equal to 1090bar
+			expectedRewards: []sdk.Coins{noRewardCoins, fiveKFourHundredRewardCoinsNonBaseDenom},
+		},
+		// Non base denom rewards test, insufficient rewards to distribute all locks
+		// gauge 1 gives 3k coins. three locks, all eligible.
+		// gauge 2 gives 3k coins. one lock, to twoLockupUser.
+		// All pending reward payouts (600, 1200, and 3000) are all below the min threshold of 4545, so no rewards are distributed.
+		{
+			name:            "Non base denom, insufficient rewards to distribute to all users",
+			users:           []userLocks{oneSyntheticLockupUser, twoSyntheticLockupUserDoubleAmt},
+			gauges:          []perpGaugeDesc{defaultGaugeNonBaseDenom, doubleLengthGaugeNonBaseDenom},
+			poolCoins:       sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, osmomath.NewInt(10000)), sdk.NewCoin(nonBaseDenom, osmomath.NewInt(50000))), // min amt for distribution is now equal to 4545bar
+			expectedRewards: []sdk.Coins{noRewardCoins, noRewardCoins},
+		},
+		// No pool exists for the first gauge, so only the second gauge should distribute rewards.
+		// gauge 1 gives 3k coins. three locks, all eligible, but no pool exists to determine underlying value so no rewards are distributed.
+		// gauge 2 gives 3k coins. one lock, to twoLockupUser.
+		{
+			name:            "Non base denom and base denom, no pool to determine non base denom value, only base denom distributes",
+			users:           []userLocks{oneSyntheticLockupUser, twoSyntheticLockupUserDoubleAmt},
+			gauges:          []perpGaugeDesc{defaultGaugeNonBaseDenom, doubleLengthGauge},
+			expectedRewards: []sdk.Coins{noRewardCoins, threeKRewardCoins},
+		},
 	}
 	for _, tc := range tests {
 		s.SetupTest()
+
+		// set the base denom and min value for distribution
+		err := s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, defaultRewardDenom)
+		s.Require().NoError(err)
+		s.App.IncentivesKeeper.SetParam(s.Ctx, types.KeyMinValueForDistr, sdk.NewCoin(defaultRewardDenom, osmomath.NewInt(1000)))
+		baseDenom, err := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
+		s.Require().NoError(err)
+
 		// setup gauges and the synthetic locks defined in the above tests, then distribute to them
 		gauges := s.SetupGauges(tc.gauges, defaultLPSyntheticDenom)
 		addrs := s.SetupUserSyntheticLocks(tc.users)
-		_, err := s.App.IncentivesKeeper.Distribute(s.Ctx, gauges)
+
+		// if test requires it, set up a pool with the baseDenom and the underlying reward denom
+		if tc.poolCoins != nil {
+			poolID := s.PrepareBalancerPoolWithCoins(tc.poolCoins...)
+			s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, baseDenom, nonBaseDenom, poolID)
+		}
+
+		_, err = s.App.IncentivesKeeper.Distribute(s.Ctx, gauges)
 		s.Require().NoError(err)
 		// check expected rewards against actual rewards received
 		for i, addr := range addrs {
-			var rewards string
 			bal := s.App.BankKeeper.GetAllBalances(s.Ctx, addr)
 			// extract the superbonding tokens from the rewards distribution
-			// TODO: figure out a less hacky way of doing this
-			if strings.Contains(bal.String(), "lptoken/superbonding,") {
-				rewards = strings.Split(bal.String(), "lptoken/superbonding,")[1]
+			rewards := sdk.Coins{}
+			for _, coin := range bal {
+				if coin.Denom != "lptoken/superbonding" {
+					rewards = append(rewards, coin)
+				}
 			}
-			s.Require().Equal(tc.expectedRewards[i].String(), rewards, "test %v, person %d", tc.name, i)
+			s.Require().Equal(tc.expectedRewards[i].String(), rewards.String(), "test %v, person %d", tc.name, i)
 		}
 	}
 }
@@ -1056,6 +1197,12 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalCLGauge() {
 		halfOfExternalGaugeCoins = sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(defaultExternalGaugeValue/numEpochsPaidOverGaugeTwo)), sdk.NewCoin("usdc", osmomath.NewInt(defaultExternalGaugeValue/numEpochsPaidOverGaugeTwo))) // distributed at each epoch for non-perp gauge with numEpoch = 2
 	)
 
+	// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+	// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+	for _, coin := range append(externalGaugeCoins, internalGaugeCoins...) {
+		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+	}
+
 	s.FundAcc(s.TestAccs[1], requiredBalances)
 	s.FundAcc(s.TestAccs[2], requiredBalances)
 	s.FundModuleAcc(incentivetypes.ModuleName, requiredBalances)
@@ -1206,6 +1353,12 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalCLGauge() {
 }
 
 func (s *KeeperTestSuite) CreateNoLockExternalGauges(clPoolId uint64, externalGaugeCoins sdk.Coins, gaugeCreator sdk.AccAddress, numEpochsPaidOver uint64) uint64 {
+	// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+	// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+	for _, coin := range externalGaugeCoins {
+		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+	}
+
 	// Create 1 external no-lock gauge perpetual over 1 epochs MsgCreateGauge
 	clPoolExternalGaugeId, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, numEpochsPaidOver == 1, gaugeCreator, externalGaugeCoins,
 		lockuptypes.QueryCondition{
@@ -1818,7 +1971,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 		// Double the volume configuration in poolmanager because we want the current volume to be
 		// updated relative to the existing values in gauge record state.
 		// The current volume is computed = poolmanager cumulative volume - gauge record cumulative volume.
-		two = sdk.NewInt(2)
+		two = osmomath.NewInt(2)
 
 		// Volume pre-set configurations.
 		balancerOnlyVolumeConfig  = []osmomath.Int{singleRecordGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight.Mul(two), osmomath.ZeroInt()}
@@ -2281,7 +2434,9 @@ func (s *KeeperTestSuite) overwriteVolumes(poolIds []uint64, updatedPoolVolumes 
 	// Update cumulative volumes for pools
 	for i, updatedVolume := range updatedPoolVolumes {
 		// Note that even though we deal with volumes as ints, they are tracked as coins to allow for tracking of more denoms in the future.
-		s.App.PoolManagerKeeper.SetVolume(s.Ctx, poolIds[i], sdk.NewCoins(sdk.NewCoin(s.App.StakingKeeper.BondDenom(s.Ctx), updatedVolume)))
+		bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
+		s.Require().NoError(err)
+		s.App.PoolManagerKeeper.SetVolume(s.Ctx, poolIds[i], sdk.NewCoins(sdk.NewCoin(bondDenom, updatedVolume)))
 	}
 }
 
@@ -2558,7 +2713,7 @@ func (s *KeeperTestSuite) TestSkipSpamGaugeDistribute() {
 
 	tenCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 10)}
 	oneKCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 1000)}
-	twoCoinsOneK := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 1000), sdk.NewInt64Coin("note", 1000)}
+	twoCoinsOneK := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 1000), sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000)}
 	tests := []struct {
 		name                    string
 		locks                   []*lockuptypes.PeriodLock

@@ -4,12 +4,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/x/protorev/types"
 )
 
 // TestGetTokenPairArbRoutes tests the GetTokenPairArbRoutes function.
 func (s *KeeperTestSuite) TestGetTokenPairArbRoutes() {
+	s.SetupPoolsTest()
 	// Tests that we can properly retrieve all of the routes that were set up
 	for _, tokenPair := range s.tokenPairArbRoutes {
 		tokenPairArbRoutes, err := s.App.ProtoRevKeeper.GetTokenPairArbRoutes(s.Ctx, tokenPair.TokenIn, tokenPair.TokenOut)
@@ -19,12 +20,13 @@ func (s *KeeperTestSuite) TestGetTokenPairArbRoutes() {
 	}
 
 	// Testing to see if we will not find a route that does not exist
-	_, err := s.App.ProtoRevKeeper.GetTokenPairArbRoutes(s.Ctx, "melody", "abc")
+	_, err := s.App.ProtoRevKeeper.GetTokenPairArbRoutes(s.Ctx, "osmo", "abc")
 	s.Require().Error(err)
 }
 
 // TestGetAllTokenPairArbRoutes tests the GetAllTokenPairArbRoutes function.
 func (s *KeeperTestSuite) TestGetAllTokenPairArbRoutes() {
+	s.SetupPoolsTest()
 	// Tests that we can properly retrieve all of the routes that were set up
 	tokenPairArbRoutes, err := s.App.ProtoRevKeeper.GetAllTokenPairArbRoutes(s.Ctx)
 
@@ -38,6 +40,7 @@ func (s *KeeperTestSuite) TestGetAllTokenPairArbRoutes() {
 
 // TestDeleteAllTokenPairArbRoutes tests the DeleteAllTokenPairArbRoutes function.
 func (s *KeeperTestSuite) TestDeleteAllTokenPairArbRoutes() {
+	s.SetupPoolsTest()
 	// Tests that we can properly retrieve all of the routes that were set up
 	tokenPairArbRoutes, err := s.App.ProtoRevKeeper.GetAllTokenPairArbRoutes(s.Ctx)
 
@@ -63,17 +66,17 @@ func (s *KeeperTestSuite) TestGetAllBaseDenoms() {
 	baseDenoms, err := s.App.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(baseDenoms))
-	s.Require().Equal(baseDenoms[0].Denom, types.SymphonyDenomination)
+	s.Require().Equal(baseDenoms[0].Denom, types.OsmosisDenomination)
 	s.Require().Equal(baseDenoms[1].Denom, "Atom")
 	s.Require().Equal(baseDenoms[2].Denom, "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7")
 
 	// Should be able to set the base denoms
-	err = s.App.ProtoRevKeeper.SetBaseDenoms(s.Ctx, []types.BaseDenom{{Denom: "melody"}, {Denom: "atom"}, {Denom: "weth"}})
+	err = s.App.ProtoRevKeeper.SetBaseDenoms(s.Ctx, []types.BaseDenom{{Denom: "osmo"}, {Denom: "atom"}, {Denom: "weth"}})
 	s.Require().NoError(err)
 	baseDenoms, err = s.App.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(baseDenoms))
-	s.Require().Equal(baseDenoms[0].Denom, "melody")
+	s.Require().Equal(baseDenoms[0].Denom, "osmo")
 	s.Require().Equal(baseDenoms[1].Denom, "atom")
 	s.Require().Equal(baseDenoms[2].Denom, "weth")
 }
@@ -81,8 +84,8 @@ func (s *KeeperTestSuite) TestGetAllBaseDenoms() {
 // TestGetPoolForDenomPair tests the GetPoolForDenomPair, SetPoolForDenomPair, and DeleteAllPoolsForBaseDenom functions.
 func (s *KeeperTestSuite) TestGetPoolForDenomPair() {
 	// Should be able to set a pool for a denom pair
-	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, "Atom", types.SymphonyDenomination, 1000)
-	pool, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, "Atom", types.SymphonyDenomination)
+	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, "Atom", types.OsmosisDenomination, 1000)
+	pool, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, "Atom", types.OsmosisDenomination)
 	s.Require().NoError(err)
 	s.Require().Equal(uint64(1000), pool)
 
@@ -92,20 +95,20 @@ func (s *KeeperTestSuite) TestGetPoolForDenomPair() {
 	s.Require().NoError(err)
 	s.Require().Equal(uint64(2000), pool)
 
-	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, types.SymphonyDenomination, "Atom", 3000)
-	pool, err = s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, types.SymphonyDenomination, "Atom")
+	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, types.OsmosisDenomination, "Atom", 3000)
+	pool, err = s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, types.OsmosisDenomination, "Atom")
 	s.Require().NoError(err)
 	s.Require().Equal(uint64(3000), pool)
 
 	// Should be able to delete all pools for a base denom
 	s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "Atom")
-	_, err = s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, "Atom", types.SymphonyDenomination)
+	_, err = s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, "Atom", types.OsmosisDenomination)
 	s.Require().Error(err)
 	_, err = s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, "Atom", "weth")
 	s.Require().Error(err)
 
 	// Other denoms should still exist
-	pool, err = s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, types.SymphonyDenomination, "Atom")
+	pool, err = s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, types.OsmosisDenomination, "Atom")
 	s.Require().NoError(err)
 	s.Require().Equal(uint64(3000), pool)
 }
@@ -132,7 +135,7 @@ func (s *KeeperTestSuite) TestGetDeveloperFees() {
 	s.Require().Equal(0, len(fees))
 
 	// Should be no osmo fees on genesis
-	osmoFees, err := s.App.ProtoRevKeeper.GetDeveloperFees(s.Ctx, types.SymphonyDenomination)
+	osmoFees, err := s.App.ProtoRevKeeper.GetDeveloperFees(s.Ctx, types.OsmosisDenomination)
 	s.Require().Error(err)
 	s.Require().Equal(sdk.Coin{}, osmoFees)
 
@@ -142,7 +145,7 @@ func (s *KeeperTestSuite) TestGetDeveloperFees() {
 	s.Require().Equal(sdk.Coin{}, atomFees)
 
 	// Should be able to set the fees
-	err = s.App.ProtoRevKeeper.SetDeveloperFees(s.Ctx, sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(100)))
+	err = s.App.ProtoRevKeeper.SetDeveloperFees(s.Ctx, sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(100)))
 	s.Require().NoError(err)
 	err = s.App.ProtoRevKeeper.SetDeveloperFees(s.Ctx, sdk.NewCoin("Atom", osmomath.NewInt(100)))
 	s.Require().NoError(err)
@@ -150,9 +153,9 @@ func (s *KeeperTestSuite) TestGetDeveloperFees() {
 	s.Require().NoError(err)
 
 	// Should be able to get the fees
-	osmoFees, err = s.App.ProtoRevKeeper.GetDeveloperFees(s.Ctx, types.SymphonyDenomination)
+	osmoFees, err = s.App.ProtoRevKeeper.GetDeveloperFees(s.Ctx, types.OsmosisDenomination)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(100)), osmoFees)
+	s.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(100)), osmoFees)
 	atomFees, err = s.App.ProtoRevKeeper.GetDeveloperFees(s.Ctx, "Atom")
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewCoin("Atom", osmomath.NewInt(100)), atomFees)
@@ -169,19 +172,19 @@ func (s *KeeperTestSuite) TestGetDeveloperFees() {
 
 // TestDeleteDeveloperFees tests the DeleteDeveloperFees function.
 func (s *KeeperTestSuite) TestDeleteDeveloperFees() {
-	err := s.App.ProtoRevKeeper.SetDeveloperFees(s.Ctx, sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(100)))
+	err := s.App.ProtoRevKeeper.SetDeveloperFees(s.Ctx, sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(100)))
 	s.Require().NoError(err)
 
 	// Should be able to get the fees
-	osmoFees, err := s.App.ProtoRevKeeper.GetDeveloperFees(s.Ctx, types.SymphonyDenomination)
+	osmoFees, err := s.App.ProtoRevKeeper.GetDeveloperFees(s.Ctx, types.OsmosisDenomination)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(100)), osmoFees)
+	s.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(100)), osmoFees)
 
 	// Should be able to delete the fees
-	s.App.ProtoRevKeeper.DeleteDeveloperFees(s.Ctx, types.SymphonyDenomination)
+	s.App.ProtoRevKeeper.DeleteDeveloperFees(s.Ctx, types.OsmosisDenomination)
 
 	// Should be no osmo fees after deletion
-	osmoFees, err = s.App.ProtoRevKeeper.GetDeveloperFees(s.Ctx, types.SymphonyDenomination)
+	osmoFees, err = s.App.ProtoRevKeeper.GetDeveloperFees(s.Ctx, types.OsmosisDenomination)
 	s.Require().Error(err)
 	s.Require().Equal(sdk.Coin{}, osmoFees)
 }
@@ -320,6 +323,7 @@ func (s *KeeperTestSuite) TestGetInfoByPoolType() {
 }
 
 func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
+	s.SetupPoolsTest()
 	baseDenom, err := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
 	s.Require().NoError(err)
 	communityPoolDenom := "Akash"
@@ -327,7 +331,7 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
 	ion := "uion"
 
 	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
-	poolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.MustNewDecFromStr("0.02")
+	poolManagerParams.TakerFeeParams.DefaultTakerFee = osmomath.MustNewDecFromStr("0.02")
 	poolManagerParams.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo = communityPoolDenom
 	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
 
@@ -353,7 +357,7 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
 	// Store cache context prior to swap so we can use it to calculate how much outToken we should expect after the epoch hook is called and taker fees are swapped.
 	cacheCtx, _ := s.Ctx.CacheContext()
 
-	_, err = s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], atomCommPoolID, swapInCoin, communityPoolDenom, sdk.ZeroInt())
+	_, _, err = s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], atomCommPoolID, swapInCoin, communityPoolDenom, osmomath.ZeroInt())
 	s.Require().NoError(err)
 	expectedTakerFeeFromInput := swapInCoin.Amount.ToLegacyDec().Mul(poolManagerParams.TakerFeeParams.DefaultTakerFee)
 	expectedTakerFeeToCommunityPoolAmt := expectedTakerFeeFromInput.Mul(poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.CommunityPool).TruncateInt()
@@ -362,12 +366,12 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
 	expectedTakerFeeToCommunityPool := sdk.NewCoins(sdk.NewCoin(atom, expectedTakerFeeToCommunityPoolAmt))
 
 	// We swap taker fees to stakers to the base denom
-	baseDenomAmt, err := s.App.PoolManagerKeeper.SwapExactAmountInNoTakerFee(cacheCtx, s.TestAccs[0], atomBaseDenomPool.GetId(), expectedTakerFeeToStakers[0], baseDenom, sdk.ZeroInt())
+	baseDenomAmt, err := s.App.PoolManagerKeeper.SwapExactAmountInNoTakerFee(cacheCtx, s.TestAccs[0], atomBaseDenomPool.GetId(), expectedTakerFeeToStakers[0], baseDenom, osmomath.ZeroInt())
 	s.Require().NoError(err)
 	expectedTakerFeeToStakers = sdk.NewCoins(sdk.NewCoin(baseDenom, baseDenomAmt))
 
 	// We swap taker fees to community pool that are not whitelisted to the CommunityPoolDenomToSwapNonWhitelistedAssetsTo
-	communityPoolDenomAmt, err := s.App.PoolManagerKeeper.SwapExactAmountInNoTakerFee(cacheCtx, s.TestAccs[0], atomCommPoolID, expectedTakerFeeToCommunityPool[0], communityPoolDenom, sdk.ZeroInt())
+	communityPoolDenomAmt, err := s.App.PoolManagerKeeper.SwapExactAmountInNoTakerFee(cacheCtx, s.TestAccs[0], atomCommPoolID, expectedTakerFeeToCommunityPool[0], communityPoolDenom, osmomath.ZeroInt())
 	s.Require().NoError(err)
 	expectedTakerFeeToCommunityPool = sdk.NewCoins(sdk.NewCoin(communityPoolDenom, communityPoolDenomAmt))
 
@@ -376,7 +380,7 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
 	s.SetupTxFeeAnteHandlerAndChargeFee(s.clientCtx, sdk.NewDecCoins(sdk.NewInt64DecCoin(ion, 1000000)), 0, true, false, txFeeCharged)
 
 	// Pseudo collect cyclic arb profits
-	cyclicArbProfits := sdk.NewCoins(sdk.NewCoin(types.SymphonyDenomination, osmomath.NewInt(9000)), sdk.NewCoin(atom, osmomath.NewInt(3000)))
+	cyclicArbProfits := sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(9000)), sdk.NewCoin(atom, osmomath.NewInt(3000)))
 	err = s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, cyclicArbProfits[0].Denom, cyclicArbProfits[0].Amount)
 	s.Require().NoError(err)
 	err = s.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(s.Ctx, poolmanagertypes.SwapAmountInRoutes{}, cyclicArbProfits[1].Denom, cyclicArbProfits[1].Amount)
@@ -396,7 +400,7 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
 	// A second round of the same thing
 	// Swap on a pool to charge taker fee
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(atom, osmomath.NewInt(10000))))
-	_, err = s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], atomCommPoolID, swapInCoin, communityPoolDenom, sdk.ZeroInt())
+	_, _, err = s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], atomCommPoolID, swapInCoin, communityPoolDenom, osmomath.ZeroInt())
 	s.Require().NoError(err)
 
 	// Charge txfee of 1000 uion

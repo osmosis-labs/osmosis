@@ -1,9 +1,13 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"sort"
 
-	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	"github.com/osmosis-labs/osmosis/v26/x/tokenfactory/types"
 )
 
 func (k Keeper) mintTo(ctx sdk.Context, amount sdk.Coin, mintTo string) error {
@@ -40,6 +44,10 @@ func (k Keeper) burnFrom(ctx sdk.Context, amount sdk.Coin, burnFrom string) erro
 		return err
 	}
 
+	if k.IsModuleAcc(ctx, addr) {
+		return types.ErrBurnFromModuleAccount
+	}
+
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx,
 		addr,
 		types.ModuleName,
@@ -58,6 +66,28 @@ func (k Keeper) forceTransfer(ctx sdk.Context, amount sdk.Coin, fromAddr string,
 		return err
 	}
 
+	fromAcc, err := sdk.AccAddressFromBech32(fromAddr)
+	if err != nil {
+		return err
+	}
+
+	sortedPermAddrs := make([]string, 0, len(k.permAddrs))
+	for moduleName := range k.permAddrs {
+		sortedPermAddrs = append(sortedPermAddrs, moduleName)
+	}
+	sort.Strings(sortedPermAddrs)
+
+	for _, moduleName := range sortedPermAddrs {
+		account := k.accountKeeper.GetModuleAccount(ctx, moduleName)
+		if account == nil {
+			return status.Errorf(codes.NotFound, "account %s not found", moduleName)
+		}
+
+		if account.GetAddress().Equals(fromAcc) {
+			return status.Errorf(codes.Internal, "send from module acc not available")
+		}
+	}
+
 	fromSdkAddr, err := sdk.AccAddressFromBech32(fromAddr)
 	if err != nil {
 		return err
@@ -69,4 +99,9 @@ func (k Keeper) forceTransfer(ctx sdk.Context, amount sdk.Coin, fromAddr string,
 	}
 
 	return k.bankKeeper.SendCoins(ctx, fromSdkAddr, toSdkAddr, sdk.NewCoins(amount))
+}
+
+// IsModuleAcc checks if a given address is restricted
+func (k Keeper) IsModuleAcc(ctx sdk.Context, addr sdk.AccAddress) bool {
+	return k.permAddrMap[addr.String()]
 }

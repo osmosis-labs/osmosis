@@ -22,7 +22,7 @@ const (
 // Keys for oracle store
 // Items are stored with the following key: values
 //
-// - 0x01<denom_Bytes>: sdk.Dec
+// - 0x01<denom_Bytes>: osmomath.Dec
 //
 // - 0x02<valAddress_Bytes>: accAddress
 //
@@ -32,7 +32,7 @@ const (
 //
 // - 0x05<valAddress_Bytes>: AggregateExchangeRateVote
 //
-// - 0x06<denom_Bytes>: sdk.Dec
+// - 0x06<denom_Bytes>: osmomath.Dec
 var (
 	// Keys for store prefixes
 	ExchangeRateKey                 = []byte{0x01} // prefix for each key to a rate

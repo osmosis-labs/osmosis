@@ -8,13 +8,13 @@ order: 2
 
 The value of the Tax Rate policy lever for the current epoch.
 
-- TaxRate: `0x01 -> amino(sdk.Dec)`
+- TaxRate: `0x01 -> amino(osmomath.Dec)`
 
 ## RewardWeight
 
 The value of the Reward Weight policy lever for the current epoch.
 
-- RewardWeight: `0x02 -> amino(sdk.Dec)`
+- RewardWeight: `0x02 -> amino(osmomath.Dec)`
 
 ## TaxCap
 
@@ -44,12 +44,12 @@ The Treasury keeps track of following indicators for the present and previous ep
 ### TaxReward
 The Tax Rewards  for the `epoch`.
 
-- TaxReward: `0x06<epoch_Bytes> -> amino(sdk.Dec)`
+- TaxReward: `0x06<epoch_Bytes> -> amino(osmomath.Dec)`
 
 ### SeigniorageReward
 The Seigniorage Rewards $S$ for the `epoch`.
 
-- SeigniorageReward: `0x07<epoch_Bytes> -> amino(sdk.Dec)`
+- SeigniorageReward: `0x07<epoch_Bytes> -> amino(osmomath.Dec)`
 
 ### TotalStakedLuna
 The Total Staked Luna $\lambda$ for the `epoch`.

@@ -8,9 +8,9 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v26/x/incentives/types"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

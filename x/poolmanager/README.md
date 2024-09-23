@@ -343,8 +343,8 @@ The `EstimateTradeBasedOnPriceImpact` query allows users to estimate a trade for
 - **FromCoin**: (`sdk.Coin`): is the total amount of tokens one wants to sell.
 - **ToCoinDenom**: (`string`): is the denom they want to buy with the tokens being sold.
 - **PoolId**: (`uint64`): is the identifier of the pool that the trade will happen on.
-- **MaxPriceImpact**: (`sdk.Dec`): is the maximum percentage that the user is willing to affect the price of the pool.
-- **ExternalPrice**: (`sdk.Dec`) is an external price that the user can optionally enter to have the `MaxPriceImpact` adjusted as the `SpotPrice` of a pool could be changed at any time.
+- **MaxPriceImpact**: (`osmomath.Dec`): is the maximum percentage that the user is willing to affect the price of the pool.
+- **ExternalPrice**: (`osmomath.Dec`) is an external price that the user can optionally enter to have the `MaxPriceImpact` adjusted as the `SpotPrice` of a pool could be changed at any time.
 
 The response would be `EstimateTradeBasedOnPriceImpactResponse` which contains the following data:
 
@@ -363,7 +363,7 @@ The following is the process in which the query finds a trade that will stay bel
 3. Return the specific `PoolI` interface from the `swapModule` based on the `PoolId`.
 4. Calculate the `SpotPrice` in terms of the token being bought, therefore if it's an `OSMO/ATOM` pool and `OSMO` is being sold we need to calculate the `SpotPrice` in terms of `ATOM` being the base asset and `OSMO` being the quote asset.
 5. If we have a `ExternalPrice` specified in the request we need to adjust the `MaxPriceImpact` into a new variable `adjustedMaxPriceImpact` which would either increase if the `SpotPrice` is cheaper than the `ExternalPrice` or decrease if the `SpotPrice` is more expensive leaving less room to estimate a trade.
-   1. If the `adjustedMaxPriceImpact` was calculated to be `0` or negative it means that the `SpotPrice` is more expensive than the `ExternalPrice` and has already exceeded the possible `MaxPriceImpact`. We return a `sdk.ZeroInt()` input and output for the input and output coins indicating that no trade is viable.
+   1. If the `adjustedMaxPriceImpact` was calculated to be `0` or negative it means that the `SpotPrice` is more expensive than the `ExternalPrice` and has already exceeded the possible `MaxPriceImpact`. We return a `osmomath.ZeroInt()` input and output for the input and output coins indicating that no trade is viable.
 6. Then according to the pool type we attempt to find a viable trade, we must process each pool type differently as they return different results for different scenarios. The sections below explain the different pool types and how they each handle input.
 
 #### Balancer Pool Type Process
@@ -478,8 +478,34 @@ type TakerFeeParams struct {
 
 Not shown here is a separate KVStore, which holds overrides for the defaultTakerFee.
 
-At time of swap, all taker fees are sent to the `taker_fee_collector` module account. At epoch:
+The Osmosis protocol now supports setting up taker fee agreements with specific denoms to share a certain percentage of taker fees generated in any route containing those denoms:
 
+```go
+func (k *Keeper) SetTakerFeeShareAgreementForDenom(ctx sdk.Context, takerFeeShare types.TakerFeeShareAgreement) error
+
+type TakerFeeShareAgreement struct {
+    Denom       string `json:"denom"`
+    SkimAddress string `json:"skim_address"`
+    SkimPercent string `json:"skim_percent"`
+}
+```
+
+For example, if the agreement specifies a 10% `skim_percent`, then 10% of all taker fees generated in a swap route containing the specified denom will be sent to the `skim_address` at the end of each epoch. These percentages are additive, so if there are agreements with skim percents of 10%, 20%, and 30%, the total skim percent for the route will be 60%. If the skim percent exceeds 100%, the swap fails to go through.
+
+The protocol can also register alloyed asset pools, which are pools containing denoms with taker fee share agreements:
+
+```go
+func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error
+```
+
+If a swap route contains an alloyed asset pool but no individual taker fee share agreement denoms, the taker fees will be skimmed based on the underlying denoms in the pool that have taker fee share agreements, adjusted by their respective weights. For example, if an alloyed asset pool contains 50% nBTC (10% skim percent) and 50% iBTC (5% skim percent), the total skim percent for the pool will be 7.5%, with 5% of the taker fees going to the nBTC skim address and 2.5% to the iBTC skim address. Just like the taker fee share agreements, if the skim percent exceeds 100%, the swap fails to go through.
+
+NOTE: We cache the alloyed pool asset weight composition and recalculate in the poolmanager EndBlock every 700 blocks (approx 30 minutes at 2.6s blocks) to avoid recalculating the weights for every swap.
+
+At the time of swap, all taker fees (including those skimmed via taker fee share agreements) are sent to the `taker_fee_collector` module account. At the time of sending to the `taker_fee_collector`, we track the amount of fees to be skimmed via the `KeyTakerFeeShareDenomAccrualForTakerFeeChargedDenom` key. At the end of each epoch, all the fees tracked are distributed as follows:
+
+- Skimmed taker fee:
+    - Sent directly to the `skim_address` specified in the taker fee agreement.
 - Non native taker fees
     - For Community Pool: Sent to `non_native_fee_collector_community_pool` module account, swapped to `CommunityPoolDenomToSwapNonWhitelistedAssetsTo`, then sent to community pool
     - For Stakers: Sent to `non_native_fee_collector_stakers` module account, swapped to OSMO, then sent to auth module account, which distributes it to stakers
@@ -492,9 +518,9 @@ Lets go through the lifecycle to better understand how taker fee works in a vari
 
 ### Example 1: Non OSMO taker fee
 
-A user makes a swap of USDC to OSMO. First, the protocol checks the KVStore to determine if the the denom pair has a taker fee override. If the pair exists in the KVStore, the taker fee override is used. If the pair does not exist, the defaultTakerFee is used.
+A user makes a swap of USDC to OSMO. First, the protocol checks the KVStore to determine if the the denom pair has a taker fee override. If the pair exists in the KVStore, the taker fee override is used. If the pair does not exist, the defaultTakerFee is used. It is important to note that the order of the denom pair now matters, so if a denom pair taker fee override exists for OSMO to USDC but not USDC to OSMO, the default taker fee will instead be used.
 
-In this example, defaultTakerFee is 0.02%. A USDC<>OSMO KVStore exists with an override of 0.01%. Therefore, 0.01% is used.
+In this example, defaultTakerFee is 0.02%. A USDC->OSMO KVStore exists with an override of 0.01%. Therefore, 0.01% is used.
 
 Now, imagine the amount in is 10000 USDC. This means that the amount of takerFee utilized is 0.01% of 10000, which is 1 USDC.
 
@@ -532,3 +558,61 @@ At epoch, we check the `OsmoTakerFeeDistribution`. In this example, let’s say 
 For community pool, this is just a direct send of the OSMO to the community pool.
 
 For staking, the OSMO is directly sent to the auth "fee collector" module account, which distributes it to stakers.
+
+### Example 3: Multi hop swap through a taker fee share denom and alloyed asset pool
+
+The swap route is as follows:
+
+OSMO -> nBTC -> allBTC -> iBTC
+
+The Osmosis protocol has a taker fee share agreement with nBTC and iBTC. The skim percent for nBTC is 10% and for iBTC is 5%.
+
+This swap generates 5 OSMO, 10 nBTC, and 20 allBTC in taker fees.
+
+Because this route is made up of two taker fee share denoms, the total skim percent for the route is 15% (10% from nBTC and 5% from iBTC). 10% of the taker fees are noted to go to the nBTC `skim_address` (0.5 OSMO, 1 nBTC, 2 allBTC) and 5% to the iBTC `skim_address` (0.25 OSMO, 0.5 iBTC, 1 allBTC). All funds, including those noted to go to the `skim_address`, are sent to the `taker_fee_collector` module account at time of swap. At epoch, the noted skim amounts are sent to the respective `skim_address`.
+
+Notice, no logic touches the alloyed asset pool due to the swap route containing taker fee share denoms, which trumps the alloyed asset pool share (the next example will show how the alloyed asset pool is used when the route does not contain taker fee share denoms). The rate of update in blocks is determined by the `alloyedAssetCompositionUpdateRate` variable.
+
+### Example 4: Multi hop swap through an alloyed asset pool
+
+The swap route is as follows:
+
+OSMO -> wBTC -> allBTC -> xBTC
+
+The Osmosis protocol has a taker fee share agreement with nBTC and iBTC. The skim percent for nBTC is 10% and for iBTC is 5%.
+
+allBTC is made up of four denoms:
+- nBTC (10% skim percent)
+- iBTC (5% skim percent)
+- WBTC (no taker fee share agreement)
+- xBTC (no taker fee share agreement)
+
+allBTC's composition is 25% nBTC, 25% iBTC, 25% WBTC, and 25% xBTC.
+
+This swap generates 5 OSMO, 10 wBTC, and 20 allBTC in taker fees.
+
+Because this route does not contain taker fee share denoms, but does contain a registered alloyed pool, each skim percent must be calculated as the weighted skim percents of the underlying denoms with taker fee share agreements. The total skim percent for the route is 3.75%, 2.5% to nBTC (10% * 25%) and 1.25% to iBTC (5% * 25%). 2.5% of the taker fees are noted to go to the nBTC `skim_address` (0.125 OSMO, 0.25 wBTC, 0.5 allBTC) and 1.25% to the iBTC `skim_address` (0.0625 OSMO, 0.125 wBTC, 0.25 allBTC). All funds, including those noted to go to the `skim_address`, are sent to the `taker_fee_collector` module account at time of swap. At epoch, the noted skim amounts are sent to the respective `skim_address`.
+
+### Cached Maps: `cachedTakerFeeShareAgreementMap` and `cachedRegisteredAlloyPoolByAlloyDenomMap`
+
+#### Overview
+
+The `cachedTakerFeeShareAgreementMap` and `cachedRegisteredAlloyPoolByAlloyDenomMap` are two in-memory caches used to optimize the retrieval of taker fee share agreements and registered alloyed pools, respectively. These caches are designed to reduce the number of reads from the persistent KVStore, thereby improving the performance of the poolmanager module.
+
+The initialization of these caches occurs during the `BeginBlock` method to ensure they are populated at the start of the block if they are empty. This means that the cache population logic in `BeginBlock` is always executed when the node is first started up, and then is a no-op for the rest of the block processing.
+
+By using these caches, the pool manager module can efficiently handle frequent read operations, thereby improving overall performance and reducing latency.
+
+#### `cachedTakerFeeShareAgreementMap`
+
+- **Purpose**: This map caches taker fee share agreements, which define the percentage of taker fees to be skimmed and sent to specific addresses for various denoms.
+- **Type**: `map[string]types.TakerFeeShareAgreement`
+- **Setter**: The cache is initialized by calling the `setTakerFeeShareAgreementsMapCached` method, which populates the map with all taker fee share agreements from the KVStore.
+- **Usage**: The cache is used to quickly retrieve taker fee share agreements during swaps and other operations that involve taker fees.
+
+#### `cachedRegisteredAlloyPoolByAlloyDenomMap`
+
+- **Purpose**: This map caches the state of registered alloyed pools, which are pools containing denoms with taker fee share agreements.
+- **Type**: `map[string]types.AlloyContractTakerFeeShareState`
+- **Setter**: The cache is initialized by calling the `setAllRegisteredAlloyedPoolsByDenomCached` method, which populates the map with all registered alloyed pools from the KVStore.
+- **Usage**: The cache is used to quickly retrieve the state of registered alloyed pools during swaps and other operations that involve alloyed assets.

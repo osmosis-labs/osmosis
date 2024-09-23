@@ -15,8 +15,10 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
 
-	"github.com/cometbft/cometbft/config"
 	"github.com/cosmos/cosmos-sdk/client"
+
+	cmtcfg "github.com/cometbft/cometbft/config"
+	sm "github.com/cometbft/cometbft/state"
 )
 
 const (
@@ -30,14 +32,14 @@ const (
 	defaultMinHeight  = "1000"
 )
 
-// forceprune gets cmd to convert any bech32 address to an melody prefix.
+// forceprune gets cmd to convert any bech32 address to an osmo prefix.
 func forceprune() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "forceprune",
 		Short: "Forceprune option prunes and compacts blockstore.db and state.db.",
 		Long: `Forceprune option prunes and compacts blockstore.db and state.db. One needs to shut down chain before running forceprune. By default it keeps last 188000 blocks (approximately 2 weeks of data) blockstore and state db (validator and consensus information) and 1000 blocks of abci responses from state.db. Everything beyond these heights in blockstore and state.db is pruned. ABCI Responses are stored in index db and so redundant especially if one is running pruned nodes. As a result we are removing ABCI data from state.db aggressively by default. One can override height for blockstore.db and state.db by using -f option and for abci response by using -m option. 
 Example:
-	symphonyd forceprune -f 188000 -m 1000,
+	osmosisd forceprune -f 188000 -m 1000,
 which would keep blockchain and state data of last 188000 blocks (approximately 2 weeks) and ABCI responses of last 1000 blocks.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fullHeightFlag, err := cmd.Flags().GetString(fullHeight)
@@ -51,10 +53,10 @@ which would keep blockchain and state data of last 188000 blocks (approximately 
 			}
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			conf := config.DefaultConfig()
+			conf := cmtcfg.DefaultConfig()
 			dbPath := clientCtx.HomeDir + "/" + conf.DBPath
 
-			cmdr := exec.Command("symphonyd", "status")
+			cmdr := exec.Command("osmosisd", "status")
 			err = cmdr.Run()
 
 			if err == nil {
@@ -116,8 +118,25 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 	startHeight = bs.Base()
 	currentHeight = bs.Height()
 
+	defaultConfig := cmtcfg.DefaultConfig()
+
+	stateDB, err := cmtcfg.DefaultDBProvider(&cmtcfg.DBContext{ID: "state", Config: defaultConfig})
+	if err != nil {
+		return 0, 0, err
+	}
+
+	stateStore := sm.NewStore(stateDB, sm.StoreOptions{
+		DiscardABCIResponses: defaultConfig.Storage.DiscardABCIResponses,
+	})
+
+	// Can use blank string for genesis file since state will not be empty if we are pruning, and therefore is not used.
+	state, err := stateStore.LoadFromDBOrGenesisFile("")
+	if err != nil {
+		return 0, 0, err
+	}
+
 	fmt.Println("Pruning Block Store ...")
-	prunedBlocks, err := bs.PruneBlocks(currentHeight - fullHeight)
+	prunedBlocks, _, err := bs.PruneBlocks(currentHeight-fullHeight, state)
 	if err != nil {
 		return 0, 0, err
 	}

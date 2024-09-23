@@ -1,12 +1,14 @@
 package types
 
 import (
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	context "context"
+
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 // AccountKeeper defines the contract needed for AccountKeeper related APIs.
@@ -18,7 +20,7 @@ type AccountKeeper interface {
 // BankKeeper defines the banking contract that must be fulfilled when
 // creating a x/cosmwasmpool keeper.
 type BankKeeper interface {
-	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoins(ctx context.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 }
 
 // PoolManagerKeeper defines the interface needed to be fulfilled for
@@ -52,8 +54,8 @@ type ContractKeeper interface {
 // ContractKeeper defines the interface needed to be fulfilled for
 // the WasmKeeper.
 type WasmKeeper interface {
-	QuerySmart(ctx sdk.Context, contractAddress sdk.AccAddress, queryMsg []byte) ([]byte, error)
+	QuerySmart(ctx context.Context, contractAddress sdk.AccAddress, queryMsg []byte) ([]byte, error)
 	QueryGasLimit() storetypes.Gas
 
-	GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmtypes.ContractInfo
+	GetContractInfo(ctx context.Context, contractAddress sdk.AccAddress) *wasmtypes.ContractInfo
 }

@@ -5,7 +5,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -15,12 +15,15 @@ import (
 var (
 	KeyPoolCreationFee                                = []byte("PoolCreationFee")
 	KeyDefaultTakerFee                                = []byte("DefaultTakerFee")
-	KeyMelodyTakerFeeDistribution                     = []byte("OsmoTakerFeeDistribution")
-	KeyNonMelodyTakerFeeDistribution                  = []byte("NonOsmoTakerFeeDistribution")
+	KeyOsmoTakerFeeDistribution                       = []byte("OsmoTakerFeeDistribution")
+	KeyNonOsmoTakerFeeDistribution                    = []byte("NonOsmoTakerFeeDistribution")
 	KeyAdminAddresses                                 = []byte("AdminAddresses")
 	KeyCommunityPoolDenomToSwapNonWhitelistedAssetsTo = []byte("CommunityPoolDenomToSwapNonWhitelistedAssetsTo")
 	KeyAuthorizedQuoteDenoms                          = []byte("AuthorizedQuoteDenoms")
 	KeyReducedTakerFeeByWhitelist                     = []byte("ReducedTakerFeeByWhitelist")
+
+	ZeroDec = osmomath.ZeroDec()
+	OneDec  = osmomath.OneDec()
 )
 
 // ParamTable for gamm module.
@@ -30,15 +33,15 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 func NewParams(poolCreationFee sdk.Coins,
 	defaultTakerFee osmomath.Dec,
-	melodyTakerFeeDistribution, nonMelodyTakerFeeDistribution TakerFeeDistributionPercentage,
+	osmoTakerFeeDistribution, nonOsmoTakerFeeDistribution TakerFeeDistributionPercentage,
 	adminAddresses, authorizedQuoteDenoms []string,
 	communityPoolDenomToSwapNonWhitelistedAssetsTo string) Params {
 	return Params{
 		PoolCreationFee: poolCreationFee,
 		TakerFeeParams: TakerFeeParams{
 			DefaultTakerFee:                                defaultTakerFee,
-			OsmoTakerFeeDistribution:                       melodyTakerFeeDistribution,
-			NonOsmoTakerFeeDistribution:                    nonMelodyTakerFeeDistribution,
+			OsmoTakerFeeDistribution:                       osmoTakerFeeDistribution,
+			NonOsmoTakerFeeDistribution:                    nonOsmoTakerFeeDistribution,
 			AdminAddresses:                                 adminAddresses,
 			CommunityPoolDenomToSwapNonWhitelistedAssetsTo: communityPoolDenomToSwapNonWhitelistedAssetsTo,
 		},
@@ -49,9 +52,9 @@ func NewParams(poolCreationFee sdk.Coins,
 // DefaultParams are the default poolmanager module parameters.
 func DefaultParams() Params {
 	return Params{
-		PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)}, // 1000 MELODY
+		PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)}, // 1000 OSMO
 		TakerFeeParams: TakerFeeParams{
-			DefaultTakerFee: osmomath.ZeroDec(), // 0%
+			DefaultTakerFee: ZeroDec, // 0%
 			OsmoTakerFeeDistribution: TakerFeeDistributionPercentage{
 				StakingRewards: osmomath.MustNewDecFromStr("1"), // 100%
 				CommunityPool:  osmomath.MustNewDecFromStr("0"), // 0%
@@ -65,7 +68,7 @@ func DefaultParams() Params {
 			ReducedFeeWhitelist:                            []string{},
 		},
 		AuthorizedQuoteDenoms: []string{
-			"note",
+			appparams.BaseCoinUnit,
 			"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", // ATOM
 			"ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", // DAI
 			"ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // USDC
@@ -108,8 +111,8 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyPoolCreationFee, &p.PoolCreationFee, validatePoolCreationFee),
 		paramtypes.NewParamSetPair(KeyDefaultTakerFee, &p.TakerFeeParams.DefaultTakerFee, validateDefaultTakerFee),
-		paramtypes.NewParamSetPair(KeyMelodyTakerFeeDistribution, &p.TakerFeeParams.OsmoTakerFeeDistribution, validateTakerFeeDistribution),
-		paramtypes.NewParamSetPair(KeyNonMelodyTakerFeeDistribution, &p.TakerFeeParams.NonOsmoTakerFeeDistribution, validateTakerFeeDistribution),
+		paramtypes.NewParamSetPair(KeyOsmoTakerFeeDistribution, &p.TakerFeeParams.OsmoTakerFeeDistribution, validateTakerFeeDistribution),
+		paramtypes.NewParamSetPair(KeyNonOsmoTakerFeeDistribution, &p.TakerFeeParams.NonOsmoTakerFeeDistribution, validateTakerFeeDistribution),
 		paramtypes.NewParamSetPair(KeyAdminAddresses, &p.TakerFeeParams.AdminAddresses, validateAdminAddresses),
 		paramtypes.NewParamSetPair(KeyCommunityPoolDenomToSwapNonWhitelistedAssetsTo, &p.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo, validateCommunityPoolDenomToSwapNonWhitelistedAssetsTo),
 		paramtypes.NewParamSetPair(KeyAuthorizedQuoteDenoms, &p.AuthorizedQuoteDenoms, validateAuthorizedQuoteDenoms),
@@ -139,7 +142,7 @@ func validateDefaultTakerFee(i interface{}) error {
 	}
 
 	// Ensure that the passed in discount rate is between 0 and 1.
-	if defaultTakerFee.IsNegative() || defaultTakerFee.GT(osmomath.OneDec()) {
+	if defaultTakerFee.IsNegative() || defaultTakerFee.GT(OneDec) {
 		return fmt.Errorf("invalid default taker fee: %s", defaultTakerFee)
 	}
 
@@ -154,10 +157,10 @@ func validateTakerFeeDistribution(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if takerFeeDistribution.StakingRewards.IsNegative() || takerFeeDistribution.StakingRewards.GT(osmomath.OneDec()) {
+	if takerFeeDistribution.StakingRewards.IsNegative() || takerFeeDistribution.StakingRewards.GT(OneDec) {
 		return fmt.Errorf("invalid staking rewards distribution: %s", takerFeeDistribution.StakingRewards)
 	}
-	if takerFeeDistribution.CommunityPool.IsNegative() || takerFeeDistribution.CommunityPool.GT(osmomath.OneDec()) {
+	if takerFeeDistribution.CommunityPool.IsNegative() || takerFeeDistribution.CommunityPool.GT(OneDec) {
 		return fmt.Errorf("invalid community pool distribution: %s", takerFeeDistribution.CommunityPool)
 	}
 
@@ -230,20 +233,20 @@ func validateDenomPairTakerFees(pairs []DenomPairTakerFee) error {
 	}
 
 	for _, record := range pairs {
-		if record.Denom0 == record.Denom1 {
-			return fmt.Errorf("denom0 and denom1 must be different")
+		if record.TokenInDenom == record.TokenOutDenom {
+			return fmt.Errorf("TokenInDenom and TokenOutDenom must be different")
 		}
 
-		if sdk.ValidateDenom(record.Denom0) != nil {
-			return fmt.Errorf("denom0 is invalid: %s", sdk.ValidateDenom(record.Denom0))
+		if sdk.ValidateDenom(record.TokenInDenom) != nil {
+			return fmt.Errorf("TokenInDenom is invalid: %s", sdk.ValidateDenom(record.TokenInDenom))
 		}
 
-		if sdk.ValidateDenom(record.Denom1) != nil {
-			return fmt.Errorf("denom1 is invalid: %s", sdk.ValidateDenom(record.Denom1))
+		if sdk.ValidateDenom(record.TokenOutDenom) != nil {
+			return fmt.Errorf("TokenOutDenom is invalid: %s", sdk.ValidateDenom(record.TokenOutDenom))
 		}
 
 		takerFee := record.TakerFee
-		if takerFee.IsNegative() || takerFee.GTE(osmomath.OneDec()) {
+		if takerFee.IsNegative() || takerFee.GTE(OneDec) {
 			return fmt.Errorf("taker fee must be between 0 and 1: %s", takerFee.String())
 		}
 	}

@@ -8,7 +8,7 @@ import (
 
 	// "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v26/x/tokenfactory/types"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -21,15 +21,23 @@ func GetTxCmd() *cobra.Command {
 		// NewForceTransferCmd(),
 		NewChangeAdminCmd(),
 		NewSetBeforeSendHookCmd(),
+		NewMsgSetDenomMetadata(),
 	)
 
 	return cmd
 }
 
+func NewMsgSetDenomMetadata() *cobra.Command {
+	return osmocli.BuildTxCli[*types.MsgSetDenomMetadata](&osmocli.TxCliDesc{
+		Use:   "set-denom-metadata",
+		Short: "overwriting of the denom metadata in the bank module.",
+	})
+}
+
 func NewCreateDenomCmd() *cobra.Command {
 	return osmocli.BuildTxCli[*types.MsgCreateDenom](&osmocli.TxCliDesc{
 		Use:   "create-denom",
-		Short: "create a new denom from an account. (Costs melody though!)",
+		Short: "create a new denom from an account. (osmo to create tokens is charged through gas consumption)",
 	})
 }
 

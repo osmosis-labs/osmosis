@@ -8,8 +8,8 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 var customRouterFlagOverride = map[string]string{
@@ -33,6 +33,13 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdTradingPairTakerFee)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdEstimateTradeBasedOnPriceImpact)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdListPoolsByDenom)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetAllTakerFeeShareAgreements)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetTakerFeeShareAgreementFromDenom)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetTakerFeeShareDenomsToAccruedValue)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetAllTakerFeeShareAccumulators)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetRegisteredAlloyedPoolFromDenom)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetRegisteredAlloyedPoolFromPoolId)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetAllRegisteredAlloyedPools)
 	cmd.AddCommand(
 		osmocli.GetParams[*queryproto.ParamsRequest](
 			types.ModuleName, queryproto.NewQueryClient),
@@ -78,11 +85,11 @@ func GetCmdNumPools() (*osmocli.QueryDescriptor, *queryproto.NumPoolsRequest) {
 	}, &queryproto.NumPoolsRequest{}
 }
 
-// GetCmdAllPools return all pools available across Symphony modules.
+// GetCmdAllPools return all pools available across Osmosis modules.
 func GetCmdAllPools() (*osmocli.QueryDescriptor, *queryproto.AllPoolsRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "all-pools",
-		Short: "Query all pools on the Symphony chain",
+		Short: "Query all pools on the Osmosis chain",
 		Long:  "{{.Short}}",
 	}, &queryproto.AllPoolsRequest{}
 }
@@ -102,7 +109,7 @@ func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *queryproto.SpotPriceRequest) 
 		Use:   "spot-price",
 		Short: "Query spot-price",
 		Long: `Query spot-price
-{{.CommandPrefix}} spot-price 1 note ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
+{{.CommandPrefix}} spot-price 1 uosmo ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
 `,
 	}, &queryproto.SpotPriceRequest{}
 }
@@ -111,7 +118,7 @@ func GetCmdListPoolsByDenom() (*osmocli.QueryDescriptor, *queryproto.ListPoolsBy
 		Use:   "list-pools-by-denom",
 		Short: "Query list-pools-by-denom",
 		Long: `Query list-pools-by-denom
-{{.CommandPrefix}} list-pools-by-denom note 
+{{.CommandPrefix}} list-pools-by-denom uosmo 
 `,
 	}, &queryproto.ListPoolsByDenomRequest{}
 }
@@ -158,7 +165,7 @@ func GetCmdEstimateSinglePoolSwapExactAmountIn() (*osmocli.QueryDescriptor, *que
 		Use:   "estimate-single-pool-swap-exact-amount-in",
 		Short: "Query estimate-single-pool-swap-exact-amount-in",
 		Long: `Query estimate-single-pool-swap-exact-amount-in.{{.ExampleHeader}}
-{{.CommandPrefix}} estimate-single-pool-swap-exact-amount-in 1 1000stake note`,
+{{.CommandPrefix}} estimate-single-pool-swap-exact-amount-in 1 1000stake uosmo`,
 		QueryFnName: "EstimateSinglePoolSwapExactAmountIn",
 	}, &queryproto.EstimateSinglePoolSwapExactAmountInRequest{}
 }
@@ -169,7 +176,7 @@ func GetCmdEstimateSinglePoolSwapExactAmountOut() (*osmocli.QueryDescriptor, *qu
 		Use:   "estimate-single-pool-swap-exact-amount-out",
 		Short: "Query estimate-single-pool-swap-exact-amount-out",
 		Long: `Query estimate-single-pool-swap-exact-amount-out.{{.ExampleHeader}}
-{{.CommandPrefix}} estimate-single-pool-swap-exact-amount-out 1 note 1000stake`,
+{{.CommandPrefix}} estimate-single-pool-swap-exact-amount-out 1 uosmo 1000stake`,
 		QueryFnName: "EstimateSinglePoolSwapExactAmountOut",
 	}, &queryproto.EstimateSinglePoolSwapExactAmountOutRequest{}
 }
@@ -197,7 +204,7 @@ func GetCmdTradingPairTakerFee() (*osmocli.QueryDescriptor, *queryproto.TradingP
 		Use:   "trading-pair-taker-fee",
 		Short: "Query trading pair taker fee",
 		Long: `{{.Short}}
-		{{.CommandPrefix}} trading-pair-taker-fee note uatom`,
+		{{.CommandPrefix}} trading-pair-taker-fee uosmo uatom`,
 	}, &queryproto.TradingPairTakerFeeRequest{}
 }
 
@@ -208,7 +215,67 @@ func GetCmdEstimateTradeBasedOnPriceImpact() (
 		Use:   "estimate-trade-based-on-price-impact",
 		Short: "Query estimate-trade-based-on-price-impact",
 		Long: `{{.Short}}
-		{{.CommandPrefix}} estimate-trade-based-on-price-impact 100note stmelody  833 0.001 1.00`,
+		{{.CommandPrefix}} estimate-trade-based-on-price-impact 100uosmo stosmo  833 0.001 1.00`,
 		QueryFnName: "EstimateTradeBasedOnPriceImpact",
 	}, &queryproto.EstimateTradeBasedOnPriceImpactRequest{}
+}
+
+func GetAllTakerFeeShareAgreements() (*osmocli.QueryDescriptor, *queryproto.AllTakerFeeShareAgreementsRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "all-taker-fee-share-agreements",
+		Short: "Query all taker fee share agreements",
+		Long:  "{{.Short}}",
+	}, &queryproto.AllTakerFeeShareAgreementsRequest{}
+}
+
+func GetTakerFeeShareAgreementFromDenom() (*osmocli.QueryDescriptor, *queryproto.TakerFeeShareAgreementFromDenomRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "taker-fee-share-agreement-from-denom",
+		Short: "Query taker fee share agreement from denom",
+		Long: `{{.Short}}
+		{{.CommandPrefix}} taker-fee-share-agreement-from-denom uosmo`,
+	}, &queryproto.TakerFeeShareAgreementFromDenomRequest{}
+}
+
+func GetTakerFeeShareDenomsToAccruedValue() (*osmocli.QueryDescriptor, *queryproto.TakerFeeShareDenomsToAccruedValueRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "taker-fee-share-denoms-to-accrued-value",
+		Short: "Query taker fee share denoms to accrued value",
+		Long: `{{.Short}}
+		{{.CommandPrefix}} taker-fee-share-denoms-to-accrued-value uosmo`,
+	}, &queryproto.TakerFeeShareDenomsToAccruedValueRequest{}
+}
+
+func GetAllTakerFeeShareAccumulators() (*osmocli.QueryDescriptor, *queryproto.AllTakerFeeShareAccumulatorsRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "all-taker-fee-share-accumulators",
+		Short: "Query all taker fee share accumulators",
+		Long:  "{{.Short}}",
+	}, &queryproto.AllTakerFeeShareAccumulatorsRequest{}
+}
+
+func GetRegisteredAlloyedPoolFromDenom() (*osmocli.QueryDescriptor, *queryproto.RegisteredAlloyedPoolFromDenomRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "registered-alloyed-pool-from-denom",
+		Short: "Query registered alloyed pool from the alloyed pool denom",
+		Long: `{{.Short}}
+		{{.CommandPrefix}} registered-alloyed-pool-from-denom factory/osmo1z6r6qdknhgsc0zeracktgpcxf43j6sekq07nw8sxduc9lg0qjjlqfu25e3/alloyed/allBTC`,
+	}, &queryproto.RegisteredAlloyedPoolFromDenomRequest{}
+}
+
+func GetRegisteredAlloyedPoolFromPoolId() (*osmocli.QueryDescriptor, *queryproto.RegisteredAlloyedPoolFromPoolIdRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "registered-alloyed-pool-from-pool-id",
+		Short: "Query registered alloyed pool from pool id",
+		Long: `{{.Short}}
+		{{.CommandPrefix}} registered-alloyed-pool-from-pool-id 1868`,
+	}, &queryproto.RegisteredAlloyedPoolFromPoolIdRequest{}
+}
+
+func GetAllRegisteredAlloyedPools() (*osmocli.QueryDescriptor, *queryproto.AllRegisteredAlloyedPoolsRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "all-registered-alloyed-pools",
+		Short: "Query all registered alloyed pools",
+		Long:  "{{.Short}}",
+	}, &queryproto.AllRegisteredAlloyedPoolsRequest{}
 }

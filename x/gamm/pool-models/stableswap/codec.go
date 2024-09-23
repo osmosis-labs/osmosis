@@ -6,19 +6,17 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 
-	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
-
-	types "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	types "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/gamm interfaces and concrete types
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&Pool{}, "symphony/gamm/StableswapPool", nil)
-	cdc.RegisterConcrete(&MsgCreateStableswapPool{}, "symphony/gamm/create-stableswap-pool", nil)
-	cdc.RegisterConcrete(&MsgStableSwapAdjustScalingFactors{}, "symphony/gamm/stableswap-adjust-scaling-factors", nil)
-	cdc.RegisterConcrete(&PoolParams{}, "symphony/gamm/StableswapPoolParams", nil)
+	cdc.RegisterConcrete(&Pool{}, "osmosis/gamm/StableswapPool", nil)
+	cdc.RegisterConcrete(&MsgCreateStableswapPool{}, "osmosis/gamm/create-stableswap-pool", nil)
+	cdc.RegisterConcrete(&MsgStableSwapAdjustScalingFactors{}, "osmosis/gamm/stableswap-adjust-scaling-factors", nil)
+	cdc.RegisterConcrete(&PoolParams{}, "osmosis/gamm/StableswapPoolParams", nil)
 }
 
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
@@ -38,27 +36,6 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&MsgStableSwapAdjustScalingFactors{},
 	)
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
-}
-
-var (
-	amino = codec.NewLegacyAmino()
-
-	// ModuleCdc references the global x/bank module codec. Note, the codec should
-	// ONLY be used in certain instances of tests and for JSON encoding as Amino is
-	// still used for that purpose.
-	//
-	// The actual codec used for serialization should be provided to x/staking and
-	// defined at the application level.
-	ModuleCdc = codec.NewAminoCodec(amino)
-)
-
-func init() {
-	RegisterLegacyAminoCodec(amino)
-	// Register all Amino interfaces and concrete types on the authz Amino codec so that this can later be
-	// used to properly serialize MsgGrant and MsgExec instances
-	sdk.RegisterLegacyAminoCodec(amino)
-	RegisterLegacyAminoCodec(authzcodec.Amino)
-	amino.Seal()
 }
 
 const PoolTypeName string = "Stableswap"

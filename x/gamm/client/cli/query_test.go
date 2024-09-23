@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/types"
 )
 
 type QueryTestSuite struct {
@@ -30,13 +30,13 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 		fooDenom   = apptesting.DefaultPoolAssets[0].Token.Denom
 		barDenom   = apptesting.DefaultPoolAssets[1].Token.Denom
 		bazDenom   = apptesting.DefaultPoolAssets[2].Token.Denom
-		noteDenom = apptesting.DefaultPoolAssets[3].Token.Denom
+		uosmoDenom = apptesting.DefaultPoolAssets[3].Token.Denom
 
 		basicValidTokensIn = sdk.NewCoins(
 			sdk.NewCoin(fooDenom, osmomath.OneInt()),
 			sdk.NewCoin(barDenom, osmomath.OneInt()),
 			sdk.NewCoin(bazDenom, osmomath.OneInt()),
-			sdk.NewCoin(noteDenom, osmomath.OneInt()))
+			sdk.NewCoin(uosmoDenom, osmomath.OneInt()))
 	)
 
 	testCases := []struct {

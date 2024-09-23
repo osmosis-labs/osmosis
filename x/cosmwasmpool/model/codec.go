@@ -3,19 +3,18 @@ package model
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 
-	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&CosmWasmPool{}, "symphony/cw-pool", nil)
-	cdc.RegisterConcrete(&Pool{}, "symphony/cw-pool-wrap", nil)
-	cdc.RegisterConcrete(&MsgCreateCosmWasmPool{}, "symphony/cw-create-pool", nil)
+	cdc.RegisterConcrete(&CosmWasmPool{}, "osmosis/cw-pool", nil)
+	cdc.RegisterConcrete(&Pool{}, "osmosis/cw-pool-wrap", nil)
+	cdc.RegisterConcrete(&MsgCreateCosmWasmPool{}, "osmosis/cw-create-pool", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -36,19 +35,4 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_MsgCreator_serviceDesc)
-}
-
-var (
-	amino     = codec.NewLegacyAmino()
-	ModuleCdc = codec.NewAminoCodec(amino)
-)
-
-func init() {
-	RegisterCodec(amino)
-	sdk.RegisterLegacyAminoCodec(amino)
-
-	// Register all Amino interfaces and concrete types on the authz Amino codec so that this can later be
-	// used to properly serialize MsgGrant and MsgExec instances
-	RegisterCodec(authzcodec.Amino)
-	amino.Seal()
 }

@@ -2,9 +2,9 @@ package swapstrategy_test
 
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
 )
 
 func (suite *StrategyTestSuite) setupNewOneForZeroSwapStrategy(sqrtPriceLimit osmomath.Dec, spread osmomath.Dec) swapstrategy.SwapStrategy {
@@ -77,7 +77,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 			sqrtPriceTarget:  sqrtPriceNext,
 			liquidity:        defaultLiquidity,
 			// Add 100.
-			amountOneInRemaining: defaultAmountOne.Add(osmomath.NewDec(100)),
+			amountOneInRemaining: defaultAmountOne.Add(hundredDec),
 			spreadFactor:         osmomath.ZeroDec(),
 
 			expectedSqrtPriceNext: osmomath.BigDecFromDec(sqrtPriceNext),
@@ -91,13 +91,13 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 			sqrtPriceCurrent:     osmomath.BigDecFromDec(sqrtPriceCurrent),
 			sqrtPriceTarget:      sqrtPriceNext,
 			liquidity:            defaultLiquidity,
-			amountOneInRemaining: defaultAmountOne.Sub(osmomath.NewDec(100)),
+			amountOneInRemaining: defaultAmountOne.Sub(hundredDec),
 			spreadFactor:         osmomath.ZeroDec(),
 
-			// sqrtPriceCurrent + round_melody_prec_down(token_in / liquidity)
+			// sqrtPriceCurrent + round_osmo_prec_down(token_in / liquidity)
 			// sqrtPriceCurrent + token_in / liquidity
 			expectedSqrtPriceNext:           osmomath.MustNewBigDecFromStr("70.710678085714122880779431539932994712"),
-			expectedAmountInConsumed:        defaultAmountOne.Sub(osmomath.NewDec(100)).Ceil(),
+			expectedAmountInConsumed:        defaultAmountOne.Sub(hundredDec).Ceil(),
 			expectedAmountOut:               actualAmountZeroTargetNotReachedBigDec.Dec(),
 			expectedSpreadRewardChargeTotal: osmomath.ZeroDec(),
 		},
@@ -106,7 +106,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 			sqrtPriceTarget:  sqrtPriceNext,
 			liquidity:        defaultLiquidity,
 
-			amountOneInRemaining:     defaultAmountOne.Add(osmomath.NewDec(100)).Quo(osmomath.OneDec().Sub(defaultSpreadReward)),
+			amountOneInRemaining:     defaultAmountOne.Add(hundredDec).Quo(oneMinusDefaultSpreadFactor),
 			spreadFactor:             defaultSpreadReward,
 			expectedSqrtPriceNext:    osmomath.BigDecFromDec(sqrtPriceNext),
 			expectedAmountInConsumed: defaultAmountOne.Ceil(),
@@ -118,15 +118,15 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 			sqrtPriceCurrent:     osmomath.BigDecFromDec(sqrtPriceCurrent),
 			sqrtPriceTarget:      sqrtPriceNext,
 			liquidity:            defaultLiquidity,
-			amountOneInRemaining: defaultAmountOne.Sub(osmomath.NewDec(100)).QuoRoundUp(osmomath.OneDec().Sub(defaultSpreadReward)),
+			amountOneInRemaining: defaultAmountOne.Sub(hundredDec).QuoRoundUp(oneMinusDefaultSpreadFactor),
 			spreadFactor:         defaultSpreadReward,
 
-			// sqrtPriceCurrent + round_melody_prec_down(round_melody_prec_down(round_sdk_prec_up(token_in / (1 - spreadFactor )) * (1 - spreadFactor)) / liquidity)
+			// sqrtPriceCurrent + round_osmo_prec_down(round_osmo_prec_down(round_sdk_prec_up(token_in / (1 - spreadFactor )) * (1 - spreadFactor)) / liquidity)
 			expectedSqrtPriceNext:    osmomath.MustNewBigDecFromStr("70.710678085714122880779431540005464097"),
-			expectedAmountInConsumed: defaultAmountOne.Sub(osmomath.NewDec(100)).Ceil(),
+			expectedAmountInConsumed: defaultAmountOne.Sub(hundredDec).Ceil(),
 			expectedAmountOut:        actualAmountZeroTargetNotReachedBigDec.Dec(),
 			// Difference between given amount remaining in and amount in actually consumed which qpproximately equals to spread factor.
-			expectedSpreadRewardChargeTotal: defaultAmountOne.Sub(osmomath.NewDec(100)).Quo(osmomath.OneDec().Sub(defaultSpreadReward)).Sub(defaultAmountOne.Sub(osmomath.NewDec(100)).Ceil()),
+			expectedSpreadRewardChargeTotal: defaultAmountOne.Sub(hundredDec).Quo(oneMinusDefaultSpreadFactor).Sub(defaultAmountOne.Sub(hundredDec).Ceil()),
 		},
 		"5: custom amounts at high price levels - reach target": {
 			sqrtPriceCurrent: osmomath.BigDecFromDec(sqrt(100_000_000)),
@@ -258,7 +258,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 			liquidity:        defaultLiquidity,
 
 			// Add 100.
-			amountZeroOutRemaining: defaultAmountZero.Add(osmomath.NewDec(100)),
+			amountZeroOutRemaining: defaultAmountZero.Add(hundredDec),
 			spreadFactor:           osmomath.ZeroDec(),
 
 			expectedSqrtPriceNext: osmomath.BigDecFromDec(defaultSqrtPriceUpper),
@@ -298,7 +298,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 			sqrtPriceTarget:  defaultSqrtPriceUpper,
 			liquidity:        defaultLiquidity,
 
-			amountZeroOutRemaining: defaultAmountZero.Quo(osmomath.OneDec().Sub(defaultSpreadReward)),
+			amountZeroOutRemaining: defaultAmountZero.Quo(oneMinusDefaultSpreadFactor),
 			spreadFactor:           defaultSpreadReward,
 
 			expectedSqrtPriceNext: osmomath.BigDecFromDec(defaultSqrtPriceUpper),
@@ -366,9 +366,9 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 			// sqrt price current and sqrt price next is smaller than 10^-36
 			// Let's compute next sqrt price without rounding:
 			// product_num = liquidity * sqrtPriceCurrent
-			// product_num = round_melody_prec_up(product_num)
+			// product_num = round_osmo_prec_up(product_num)
 			// product_den =  tokenOut * sqrtPriceCurrent
-			// product_den = round_melody_prec_up(product_den)
+			// product_den = round_osmo_prec_up(product_den)
 			// product_num / (liquidity - product_den)
 			// '0.00000100004999875000000000000000000000000000000001000075017501875'
 			// This can lead to negative amount zero in swaps.
@@ -391,8 +391,8 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 
 			// product_num = liquidity * sqrtPriceCurrent
 			// product_den =  tokenOut * sqrtPriceCurrent
-			// product_den = round_melody_prec_up(product_den)
-			// round_melody_prec_up(product_num / (liquidity - product_den))
+			// product_den = round_osmo_prec_up(product_den)
+			// round_osmo_prec_up(product_num / (liquidity - product_den))
 			expectedSqrtPriceNext: types.MaxSqrtPriceBigDec,
 
 			expectedAmountZeroOutConsumed: osmomath.ZeroDec(),
@@ -412,8 +412,8 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 
 			// product_num = liquidity * sqrtPriceCurrent
 			// product_den =  tokenOut * sqrtPriceCurrent
-			// product_den = round_melody_prec_up(product_den)
-			// round_melody_prec_up(product_num / (liquidity - product_den))
+			// product_den = round_osmo_prec_up(product_den)
+			// round_osmo_prec_up(product_num / (liquidity - product_den))
 			expectedSqrtPriceNext: types.MaxSqrtPriceBigDec,
 
 			// product_num = liquidity * diff

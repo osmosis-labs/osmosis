@@ -50,7 +50,8 @@ var (
 	KeyTotalLiquidity     = []byte{0x13}
 	KeyContractHookPrefix = []byte{0x14}
 
-	KeyIncentiveAccumulatorMigrationThreshold = []byte{0x15}
+	KeyIncentiveAccumulatorMigrationThreshold    = []byte{0x15}
+	KeySpreadRewardAccumulatorMigrationThreshold = []byte{0x16}
 
 	// TickPrefix + pool id
 	KeyTickPrefixByPoolIdLengthBytes = len(TickPrefix) + Uint64ByteSize
@@ -226,7 +227,11 @@ func KeyPoolPosition(poolId uint64) []byte {
 // Pool Prefix Keys
 // KeyPool is used to map a pool id to a pool struct
 func KeyPool(poolId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%d", PoolPrefix, poolId))
+	// Start with PoolPrefix initialized
+	result := []byte{0x03}
+	// Directly append the string representation of poolId as bytes
+	result = strconv.AppendUint(result, poolId, 10)
+	return result
 }
 
 // Incentive Prefix Keys

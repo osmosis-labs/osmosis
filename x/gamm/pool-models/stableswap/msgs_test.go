@@ -8,15 +8,15 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appParams "github.com/osmosis-labs/osmosis/v23/app/params"
-	stableswap "github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	appParams "github.com/osmosis-labs/osmosis/v26/app/params"
+	stableswap "github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/types"
 )
 
 func baseCreatePoolMsgGen(sender sdk.AccAddress) *stableswap.MsgCreateStableswapPool {
 	testPoolAsset := sdk.Coins{
 		sdk.NewCoin("atom", osmomath.NewInt(100)),
-		sdk.NewCoin("melody", osmomath.NewInt(100)),
+		sdk.NewCoin("osmo", osmomath.NewInt(100)),
 	}
 
 	poolParams := &stableswap.PoolParams{
@@ -94,7 +94,7 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 			name: "has one coin in InitialPoolLiquidity",
 			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.InitialPoolLiquidity = sdk.Coins{
-					sdk.NewCoin("melody", osmomath.NewInt(100)),
+					sdk.NewCoin("osmo", osmomath.NewInt(100)),
 				}
 				return msg
 			}),
@@ -109,7 +109,7 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 					sdk.NewCoin("band", osmomath.NewInt(100)),
 					sdk.NewCoin("evmos", osmomath.NewInt(100)),
 					sdk.NewCoin("juno", osmomath.NewInt(100)),
-					sdk.NewCoin("melody", osmomath.NewInt(100)),
+					sdk.NewCoin("osmo", osmomath.NewInt(100)),
 					sdk.NewCoin("regen", osmomath.NewInt(100)),
 					sdk.NewCoin("usdt", osmomath.NewInt(100)),
 					sdk.NewCoin("usdc", osmomath.NewInt(100)),
@@ -180,7 +180,7 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 		{
 			name: "valid governor: address",
 			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
-				msg.FuturePoolGovernor = "symphony1qxgkur7772gjk8wm7kta387wksn48ljh7v82da"
+				msg.FuturePoolGovernor = "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
 				return msg
 			}),
 			expectPass: true,
@@ -209,7 +209,7 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.InitialPoolLiquidity = sdk.Coins{
 					sdk.NewCoin("atom", osmomath.NewInt(100)),
-					sdk.NewCoin("melody", osmomath.NewInt(100)),
+					sdk.NewCoin("osmo", osmomath.NewInt(100)),
 					sdk.NewCoin("usdc", osmomath.NewInt(100)),
 					sdk.NewCoin("usdt", osmomath.NewInt(100)),
 				}
@@ -222,7 +222,7 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 			name: "post-scaled asset amount less than 1",
 			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.InitialPoolLiquidity = sdk.Coins{
-					sdk.NewCoin("melody", osmomath.NewInt(100)),
+					sdk.NewCoin("osmo", osmomath.NewInt(100)),
 					sdk.NewCoin("atom", osmomath.NewInt(100)),
 					sdk.NewCoin("usdt", osmomath.NewInt(100)),
 					sdk.NewCoin("usdc", osmomath.NewInt(100)),
@@ -240,7 +240,7 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 					sdk.NewCoin("atom", types.StableswapMaxScaledAmtPerAsset),
 					sdk.NewCoin("band", types.StableswapMaxScaledAmtPerAsset),
 					sdk.NewCoin("juno", types.StableswapMaxScaledAmtPerAsset),
-					sdk.NewCoin("melody", types.StableswapMaxScaledAmtPerAsset),
+					sdk.NewCoin("osmo", types.StableswapMaxScaledAmtPerAsset),
 					sdk.NewCoin("regen", types.StableswapMaxScaledAmtPerAsset),
 					sdk.NewCoin("usdc", types.StableswapMaxScaledAmtPerAsset),
 					sdk.NewCoin("usdt", types.StableswapMaxScaledAmtPerAsset),
@@ -254,7 +254,7 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 			name: "greater than max post-scaled amount with regular scaling factors",
 			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.InitialPoolLiquidity = sdk.Coins{
-					sdk.NewCoin("melody", types.StableswapMaxScaledAmtPerAsset.Add(osmomath.OneInt())),
+					sdk.NewCoin("osmo", types.StableswapMaxScaledAmtPerAsset.Add(osmomath.OneInt())),
 					sdk.NewCoin("atom", types.StableswapMaxScaledAmtPerAsset),
 					sdk.NewCoin("usdt", types.StableswapMaxScaledAmtPerAsset),
 					sdk.NewCoin("usdc", types.StableswapMaxScaledAmtPerAsset),
@@ -276,7 +276,7 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 					sdk.NewCoin("atom", osmomath.NewInt(100_000_000_000_000_000)),
 					sdk.NewCoin("band", osmomath.NewInt(100_000_000_000_000_000)),
 					sdk.NewCoin("juno", osmomath.NewInt(100_000_000_000_000_000)),
-					sdk.NewCoin("melody", osmomath.NewInt(100_000_000_000_000_000)),
+					sdk.NewCoin("osmo", osmomath.NewInt(100_000_000_000_000_000)),
 					sdk.NewCoin("regen", osmomath.NewInt(100_000_000_000_000_000)),
 					sdk.NewCoin("usdc", osmomath.NewInt(100_000_000_000_000_000)),
 					sdk.NewCoin("usdt", osmomath.NewInt(100_000_000_000_000_000)),

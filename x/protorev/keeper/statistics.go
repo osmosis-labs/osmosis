@@ -1,18 +1,21 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	gogotypes "github.com/cosmos/gogoproto/types"
 
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/x/protorev/types"
 )
 
 // ----------------------- Statistics Stores  ----------------------- //
@@ -23,7 +26,7 @@ func (k Keeper) GetNumberOfTrades(ctx sdk.Context) (osmomath.Int, error) {
 
 	bz := store.Get(types.KeyPrefixNumberOfTrades)
 	if len(bz) == 0 {
-		return osmomath.ZeroInt(), fmt.Errorf("no trades have been executed by the protorev module")
+		return osmomath.ZeroInt(), errors.New("no trades have been executed by the protorev module")
 	}
 
 	trades := osmomath.Int{}
@@ -39,7 +42,7 @@ func (k Keeper) IncrementNumberOfTrades(ctx sdk.Context) error {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixNumberOfTrades)
 
 	numberOfTrades, _ := k.GetNumberOfTrades(ctx)
-	numberOfTrades = numberOfTrades.Add(osmomath.OneInt())
+	numberOfTrades = numberOfTrades.Add(oneInt)
 
 	bz, err := numberOfTrades.Marshal()
 	if err != nil {
@@ -72,7 +75,7 @@ func (k Keeper) GetAllProfits(ctx sdk.Context) []sdk.Coin {
 	profits := make([]sdk.Coin, 0)
 
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixProfitByDenom)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyPrefixProfitByDenom)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -147,7 +150,7 @@ func (k Keeper) GetAllRoutes(ctx sdk.Context) ([][]uint64, error) {
 	routes := make([][]uint64, 0)
 
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixTradesByRoute)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyPrefixTradesByRoute)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -189,7 +192,7 @@ func (k Keeper) IncrementTradesByRoute(ctx sdk.Context, route []uint64) error {
 	key := types.GetKeyPrefixTradesByRoute(route)
 
 	trades, _ := k.GetTradesByRoute(ctx, route)
-	trades = trades.Add(osmomath.OneInt())
+	trades = trades.Add(oneInt)
 	bz, err := trades.Marshal()
 	if err != nil {
 		return err
@@ -223,7 +226,7 @@ func (k Keeper) GetAllProfitsByRoute(ctx sdk.Context, route []uint64) []sdk.Coin
 
 	store := ctx.KVStore(k.storeKey)
 	prefix := append(types.KeyPrefixProfitsByRoute, types.GetKeyPrefixProfitsByRoute(route, "")...)
-	iterator := sdk.KVStorePrefixIterator(store, prefix)
+	iterator := storetypes.KVStorePrefixIterator(store, prefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

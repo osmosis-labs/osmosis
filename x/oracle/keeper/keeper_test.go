@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"bytes"
 	"encoding/hex"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/stretchr/testify/require"
 	"strconv"
 	"testing"
 
@@ -13,19 +15,19 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting/assets"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting/assets"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v26/x/tokenfactory/types"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
 )
 
 var (
@@ -75,7 +77,8 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.Setup()
 
 	// Set the bond denom to be note to make volume tracking tests more readable.
-	skParams := s.App.StakingKeeper.GetParams(s.Ctx)
+	skParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	require.NoError(s.T(), err)
 	skParams.BondDenom = appparams.BaseCoinUnit
 	s.App.StakingKeeper.SetParams(s.Ctx, skParams)
 	s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, "note")
@@ -100,11 +103,11 @@ func (s *KeeperTestSuite) SetupTest() {
 }
 
 // NewTestMsgCreateValidator test msg creator
-func (s *KeeperTestSuite) NewTestMsgCreateValidator(address sdk.ValAddress, pubKey cryptotypes.PubKey, amt sdk.Int) *stakingtypes.MsgCreateValidator {
-	commission := stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+func (s *KeeperTestSuite) NewTestMsgCreateValidator(address sdk.ValAddress, pubKey cryptotypes.PubKey, amt osmomath.Int) *stakingtypes.MsgCreateValidator {
+	commission := stakingtypes.NewCommissionRates(osmomath.ZeroDec(), osmomath.ZeroDec(), osmomath.ZeroDec())
 	msg, _ := stakingtypes.NewMsgCreateValidator(
 		address, pubKey, sdk.NewCoin(appparams.BaseCoinUnit, amt),
-		stakingtypes.Description{}, commission, sdk.OneInt(),
+		stakingtypes.Description{}, commission, osmomath.OneInt(),
 	)
 
 	return msg
@@ -151,10 +154,10 @@ func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
 }
 
 func (s *KeeperTestSuite) TestExchangeRate() {
-	cnyExchangeRate := sdk.NewDecWithPrec(839, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
-	gbpExchangeRate := sdk.NewDecWithPrec(4995, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
-	krwExchangeRate := sdk.NewDecWithPrec(2838, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
-	noteExchangeRate := sdk.NewDecWithPrec(3282384, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
+	cnyExchangeRate := osmomath.NewDecWithPrec(839, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
+	gbpExchangeRate := osmomath.NewDecWithPrec(4995, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
+	krwExchangeRate := osmomath.NewDecWithPrec(2838, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
+	noteExchangeRate := osmomath.NewDecWithPrec(3282384, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
 
 	// Set & get rates
 	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.MicroCNYDenom, cnyExchangeRate)
@@ -174,14 +177,14 @@ func (s *KeeperTestSuite) TestExchangeRate() {
 
 	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, appparams.BaseCoinUnit, noteExchangeRate)
 	rate, _ = s.App.OracleKeeper.GetMelodyExchangeRate(s.Ctx, appparams.BaseCoinUnit)
-	s.Require().Equal(sdk.OneDec(), rate)
+	s.Require().Equal(osmomath.OneDec(), rate)
 
 	s.App.OracleKeeper.DeleteMelodyExchangeRate(s.Ctx, assets.MicroKRWDenom)
 	_, err = s.App.OracleKeeper.GetMelodyExchangeRate(s.Ctx, assets.MicroKRWDenom)
 	s.Require().Error(err)
 
 	numExchangeRates := 0
-	handler := func(denom string, exchangeRate sdk.Dec) (stop bool) {
+	handler := func(denom string, exchangeRate osmomath.Dec) (stop bool) {
 		numExchangeRates++
 		return false
 	}
@@ -191,10 +194,10 @@ func (s *KeeperTestSuite) TestExchangeRate() {
 }
 
 func (s *KeeperTestSuite) TestIterateMelodyExchangeRates() {
-	cnyExchangeRate := sdk.NewDecWithPrec(839, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
-	gbpExchangeRate := sdk.NewDecWithPrec(4995, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
-	krwExchangeRate := sdk.NewDecWithPrec(2838, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
-	melodyExchangeRate := sdk.NewDecWithPrec(3282384, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
+	cnyExchangeRate := osmomath.NewDecWithPrec(839, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
+	gbpExchangeRate := osmomath.NewDecWithPrec(4995, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
+	krwExchangeRate := osmomath.NewDecWithPrec(2838, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
+	melodyExchangeRate := osmomath.NewDecWithPrec(3282384, int64(OracleDecPrecision)).MulInt64(appparams.MicroUnit)
 
 	// Set & get rates
 	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.MicroCNYDenom, cnyExchangeRate)
@@ -202,7 +205,7 @@ func (s *KeeperTestSuite) TestIterateMelodyExchangeRates() {
 	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.MicroKRWDenom, krwExchangeRate)
 	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, appparams.BaseCoinUnit, melodyExchangeRate)
 
-	s.App.OracleKeeper.IterateNoteExchangeRates(s.Ctx, func(denom string, rate sdk.Dec) (stop bool) {
+	s.App.OracleKeeper.IterateNoteExchangeRates(s.Ctx, func(denom string, rate osmomath.Dec) (stop bool) {
 		switch denom {
 		case assets.MicroCNYDenom:
 			s.Require().Equal(cnyExchangeRate, rate)
@@ -218,7 +221,7 @@ func (s *KeeperTestSuite) TestIterateMelodyExchangeRates() {
 }
 
 func (s *KeeperTestSuite) TestRewardPool() {
-	fees := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, sdk.NewInt(1000)))
+	fees := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, osmomath.NewInt(1000)))
 	acc := s.App.AccountKeeper.GetModuleAccount(s.Ctx, types.ModuleName)
 	err := s.FundAccount(acc.GetAddress(), fees)
 	if err != nil {
@@ -237,12 +240,12 @@ func (s *KeeperTestSuite) TestParams() {
 
 	// Test custom params setting
 	votePeriod := uint64(10)
-	voteThreshold := sdk.NewDecWithPrec(33, 2)
-	oracleRewardBand := sdk.NewDecWithPrec(1, 2)
+	voteThreshold := osmomath.NewDecWithPrec(33, 2)
+	oracleRewardBand := osmomath.NewDecWithPrec(1, 2)
 	rewardDistributionWindow := uint64(10000000000000)
-	slashFraction := sdk.NewDecWithPrec(1, 2)
+	slashFraction := osmomath.NewDecWithPrec(1, 2)
 	slashWindow := uint64(1000)
-	minValidPerWindow := sdk.NewDecWithPrec(1, 4)
+	minValidPerWindow := osmomath.NewDecWithPrec(1, 4)
 	whitelist := types.DenomList{
 		{Name: assets.MicroSDRDenom, TobinTax: types.DefaultTobinTax},
 		{Name: assets.MicroKRWDenom, TobinTax: types.DefaultTobinTax},
@@ -375,9 +378,9 @@ func (s *KeeperTestSuite) TestAggregatePrevoteIterate() {
 
 func (s *KeeperTestSuite) TestAggregateVoteAddDelete() {
 	aggregateVote := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{
-		{Denom: "foo", ExchangeRate: sdk.NewDec(-1)},
-		{Denom: "foo", ExchangeRate: sdk.NewDec(0)},
-		{Denom: "foo", ExchangeRate: sdk.NewDec(1)},
+		{Denom: "foo", ExchangeRate: osmomath.NewDec(-1)},
+		{Denom: "foo", ExchangeRate: osmomath.NewDec(0)},
+		{Denom: "foo", ExchangeRate: osmomath.NewDec(1)},
 	}, sdk.ValAddress(Addrs[0]))
 	s.App.OracleKeeper.SetAggregateExchangeRateVote(s.Ctx, sdk.ValAddress(Addrs[0]), aggregateVote)
 
@@ -392,16 +395,16 @@ func (s *KeeperTestSuite) TestAggregateVoteAddDelete() {
 
 func (s *KeeperTestSuite) TestAggregateVoteIterate() {
 	aggregateVote1 := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{
-		{Denom: "foo", ExchangeRate: sdk.NewDec(-1)},
-		{Denom: "foo", ExchangeRate: sdk.NewDec(0)},
-		{Denom: "foo", ExchangeRate: sdk.NewDec(1)},
+		{Denom: "foo", ExchangeRate: osmomath.NewDec(-1)},
+		{Denom: "foo", ExchangeRate: osmomath.NewDec(0)},
+		{Denom: "foo", ExchangeRate: osmomath.NewDec(1)},
 	}, sdk.ValAddress(Addrs[0]))
 	s.App.OracleKeeper.SetAggregateExchangeRateVote(s.Ctx, sdk.ValAddress(Addrs[0]), aggregateVote1)
 
 	aggregateVote2 := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{
-		{Denom: "foo", ExchangeRate: sdk.NewDec(-1)},
-		{Denom: "foo", ExchangeRate: sdk.NewDec(0)},
-		{Denom: "foo", ExchangeRate: sdk.NewDec(1)},
+		{Denom: "foo", ExchangeRate: osmomath.NewDec(-1)},
+		{Denom: "foo", ExchangeRate: osmomath.NewDec(0)},
+		{Denom: "foo", ExchangeRate: osmomath.NewDec(1)},
 	}, sdk.ValAddress(Addrs[1]))
 	s.App.OracleKeeper.SetAggregateExchangeRateVote(s.Ctx, sdk.ValAddress(Addrs[1]), aggregateVote2)
 
@@ -422,10 +425,10 @@ func (s *KeeperTestSuite) TestAggregateVoteIterate() {
 }
 
 func (s *KeeperTestSuite) TestTobinTaxGetSet() {
-	tobinTaxes := map[string]sdk.Dec{
-		assets.MicroSDRDenom: sdk.NewDec(1),
-		assets.MicroUSDDenom: sdk.NewDecWithPrec(1, 3),
-		assets.StakeDenom:    sdk.NewDec(1),
+	tobinTaxes := map[string]osmomath.Dec{
+		assets.MicroSDRDenom: osmomath.NewDec(1),
+		assets.MicroUSDDenom: osmomath.NewDecWithPrec(1, 3),
+		assets.StakeDenom:    osmomath.NewDec(1),
 	}
 
 	for denom, tobinTax := range tobinTaxes {
@@ -435,7 +438,7 @@ func (s *KeeperTestSuite) TestTobinTaxGetSet() {
 		s.Require().Equal(tobinTaxes[denom], factor)
 	}
 
-	s.App.OracleKeeper.IterateTobinTaxes(s.Ctx, func(denom string, tobinTax sdk.Dec) (stop bool) {
+	s.App.OracleKeeper.IterateTobinTaxes(s.Ctx, func(denom string, tobinTax osmomath.Dec) (stop bool) {
 		s.Require().Equal(tobinTaxes[denom], tobinTax)
 		return false
 	})

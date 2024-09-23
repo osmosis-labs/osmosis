@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	"github.com/osmosis-labs/osmosis/v23/x/market"
+	"github.com/osmosis-labs/osmosis/v26/x/market"
 )
 
 func (s *KeeperTestSuite) TestExportInitGenesis() {

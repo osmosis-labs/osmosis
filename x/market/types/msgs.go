@@ -4,6 +4,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 // ensure Msg interface compliance at compile time
@@ -58,7 +59,7 @@ func (msg MsgSwap) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid trader address (%s)", err)
 	}
 
-	if msg.OfferCoin.Amount.LTE(sdk.ZeroInt()) || msg.OfferCoin.Amount.BigInt().BitLen() > 100 {
+	if msg.OfferCoin.Amount.LTE(osmomath.ZeroInt()) || msg.OfferCoin.Amount.BigInt().BitLen() > 100 {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.OfferCoin.String())
 	}
 
@@ -112,7 +113,7 @@ func (msg MsgSwapSend) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid to address (%s)", err)
 	}
 
-	if msg.OfferCoin.Amount.LTE(sdk.ZeroInt()) || msg.OfferCoin.Amount.BigInt().BitLen() > 100 {
+	if msg.OfferCoin.Amount.LTE(osmomath.ZeroInt()) || msg.OfferCoin.Amount.BigInt().BitLen() > 100 {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.OfferCoin.String())
 	}
 

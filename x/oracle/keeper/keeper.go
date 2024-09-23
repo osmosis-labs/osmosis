@@ -4,18 +4,18 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
-	"github.com/cometbft/cometbft/libs/log"
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
+	"cosmossdk.io/log"
 
-	gogotypes "github.com/gogo/protobuf/types"
-
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	gogotypes "github.com/gogo/protobuf/types"
 
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
 )
 
 // Keeper of the oracle store
@@ -74,15 +74,15 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 // ExchangeRate logic
 
 // GetMelodyExchangeRate gets the consensus exchange rate of Melody denominated in the denom asset from the store.
-func (k Keeper) GetMelodyExchangeRate(ctx sdk.Context, denom string) (sdk.Dec, error) {
+func (k Keeper) GetMelodyExchangeRate(ctx sdk.Context, denom string) (osmomath.Dec, error) {
 	if denom == appparams.BaseCoinUnit {
-		return sdk.OneDec(), nil
+		return osmomath.OneDec(), nil
 	}
 
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(types.GetExchangeRateKey(denom))
 	if b == nil {
-		return sdk.ZeroDec(), errorsmod.Wrap(types.ErrUnknownDenom, denom)
+		return osmomath.ZeroDec(), errorsmod.Wrap(types.ErrUnknownDenom, denom)
 	}
 
 	dp := sdk.DecProto{}
@@ -91,7 +91,7 @@ func (k Keeper) GetMelodyExchangeRate(ctx sdk.Context, denom string) (sdk.Dec, e
 }
 
 // SetMelodyExchangeRate sets the consensus exchange rate of Melody denominated in the denom asset to the store.
-func (k Keeper) SetMelodyExchangeRate(ctx sdk.Context, denom string, exchangeRate sdk.Dec) {
+func (k Keeper) SetMelodyExchangeRate(ctx sdk.Context, denom string, exchangeRate osmomath.Dec) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&sdk.DecProto{Dec: exchangeRate})
 	store.Set(types.GetExchangeRateKey(denom), bz)
@@ -99,7 +99,7 @@ func (k Keeper) SetMelodyExchangeRate(ctx sdk.Context, denom string, exchangeRat
 
 // SetMelodyExchangeRateWithEvent sets the consensus exchange rate of Note
 // denominated in the denom asset to the store with ABCI event
-func (k Keeper) SetMelodyExchangeRateWithEvent(ctx sdk.Context, denom string, exchangeRate sdk.Dec) {
+func (k Keeper) SetMelodyExchangeRateWithEvent(ctx sdk.Context, denom string, exchangeRate osmomath.Dec) {
 	k.SetMelodyExchangeRate(ctx, denom, exchangeRate)
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(types.EventTypeExchangeRateUpdate,
@@ -116,9 +116,9 @@ func (k Keeper) DeleteMelodyExchangeRate(ctx sdk.Context, denom string) {
 }
 
 // IterateNoteExchangeRates iterates over note rates in the store
-func (k Keeper) IterateNoteExchangeRates(ctx sdk.Context, handler func(denom string, exchangeRate sdk.Dec) (stop bool)) {
+func (k Keeper) IterateNoteExchangeRates(ctx sdk.Context, handler func(denom string, exchangeRate osmomath.Dec) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.ExchangeRateKey)
+	iter := storetypes.KVStorePrefixIterator(store, types.ExchangeRateKey)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		denom := string(iter.Key()[len(types.ExchangeRateKey):])
@@ -156,7 +156,7 @@ func (k Keeper) IterateFeederDelegations(ctx sdk.Context,
 	handler func(delegator sdk.ValAddress, delegate sdk.AccAddress) (stop bool),
 ) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.FeederDelegationKey)
+	iter := storetypes.KVStorePrefixIterator(store, types.FeederDelegationKey)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		delegator := sdk.ValAddress(iter.Key()[2:])
@@ -203,7 +203,7 @@ func (k Keeper) IterateMissCounters(ctx sdk.Context,
 	handler func(operator sdk.ValAddress, missCounter uint64) (stop bool),
 ) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.MissCounterKey)
+	iter := storetypes.KVStorePrefixIterator(store, types.MissCounterKey)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		operator := sdk.ValAddress(iter.Key()[2:])
@@ -249,7 +249,7 @@ func (k Keeper) DeleteAggregateExchangeRatePrevote(ctx sdk.Context, voter sdk.Va
 // IterateAggregateExchangeRatePrevotes iterates rate over prevotes in the store
 func (k Keeper) IterateAggregateExchangeRatePrevotes(ctx sdk.Context, handler func(voterAddr sdk.ValAddress, aggregatePrevote types.AggregateExchangeRatePrevote) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.AggregateExchangeRatePrevoteKey)
+	iter := storetypes.KVStorePrefixIterator(store, types.AggregateExchangeRatePrevoteKey)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		voterAddr := sdk.ValAddress(iter.Key()[2:])
@@ -293,7 +293,7 @@ func (k Keeper) DeleteAggregateExchangeRateVote(ctx sdk.Context, voter sdk.ValAd
 // IterateAggregateExchangeRateVotes iterates rate over prevotes in the store
 func (k Keeper) IterateAggregateExchangeRateVotes(ctx sdk.Context, handler func(voterAddr sdk.ValAddress, aggregateVote types.AggregateExchangeRateVote) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.AggregateExchangeRateVoteKey)
+	iter := storetypes.KVStorePrefixIterator(store, types.AggregateExchangeRateVoteKey)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		voterAddr := sdk.ValAddress(iter.Key()[2:])
@@ -307,12 +307,12 @@ func (k Keeper) IterateAggregateExchangeRateVotes(ctx sdk.Context, handler func(
 }
 
 // GetTobinTax return tobin tax for the denom
-func (k Keeper) GetTobinTax(ctx sdk.Context, denom string) (sdk.Dec, error) {
+func (k Keeper) GetTobinTax(ctx sdk.Context, denom string) (osmomath.Dec, error) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetTobinTaxKey(denom))
 	if bz == nil {
 		err := errorsmod.Wrap(types.ErrNoTobinTax, denom)
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	tobinTax := sdk.DecProto{}
@@ -322,16 +322,16 @@ func (k Keeper) GetTobinTax(ctx sdk.Context, denom string) (sdk.Dec, error) {
 }
 
 // SetTobinTax updates tobin tax for the denom
-func (k Keeper) SetTobinTax(ctx sdk.Context, denom string, tobinTax sdk.Dec) {
+func (k Keeper) SetTobinTax(ctx sdk.Context, denom string, tobinTax osmomath.Dec) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&sdk.DecProto{Dec: tobinTax})
 	store.Set(types.GetTobinTaxKey(denom), bz)
 }
 
 // IterateTobinTaxes iterates rate over tobin taxes in the store
-func (k Keeper) IterateTobinTaxes(ctx sdk.Context, handler func(denom string, tobinTax sdk.Dec) (stop bool)) {
+func (k Keeper) IterateTobinTaxes(ctx sdk.Context, handler func(denom string, tobinTax osmomath.Dec) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.TobinTaxKey)
+	iter := storetypes.KVStorePrefixIterator(store, types.TobinTaxKey)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		denom := types.ExtractDenomFromTobinTaxKey(iter.Key())
@@ -347,7 +347,7 @@ func (k Keeper) IterateTobinTaxes(ctx sdk.Context, handler func(denom string, to
 // ClearTobinTaxes clears tobin taxes
 func (k Keeper) ClearTobinTaxes(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.TobinTaxKey)
+	iter := storetypes.KVStorePrefixIterator(store, types.TobinTaxKey)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		store.Delete(iter.Key())
@@ -364,7 +364,11 @@ func (k Keeper) ValidateFeeder(ctx sdk.Context, feederAddr sdk.AccAddress, valid
 	}
 
 	// Check that the given validator exists
-	if val := k.StakingKeeper.Validator(ctx, validatorAddr); val == nil || !val.IsBonded() {
+	val, err := k.StakingKeeper.GetValidator(ctx, validatorAddr)
+	if err != nil {
+		return fmt.Errorf("could not retrieve validator by address %s: %w", validatorAddr, err)
+	}
+	if !val.IsBonded() {
 		return errorsmod.Wrapf(stakingtypes.ErrNoValidatorFound, "validator %s is not active set", validatorAddr.String())
 	}
 

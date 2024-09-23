@@ -5,7 +5,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
-	"github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v26/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -94,6 +95,11 @@ func (s *KeeperTestSuite) TestAllocateAsset() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			s.Setup()
+
+			// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+			// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+			s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, sdk.DefaultBondDenom, 9999)
+
 			keeper := s.App.PoolIncentivesKeeper
 			s.FundModuleAcc(types.ModuleName, sdk.NewCoins(test.mintedCoins))
 			s.PrepareBalancerPool()
@@ -106,10 +112,10 @@ func (s *KeeperTestSuite) TestAllocateAsset() {
 				s.Equal(duration, types.DefaultGenesisState().GetLockableDurations()[i])
 			}
 
-			feePoolOrigin := s.App.DistrKeeper.GetFeePool(s.Ctx)
+			feePoolOrigin, err := s.App.DistrKeeper.FeePool.Get(s.Ctx)
 
 			// Create record
-			err := keeper.ReplaceDistrRecords(s.Ctx, test.testingDistrRecord...)
+			err = keeper.ReplaceDistrRecords(s.Ctx, test.testingDistrRecord...)
 			s.Require().NoError(err)
 
 			err = keeper.AllocateAsset(s.Ctx)
@@ -124,7 +130,7 @@ func (s *KeeperTestSuite) TestAllocateAsset() {
 				s.Require().Equal(test.expectedGaugesBalances[i], gauge.Coins)
 			}
 
-			feePoolNew := s.App.DistrKeeper.GetFeePool(s.Ctx)
+			feePoolNew, err := s.App.DistrKeeper.FeePool.Get(s.Ctx)
 			s.Require().Equal(feePoolOrigin.CommunityPool.Add(test.expectedCommunityPool), feePoolNew.CommunityPool)
 		})
 	}
@@ -143,6 +149,11 @@ func (s *KeeperTestSuite) TestAllocateAsset_GroupGauge() {
 	)
 
 	s.Setup()
+
+	// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+	// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, sdk.DefaultBondDenom, 9999)
+
 	poolInfo := s.PrepareAllSupportedPools()
 
 	poolIDs := []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID, poolInfo.StableSwapPoolID}

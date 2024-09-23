@@ -2,17 +2,16 @@ package treasury
 
 import (
 	"context"
+	"cosmossdk.io/core/appmodule"
 	"encoding/json"
 	"fmt"
 	"math/rand"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/osmosis-labs/osmosis/v23/x/treasury/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/treasury/simulation"
+	"github.com/osmosis-labs/osmosis/v26/x/treasury/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/treasury/simulation"
 
 	"github.com/spf13/cobra"
-
-	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,14 +20,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/v23/x/treasury/client/cli"
-	"github.com/osmosis-labs/osmosis/v23/x/treasury/types"
+	"github.com/osmosis-labs/osmosis/v26/x/treasury/client/cli"
+	"github.com/osmosis-labs/osmosis/v26/x/treasury/types"
 )
 
 var (
-	_ module.AppModule           = AppModule{}
-	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModule{}
+	_ module.AppModuleBasic   = AppModuleBasic{}
+	_ module.HasGenesisBasics = AppModuleBasic{}
+
+	_ appmodule.AppModule        = AppModule{}
+	_ module.HasConsensusVersion = AppModule{}
+	_ module.HasGenesis          = AppModule{}
+	_ module.HasServices         = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the treasury module.
@@ -97,16 +100,17 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 	}
 }
 
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
+// IsOnePerModuleType is a marker function just indicates that this is a one-per-module type.
+func (am AppModule) IsOnePerModuleType() {}
+
 // Name returns the treasury module's name.
 func (AppModule) Name() string { return types.ModuleName }
 
 // RegisterInvariants registers the treasury module invariants.
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
-// NewHandler returns an sdk.Handler for the treasury module.
-func (am AppModule) NewHandler() sdk.Handler {
-	return nil
-}
 
 // QuerierRoute returns the treasury module's querier route name.
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
@@ -119,12 +123,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 // InitGenesis performs genesis initialization for the treasury module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) {
 	var genesisState types.GenesisState
-	cdc.MustUnmarshalJSON(data, &genesisState)
+	cdc.MustUnmarshalJSON(gs, &genesisState)
 	InitGenesis(ctx, am.keeper, &genesisState)
-
-	return nil
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the treasury
@@ -137,13 +139,11 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 3 }
 
-// BeginBlock returns the begin blocker for the treasury module.
-func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
-
 // EndBlock returns the end blocker for the treasury module.
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+func (am AppModule) EndBlock(context context.Context) error {
+	ctx := sdk.UnwrapSDKContext(context)
 	EndBlocker(ctx, am.keeper)
-	return []abci.ValidatorUpdate{}
+	return nil
 }
 
 // ____________________________________________________________________________
@@ -167,7 +167,7 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.LegacyParamChange {
 }
 
 // RegisterStoreDecoder registers a decoder for distribution module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 

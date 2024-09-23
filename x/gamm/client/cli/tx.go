@@ -14,11 +14,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v23/x/gamm/types/migration"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v26/x/gamm/types/migration"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -56,10 +56,9 @@ func NewCreatePoolCmd() *osmocli.TxCliDesc {
 		Long: `Must provide path to a pool JSON file (--pool-file) describing the pool to be created
 Sample pool JSON file contents for balancer:
 {
-	"weights": "4uatom,4melody,2uakt",
-	"initial-deposit": "100uatom,5melody,20uakt",
+	"weights": "4uatom,4osmo,2uakt",
+	"initial-deposit": "100uatom,5osmo,20uakt",
 	"swap-fee": "0.01",
-	"exit-fee": "0.01",
 	"future-governor": "168h"
 }
 
@@ -67,7 +66,6 @@ For stableswap (demonstrating need for a 1:1000 scaling factor, see doc)
 {
 	"initial-deposit": "1000000uusdc,1000miliusdc",
 	"swap-fee": "0.01",
-	"exit-fee": "0.00",
 	"future-governor": "168h",
 	"scaling-factors": "1000,1"
 }
@@ -175,7 +173,7 @@ func NewStableSwapAdjustScalingFactorsCmd() *cobra.Command {
 	cmd := osmocli.TxCliDesc{
 		Use:              "adjust-scaling-factors --pool-id=[pool-id]  --scaling-factors=[scaling-factors]",
 		Short:            "adjust scaling factors",
-		Example:          "symphonyd adjust-scaling-factors --pool-id=1 --scaling-factors=\"100, 100\"",
+		Example:          "osmosisd adjust-scaling-factors --pool-id=1 --scaling-factors=\"100, 100\"",
 		NumArgs:          0,
 		ParseAndBuildMsg: NewStableSwapAdjustScalingFactorsMsg,
 	}.BuildCommandCustomFn()
@@ -325,21 +323,21 @@ func NewCmdSubmitSetScalingFactorControllerProposal() *cobra.Command {
 Sample proposal file:
 {
 	"title": "Set Scaling Factor Controller Proposal",
-	"description": "Change scaling factor controller address from melodyXXX to melodyYYY"
+	"description": "Change scaling factor controller address from osmoXXX to osmoYYY"
 	"pool-id": 1,
-	"controller-address": "melodyYYY"
+	"controller-address": "osmoYYY"
 }
->>> symphonyd tx gov submit-proposal set-scaling-factor-controller-proposal \
+>>> osmosisd tx gov submit-proposal set-scaling-factor-controller-proposal \
         --proposal proposal.json \
-		--deposit 1600000000note \
+		--deposit 1600000000uosmo \
 
 Sample proposal with flags
->>> symphonyd tx gov submit-proposal set-scaling-factor-controller-proposal \
+>>> osmosisd tx gov submit-proposal set-scaling-factor-controller-proposal \
         --title "Set Scaling Factor Controller Proposal" \
-		--summary "Change scaling factor controller address from melodyXXX to melodyYYY"
-		--deposit 1600000000note
+		--summary "Change scaling factor controller address from osmoXXX to osmoYYY"
+		--deposit 1600000000uosmo
 		--pool-id 1
-		--controller-address melodyYYY
+		--controller-address osmoYYY
 		`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, proposalTitle, summary, deposit, isExpedited, authority, err := osmocli.GetProposalInfo(cmd)
@@ -370,6 +368,7 @@ Sample proposal with flags
 	osmocli.AddCommonProposalFlags(cmd)
 	cmd.Flags().Uint64(FlagPoolId, 0, "stableswap pool-id")
 	cmd.Flags().String(FlagScalingFactorControllerAddress, "", "target scaling factor controller address")
+	cmd.Flags().String(govcli.FlagProposal, "", "proposal file path") //nolint:staticcheck
 
 	return cmd
 }
@@ -421,11 +420,6 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (
 		return nil, err
 	}
 
-	exitFee, err := osmomath.NewDecFromStr(pool.ExitFee)
-	if err != nil {
-		return nil, err
-	}
-
 	var poolAssets []balancer.PoolAsset
 	for i := 0; i < len(poolAssetCoins); i++ {
 		if poolAssetCoins[i].Denom != deposit[i].Denom {
@@ -440,7 +434,7 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (
 
 	poolParams := &balancer.PoolParams{
 		SwapFee: spreadFactor,
-		ExitFee: exitFee,
+		ExitFee: osmomath.NewDec(0),
 	}
 
 	msg := &balancer.MsgCreateBalancerPool{
@@ -516,14 +510,9 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, fs *flag.FlagSet)
 		return nil, err
 	}
 
-	exitFee, err := osmomath.NewDecFromStr(flags.ExitFee)
-	if err != nil {
-		return nil, err
-	}
-
 	poolParams := &stableswap.PoolParams{
 		SwapFee: spreadFactor,
-		ExitFee: exitFee,
+		ExitFee: osmomath.NewDec(0),
 	}
 
 	scalingFactors := []uint64{}

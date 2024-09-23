@@ -30,7 +30,7 @@ impl RateLimitingContract {
     pub fn sudo<T: Into<SudoMsg>>(&self, msg: T) -> cw_multi_test::SudoMsg {
         let msg = to_binary(&msg.into()).unwrap();
         cw_multi_test::SudoMsg::Wasm(cw_multi_test::WasmSudo {
-            contract_addr: self.addr().into(),
+            contract_addr: self.addr(),
             msg,
         })
     }
@@ -39,7 +39,7 @@ impl RateLimitingContract {
 pub mod tests {
     use cosmwasm_std::{Timestamp, Uint256};
 
-    use crate::state::RateLimit;
+    use crate::state::rate_limit::RateLimit;
 
     pub fn verify_query_response(
         value: &RateLimit,

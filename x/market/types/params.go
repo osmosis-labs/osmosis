@@ -2,13 +2,13 @@ package types
 
 import (
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmomath"
 
 	"gopkg.in/yaml.v2"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/osmosis-labs/osmosis/v23/app/params"
+	"github.com/osmosis-labs/osmosis/v26/app/params"
 )
 
 // Parameter keys
@@ -21,9 +21,9 @@ var (
 
 // Default parameter values
 var (
-	DefaultBasePool           = sdk.NewDec(1000000 * params.MicroUnit) // 1000,000sdr = 1000,000,000,000usdr
-	DefaultPoolRecoveryPeriod = params.BlocksPerDay                    // 14,400
-	DefaultMinStabilitySpread = sdk.NewDecWithPrec(2, 2)               // 2%
+	DefaultBasePool           = osmomath.NewDec(1000000 * params.MicroUnit) // 1000,000sdr = 1000,000,000,000usdr
+	DefaultPoolRecoveryPeriod = params.BlocksPerDay                         // 14,400
+	DefaultMinStabilitySpread = osmomath.NewDecWithPrec(2, 2)               // 2%
 )
 
 var _ paramstypes.ParamSet = &Params{}
@@ -73,7 +73,7 @@ func validatePoolRecoveryPeriod(i interface{}) error {
 }
 
 func validateMinStabilitySpread(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(osmomath.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -82,7 +82,7 @@ func validateMinStabilitySpread(i interface{}) error {
 		return fmt.Errorf("min spread must be positive or zero: %s", v)
 	}
 
-	if v.GT(sdk.OneDec()) {
+	if v.GT(osmomath.OneDec()) {
 		return fmt.Errorf("min spread is too large: %s", v)
 	}
 

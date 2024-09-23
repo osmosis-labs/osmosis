@@ -2,10 +2,10 @@ package types
 
 import (
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmomath"
 
 	"gopkg.in/yaml.v2"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -20,12 +20,12 @@ var (
 
 // Default parameter values
 var (
-	DefaultWindowShort            = uint64(4)                // a month
-	DefaultWindowLong             = uint64(52)               // a year
-	DefaultWindowProbation        = uint64(12)               // 3 month
-	DefaultTaxRate                = sdk.NewDecWithPrec(1, 3) // 0.1%
-	DefaultMaxFeeMultiplier       = sdk.NewDecWithPrec(1, 0) // 1%
-	DefaultReserveAllowableOffset = sdk.NewDecWithPrec(5, 0) // 5%
+	DefaultWindowShort            = uint64(4)                     // a month
+	DefaultWindowLong             = uint64(52)                    // a year
+	DefaultWindowProbation        = uint64(12)                    // 3 month
+	DefaultTaxRate                = osmomath.NewDecWithPrec(1, 3) // 0.1%
+	DefaultMaxFeeMultiplier       = osmomath.NewDecWithPrec(1, 0) // 1%
+	DefaultReserveAllowableOffset = osmomath.NewDecWithPrec(5, 0) // 5%
 )
 
 var _ paramstypes.ParamSet = &Params{}
@@ -66,7 +66,7 @@ func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 
 // Validate performs basic validation on treasury parameters.
 func (p Params) Validate() error {
-	if p.MaxFeeMultiplier.GT(sdk.NewDecWithPrec(10, 0)) {
+	if p.MaxFeeMultiplier.GT(osmomath.NewDecWithPrec(10, 0)) {
 		return fmt.Errorf("treasury parameter MaxFeeMultiplier must be lower than 10: %s", p.MaxFeeMultiplier)
 	}
 	if p.WindowLong <= p.WindowShort {
@@ -77,7 +77,7 @@ func (p Params) Validate() error {
 }
 
 func validateReserveAllowableOffset(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(osmomath.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -90,7 +90,7 @@ func validateReserveAllowableOffset(i interface{}) error {
 }
 
 func validateMaxFeeMultiplier(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(osmomath.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

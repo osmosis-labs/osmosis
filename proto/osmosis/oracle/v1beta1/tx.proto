@@ -3,7 +3,7 @@ package osmosis.oracle.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v23/x/oracle/types";
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/oracle/types";
 
 // Msg defines the oracle Msg service.
 service Msg {

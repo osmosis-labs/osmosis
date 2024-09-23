@@ -1,6 +1,9 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
+	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -12,12 +15,13 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	osmoapp "github.com/osmosis-labs/osmosis/v23/app"
-	cl "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
-	clmodule "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/clmodule"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types/genesis"
+	osmoapp "github.com/osmosis-labs/osmosis/v26/app"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	cl "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity"
+	clmodule "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/clmodule"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types/genesis"
 )
 
 type singlePoolGenesisEntry struct {
@@ -34,7 +38,6 @@ var (
 		Params: types.Params{
 			AuthorizedTickSpacing:        []uint64{1, 10, 100, 1000},
 			AuthorizedSpreadFactors:      []osmomath.Dec{osmomath.MustNewDecFromStr("0.0001"), osmomath.MustNewDecFromStr("0.0003"), osmomath.MustNewDecFromStr("0.0005")},
-			AuthorizedQuoteDenoms:        []string{ETH, USDC},
 			BalancerSharesRewardDiscount: types.DefaultBalancerSharesDiscount,
 			AuthorizedUptimes:            types.DefaultAuthorizedUptimes,
 		},
@@ -42,6 +45,7 @@ var (
 		NextIncentiveRecordId: 2,
 		NextPositionId:        3,
 		IncentivesAccumulatorPoolIdMigrationThreshold: 3,
+		SpreadFactorPoolIdMigrationThreshold:          4,
 	}
 	testCoins    = sdk.NewDecCoins(cl.HundredFooCoins)
 	testTickInfo = model.TickInfo{
@@ -98,7 +102,7 @@ var (
 func accumRecordWithDefinedValues(accumRecord accum.Record, numShares osmomath.Dec, initAccumValue, unclaimedRewards osmomath.Int) accum.Record {
 	accumRecord.NumShares = numShares
 	accumRecord.AccumValuePerShare = sdk.NewDecCoins(sdk.NewDecCoin("uion", initAccumValue))
-	accumRecord.UnclaimedRewardsTotal = sdk.NewDecCoins(sdk.NewDecCoin("note", unclaimedRewards))
+	accumRecord.UnclaimedRewardsTotal = sdk.NewDecCoins(sdk.NewDecCoin(appparams.BaseCoinUnit, unclaimedRewards))
 	return accumRecord
 }
 
@@ -601,6 +605,11 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			incentiveMigrationThreshold, err := clKeeper.GetIncentivePoolIDMigrationThreshold(ctx)
 			s.Require().NoError(err)
 			s.Require().Equal(tc.genesis.IncentivesAccumulatorPoolIdMigrationThreshold, incentiveMigrationThreshold)
+
+			// Validate spread factor migration threshold
+			spreadFactorMigrationThreshold, err := clKeeper.GetSpreadFactorPoolIDMigrationThreshold(ctx)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.genesis.SpreadFactorPoolIdMigrationThreshold, spreadFactorMigrationThreshold)
 		})
 	}
 }
@@ -823,6 +832,9 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 
 			// Validate incentive migration threshold
 			s.Require().Equal(tc.genesis.IncentivesAccumulatorPoolIdMigrationThreshold, actualExported.IncentivesAccumulatorPoolIdMigrationThreshold)
+
+			// Validate spread factor migration threshold
+			s.Require().Equal(tc.genesis.SpreadFactorPoolIdMigrationThreshold, actualExported.SpreadFactorPoolIdMigrationThreshold)
 		})
 	}
 }
@@ -831,8 +843,9 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 // It checks that the exported genesis can be marshaled and unmarshaled without panicking.
 func TestMarshalUnmarshalGenesis(t *testing.T) {
 	// Set up the app and context
-	app := osmoapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	dirName := fmt.Sprintf("%d", rand.Int())
+	app := osmoapp.SetupWithCustomHome(false, dirName)
+	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	now := ctx.BlockTime()
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 
@@ -843,11 +856,12 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 	// Export the genesis state
 	genesisExported := appModule.ExportGenesis(ctx, appCodec)
+	os.RemoveAll(dirName)
 
 	// Test that the exported genesis can be marshaled and unmarshaled without panicking
 	assert.NotPanics(t, func() {
 		app := osmoapp.Setup(false)
-		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+		ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 		ctx = ctx.WithBlockTime(now.Add(time.Second))
 		am := clmodule.NewAppModule(appCodec, *app.ConcentratedLiquidityKeeper)
 		am.InitGenesis(ctx, appCodec, genesisExported)

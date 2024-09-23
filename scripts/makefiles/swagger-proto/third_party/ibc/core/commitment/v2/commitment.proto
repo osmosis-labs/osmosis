@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package ibc.core.commitment.v2;
+
+option go_package = "github.com/cosmos/ibc-go/v9/modules/core/23-commitment/types/v2";
+
+// MerklePath is the path used to verify commitment proofs, which can be an
+// arbitrary structured object (defined by a commitment type).
+// MerklePath is represented from root-to-leaf
+message MerklePath {
+  repeated bytes key_path = 1;
+}

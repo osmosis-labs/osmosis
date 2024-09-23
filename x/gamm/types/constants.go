@@ -39,8 +39,8 @@ var (
 	// It is limited by osmomath.Dec's precision.
 	MinSpotPrice = osmomath.SmallestDec()
 
-	// MultihopSpreadFactorMultiplierForMelodyPools if a spread factor multiplier for trades consists of just two MELODY pools during a single transaction.
-	MultihopSpreadFactorMultiplierForMelodyPools = osmomath.NewDecWithPrec(5, 1) // 0.5
+	// MultihopSpreadFactorMultiplierForOsmoPools if a spread factor multiplier for trades consists of just two OSMO pools during a single transaction.
+	MultihopSpreadFactorMultiplierForOsmoPools = osmomath.NewDecWithPrec(5, 1) // 0.5
 
 	// Maximum amount per asset after the application of scaling factors should be 10e34.
 	StableswapMaxScaledAmtPerAsset = osmomath.NewDec(10).Power(34).TruncateInt()

@@ -1,25 +1,30 @@
 package keeper_test
 
 import (
+	"fmt"
+	"math/rand"
+	"os"
 	"testing"
 	"time"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	simapp "github.com/osmosis-labs/osmosis/v23/app"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	pool_incentives "github.com/osmosis-labs/osmosis/v23/x/pool-incentives"
-	"github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
+	simapp "github.com/osmosis-labs/osmosis/v26/app"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
+	pool_incentives "github.com/osmosis-labs/osmosis/v26/x/pool-incentives"
+	"github.com/osmosis-labs/osmosis/v26/x/pool-incentives/types"
 )
 
 var (
 	now         = time.Now().UTC()
 	testGenesis = types.GenesisState{
 		Params: types.Params{
-			MintedDenom: "note",
+			MintedDenom: appparams.BaseCoinUnit,
 		},
 		LockableDurations: []time.Duration{
 			time.Second,
@@ -62,8 +67,10 @@ var (
 )
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	dirName := fmt.Sprintf("%d", rand.Int())
+	app := simapp.SetupWithCustomHome(false, dirName)
+
+	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 
 	encodingConfig := simapp.MakeEncodingConfig()
@@ -75,9 +82,11 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	assert.Equal(t, app.PoolIncentivesKeeper.GetDistrInfo(ctx), *testGenesis.DistrInfo)
 
 	genesisExported := am.ExportGenesis(ctx, appCodec)
+	os.RemoveAll(dirName)
+
 	assert.NotPanics(t, func() {
 		app := simapp.Setup(false)
-		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+		ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 		ctx = ctx.WithBlockTime(now.Add(time.Second))
 		am := pool_incentives.NewAppModule(*app.PoolIncentivesKeeper)
 		am.InitGenesis(ctx, appCodec, genesisExported)
@@ -85,8 +94,10 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 }
 
 func TestInitGenesis(t *testing.T) {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	dirName := fmt.Sprintf("%d", rand.Int())
+	app := simapp.SetupWithCustomHome(false, dirName)
+
+	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
 	app.PoolIncentivesKeeper.InitGenesis(ctx, &genesis)
@@ -99,10 +110,12 @@ func TestInitGenesis(t *testing.T) {
 
 	distrInfo := app.PoolIncentivesKeeper.GetDistrInfo(ctx)
 	require.Equal(t, distrInfo, *genesis.DistrInfo)
+
+	os.RemoveAll(dirName)
 }
 
 func (s *KeeperTestSuite) TestExportGenesis() {
-	ctx := s.App.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := s.App.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
 	s.App.PoolIncentivesKeeper.InitGenesis(ctx, &genesis)
@@ -147,6 +160,10 @@ func (s *KeeperTestSuite) TestImportExportGenesis_ExternalNoLock() {
 
 	// Fund account to create gauge
 	s.FundAcc(s.TestAccs[0], defaultCoins.Add(defaultCoins...))
+
+	// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+	// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, sdk.DefaultBondDenom, 9999)
 
 	// Create external non-perpetual gauge
 	externalGaugeID, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, s.TestAccs[0], defaultCoins.Add(defaultCoins...), lockuptypes.QueryCondition{

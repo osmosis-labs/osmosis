@@ -11,8 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
-	"github.com/osmosis-labs/osmosis/v23/app/params"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v26/app/params"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v26/x/tokenfactory/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -29,7 +29,11 @@ func (sim *SimCtx) defaultTxBuilder(
 	msg sdk.Msg,
 	msgName string, // TODO fix
 ) (sdk.Tx, error) {
-	account, found := sim.FindAccount(msg.GetSigners()[0])
+	accounts, _, err := sim.AppCodec().GetMsgV1Signers(msg)
+	if err != nil {
+		return nil, err
+	}
+	account, found := sim.FindAccount(sdk.AccAddress(accounts[0]))
 	if !found {
 		return nil, errors.New("unable to generate mock tx: sim acct not found")
 	}
@@ -42,6 +46,7 @@ func (sim *SimCtx) defaultTxBuilder(
 	gas := getGas(msg)
 
 	tx, err := genTx(
+		ctx,
 		txConfig,
 		[]sdk.Msg{msg},
 		fees,
@@ -65,7 +70,7 @@ func (sim *SimCtx) deliverTx(tx sdk.Tx, msg sdk.Msg, msgName string) (simulation
 		return simulation.OperationMsg{}, nil, nil, err
 	}
 
-	opMsg := simulation.NewOperationMsg(msg, true, "", nil)
+	opMsg := simulation.NewOperationMsg(msg, true, "")
 	opMsg.Route = msgName
 	opMsg.Name = msgName
 
@@ -75,10 +80,13 @@ func (sim *SimCtx) deliverTx(tx sdk.Tx, msg sdk.Msg, msgName string) (simulation
 // GenTx generates a signed mock transaction.
 // TODO: Surely there's proper API's in the SDK for this?
 // (This was copied from SDK simapp, and deleted the egregiously non-deterministic memo handling)
-func genTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums, accSeqs []uint64, priv ...cryptotypes.PrivKey) (sdk.Tx, error) {
+func genTx(ctx sdk.Context, gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums, accSeqs []uint64, priv ...cryptotypes.PrivKey) (sdk.Tx, error) {
 	sigs := make([]signing.SignatureV2, len(priv))
 	memo := "sample_memo"
-	signMode := gen.SignModeHandler().DefaultMode()
+	signMode, err := authsign.APISignModeToInternal(gen.SignModeHandler().DefaultMode())
+	if err != nil {
+		return nil, err
+	}
 
 	// 1st round: set SignatureV2 with empty signatures, to set correct
 	// signer infos.
@@ -93,7 +101,7 @@ func genTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, ch
 	}
 
 	txBuilder := gen.NewTxBuilder()
-	err := txBuilder.SetMsgs(msgs...)
+	err = txBuilder.SetMsgs(msgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +120,7 @@ func genTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, ch
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
 		}
-		sig, err := tx.SignWithPrivKey(signMode, signerData, txBuilder, p, gen, accSeqs[i])
+		sig, err := tx.SignWithPrivKey(ctx, signMode, signerData, txBuilder, p, gen, accSeqs[i])
 		if err != nil {
 			panic(err)
 		}

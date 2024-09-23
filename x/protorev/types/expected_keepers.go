@@ -1,11 +1,13 @@
 package types
 
 import (
+	context "context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -18,11 +20,11 @@ type AccountKeeper interface {
 // BankKeeper defines the banking contract that must be fulfilled when
 // creating a x/protorev keeper.
 type BankKeeper interface {
-	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
-	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) error
-	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
+	BurnCoins(ctx context.Context, name string, amt sdk.Coins) error
+	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 }
 
 // GAMMKeeper defines the Gamm contract that must be fulfilled when
@@ -59,6 +61,7 @@ type PoolManagerKeeper interface {
 		ctx sdk.Context,
 		poolId uint64,
 	) (poolmanagertypes.PoolI, error)
+	GetPoolType(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolType, error)
 	GetPoolModule(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolModuleI, error)
 	GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error)
 	RouteGetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error)
@@ -87,5 +90,5 @@ type ConcentratedLiquidityKeeper interface {
 // DistributionKeeper defines the distribution contract that must be fulfilled when
 // creating a x/protorev keeper.
 type DistributionKeeper interface {
-	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
+	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }

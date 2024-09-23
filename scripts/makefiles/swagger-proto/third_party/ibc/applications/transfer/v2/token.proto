@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package ibc.applications.transfer.v2;
+
+option go_package = "github.com/cosmos/ibc-go/v9/modules/apps/transfer/types";
+
+import "ibc/applications/transfer/v1/transfer.proto";
+import "gogoproto/gogo.proto";
+
+// Token defines a struct which represents a token to be transferred.
+message Token {
+  // the token denomination
+  Denom denom = 1 [(gogoproto.nullable) = false];
+  // the token amount to be transferred
+  string amount = 2;
+}
+
+// Denom holds the base denom of a Token and a trace of the chains it was sent through.
+message Denom {
+  // the base token denomination
+  string base = 1;
+  // the trace of the token
+  repeated ibc.applications.transfer.v1.Hop trace = 3 [(gogoproto.nullable) = false];
+}

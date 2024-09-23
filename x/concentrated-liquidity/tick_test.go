@@ -3,16 +3,17 @@ package concentrated_liquidity_test
 import (
 	"errors"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	cl "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types/genesis"
+	cl "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types/genesis"
 )
 
 const validPoolId = 1
@@ -37,8 +38,8 @@ func withLiquidityNetandTickIndex(tick genesis.FullTick, tickIndex int64, liquid
 func (s *KeeperTestSuite) TestTickOrdering() {
 	s.SetupTest()
 
-	storeKey := sdk.NewKVStoreKey("concentrated_liquidity")
-	tKey := sdk.NewTransientStoreKey("transient_test")
+	storeKey := storetypes.NewKVStoreKey("concentrated_liquidity")
+	tKey := storetypes.NewTransientStoreKey("transient_test")
 	s.Ctx = testutil.DefaultContext(storeKey, tKey)
 	s.App.ConcentratedLiquidityKeeper = cl.NewKeeper(s.App.AppCodec(), storeKey, s.App.AccountKeeper, s.App.BankKeeper, s.App.GAMMKeeper, s.App.PoolIncentivesKeeper, s.App.IncentivesKeeper, s.App.LockupKeeper, s.App.DistrKeeper, s.App.ContractKeeper, s.App.GetSubspace(types.ModuleName))
 
@@ -451,6 +452,9 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			clPool := s.PrepareConcentratedPool()
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 
+			// Upscale accum value
+			test.expectedTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal = test.expectedTickInfo.SpreadRewardGrowthOppositeDirectionOfLastTraversal.MulDecTruncate(cl.PerUnitLiqScalingFactor)
+
 			if test.preInitUptimeAccumValues != nil {
 				err := addToUptimeAccums(s.Ctx, clPool.GetId(), clKeeper, test.preInitUptimeAccumValues)
 				s.Require().NoError(err)
@@ -488,7 +492,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 		preInitializedTickIndex     = DefaultCurrTick - 2
 		expectedUptimes             = getExpectedUptimes()
 		emptyUptimeTrackers         = wrapUptimeTrackers(expectedUptimes.emptyExpectedAccumValues)
-		defaultAdditiveSpreadFactor = sdk.NewDecCoinFromDec(USDC, osmomath.NewDec(1000))
+		defaultAdditiveSpreadFactor = sdk.NewDecCoinFromDec(USDC, osmomath.NewDec(1000).MulTruncate(cl.PerUnitLiqScalingFactor))
 	)
 
 	tests := []struct {
@@ -673,12 +677,13 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			}
 
 			// System under test
-			liquidityDelta, err := s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, test.poolToGet, test.tickToGet, nextTickInfo, test.additiveSpreadFactor, spreadRewardAccum.GetValue(), uptimeAccums)
+			err = s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, test.poolToGet, test.tickToGet, nextTickInfo, test.additiveSpreadFactor, spreadRewardAccum.GetValue(), uptimeAccums)
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, &test.expectedErr)
 			} else {
 				s.Require().NoError(err)
+				liquidityDelta := nextTickInfo.LiquidityNet
 				s.Require().Equal(test.expectedLiquidityDelta, liquidityDelta)
 
 				// now check if spread factor accumulator has been properly updated
@@ -686,7 +691,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 				s.Require().NoError(err)
 
 				// accum value should not have changed
-				s.Require().Equal(accum.GetValue(), sdk.NewDecCoins(defaultAccumCoins).MulDec(osmomath.NewDec(2)))
+				s.Require().Equal(accum.GetValue(), sdk.NewDecCoins(defaultAccumCoins).MulDec(osmomath.NewDec(2)).MulDecTruncate(cl.PerUnitLiqScalingFactor))
 
 				// check if the tick spread reward growth outside has been correctly subtracted
 				tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, test.poolToGet, test.tickToGet)

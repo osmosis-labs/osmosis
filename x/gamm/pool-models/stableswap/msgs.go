@@ -5,8 +5,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 const (
@@ -80,10 +80,6 @@ func (msg MsgCreateStableswapPool) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgCreateStableswapPool) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 func (msg MsgCreateStableswapPool) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -155,10 +151,6 @@ func (msg MsgStableSwapAdjustScalingFactors) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-func (msg MsgStableSwapAdjustScalingFactors) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgStableSwapAdjustScalingFactors) GetSigners() []sdk.AccAddress {

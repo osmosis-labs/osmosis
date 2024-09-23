@@ -5,16 +5,15 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	cl "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
-	clmodel "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	types "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	cl "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/model"
+	clmodel "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	types "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
 )
 
 type lpTest struct {
@@ -361,6 +360,10 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 
 			s.validatePositionSpreadRewardAccUpdate(s.Ctx, tc.poolId, positionId, expectedLiquidityCreated)
 
+			// Upscale accumulator values
+			tc.expectedSpreadRewardGrowthOutsideLower = tc.expectedSpreadRewardGrowthOutsideLower.MulDecTruncate(cl.PerUnitLiqScalingFactor)
+			tc.expectedSpreadRewardGrowthOutsideUpper = tc.expectedSpreadRewardGrowthOutsideUpper.MulDecTruncate(cl.PerUnitLiqScalingFactor)
+
 			// Check tick state
 			s.validateTickUpdates(tc.poolId, tc.lowerTick, tc.upperTick, tc.liquidityAmount, tc.expectedSpreadRewardGrowthOutsideLower, tc.expectedSpreadRewardGrowthOutsideUpper)
 
@@ -596,8 +599,6 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				s.FundAcc(pool.GetSpreadRewardsAddress(), expectedSpreadRewardsClaimed)
 			}
 
-			communityPoolBalanceBefore := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName))
-
 			// Set expected incentives and fund pool with appropriate amount
 			expectedIncentivesClaimed = expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, tc.timeElapsed, defaultMultiplier)
 
@@ -641,14 +642,19 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			poolSpreadRewardBalanceAfterWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetSpreadRewardsAddress())
 			incentivesBalanceAfterWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetIncentivesAddress())
 			ownerBalancerAfterWithdraw := s.App.BankKeeper.GetAllBalances(s.Ctx, owner)
-			communityPoolBalanceAfter := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName))
+
+			// If the position was the last in the pool, we expect it to receive full incentives since there
+			// is nobody to forfeit to
+			updatedPool, err := concentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+			if updatedPool.GetLiquidity().LTE(osmomath.OneDec()) {
+				expectedIncentivesClaimed = expectedFullIncentivesFromAllUptimes
+			}
 
 			// owner should only have tokens equivalent to the delta balance of the pool
 			expectedOwnerBalanceDelta := expectedPoolBalanceDelta.Add(expectedIncentivesClaimed...).Add(expectedSpreadRewardsClaimed...)
 			actualOwnerBalancerDelta := ownerBalancerAfterWithdraw.Sub(ownerBalancerBeforeWithdraw...)
-
-			communityPoolBalanceDelta := communityPoolBalanceAfter.Sub(communityPoolBalanceBefore...)
-			actualIncentivesClaimed := incentivesBalanceBeforeWithdraw.Sub(incentivesBalanceAfterWithdraw...).Sub(communityPoolBalanceDelta...)
+			actualIncentivesClaimed := incentivesBalanceBeforeWithdraw.Sub(incentivesBalanceAfterWithdraw...)
 
 			s.Require().Equal(expectedPoolBalanceDelta.String(), poolBalanceBeforeWithdraw.Sub(poolBalanceAfterWithdraw...).String())
 			s.Require().NotEmpty(expectedOwnerBalanceDelta)
@@ -1342,10 +1348,10 @@ func mergeConfigs(dst *lpTest, overwrite *lpTest) {
 		if !overwrite.joinTime.IsZero() {
 			dst.joinTime = overwrite.joinTime
 		}
-		if !overwrite.expectedSpreadRewardGrowthOutsideLower.IsEqual(sdk.DecCoins{}) {
+		if !overwrite.expectedSpreadRewardGrowthOutsideLower.Equal(sdk.DecCoins{}) {
 			dst.expectedSpreadRewardGrowthOutsideLower = overwrite.expectedSpreadRewardGrowthOutsideLower
 		}
-		if !overwrite.expectedSpreadRewardGrowthOutsideUpper.IsEqual(sdk.DecCoins{}) {
+		if !overwrite.expectedSpreadRewardGrowthOutsideUpper.Equal(sdk.DecCoins{}) {
 			dst.expectedSpreadRewardGrowthOutsideUpper = overwrite.expectedSpreadRewardGrowthOutsideUpper
 		}
 		if overwrite.positionId != 0 {

@@ -7,13 +7,14 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
 )
 
 var (
-	validCosmwasmAddress   = "symphony14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s748pj4"
-	invalidCosmwasmAddress = "symphony1{}{}4hj2tfpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s748pj4"
+	validCosmwasmAddress   = "osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9"
+	invalidCosmwasmAddress = "osmo1{}{}4hj2tfpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9"
 	validActionPrefix      = "beforeSwapExactAmountIn"
 	counterContractPath    = "./testcontracts/compiled-wasm/counter.wasm"
 )
@@ -248,7 +249,7 @@ func (s *KeeperTestSuite) TestPoolHooks() {
 
 			// Fund the contract with tokens for all action prefixes using a helper
 			for _, actionPrefix := range tc.actionPrefixes {
-				s.FundAcc(rawCosmwasmAddress, sdk.NewCoins(sdk.NewCoin(actionPrefix, sdk.NewInt(10))))
+				s.FundAcc(rawCosmwasmAddress, sdk.NewCoins(sdk.NewCoin(actionPrefix, osmomath.NewInt(10))))
 			}
 
 			// Set the contract for all hooks as defined by tc.actionPrefixes
@@ -264,17 +265,17 @@ func (s *KeeperTestSuite) TestPoolHooks() {
 			_, positionId := s.SetupPosition(clPool.GetId(), s.TestAccs[0], DefaultCoins, types.MinInitializedTick, types.MaxTick, true)
 
 			// Withdraw from position
-			_, _, err := s.Clk.WithdrawPosition(s.Ctx, s.TestAccs[0], positionId, sdk.NewDec(100))
+			_, _, err := s.Clk.WithdrawPosition(s.Ctx, s.TestAccs[0], positionId, osmomath.NewDec(100))
 			s.Require().NoError(err)
 
 			// Execute swap (SwapExactAmountIn)
-			s.FundAcc(rawCosmwasmAddress, sdk.NewCoins(sdk.NewCoin(types.SwapExactAmountInPrefix, sdk.NewInt(10))))
-			_, err = s.Clk.SwapExactAmountIn(s.Ctx, s.TestAccs[0], clPool, sdk.NewCoin(ETH, sdk.NewInt(1)), USDC, sdk.ZeroInt(), DefaultZeroSpreadFactor)
+			s.FundAcc(rawCosmwasmAddress, sdk.NewCoins(sdk.NewCoin(types.SwapExactAmountInPrefix, osmomath.NewInt(10))))
+			_, err = s.Clk.SwapExactAmountIn(s.Ctx, s.TestAccs[0], clPool, sdk.NewCoin(ETH, osmomath.NewInt(1)), USDC, osmomath.ZeroInt(), DefaultZeroSpreadFactor)
 			s.Require().NoError(err)
 
 			// Execute swap (SwapExactAmountOut)
-			s.FundAcc(rawCosmwasmAddress, sdk.NewCoins(sdk.NewCoin(types.SwapExactAmountOutPrefix, sdk.NewInt(10))))
-			_, err = s.Clk.SwapExactAmountOut(s.Ctx, s.TestAccs[0], clPool, ETH, sdk.NewInt(100), sdk.NewCoin(USDC, sdk.NewInt(10)), DefaultZeroSpreadFactor)
+			s.FundAcc(rawCosmwasmAddress, sdk.NewCoins(sdk.NewCoin(types.SwapExactAmountOutPrefix, osmomath.NewInt(10))))
+			_, err = s.Clk.SwapExactAmountOut(s.Ctx, s.TestAccs[0], clPool, ETH, osmomath.NewInt(100), sdk.NewCoin(USDC, osmomath.NewInt(10)), DefaultZeroSpreadFactor)
 			s.Require().NoError(err)
 
 			// Check that each set hook was successfully triggered.
@@ -283,7 +284,7 @@ func (s *KeeperTestSuite) TestPoolHooks() {
 			// action that triggered it.
 			expectedTriggers := sdk.NewCoins()
 			for _, actionPrefix := range tc.actionPrefixes {
-				expectedTriggers = expectedTriggers.Add(sdk.NewCoin(actionPrefix, sdk.NewInt(1)))
+				expectedTriggers = expectedTriggers.Add(sdk.NewCoin(actionPrefix, osmomath.NewInt(1)))
 			}
 
 			// Ensure that correct hooks were triggered
@@ -295,7 +296,7 @@ func (s *KeeperTestSuite) TestPoolHooks() {
 
 			// Ensure that hooks that weren't set weren't triggered
 			for _, action := range notTriggeredActions {
-				s.Require().False(osmoutils.Contains(balances, sdk.NewCoin(action, sdk.NewInt(1))), "expected balance to not include: %s, actual balances: %s", action, balances)
+				s.Require().False(osmoutils.Contains(balances, sdk.NewCoin(action, osmomath.NewInt(1))), "expected balance to not include: %s, actual balances: %s", action, balances)
 			}
 		})
 	}
@@ -324,7 +325,7 @@ func (s *KeeperTestSuite) uploadAndInstantiateContract(filePath string) (rawCWAd
 	s.Require().NoError(err)
 	rawCWAddr, _, err = contractKeeper.Instantiate(s.Ctx, codeID, s.TestAccs[0], s.TestAccs[0], []byte("{}"), "", sdk.NewCoins())
 	s.Require().NoError(err)
-	bech32CWAddr, err = sdk.Bech32ifyAddressBytes("symphony", rawCWAddr)
+	bech32CWAddr, err = sdk.Bech32ifyAddressBytes("osmo", rawCWAddr)
 	s.Require().NoError(err)
 
 	return rawCWAddr, bech32CWAddr

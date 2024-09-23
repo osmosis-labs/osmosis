@@ -2,8 +2,10 @@ syntax = "proto3";
 package osmosis.ibchooks;
 
 import "gogoproto/gogo.proto";
+import "cosmos/msg/v1/msg.proto";
+import "amino/amino.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v23/x/ibc-hooks/types";
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/ibc-hooks/types";
 
 // Msg defines the Msg service.
 service Msg {
@@ -13,6 +15,9 @@ service Msg {
 }
 
 message MsgEmitIBCAck {
+  option (amino.name) = "osmosis/MsgEmitIBCAck";
+  option (cosmos.msg.v1.signer) = "sender";
+
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 packet_sequence = 2
       [ (gogoproto.moretags) = "yaml:\"packet_sequence\"" ];

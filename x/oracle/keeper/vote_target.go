@@ -1,6 +1,9 @@
 package keeper
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+)
 
 // IsVoteTarget returns existence of a denom in the the voting target list
 func (k Keeper) IsVoteTarget(ctx sdk.Context, denom string) bool {
@@ -10,7 +13,7 @@ func (k Keeper) IsVoteTarget(ctx sdk.Context, denom string) bool {
 
 // GetVoteTargets returns the voting target list on current vote period
 func (k Keeper) GetVoteTargets(ctx sdk.Context) (voteTargets []string) {
-	k.IterateTobinTaxes(ctx, func(denom string, _ sdk.Dec) bool {
+	k.IterateTobinTaxes(ctx, func(denom string, _ osmomath.Dec) bool {
 		voteTargets = append(voteTargets, denom)
 		return false
 	})

@@ -4,9 +4,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v26/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/protorev/types"
 )
 
 // TestMsgSetHotRoutes tests the MsgSetHotRoutes message.
@@ -51,18 +51,18 @@ func (s *KeeperTestSuite) TestMsgSetHotRoutes() {
 								{
 									Pool:     0,
 									TokenIn:  "Juno",
-									TokenOut: types.SymphonyDenomination,
+									TokenOut: types.OsmosisDenomination,
 								},
 								{
 									Pool:     3,
-									TokenIn:  types.SymphonyDenomination,
+									TokenIn:  types.OsmosisDenomination,
 									TokenOut: "Atom",
 								},
 							},
 							StepSize: validStepSize,
 						},
 					},
-					TokenIn:  types.SymphonyDenomination,
+					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
 				},
 			},
@@ -85,18 +85,18 @@ func (s *KeeperTestSuite) TestMsgSetHotRoutes() {
 								{
 									Pool:     0,
 									TokenIn:  "Juno",
-									TokenOut: types.SymphonyDenomination,
+									TokenOut: types.OsmosisDenomination,
 								},
 								{
 									Pool:     3,
-									TokenIn:  types.SymphonyDenomination,
+									TokenIn:  types.OsmosisDenomination,
 									TokenOut: "Atom",
 								},
 							},
 							StepSize: validStepSize,
 						},
 					},
-					TokenIn:  types.SymphonyDenomination,
+					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
 				},
 				{
@@ -111,18 +111,18 @@ func (s *KeeperTestSuite) TestMsgSetHotRoutes() {
 								{
 									Pool:     0,
 									TokenIn:  "Juno",
-									TokenOut: types.SymphonyDenomination,
+									TokenOut: types.OsmosisDenomination,
 								},
 								{
 									Pool:     3,
-									TokenIn:  types.SymphonyDenomination,
+									TokenIn:  types.OsmosisDenomination,
 									TokenOut: "Atom",
 								},
 							},
 							StepSize: validStepSize,
 						},
 					},
-					TokenIn:  types.SymphonyDenomination,
+					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
 				},
 			},
@@ -145,18 +145,18 @@ func (s *KeeperTestSuite) TestMsgSetHotRoutes() {
 								{
 									Pool:     0,
 									TokenIn:  "Juno",
-									TokenOut: types.SymphonyDenomination,
+									TokenOut: types.OsmosisDenomination,
 								},
 								{
 									Pool:     3,
-									TokenIn:  types.SymphonyDenomination,
+									TokenIn:  types.OsmosisDenomination,
 									TokenOut: "Atom",
 								},
 							},
 							StepSize: invalidStepSize,
 						},
 					},
-					TokenIn:  types.SymphonyDenomination,
+					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
 				},
 			},
@@ -179,17 +179,17 @@ func (s *KeeperTestSuite) TestMsgSetHotRoutes() {
 								{
 									Pool:     0,
 									TokenIn:  "Juno",
-									TokenOut: types.SymphonyDenomination,
+									TokenOut: types.OsmosisDenomination,
 								},
 								{
 									Pool:     3,
-									TokenIn:  types.SymphonyDenomination,
+									TokenIn:  types.OsmosisDenomination,
 									TokenOut: "Atom",
 								},
 							},
 						},
 					},
-					TokenIn:  types.SymphonyDenomination,
+					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
 				},
 			},
@@ -211,7 +211,7 @@ func (s *KeeperTestSuite) TestMsgSetHotRoutes() {
 			}
 
 			server := keeper.NewMsgServer(*s.App.AppKeepers.ProtoRevKeeper)
-			wrappedCtx := sdk.WrapSDKContext(s.Ctx)
+			wrappedCtx := s.Ctx
 			response, err := server.SetHotRoutes(wrappedCtx, msg)
 			if tc.pass {
 				s.Require().NoError(err)
@@ -279,7 +279,7 @@ func (s *KeeperTestSuite) TestMsgSetDeveloperAccount() {
 			}
 
 			server := keeper.NewMsgServer(*s.App.AppKeepers.ProtoRevKeeper)
-			wrappedCtx := sdk.WrapSDKContext(s.Ctx)
+			wrappedCtx := s.Ctx
 			response, err := server.SetDeveloperAccount(wrappedCtx, msg)
 			if testCase.pass {
 				s.Require().NoError(err)
@@ -361,7 +361,7 @@ func (s *KeeperTestSuite) TestMsgSetMaxPoolPointsPerTx() {
 			}
 
 			server := keeper.NewMsgServer(*s.App.AppKeepers.ProtoRevKeeper)
-			wrappedCtx := sdk.WrapSDKContext(s.Ctx)
+			wrappedCtx := s.Ctx
 			response, err := server.SetMaxPoolPointsPerTx(wrappedCtx, msg)
 			if testCase.pass {
 				s.Require().NoError(err)
@@ -450,7 +450,7 @@ func (s *KeeperTestSuite) TestMsgSetMaxPoolPointsPerBlock() {
 			}
 
 			server := keeper.NewMsgServer(*s.App.AppKeepers.ProtoRevKeeper)
-			wrappedCtx := sdk.WrapSDKContext(s.Ctx)
+			wrappedCtx := s.Ctx
 			response, err := server.SetMaxPoolPointsPerBlock(wrappedCtx, msg)
 			if testCase.pass {
 				s.Require().NoError(err)
@@ -549,7 +549,7 @@ func (s *KeeperTestSuite) TestMsgSetPoolTypeInfo() {
 			}
 
 			server := keeper.NewMsgServer(*s.App.AppKeepers.ProtoRevKeeper)
-			wrappedCtx := sdk.WrapSDKContext(s.Ctx)
+			wrappedCtx := s.Ctx
 			response, err := server.SetInfoByPoolType(wrappedCtx, msg)
 			if testCase.pass {
 				s.Require().NoError(err)
@@ -579,7 +579,7 @@ func (s *KeeperTestSuite) TestMsgSetBaseDenoms() {
 			"admin",
 			[]types.BaseDenom{
 				{
-					Denom:    types.SymphonyDenomination,
+					Denom:    types.OsmosisDenomination,
 					StepSize: osmomath.NewInt(1_000_000),
 				},
 			},
@@ -587,7 +587,7 @@ func (s *KeeperTestSuite) TestMsgSetBaseDenoms() {
 			false,
 		},
 		{
-			"Invalid message (invalid base denoms must start with melody)",
+			"Invalid message (invalid base denoms must start with osmo)",
 			s.adminAccount.String(),
 			[]types.BaseDenom{
 				{
@@ -603,7 +603,7 @@ func (s *KeeperTestSuite) TestMsgSetBaseDenoms() {
 			s.adminAccount.String(),
 			[]types.BaseDenom{
 				{
-					Denom:    types.SymphonyDenomination,
+					Denom:    types.OsmosisDenomination,
 					StepSize: osmomath.NewInt(0),
 				},
 			},
@@ -615,7 +615,7 @@ func (s *KeeperTestSuite) TestMsgSetBaseDenoms() {
 			apptesting.CreateRandomAccounts(1)[0].String(),
 			[]types.BaseDenom{
 				{
-					Denom:    types.SymphonyDenomination,
+					Denom:    types.OsmosisDenomination,
 					StepSize: osmomath.NewInt(1_000_000),
 				},
 			},
@@ -627,7 +627,7 @@ func (s *KeeperTestSuite) TestMsgSetBaseDenoms() {
 			s.adminAccount.String(),
 			[]types.BaseDenom{
 				{
-					Denom:    types.SymphonyDenomination,
+					Denom:    types.OsmosisDenomination,
 					StepSize: osmomath.NewInt(1_000_000),
 				},
 			},
@@ -649,7 +649,7 @@ func (s *KeeperTestSuite) TestMsgSetBaseDenoms() {
 			}
 
 			server := keeper.NewMsgServer(*s.App.AppKeepers.ProtoRevKeeper)
-			wrappedCtx := sdk.WrapSDKContext(s.Ctx)
+			wrappedCtx := s.Ctx
 			response, err := server.SetBaseDenoms(wrappedCtx, msg)
 			if testCase.pass {
 				s.Require().NoError(err)

@@ -1,9 +1,9 @@
 package bindings
 
-// SymphonyQuery contains symphony custom queries.
+// OsmosisQuery contains osmosis custom queries.
 // See https://github.com/osmosis-labs/osmosis-bindings/blob/main/packages/bindings/src/query.rs
-type SymphonyQuery struct {
-	/// Given a subdenom minted by a contract via `SymphonyMsg::MintTokens`,
+type OsmosisQuery struct {
+	/// Given a subdenom minted by a contract via `OsmosisMsg::MintTokens`,
 	/// returns the full denom as used by `BankMsg::Send`.
 	FullDenom *FullDenom `json:"full_denom,omitempty"`
 	/// Returns the admin of a denom, if the denom is a Token Factory denom.

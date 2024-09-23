@@ -5,8 +5,8 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
@@ -35,7 +35,7 @@ func GetUserPositions() (*osmocli.QueryDescriptor, *queryproto.UserPositionsRequ
 			Use:   "user-positions",
 			Short: "Query user's positions",
 			Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} user-positions symphony1p7mp7r9f9f6sf2c95ht42ncm6ga96ha8xghdeg`,
+{{.CommandPrefix}} user-positions osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj`,
 			Flags:               osmocli.FlagDesc{OptionalFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
 			CustomFlagOverrides: poolIdFlagOverride,
 		},
@@ -111,7 +111,7 @@ func GetTickLiquidityNetInDirection() (*osmocli.QueryDescriptor, *queryproto.Liq
 		Use:   "liquidity-net-in-direction",
 		Short: "Query liquidity net in direction",
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} 4 note "[-18000000]" true "[-9000000]" true
+{{.CommandPrefix}} 4 uosmo "[-18000000]" true "[-9000000]" true
 
 [poolid] [inputDenom] [start tick] [use cur tick] [bound tick] [use_no_bound]
 TODO: What does any of that mean...?`,

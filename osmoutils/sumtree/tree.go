@@ -11,8 +11,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 
-	store "github.com/cosmos/cosmos-sdk/store"
-	stypes "github.com/cosmos/cosmos-sdk/store/types"
+	store "cosmossdk.io/store"
+	stypes "cosmossdk.io/store/types"
 )
 
 // Tree is an augmented B+ tree implementation.

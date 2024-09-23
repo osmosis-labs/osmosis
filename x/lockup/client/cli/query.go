@@ -17,7 +17,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v26/x/lockup/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
@@ -244,7 +244,7 @@ func GetCmdAccountLockedDuration() *cobra.Command {
 		"account-locked-duration",
 		"Query account locked records with a specific duration",
 		`{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} account-locked-duration symphony153myrepjymt5fvfntdksk4098vkvk8pqqg7fq6 604800s`, types.ModuleName, types.NewQueryClient)
+{{.CommandPrefix}} account-locked-duration osmo1yl6hdjhmkf37639730gffanpzndzdpmhxy9ep3 604800s`, types.ModuleName, types.NewQueryClient)
 }
 
 // GetCmdAccountLockedLongerDurationNotUnlockingOnly returns account locked records with longer duration from unlocking only queue.
@@ -269,7 +269,7 @@ func GetCmdTotalLockedByDenom() (*osmocli.QueryDescriptor, *types.LockedDenomReq
 		Use:   "total-locked-of-denom",
 		Short: "Query locked amount for a specific denom bigger then duration provided",
 		Long: osmocli.FormatLongDescDirect(`{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} total-locked-of-denom note --min-duration=0s`, types.ModuleName),
+{{.CommandPrefix}} total-locked-of-denom uosmo --min-duration=0s`, types.ModuleName),
 		CustomFlagOverrides: map[string]string{
 			"duration": FlagMinDuration,
 		},

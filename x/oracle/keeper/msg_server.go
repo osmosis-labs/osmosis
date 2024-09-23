@@ -8,7 +8,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
 )
 
 type msgServer struct {
@@ -143,8 +143,8 @@ func (ms msgServer) DelegateFeedConsent(goCtx context.Context, msg *types.MsgDel
 	}
 
 	// Check the delegator is a validator
-	val := ms.StakingKeeper.Validator(ctx, operatorAddr)
-	if val == nil {
+	_, err = ms.StakingKeeper.GetValidator(ctx, operatorAddr)
+	if err != nil {
 		return nil, errorsmod.Wrap(stakingtypes.ErrNoValidatorFound, msg.Operator)
 	}
 

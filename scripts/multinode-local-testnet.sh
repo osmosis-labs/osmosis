@@ -16,6 +16,7 @@ mkdir $HOME/.symphonyd/validator4
 
 # init all 4 validators
 symphonyd init --chain-id=$CHAIN_ID validator1 --home=$HOME/.symphonyd/validator1
+symphonyd prepare-genesis mainnet $CHAIN_ID --home=$HOME/.symphonyd/validator1
 symphonyd init --chain-id=$CHAIN_ID validator2 --home=$HOME/.symphonyd/validator2
 symphonyd init --chain-id=$CHAIN_ID validator3 --home=$HOME/.symphonyd/validator3
 symphonyd init --chain-id=$CHAIN_ID validator4 --home=$HOME/.symphonyd/validator4
@@ -31,7 +32,7 @@ update_genesis () {
 
 # create validator node with tokens
 symphonyd add-genesis-account $(symphonyd keys show validator1 -a --keyring-backend=test --home=$HOME/.symphonyd/validator1) 100000000000note,10000000usdr --home=$HOME/.symphonyd/validator1
-symphonyd gentx validator1 5000000000note --moniker="validator1" --chain-id=$CHAIN_ID --commission-rate="0.1" --commission-max-rate="0.2" --commission-max-change-rate="0.05" --min-self-delegation="500000000" --keyring-backend=test --home=$HOME/.symphonyd/validator1 --chain-id=$CHAIN_ID
+symphonyd gentx validator1 5000000000note --moniker="validator1" --chain-id=$CHAIN_ID --keyring-backend=test --home=$HOME/.symphonyd/validator1 --chain-id=$CHAIN_ID
 symphonyd collect-gentxs --home=$HOME/.symphonyd/validator1
 
 # change staking denom to note
@@ -70,10 +71,10 @@ update_genesis '.app_state["mint"]["params"]["mint_denom"]="note"'
 update_genesis '.app_state["mint"]["params"]["epoch_identifier"]="day"'
 
 # update gamm genesis
-update_genesis '.app_state["gamm"]["params"]["pool_creation_fee"][0]["denom"]="note"'
+#update_genesis '.app_state["gamm"]["params"]["pool_creation_fee"][0]["denom"]="note"'
 
 # update concentratedliquidity genesis
-update_genesis '.app_state["concentratedliquidity"]["params"]["is_permissionless_pool_creation_enabled"]=true'
+#update_genesis '.app_state["concentratedliquidity"]["params"]["is_permissionless_pool_creation_enabled"]=true'
 
 # update txfees genesis
 update_genesis '.app_state["txfees"]["basedenom"]="note"'

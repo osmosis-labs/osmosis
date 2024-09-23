@@ -6,10 +6,10 @@ import (
 	"sort"
 	"strings"
 
-	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/keeper/internal/events"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -37,7 +37,7 @@ func HandleRemoveSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, p *t
 			return err
 		}
 		dummyAsset := types.SuperfluidAsset{}
-		if asset == dummyAsset {
+		if asset.Equal(dummyAsset) {
 			return fmt.Errorf("superfluid asset %s doesn't exist", denom)
 		}
 		k.BeginUnwindSuperfluidAsset(ctx, 0, asset)

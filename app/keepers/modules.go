@@ -1,25 +1,24 @@
 package keepers
 
+// UNFORKING v2 TODO: Eventually should get rid of this in favor of NewBasicManagerFromManager
+// Right now is strictly used for default genesis creation and registering codecs prior to app init
+// Unclear to me how to use NewBasicManagerFromManager for this purpose though prior to app init
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
-	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward"
-	transfer "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
-	ibc "github.com/cosmos/ibc-go/v7/modules/core"
-	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
-	tendermint "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
-	"github.com/osmosis-labs/osmosis/v23/x/market"
-	"github.com/osmosis-labs/osmosis/v23/x/oracle"
-	"github.com/osmosis-labs/osmosis/v23/x/treasury"
+	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward"
+	transfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
+	ibc "github.com/cosmos/ibc-go/v8/modules/core"
+	tendermint "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 
+	"cosmossdk.io/x/evidence"
+	"cosmossdk.io/x/upgrade"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
@@ -27,47 +26,53 @@ import (
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
-	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
+	icq "github.com/cosmos/ibc-apps/modules/async-icq/v8"
+	"github.com/cosmos/ibc-go/modules/capability"
 	ibcwasm "github.com/cosmos/ibc-go/modules/light-clients/08-wasm"
-	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
+	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
 
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
-	_ "github.com/osmosis-labs/osmosis/v23/client/docs/statik"
-	clclient "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/client"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/clmodule"
-	cwpoolclient "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/client"
-	cosmwasmpoolmodule "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/module"
-	downtimemodule "github.com/osmosis-labs/osmosis/v23/x/downtime-detector/module"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm"
-	gammclient "github.com/osmosis-labs/osmosis/v23/x/gamm/client"
-	"github.com/osmosis-labs/osmosis/v23/x/ibc-rate-limit/ibcratelimitmodule"
-	"github.com/osmosis-labs/osmosis/v23/x/incentives"
-	incentivesclient "github.com/osmosis-labs/osmosis/v23/x/incentives/client"
-	"github.com/osmosis-labs/osmosis/v23/x/lockup"
-	"github.com/osmosis-labs/osmosis/v23/x/mint"
-	poolincentives "github.com/osmosis-labs/osmosis/v23/x/pool-incentives"
-	poolincentivesclient "github.com/osmosis-labs/osmosis/v23/x/pool-incentives/client"
-	poolmanagerclient "github.com/osmosis-labs/osmosis/v23/x/poolmanager/client"
-	poolmanager "github.com/osmosis-labs/osmosis/v23/x/poolmanager/module"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev"
-	superfluid "github.com/osmosis-labs/osmosis/v23/x/superfluid"
-	superfluidclient "github.com/osmosis-labs/osmosis/v23/x/superfluid/client"
-	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory"
-	"github.com/osmosis-labs/osmosis/v23/x/twap/twapmodule"
-	"github.com/osmosis-labs/osmosis/v23/x/txfees"
-	txfeesclient "github.com/osmosis-labs/osmosis/v23/x/txfees/client"
-	valsetprefmodule "github.com/osmosis-labs/osmosis/v23/x/valset-pref/valpref-module"
+	smartaccount "github.com/osmosis-labs/osmosis/v26/x/smart-account"
+
+	"github.com/skip-mev/block-sdk/v2/x/auction"
+
+	_ "github.com/osmosis-labs/osmosis/v26/client/docs/statik"
+	clclient "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/client"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/clmodule"
+	cwpoolclient "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/client"
+	cosmwasmpoolmodule "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/module"
+	downtimemodule "github.com/osmosis-labs/osmosis/v26/x/downtime-detector/module"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm"
+	gammclient "github.com/osmosis-labs/osmosis/v26/x/gamm/client"
+	"github.com/osmosis-labs/osmosis/v26/x/ibc-rate-limit/ibcratelimitmodule"
+	"github.com/osmosis-labs/osmosis/v26/x/incentives"
+	incentivesclient "github.com/osmosis-labs/osmosis/v26/x/incentives/client"
+	"github.com/osmosis-labs/osmosis/v26/x/lockup"
+	"github.com/osmosis-labs/osmosis/v26/x/market"
+	"github.com/osmosis-labs/osmosis/v26/x/mint"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle"
+	poolincentives "github.com/osmosis-labs/osmosis/v26/x/pool-incentives"
+	poolincentivesclient "github.com/osmosis-labs/osmosis/v26/x/pool-incentives/client"
+	poolmanagerclient "github.com/osmosis-labs/osmosis/v26/x/poolmanager/client"
+	poolmanager "github.com/osmosis-labs/osmosis/v26/x/poolmanager/module"
+	"github.com/osmosis-labs/osmosis/v26/x/protorev"
+	superfluid "github.com/osmosis-labs/osmosis/v26/x/superfluid"
+	superfluidclient "github.com/osmosis-labs/osmosis/v26/x/superfluid/client"
+	"github.com/osmosis-labs/osmosis/v26/x/tokenfactory"
+	"github.com/osmosis-labs/osmosis/v26/x/treasury"
+	"github.com/osmosis-labs/osmosis/v26/x/twap/twapmodule"
+	"github.com/osmosis-labs/osmosis/v26/x/txfees"
+	txfeesclient "github.com/osmosis-labs/osmosis/v26/x/txfees/client"
+	valsetprefmodule "github.com/osmosis-labs/osmosis/v26/x/valset-pref/valpref-module"
 	"github.com/osmosis-labs/osmosis/x/epochs"
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 )
 
 // AppModuleBasics returns ModuleBasics for the module BasicManager.
-var AppModuleBasics = []module.AppModuleBasic{
+var AppModuleBasics = module.NewBasicManager(
 	auth.AppModuleBasic{},
 	genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
 	bank.AppModuleBasic{},
@@ -79,12 +84,8 @@ var AppModuleBasics = []module.AppModuleBasic{
 	gov.NewAppModuleBasic(
 		[]govclient.ProposalHandler{
 			paramsclient.ProposalHandler,
-			upgradeclient.LegacyProposalHandler,
-			upgradeclient.LegacyCancelProposalHandler,
 			poolincentivesclient.UpdatePoolIncentivesHandler,
 			poolincentivesclient.ReplacePoolIncentivesHandler,
-			ibcclientclient.UpdateClientProposalHandler,
-			ibcclientclient.UpgradeProposalHandler,
 			superfluidclient.SetSuperfluidAssetsProposalHandler,
 			superfluidclient.RemoveSuperfluidAssetsProposalHandler,
 			superfluidclient.UpdateUnpoolWhitelistProposalHandler,
@@ -136,4 +137,6 @@ var AppModuleBasics = []module.AppModuleBasic{
 	packetforward.AppModuleBasic{},
 	cosmwasmpoolmodule.AppModuleBasic{},
 	tendermint.AppModuleBasic{},
-}
+	auction.AppModuleBasic{},
+	smartaccount.AppModuleBasic{},
+)

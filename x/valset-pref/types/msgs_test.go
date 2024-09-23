@@ -6,9 +6,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v23/app/params"
-	"github.com/osmosis-labs/osmosis/v23/x/valset-pref/types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v26/x/valset-pref/types"
 )
 
 func TestMsgSetValidatorSetPreference(t *testing.T) {
@@ -26,15 +26,15 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 				Delegator: addr1,
 				Preferences: []types.ValidatorPreference{
 					{
-						ValOperAddress: "symphonyvaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86lswllt",
+						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
 						Weight:         osmomath.NewDecWithPrec(322, 3),
 					},
 					{
-						ValOperAddress: "symphonyvaloper1jcr68jghzm24zwe78zuhz7xahua8429e4s99gc",
+						ValOperAddress: "osmovaloper1jcr68jghzm24zwe78zuhz7xahua8429erxk7vm",
 						Weight:         osmomath.NewDecWithPrec(332, 3),
 					},
 					{
-						ValOperAddress: "symphonyvaloper1gqsr38e4zteekwr6kq5se5jpadafqmcfj55ffn",
+						ValOperAddress: "osmovaloper1gqsr38e4zteekwr6kq5se5jpadafqmcfyz8jds",
 						Weight:         osmomath.NewDecWithPrec(348, 3),
 					},
 				},
@@ -47,15 +47,15 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 				Delegator: addr1,
 				Preferences: []types.ValidatorPreference{
 					{
-						ValOperAddress: "symphonyvaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86lswllt",
+						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
 						Weight:         osmomath.NewDecWithPrec(6, 1),
 					},
 					{
-						ValOperAddress: "symphonyvaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86lswllt",
+						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
 						Weight:         osmomath.NewDecWithPrec(4, 1),
 					},
 					{
-						ValOperAddress: "symphonyvaloper1jcr68jghzm24zwe78zuhz7xahua8429e4s99gc",
+						ValOperAddress: "osmovaloper1jcr68jghzm24zwe78zuhz7xahua8429erxk7vm",
 						Weight:         osmomath.NewDecWithPrec(2, 1),
 					},
 				},
@@ -68,7 +68,7 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 				Delegator: invalidAddr,
 				Preferences: []types.ValidatorPreference{
 					{
-						ValOperAddress: "symphonyvaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86lswllt",
+						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
 						Weight:         osmomath.NewDec(1),
 					},
 				},
@@ -81,15 +81,15 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 				Delegator: addr1,
 				Preferences: []types.ValidatorPreference{
 					{
-						ValOperAddress: "symphonyvaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxay", // invalid address
+						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxay", // invalid address
 						Weight:         osmomath.NewDecWithPrec(2, 1),
 					},
 					{
-						ValOperAddress: "symphonyvaloper1jcr68jghzm24zwe78zuhz7xahua8429e4s99gc",
+						ValOperAddress: "osmovaloper1jcr68jghzm24zwe78zuhz7xahua8429erxk7vm",
 						Weight:         osmomath.NewDecWithPrec(2, 1),
 					},
 					{
-						ValOperAddress: "symphonyvaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86lswllt",
+						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
 						Weight:         osmomath.NewDecWithPrec(6, 1),
 					},
 				},
@@ -102,15 +102,15 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 				Delegator: addr1,
 				Preferences: []types.ValidatorPreference{
 					{
-						ValOperAddress: "symphonyvaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86lswllt",
+						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
 						Weight:         osmomath.NewDecWithPrec(5, 1),
 					},
 					{
-						ValOperAddress: "symphonyvaloper1jcr68jghzm24zwe78zuhz7xahua8429e4s99gc",
+						ValOperAddress: "osmovaloper1jcr68jghzm24zwe78zuhz7xahua8429erxk7vm",
 						Weight:         osmomath.NewDecWithPrec(3, 1),
 					},
 					{
-						ValOperAddress: "symphonyvaloper1gqsr38e4zteekwr6kq5se5jpadafqmcfj55ffn",
+						ValOperAddress: "osmovaloper1gqsr38e4zteekwr6kq5se5jpadafqmcfyz8jds",
 						Weight:         osmomath.NewDecWithPrec(3, 1),
 					},
 				},
@@ -123,15 +123,15 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 				Delegator: addr1,
 				Preferences: []types.ValidatorPreference{
 					{
-						ValOperAddress: "symphonyvaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
+						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
 						Weight:         osmomath.NewDecWithPrec(2, 1),
 					},
 					{
-						ValOperAddress: "symphonyvaloper1jcr68jghzm24zwe78zuhz7xahua8429e4s99gc",
+						ValOperAddress: "osmovaloper1jcr68jghzm24zwe78zuhz7xahua8429erxk7vm",
 						Weight:         osmomath.NewDecWithPrec(2, 1),
 					},
 					{
-						ValOperAddress: "symphonyvaloper1gqsr38e4zteekwr6kq5se5jpadafqmcfyz8jds",
+						ValOperAddress: "osmovaloper1gqsr38e4zteekwr6kq5se5jpadafqmcfyz8jds",
 						Weight:         osmomath.NewDecWithPrec(2, 1),
 					},
 				},

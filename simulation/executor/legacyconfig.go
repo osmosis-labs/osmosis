@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"os"
 
+	"cosmossdk.io/store"
 	cometbftdb "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/store"
 
-	"github.com/osmosis-labs/osmosis/v23/simulation/executor/internal/stats"
-	"github.com/osmosis-labs/osmosis/v23/simulation/simtypes/simlogger"
+	"github.com/osmosis-labs/osmosis/v26/simulation/executor/internal/stats"
+	"github.com/osmosis-labs/osmosis/v26/simulation/simtypes/simlogger"
 )
 
 const SimAppChainID = "symphony-test"

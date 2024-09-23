@@ -1,14 +1,14 @@
 package cosmwasmpool
 
 import (
+	"cosmossdk.io/store/prefix"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/types"
 )
 
 // SetPool stores the given pool in state.

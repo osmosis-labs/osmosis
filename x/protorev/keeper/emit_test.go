@@ -9,8 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v26/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/protorev/types"
 )
 
 func (s *KeeperTestSuite) TestBackRunEvent() {
@@ -25,14 +26,14 @@ func (s *KeeperTestSuite) TestBackRunEvent() {
 		"basic valid": {
 			pool: keeper.SwapToBackrun{
 				PoolId:        1,
-				TokenInDenom:  "note",
+				TokenInDenom:  appparams.BaseCoinUnit,
 				TokenOutDenom: "uatom",
 			},
 			remainingTxPoolPoints:    100,
 			remainingBlockPoolPoints: 100,
 			profit:                   osmomath.NewInt(100),
 			tokenOutAmount:           osmomath.NewInt(100),
-			inputCoin:                sdk.NewCoin("note", osmomath.NewInt(100)),
+			inputCoin:                sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100)),
 		},
 	}
 

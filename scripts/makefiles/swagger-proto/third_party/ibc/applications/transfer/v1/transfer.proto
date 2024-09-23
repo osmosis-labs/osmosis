@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package ibc.applications.transfer.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/cosmos/ibc-go/v9/modules/apps/transfer/types";
+
+// Params defines the set of IBC transfer parameters.
+// NOTE: To prevent a single token from being transferred, set the
+// TransfersEnabled parameter to true and then set the bank module's SendEnabled
+// parameter for the denomination to false.
+message Params {
+  // send_enabled enables or disables all cross-chain token transfers from this
+  // chain.
+  bool send_enabled = 1;
+  // receive_enabled enables or disables all cross-chain token transfers to this
+  // chain.
+  bool receive_enabled = 2;
+}
+
+// Forwarding defines a list of port ID, channel ID pairs determining the path
+// through which a packet must be forwarded, and an unwind boolean indicating if
+// the coin should be unwinded to its native chain before forwarding.
+message Forwarding {
+  // optional unwinding for the token transfered
+  bool unwind = 1;
+  // optional intermediate path through which packet will be forwarded
+  repeated Hop hops = 2 [(gogoproto.nullable) = false];
+}
+
+// Hop defines a port ID, channel ID pair specifying where tokens must be forwarded
+// next in a multihop transfer.
+message Hop {
+  option (gogoproto.goproto_stringer) = false;
+  string port_id                      = 1;
+  string channel_id                   = 2;
+}

@@ -17,7 +17,7 @@ const (
 // Keys for market store
 // Items are stored with the following key: values
 //
-// - 0x01: sdk.Dec
+// - 0x01: osmomath.Dec
 var (
 	// Keys for store prefixed
 	OsmosisPoolDeltaKey = []byte{0x01} // key for symphony pool delta which gap between MintPool from BasePool
