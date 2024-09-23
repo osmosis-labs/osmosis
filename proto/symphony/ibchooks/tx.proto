@@ -1,0 +1,30 @@
+syntax = "proto3";
+package symphony.ibchooks;
+
+import "gogoproto/gogo.proto";
+import "cosmos/msg/v1/msg.proto";
+import "amino/amino.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/ibc-hooks/types";
+
+// Msg defines the Msg service.
+service Msg {
+  // EmitIBCAck checks the sender can emit the ack and writes the IBC
+  // acknowledgement
+  rpc EmitIBCAck(MsgEmitIBCAck) returns (MsgEmitIBCAckResponse);
+}
+
+message MsgEmitIBCAck {
+  option (amino.name) = "symphony/MsgEmitIBCAck";
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 packet_sequence = 2
+      [ (gogoproto.moretags) = "yaml:\"packet_sequence\"" ];
+  string channel = 3 [ (gogoproto.moretags) = "yaml:\"channel\"" ];
+}
+message MsgEmitIBCAckResponse {
+  string contract_result = 1
+      [ (gogoproto.moretags) = "yaml:\"contract_result\"" ];
+  string ibc_ack = 2 [ (gogoproto.moretags) = "yaml:\"ibc_ack\"" ];
+}

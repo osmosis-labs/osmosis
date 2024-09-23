@@ -27,7 +27,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v26/app/params"
-	"github.com/osmosis-labs/osmosis/v26/ingest/indexer"
 
 	"cosmossdk.io/log"
 	tmcfg "github.com/cometbft/cometbft/config"
@@ -652,8 +651,6 @@ func initAppConfig() (string, interface{}) {
 
 		SymphonyMempoolConfig SymphonyMempoolConfig `mapstructure:"symphony-mempool"`
 
-		IndexerConfig indexer.Config `mapstructure:"symphony-indexer"`
-
 		WasmConfig wasmtypes.WasmConfig `mapstructure:"wasm"`
 	}
 
@@ -674,11 +671,9 @@ func initAppConfig() (string, interface{}) {
 
 	memCfg := DefaultSymphonyMempoolConfig
 
-	indexCfg := indexer.DefaultConfig
-
 	wasmCfg := wasmtypes.DefaultWasmConfig()
 
-	SymphonyAppCfg := CustomAppConfig{Config: *srvCfg, SymphonyMempoolConfig: memCfg, IndexerConfig: indexCfg, WasmConfig: wasmCfg}
+	SymphonyAppCfg := CustomAppConfig{Config: *srvCfg, SymphonyMempoolConfig: memCfg, WasmConfig: wasmCfg}
 
 	SymphonyAppTemplate := serverconfig.DefaultConfigTemplate + `
 ###############################################################################
@@ -700,40 +695,6 @@ min-gas-price-for-high-gas-tx = "{{ .SymphonyMempoolConfig.MinGasPriceForHighGas
 
 # This parameter enables EIP-1559 like fee market logic in the mempool
 adaptive-fee-enabled = "{{ .SymphonyMempoolConfig.Mempool1559Enabled }}"
-
-###############################################################################
-###              Symphony Indexer Configuration                              ###
-###############################################################################
-[symphony-indexer]
-
-# The indexer service is disabled by default.
-is-enabled = "{{ .IndexerConfig.IsEnabled }}"
-
-# Max publish delay in seconds for the indexer service.
-# Migitate the issue of messages remaining pending when the publishing rate is low,
-# ensuring timely delivery and preventing messages from appearing undelivered
-max-publish-delay = "{{ .IndexerConfig.MaxPublishDelay }}"
-
-# The GCP project id to use for the indexer service.
-gcp-project-id = "{{ .IndexerConfig.GCPProjectId }}"
-
-# The topic id to use for the publishing block data
-block-topic-id = "{{ .IndexerConfig.BlockTopicId }}"
-
-# The topic id to use for the publishing transaction data
-transaction-topic-id = "{{ .IndexerConfig.TransactionTopicId }}"
-
-# The topic id to use for the publishing pool data
-pool-topic-id = "{{ .IndexerConfig.PoolTopicId }}"
-
-# The topic id to use for the publishing token supply data
-token-supply-topic-id = "{{ .IndexerConfig.TokenSupplyTopicId }}"
-
-# The topic id to use for the publishing token supply offset data
-token-supply-offset-topic-id = "{{ .IndexerConfig.TokenSupplyOffsetTopicId }}"
-
-# The topic id to use for publishing pair metadata
-pair-topic-id = "{{ .IndexerConfig.PairTopicId }}"
 
 ###############################################################################
 ###                            Wasm Configuration                           ###

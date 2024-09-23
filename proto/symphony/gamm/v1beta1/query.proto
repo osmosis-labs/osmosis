@@ -1,0 +1,378 @@
+syntax = "proto3";
+package symphony.gamm.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "symphony/gamm/v1beta1/tx.proto";
+import "symphony/poolmanager/v1beta1/swap_route.proto";
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
+import "symphony/gamm/v1beta1/shared.proto";
+import "symphony/gamm/v1beta1/params.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/gamm/types";
+
+service Query {
+  rpc Pools(QueryPoolsRequest) returns (QueryPoolsResponse) {
+    option (google.api.http).get = "/osmosis/gamm/v1beta1/pools";
+  }
+
+  // Deprecated: please use the alternative in x/poolmanager
+  rpc NumPools(QueryNumPoolsRequest) returns (QueryNumPoolsResponse) {
+    option deprecated = true;
+    option (google.api.http).get = "/osmosis/gamm/v1beta1/num_pools";
+  }
+
+  rpc TotalLiquidity(QueryTotalLiquidityRequest)
+      returns (QueryTotalLiquidityResponse) {
+    option (google.api.http).get = "/osmosis/gamm/v1beta1/total_liquidity";
+  }
+
+  // PoolsWithFilter allows you to query specific pools with requested
+  // parameters
+  rpc PoolsWithFilter(QueryPoolsWithFilterRequest)
+      returns (QueryPoolsWithFilterResponse) {
+    option (google.api.http).get = "/osmosis/gamm/v1beta1/filtered_pools";
+  }
+
+  // Deprecated: please use the alternative in x/poolmanager
+  rpc Pool(QueryPoolRequest) returns (QueryPoolResponse) {
+    option deprecated = true;
+    option (google.api.http).get = "/osmosis/gamm/v1beta1/pools/{pool_id}";
+  }
+
+  // PoolType returns the type of the pool.
+  // Returns "Balancer" as a string literal when the pool is a balancer pool.
+  // Errors if the pool is failed to be type caseted.
+  rpc PoolType(QueryPoolTypeRequest) returns (QueryPoolTypeResponse) {
+    option (google.api.http).get = "/osmosis/gamm/v1beta1/pool_type/{pool_id}";
+  }
+
+  // Simulates joining pool without a swap. Returns the amount of shares you'd
+  // get and tokens needed to provide
+  rpc CalcJoinPoolNoSwapShares(QueryCalcJoinPoolNoSwapSharesRequest)
+      returns (QueryCalcJoinPoolNoSwapSharesResponse) {}
+
+  rpc CalcJoinPoolShares(QueryCalcJoinPoolSharesRequest)
+      returns (QueryCalcJoinPoolSharesResponse) {
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/pools/{pool_id}/join_swap_exact_in";
+  }
+  rpc CalcExitPoolCoinsFromShares(QueryCalcExitPoolCoinsFromSharesRequest)
+      returns (QueryCalcExitPoolCoinsFromSharesResponse) {
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/pools/{pool_id}/exit_swap_share_amount_in";
+  }
+
+  rpc PoolParams(QueryPoolParamsRequest) returns (QueryPoolParamsResponse) {
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/pools/{pool_id}/params";
+  }
+
+  // Deprecated: please use the alternative in x/poolmanager
+  rpc TotalPoolLiquidity(QueryTotalPoolLiquidityRequest)
+      returns (QueryTotalPoolLiquidityResponse) {
+    option deprecated = true;
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/pools/{pool_id}/total_pool_liquidity";
+  }
+
+  rpc TotalShares(QueryTotalSharesRequest) returns (QueryTotalSharesResponse) {
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/pools/{pool_id}/total_shares";
+  }
+
+  // SpotPrice defines a gRPC query handler that returns the spot price given
+  // a base denomination and a quote denomination.
+  rpc SpotPrice(QuerySpotPriceRequest) returns (QuerySpotPriceResponse) {
+    option deprecated = true;
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/pools/{pool_id}/prices";
+  }
+
+  // Deprecated: please use the alternative in x/poolmanager
+  rpc EstimateSwapExactAmountIn(QuerySwapExactAmountInRequest)
+      returns (QuerySwapExactAmountInResponse) {
+    option deprecated = true;
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_in";
+  }
+
+  // Deprecated: please use the alternative in x/poolmanager
+  rpc EstimateSwapExactAmountOut(QuerySwapExactAmountOutRequest)
+      returns (QuerySwapExactAmountOutResponse) {
+    option deprecated = true;
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_out";
+  }
+
+  // ConcentratedPoolIdLinkFromBalancer returns the pool id of the concentrated
+  // pool that is linked with the given CFMM pool.
+  rpc ConcentratedPoolIdLinkFromCFMM(QueryConcentratedPoolIdLinkFromCFMMRequest)
+      returns (QueryConcentratedPoolIdLinkFromCFMMResponse) {
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/concentrated_pool_id_link_from_cfmm/"
+        "{cfmm_pool_id}";
+  }
+
+  // CFMMConcentratedPoolLinks returns migration links between CFMM and
+  // Concentrated pools.
+  rpc CFMMConcentratedPoolLinks(QueryCFMMConcentratedPoolLinksRequest)
+      returns (QueryCFMMConcentratedPoolLinksResponse) {
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/cfmm_concentrated_pool_links";
+  }
+
+  // Params returns gamm module params.
+  rpc Params(ParamsRequest) returns (ParamsResponse) {
+    option (google.api.http).get = "/osmosis/gamm/v1beta1/params";
+  }
+}
+
+//=============================== Params
+message ParamsRequest {}
+message ParamsResponse { Params params = 1 [ (gogoproto.nullable) = false ]; }
+
+//=============================== Pool
+// Deprecated: please use the alternative in x/poolmanager
+message QueryPoolRequest {
+  option deprecated = true;
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+// Deprecated: please use the alternative in x/poolmanager
+message QueryPoolResponse {
+  option deprecated = true;
+  google.protobuf.Any pool = 1 [ (cosmos_proto.accepts_interface) = "PoolI" ];
+}
+
+//=============================== Pools
+message QueryPoolsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+message QueryPoolsResponse {
+  repeated google.protobuf.Any pools = 1
+      [ (cosmos_proto.accepts_interface) = "PoolI" ];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+//=============================== NumPools
+message QueryNumPoolsRequest { option deprecated = true; }
+message QueryNumPoolsResponse {
+  option deprecated = true;
+  uint64 num_pools = 1 [ (gogoproto.moretags) = "yaml:\"num_pools\"" ];
+}
+
+//=============================== PoolType
+message QueryPoolTypeRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+message QueryPoolTypeResponse {
+  string pool_type = 1 [ (gogoproto.moretags) = "yaml:\"pool_type\"" ];
+}
+
+//=============================== CalcJoinPoolShares
+message QueryCalcJoinPoolSharesRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  repeated cosmos.base.v1beta1.Coin tokens_in = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
+}
+message QueryCalcJoinPoolSharesResponse {
+  string share_out_amount = 1 [
+
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.moretags) = "yaml:\"share_out_amount\"",
+    (gogoproto.nullable) = false
+  ];
+  repeated cosmos.base.v1beta1.Coin tokens_out = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
+}
+
+//=============================== CalcExitPoolCoinsFromShares
+message QueryCalcExitPoolCoinsFromSharesRequest {
+  uint64 pool_id = 1;
+  string share_in_amount = 2 [
+
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+message QueryCalcExitPoolCoinsFromSharesResponse {
+  repeated cosmos.base.v1beta1.Coin tokens_out = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
+}
+
+//=============================== PoolParams
+message QueryPoolParamsRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+message QueryPoolParamsResponse { google.protobuf.Any params = 1; }
+
+//=============================== PoolLiquidity
+// Deprecated: please use the alternative in x/poolmanager
+message QueryTotalPoolLiquidityRequest {
+  option deprecated = true;
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+
+// Deprecated: please use the alternative in x/poolmanager
+message QueryTotalPoolLiquidityResponse {
+  option deprecated = true;
+  repeated cosmos.base.v1beta1.Coin liquidity = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags) = "yaml:\"liquidity\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+//=============================== TotalShares
+message QueryTotalSharesRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+message QueryTotalSharesResponse {
+  cosmos.base.v1beta1.Coin total_shares = 1 [
+    (gogoproto.moretags) = "yaml:\"total_shares\"",
+    (gogoproto.nullable) = false
+  ];
+}
+//=============================== CalcJoinPoolNoSwapShares
+message QueryCalcJoinPoolNoSwapSharesRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  repeated cosmos.base.v1beta1.Coin tokens_in = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
+}
+message QueryCalcJoinPoolNoSwapSharesResponse {
+  repeated cosmos.base.v1beta1.Coin tokens_out = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags) = "yaml:\"tokens_out\"",
+    (gogoproto.nullable) = false
+  ];
+  string shares_out = 2 [
+
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+// QuerySpotPriceRequest defines the gRPC request structure for a SpotPrice
+// query.
+message QuerySpotPriceRequest {
+  option deprecated = true;
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string base_asset_denom = 2
+      [ (gogoproto.moretags) = "yaml:\"base_asset_denom\"" ];
+  string quote_asset_denom = 3
+      [ (gogoproto.moretags) = "yaml:\"quote_asset_denom\"" ];
+  // DEPRECATED
+  bool withSwapFee = 4 [
+    (gogoproto.moretags) = "yaml:\"with_swap_fee\",deprecated:\"true\"",
+    deprecated = true
+  ];
+}
+
+//=============================== PoolsWithFilter
+
+message QueryPoolsWithFilterRequest {
+  // String of the coins in single string separated by comma. Ex)
+  // 10uatom,100uosmo
+  string min_liquidity = 1 [ (gogoproto.moretags) = "yaml:\"min_liquidity\"" ];
+  string pool_type = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+message QueryPoolsWithFilterResponse {
+  repeated google.protobuf.Any pools = 1
+      [ (cosmos_proto.accepts_interface) = "PoolI" ];
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QuerySpotPriceResponse defines the gRPC response structure for a SpotPrice
+// query.
+message QuerySpotPriceResponse {
+  option deprecated = true;
+  // String of the Dec. Ex) 10.203uatom
+  string spot_price = 1 [ (gogoproto.moretags) = "yaml:\"spot_price\"" ];
+}
+
+//=============================== EstimateSwapExactAmountIn
+message QuerySwapExactAmountInRequest {
+  option deprecated = true;
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string token_in = 3 [ (gogoproto.moretags) = "yaml:\"token_in\"" ];
+  repeated symphony.poolmanager.v1beta1.SwapAmountInRoute routes = 4 [
+    (gogoproto.moretags) = "yaml:\"routes\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message QuerySwapExactAmountInResponse {
+  option deprecated = true;
+  string token_out_amount = 1 [
+
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.moretags) = "yaml:\"token_out_amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+//=============================== EstimateSwapExactAmountOut
+message QuerySwapExactAmountOutRequest {
+  option deprecated = true;
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  repeated symphony.poolmanager.v1beta1.SwapAmountOutRoute routes = 3 [
+    (gogoproto.moretags) = "yaml:\"routes\"",
+    (gogoproto.nullable) = false
+  ];
+  string token_out = 4 [ (gogoproto.moretags) = "yaml:\"token_out\"" ];
+}
+
+message QuerySwapExactAmountOutResponse {
+  option deprecated = true;
+  string token_in_amount = 1 [
+
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.moretags) = "yaml:\"token_in_amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message QueryTotalLiquidityRequest {}
+
+message QueryTotalLiquidityResponse {
+  repeated cosmos.base.v1beta1.Coin liquidity = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags) = "yaml:\"liquidity\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+//=============================== QueryConcentratedPoolIdLinkFromCFMM
+message QueryConcentratedPoolIdLinkFromCFMMRequest {
+  uint64 cfmm_pool_id = 1 [ (gogoproto.moretags) = "yaml:\"cfmm_pool_id\"" ];
+}
+
+message QueryConcentratedPoolIdLinkFromCFMMResponse {
+  uint64 concentrated_pool_id = 1;
+}
+
+//=============================== QueryCFMMConcentratedPoolLinks
+message QueryCFMMConcentratedPoolLinksRequest {}
+
+message QueryCFMMConcentratedPoolLinksResponse {
+  MigrationRecords migration_records = 1;
+}
