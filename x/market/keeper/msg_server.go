@@ -2,12 +2,10 @@ package keeper
 
 import (
 	"context"
-	"fmt"
-	"github.com/osmosis-labs/osmosis/osmomath"
-
 	errorsmod "cosmossdk.io/errors"
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
 	"github.com/osmosis-labs/osmosis/v26/x/market/types"
 )
@@ -88,7 +86,7 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 		return nil, err
 	}
 
-	if offerCoin.Denom != appparams.BaseCoinUnit {
+	if offerCoin.Denom != appparams.BaseCoinUnit { // stable -> melody or stable -> stable
 		// Burn offered coins and subtract from the trader's account
 		err = k.BankKeeper.BurnCoins(ctx, types.ModuleName, offerCoins)
 		if err != nil {
@@ -107,10 +105,10 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 	feeDecCoin = feeDecCoin.Add(decimalCoin) // add truncated decimalCoin to swapFee
 	feeCoin, _ := feeDecCoin.TruncateDecimal()
 
-	mintCoins := sdk.NewCoins(swapCoin.Add(feeCoin))
+	mintCoins := sdk.NewCoins(swapCoin)
 
 	// mint only stable coin
-	if askDenom != appparams.BaseCoinUnit {
+	if askDenom != appparams.BaseCoinUnit { // melody -> stable or stable -> stable
 		err = k.BankKeeper.MintCoins(ctx, types.ModuleName, mintCoins)
 		if err != nil {
 			return nil, err
@@ -122,14 +120,12 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 		if err != nil {
 			return nil, err
 		}
-	} else {
+	} else { // stable -> melody
 		// native coin transfer using exchange vault
-		calculatedAskCoin := swapCoin.Add(feeCoin)
-
 		marketVaultBalance := k.GetExchangePoolBalance(ctx)
-		if marketVaultBalance.Amount.LT(calculatedAskCoin.Amount) {
+		if marketVaultBalance.Amount.LT(swapCoin.Amount) {
 			return nil, errorsmod.Wrapf(types.ErrNotEnoughBalanceOnMarketVaults, "Market vaults do not have enough coins to swap. Available amount: (main: %v), needed amount: %v",
-				marketVaultBalance.Amount, calculatedAskCoin.Amount)
+				marketVaultBalance.Amount, swapCoin.Amount)
 		}
 
 		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiver, sdk.NewCoins(swapCoin))

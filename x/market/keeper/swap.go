@@ -25,6 +25,9 @@ func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string
 		return sdk.DecCoin{}, osmomath.Dec{}, err
 	}
 
+	// use a constant spread for all swaps which will result in 0.25% swap fees paid
+	spread := osmomath.NewDecWithPrec(25, 2) // 0.25%
+
 	// Symphony => Symphony swap
 	// Apply only tobin tax without constant product spread
 	// TODO: yurii: revisit stable => stable swaps, apply tobix tax if needed.
@@ -50,7 +53,7 @@ func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string
 	//	spread := tobinTax
 	//	return retDecCoin, spread, nil
 	//}
-	return retDecCoin, osmomath.ZeroDec(), nil
+	return retDecCoin, spread, nil
 }
 
 // ComputeInternalSwap returns the amount of asked DecCoin should be returned for a given offerCoin at the effective
