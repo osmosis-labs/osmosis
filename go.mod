@@ -5,7 +5,7 @@ go 1.22.4
 require (
 	cloud.google.com/go/pubsub v1.43.0
 	cosmossdk.io/api v0.7.5
-	cosmossdk.io/client/v2 v2.0.0-beta.1
+	cosmossdk.io/client/v2 v2.0.0-beta.5
 	cosmossdk.io/core v0.12.1-0.20240725072823-6a2d039e1212
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
@@ -14,11 +14,11 @@ require (
 	cosmossdk.io/tools/confix v0.1.2
 	cosmossdk.io/x/circuit v0.1.1
 	cosmossdk.io/x/evidence v0.1.1
-	cosmossdk.io/x/tx v0.13.4
+	cosmossdk.io/x/tx v0.13.5
 	cosmossdk.io/x/upgrade v0.1.4
 	github.com/CosmWasm/wasmd v0.53.0
 	github.com/CosmWasm/wasmvm/v2 v2.1.2
-	github.com/cometbft/cometbft v0.38.11
+	github.com/cometbft/cometbft v0.38.12
 	github.com/cometbft/cometbft-db v0.12.0
 	github.com/cosmos/cosmos-db v1.0.2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -89,18 +89,19 @@ require (
 	github.com/aws/aws-sdk-go v1.44.327 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/bits-and-blooms/bitset v1.8.0 // indirect
-	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
+	github.com/btcsuite/btcd/btcec/v2 v2.3.4 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
-	github.com/cockroachdb/errors v1.11.1 // indirect
+	github.com/cockroachdb/errors v1.11.3 // indirect
+	github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
-	github.com/cockroachdb/pebble v1.1.0 // indirect
+	github.com/cockroachdb/pebble v1.1.1 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v1.2.0 // indirect
-	github.com/cosmos/ics23/go v0.10.0 // indirect
+	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect
 	github.com/creachadair/atomicfile v0.3.1 // indirect
 	github.com/creachadair/tomledit v0.0.24 // indirect
@@ -208,7 +209,7 @@ require (
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/gorilla/handlers v1.5.2 // indirect
-	github.com/gorilla/websocket v1.5.1 // indirect
+	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
@@ -242,7 +243,7 @@ require (
 	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
-	github.com/rs/cors v1.11.0 // indirect
+	github.com/rs/cors v1.11.1 // indirect
 	github.com/rs/zerolog v1.33.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
