@@ -1,0 +1,49 @@
+syntax = "proto3";
+package symphony.oracle.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "symphony/oracle/v1beta1/oracle.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/oracle/types";
+
+// GenesisState defines the oracle module's genesis state.
+message GenesisState {
+  Params params = 1 [ (gogoproto.nullable) = false ];
+  repeated FeederDelegation feeder_delegations = 2
+      [ (gogoproto.nullable) = false ];
+  repeated ExchangeRateTuple exchange_rates = 3 [
+    (gogoproto.castrepeated) = "ExchangeRateTuples",
+    (gogoproto.nullable) = false
+  ];
+  repeated MissCounter miss_counters = 4 [ (gogoproto.nullable) = false ];
+  repeated AggregateExchangeRatePrevote aggregate_exchange_rate_prevotes = 5
+      [ (gogoproto.nullable) = false ];
+  repeated AggregateExchangeRateVote aggregate_exchange_rate_votes = 6
+      [ (gogoproto.nullable) = false ];
+  repeated TobinTax tobin_taxes = 7 [ (gogoproto.nullable) = false ];
+}
+
+// FeederDelegation is the address for where oracle feeder authority are
+// delegated to. By default this struct is only used at genesis to feed in
+// default feeder addresses.
+message FeederDelegation {
+  string feeder_address = 1;
+  string validator_address = 2;
+}
+
+// MissCounter defines an miss counter and validator address pair used in
+// oracle module's genesis state
+message MissCounter {
+  string validator_address = 1;
+  uint64 miss_counter = 2;
+}
+
+// TobinTax defines an denom and tobin_tax pair used in
+// oracle module's genesis state
+message TobinTax {
+  string denom = 1;
+  string tobin_tax = 2 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+}
