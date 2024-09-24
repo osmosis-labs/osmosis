@@ -26,7 +26,7 @@ func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string
 	}
 
 	// use a constant spread for all swaps which will result in 0.25% swap fees paid
-	spread := osmomath.NewDecWithPrec(25, 2) // 0.25%
+	spread := osmomath.NewDecWithPrec(25, 4) // 0.25%
 
 	// Symphony => Symphony swap
 	// Apply only tobin tax without constant product spread

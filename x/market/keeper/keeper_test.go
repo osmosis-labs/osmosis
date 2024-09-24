@@ -38,18 +38,24 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.Setup()
 
 	// Set the bond denom to be note to make volume tracking tests more readable.
-	skParams := s.App.StakingKeeper.GetParams(s.Ctx)
+	skParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	s.Require().NoError(err)
 	skParams.BondDenom = "note"
-	s.App.StakingKeeper.SetParams(s.Ctx, skParams)
-	s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, "note")
+	err = s.App.StakingKeeper.SetParams(s.Ctx, skParams)
+	s.Require().NoError(err)
+	err = s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, "note")
+	s.Require().NoError(err)
 	marketParams := s.App.MarketKeeper.GetParams(s.Ctx)
 	s.App.MarketKeeper.SetParams(s.Ctx, marketParams)
 
 	totalSupply := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, InitTokens.MulRaw(int64(len(Addr)*10))))
-	err := s.App.BankKeeper.MintCoins(s.Ctx, FaucetAccountName, totalSupply)
+	err = s.App.BankKeeper.MintCoins(s.Ctx, FaucetAccountName, totalSupply)
 	s.Require().NoError(err)
 
-	s.App.AccountKeeper.SetAccount(s.Ctx, authtypes.NewBaseAccountWithAddress(Addr))
+	acc := authtypes.NewBaseAccountWithAddress(Addr)
+	acc.AccountNumber = 1000
+
+	s.App.AccountKeeper.SetAccount(s.Ctx, acc)
 
 	err = s.App.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, FaucetAccountName, Addr, InitBaseCoins)
 	s.Require().NoError(err)
