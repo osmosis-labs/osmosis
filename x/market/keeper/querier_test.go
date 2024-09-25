@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v26/app/apptesting/assets"
 	appParams "github.com/osmosis-labs/osmosis/v26/app/params"
 	"github.com/osmosis-labs/osmosis/v26/x/market/keeper"
@@ -45,7 +46,7 @@ func (s *KeeperTestSuite) TestQuerySwap() {
 	s.Require().Error(err)
 
 	// overflow query
-	overflowAmt, _ := sdk.NewIntFromString("1000000000000000000000000000000000")
+	overflowAmt, _ := osmomath.NewIntFromString("1000000000000000000000000000000000")
 	overflowOfferCoin := sdk.NewCoin(appParams.BaseCoinUnit, overflowAmt).String()
 	_, err = querier.Swap(ctx, &types.QuerySwapRequest{OfferCoin: overflowOfferCoin, AskDenom: assets.MicroSDRDenom})
 	s.Require().Error(err)

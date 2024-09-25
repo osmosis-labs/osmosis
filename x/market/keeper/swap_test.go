@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
