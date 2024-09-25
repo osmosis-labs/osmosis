@@ -44,6 +44,7 @@ import (
 	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	customwasmkeeper "github.com/osmosis-labs/osmosis/v26/custom/wasm/keeper"
 	"github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/types"
 	downtimedetector "github.com/osmosis-labs/osmosis/v26/x/downtime-detector"
@@ -595,6 +596,20 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		"cosmwasm_2_1",
 	}
 
+	wasmMsgHandler := customwasmkeeper.NewMessageHandler(
+		bApp.MsgServiceRouter(),
+		appKeepers.HooksICS4Wrapper,
+		appKeepers.IBCKeeper.ChannelKeeper,
+		appKeepers.ScopedIBCKeeper,
+		appKeepers.WasmKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.TreasuryKeeper,
+		*appKeepers.AccountKeeper,
+		appCodec,
+		appKeepers.TransferKeeper,
+	)
+	// the first slice will replace all default msh handler with custom one
+	wasmOpts = append([]wasmkeeper.Option{wasmkeeper.WithMessageHandler(wasmMsgHandler)}, wasmOpts...)
 	wasmOpts = append(owasm.RegisterCustomPlugins(appKeepers.BankKeeper, appKeepers.TokenFactoryKeeper), wasmOpts...)
 	wasmOpts = append(owasm.RegisterStargateQueries(*bApp.GRPCQueryRouter(), appCodec), wasmOpts...)
 
