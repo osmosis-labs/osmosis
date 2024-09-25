@@ -1,6 +1,7 @@
 package ante
 
 import (
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"regexp"
 	"strings"
 
@@ -9,8 +10,8 @@ import (
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	marketexported "github.com/osmosis-labs/osmosis/v23/x/market/exported"
-	oracleexported "github.com/osmosis-labs/osmosis/v23/x/oracle/exported"
+	marketexported "github.com/osmosis-labs/osmosis/v26/x/market/exported"
+	oracleexported "github.com/osmosis-labs/osmosis/v26/x/oracle/exported"
 )
 
 var IBCRegexp = regexp.MustCompile("^ibc/[a-fA-F0-9]{64}$")
@@ -59,7 +60,7 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk TreasuryKeeper, msgs ...sdk.Msg)
 // computes the stability tax according to tax-rate and tax-cap
 func computeTax(ctx sdk.Context, tk TreasuryKeeper, principal sdk.Coins) sdk.Coins {
 	taxRate := tk.GetTaxRate(ctx)
-	if taxRate.Equal(sdk.ZeroDec()) {
+	if taxRate.Equal(osmomath.ZeroDec()) {
 		return sdk.Coins{}
 	}
 
@@ -74,7 +75,7 @@ func computeTax(ctx sdk.Context, tk TreasuryKeeper, principal sdk.Coins) sdk.Coi
 			continue
 		}
 
-		taxDue := sdk.NewDecFromInt(coin.Amount).Mul(taxRate).TruncateInt()
+		taxDue := osmomath.NewDecFromInt(coin.Amount).Mul(taxRate).TruncateInt()
 
 		// If tax due is greater than the tax cap, cap!
 		//taxCap := tk.GetTaxCap(ctx, coin.Denom)
@@ -82,7 +83,7 @@ func computeTax(ctx sdk.Context, tk TreasuryKeeper, principal sdk.Coins) sdk.Coi
 		//	taxDue = taxCap
 		//}
 
-		if taxDue.Equal(sdk.ZeroInt()) {
+		if taxDue.Equal(osmomath.ZeroInt()) {
 			continue
 		}
 

@@ -1,14 +1,15 @@
 package ante
 
 import (
+	"bytes"
 	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	treasurytypes "github.com/osmosis-labs/osmosis/v23/x/treasury/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
+	treasurytypes "github.com/osmosis-labs/osmosis/v26/x/treasury/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v26/x/txfees/types"
 )
 
 // DeductFeeDecorator deducts fees from the first signer of the tx.
@@ -83,7 +84,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	if feeGranter != nil {
 		if dfd.feegrantKeeper == nil {
 			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "fee grants is not enabled")
-		} else if !feeGranter.Equals(feePayer) {
+		} else if !bytes.Equal(feeGranter, feePayer) {
 			err := dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, tx.GetMsgs())
 			if err != nil {
 				return ctx, errorsmod.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)

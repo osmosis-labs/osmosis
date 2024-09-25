@@ -7,15 +7,15 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	v8constants "github.com/osmosis-labs/osmosis/v23/app/upgrades/v8/constants"
-	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v23/x/gamm/types/migration"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v23/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	v8constants "github.com/osmosis-labs/osmosis/v26/app/upgrades/v8/constants"
+	cltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v26/x/gamm/types/migration"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v26/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
 )
 
 var defaultFunds = sdk.NewCoins(defaultPoolAssets[0].Token, sdk.NewCoin("stake", osmomath.NewInt(5000000000)))
@@ -63,7 +63,7 @@ func (s *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 		s.Run(test.name, func() {
 			s.SetupTest()
 			lockupMsgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
-			c := sdk.WrapSDKContext(s.Ctx)
+			c := s.Ctx
 
 			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
@@ -121,7 +121,7 @@ func (s *KeeperTestSuite) TestMsgSuperfluidUndelegate() {
 		s.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
 		lockupMsgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
-		c := sdk.WrapSDKContext(s.Ctx)
+		c := s.Ctx
 		resp, err := lockupMsgServer.LockTokens(c, lockuptypes.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 		s.Require().NoError(err)
 
@@ -177,7 +177,7 @@ func (s *KeeperTestSuite) TestMsgCreateFullRangePositionAndSuperfluidDelegate() 
 		s.Run(test.name, func() {
 			s.SetupTest()
 
-			ctx := sdk.WrapSDKContext(s.Ctx)
+			ctx := s.Ctx
 
 			clPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(defaultFunds[0].Denom, defaultFunds[1].Denom)
 			clLockupDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPool.GetId())
@@ -245,7 +245,7 @@ func (s *KeeperTestSuite) TestMsgSuperfluidUnbondLock() {
 		s.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
 		lockupMsgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
-		c := sdk.WrapSDKContext(s.Ctx)
+		c := s.Ctx
 		resp, err := lockupMsgServer.LockTokens(c, lockuptypes.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 		s.Require().NoError(err)
 
@@ -293,7 +293,7 @@ func (s *KeeperTestSuite) TestMsgSuperfluidUndelegateAndUnbondLock() {
 		s.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
 		lockupMsgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
-		c := sdk.WrapSDKContext(s.Ctx)
+		c := s.Ctx
 		resp, err := lockupMsgServer.LockTokens(c, lockuptypes.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 		s.Require().NoError(err)
 
@@ -338,7 +338,7 @@ func (s *KeeperTestSuite) TestMsgLockAndSuperfluidDelegate() {
 
 		s.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
-		c := sdk.WrapSDKContext(s.Ctx)
+		c := s.Ctx
 		valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
 		msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
@@ -382,7 +382,7 @@ func (s *KeeperTestSuite) TestMsgSuperfluidUndelegate_Event() {
 	for _, test := range testCases {
 		s.SetupTest()
 		msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
-		c := sdk.WrapSDKContext(s.Ctx)
+		c := s.Ctx
 
 		// setup validators
 		valAddrs := s.SetupValidators(test.validatorStats)
@@ -430,7 +430,7 @@ func (s *KeeperTestSuite) TestMsgSuperfluidUnbondLock_Event() {
 		sender, _ := sdk.AccAddressFromBech32(lock.Owner)
 
 		// first we test that SuperfluidUnbondLock would cause error before undelegating
-		_, err := msgServer.SuperfluidUnbondLock(sdk.WrapSDKContext(s.Ctx), types.NewMsgSuperfluidUnbondLock(sender, lock.ID))
+		_, err := msgServer.SuperfluidUnbondLock(s.Ctx, types.NewMsgSuperfluidUnbondLock(sender, lock.ID))
 		s.Require().Error(err)
 
 		// undelegation needs to happen prior to SuperfluidUnbondLock
@@ -440,7 +440,7 @@ func (s *KeeperTestSuite) TestMsgSuperfluidUnbondLock_Event() {
 		// test SuperfluidUnbondLock
 		unbondLockStartTime := startTime.Add(time.Hour)
 		s.Ctx = s.Ctx.WithBlockTime(unbondLockStartTime)
-		_, err = msgServer.SuperfluidUnbondLock(sdk.WrapSDKContext(s.Ctx), types.NewMsgSuperfluidUnbondLock(sender, lock.ID))
+		_, err = msgServer.SuperfluidUnbondLock(s.Ctx, types.NewMsgSuperfluidUnbondLock(sender, lock.ID))
 		s.Require().NoError(err)
 		s.AssertEventEmitted(s.Ctx, types.TypeEvtSuperfluidUnbondLock, 1)
 	}
@@ -466,7 +466,7 @@ func (s *KeeperTestSuite) TestMsgUnPoolWhitelistedPool_Event() {
 	for index, poolId := range poolIds {
 		sender, _ := sdk.AccAddressFromBech32(locks[index].Owner)
 		s.Ctx = s.Ctx.WithBlockHeight(v8constants.UpgradeHeight)
-		_, err := msgServer.UnPoolWhitelistedPool(sdk.WrapSDKContext(s.Ctx), types.NewMsgUnPoolWhitelistedPool(sender, poolId))
+		_, err := msgServer.UnPoolWhitelistedPool(s.Ctx, types.NewMsgUnPoolWhitelistedPool(sender, poolId))
 		s.Require().NoError(err)
 		s.AssertEventEmitted(s.Ctx, types.TypeEvtUnpoolId, 1)
 	}
@@ -525,7 +525,7 @@ func (s *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedPosit
 	// Execute UnlockAndMigrateSharesToFullRangeConcentratedPosition message
 	sender, err := sdk.AccAddressFromBech32(locks[0].Owner)
 	s.Require().NoError(err)
-	_, err = msgServer.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sdk.WrapSDKContext(s.Ctx),
+	_, err = msgServer.UnlockAndMigrateSharesToFullRangeConcentratedPosition(s.Ctx,
 		types.NewMsgUnlockAndMigrateSharesToFullRangeConcentratedPosition(sender, int64(locks[0].ID), locks[0].Coins[0]))
 	s.Require().NoError(err)
 
@@ -582,7 +582,7 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition_Event
 				TokenDesired1: defaultFunds[1],
 			}
 
-			response, err := msgServer.AddToConcentratedLiquiditySuperfluidPosition(sdk.WrapSDKContext(s.Ctx), msg)
+			response, err := msgServer.AddToConcentratedLiquiditySuperfluidPosition(s.Ctx, msg)
 
 			if tc.expectedError == nil {
 				s.NoError(err)

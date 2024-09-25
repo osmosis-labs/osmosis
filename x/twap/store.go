@@ -7,17 +7,26 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v26/x/twap/types"
 )
 
-// NumRecordsToPrunePerBlock is the number of records to prune per block.
+// NumRecordsToPrunePerBlock is the number of twap records indexed by pool ID to prune per block.
 // One record indexed by pool ID is deleted per incentive record.
 // Therefore, setting this to 200 means 200 complete incentive records are deleted per block.
 // The choice is somewhat arbitrary
 // However, th intuition is that the number should be low enough to not make blocks take longer but
 // not too small where it would take all the way to the next epoch.
 var NumRecordsToPrunePerBlock uint16 = 200
+
+// NumDeprecatedRecordsToPrunePerBlock is the number of twap records indexed by time to prune per block.
+// This is the same as NumRecordsToPrunePerBlock, but is used for the deprecated historical twap records.
+// This is to be used in the upgrade handler, to clear out the now-obsolete historical twap records
+// that were indexed by time. It is expected that these records will be pruned shortly after the upgrade.
+// After all these records are pruned, this logic can be removed for a future upgrade.
+var NumDeprecatedRecordsToPrunePerBlock uint16 = 200
 
 type timeTooOldError struct {
 	Time time.Time
@@ -260,15 +269,38 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 	return twap, nil
 }
 
-// DeleteAllHistoricalTimeIndexedTWAPs deletes every historical twap record indexed by time.
+// DeleteHistoricalTimeIndexedTWAPs deletes every historical twap record indexed by time (now deprecated) up till the limit.
 // This is to be used in the upgrade handler, to clear out the now-obsolete historical twap records
 // that were indexed by time.
-func (k Keeper) DeleteAllHistoricalTimeIndexedTWAPs(ctx sdk.Context) {
+func (k Keeper) DeleteHistoricalTimeIndexedTWAPs(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, []byte("historical_time_index"))
+	iter := storetypes.KVStorePrefixIterator(store, []byte("historical_time_index"))
 	defer iter.Close()
+
+	iterationCounter := uint16(0)
 	for iter.Valid() {
 		store.Delete(iter.Key())
+		iterationCounter++
+		if iterationCounter >= NumDeprecatedRecordsToPrunePerBlock {
+			ctx.Logger().Info("Deleted deprecated historical time indexed twaps", "count", iterationCounter)
+			return
+		}
 		iter.Next()
 	}
+
+	ctx.Logger().Info("Deleted deprecated historical time indexed twaps", "count", iterationCounter)
+
+	if iterationCounter == 0 {
+		// We have pruned all records, so we can delete the pruning key.
+		ctx.Logger().Info("All deprecated historical time indexed twaps have been deleted")
+		store.Delete(types.DeprecatedHistoricalTWAPsIsPruningKey)
+	}
+}
+
+// DeleteDeprecatedHistoricalTWAPsIsPruning the state entry that determines if we are still
+// executing pruning logic in the end blocker.
+// TODO: Remove this in v26
+func (k Keeper) DeleteDeprecatedHistoricalTWAPsIsPruning(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.DeprecatedHistoricalTWAPsIsPruningKey)
 }

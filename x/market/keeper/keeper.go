@@ -2,14 +2,15 @@ package keeper
 
 import (
 	"fmt"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
+	"github.com/osmosis-labs/osmosis/osmomath"
 
-	"github.com/osmosis-labs/osmosis/v23/x/market/types"
+	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+
+	"github.com/osmosis-labs/osmosis/v26/x/market/types"
 )
 
 // Keeper of the market store
@@ -62,8 +63,8 @@ func (k Keeper) GetExchangePoolBalance(ctx sdk.Context) sdk.Coin {
 }
 
 // GetExchangeRequirement calculates the total amount of Melody asset required to back the assets in the oracle module.
-func (k Keeper) GetExchangeRequirement(ctx sdk.Context) sdk.Dec {
-	total := sdk.ZeroDec()
+func (k Keeper) GetExchangeRequirement(ctx sdk.Context) osmomath.Dec {
+	total := osmomath.ZeroDec()
 	for _, req := range k.getExchangeRates(ctx) {
 		total = total.Add(req.BaseCurrency.Amount.ToLegacyDec().Mul(req.ExchangeRate))
 	}
@@ -72,7 +73,7 @@ func (k Keeper) GetExchangeRequirement(ctx sdk.Context) sdk.Dec {
 
 func (k Keeper) getExchangeRates(ctx sdk.Context) []types.ExchangeRequirement {
 	var result []types.ExchangeRequirement
-	k.OracleKeeper.IterateNoteExchangeRates(ctx, func(denom string, exchangeRate sdk.Dec) (stop bool) {
+	k.OracleKeeper.IterateNoteExchangeRates(ctx, func(denom string, exchangeRate osmomath.Dec) (stop bool) {
 		supply := k.BankKeeper.GetSupply(ctx, denom)
 		result = append(result, types.ExchangeRequirement{
 			BaseCurrency: supply,

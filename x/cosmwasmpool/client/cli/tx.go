@@ -18,8 +18,8 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/types"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -32,7 +32,7 @@ func NewCreateCWPoolCmd() (*osmocli.TxCliDesc, *model.MsgCreateCosmWasmPool) {
 	return &osmocli.TxCliDesc{
 		Use:              "create-pool",
 		Short:            "create a cosmwasm pool",
-		Example:          "symphonyd tx cosmwasmpool create-pool 1 '{\"pool_assets_denom\":[\"uion\",\"note\"]}' --from lo-test1 --keyring-backend test --chain-id localsymphony --fees 875note -b=block",
+		Example:          "osmosisd tx cosmwasmpool create-pool 1 '{\"pool_asset_denoms\":[\"uion\",\"uosmo\"]}' --from lo-test1 --keyring-backend test --chain-id localosmosis --fees 875uosmo -b=block",
 		NumArgs:          2,
 		ParseAndBuildMsg: BuildCreatePoolMsg,
 	}, &model.MsgCreateCosmWasmPool{}
@@ -68,7 +68,7 @@ func NewCmdUploadCodeIdAndWhitelistProposal() *cobra.Command {
 		Use:     "upload-code-id-and-whitelist [wasm-file-path] [flags]",
 		Args:    cobra.ExactArgs(1),
 		Short:   "Submit an upload code id and whitelist proposal",
-		Example: "symphonyd tx gov submit-proposal upload-code-id-and-whitelist x/cosmwasmpool/bytecode/transmuter.wasm --from lo-test1 --keyring-backend test --title \"Test\" --summary \"Test\" -b=block --chain-id localsymphony --fees=100000note --gas=20000000",
+		Example: "osmosisd tx gov submit-proposal upload-code-id-and-whitelist x/cosmwasmpool/bytecode/transmuter.wasm --from lo-test1 --keyring-backend test --title \"Test\" --summary \"Test\" -b=block --chain-id localosmosis --fees=100000uosmo --gas=20000000",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, proposalTitle, summary, deposit, isExpedited, authority, err := osmocli.GetProposalInfo(cmd)
 			if err != nil {

@@ -4,18 +4,18 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// This function calculates the melody equivalent worth of an LP share.
+// This function calculates the osmo equivalent worth of an LP share.
 // It is intended to eventually use the TWAP of the worth of an LP share
 // once that is exposed from the gamm module.
-func (k Keeper) calculateMelodyBackingPerShare(pool gammtypes.CFMMPoolI, melodyInPool osmomath.Int) osmomath.Dec {
-	twap := melodyInPool.ToLegacyDec().Quo(pool.GetTotalShares().ToLegacyDec())
+func (k Keeper) calculateOsmoBackingPerShare(pool gammtypes.CFMMPoolI, osmoInPool osmomath.Int) osmomath.Dec {
+	twap := osmoInPool.ToLegacyDec().Quo(pool.GetTotalShares().ToLegacyDec())
 	return twap
 }
 
@@ -34,7 +34,7 @@ func (k Keeper) SetOsmoEquivalentMultiplier(ctx sdk.Context, epoch int64, denom 
 	prefixStore.Set([]byte(denom), bz)
 }
 
-func (k Keeper) GetSuperfluidMELODYTokens(ctx sdk.Context, denom string, amount osmomath.Int) (osmomath.Int, error) {
+func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount osmomath.Int) (osmomath.Int, error) {
 	multiplier := k.GetOsmoEquivalentMultiplier(ctx, denom)
 	if multiplier.IsZero() {
 		return osmomath.ZeroInt(), nil
@@ -45,7 +45,7 @@ func (k Keeper) GetSuperfluidMELODYTokens(ctx sdk.Context, denom string, amount 
 	if err != nil {
 		return osmomath.ZeroInt(), err
 	}
-	return k.GetRiskAdjustedMelodyValue(ctx, decAmt.RoundInt()), nil
+	return k.GetRiskAdjustedOsmoValue(ctx, decAmt.RoundInt()), nil
 }
 
 func (k Keeper) DeleteOsmoEquivalentMultiplier(ctx sdk.Context, denom string) {

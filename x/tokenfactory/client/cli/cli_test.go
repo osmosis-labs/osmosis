@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory/client/cli"
-	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v26/x/tokenfactory/client/cli"
+	"github.com/osmosis-labs/osmosis/v26/x/tokenfactory/types"
 )
 
 func TestGetCmdDenomAuthorityMetadata(t *testing.T) {
@@ -25,9 +25,9 @@ func TestGetCmdDenomsFromCreator(t *testing.T) {
 	desc, _ := cli.GetCmdDenomsFromCreator()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryDenomsFromCreatorRequest]{
 		"basic test": {
-			Cmd: "symphony1test",
+			Cmd: "osmo1test",
 			ExpectedQuery: &types.QueryDenomsFromCreatorRequest{
-				Creator: "symphony1test",
+				Creator: "osmo1test",
 			},
 		},
 	}

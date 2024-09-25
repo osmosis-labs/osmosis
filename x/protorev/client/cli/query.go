@@ -8,7 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v26/x/protorev/types"
 )
 
 // NewCmdQuery returns the cli query commands for this module
@@ -56,7 +56,7 @@ func NewQueryProfitsByDenomCmd() (*osmocli.QueryDescriptor, *types.QueryGetProto
 	return &osmocli.QueryDescriptor{
 		Use:   "profits-by-denom",
 		Short: "Query the profits of protorev by denom",
-		Long:  `{{.Short}}{{.ExampleHeader}}{{.CommandPrefix}} profits-by-denom note`,
+		Long:  `{{.Short}}{{.ExampleHeader}}{{.CommandPrefix}} profits-by-denom uosmo`,
 	}, &types.QueryGetProtoRevProfitsByDenomRequest{}
 }
 

@@ -30,7 +30,7 @@ type ExchangeRatePrevote struct {
 
 ```go
 type ExchangeRateVote struct {
-	ExchangeRate sdk.Dec        // ExchangeRate of Luna in target fiat currency
+	ExchangeRate osmomath.Dec        // ExchangeRate of Luna in target fiat currency
 	Denom        string         // Ticker name of target fiat currency
 	Voter        sdk.ValAddress // voter val address of validator
 }
@@ -38,11 +38,11 @@ type ExchangeRateVote struct {
 
 ## ExchangeRate
 
-An `sdk.Dec` that stores the current Luna exchange rate against a given denom, which is used by the [Market](../../market/spec/README.md) module for pricing swaps.
+An `osmomath.Dec` that stores the current Luna exchange rate against a given denom, which is used by the [Market](../../market/spec/README.md) module for pricing swaps.
 
 You can get the active list of denoms trading against `Luna` (denominations with votes past `VoteThreshold`) with `k.GetActiveDenoms()`.
 
-- ExchangeRate: `0x03<denom_Bytes> -> amino(sdk.Dec)`
+- ExchangeRate: `0x03<denom_Bytes> -> amino(osmomath.Dec)`
 
 ## FeederDelegation
 
@@ -83,7 +83,7 @@ type AggregateExchangeRatePrevote struct {
 ```go
 type ExchangeRateTuple struct {
 	Denom        string  `json:"denom"`
-	ExchangeRate sdk.Dec `json:"exchange_rate"`
+	ExchangeRate osmomath.Dec `json:"exchange_rate"`
 }
 
 type ExchangeRateTuples []ExchangeRateTuple
@@ -96,6 +96,6 @@ type AggregateExchangeRateVote struct {
 
 ## TobinTax
 
-`sdk.Dec` that stores spread tax for the denom whose ballot is passed, which is used by the [Market](../../market/spec/README.md) module for spot-converting Terra<>Terra.
+`osmomath.Dec` that stores spread tax for the denom whose ballot is passed, which is used by the [Market](../../market/spec/README.md) module for spot-converting Terra<>Terra.
 
-- TobinTax: `0x08<denom_Bytes> -> amino(sdk.Dec)`
+- TobinTax: `0x08<denom_Bytes> -> amino(osmomath.Dec)`

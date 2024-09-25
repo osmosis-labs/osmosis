@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"strconv"
 	time "time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -27,9 +27,11 @@ const (
 )
 
 var (
-	PruningStateKey                    = []byte{0x01}
-	mostRecentTWAPsNoSeparator         = "recent_twap"
-	historicalTWAPPoolIndexNoSeparator = "historical_pool_index"
+	PruningStateKey = []byte{0x01}
+	// TODO: Delete in v26
+	DeprecatedHistoricalTWAPsIsPruningKey = []byte{0x02}
+	mostRecentTWAPsNoSeparator            = "recent_twap"
+	historicalTWAPPoolIndexNoSeparator    = "historical_pool_index"
 
 	// We do key management to let us easily meet the goals of (AKA minimal iteration):
 	// * Get most recent twap for a (pool id, asset 1, asset 2) with no iteration
@@ -72,23 +74,6 @@ func FormatHistoricalPoolIndexTWAPKeyFromStrTime(poolId uint64, denom1, denom2 s
 	return buffer.Bytes()
 }
 
-// returns timeString, poolIdString, denom1, denom2, error
-// nolint: revive
-func ParseFieldsFromHistoricalTimeKey(bz []byte) (string, uint64, string, string, error) {
-	split := bytes.Split(bz, []byte(KeySeparator))
-	if len(split) != 5 {
-		return "", 0, "", "", errors.New("invalid key")
-	}
-	timeS := string(split[1])
-	poolId, err := strconv.Atoi(string(split[2]))
-	if err != nil {
-		return "", 0, "", "", err
-	}
-	denom1 := string(split[3])
-	denom2 := string(split[4])
-	return timeS, uint64(poolId), denom1, denom2, err
-}
-
 func FormatHistoricalPoolIndexTimePrefix(poolId uint64, denom1, denom2 string) []byte {
 	return []byte(fmt.Sprintf("%s%d%s%s%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, denom1, KeySeparator, denom2, KeySeparator))
 }
@@ -101,7 +86,7 @@ func FormatHistoricalPoolIndexTimeSuffix(poolId uint64, denom1, denom2 string, a
 
 // GetAllMostRecentTwapsForPool returns all of the most recent twap records for a pool id.
 // if the pool id doesn't exist, then this returns a blank list.
-func GetAllMostRecentTwapsForPool(store sdk.KVStore, poolId uint64) ([]TwapRecord, error) {
+func GetAllMostRecentTwapsForPool(store storetypes.KVStore, poolId uint64) ([]TwapRecord, error) {
 	poolIdS := osmoutils.FormatFixedLengthU64(poolId)
 	poolIdPlusOneS := osmoutils.FormatFixedLengthU64(poolId + 1)
 	startPrefix := fmt.Sprintf("%s%s%s", mostRecentTWAPsPrefix, poolIdS, KeySeparator)
@@ -109,7 +94,7 @@ func GetAllMostRecentTwapsForPool(store sdk.KVStore, poolId uint64) ([]TwapRecor
 	return osmoutils.GatherValuesFromStore(store, []byte(startPrefix), []byte(endPrefix), ParseTwapFromBz)
 }
 
-func GetMostRecentTwapForPool(store sdk.KVStore, poolId uint64, denom1, denom2 string) (TwapRecord, error) {
+func GetMostRecentTwapForPool(store storetypes.KVStore, poolId uint64, denom1, denom2 string) (TwapRecord, error) {
 	key := FormatMostRecentTWAPKey(poolId, denom1, denom2)
 	bz := store.Get(key)
 	return ParseTwapFromBz(bz)

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -41,19 +42,15 @@ func (m MsgSuperfluidDelegate) Route() string { return RouterKey }
 func (m MsgSuperfluidDelegate) Type() string  { return TypeMsgSuperfluidDelegate }
 func (m MsgSuperfluidDelegate) ValidateBasic() error {
 	if m.Sender == "" {
-		return fmt.Errorf("sender should not be an empty address")
+		return errors.New("sender should not be an empty address")
 	}
 	if m.LockId == 0 {
 		return fmt.Errorf("lock id should be positive: %d < 0", m.LockId)
 	}
 	if m.ValAddr == "" {
-		return fmt.Errorf("ValAddr should not be empty")
+		return errors.New("ValAddr should not be empty")
 	}
 	return nil
-}
-
-func (m MsgSuperfluidDelegate) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 func (m MsgSuperfluidDelegate) GetSigners() []sdk.AccAddress {
@@ -75,16 +72,12 @@ func (m MsgSuperfluidUndelegate) Route() string { return RouterKey }
 func (m MsgSuperfluidUndelegate) Type() string  { return TypeMsgSuperfluidUndelegate }
 func (m MsgSuperfluidUndelegate) ValidateBasic() error {
 	if m.Sender == "" {
-		return fmt.Errorf("sender should not be an empty address")
+		return errors.New("sender should not be an empty address")
 	}
 	if m.LockId == 0 {
 		return fmt.Errorf("lock id should be positive: %d < 0", m.LockId)
 	}
 	return nil
-}
-
-func (m MsgSuperfluidUndelegate) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 func (m MsgSuperfluidUndelegate) GetSigners() []sdk.AccAddress {
@@ -107,18 +100,15 @@ func (m MsgSuperfluidUndelegate) GetSigners() []sdk.AccAddress {
 // func (m MsgSuperfluidRedelegate) Type() string  { return TypeMsgSuperfluidRedelegate }
 // func (m MsgSuperfluidRedelegate) ValidateBasic() error {
 // 	if m.Sender == "" {
-// 		return fmt.Errorf("sender should not be an empty address")
+// 		return errors.New("sender should not be an empty address")
 // 	}
 // 	if m.LockId == 0 {
 // 		return fmt.Errorf("lock id should be positive: %d < 0", m.LockId)
 // 	}
 // 	if m.NewValAddr == "" {
-// 		return fmt.Errorf("NewValAddr should not be empty")
+// 		return errors.New("NewValAddr should not be empty")
 // 	}
 // 	return nil
-// }
-// func (m MsgSuperfluidRedelegate) GetSignBytes() []byte {
-// 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 // }
 // func (m MsgSuperfluidRedelegate) GetSigners() []sdk.AccAddress {
 // 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
@@ -142,16 +132,12 @@ func (m MsgSuperfluidUnbondLock) Type() string {
 
 func (m MsgSuperfluidUnbondLock) ValidateBasic() error {
 	if m.Sender == "" {
-		return fmt.Errorf("sender should not be an empty address")
+		return errors.New("sender should not be an empty address")
 	}
 	if m.LockId == 0 {
-		return fmt.Errorf("lockID should be set")
+		return errors.New("lockID should be set")
 	}
 	return nil
-}
-
-func (m MsgSuperfluidUnbondLock) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 func (m MsgSuperfluidUnbondLock) GetSigners() []sdk.AccAddress {
@@ -178,20 +164,16 @@ func (m MsgSuperfluidUndelegateAndUnbondLock) Type() string {
 
 func (m MsgSuperfluidUndelegateAndUnbondLock) ValidateBasic() error {
 	if m.Sender == "" {
-		return fmt.Errorf("sender should not be an empty address")
+		return errors.New("sender should not be an empty address")
 	}
 	if m.LockId == 0 {
-		return fmt.Errorf("lockID should be set")
+		return errors.New("lockID should be set")
 	}
 	if !m.Coin.IsValid() {
-		return fmt.Errorf("cannot unlock a zero or negative amount")
+		return errors.New("cannot unlock a zero or negative amount")
 	}
 
 	return nil
-}
-
-func (m MsgSuperfluidUndelegateAndUnbondLock) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 func (m MsgSuperfluidUndelegateAndUnbondLock) GetSigners() []sdk.AccAddress {
@@ -214,7 +196,7 @@ func (m MsgLockAndSuperfluidDelegate) Route() string { return RouterKey }
 func (m MsgLockAndSuperfluidDelegate) Type() string  { return TypeMsgLockAndSuperfluidDelegate }
 func (m MsgLockAndSuperfluidDelegate) ValidateBasic() error {
 	if m.Sender == "" {
-		return fmt.Errorf("sender should not be an empty address")
+		return errors.New("sender should not be an empty address")
 	}
 
 	if m.Coins.Len() != 1 {
@@ -222,13 +204,9 @@ func (m MsgLockAndSuperfluidDelegate) ValidateBasic() error {
 	}
 
 	if m.ValAddr == "" {
-		return fmt.Errorf("ValAddr should not be empty")
+		return errors.New("ValAddr should not be empty")
 	}
 	return nil
-}
-
-func (m MsgLockAndSuperfluidDelegate) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 func (m MsgLockAndSuperfluidDelegate) GetSigners() []sdk.AccAddress {
@@ -255,10 +233,6 @@ func (msg MsgUnPoolWhitelistedPool) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-func (msg MsgUnPoolWhitelistedPool) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgUnPoolWhitelistedPool) GetSigners() []sdk.AccAddress {
@@ -293,10 +267,6 @@ func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) ValidateBasi
 		return fmt.Errorf("Invalid shares to migrate (%s)", msg.SharesToMigrate)
 	}
 	return nil
-}
-
-func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) GetSigners() []sdk.AccAddress {
@@ -335,17 +305,13 @@ func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) ValidateBasic() error
 	}
 
 	if msg.ValAddr == "" {
-		return fmt.Errorf("ValAddr should not be empty")
+		return errors.New("ValAddr should not be empty")
 	}
 
 	if msg.PoolId < 1 {
-		return fmt.Errorf("pool id must be positive")
+		return errors.New("pool id must be positive")
 	}
 	return nil
-}
-
-func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) GetSigners() []sdk.AccAddress {
@@ -384,10 +350,6 @@ func (msg MsgAddToConcentratedLiquiditySuperfluidPosition) ValidateBasic() error
 	return nil
 }
 
-func (msg MsgAddToConcentratedLiquiditySuperfluidPosition) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 func (msg MsgAddToConcentratedLiquiditySuperfluidPosition) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -420,13 +382,9 @@ func (msg MsgUnbondConvertAndStake) ValidateBasic() error {
 	}
 
 	if msg.MinAmtToStake.IsNegative() {
-		return fmt.Errorf("Min amount to stake cannot be negative")
+		return errors.New("Min amount to stake cannot be negative")
 	}
 	return nil
-}
-
-func (msg MsgUnbondConvertAndStake) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgUnbondConvertAndStake) GetSigners() []sdk.AccAddress {

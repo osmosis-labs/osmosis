@@ -9,11 +9,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	symphonyApp "github.com/osmosis-labs/osmosis/v23/app"
+	osmosisapp "github.com/osmosis-labs/osmosis/v26/app"
 
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	protorevtypes "github.com/osmosis-labs/osmosis/v23/x/protorev/types"
-	"github.com/osmosis-labs/osmosis/v23/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	protorevtypes "github.com/osmosis-labs/osmosis/v26/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v26/x/txfees/types"
 )
 
 type KeeperTestSuite struct {
@@ -31,7 +32,7 @@ func (s *KeeperTestSuite) SetupTest(isCheckTx bool) {
 	s.Setup()
 	s.queryClient = types.NewQueryClient(s.QueryHelper)
 
-	encodingConfig := symphonyApp.MakeEncodingConfig()
+	encodingConfig := osmosisapp.MakeEncodingConfig()
 	s.clientCtx = client.Context{}.
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
@@ -58,7 +59,7 @@ func (s *KeeperTestSuite) SetupTest(isCheckTx bool) {
 		s.FundAcc(acc,
 			sdk.NewCoins(
 				sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000000)),
-				sdk.NewCoin("note", osmomath.NewInt(100000000000000000)), // Needed for pool creation fee
+				sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100000000000000000)), // Needed for pool creation fee
 				sdk.NewCoin("uion", osmomath.NewInt(10000000)),
 				sdk.NewCoin("atom", osmomath.NewInt(10000000)),
 				sdk.NewCoin("ust", osmomath.NewInt(10000000)),

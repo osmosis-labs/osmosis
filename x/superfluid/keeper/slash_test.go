@@ -4,11 +4,12 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
-	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	cl "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -44,8 +45,8 @@ func (s *KeeperTestSuite) TestBeforeValidatorSlashed() {
 			[]stakingtypes.BondStatus{stakingtypes.Unbonded},
 			1,
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
-			[]int64{0},
-			[]int64{0},
+			[]int64{},
+			[]int64{},
 		},
 	}
 
@@ -78,8 +79,8 @@ func (s *KeeperTestSuite) TestBeforeValidatorSlashed() {
 
 			// slash validator
 			for _, valIndex := range tc.slashedValIndexes {
-				validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrs[valIndex])
-				s.Require().True(found)
+				validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrs[valIndex])
+				s.Require().NoError(err)
 				s.Ctx = s.Ctx.WithBlockHeight(100)
 				consAddr, err := validator.GetConsAddr()
 				s.Require().NoError(err)
@@ -105,8 +106,8 @@ func (s *KeeperTestSuite) TestBeforeValidatorSlashed() {
 				gotLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, locks[lockIndex].ID)
 				s.Require().NoError(err)
 				s.Require().Equal(
-					gotLock.Coins.AmountOf(denoms[0]).String(),
 					osmomath.NewDec(1000000).Mul(osmomath.OneDec().Sub(slashFactor)).TruncateInt().String(),
+					gotLock.Coins.AmountOf(denoms[0]).String(),
 				)
 			}
 		})
@@ -238,7 +239,7 @@ func (s *KeeperTestSuite) TestPrepareConcentratedLockForSlash() {
 		s.Run(tc.name, func() {
 			s.SetupTest()
 
-			clPool, concentratedLockId, positionId := s.PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition("note", apptesting.USDC)
+			clPool, concentratedLockId, positionId := s.PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition(appparams.BaseCoinUnit, apptesting.USDC)
 			clPoolId := clPool.GetId()
 
 			lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, concentratedLockId)

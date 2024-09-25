@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -44,7 +44,11 @@ const (
 func (k Keeper) createSyntheticLockup(ctx sdk.Context,
 	underlyingLockId uint64, intermediateAcc types.SuperfluidIntermediaryAccount, lockingStat lockingStatus,
 ) error {
-	unbondingDuration := k.sk.GetParams(ctx).UnbondingTime
+	stakingParams, err := k.sk.GetParams(ctx)
+	if err != nil {
+		return err
+	}
+	unbondingDuration := stakingParams.UnbondingTime
 	return k.createSyntheticLockupWithDuration(ctx, underlyingLockId, intermediateAcc, unbondingDuration, lockingStat)
 }
 

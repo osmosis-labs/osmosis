@@ -6,7 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v26/x/incentives/types"
 )
 
 func TestGetCmdGauges(t *testing.T) {
@@ -59,9 +60,9 @@ func TestGetCmdActiveGaugesPerDenom(t *testing.T) {
 	desc, _ := GetCmdActiveGaugesPerDenom()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.ActiveGaugesPerDenomRequest]{
 		"basic test": {
-			Cmd: "note --offset=2",
+			Cmd: "uosmo --offset=2",
 			ExpectedQuery: &types.ActiveGaugesPerDenomRequest{
-				Denom:      "note",
+				Denom:      appparams.BaseCoinUnit,
 				Pagination: &query.PageRequest{Key: []uint8{}, Offset: 2, Limit: 100},
 			},
 		},
@@ -86,9 +87,9 @@ func TestGetCmdUpcomingGaugesPerDenom(t *testing.T) {
 	desc, _ := GetCmdUpcomingGaugesPerDenom()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.UpcomingGaugesPerDenomRequest]{
 		"basic test": {
-			Cmd: "note --offset=2",
+			Cmd: "uosmo --offset=2",
 			ExpectedQuery: &types.UpcomingGaugesPerDenomRequest{
-				Denom:      "note",
+				Denom:      appparams.BaseCoinUnit,
 				Pagination: &query.PageRequest{Key: []uint8{}, Offset: 2, Limit: 100},
 			},
 		},

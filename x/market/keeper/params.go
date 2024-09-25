@@ -1,14 +1,15 @@
 package keeper
 
 import (
-	"github.com/osmosis-labs/osmosis/v23/x/market/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v26/x/market/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // MinStabilitySpread is the minimum spread applied to swaps to / from Note.
 // Intended to prevent swing trades exploiting oracle period delays
-func (k Keeper) MinStabilitySpread(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) MinStabilitySpread(ctx sdk.Context) (res osmomath.Dec) {
 	k.paramSpace.Get(ctx, types.KeyMinStabilitySpread, &res)
 	return
 }

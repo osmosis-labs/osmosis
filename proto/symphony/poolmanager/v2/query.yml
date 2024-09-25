@@ -1,0 +1,10 @@
+keeper:
+  path: "github.com/osmosis-labs/osmosis/v26/x/poolmanager"
+  struct: "Keeper"
+client_path: "github.com/osmosis-labs/osmosis/v26/x/poolmanager/client"
+queries:
+  SpotPrice:
+    proto_wrapper:
+      query_func: "k.RouteCalculateSpotPrice"
+    cli:
+      cmd: "SpotPrice"

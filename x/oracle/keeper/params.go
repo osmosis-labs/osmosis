@@ -1,7 +1,8 @@
 package keeper
 
 import (
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -13,13 +14,13 @@ func (k Keeper) VotePeriod(ctx sdk.Context) (res uint64) {
 }
 
 // VoteThreshold returns the minimum percentage of votes that must be received for a ballot to pass.
-func (k Keeper) VoteThreshold(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) VoteThreshold(ctx sdk.Context) (res osmomath.Dec) {
 	k.paramSpace.Get(ctx, types.KeyVoteThreshold, &res)
 	return
 }
 
 // RewardBand returns the ratio of allowable exchange rate error that a validator can be rewared
-func (k Keeper) RewardBand(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) RewardBand(ctx sdk.Context) (res osmomath.Dec) {
 	k.paramSpace.Get(ctx, types.KeyRewardBand, &res)
 	return
 }
@@ -43,7 +44,7 @@ func (k Keeper) SetWhitelist(ctx sdk.Context, whitelist types.DenomList) {
 }
 
 // SlashFraction returns oracle voting penalty rate
-func (k Keeper) SlashFraction(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) SlashFraction(ctx sdk.Context) (res osmomath.Dec) {
 	k.paramSpace.Get(ctx, types.KeySlashFraction, &res)
 	return
 }
@@ -55,7 +56,7 @@ func (k Keeper) SlashWindow(ctx sdk.Context) (res uint64) {
 }
 
 // MinValidPerWindow returns oracle slashing threshold
-func (k Keeper) MinValidPerWindow(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) MinValidPerWindow(ctx sdk.Context) (res osmomath.Dec) {
 	k.paramSpace.Get(ctx, types.KeyMinValidPerWindow, &res)
 	return
 }

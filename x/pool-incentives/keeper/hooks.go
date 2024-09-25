@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
+	minttypes "github.com/osmosis-labs/osmosis/v26/x/mint/types"
 )
 
 type Hooks struct {
@@ -51,7 +51,7 @@ func (h Hooks) AfterDistributeMintedCoin(ctx sdk.Context) {
 	// Therefore, for the pool-incentives module to only take the AllocationRatio from the inflated amount, it should be run before the distribution module’s BeginBlock.
 	// Also, the pool-incentives module first takes the AllocationRatio from the total inflated amount, and the remainder is used by the distribution.
 	// So the amount is relative to each other. For example, if the AllocationRatio is 0.2(20%),
-	// the distribution uses the remaining 80% to calculate–which means if the community pool is set to receive 10% of newly minted MELODY, community pool is 8% of the total inflation.
+	// the distribution uses the remaining 80% to calculate–which means if the community pool is set to receive 10% of newly minted OSMO, community pool is 8% of the total inflation.
 
 	// Calculate the AllocatableAsset using the AllocationRatio and the MintedDenom,
 	// then allocate the tokens to the registered pools’ gauges.

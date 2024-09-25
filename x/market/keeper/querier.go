@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"context"
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
-	"github.com/osmosis-labs/osmosis/v23/x/market/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v26/x/market/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -59,7 +60,7 @@ func (q querier) ExchangeRequirements(c context.Context, _ *types.QueryExchangeR
 	resp := &types.QueryExchangeRequirementsResponse{}
 
 	resp.ExchangeRequirements = q.getExchangeRates(ctx)
-	total := sdk.ZeroDec()
+	total := osmomath.ZeroDec()
 	for _, req := range resp.ExchangeRequirements {
 		total = total.Add(req.BaseCurrency.Amount.ToLegacyDec().Mul(req.ExchangeRate))
 	}

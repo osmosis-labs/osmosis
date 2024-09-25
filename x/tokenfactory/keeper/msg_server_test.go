@@ -3,10 +3,14 @@ package keeper_test
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v26/x/tokenfactory/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
 )
 
 // TestMintDenomMsg tests TypeMsgMint message is emitted on a successful mint
@@ -25,7 +29,7 @@ func (s *KeeperTestSuite) TestMintDenomMsg() {
 		{
 			desc:      "denom does not exist",
 			amount:    10,
-			mintDenom: "factory/symphony1p822vyk8ylf3hpwh9qgv6p6dft7hedntyqyw7w/evmos",
+			mintDenom: "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos",
 			admin:     s.TestAccs[0].String(),
 			valid:     false,
 		},
@@ -42,7 +46,7 @@ func (s *KeeperTestSuite) TestMintDenomMsg() {
 			ctx := s.Ctx.WithEventManager(sdk.NewEventManager())
 			s.Require().Equal(0, len(ctx.EventManager().Events()))
 			// Test mint message
-			_, err := s.msgServer.Mint(sdk.WrapSDKContext(ctx), types.NewMsgMint(tc.admin, sdk.NewInt64Coin(tc.mintDenom, 10)))
+			_, err := s.msgServer.Mint(ctx, types.NewMsgMint(tc.admin, sdk.NewInt64Coin(tc.mintDenom, 10)))
 			if tc.valid {
 				s.Require().NoError(err)
 			} else {
@@ -59,7 +63,7 @@ func (s *KeeperTestSuite) TestBurnDenomMsg() {
 	// Create a denom.
 	s.CreateDefaultDenom()
 	// mint 10 default token for testAcc[0]
-	_, err := s.msgServer.Mint(sdk.WrapSDKContext(s.Ctx), types.NewMsgMint(s.TestAccs[0].String(), sdk.NewInt64Coin(s.defaultDenom, 10)))
+	_, err := s.msgServer.Mint(s.Ctx, types.NewMsgMint(s.TestAccs[0].String(), sdk.NewInt64Coin(s.defaultDenom, 10)))
 	s.Require().NoError(err)
 
 	for _, tc := range []struct {
@@ -72,7 +76,7 @@ func (s *KeeperTestSuite) TestBurnDenomMsg() {
 	}{
 		{
 			desc:      "denom does not exist",
-			burnDenom: "factory/symphony1p822vyk8ylf3hpwh9qgv6p6dft7hedntyqyw7w/evmos",
+			burnDenom: "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos",
 			admin:     s.TestAccs[0].String(),
 			valid:     false,
 		},
@@ -88,7 +92,7 @@ func (s *KeeperTestSuite) TestBurnDenomMsg() {
 			ctx := s.Ctx.WithEventManager(sdk.NewEventManager())
 			s.Require().Equal(0, len(ctx.EventManager().Events()))
 			// Test burn message
-			_, err := s.msgServer.Burn(sdk.WrapSDKContext(ctx), types.NewMsgBurn(tc.admin, sdk.NewInt64Coin(tc.burnDenom, 10)))
+			_, err := s.msgServer.Burn(ctx, types.NewMsgBurn(tc.admin, sdk.NewInt64Coin(tc.burnDenom, 10)))
 			if tc.valid {
 				s.Require().NoError(err)
 			} else {
@@ -98,6 +102,25 @@ func (s *KeeperTestSuite) TestBurnDenomMsg() {
 			s.AssertEventEmitted(ctx, types.TypeMsgBurn, tc.expectedMessageEvents)
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestForceTransferMsg() {
+	// Create a denom
+	s.CreateDefaultDenom()
+
+	s.Run(fmt.Sprintf("test force transfer"), func() {
+		mintAmt := sdk.NewInt64Coin(s.defaultDenom, 10)
+
+		_, err := s.msgServer.Mint(s.Ctx, types.NewMsgMint(s.TestAccs[0].String(), mintAmt))
+
+		govModAcc := s.App.AccountKeeper.GetModuleAccount(s.Ctx, govtypes.ModuleName)
+
+		err = s.App.BankKeeper.SendCoins(s.Ctx, s.TestAccs[0], govModAcc.GetAddress(), sdk.NewCoins(mintAmt))
+		s.Require().NoError(err)
+
+		_, err = s.msgServer.ForceTransfer(s.Ctx, types.NewMsgForceTransfer(s.TestAccs[0].String(), mintAmt, govModAcc.GetAddress().String(), s.TestAccs[1].String()))
+		s.Require().ErrorContains(err, "send from module acc not available")
+	})
 }
 
 // TestCreateDenomMsg tests TypeMsgCreateDenom message is emitted on a successful denom creation
@@ -126,7 +149,7 @@ func (s *KeeperTestSuite) TestCreateDenomMsg() {
 			s.Require().Equal(0, len(ctx.EventManager().Events()))
 			// Set denom creation fee in params
 			// Test create denom message
-			_, err := s.msgServer.CreateDenom(sdk.WrapSDKContext(ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), tc.subdenom))
+			_, err := s.msgServer.CreateDenom(ctx, types.NewMsgCreateDenom(s.TestAccs[0].String(), tc.subdenom))
 			if tc.valid {
 				s.Require().NoError(err)
 			} else {
@@ -177,13 +200,13 @@ func (s *KeeperTestSuite) TestChangeAdminDenomMsg() {
 			ctx := s.Ctx.WithEventManager(sdk.NewEventManager())
 			s.Require().Equal(0, len(ctx.EventManager().Events()))
 			// Create a denom and mint
-			res, err := s.msgServer.CreateDenom(sdk.WrapSDKContext(ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), "bitcoin"))
+			res, err := s.msgServer.CreateDenom(ctx, types.NewMsgCreateDenom(s.TestAccs[0].String(), "bitcoin"))
 			s.Require().NoError(err)
 			testDenom := res.GetNewTokenDenom()
-			_, err = s.msgServer.Mint(sdk.WrapSDKContext(ctx), types.NewMsgMint(s.TestAccs[0].String(), sdk.NewInt64Coin(testDenom, 10)))
+			_, err = s.msgServer.Mint(ctx, types.NewMsgMint(s.TestAccs[0].String(), sdk.NewInt64Coin(testDenom, 10)))
 			s.Require().NoError(err)
 			// Test change admin message
-			_, err = s.msgServer.ChangeAdmin(sdk.WrapSDKContext(ctx), tc.msgChangeAdmin(testDenom))
+			_, err = s.msgServer.ChangeAdmin(ctx, tc.msgChangeAdmin(testDenom))
 			if tc.expectedChangeAdminPass {
 				s.Require().NoError(err)
 			} else {
@@ -217,14 +240,14 @@ func (s *KeeperTestSuite) TestSetDenomMetaDataMsg() {
 						Exponent: 0,
 					},
 					{
-						Denom:    "note",
+						Denom:    appparams.BaseCoinUnit,
 						Exponent: 6,
 					},
 				},
 				Base:    s.defaultDenom,
-				Display: "note",
-				Name:    "MELODY",
-				Symbol:  "MELODY",
+				Display: appparams.BaseCoinUnit,
+				Name:    "OSMO",
+				Symbol:  "OSMO",
 			}),
 			expectedPass:          true,
 			expectedMessageEvents: 1,
@@ -239,14 +262,14 @@ func (s *KeeperTestSuite) TestSetDenomMetaDataMsg() {
 						Exponent: 0,
 					},
 					{
-						Denom:    "note",
+						Denom:    appparams.BaseCoinUnit,
 						Exponent: 6,
 					},
 				},
 				Base:    fmt.Sprintf("factory/%s/litecoin", s.TestAccs[0].String()),
-				Display: "note",
-				Name:    "MELODY",
-				Symbol:  "MELODY",
+				Display: appparams.BaseCoinUnit,
+				Name:    "OSMO",
+				Symbol:  "OSMO",
 			}),
 			expectedPass: false,
 		},
@@ -255,7 +278,7 @@ func (s *KeeperTestSuite) TestSetDenomMetaDataMsg() {
 			ctx := s.Ctx.WithEventManager(sdk.NewEventManager())
 			s.Require().Equal(0, len(ctx.EventManager().Events()))
 			// Test set denom metadata message
-			_, err := s.msgServer.SetDenomMetadata(sdk.WrapSDKContext(ctx), &tc.msgSetDenomMetadata)
+			_, err := s.msgServer.SetDenomMetadata(ctx, &tc.msgSetDenomMetadata)
 			if tc.expectedPass {
 				s.Require().NoError(err)
 			} else {

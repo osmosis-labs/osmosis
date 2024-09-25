@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app"
-	osmosim "github.com/osmosis-labs/osmosis/v23/simulation/executor"
-	osmosimtypes "github.com/osmosis-labs/osmosis/v23/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v26/app"
+	osmosim "github.com/osmosis-labs/osmosis/v26/simulation/executor"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v26/simulation/simtypes"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -136,7 +136,7 @@ func AppStateRandomizedFn(
 
 	// generate a random amount of initial stake coins and a random initial
 	// number of bonded accounts
-	initialStake := sdk.NewInt(r.Int63n(1e12))
+	initialStake := osmomath.NewInt(r.Int63n(1e12))
 	// Don't allow 0 validators to start off with
 	numInitiallyBonded := int64(r.Intn(299)) + 1
 

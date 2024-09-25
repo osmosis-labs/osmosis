@@ -2,17 +2,19 @@ package oracle
 
 import (
 	"cosmossdk.io/math"
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
 
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/keeper"
 
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
 )
 
 // Tally calculates the median and returns it. Sets the set of voters to be rewarded, i.e. voted within
 // a reasonable spread from the weighted median to the store
 // CONTRACT: pb must be sorted
-func Tally(pb types.ExchangeRateBallot, rewardBand sdk.Dec, validatorClaimMap map[string]types.Claim) (weightedMedian sdk.Dec) {
+func Tally(pb types.ExchangeRateBallot, rewardBand osmomath.Dec, validatorClaimMap map[string]types.Claim) (weightedMedian osmomath.Dec) {
 	weightedMedian = pb.WeightedMedian()
 	standardDeviation := pb.StandardDeviation(weightedMedian)
 	rewardSpread := weightedMedian.Mul(rewardBand.QuoInt64(2))
@@ -39,18 +41,22 @@ func Tally(pb types.ExchangeRateBallot, rewardBand sdk.Dec, validatorClaimMap ma
 
 // ballot for the asset is passing the threshold amount of voting power
 func ballotIsPassing(ballot types.ExchangeRateBallot, thresholdVotes math.Int) (math.Int, bool) {
-	ballotPower := sdk.NewInt(ballot.Power())
+	ballotPower := osmomath.NewInt(ballot.Power())
 	return ballotPower, !ballotPower.IsZero() && ballotPower.GTE(thresholdVotes)
 }
 
 // PickReferenceSymphony choose Reference Symphony with the highest voter turnout
 // If the voting power of the two denominations is the same,
 // select reference Symphony in alphabetical order.
-func PickReferenceSymphony(ctx sdk.Context, k keeper.Keeper, voteTargets map[string]sdk.Dec, voteMap map[string]types.ExchangeRateBallot) string {
+func PickReferenceSymphony(ctx sdk.Context, k keeper.Keeper, voteTargets map[string]osmomath.Dec, voteMap map[string]types.ExchangeRateBallot) (string, error) {
 	largestBallotPower := int64(0)
 	referenceSymphony := ""
 
-	totalBondedPower := sdk.TokensToConsensusPower(k.StakingKeeper.TotalBondedTokens(ctx), k.StakingKeeper.PowerReduction(ctx))
+	totalBondedTokens, err := k.StakingKeeper.TotalBondedTokens(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to get total bonded tokens: %w", err)
+	}
+	totalBondedPower := sdk.TokensToConsensusPower(totalBondedTokens, k.StakingKeeper.PowerReduction(ctx))
 	voteThreshold := k.VoteThreshold(ctx)
 	thresholdVotes := voteThreshold.MulInt64(totalBondedPower).RoundInt()
 
@@ -82,5 +88,5 @@ func PickReferenceSymphony(ctx sdk.Context, k keeper.Keeper, voteTargets map[str
 		}
 	}
 
-	return referenceSymphony
+	return referenceSymphony, nil
 }

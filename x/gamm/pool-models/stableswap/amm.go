@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/internal/cfmm_common"
-	types "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/internal/cfmm_common"
+	types "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
 )
 
 // Simplified multi-asset CFMM is xy(x^2 + y^2 + w) = k,
@@ -51,11 +51,11 @@ func targetKCalculator(x0, y0, w, yf osmomath.BigDec) osmomath.BigDec {
 	// cfmmNoV(x0, y0, w) = x_0 y_0 (x_0^2 + y_0^2 + w)
 	startK := cfmmConstantMultiNoV(x0, y0, w)
 	// remove extra yf term
-	yfRemoved := startK.Quo(yf)
+	yfRemoved := startK.QuoMut(yf)
 	// removed constant term from expression
 	// namely - (x_0 (y_f^2 + w) + x_0^3) = x_0(y_f^2 + w + x_0^2)
 	// innerTerm = y_f^2 + w + x_0^2
-	innerTerm := yf.Mul(yf).Add(w).Add((x0.Mul(x0)))
+	innerTerm := yf.Mul(yf).AddMut(w).AddMut((x0.Mul(x0)))
 	constantTerm := innerTerm.Mul(x0)
 	return yfRemoved.Sub(constantTerm)
 }
@@ -66,7 +66,7 @@ func iterKCalculator(x0, w, yf osmomath.BigDec) func(osmomath.BigDec) osmomath.B
 	// compute coefficients first. Notice that the leading coefficient is -1, we will use this to compute faster.
 	// cubicCoeff := -1
 	quadraticCoeff := x0.MulInt64(3)
-	linearCoeff := quadraticCoeff.Mul(x0).Add(w).Add(yf.Mul(yf)).NegMut()
+	linearCoeff := quadraticCoeff.Mul(x0).AddMut(w).AddMut(yf.Mul(yf)).NegMut()
 	return func(xf osmomath.BigDec) osmomath.BigDec {
 		xOut := x0.Sub(xf)
 		// horners method

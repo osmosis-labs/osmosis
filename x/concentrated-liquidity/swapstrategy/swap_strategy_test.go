@@ -9,10 +9,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
 )
 
 type StrategyTestSuite struct {
@@ -98,7 +98,7 @@ func (suite *StrategyTestSuite) setupPresetPositions(poolId uint64, positions []
 	clMsgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
 	for _, pos := range positions {
 		suite.FundAcc(suite.TestAccs[0], DefaultCoins.Add(DefaultCoins...))
-		_, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(suite.Ctx), &types.MsgCreatePosition{
+		_, err := clMsgServer.CreatePosition(suite.Ctx, &types.MsgCreatePosition{
 			PoolId:          poolId,
 			Sender:          suite.TestAccs[0].String(),
 			LowerTick:       pos.lowerTick,

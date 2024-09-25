@@ -11,10 +11,11 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	_ "github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 var (
@@ -41,7 +42,7 @@ var (
 		sdk.NewCoin("bar", osmomath.NewInt(10000)),
 	)
 	defaultAcctFunds sdk.Coins = sdk.NewCoins(
-		sdk.NewCoin("note", osmomath.NewInt(10000000000)),
+		sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000000000)),
 		sdk.NewCoin("foo", osmomath.NewInt(10000000)),
 		sdk.NewCoin("bar", osmomath.NewInt(10000000)),
 		sdk.NewCoin("baz", osmomath.NewInt(10000000)),
@@ -201,7 +202,9 @@ func (s *KeeperTestSuite) TestCreateBalancerPool() {
 		}
 
 		// note starting balances for community fee pool and pool creator account
-		feePoolBalBeforeNewPool := distributionKeeper.GetFeePoolCommunityCoins(s.Ctx)
+		feePoolBalBeforeNewPoolStruct, err := distributionKeeper.FeePool.Get(s.Ctx)
+		s.Require().NoError(err, "test: %v", test.name)
+		feePoolBalBeforeNewPool := feePoolBalBeforeNewPoolStruct.CommunityPool
 		senderBalBeforeNewPool := bankKeeper.GetAllBalances(s.Ctx, sender)
 
 		// attempt to create a pool with the given NewMsgCreateBalancerPool message
@@ -218,7 +221,9 @@ func (s *KeeperTestSuite) TestCreateBalancerPool() {
 			)
 
 			// make sure pool creation fee is correctly sent to community pool
-			feePool := distributionKeeper.GetFeePoolCommunityCoins(s.Ctx)
+			feePoolStruct, err := distributionKeeper.FeePool.Get(s.Ctx)
+			s.Require().NoError(err, "test: %v", test.name)
+			feePool := feePoolStruct.CommunityPool
 			s.Require().Equal(feePool, feePoolBalBeforeNewPool.Add(poolCreationFeeDecCoins...))
 
 			// get expected tokens in new pool and corresponding pool shares

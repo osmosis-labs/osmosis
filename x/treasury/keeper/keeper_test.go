@@ -1,15 +1,16 @@
 package keeper
 
 import (
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
-	markettypes "github.com/osmosis-labs/osmosis/v23/x/market/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	markettypes "github.com/osmosis-labs/osmosis/v26/x/market/types"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v23/x/treasury/types"
+	"github.com/osmosis-labs/osmosis/v26/x/treasury/types"
 )
 
 func TestTaxRate(t *testing.T) {
@@ -17,8 +18,8 @@ func TestTaxRate(t *testing.T) {
 
 	// See that we can get and set tax rate
 	for i := int64(0); i < 10; i++ {
-		input.TreasuryKeeper.SetTaxRate(input.Ctx, sdk.NewDecWithPrec(i, 2))
-		require.Equal(t, sdk.NewDecWithPrec(i, 2), input.TreasuryKeeper.GetTaxRate(input.Ctx))
+		input.TreasuryKeeper.SetTaxRate(input.Ctx, osmomath.NewDecWithPrec(i, 2))
+		require.Equal(t, osmomath.NewDecWithPrec(i, 2), input.TreasuryKeeper.GetTaxRate(input.Ctx))
 	}
 }
 
@@ -39,14 +40,14 @@ func TestKeeper_UpdateReserveFee(t *testing.T) {
 
 		// Update the reserve
 		newTaxRate := input.TreasuryKeeper.UpdateReserveFee(input.Ctx)
-		require.True(t, newTaxRate.GT(sdk.ZeroDec()), "reserve is empty so we should apply the tax rate")
+		require.True(t, newTaxRate.GT(osmomath.ZeroDec()), "reserve is empty so we should apply the tax rate")
 		require.True(t, newTaxRate.LTE(input.TreasuryKeeper.GetParams(input.Ctx).MaxFeeMultiplier))
 	})
 	t.Run("reserve is full", func(t *testing.T) {
 		input := CreateTestInput(t)
 
 		exchangeRequirement := input.MarketKeeper.GetExchangeRequirement(input.Ctx)
-		require.True(t, exchangeRequirement.GT(sdk.ZeroDec()))
+		require.True(t, exchangeRequirement.GT(osmomath.ZeroDec()))
 
 		err := input.BankKeeper.SendCoinsFromModuleToModule(input.Ctx, faucetAccountName, types.ModuleName, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, exchangeRequirement.TruncateInt())))
 		require.NoError(t, err)
@@ -80,7 +81,7 @@ func TestKeeper_RefillExchangePool(t *testing.T) {
 		require.NoError(t, err)
 
 		allowedOffsetPercent := input.TreasuryKeeper.GetParams(input.Ctx).ReserveAllowableOffset
-		fillValue := exchangeRequirement.Mul(sdk.NewDec(100).Sub(allowedOffsetPercent).QuoInt64(100)).TruncateInt()
+		fillValue := exchangeRequirement.Mul(osmomath.NewDec(100).Sub(allowedOffsetPercent).QuoInt64(100)).TruncateInt()
 
 		err = input.BankKeeper.SendCoinsFromModuleToModule(input.Ctx, faucetAccountName, markettypes.ModuleName, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, fillValue)))
 		require.NoError(t, err)

@@ -7,9 +7,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/kv"
 
-	simapp "github.com/osmosis-labs/osmosis/v23/app"
+	simapp "github.com/osmosis-labs/osmosis/v26/app"
 
-	"github.com/osmosis-labs/osmosis/v23/x/mint/simulation"
+	"github.com/osmosis-labs/osmosis/v26/x/mint/simulation"
 )
 
 func TestDecodeDistributionStore(t *testing.T) {

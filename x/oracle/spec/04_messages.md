@@ -40,7 +40,7 @@ The `MsgExchangeRateVote` contains the actual exchange rate vote. The `Salt` par
 // For example, if the validator believes that the effective exchange rate of Luna in USD is 10.39, that's
 // what the exchange rate field would be, and if 1213.34 for KRW, same.
 type MsgExchangeRateVote struct {
-	ExchangeRate sdk.Dec        // the effective rate of Luna in {Denom}
+	ExchangeRate osmomath.Dec        // the effective rate of Luna in {Denom}
 	Salt         string
 	Denom        string
 	Feeder       sdk.AccAddress

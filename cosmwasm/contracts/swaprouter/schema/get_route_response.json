@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GetRouteResponse",
+  "type": "object",
+  "required": [
+    "pool_route"
+  ],
+  "properties": {
+    "pool_route": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/SwapAmountInRoute"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "SwapAmountInRoute": {
+      "description": "===================== MsgSwapExactAmountIn",
+      "type": "object",
+      "required": [
+        "pool_id",
+        "token_out_denom"
+      ],
+      "properties": {
+        "pool_id": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "token_out_denom": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

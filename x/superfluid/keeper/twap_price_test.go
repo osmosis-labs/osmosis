@@ -2,8 +2,8 @@ package keeper_test
 
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -53,7 +53,7 @@ func (s *KeeperTestSuite) TestOsmoEquivalentMultiplierSetGetDeleteFlow() {
 	s.Require().Equal(multiplier, osmomath.NewDec(0))
 }
 
-func (s *KeeperTestSuite) TestGetSuperfluidMELODYTokens() {
+func (s *KeeperTestSuite) TestGetSuperfluidOSMOTokens() {
 	s.SetupTest()
 	minRiskFactor := s.App.SuperfluidKeeper.GetParams(s.Ctx).MinimumRiskFactor
 	poolCoins := sdk.NewCoins(sdk.NewCoin("stake", osmomath.NewInt(1000000000000000000)), sdk.NewCoin("foo", osmomath.NewInt(1000000000000000000)))
@@ -75,10 +75,10 @@ func (s *KeeperTestSuite) TestGetSuperfluidMELODYTokens() {
 	s.Require().Equal(multiplier, osmomath.NewDec(2))
 
 	// Should get error since asset is not superfluid enabled
-	melodyTokens, err := s.App.SuperfluidKeeper.GetSuperfluidMELODYTokens(s.Ctx, gammShareDenom, testAmount)
+	osmoTokens, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(s.Ctx, gammShareDenom, testAmount)
 	s.Require().Error(err)
 	s.Require().ErrorIs(err, types.ErrNonSuperfluidAsset)
-	s.Require().Equal(melodyTokens, osmomath.NewInt(0))
+	s.Require().Equal(osmoTokens, osmomath.NewInt(0))
 
 	// Set gamm share as superfluid
 	superfluidGammAsset := types.SuperfluidAsset{
@@ -91,15 +91,15 @@ func (s *KeeperTestSuite) TestGetSuperfluidMELODYTokens() {
 	// Reset multiplier
 	s.App.SuperfluidKeeper.SetOsmoEquivalentMultiplier(s.Ctx, epoch, gammShareDenom, multiplier)
 
-	// Get superfluid MELODY tokens
-	melodyTokens, err = s.App.SuperfluidKeeper.GetSuperfluidMELODYTokens(s.Ctx, gammShareDenom, testAmount)
+	// Get superfluid OSMO tokens
+	osmoTokens, err = s.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(s.Ctx, gammShareDenom, testAmount)
 	s.Require().NoError(err)
 
 	// Adjust result with risk factor
-	melodyTokensRiskAdjusted := s.App.SuperfluidKeeper.GetRiskAdjustedMelodyValue(s.Ctx, melodyTokens)
+	osmoTokensRiskAdjusted := s.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(s.Ctx, osmoTokens)
 
 	// Check result
-	s.Require().Equal(testAmount.ToLegacyDec().Mul(minRiskFactor).TruncateInt().String(), melodyTokensRiskAdjusted.String())
+	s.Require().Equal(testAmount.ToLegacyDec().Mul(minRiskFactor).TruncateInt().String(), osmoTokensRiskAdjusted.String())
 
 	// Set cl share as superfluid
 	superfluidClAsset := types.SuperfluidAsset{
@@ -112,13 +112,13 @@ func (s *KeeperTestSuite) TestGetSuperfluidMELODYTokens() {
 	// Reset multiplier
 	s.App.SuperfluidKeeper.SetOsmoEquivalentMultiplier(s.Ctx, epoch, clShareDenom, multiplier)
 
-	// Get superfluid MELODY tokens
-	melodyTokens, err = s.App.SuperfluidKeeper.GetSuperfluidMELODYTokens(s.Ctx, clShareDenom, testAmount)
+	// Get superfluid OSMO tokens
+	osmoTokens, err = s.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(s.Ctx, clShareDenom, testAmount)
 	s.Require().NoError(err)
 
 	// Adjust result with risk factor
-	melodyTokensRiskAdjusted = s.App.SuperfluidKeeper.GetRiskAdjustedMelodyValue(s.Ctx, melodyTokens)
+	osmoTokensRiskAdjusted = s.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(s.Ctx, osmoTokens)
 
 	// Check result
-	s.Require().Equal(testAmount.ToLegacyDec().Mul(minRiskFactor).TruncateInt().String(), melodyTokensRiskAdjusted.String())
+	s.Require().Equal(testAmount.ToLegacyDec().Mul(minRiskFactor).TruncateInt().String(), osmoTokensRiskAdjusted.String())
 }

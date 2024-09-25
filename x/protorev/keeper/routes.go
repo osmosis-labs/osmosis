@@ -1,13 +1,14 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/x/protorev/types"
 )
 
 type RouteMetaData struct {
@@ -112,7 +113,7 @@ func (k Keeper) BuildHighestLiquidityRoutes(ctx sdk.Context, tokenIn, tokenOut s
 	return routes, nil
 }
 
-// BuildHighestLiquidityRoute constructs a cyclic arbitrage route that is starts/ends with swapDenom (ex. melody) given the swap (tokenIn, tokenOut, poolId).
+// BuildHighestLiquidityRoute constructs a cyclic arbitrage route that is starts/ends with swapDenom (ex. osmo) given the swap (tokenIn, tokenOut, poolId).
 func (k Keeper) BuildHighestLiquidityRoute(ctx sdk.Context, swapDenom types.BaseDenom, tokenIn, tokenOut string, poolId uint64) (RouteMetaData, error) {
 	// Create the first swap for the MultiHopSwap Route
 	entryPoolId, err := k.GetPoolForDenomPair(ctx, swapDenom.Denom, tokenOut)
@@ -226,17 +227,12 @@ func (k Keeper) CalculateRoutePoolPoints(ctx sdk.Context, route poolmanagertypes
 	totalWeight := uint64(0)
 
 	for _, poolId := range route.PoolIds() {
-		pool, err := k.poolmanagerKeeper.GetPool(ctx, poolId)
+		poolType, err := k.poolmanagerKeeper.GetPoolType(ctx, poolId)
 		if err != nil {
 			return 0, err
 		}
 
-		// Ensure that all of the pools in the route exist and are active
-		if err := k.IsValidPool(ctx, pool); err != nil {
-			return 0, err
-		}
-
-		switch pool.GetType() {
+		switch poolType {
 		case poolmanagertypes.Balancer:
 			totalWeight += infoByPoolType.Balancer.Weight
 		case poolmanagertypes.Stableswap:
@@ -245,8 +241,13 @@ func (k Keeper) CalculateRoutePoolPoints(ctx sdk.Context, route poolmanagertypes
 			totalWeight += infoByPoolType.Concentrated.Weight
 		case poolmanagertypes.CosmWasm:
 			weight, ok := uint64(0), false
+			pool, err := k.poolmanagerKeeper.GetPool(ctx, poolId)
+			if err != nil {
+				return 0, err
+			}
+			poolAddrString := pool.GetAddress().String()
 			for _, weightMap := range infoByPoolType.Cosmwasm.WeightMaps {
-				if weightMap.ContractAddress == pool.GetAddress().String() {
+				if weightMap.ContractAddress == poolAddrString {
 					weight = weightMap.Weight
 					ok = true
 					break
@@ -258,7 +259,7 @@ func (k Keeper) CalculateRoutePoolPoints(ctx sdk.Context, route poolmanagertypes
 
 			totalWeight += weight
 		default:
-			return 0, fmt.Errorf("invalid pool type")
+			return 0, errors.New("invalid pool type")
 		}
 	}
 

@@ -1,7 +1,7 @@
 package ante_test
 
 import (
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -22,8 +22,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	"github.com/osmosis-labs/osmosis/v23/app"
-	treasurytypes "github.com/osmosis-labs/osmosis/v23/x/treasury/types"
+	"github.com/osmosis-labs/osmosis/v26/app"
+	treasurytypes "github.com/osmosis-labs/osmosis/v26/x/treasury/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 )
@@ -51,7 +51,7 @@ func createTestApp(isCheckTx bool, tempDir string) (*app.SymphonyApp, sdk.Contex
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	app.TreasuryKeeper.SetParams(ctx, treasurytypes.DefaultParams())
-	app.TreasuryKeeper.SetTaxRate(ctx, sdk.NewDecWithPrec(1, 2)) // 0.01%
+	app.TreasuryKeeper.SetTaxRate(ctx, osmomath.NewDecWithPrec(1, 2)) // 0.01%
 	app.DistrKeeper.SetParams(ctx, distributiontypes.DefaultParams())
 	app.DistrKeeper.SetFeePool(ctx, distributiontypes.InitialFeePool())
 	app.TxFeesKeeper.SetBaseDenom(ctx, appparams.BaseCoinUnit)

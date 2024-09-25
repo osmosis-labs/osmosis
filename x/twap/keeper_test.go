@@ -10,9 +10,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v23/x/twap"
-	"github.com/osmosis-labs/osmosis/v23/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v26/x/twap"
+	"github.com/osmosis-labs/osmosis/v26/x/twap/types"
 )
 
 // TODO: Consider switching this everywhere
@@ -320,6 +320,15 @@ func (s *TestSuite) setupDefaultPool() (poolId uint64, denomA, denomB string) {
 // given records.
 func (s *TestSuite) preSetRecords(records []types.TwapRecord) {
 	for _, record := range records {
+		s.twapkeeper.StoreNewRecord(s.Ctx, record)
+	}
+}
+
+// preSetRecords pre sets records on the twap keeper to the
+// given records. The records are updated to use the provided pool ID
+func (s *TestSuite) preSetRecordsWithPoolId(poolId uint64, records []types.TwapRecord) {
+	for _, record := range records {
+		record.PoolId = poolId
 		s.twapkeeper.StoreNewRecord(s.Ctx, record)
 	}
 }

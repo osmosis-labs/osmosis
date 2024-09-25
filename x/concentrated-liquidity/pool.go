@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/store/prefix"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
@@ -14,10 +14,10 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
-	types "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/model"
+	types "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 // InitializePool initializes a new concentrated liquidity pool with the given PoolI interface and creator address.
@@ -215,8 +215,9 @@ func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins
 		return nil, err
 	}
 
-	token0Bal := k.bankKeeper.GetBalance(ctx, pool.GetAddress(), pool.GetToken0())
-	token1Bal := k.bankKeeper.GetBalance(ctx, pool.GetAddress(), pool.GetToken1())
+	addr := pool.GetAddress()
+	token0Bal := k.bankKeeper.GetBalance(ctx, addr, pool.GetToken0())
+	token1Bal := k.bankKeeper.GetBalance(ctx, addr, pool.GetToken1())
 
 	return sdk.NewCoins(token0Bal, token1Bal), nil
 }
@@ -444,9 +445,9 @@ func parsePositionIDFromPoolLink(key []byte, _ []byte) (uint64, error) {
 	return positionID, nil
 }
 
-// MigrateAccumulatorToScalingFactor multiplies the value of the uptime accumulator, respective position accumulators
+// MigrateIncentivesAccumulatorToScalingFactor multiplies the value of the uptime accumulator, respective position accumulators
 // and tick uptime trackers by the per-unit liquidity scaling factor and overwrites the accumulators with the new values.
-func (k Keeper) MigrateAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64) error {
+func (k Keeper) MigrateIncentivesAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64) error {
 	ctx.Logger().Info("migration start", "pool_id", poolId)
 	// Get pool-global incentive accumulator
 	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
@@ -511,6 +512,78 @@ func (k Keeper) MigrateAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64
 		for i, uptimeTracker := range uptimeTrackers.List {
 			uptimeTrackers.List[i].UptimeGrowthOutside = uptimeTracker.UptimeGrowthOutside.MulDecTruncate(perUnitLiqScalingFactor)
 		}
+
+		// Overwrite the tick's accumulator with the new value
+		k.SetTickInfo(ctx, poolId, tick.TickIndex, &tick.Info)
+	}
+
+	ctx.Logger().Info("migration end", "pool_id", poolId)
+	return nil
+}
+
+// MigrateSpreadFactorAccumulatorToScalingFactor multiplies the value of the spread reward accumulator, respective position accumulators
+// and tick spread reward trackers by the per-unit liquidity scaling factor and overwrites the accumulators with the new values.
+func (k Keeper) MigrateSpreadFactorAccumulatorToScalingFactor(ctx sdk.Context, poolId uint64) error {
+	ctx.Logger().Info("migration start", "pool_id", poolId)
+	// Get the spread reward accumulator for the pool.
+	spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	// Update the spread reward accumulator's value by multiplying it by the per-unit liquidity scaling factor.
+	value := spreadRewardAccumulator.GetValue().MulDecTruncate(perUnitLiqScalingFactor)
+	if err := accum.OverwriteAccumulatorUnsafe(ctx.KVStore(k.storeKey), types.KeySpreadRewardPoolAccumulator(poolId), value, spreadRewardAccumulator.GetTotalShares()); err != nil {
+		return err
+	}
+
+	// Get all position IDs for the pool.
+	positionIDs, err := k.GetPositionIDsByPoolID(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	ctx.Logger().Info("num_positions", "count", len(positionIDs))
+
+	// For each position ID, multiply the value by the per-unit liquidity scaling factor
+	// and overwrite the accumulator with the new value.
+	for _, positionId := range positionIDs {
+		// Get the key for the position's accumulator in the spread reward accumulator.
+		positionKey := types.KeySpreadRewardPositionAccumulator(positionId)
+
+		// Check if the position exists in the spread reward accumulator.
+		hasPosition := spreadRewardAccumulator.HasPosition(positionKey)
+		if !hasPosition {
+			return types.SpreadRewardPositionNotFoundError{PositionId: positionId}
+		}
+
+		// Get the position's current accumulator value per share from the spread reward accumulator.
+		positionSnapshot, err := spreadRewardAccumulator.GetPosition(positionKey)
+		if err != nil {
+			return err
+		}
+		positionSnapshotValue := positionSnapshot.GetAccumValuePerShare()
+
+		// Multiply the value by the per-unit liquidity scaling factor
+		newValue := positionSnapshotValue.MulDecTruncate(perUnitLiqScalingFactor)
+
+		// Overwrite the position accumulator with the new value
+		if err := spreadRewardAccumulator.SetPositionIntervalAccumulation(positionKey, newValue); err != nil {
+			return err
+		}
+	}
+
+	// Retrieve all ticks for the pool
+	ticks, err := k.GetAllInitializedTicksForPool(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	ctx.Logger().Info("num_ticks", "count", len(ticks))
+
+	// For each tick, scale the value of the spread reward accumulator tracker.
+	for _, tick := range ticks {
+		tick.Info.SpreadRewardGrowthOppositeDirectionOfLastTraversal = tick.Info.SpreadRewardGrowthOppositeDirectionOfLastTraversal.MulDecTruncate(perUnitLiqScalingFactor)
 
 		// Overwrite the tick's accumulator with the new value
 		k.SetTickInfo(ctx, poolId, tick.TickIndex, &tick.Info)

@@ -4,32 +4,34 @@ import (
 	"fmt"
 	"sync"
 
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-	"github.com/cosmos/cosmos-sdk/codec"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	gammv2types "github.com/osmosis-labs/osmosis/v23/x/gamm/v2types"
+	gammv2types "github.com/osmosis-labs/osmosis/v26/x/gamm/v2types"
 
-	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/client/queryproto"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v23/x/cosmwasmpool/client/queryproto"
-	downtimequerytypes "github.com/osmosis-labs/osmosis/v23/x/downtime-detector/client/queryproto"
-	gammtypes "github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v23/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
-	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v23/x/poolmanager/client/queryproto"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v23/x/tokenfactory/types"
-	twapquerytypes "github.com/osmosis-labs/osmosis/v23/x/twap/client/queryproto"
-	txfeestypes "github.com/osmosis-labs/osmosis/v23/x/txfees/types"
+	"github.com/cosmos/gogoproto/proto"
+
+	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/client/queryproto"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/client/queryproto"
+	downtimequerytypes "github.com/osmosis-labs/osmosis/v26/x/downtime-detector/client/queryproto"
+	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v26/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v26/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v26/x/pool-incentives/types"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/queryproto"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v26/x/smart-account/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v26/x/tokenfactory/types"
+	twapquerytypes "github.com/osmosis-labs/osmosis/v26/x/twap/client/queryproto"
+	txfeestypes "github.com/osmosis-labs/osmosis/v26/x/txfees/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -84,7 +86,7 @@ func init() {
 	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/Params", &stakingtypes.QueryParamsResponse{})
 	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/Validator", &stakingtypes.QueryValidatorResponse{})
 
-	// symphony queries
+	// osmosis queries
 	// cosmwasm pool
 	setWhitelistedQuery("/osmosis.cosmwasmpool.v1beta1.Query/Pools", &cosmwasmpooltypes.PoolsResponse{})
 	setWhitelistedQuery("/osmosis.cosmwasmpool.v1beta1.Query/Params", &cosmwasmpooltypes.ParamsResponse{})
@@ -112,6 +114,7 @@ func init() {
 	// incentives
 	setWhitelistedQuery("/osmosis.incentives.Query/ModuleToDistributeCoins", &incentivestypes.ModuleToDistributeCoinsResponse{})
 	setWhitelistedQuery("/osmosis.incentives.Query/LockableDurations", &incentivestypes.QueryLockableDurationsResponse{})
+	setWhitelistedQuery("/osmosis.incentives.Query/GaugeByID", &incentivestypes.GaugeByIDResponse{})
 
 	// lockup
 	setWhitelistedQuery("/osmosis.lockup.Query/ModuleBalance", &lockuptypes.ModuleBalanceResponse{})
@@ -137,6 +140,10 @@ func init() {
 	setWhitelistedQuery("/osmosis.superfluid.Query/AssetType", &superfluidtypes.AssetTypeResponse{})
 	setWhitelistedQuery("/osmosis.superfluid.Query/AllAssets", &superfluidtypes.AllAssetsResponse{})
 	setWhitelistedQuery("/osmosis.superfluid.Query/AssetMultiplier", &superfluidtypes.AssetMultiplierResponse{})
+
+	// smartaccount
+	setWhitelistedQuery("/osmosis.smartaccount.v1beta1.Query/GetAuthenticator", &smartaccounttypes.GetAuthenticatorResponse{})
+	setWhitelistedQuery("/osmosis.smartaccount.v1beta1.Query/GetAuthenticators", &smartaccounttypes.GetAuthenticatorsResponse{})
 
 	// poolmanager
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/NumPools", &poolmanagerqueryproto.NumPoolsResponse{})
@@ -183,10 +190,6 @@ func init() {
 	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/IncentiveRecords", &concentratedliquidityquery.IncentiveRecordsResponse{})
 	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/TickAccumulatorTrackers", &concentratedliquidityquery.TickAccumulatorTrackersResponse{})
 	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/CFMMPoolIdLinkFromConcentratedPoolId", &concentratedliquidityquery.CFMMPoolIdLinkFromConcentratedPoolIdResponse{})
-
-	// market
-	//setWhitelistedQuery("/osmosis.market.v1beta1.Query/Swap", &marketqueryproto.QuerySwapResponse{})
-	//setWhitelistedQuery("/osmosis.market.v1beta1.Query/OsmosisPoolDelta", &marketqueryproto.QueryTerraPoolDeltaResponse{})
 }
 
 // IsWhitelistedQuery returns if the query is not whitelisted.
@@ -201,21 +204,21 @@ func IsWhitelistedQuery(queryPath string) error {
 // getWhitelistedQuery returns the whitelisted query at the provided path.
 // If the query does not exist, or it was setup wrong by the chain, this returns an error.
 // CONTRACT: must call returnStargateResponseToPool in order to avoid pointless allocs.
-func getWhitelistedQuery(queryPath string) (codec.ProtoMarshaler, error) {
+func getWhitelistedQuery(queryPath string) (proto.Message, error) {
 	protoResponseAny, isWhitelisted := stargateResponsePools[queryPath]
 	if !isWhitelisted {
 		return nil, wasmvmtypes.UnsupportedRequest{Kind: fmt.Sprintf("'%s' path is not allowed from the contract", queryPath)}
 	}
-	protoMarshaler, ok := protoResponseAny.Get().(codec.ProtoMarshaler)
+	protoMarshaler, ok := protoResponseAny.Get().(proto.Message)
 	if !ok {
-		return nil, fmt.Errorf("failed to assert type to codec.ProtoMarshaler")
+		return nil, fmt.Errorf("failed to assert type to proto.Messager")
 	}
 	return protoMarshaler, nil
 }
 
 type protoTypeG[T any] interface {
 	*T
-	codec.ProtoMarshaler
+	proto.Message
 }
 
 // setWhitelistedQuery sets the whitelisted query at the provided path.
@@ -231,7 +234,7 @@ func setWhitelistedQuery[T any, PT protoTypeG[T]](queryPath string, _ PT) {
 }
 
 // returnStargateResponseToPool returns the provided protoMarshaler to the appropriate pool based on it's query path.
-func returnStargateResponseToPool(queryPath string, pb codec.ProtoMarshaler) {
+func returnStargateResponseToPool(queryPath string, pb proto.Message) {
 	stargateResponsePools[queryPath].Put(pb)
 }
 

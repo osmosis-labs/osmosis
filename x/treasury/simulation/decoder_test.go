@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -9,15 +10,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 
-	"github.com/osmosis-labs/osmosis/v23/x/treasury/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/treasury/types"
+	"github.com/osmosis-labs/osmosis/v26/x/treasury/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/treasury/types"
 )
 
 func TestDecodeDistributionStore(t *testing.T) {
 	cdc := keeper.MakeTestCodec(t)
 	dec := NewDecodeStore(cdc)
 
-	taxRate := sdk.NewDecWithPrec(123, 2)
+	taxRate := osmomath.NewDecWithPrec(123, 2)
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{

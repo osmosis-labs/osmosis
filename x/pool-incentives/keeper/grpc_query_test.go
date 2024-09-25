@@ -8,9 +8,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	incentivestypes "github.com/osmosis-labs/osmosis/v23/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	incentivestypes "github.com/osmosis-labs/osmosis/v26/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v26/x/pool-incentives/types"
 )
 
 var (
@@ -498,6 +499,10 @@ func (s *KeeperTestSuite) TestExternalIncentiveGauges_NoLock() {
 	for name, tc := range tests {
 		s.Run(name, func() {
 			s.SetupTest()
+
+			// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+			// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+			s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, defaultDenom, 9999)
 
 			defaultStartTime := s.Ctx.BlockTime()
 

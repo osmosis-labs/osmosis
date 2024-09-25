@@ -1,11 +1,12 @@
 package keeper_test
 
 import (
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"sort"
 
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting/assets"
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting/assets"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -27,14 +28,14 @@ func (s *KeeperTestSuite) TestOrganizeAggregate() {
 	staking.EndBlocker(ctx, s.App.StakingKeeper)
 
 	sdrBallot := types.ExchangeRateBallot{
-		types.NewVoteForTally(sdk.NewDec(17), assets.MicroSDRDenom, ValAddrs[0], power),
-		types.NewVoteForTally(sdk.NewDec(10), assets.MicroSDRDenom, ValAddrs[1], power),
-		types.NewVoteForTally(sdk.NewDec(6), assets.MicroSDRDenom, ValAddrs[2], power),
+		types.NewVoteForTally(osmomath.NewDec(17), assets.MicroSDRDenom, ValAddrs[0], power),
+		types.NewVoteForTally(osmomath.NewDec(10), assets.MicroSDRDenom, ValAddrs[1], power),
+		types.NewVoteForTally(osmomath.NewDec(6), assets.MicroSDRDenom, ValAddrs[2], power),
 	}
 	krwBallot := types.ExchangeRateBallot{
-		types.NewVoteForTally(sdk.NewDec(1000), assets.MicroKRWDenom, ValAddrs[0], power),
-		types.NewVoteForTally(sdk.NewDec(1300), assets.MicroKRWDenom, ValAddrs[1], power),
-		types.NewVoteForTally(sdk.NewDec(2000), assets.MicroKRWDenom, ValAddrs[2], power),
+		types.NewVoteForTally(osmomath.NewDec(1000), assets.MicroKRWDenom, ValAddrs[0], power),
+		types.NewVoteForTally(osmomath.NewDec(1300), assets.MicroKRWDenom, ValAddrs[1], power),
+		types.NewVoteForTally(osmomath.NewDec(2000), assets.MicroKRWDenom, ValAddrs[2], power),
 	}
 
 	for i := range sdrBallot {
@@ -90,14 +91,14 @@ func (s *KeeperTestSuite) TestClearBallots() {
 	staking.EndBlocker(ctx, s.App.StakingKeeper)
 
 	sdrBallot := types.ExchangeRateBallot{
-		types.NewVoteForTally(sdk.NewDec(17), assets.MicroSDRDenom, ValAddrs[0], power),
-		types.NewVoteForTally(sdk.NewDec(10), assets.MicroSDRDenom, ValAddrs[1], power),
-		types.NewVoteForTally(sdk.NewDec(6), assets.MicroSDRDenom, ValAddrs[2], power),
+		types.NewVoteForTally(osmomath.NewDec(17), assets.MicroSDRDenom, ValAddrs[0], power),
+		types.NewVoteForTally(osmomath.NewDec(10), assets.MicroSDRDenom, ValAddrs[1], power),
+		types.NewVoteForTally(osmomath.NewDec(6), assets.MicroSDRDenom, ValAddrs[2], power),
 	}
 	krwBallot := types.ExchangeRateBallot{
-		types.NewVoteForTally(sdk.NewDec(1000), assets.MicroKRWDenom, ValAddrs[0], power),
-		types.NewVoteForTally(sdk.NewDec(1300), assets.MicroKRWDenom, ValAddrs[1], power),
-		types.NewVoteForTally(sdk.NewDec(2000), assets.MicroKRWDenom, ValAddrs[2], power),
+		types.NewVoteForTally(osmomath.NewDec(1000), assets.MicroKRWDenom, ValAddrs[0], power),
+		types.NewVoteForTally(osmomath.NewDec(1300), assets.MicroKRWDenom, ValAddrs[1], power),
+		types.NewVoteForTally(osmomath.NewDec(2000), assets.MicroKRWDenom, ValAddrs[2], power),
 	}
 
 	for i := range sdrBallot {
@@ -145,24 +146,24 @@ func (s *KeeperTestSuite) TestApplyWhitelist() {
 	s.App.OracleKeeper.ApplyWhitelist(s.Ctx, types.DenomList{
 		types.Denom{
 			Name:     "uusd",
-			TobinTax: sdk.OneDec(),
+			TobinTax: osmomath.OneDec(),
 		},
 		types.Denom{
 			Name:     "ukrw",
-			TobinTax: sdk.OneDec(),
+			TobinTax: osmomath.OneDec(),
 		},
-	}, map[string]sdk.Dec{
-		"uusd": sdk.ZeroDec(),
-		"ukrw": sdk.ZeroDec(),
+	}, map[string]osmomath.Dec{
+		"uusd": osmomath.ZeroDec(),
+		"ukrw": osmomath.ZeroDec(),
 	})
 
 	price, err := s.App.OracleKeeper.GetTobinTax(s.Ctx, "uusd")
 	s.Require().NoError(err)
-	s.Require().Equal(price, sdk.OneDec())
+	s.Require().Equal(price, osmomath.OneDec())
 
 	price, err = s.App.OracleKeeper.GetTobinTax(s.Ctx, "ukrw")
 	s.Require().NoError(err)
-	s.Require().Equal(price, sdk.OneDec())
+	s.Require().Equal(price, osmomath.OneDec())
 
 	metadata, ok := s.App.BankKeeper.GetDenomMetaData(s.Ctx, "uusd")
 	s.Require().True(ok)

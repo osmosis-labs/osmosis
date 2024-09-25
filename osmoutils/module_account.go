@@ -1,6 +1,7 @@
 package osmoutils
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"reflect"
@@ -16,10 +17,10 @@ import (
 var OsmoUtilsExtraAccountTypes map[reflect.Type]struct{}
 
 type AccountKeeper interface {
-	NewAccount(sdk.Context, authtypes.AccountI) authtypes.AccountI
+	NewAccount(context.Context, sdk.AccountI) sdk.AccountI
 
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
-	SetAccount(ctx sdk.Context, acc authtypes.AccountI)
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
+	SetAccount(ctx context.Context, acc sdk.AccountI)
 }
 
 // CanCreateModuleAccountAtAddr tells us if we can safely make a module account at
@@ -79,6 +80,25 @@ func CreateModuleAccount(ctx sdk.Context, ak AccountKeeper, addr sdk.AccAddress)
 		authtypes.NewModuleAccount(
 			authtypes.NewBaseAccountWithAddress(addr),
 			addr.String(),
+		),
+	)
+	ak.SetAccount(ctx, acc)
+	return nil
+}
+
+// CreateModuleAccountByName creates a module account at the provided name
+func CreateModuleAccountByName(ctx sdk.Context, ak AccountKeeper, name string) error {
+	addr := authtypes.NewModuleAddress(name)
+	err := CanCreateModuleAccountAtAddr(ctx, ak, addr)
+	if err != nil {
+		return err
+	}
+
+	acc := ak.NewAccount(
+		ctx,
+		authtypes.NewModuleAccount(
+			authtypes.NewBaseAccountWithAddress(addr),
+			name,
 		),
 	)
 	ak.SetAccount(ctx, acc)

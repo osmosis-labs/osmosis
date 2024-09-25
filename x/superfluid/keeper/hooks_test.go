@@ -9,9 +9,10 @@ import (
 	distribution "github.com/cosmos/cosmos-sdk/x/distribution"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v23/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v26/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
@@ -33,7 +34,7 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			// delegation rewards are calculated using the equation (current period cumulative reward ratio - last period cumulative reward ratio) * asset amount
 			// in this test case, the calculation for expected reward would be the following (0.99999 - 0) * 11_000_000
 			// thus we expect 909_900 stake as rewards
-			[]sdk.Coins{{sdk.NewCoin("stake", osmomath.NewInt(909090))}},
+			[]sdk.Coins{{sdk.NewCoin(STAKE, osmomath.NewInt(909090))}},
 		},
 		{
 			"happy path with two validator and delegator each",
@@ -46,13 +47,18 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			// This would be the first block propsed by the second validator, current period cumulative reward ratio being 999_86.66684,
 			// last period cumulative reward ratio being 0
 			// Thus as rewards, we expect 999986stake, calculated using the following equation: (0.117647) * 7_500_000
-			[]sdk.Coins{{sdk.NewCoin("stake", osmomath.NewInt(909090))}, {sdk.NewCoin("stake", osmomath.NewInt(882352))}},
+			[]sdk.Coins{{sdk.NewCoin(STAKE, osmomath.NewInt(909090))}, {sdk.NewCoin(STAKE, osmomath.NewInt(882352))}},
 		},
 	}
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			s.SetupTest()
+
+			// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
+			// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
+			s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, STAKE, 9999)
+
 			valAddrs := s.SetupValidators(tc.validatorStats)
 
 			denoms, poolIds := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20)})
@@ -96,8 +102,8 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			for _, acc := range intermediaryAccs {
 				valAddr, err := sdk.ValAddressFromBech32(acc.ValAddr)
 				s.Require().NoError(err)
-				delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, acc.GetAccAddress(), valAddr)
-				s.Require().True(found)
+				delegation, err := s.App.StakingKeeper.GetDelegation(s.Ctx, acc.GetAccAddress(), valAddr)
+				s.Require().NoError(err)
 				s.Require().Equal(osmomath.NewDec(7500000), delegation.Shares)
 			}
 
@@ -275,8 +281,8 @@ func (s *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 			superDelegations:      []superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			superUnbondingLockIds: []uint64{1, 2},
 			slashedValIndexes:     []int64{0},
-			expSlashedLockIds:     []uint64{1},
-			expUnslashedLockIds:   []uint64{2},
+			expSlashedLockIds:     []uint64{},
+			expUnslashedLockIds:   []uint64{1, 2},
 		},
 	}
 
@@ -308,8 +314,8 @@ func (s *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 
 			// slash unbonding lockups for all intermediary accounts
 			for _, valIndex := range tc.slashedValIndexes {
-				validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrs[valIndex])
-				s.Require().True(found)
+				validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrs[valIndex])
+				s.Require().NoError(err)
 				s.Ctx = s.Ctx.WithBlockHeight(100)
 				consAddr, err := validator.GetConsAddr()
 				s.Require().NoError(err)
@@ -358,7 +364,7 @@ func (s *KeeperTestSuite) TestAfterAddTokensToLock_Event() {
 
 	for index, lock := range locks {
 		lockupMsgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
-		c := sdk.WrapSDKContext(s.Ctx)
+		c := s.Ctx
 		coinsToLock := sdk.NewCoins(sdk.NewCoin(denoms[index], osmomath.NewInt(100)))
 		sender, _ := sdk.AccAddressFromBech32(lock.Owner)
 		s.FundAcc(sender, coinsToLock)

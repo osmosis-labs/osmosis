@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -39,7 +40,7 @@ func (v AggregateExchangeRateVote) String() string {
 }
 
 // NewExchangeRateTuple creates a ExchangeRateTuple instance
-func NewExchangeRateTuple(denom string, exchangeRate sdk.Dec) ExchangeRateTuple {
+func NewExchangeRateTuple(denom string, exchangeRate osmomath.Dec) ExchangeRateTuple {
 	return ExchangeRateTuple{
 		denom,
 		exchangeRate,

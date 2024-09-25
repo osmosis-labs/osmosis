@@ -6,9 +6,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/osmosis-labs/osmosis/v23/ante"
+	"github.com/osmosis-labs/osmosis/v26/ante"
 
-	oracletypes "github.com/osmosis-labs/osmosis/v23/x/oracle/types"
+	oracletypes "github.com/osmosis-labs/osmosis/v26/x/oracle/types"
 )
 
 func (suite *AnteTestSuite) TestOracleSpamming() {
@@ -88,6 +88,6 @@ func (ok dummyOracleKeeper) ValidateFeeder(_ sdk.Context, feederAddr sdk.AccAddr
 	return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "cannot ensure feeder right")
 }
 
-func (ok dummyOracleKeeper) GetMelodyExchangeRate(_ sdk.Context, _ string) (sdk.Dec, error) {
-	return sdk.NewDecWithPrec(1, 1), nil
+func (ok dummyOracleKeeper) GetMelodyExchangeRate(_ sdk.Context, _ string) (osmomath.Dec, error) {
+	return osmomath.NewDecWithPrec(1, 1), nil
 }

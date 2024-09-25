@@ -2,12 +2,16 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&UpdateFeeTokenProposal{}, "symphony/UpdateFeeTokenProposal", nil)
+	cdc.RegisterConcrete(&UpdateFeeTokenProposal{}, "osmosis/UpdateFeeTokenProposal", nil)
+	legacy.RegisterAminoMsg(cdc, &MsgSetFeeTokens{}, "osmosis/txfees/set-fee-tokens")
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
@@ -15,9 +19,10 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*govtypesv1.Content)(nil),
 		&UpdateFeeTokenProposal{},
 	)
-}
+	registry.RegisterImplementations(
+		(*sdk.Msg)(nil),
+		&MsgSetFeeTokens{},
+	)
 
-var (
-	amino     = codec.NewLegacyAmino()
-	ModuleCdc = codec.NewAminoCodec(amino)
-)
+	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+}

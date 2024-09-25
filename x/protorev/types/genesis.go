@@ -14,7 +14,7 @@ var (
 	// first come first serve basis that is based on the order of the base denoms.
 	DefaultBaseDenoms = []BaseDenom{
 		{
-			Denom:    SymphonyDenomination,
+			Denom:    OsmosisDenomination,
 			StepSize: osmomath.NewInt(1_000_000),
 		},
 	}

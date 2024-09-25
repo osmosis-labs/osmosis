@@ -6,11 +6,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting/assets"
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting/assets"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
 
-	"github.com/osmosis-labs/osmosis/v23/x/market/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/market/types"
+	"github.com/osmosis-labs/osmosis/v26/x/market/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/market/types"
 )
 
 func (s *KeeperTestSuite) setupServer() types.MsgServer {
@@ -30,7 +30,7 @@ func (s *KeeperTestSuite) TestMsgServer_SwapToNativeCoins() {
 	msgServer := s.setupServer()
 
 	// Set Oracle Price
-	sdrPriceInMelody := sdk.NewDecWithPrec(17, 1) // 1 SDR -> 1.7 Melody
+	sdrPriceInMelody := osmomath.NewDecWithPrec(17, 1) // 1 SDR -> 1.7 Melody
 	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.MicroSDRDenom, sdrPriceInMelody)
 
 	swapAmountInSDR := sdrPriceInMelody.MulInt64(rand.Int63()%10000 + 2).TruncateInt()
@@ -76,7 +76,7 @@ func (s *KeeperTestSuite) TestMsgServer_SwapToNativeBalancePool() {
 	msgServer := s.setupServer()
 
 	// Set Oracle Price
-	sdrPriceInMelody := sdk.NewDecWithPrec(17, 1) // 1 SDR -> 1.7 Melody
+	sdrPriceInMelody := osmomath.NewDecWithPrec(17, 1) // 1 SDR -> 1.7 Melody
 	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.MicroSDRDenom, sdrPriceInMelody)
 
 	swapAmountInSDR := sdrPriceInMelody.MulInt64(rand.Int63()%10000 + 2).TruncateInt()
@@ -114,8 +114,8 @@ func (s *KeeperTestSuite) TestMsgServer_SwapStableToStable() {
 	msgServer := s.setupServer()
 
 	// Set Oracle Price
-	sdrPriceInMelody := sdk.NewDecWithPrec(17, 1) // 1 SDR -> 1.7 Melody
-	usdPriceInMelody := sdk.NewDecWithPrec(13, 1) // 1 USD -> 1.3 Melody
+	sdrPriceInMelody := osmomath.NewDecWithPrec(17, 1) // 1 SDR -> 1.7 Melody
+	usdPriceInMelody := osmomath.NewDecWithPrec(13, 1) // 1 USD -> 1.3 Melody
 	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.MicroSDRDenom, sdrPriceInMelody)
 	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.MicroUSDDenom, usdPriceInMelody)
 
@@ -139,7 +139,7 @@ func (s *KeeperTestSuite) TestMsgServe_SwapNotEnoughInMainPool() {
 	msgServer := s.setupServer()
 
 	// Set Oracle Price
-	sdrPriceInMelody := sdk.NewDecWithPrec(1, 0) // 1 SDR -> 1 Melody
+	sdrPriceInMelody := osmomath.NewDecWithPrec(1, 0) // 1 SDR -> 1 Melody
 	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.MicroSDRDenom, sdrPriceInMelody)
 
 	swapAmountInSDR := sdrPriceInMelody.MulInt64(appparams.MicroUnit).TruncateInt()
@@ -179,7 +179,7 @@ func (s *KeeperTestSuite) TestMsgServe_SwapMainPoolEmpty() {
 	msgServer := s.setupServer()
 
 	// Set Oracle Price
-	sdrPriceInMelody := sdk.NewDecWithPrec(1, 0) // 1 SDR -> 1 Melody
+	sdrPriceInMelody := osmomath.NewDecWithPrec(1, 0) // 1 SDR -> 1 Melody
 	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.MicroSDRDenom, sdrPriceInMelody)
 
 	swapAmountInSDR := sdrPriceInMelody.MulInt64(appparams.MicroUnit).TruncateInt()
@@ -213,7 +213,7 @@ func (s *KeeperTestSuite) TestMsgServe_SwapNotEnoughInReservePool() {
 	msgServer := s.setupServer()
 
 	// Set Oracle Price
-	sdrPriceInMelody := sdk.NewDecWithPrec(1, 0) // 1 SDR -> 1 Melody
+	sdrPriceInMelody := osmomath.NewDecWithPrec(1, 0) // 1 SDR -> 1 Melody
 	s.App.OracleKeeper.SetMelodyExchangeRate(s.Ctx, assets.MicroSDRDenom, sdrPriceInMelody)
 
 	swapAmountInSDR := sdrPriceInMelody.MulInt64(appparams.MicroUnit).TruncateInt()

@@ -1,7 +1,8 @@
 package types
 
 import (
-	fmt "fmt"
+	"errors"
+	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -54,7 +55,7 @@ func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 	// check that all the validator address are unique
 	containsDuplicate := osmoutils.ContainsDuplicate(validatorAddrs)
 	if containsDuplicate {
-		return fmt.Errorf("The validator operator address are duplicated")
+		return errors.New("The validator operator address are duplicated")
 	}
 
 	// Round to 2 digit after the decimal. For ex: 0.999 = 1.0, 0.874 = 0.87, 0.5123 = 0.51
@@ -66,10 +67,6 @@ func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-func (m MsgSetValidatorSetPreference) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 // GetSigners takes a create validator-set message and returns the delegator in a byte array.
@@ -102,14 +99,10 @@ func (m MsgDelegateToValidatorSet) ValidateBasic() error {
 	}
 
 	if !m.Coin.IsValid() {
-		return fmt.Errorf("The stake coin is not valid")
+		return errors.New("The stake coin is not valid")
 	}
 
 	return nil
-}
-
-func (m MsgDelegateToValidatorSet) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 func (m MsgDelegateToValidatorSet) GetSigners() []sdk.AccAddress {
@@ -141,14 +134,10 @@ func (m MsgUndelegateFromValidatorSet) ValidateBasic() error {
 	}
 
 	if !m.Coin.IsValid() {
-		return fmt.Errorf("The stake coin is not valid")
+		return errors.New("The stake coin is not valid")
 	}
 
 	return nil
-}
-
-func (m MsgUndelegateFromValidatorSet) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 func (m MsgUndelegateFromValidatorSet) GetSigners() []sdk.AccAddress {
@@ -182,14 +171,10 @@ func (m MsgUndelegateFromRebalancedValidatorSet) ValidateBasic() error {
 	}
 
 	if !m.Coin.IsValid() {
-		return fmt.Errorf("The stake coin is not valid")
+		return errors.New("The stake coin is not valid")
 	}
 
 	return nil
-}
-
-func (m MsgUndelegateFromRebalancedValidatorSet) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 func (m MsgUndelegateFromRebalancedValidatorSet) GetSigners() []sdk.AccAddress {
@@ -235,7 +220,7 @@ func (m MsgRedelegateValidatorSet) ValidateBasic() error {
 	// check that all the validator address are unique
 	containsDuplicate := osmoutils.ContainsDuplicate(validatorAddrs)
 	if containsDuplicate {
-		return fmt.Errorf("The validator operator address are duplicated")
+		return errors.New("The validator operator address are duplicated")
 	}
 
 	// Round to 2 digit after the decimal. For ex: 0.999 = 1.0, 0.874 = 0.87, 0.5123 = 0.51
@@ -247,10 +232,6 @@ func (m MsgRedelegateValidatorSet) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-func (m MsgRedelegateValidatorSet) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 func (m MsgRedelegateValidatorSet) GetSigners() []sdk.AccAddress {
@@ -281,10 +262,6 @@ func (m MsgWithdrawDelegationRewards) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-func (m MsgWithdrawDelegationRewards) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 func (m MsgWithdrawDelegationRewards) GetSigners() []sdk.AccAddress {
@@ -319,10 +296,6 @@ func (m MsgDelegateBondedTokens) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-func (m MsgDelegateBondedTokens) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
 
 func (m MsgDelegateBondedTokens) GetSigners() []sdk.AccAddress {

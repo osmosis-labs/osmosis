@@ -6,13 +6,14 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
 )
 
 const (
 	foo   = "foo"
 	bar   = "bar"
 	baz   = "baz"
-	note = "note"
+	uosmo = appparams.BaseCoinUnit
 )
 
 var (
@@ -22,10 +23,10 @@ var (
 	// it easier to reason about the test cases.
 	fooBarPoolId   = uint64(1)
 	fooBazPoolId   = fooBarPoolId + 1
-	fooNotePoolId = fooBazPoolId + 1
-	barBazPoolId   = fooNotePoolId + 1
-	barNotePoolId = barBazPoolId + 1
-	bazNotePoolId = barNotePoolId + 1
+	fooUosmoPoolId = fooBazPoolId + 1
+	barBazPoolId   = fooUosmoPoolId + 1
+	barUosmoPoolId = barBazPoolId + 1
+	bazUosmoPoolId = barUosmoPoolId + 1
 
 	// Amount in default routes
 
@@ -64,11 +65,11 @@ var (
 				TokenOutDenom: bar,
 			},
 			{
-				PoolId:        barNotePoolId,
-				TokenOutDenom: note,
+				PoolId:        barUosmoPoolId,
+				TokenOutDenom: uosmo,
 			},
 			{
-				PoolId:        bazNotePoolId,
+				PoolId:        bazUosmoPoolId,
 				TokenOutDenom: baz,
 			},
 		},
@@ -112,12 +113,12 @@ var (
 				TokenInDenom: foo,
 			},
 			{
-				PoolId:       barNotePoolId,
+				PoolId:       barUosmoPoolId,
 				TokenInDenom: bar,
 			},
 			{
-				PoolId:       bazNotePoolId,
-				TokenInDenom: note,
+				PoolId:       bazUosmoPoolId,
+				TokenInDenom: uosmo,
 			},
 		},
 		TokenOutAmount: osmomath.NewInt(twentyFiveBaseUnitsAmount.Int64() * 3),
@@ -320,7 +321,7 @@ func TestIntermediateDenoms(t *testing.T) {
 				},
 				{
 					PoolId:        5,
-					TokenOutDenom: note,
+					TokenOutDenom: uosmo,
 				},
 				{
 					PoolId:        3,
@@ -328,7 +329,7 @@ func TestIntermediateDenoms(t *testing.T) {
 				},
 			}),
 
-			expectedDenoms: []string{bar, baz, note},
+			expectedDenoms: []string{bar, baz, uosmo},
 		},
 		"no intermediate denoms (single pool)": {
 			route: SwapAmountInRoutes([]SwapAmountInRoute{

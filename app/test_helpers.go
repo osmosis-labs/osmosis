@@ -5,10 +5,12 @@ import (
 	"os"
 	"time"
 
-	cometbftdb "github.com/cometbft/cometbft-db"
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
-	"github.com/cometbft/cometbft/libs/log"
+	cosmosdb "github.com/cosmos/cosmos-db"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 
 	sdkmath "cosmossdk.io/math"
 	tmtypes "github.com/cometbft/cometbft/types"
@@ -48,7 +50,7 @@ func GenesisStateWithValSet(app *SymphonyApp) GenesisState {
 	initValPowers := []abci.ValidatorUpdate{}
 
 	for _, val := range valSet.Validators {
-		pk, _ := cryptocodec.FromTmPubKeyInterface(val.PubKey)
+		pk, _ := cryptocodec.FromCmtPubKeyInterface(val.PubKey)
 		pkAny, _ := codectypes.NewAnyWithValue(pk)
 		validator := stakingtypes.Validator{
 			OperatorAddress:   sdk.ValAddress(val.Address).String(),
@@ -56,15 +58,15 @@ func GenesisStateWithValSet(app *SymphonyApp) GenesisState {
 			Jailed:            false,
 			Status:            stakingtypes.Bonded,
 			Tokens:            bondAmt,
-			DelegatorShares:   sdk.OneDec(),
+			DelegatorShares:   osmomath.OneDec(),
 			Description:       stakingtypes.Description{},
 			UnbondingHeight:   int64(0),
 			UnbondingTime:     time.Unix(0, 0).UTC(),
-			Commission:        stakingtypes.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+			Commission:        stakingtypes.NewCommission(osmomath.ZeroDec(), osmomath.ZeroDec(), osmomath.ZeroDec()),
 			MinSelfDelegation: sdkmath.ZeroInt(),
 		}
 		validators = append(validators, validator)
-		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), sdk.OneDec()))
+		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress().String(), sdk.ValAddress(val.Address).String(), osmomath.OneDec()))
 
 		// add initial validator powers so consumer InitGenesis runs correctly
 		pub, _ := val.ToProto()
@@ -112,48 +114,37 @@ func GenesisStateWithValSet(app *SymphonyApp) GenesisState {
 	return genesisState
 }
 
+var defaultGenesisStatebytes = []byte{}
+
 // SetupWithCustomHome initializes a new SymphonyApp with a custom home directory
 func SetupWithCustomHome(isCheckTx bool, dir string) *SymphonyApp {
-	db := cometbftdb.NewMemDB()
-	app := NewSymphonyApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, dir, 0, sims.EmptyAppOptions{}, EmptyWasmOpts, baseapp.SetChainID("symphony-1"))
-	if !isCheckTx {
-		genesisState := GenesisStateWithValSet(app)
-		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-		if err != nil {
-			panic(err)
-		}
-
-		app.InitChain(
-			abci.RequestInitChain{
-				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: sims.DefaultConsensusParams,
-				AppStateBytes:   stateBytes,
-				ChainId:         "symphony-1",
-			},
-		)
-	}
-
-	return app
+	return SetupWithCustomHomeAndChainId(isCheckTx, dir, "osmosis-1")
 }
 
 func SetupWithCustomHomeAndChainId(isCheckTx bool, dir, chainId string) *SymphonyApp {
-	db := cometbftdb.NewMemDB()
+	db := cosmosdb.NewMemDB()
 	app := NewSymphonyApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, dir, 0, sims.EmptyAppOptions{}, EmptyWasmOpts, baseapp.SetChainID(chainId))
 	if !isCheckTx {
-		genesisState := GenesisStateWithValSet(app)
-		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-		if err != nil {
-			panic(err)
+		if len(defaultGenesisStatebytes) == 0 {
+			var err error
+			genesisState := GenesisStateWithValSet(app)
+			defaultGenesisStatebytes, err = json.Marshal(genesisState)
+			if err != nil {
+				panic(err)
+			}
 		}
 
-		app.InitChain(
-			abci.RequestInitChain{
+		_, err := app.InitChain(
+			&abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: sims.DefaultConsensusParams,
-				AppStateBytes:   stateBytes,
+				AppStateBytes:   defaultGenesisStatebytes,
 				ChainId:         chainId,
 			},
 		)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return app
@@ -167,15 +158,16 @@ func Setup(isCheckTx bool) *SymphonyApp {
 // SetupTestingAppWithLevelDb initializes a new SymphonyApp intended for testing,
 // with LevelDB as a db.
 func SetupTestingAppWithLevelDb(isCheckTx bool) (app *SymphonyApp, cleanupFn func()) {
-	dir, err := os.MkdirTemp(os.TempDir(), "symphony_leveldb_testing")
+	dir, err := os.MkdirTemp(os.TempDir(), "osmosis_leveldb_testing")
 	if err != nil {
 		panic(err)
 	}
-	db, err := cometbftdb.NewGoLevelDB("symphony_leveldb_testing", dir)
+	db, err := cosmosdb.NewGoLevelDB("osmosis_leveldb_testing", dir, nil)
 	if err != nil {
 		panic(err)
 	}
-	app = NewSymphonyApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, sims.EmptyAppOptions{}, EmptyWasmOpts, baseapp.SetChainID("symphony-1"))
+
+	app = NewSymphonyApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, sims.EmptyAppOptions{}, EmptyWasmOpts, baseapp.SetChainID("osmosis-1"))
 	if !isCheckTx {
 		genesisState := GenesisStateWithValSet(app)
 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
@@ -183,14 +175,17 @@ func SetupTestingAppWithLevelDb(isCheckTx bool) (app *SymphonyApp, cleanupFn fun
 			panic(err)
 		}
 
-		app.InitChain(
-			abci.RequestInitChain{
+		_, err = app.InitChain(
+			&abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: sims.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
-				ChainId:         "symphony-1",
+				ChainId:         "osmosis-1",
 			},
 		)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	cleanupFn = func() {

@@ -3,13 +3,14 @@ package wasmbinding_test
 import (
 	"encoding/hex"
 	"fmt"
+	"math/rand"
+	"os"
 	"testing"
 	"time"
 
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	"github.com/cometbft/cometbft/crypto/ed25519"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -20,27 +21,34 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
-	gammv2types "github.com/osmosis-labs/osmosis/v23/x/gamm/v2types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
+	gammv2types "github.com/osmosis-labs/osmosis/v26/x/gamm/v2types"
 
-	"github.com/osmosis-labs/osmosis/v23/app"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v26/app"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
-	"github.com/osmosis-labs/osmosis/v23/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v26/wasmbinding"
 )
 
 type StargateTestSuite struct {
 	suite.Suite
 
-	ctx sdk.Context
-	app *app.SymphonyApp
+	ctx     sdk.Context
+	app     *app.OsmosisApp
+	HomeDir string
 }
 
-func (suite *StargateTestSuite) SetupTest() {
-	suite.app = app.Setup(false)
-	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "symphony-1", Time: time.Now().UTC()})
+func (suite *StargateTestSuite) SetupTestInternal() {
+	suite.HomeDir = fmt.Sprintf("%d", rand.Int())
+	suite.app = app.SetupWithCustomHome(false, suite.HomeDir)
+	suite.ctx = suite.app.BaseApp.NewContextLegacy(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+}
+
+func (suite *StargateTestSuite) TearDownTestInternal() {
+	os.RemoveAll(suite.HomeDir)
 }
 
 func TestStargateTestSuite(t *testing.T) {
@@ -53,7 +61,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 		testSetup              func()
 		path                   string
 		requestData            func() []byte
-		responseProtoStruct    codec.ProtoMarshaler
+		responseProtoStruct    proto.Message
 		expectedQuerierError   bool
 		expectedUnMarshalError bool
 		resendRequest          bool
@@ -76,7 +84,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			testSetup: func() {
 				pk := ed25519.GenPrivKey().PubKey()
 				sender := sdk.AccAddress(pk.Address())
-				err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, sender, apptesting.DefaultAcctFunds)
+				err := testutil.FundAccount(suite.ctx, suite.app.BankKeeper, sender, apptesting.DefaultAcctFunds)
 				suite.Require().NoError(err)
 				msg := balancer.NewMsgCreateBalancerPool(sender,
 					balancer.NewPoolParams(osmomath.ZeroDec(), osmomath.ZeroDec(), nil),
@@ -88,7 +96,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				queryrequest := gammv2types.QuerySpotPriceRequest{ //nolint:staticcheck // we're intentionally using this deprecated package for testing
 					PoolId:          1,
 					BaseAssetDenom:  "bar",
-					QuoteAssetDenom: "note",
+					QuoteAssetDenom: appparams.BaseCoinUnit,
 				}
 				bz, err := proto.Marshal(&queryrequest)
 				suite.Require().NoError(err)
@@ -105,7 +113,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			testSetup: func() {
 				pk := ed25519.GenPrivKey().PubKey()
 				sender := sdk.AccAddress(pk.Address())
-				err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, sender, apptesting.DefaultAcctFunds)
+				err := testutil.FundAccount(suite.ctx, suite.app.BankKeeper, sender, apptesting.DefaultAcctFunds)
 				suite.Require().NoError(err)
 				msg := balancer.NewMsgCreateBalancerPool(sender,
 					balancer.NewPoolParams(osmomath.ZeroDec(), osmomath.ZeroDec(), nil),
@@ -117,7 +125,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				queryrequest := gammv2types.QuerySpotPriceRequest{ //nolint:staticcheck // we're intentionally using this deprecated package for testing
 					PoolId:          1,
 					BaseAssetDenom:  "bar",
-					QuoteAssetDenom: "note",
+					QuoteAssetDenom: appparams.BaseCoinUnit,
 				}
 				bz, err := proto.Marshal(&queryrequest)
 				suite.Require().NoError(err)
@@ -142,11 +150,11 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 		{
 			name: "test query using iterator",
 			testSetup: func() {
-				accAddr, err := sdk.AccAddressFromBech32("symphony1p822vyk8ylf3hpwh9qgv6p6dft7hedntyqyw7w")
+				accAddr, err := sdk.AccAddressFromBech32("osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44")
 				suite.Require().NoError(err)
 
 				// fund account to receive non-empty response
-				err = testutil.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", osmomath.NewInt(10))})
+				err = testutil.FundAccount(suite.ctx, suite.app.BankKeeper, accAddr, sdk.Coins{sdk.NewCoin("stake", osmomath.NewInt(10))})
 				suite.Require().NoError(err)
 
 				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
@@ -154,7 +162,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			path: "/cosmos.bank.v1beta1.Query/AllBalances",
 			requestData: func() []byte {
 				bankrequest := banktypes.QueryAllBalancesRequest{
-					Address: "symphony1p822vyk8ylf3hpwh9qgv6p6dft7hedntyqyw7w",
+					Address: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
 				}
 				bz, err := proto.Marshal(&bankrequest)
 				suite.Require().NoError(err)
@@ -165,11 +173,11 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 		{
 			name: "edge case: resending request",
 			testSetup: func() {
-				accAddr, err := sdk.AccAddressFromBech32("symphony1p822vyk8ylf3hpwh9qgv6p6dft7hedntyqyw7w")
+				accAddr, err := sdk.AccAddressFromBech32("osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44")
 				suite.Require().NoError(err)
 
 				// fund account to receive non-empty response
-				err = testutil.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", osmomath.NewInt(10))})
+				err = testutil.FundAccount(suite.ctx, suite.app.BankKeeper, accAddr, sdk.Coins{sdk.NewCoin("stake", osmomath.NewInt(10))})
 				suite.Require().NoError(err)
 
 				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
@@ -177,7 +185,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			path: "/cosmos.bank.v1beta1.Query/AllBalances",
 			requestData: func() []byte {
 				bankrequest := banktypes.QueryAllBalancesRequest{
-					Address: "symphony1p822vyk8ylf3hpwh9qgv6p6dft7hedntyqyw7w",
+					Address: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
 				}
 				bz, err := proto.Marshal(&bankrequest)
 				suite.Require().NoError(err)
@@ -244,7 +252,8 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
-			suite.SetupTest()
+			suite.SetupTestInternal()
+			defer suite.TearDownTestInternal()
 			if tc.testSetup != nil {
 				tc.testSetup()
 			}
@@ -299,9 +308,9 @@ func (suite *StargateTestSuite) TestConvertProtoToJsonMarshal() {
 	testCases := []struct {
 		name                  string
 		queryPath             string
-		protoResponseStruct   codec.ProtoMarshaler
+		protoResponseStruct   proto.Message
 		originalResponse      string
-		expectedProtoResponse codec.ProtoMarshaler
+		expectedProtoResponse proto.Message
 		expectedError         bool
 	}{
 		{
@@ -327,7 +336,8 @@ func (suite *StargateTestSuite) TestConvertProtoToJsonMarshal() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
-			suite.SetupTest()
+			suite.SetupTestInternal()
+			defer suite.TearDownTestInternal()
 
 			originalVersionBz, err := hex.DecodeString(tc.originalResponse)
 			suite.Require().NoError(err)
@@ -452,7 +462,8 @@ func (suite *StargateTestSuite) TestDeterministicJsonMarshal() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
-			suite.SetupTest()
+			suite.SetupTestInternal()
+			defer suite.TearDownTestInternal()
 
 			if tc.testSetup != nil {
 				tc.testSetup()

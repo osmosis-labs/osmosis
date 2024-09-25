@@ -1,0 +1,247 @@
+syntax = "proto3";
+package symphony.incentives;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/duration.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "symphony/incentives/gauge.proto";
+import "symphony/lockup/lock.proto";
+import "symphony/incentives/group.proto";
+import "symphony/incentives/params.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/incentives/types";
+
+// Query defines the gRPC querier service
+service Query {
+  // ModuleToDistributeCoins returns coins that are going to be distributed
+  rpc ModuleToDistributeCoins(ModuleToDistributeCoinsRequest)
+      returns (ModuleToDistributeCoinsResponse) {
+    option (google.api.http).get =
+        "/symphony/incentives/v1beta1/module_to_distribute_coins";
+  }
+  // GaugeByID returns gauges by their respective ID
+  rpc GaugeByID(GaugeByIDRequest) returns (GaugeByIDResponse) {
+    option (google.api.http).get =
+        "/symphony/incentives/v1beta1/gauge_by_id/{id}";
+  }
+  // Gauges returns both upcoming and active gauges
+  rpc Gauges(GaugesRequest) returns (GaugesResponse) {
+    option (google.api.http).get = "/symphony/incentives/v1beta1/gauges";
+  }
+  // ActiveGauges returns active gauges
+  rpc ActiveGauges(ActiveGaugesRequest) returns (ActiveGaugesResponse) {
+    option (google.api.http).get = "/symphony/incentives/v1beta1/active_gauges";
+  }
+  // ActiveGaugesPerDenom returns active gauges by denom
+  rpc ActiveGaugesPerDenom(ActiveGaugesPerDenomRequest)
+      returns (ActiveGaugesPerDenomResponse) {
+    option (google.api.http).get =
+        "/symphony/incentives/v1beta1/active_gauges_per_denom";
+  }
+  // Returns scheduled gauges that have not yet occurred
+  rpc UpcomingGauges(UpcomingGaugesRequest) returns (UpcomingGaugesResponse) {
+    option (google.api.http).get =
+        "/symphony/incentives/v1beta1/upcoming_gauges";
+  }
+  // UpcomingGaugesPerDenom returns scheduled gauges that have not yet occurred
+  // by denom
+  rpc UpcomingGaugesPerDenom(UpcomingGaugesPerDenomRequest)
+      returns (UpcomingGaugesPerDenomResponse) {
+    option (google.api.http).get =
+        "/symphony/incentives/v1beta1/upcoming_gauges_per_denom";
+  }
+  // RewardsEst returns an estimate of the rewards from now until a specified
+  // time in the future The querier either provides an address or a set of locks
+  // for which they want to find the associated rewards
+  rpc RewardsEst(RewardsEstRequest) returns (RewardsEstResponse) {
+    option (google.api.http).get =
+        "/symphony/incentives/v1beta1/rewards_est/{owner}";
+  }
+  // LockableDurations returns lockable durations that are valid to distribute
+  // incentives for
+  rpc LockableDurations(QueryLockableDurationsRequest)
+      returns (QueryLockableDurationsResponse) {
+    option (google.api.http).get =
+        "/symphony/incentives/v1beta1/lockable_durations";
+  }
+  // AllGroups returns all groups
+  rpc AllGroups(QueryAllGroupsRequest) returns (QueryAllGroupsResponse) {
+    option (google.api.http).get = "/symphony/incentives/v1beta1/all_groups";
+  }
+  // AllGroupsGauges returns all group gauges
+  rpc AllGroupsGauges(QueryAllGroupsGaugesRequest)
+      returns (QueryAllGroupsGaugesResponse) {
+    option (google.api.http).get =
+        "/symphony/incentives/v1beta1/all_groups_gauges";
+  }
+  // AllGroupsWithGauge returns all groups with their group gauge
+  rpc AllGroupsWithGauge(QueryAllGroupsWithGaugeRequest)
+      returns (QueryAllGroupsWithGaugeResponse) {
+    option (google.api.http).get =
+        "/symphony/incentives/v1beta1/all_groups_with_gauge";
+  }
+  // GroupByGroupGaugeID returns a group given its group gauge ID
+  rpc GroupByGroupGaugeID(QueryGroupByGroupGaugeIDRequest)
+      returns (QueryGroupByGroupGaugeIDResponse) {
+    option (google.api.http).get =
+        "/symphony/incentives/v1beta1/group_by_group_gauge_id/{id}";
+  }
+  // CurrentWeightByGroupGaugeID returns the current weight since the
+  // the last epoch given a group gauge ID
+  rpc CurrentWeightByGroupGaugeID(QueryCurrentWeightByGroupGaugeIDRequest)
+      returns (QueryCurrentWeightByGroupGaugeIDResponse) {
+    option (google.api.http).get =
+        "/symphony/incentives/v1beta1/current_weight_by_group_gauge_id/"
+        "{group_gauge_id}";
+  }
+  // Params returns incentives module params.
+  rpc Params(ParamsRequest) returns (ParamsResponse) {
+    option (google.api.http).get = "/symphony/incentives/v1beta1/params";
+  }
+}
+
+message ModuleToDistributeCoinsRequest {}
+message ModuleToDistributeCoinsResponse {
+  // Coins that have yet to be distributed
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+message GaugeByIDRequest {
+  // Gauge ID being queried
+  uint64 id = 1;
+}
+message GaugeByIDResponse {
+  // Gauge that corresponds to provided gauge ID
+  Gauge gauge = 1;
+}
+
+message GaugesRequest {
+  // Pagination defines pagination for the request
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+message GaugesResponse {
+  // Upcoming and active gauges
+  repeated Gauge data = 1 [ (gogoproto.nullable) = false ];
+  // Pagination defines pagination for the response
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message ActiveGaugesRequest {
+  // Pagination defines pagination for the request
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+message ActiveGaugesResponse {
+  // Active gauges only
+  repeated Gauge data = 1 [ (gogoproto.nullable) = false ];
+  // Pagination defines pagination for the response
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message ActiveGaugesPerDenomRequest {
+  // Desired denom when querying active gauges
+  string denom = 1;
+  // Pagination defines pagination for the request
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+message ActiveGaugesPerDenomResponse {
+  // Active gauges that match denom in query
+  repeated Gauge data = 1 [ (gogoproto.nullable) = false ];
+  // Pagination defines pagination for the response
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message UpcomingGaugesRequest {
+  // Pagination defines pagination for the request
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+message UpcomingGaugesResponse {
+  // Gauges whose distribution is upcoming
+  repeated Gauge data = 1 [ (gogoproto.nullable) = false ];
+  // Pagination defines pagination for the response
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message UpcomingGaugesPerDenomRequest {
+  // Filter for upcoming gauges that match specific denom
+  string denom = 1;
+  // Pagination defines pagination for the request
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message UpcomingGaugesPerDenomResponse {
+  // Upcoming gauges that match denom in query
+  repeated Gauge upcoming_gauges = 1 [ (gogoproto.nullable) = false ];
+  // Pagination defines pagination for the response
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message RewardsEstRequest {
+  // Address that is being queried for future estimated rewards
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  // Lock IDs included in future reward estimation
+  repeated uint64 lock_ids = 2;
+  // Upper time limit of reward estimation
+  // Lower limit is current epoch
+  int64 end_epoch = 3;
+}
+message RewardsEstResponse {
+  // Estimated coin rewards that will be received at provided address
+  // from specified locks between current time and end epoch
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+message QueryLockableDurationsRequest {}
+message QueryLockableDurationsResponse {
+  // Time durations that users can lock coins for in order to receive rewards
+  repeated google.protobuf.Duration lockable_durations = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags) = "yaml:\"lockable_durations\""
+  ];
+}
+
+message QueryAllGroupsRequest {}
+message QueryAllGroupsResponse {
+  repeated Group groups = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryAllGroupsGaugesRequest {}
+message QueryAllGroupsGaugesResponse {
+  repeated Gauge gauges = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryAllGroupsWithGaugeRequest {}
+message QueryAllGroupsWithGaugeResponse {
+  repeated GroupsWithGauge groups_with_gauge = 1
+      [ (gogoproto.nullable) = false ];
+}
+
+message QueryGroupByGroupGaugeIDRequest { uint64 id = 1; }
+message QueryGroupByGroupGaugeIDResponse {
+  Group group = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryCurrentWeightByGroupGaugeIDRequest { uint64 group_gauge_id = 1; }
+message QueryCurrentWeightByGroupGaugeIDResponse {
+  repeated GaugeWeight gauge_weight = 1 [ (gogoproto.nullable) = false ];
+}
+
+message GaugeWeight {
+  uint64 gauge_id = 1;
+  string weight_ratio = 2 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.moretags) = "yaml:\"weight_ratio\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message ParamsRequest {}
+message ParamsResponse { Params params = 1 [ (gogoproto.nullable) = false ]; }

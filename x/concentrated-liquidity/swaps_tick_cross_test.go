@@ -7,9 +7,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
 )
 
 const (
@@ -293,7 +293,7 @@ func (s *KeeperTestSuite) computeSwapAmounts(poolId uint64, curSqrtPrice osmomat
 		var isWithinDesiredBucketAfterSwap bool
 		if isZeroForOne {
 			// Round up so that we cross the tick by default.
-			curAmountIn := math.CalcAmount0Delta(osmomath.BigDecFromDec(currentLiquidity), curSqrtPrice, nextInitTickSqrtPrice, true).DecRoundUp()
+			curAmountIn := math.CalcAmount0Delta(currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice, true).DecRoundUp()
 
 			amountIn = amountIn.Add(curAmountIn)
 
@@ -316,12 +316,12 @@ func (s *KeeperTestSuite) computeSwapAmounts(poolId uint64, curSqrtPrice osmomat
 				nextInitTickSqrtPrice := s.tickToSqrtPrice(liquidityNetAmounts[i+1].TickIndex)
 
 				// We discount by half so that we do no cross any tick and remain in the same bucket.
-				curAmountIn := math.CalcAmount0Delta(osmomath.BigDecFromDec(currentLiquidity), curSqrtPrice, nextInitTickSqrtPrice, true).QuoInt64(2).DecRoundUp()
+				curAmountIn := math.CalcAmount0Delta(currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice, true).QuoInt64(2).DecRoundUp()
 				amountIn = amountIn.Add(curAmountIn)
 			}
 		} else {
 			// Round up so that we cross the tick by default.
-			curAmountIn := math.CalcAmount1Delta(osmomath.BigDecFromDec(currentLiquidity), curSqrtPrice, nextInitTickSqrtPrice, true).Dec()
+			curAmountIn := math.CalcAmount1Delta(currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice, true).Dec()
 			amountIn = amountIn.Add(curAmountIn)
 
 			// The tick should be crossed if currentTick <= expectedTickToSwapTo, unless the intention
@@ -346,7 +346,7 @@ func (s *KeeperTestSuite) computeSwapAmounts(poolId uint64, curSqrtPrice osmomat
 	return amountIn, currentLiquidity, curSqrtPrice
 }
 
-func (s *KeeperTestSuite) computeSwapAmountsInGivenOut(poolId uint64, curSqrtPrice osmomath.BigDec, expectedTickToSwapTo int64, isZeroForOne bool, shouldStayWithinTheSameBucket bool) (osmomath.Dec, osmomath.BigDec, osmomath.BigDec) {
+func (s *KeeperTestSuite) computeSwapAmountsInGivenOut(poolId uint64, curSqrtPrice osmomath.BigDec, expectedTickToSwapTo int64, isZeroForOne bool, shouldStayWithinTheSameBucket bool) (osmomath.Dec, osmomath.Dec, osmomath.BigDec) {
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
@@ -368,7 +368,7 @@ func (s *KeeperTestSuite) computeSwapAmountsInGivenOut(poolId uint64, curSqrtPri
 	}
 
 	// Start from current pool liquidity and zero amount in.
-	currentLiquidity := osmomath.BigDecFromDec(pool.GetLiquidity())
+	currentLiquidity := pool.GetLiquidity()
 	amountOut := osmomath.ZeroDec()
 
 	for i, liquidityNetEntry := range liquidityNetAmounts {
@@ -391,7 +391,7 @@ func (s *KeeperTestSuite) computeSwapAmountsInGivenOut(poolId uint64, curSqrtPri
 			if shouldCrossTick {
 				// Runs regular tick crossing logic.
 				curSqrtPrice = s.tickToSqrtPrice(nextInitializedTick)
-				currentLiquidity = currentLiquidity.Sub(osmomath.BigDecFromDec(liquidityNetEntry.LiquidityNet))
+				currentLiquidity = currentLiquidity.Sub(liquidityNetEntry.LiquidityNet)
 				currentTick = nextInitializedTick - 1
 			}
 
@@ -418,7 +418,7 @@ func (s *KeeperTestSuite) computeSwapAmountsInGivenOut(poolId uint64, curSqrtPri
 			if shouldCrossTick {
 				// Runs regular tick crossing logic.
 				curSqrtPrice = s.tickToSqrtPrice(nextInitializedTick)
-				currentLiquidity = currentLiquidity.Add(osmomath.BigDecFromDec(liquidityNetEntry.LiquidityNet))
+				currentLiquidity = currentLiquidity.Add(liquidityNetEntry.LiquidityNet)
 				currentTick = nextInitializedTick
 			}
 
@@ -643,7 +643,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 		if tickToSwapTo < nr1Position.lowerTick {
 			sqrtPriceLowerTickOne := s.tickToSqrtPrice(nr1Position.lowerTick)
 
-			amountZeroIn = math.CalcAmount0Delta(osmomath.BigDecFromDec(liquidity), sqrtPriceLowerTickOne, sqrtPriceStart, true).Dec()
+			amountZeroIn = math.CalcAmount0Delta(liquidity, sqrtPriceLowerTickOne, sqrtPriceStart, true).Dec()
 
 			sqrtPriceStart = sqrtPriceLowerTickOne
 
@@ -652,7 +652,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 
 		// This is the total amount necessary to cross the lower tick of narrow position.
 		// Note it is rounded up to ensure that the tick is crossed.
-		amountZeroIn = math.CalcAmount0Delta(osmomath.BigDecFromDec(liquidity), sqrtPriceTarget, sqrtPriceStart, true).DecRoundUp().Add(amountZeroIn)
+		amountZeroIn = math.CalcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceStart, true).DecRoundUp().Add(amountZeroIn)
 
 		tokenZeroIn := sdk.NewCoin(pool.GetToken0(), amountZeroIn.Ceil().TruncateInt())
 
@@ -734,7 +734,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 		if tickToSwapTo >= nr1Position.upperTick {
 			sqrtPriceUpperOne := s.tickToSqrtPrice(nr1Position.upperTick)
 
-			amountOneIn = math.CalcAmount1Delta(osmomath.BigDecFromDec(liquidity), sqrtPriceUpperOne, sqrtPriceStart, true).DecRoundUp()
+			amountOneIn = math.CalcAmount1Delta(liquidity, sqrtPriceUpperOne, sqrtPriceStart, true).DecRoundUp()
 
 			sqrtPriceStart = sqrtPriceUpperOne
 
@@ -743,7 +743,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 
 		// This is the total amount necessary to cross the lower tick of narrow position.
 		// Note it is rounded up to ensure that the tick is crossed.
-		amountOneIn = math.CalcAmount1Delta(osmomath.BigDecFromDec(liquidity), sqrtPriceTarget, sqrtPriceStart, true).DecRoundUp().Add(amountOneIn)
+		amountOneIn = math.CalcAmount1Delta(liquidity, sqrtPriceTarget, sqrtPriceStart, true).DecRoundUp().Add(amountOneIn)
 
 		tokenOneIn := sdk.NewCoin(pool.GetToken1(), amountOneIn.Ceil().TruncateInt())
 
@@ -1066,7 +1066,7 @@ func (s *KeeperTestSuite) TestSwaps_Contiguous_Initialized_TickSpacingOne() {
 				nextTickToReachInCompute = nextTickToReachInCompute + 1
 			}
 
-			return nextTickToReachInCompute, sdk.NewDecWithPrec(5, 1)
+			return nextTickToReachInCompute, osmomath.NewDecWithPrec(5, 1)
 		}
 
 		return expectedSwapEndTick, osmomath.OneDec()
@@ -1201,6 +1201,7 @@ func (s *KeeperTestSuite) TestSwaps_Contiguous_Initialized_TickSpacingOne() {
 		// estimateAmountInFromRounding is a helper to estimate the impact of amountOut rounding on the amountIn and next sqrt price.
 		// This is necessary for correct amount in estimation to pre-fund the swapper account to. It is also required for updating
 		// the "current sqrt price" for the next swap in the sequence as defined by our test configuration.
+		// TODO: Change type arg of liq
 		estimateAmountInFromRounding := func(isZeroForOne bool, nextSqrtPrice osmomath.BigDec, liq osmomath.BigDec, amountOutDifference osmomath.BigDec) (osmomath.Dec, osmomath.BigDec) {
 			if !liq.IsPositive() {
 				return osmomath.ZeroDec(), nextSqrtPrice
@@ -1210,17 +1211,17 @@ func (s *KeeperTestSuite) TestSwaps_Contiguous_Initialized_TickSpacingOne() {
 				// Round down since we want to overestimate the change in sqrt price stemming from the amount out going right-to-left
 				// from the current sqrt price.  This overestimated value is then used to calculate amount in charged on the user.
 				// Since amount in is overestimated, this done in favor of the pool.
-				updatedNextCurSqrtPrice := math.GetNextSqrtPriceFromAmount1OutRoundingDown(nextSqrtPrice, liq, amountOutDifference)
+				updatedNextCurSqrtPrice := math.GetNextSqrtPriceFromAmount1OutRoundingDown(nextSqrtPrice, liq.Dec(), amountOutDifference)
 				// Round up since we want to overestimate the amount in in favor of the pool.
-				return math.CalcAmount0Delta(liq, updatedNextCurSqrtPrice, nextSqrtPrice, true).DecRoundUp(), updatedNextCurSqrtPrice
+				return math.CalcAmount0Delta(liq.Dec(), updatedNextCurSqrtPrice, nextSqrtPrice, true).DecRoundUp(), updatedNextCurSqrtPrice
 			}
 
 			// Round up since we want to overestimate the change in sqrt price stemming from the amount out going left-to-right
 			// from the current sqrt price. This overestimated value is then used to calculate amount in charged on the user.
 			// Since amount in is overestimated, this is done in favor of the pool.
-			updatedNextCurSqrtPrice := math.GetNextSqrtPriceFromAmount0OutRoundingUp(nextSqrtPrice, liq, amountOutDifference)
+			updatedNextCurSqrtPrice := math.GetNextSqrtPriceFromAmount0OutRoundingUp(nextSqrtPrice, liq, amountOutDifference.Dec())
 			// Round up since we want to overestimate the amount in in favor of the pool.
-			return math.CalcAmount1Delta(liq, updatedNextCurSqrtPrice, nextSqrtPrice, true).DecRoundUp(), updatedNextCurSqrtPrice
+			return math.CalcAmount1Delta(liq.Dec(), updatedNextCurSqrtPrice, nextSqrtPrice, true).DecRoundUp(), updatedNextCurSqrtPrice
 		}
 
 		for name, tc := range testcases {
@@ -1277,7 +1278,8 @@ func (s *KeeperTestSuite) TestSwaps_Contiguous_Initialized_TickSpacingOne() {
 					// properly estimating the next swap. This also allows us to precisely calculate by how many tokens in we need
 					// to pre-fund the swapper account.
 					amountOutDifference := amountOutRoundedUp.ToLegacyDec().Sub(amountOut)
-					amountInFromRounding, updatedNextCurSqrtPrice := estimateAmountInFromRounding(isZeroForOne, nextSqrtPrice, expectedLiquidity, osmomath.BigDecFromDec(amountOutDifference))
+					liqBigDec := osmomath.BigDecFromDec(expectedLiquidity) // TODO: Delete
+					amountInFromRounding, updatedNextCurSqrtPrice := estimateAmountInFromRounding(isZeroForOne, nextSqrtPrice, liqBigDec, osmomath.BigDecFromDec(amountOutDifference))
 					amountInToPreFund := amountIn.Add(amountInFromRounding)
 
 					// Perform the swap in the desired direction.
@@ -1293,7 +1295,7 @@ func (s *KeeperTestSuite) TestSwaps_Contiguous_Initialized_TickSpacingOne() {
 
 					// Validate that current tick and current liquidity are as expected.
 					s.assertPoolTickEquals(poolId, expectedSwapEndTick)
-					s.assertPoolLiquidityEquals(poolId, expectedLiquidity.Dec())
+					s.assertPoolLiquidityEquals(poolId, expectedLiquidity)
 
 					// Update the current sqrt price and tick for next swap.
 					curSqrtPrice = updatedNextCurSqrtPrice
@@ -1433,7 +1435,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_GetLiquidityFromAmountsPositionBoun
 	validateInRangeLiquidityFromAmounts := func(currentSqrtPrice, lowerTickSqrtPrice, upperTickSqrtPrice osmomath.BigDec) {
 		liquidity0 := math.Liquidity0(DefaultAmt0, currentSqrtPrice, upperTickSqrtPrice)
 		liquidity1 := math.Liquidity1(DefaultAmt1, currentSqrtPrice, lowerTickSqrtPrice)
-		expectedLiquidity := sdk.MinDec(liquidity0, liquidity1)
+		expectedLiquidity := osmomath.MinDec(liquidity0, liquidity1)
 		actualLiquidity := math.GetLiquidityFromAmounts(currentSqrtPrice, lowerTickSqrtPrice, upperTickSqrtPrice, DefaultAmt0, DefaultAmt1)
 		s.Require().Equal(expectedLiquidity, actualLiquidity)
 	}

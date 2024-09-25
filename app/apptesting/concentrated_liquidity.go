@@ -6,12 +6,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	clmath "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/math"
-	clmodel "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	clmath "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/math"
+	clmodel "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 
-	cl "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity"
+	cl "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity"
 )
 
 type ConcentratedKeeperTestHelper struct {
@@ -72,8 +73,9 @@ var (
 		curSqrtPrice, _ := osmomath.MonotonicSqrt(DefaultCurrPrice) // 70.710678118654752440
 		return osmomath.BigDecFromDec(curSqrtPrice)
 	}()
+	PerUnitLiqScalingFactor = osmomath.NewDec(1e15).MulMut(osmomath.NewDec(1e12))
 
-	DefaultSpreadRewardAccumCoins = sdk.NewDecCoins(sdk.NewDecCoin("foo", osmomath.NewInt(50)))
+	DefaultSpreadRewardAccumCoins = sdk.NewDecCoins(sdk.NewDecCoinFromDec("foo", osmomath.NewDec(50).MulTruncate(PerUnitLiqScalingFactor)))
 
 	DefaultCoinAmount = osmomath.NewInt(1000000000000000000)
 
@@ -99,6 +101,8 @@ var (
 
 	// Various sqrt estimates
 	Sqrt4994 = osmomath.MustNewDecFromStr("70.668238976219012614")
+
+	usdcChainDenom = "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4"
 
 	// swap out given in test cases
 	SwapOutGivenInCases = map[string]ConcentratedSwapTest{
@@ -894,7 +898,7 @@ func (s *KeeperTestHelper) CreateFullRangePosition(pool types.ConcentratedPoolEx
 func (s *KeeperTestHelper) WithdrawFullRangePosition(pool types.ConcentratedPoolExtension, positionId uint64, liquidityToRemove osmomath.Dec) {
 	clMsgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
 
-	_, err := clMsgServer.WithdrawPosition(sdk.WrapSDKContext(s.Ctx), &types.MsgWithdrawPosition{
+	_, err := clMsgServer.WithdrawPosition(s.Ctx, &types.MsgWithdrawPosition{
 		PositionId:      positionId,
 		LiquidityAmount: liquidityToRemove,
 		Sender:          s.TestAccs[0].String(),
@@ -912,9 +916,8 @@ func (s *KeeperTestHelper) SetupConcentratedLiquidityDenomsAndPoolCreation() {
 	defaultParams.IsPermissionlessPoolCreationEnabled = true
 	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, defaultParams)
 
-	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
-	poolManagerParams.AuthorizedQuoteDenoms = append(poolmanagertypes.DefaultParams().AuthorizedQuoteDenoms, ETH, USDC, BAR, BAZ, FOO, NOTE, STAKE, WBTC)
-	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
+	authorizedQuoteDenoms := append(poolmanagertypes.DefaultParams().AuthorizedQuoteDenoms, ETH, USDC, BAR, BAZ, FOO, appparams.BaseCoinUnit, STAKE, WBTC, usdcChainDenom)
+	s.App.PoolManagerKeeper.SetParam(s.Ctx, poolmanagertypes.KeyAuthorizedQuoteDenoms, authorizedQuoteDenoms)
 }
 
 func (s *ConcentratedKeeperTestHelper) SetupTest() {

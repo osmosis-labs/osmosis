@@ -57,11 +57,6 @@ func (msg MsgSetHotRoutes) ValidateBasic() error {
 	return nil
 }
 
-// GetSignBytes encodes the message for signing
-func (msg MsgSetHotRoutes) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 // GetSigners defines whose signature is required
 func (msg MsgSetHotRoutes) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Admin)
@@ -104,11 +99,6 @@ func (msg MsgSetDeveloperAccount) ValidateBasic() error {
 	return nil
 }
 
-// GetSignBytes encodes the message for signing
-func (msg MsgSetDeveloperAccount) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 // GetSigners defines whose signature is required
 func (msg MsgSetDeveloperAccount) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Admin)
@@ -147,11 +137,6 @@ func (msg MsgSetMaxPoolPointsPerTx) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-// GetSignBytes encodes the message for signing
-func (msg MsgSetMaxPoolPointsPerTx) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
@@ -194,11 +179,6 @@ func (msg MsgSetMaxPoolPointsPerBlock) ValidateBasic() error {
 	return nil
 }
 
-// GetSignBytes encodes the message for signing
-func (msg MsgSetMaxPoolPointsPerBlock) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 // GetSigners defines whose signature is required
 func (msg MsgSetMaxPoolPointsPerBlock) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Admin)
@@ -238,11 +218,6 @@ func (msg MsgSetInfoByPoolType) ValidateBasic() error {
 	return nil
 }
 
-// GetSignBytes encodes the message for signing
-func (msg MsgSetInfoByPoolType) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 // GetSigners defines whose signature is required
 func (msg MsgSetInfoByPoolType) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Admin)
@@ -275,17 +250,12 @@ func (msg MsgSetBaseDenoms) ValidateBasic() error {
 		return errorsmod.Wrap(err, "invalid admin address (must be bech32)")
 	}
 
-	// Check that there is at least one base denom and that first denom is melody
+	// Check that there is at least one base denom and that first denom is osmo
 	if err := ValidateBaseDenoms(msg.BaseDenoms); err != nil {
 		return err
 	}
 
 	return nil
-}
-
-// GetSignBytes encodes the message for signing
-func (msg MsgSetBaseDenoms) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required

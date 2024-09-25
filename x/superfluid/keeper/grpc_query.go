@@ -16,15 +16,17 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v23/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v23/x/superfluid/types"
+	storetypes "cosmossdk.io/store/types"
+
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -106,7 +108,7 @@ func (q Querier) AllIntermediaryAccounts(goCtx context.Context, req *types.AllIn
 	sdkCtx := sdk.UnwrapSDKContext(goCtx)
 	store := sdkCtx.KVStore(q.Keeper.storeKey)
 	accStore := prefix.NewStore(store, types.KeyPrefixIntermediaryAccount)
-	iterator := sdk.KVStorePrefixIterator(accStore, nil)
+	iterator := storetypes.KVStorePrefixIterator(accStore, nil)
 	defer iterator.Close()
 
 	accInfos := []types.SuperfluidIntermediaryAccountInfo{}
@@ -257,17 +259,15 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 			return nil, err
 		}
 
-		// Find how many melody tokens this delegation is worth at superfluids current risk adjustment
+		// Find how many osmo tokens this delegation is worth at superfluids current risk adjustment
 		// and twap of the denom.
-		equivalentAmount, err := q.Keeper.GetSuperfluidMELODYTokens(ctx, baseDenom, lockedCoins.Amount)
+		equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokens(ctx, baseDenom, lockedCoins.Amount)
 		if err != nil {
 			return nil, err
 		}
+
 		coin := sdk.NewCoin(appparams.BaseCoinUnit, equivalentAmount)
 
-		if err != nil {
-			return nil, err
-		}
 		res.SuperfluidDelegationRecords = append(res.SuperfluidDelegationRecords,
 			types.SuperfluidDelegationRecord{
 				DelegatorAddress:       req.DelegatorAddress,
@@ -299,7 +299,7 @@ func (q Querier) UserConcentratedSuperfluidPositionsDelegated(goCtx context.Cont
 	}
 
 	// Query each position ID and determine if it has a lock ID associated with it.
-	// Construct a response with the position ID, lock ID, the amount of cl shares staked, and what those shares are worth in staked melody tokens.
+	// Construct a response with the position ID, lock ID, the amount of cl shares staked, and what those shares are worth in staked osmo tokens.
 	clPoolUserPositionRecords, err := q.filterConcentratedPositionLocks(ctx, positions, false)
 	if err != nil {
 		return nil, err
@@ -326,7 +326,7 @@ func (q Querier) UserConcentratedSuperfluidPositionsUndelegating(goCtx context.C
 	}
 
 	// Query each position ID and determine if it has a lock ID associated with it.
-	// Construct a response with the position ID, lock ID, the amount of cl shares staked, and what those shares are worth in staked melody tokens.
+	// Construct a response with the position ID, lock ID, the amount of cl shares staked, and what those shares are worth in staked osmo tokens.
 	clPoolUserPositionRecords, err := q.filterConcentratedPositionLocks(ctx, positions, true)
 	if err != nil {
 		return nil, err
@@ -428,11 +428,21 @@ func (q Querier) SuperfluidDelegationsByValidatorDenom(goCtx context.Context, re
 
 	for _, lock := range periodLocks {
 		lockedCoins := sdk.NewCoin(req.Denom, lock.GetCoins().AmountOf(req.Denom))
+		baseDenom := lock.Coins.GetDenomByIndex(0)
+
+		equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokens(ctx, baseDenom, lockedCoins.Amount)
+		if err != nil {
+			return nil, err
+		}
+
+		coin := sdk.NewCoin(appparams.BaseCoinUnit, equivalentAmount)
+
 		res.SuperfluidDelegationRecords = append(res.SuperfluidDelegationRecords,
 			types.SuperfluidDelegationRecord{
-				DelegatorAddress: lock.GetOwner(),
-				ValidatorAddress: req.ValidatorAddress,
-				DelegationAmount: lockedCoins,
+				DelegatorAddress:       lock.GetOwner(),
+				ValidatorAddress:       req.ValidatorAddress,
+				DelegationAmount:       lockedCoins,
+				EquivalentStakedAmount: &coin,
 			},
 		)
 	}
@@ -473,18 +483,18 @@ func (q Querier) EstimateSuperfluidDelegatedAmountByValidatorDenom(goCtx context
 		return nil, err
 	}
 
-	val, found := q.Keeper.sk.GetValidator(ctx, valAddr)
-	if !found {
+	val, err := q.Keeper.sk.GetValidator(ctx, valAddr)
+	if err != nil {
 		return nil, stakingtypes.ErrNoValidatorFound
 	}
 
-	delegation, found := q.Keeper.sk.GetDelegation(ctx, intermediaryAcc.GetAccAddress(), valAddr)
-	if !found {
-		return nil, stakingtypes.ErrNoDelegation
+	delegation, err := q.Keeper.sk.GetDelegation(ctx, intermediaryAcc.GetAccAddress(), valAddr)
+	if err != nil {
+		return nil, err
 	}
 
-	syntheticMelodyAmt := delegation.Shares.Quo(val.DelegatorShares).MulInt(val.Tokens)
-	baseAmount := q.Keeper.UnriskAdjustMelodyValue(ctx, syntheticMelodyAmt).Quo(q.Keeper.GetOsmoEquivalentMultiplier(ctx, req.Denom)).RoundInt()
+	syntheticOsmoAmt := delegation.Shares.Quo(val.DelegatorShares).MulInt(val.Tokens)
+	baseAmount := q.Keeper.UnriskAdjustOsmoValue(ctx, syntheticOsmoAmt).Quo(q.Keeper.GetOsmoEquivalentMultiplier(ctx, req.Denom)).RoundInt()
 
 	return &types.EstimateSuperfluidDelegatedAmountByValidatorDenomResponse{
 		TotalDelegatedCoins: sdk.NewCoins(sdk.NewCoin(req.Denom, baseAmount)),
@@ -515,7 +525,7 @@ func (q Querier) TotalDelegationByValidatorForDenom(goCtx context.Context, req *
 			amount = amount.Add(record.DelegationAmount.Amount)
 		}
 
-		equivalentAmountMELODY, err := q.Keeper.GetSuperfluidMELODYTokens(ctx, req.Denom, amount)
+		equivalentAmountOSMO, err := q.Keeper.GetSuperfluidOSMOTokens(ctx, req.Denom, amount)
 		if err != nil {
 			return nil, err
 		}
@@ -523,7 +533,7 @@ func (q Querier) TotalDelegationByValidatorForDenom(goCtx context.Context, req *
 		result := types.Delegations{
 			ValAddr:        valAddr.String(),
 			AmountSfsd:     amount,
-			OsmoEquivalent: equivalentAmountMELODY,
+			OsmoEquivalent: equivalentAmountOSMO,
 		}
 
 		delegationsByValidator = append(delegationsByValidator, result)
@@ -534,7 +544,7 @@ func (q Querier) TotalDelegationByValidatorForDenom(goCtx context.Context, req *
 	}, nil
 }
 
-// TotalSuperfluidDelegations returns total amount of melody delegated via superfluid staking.
+// TotalSuperfluidDelegations returns total amount of osmo delegated via superfluid staking.
 func (q Querier) TotalSuperfluidDelegations(goCtx context.Context, _ *types.TotalSuperfluidDelegationsRequest) (*types.TotalSuperfluidDelegationsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -547,18 +557,18 @@ func (q Querier) TotalSuperfluidDelegations(goCtx context.Context, _ *types.Tota
 			return nil, err
 		}
 
-		val, found := q.Keeper.sk.GetValidator(ctx, valAddr)
-		if !found {
+		val, err := q.Keeper.sk.GetValidator(ctx, valAddr)
+		if err != nil {
 			return nil, stakingtypes.ErrNoValidatorFound
 		}
 
-		delegation, found := q.Keeper.sk.GetDelegation(ctx, intermediaryAccount.GetAccAddress(), valAddr)
-		if !found {
+		delegation, err := q.Keeper.sk.GetDelegation(ctx, intermediaryAccount.GetAccAddress(), valAddr)
+		if err != nil {
 			continue
 		}
 
-		syntheticMelodyAmt := delegation.Shares.Quo(val.DelegatorShares).MulInt(val.Tokens).RoundInt()
-		totalSuperfluidDelegated = totalSuperfluidDelegated.Add(syntheticMelodyAmt)
+		syntheticOsmoAmt := delegation.Shares.Quo(val.DelegatorShares).MulInt(val.Tokens).RoundInt()
+		totalSuperfluidDelegated = totalSuperfluidDelegated.Add(syntheticOsmoAmt)
 	}
 
 	return &types.TotalSuperfluidDelegationsResponse{
@@ -596,9 +606,13 @@ func (q Querier) TotalDelegationByDelegator(goCtx context.Context, req *types.Qu
 	}
 
 	// this is for getting normal staking
-	q.sk.IterateDelegations(ctx, delAddr, func(_ int64, del stakingtypes.DelegationI) bool {
-		val, found := q.sk.GetValidator(ctx, del.GetValidatorAddr())
-		if !found {
+	err = q.sk.IterateDelegations(ctx, delAddr, func(_ int64, del stakingtypes.DelegationI) bool {
+		valAddr, err := sdk.ValAddressFromBech32(del.GetValidatorAddr())
+		if err != nil {
+			return true
+		}
+		val, err := q.sk.GetValidator(ctx, valAddr)
+		if err != nil {
 			return true
 		}
 
@@ -607,8 +621,8 @@ func (q Querier) TotalDelegationByDelegator(goCtx context.Context, req *types.Qu
 		res.DelegationResponse = append(res.DelegationResponse,
 			stakingtypes.DelegationResponse{
 				Delegation: stakingtypes.Delegation{
-					DelegatorAddress: del.GetDelegatorAddr().String(),
-					ValidatorAddress: del.GetValidatorAddr().String(),
+					DelegatorAddress: del.GetDelegatorAddr(),
+					ValidatorAddress: del.GetValidatorAddr(),
 					Shares:           del.GetShares(),
 				},
 				Balance: lockedCoins,
@@ -620,6 +634,9 @@ func (q Querier) TotalDelegationByDelegator(goCtx context.Context, req *types.Qu
 
 		return false
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	return &res, nil
 }
@@ -638,7 +655,7 @@ func (q Querier) UnpoolWhitelist(goCtx context.Context, req *types.QueryUnpoolWh
 
 func (q Querier) filterConcentratedPositionLocks(ctx sdk.Context, positions []model.Position, isUnbonding bool) ([]types.ConcentratedPoolUserPositionRecord, error) {
 	// Query each position ID and determine if it has a lock ID associated with it.
-	// Construct a response with the position ID, lock ID, the amount of cl shares staked, and what those shares are worth in staked melody tokens.
+	// Construct a response with the position ID, lock ID, the amount of cl shares staked, and what those shares are worth in staked osmo tokens.
 	var clPoolUserPositionRecords []types.ConcentratedPoolUserPositionRecord
 	for _, pos := range positions {
 		lockId, err := q.Keeper.clk.GetLockIdFromPositionId(ctx, pos.PositionId)
@@ -687,7 +704,7 @@ func (q Querier) filterConcentratedPositionLocks(ctx sdk.Context, positions []mo
 
 		baseDenom := lock.Coins.GetDenomByIndex(0)
 		lockedCoins := sdk.NewCoin(baseDenom, lock.GetCoins().AmountOf(baseDenom))
-		equivalentAmount, err := q.Keeper.GetSuperfluidMELODYTokens(ctx, baseDenom, lockedCoins.Amount)
+		equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokens(ctx, baseDenom, lockedCoins.Amount)
 		if err != nil {
 			return nil, err
 		}

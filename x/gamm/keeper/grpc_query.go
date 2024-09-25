@@ -8,18 +8,18 @@ import (
 	"google.golang.org/grpc/status"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/store/prefix"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v23/x/gamm/v2types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v26/x/gamm/v2types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -44,6 +44,17 @@ func NewV2Querier(k Keeper) QuerierV2 {
 	return QuerierV2{Keeper: k}
 }
 
+func (q Querier) Params(ctx context.Context, req *types.ParamsRequest) (*types.ParamsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	params := q.Keeper.GetParams(sdkCtx)
+	return &types.ParamsResponse{
+		Params: params,
+	}, nil
+}
+
 // Pool checks if a pool exists and their respective poolWeights.
 // Deprecated: use x/poolmanager's Pool query.
 // nolint: staticcheck
@@ -58,7 +69,7 @@ func (q Querier) Pool(
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	// GetPool gets pool from poolmanager that has the knowledge of all pool ids
-	// within Symphony.
+	// within Osmosis.
 	pool, err := q.Keeper.poolManager.GetPool(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

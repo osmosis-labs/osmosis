@@ -7,17 +7,19 @@ import (
 	"strconv"
 	"time"
 
-	sdkprefix "github.com/cosmos/cosmos-sdk/store/prefix"
+	sdkprefix "cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v23/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v23/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
 )
 
 const MinNumPositions = 2
@@ -103,7 +105,7 @@ func (k Keeper) HasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, err
 // GetAllPositionsForPoolId gets all the position for a specific poolId and store prefix.
 func (k Keeper) GetAllPositionIdsForPoolId(ctx sdk.Context, prefix []byte, poolId uint64) ([]uint64, error) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, prefix)
+	iterator := storetypes.KVStorePrefixIterator(store, prefix)
 	defer iterator.Close()
 
 	var positionIds []uint64
@@ -669,10 +671,9 @@ func (k Keeper) updateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, l
 // transferPositions transfers ownership of a set of positions from a sender to a recipient.
 // It first checks if the provided position IDs are unique. If not, it returns a DuplicatePositionIdsError.
 // For each position ID, it retrieves the corresponding position and checks if the sender is the owner of the position.
-// If the sender is not the owner, it returns an error.
+// If the sender is not the owner (or the governance module account), it returns an error.
 // It then checks if the position has an active underlying lock, and if so, returns an error.
-// It then collects any outstanding incentives and rewards for the position, deletes the KVStore entries for the position,
-// and restores the position under the recipient's account.
+// It then deletes the KVStore entries for the position, and restores the position under the recipient's account.
 // If any of these operations fail, it returns the corresponding error.
 // If all operations succeed, it returns nil.
 func (k Keeper) transferPositions(ctx sdk.Context, positionIds []uint64, sender sdk.AccAddress, recipient sdk.AccAddress) error {
@@ -684,14 +685,17 @@ func (k Keeper) transferPositions(ctx sdk.Context, positionIds []uint64, sender 
 		return types.DuplicatePositionIdsError{PositionIds: positionIds}
 	}
 
+	// Check if the sender is the governance module account.
+	isGovModuleSender := sender.Equals(k.accountKeeper.GetModuleAccount(ctx, govtypes.ModuleName).GetAddress())
+
 	for _, positionId := range positionIds {
 		position, err := k.GetPosition(ctx, positionId)
 		if err != nil {
 			return err
 		}
 
-		// Check that the sender is the owner of the position.
-		if position.Address != sender.String() {
+		// If the sender is not the governance module, verify that the sender is the owner of the position.
+		if !isGovModuleSender && position.Address != sender.String() {
 			return types.PositionOwnerMismatchError{PositionOwner: position.Address, Sender: sender.String()}
 		}
 
@@ -704,23 +708,16 @@ func (k Keeper) transferPositions(ctx sdk.Context, positionIds []uint64, sender 
 			return types.LockNotMatureError{PositionId: position.PositionId, LockId: lockId}
 		}
 
-		// Collect any outstanding incentives and rewards for the position.
-		if _, err := k.collectSpreadRewards(ctx, sender, positionId); err != nil {
-			return err
-		}
-		if _, _, err := k.collectIncentives(ctx, sender, positionId); err != nil {
-			return err
-		}
+		// Since the caller can be either the owner or the governance module (verified above), we can safely utilize the address directly from the position.
+		positionOwnerAddr := sdk.MustAccAddressFromBech32(position.Address)
 
 		// Delete the KVStore entries for the position.
-		err = k.deletePosition(ctx, positionId, sender, position.PoolId)
+		err = k.deletePosition(ctx, positionId, positionOwnerAddr, position.PoolId)
 		if err != nil {
 			return err
 		}
 
-		// There exists special logic branches we take if a position is the last position in a pool and it is withdrawn.
-		// It makes sense to accept the small annoyance of preventing a position from being transferred if it is the last position in a pool
-		// instead of considering all the edge cases that would arise if we allowed it.
+		// Check if transferring the last position in a pool.
 		anyPositionsRemainingInPool, err := k.HasAnyPositionForPool(ctx, position.PoolId)
 		if err != nil {
 			return err

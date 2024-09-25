@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v26/x/protorev/types"
 )
 
 // DistributeProfit sends the developer fee from the module account to the developer account
@@ -50,7 +50,7 @@ func (k Keeper) DistributeProfit(ctx sdk.Context, arbProfits sdk.Coins) error {
 	remainingProfit = arbProfits.Sub(devProfit...)
 
 	// If the remaining arb profits has the OSMO denom for one of the coins, burn the OSMO by sending to the null address
-	arbProfitsOsmoCoin := sdk.NewCoin(types.SymphonyDenomination, remainingProfit.AmountOf(types.SymphonyDenomination))
+	arbProfitsOsmoCoin := sdk.NewCoin(types.OsmosisDenomination, remainingProfit.AmountOf(types.OsmosisDenomination))
 	if arbProfitsOsmoCoin.IsPositive() {
 		err := k.bankKeeper.SendCoinsFromModuleToAccount(
 			ctx,

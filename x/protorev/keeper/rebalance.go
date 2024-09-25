@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v23/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/x/protorev/types"
 )
 
 var zeroInt = osmomath.ZeroInt()
@@ -55,12 +55,12 @@ func (k Keeper) IterateRoutes(ctx sdk.Context, routes []RouteMetaData, remaining
 //
 // NOTE: This does not check the underlying pool before swapping so this may go over the MaxTicksCrossed.
 func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit osmomath.Int) (osmomath.Int, error) {
-	if inputCoin.Denom == types.SymphonyDenomination {
+	if inputCoin.Denom == types.OsmosisDenomination {
 		return profit, nil
 	}
 
 	// Get highest liquidity pool ID for the input coin and uosmo
-	conversionPoolID, err := k.GetPoolForDenomPair(ctx, types.SymphonyDenomination, inputCoin.Denom)
+	conversionPoolID, err := k.GetPoolForDenomPair(ctx, types.OsmosisDenomination, inputCoin.Denom)
 	if err != nil {
 		return profit, err
 	}
@@ -82,7 +82,7 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit osmom
 		ctx,
 		conversionPool,
 		sdk.NewCoin(inputCoin.Denom, profit),
-		types.SymphonyDenomination,
+		types.OsmosisDenomination,
 		conversionPool.GetSpreadFactor(ctx),
 	)
 	if err != nil {

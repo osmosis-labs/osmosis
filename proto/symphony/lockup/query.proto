@@ -1,0 +1,336 @@
+syntax = "proto3";
+package symphony.lockup;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "symphony/lockup/lock.proto";
+import "symphony/lockup/params.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/lockup/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Return full balance of the module
+  rpc ModuleBalance(ModuleBalanceRequest) returns (ModuleBalanceResponse) {
+    option (google.api.http).get = "/symphony/lockup/v1beta1/module_balance";
+  }
+  // Return locked balance of the module
+  rpc ModuleLockedAmount(ModuleLockedAmountRequest)
+      returns (ModuleLockedAmountResponse) {
+    option (google.api.http).get =
+        "/symphony/lockup/v1beta1/module_locked_amount";
+  }
+
+  // Returns unlockable coins which are not withdrawn yet
+  rpc AccountUnlockableCoins(AccountUnlockableCoinsRequest)
+      returns (AccountUnlockableCoinsResponse) {
+    option (google.api.http).get =
+        "/symphony/lockup/v1beta1/account_unlockable_coins/{owner}";
+  }
+  // Returns unlocking coins
+  rpc AccountUnlockingCoins(AccountUnlockingCoinsRequest)
+      returns (AccountUnlockingCoinsResponse) {
+    option (google.api.http).get =
+        "/symphony/lockup/v1beta1/account_unlocking_coins/{owner}";
+  }
+  // Return a locked coins that can't be withdrawn
+  rpc AccountLockedCoins(AccountLockedCoinsRequest)
+      returns (AccountLockedCoinsResponse) {
+    option (google.api.http).get =
+        "/symphony/lockup/v1beta1/account_locked_coins/{owner}";
+  }
+
+  // Returns locked records of an account with unlock time beyond timestamp
+  rpc AccountLockedPastTime(AccountLockedPastTimeRequest)
+      returns (AccountLockedPastTimeResponse) {
+    option (google.api.http).get =
+        "/symphony/lockup/v1beta1/account_locked_pasttime/{owner}";
+  }
+  // Returns locked records of an account with unlock time beyond timestamp
+  // excluding tokens started unlocking
+  rpc AccountLockedPastTimeNotUnlockingOnly(
+      AccountLockedPastTimeNotUnlockingOnlyRequest)
+      returns (AccountLockedPastTimeNotUnlockingOnlyResponse) {
+    option (google.api.http).get =
+        "/symphony/lockup/v1beta1/account_locked_pasttime_not_unlocking_only/"
+        "{owner}";
+  }
+  // Returns unlocked records with unlock time before timestamp
+  rpc AccountUnlockedBeforeTime(AccountUnlockedBeforeTimeRequest)
+      returns (AccountUnlockedBeforeTimeResponse) {
+    option (google.api.http).get =
+        "/symphony/lockup/v1beta1/account_unlocked_before_time/{owner}";
+  }
+
+  // Returns lock records by address, timestamp, denom
+  rpc AccountLockedPastTimeDenom(AccountLockedPastTimeDenomRequest)
+      returns (AccountLockedPastTimeDenomResponse) {
+    option (google.api.http).get =
+        "/symphony/lockup/v1beta1/account_locked_pasttime_denom/{owner}";
+  }
+
+  // Returns total locked per denom with longer past given time
+  rpc LockedDenom(LockedDenomRequest) returns (LockedDenomResponse) {
+    option (google.api.http).get = "/symphony/lockup/v1beta1/locked_denom";
+  }
+
+  // Returns lock record by id
+  rpc LockedByID(LockedRequest) returns (LockedResponse) {
+    option (google.api.http).get =
+        "/symphony/lockup/v1beta1/locked_by_id/{lock_id}";
+  }
+
+  // Returns lock record by id
+  rpc LockRewardReceiver(LockRewardReceiverRequest)
+      returns (LockRewardReceiverResponse) {
+    option (google.api.http).get =
+        "/symphony/lockup/v1beta1/lock_reward_receiver/{lock_id}";
+  }
+
+  // Returns next lock ID
+  rpc NextLockID(NextLockIDRequest) returns (NextLockIDResponse) {
+    option (google.api.http).get = "/symphony/lockup/v1beta1/next_lock_id";
+  }
+
+  // Returns synthetic lockup by native lockup id
+  // Deprecated: use SyntheticLockupByLockupID instead
+  rpc SyntheticLockupsByLockupID(SyntheticLockupsByLockupIDRequest)
+      returns (SyntheticLockupsByLockupIDResponse) {
+    option deprecated = true;
+    option (google.api.http).get =
+        "/symphony/lockup/v1beta1/synthetic_lockups_by_lock_id/{lock_id}";
+  }
+
+  // Returns synthetic lockup by native lockup id
+  rpc SyntheticLockupByLockupID(SyntheticLockupByLockupIDRequest)
+      returns (SyntheticLockupByLockupIDResponse) {
+    option (google.api.http).get =
+        "/symphony/lockup/v1beta1/synthetic_lockup_by_lock_id/{lock_id}";
+  }
+
+  // Returns account locked records with longer duration
+  rpc AccountLockedLongerDuration(AccountLockedLongerDurationRequest)
+      returns (AccountLockedLongerDurationResponse) {
+    option (google.api.http).get =
+        "/symphony/lockup/v1beta1/account_locked_longer_duration/{owner}";
+  }
+
+  // Returns account locked records with a specific duration
+  rpc AccountLockedDuration(AccountLockedDurationRequest)
+      returns (AccountLockedDurationResponse) {
+    option (google.api.http).get =
+        "/symphony/lockup/v1beta1/account_locked_duration/{owner}";
+  }
+
+  // Returns account locked records with longer duration excluding tokens
+  // started unlocking
+  rpc AccountLockedLongerDurationNotUnlockingOnly(
+      AccountLockedLongerDurationNotUnlockingOnlyRequest)
+      returns (AccountLockedLongerDurationNotUnlockingOnlyResponse) {
+    option (google.api.http).get =
+        "/symphony/lockup/v1beta1/"
+        "account_locked_longer_duration_not_unlocking_only/{owner}";
+  }
+  // Returns account's locked records for a denom with longer duration
+  rpc AccountLockedLongerDurationDenom(AccountLockedLongerDurationDenomRequest)
+      returns (AccountLockedLongerDurationDenomResponse) {
+    option (google.api.http).get =
+        "/symphony/lockup/v1beta1/account_locked_longer_duration_denom/{owner}";
+  }
+  // Params returns lockup params.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/symphony/lockup/v1beta1/params";
+  }
+}
+
+message ModuleBalanceRequest {};
+message ModuleBalanceResponse {
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+};
+
+message ModuleLockedAmountRequest {};
+message ModuleLockedAmountResponse {
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+};
+
+message AccountUnlockableCoinsRequest {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+};
+message AccountUnlockableCoinsResponse {
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+};
+
+message AccountUnlockingCoinsRequest {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+}
+message AccountUnlockingCoinsResponse {
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+message AccountLockedCoinsRequest {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+};
+message AccountLockedCoinsResponse {
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+};
+
+message AccountLockedPastTimeRequest {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  google.protobuf.Timestamp timestamp = 2 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"timestamp\""
+  ];
+};
+message AccountLockedPastTimeResponse {
+  repeated PeriodLock locks = 1 [ (gogoproto.nullable) = false ];
+};
+
+message AccountLockedPastTimeNotUnlockingOnlyRequest {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  google.protobuf.Timestamp timestamp = 2 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"timestamp\""
+  ];
+};
+message AccountLockedPastTimeNotUnlockingOnlyResponse {
+  repeated PeriodLock locks = 1 [ (gogoproto.nullable) = false ];
+};
+
+message AccountUnlockedBeforeTimeRequest {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  google.protobuf.Timestamp timestamp = 2 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"timestamp\""
+  ];
+};
+message AccountUnlockedBeforeTimeResponse {
+  repeated PeriodLock locks = 1 [ (gogoproto.nullable) = false ];
+}
+
+message AccountLockedPastTimeDenomRequest {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  google.protobuf.Timestamp timestamp = 2 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"timestamp\""
+  ];
+  string denom = 3;
+};
+message AccountLockedPastTimeDenomResponse {
+  repeated PeriodLock locks = 1 [ (gogoproto.nullable) = false ];
+};
+
+message LockedDenomRequest {
+  string denom = 1;
+  google.protobuf.Duration duration = 2 [
+    (gogoproto.stdduration) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"duration\""
+  ];
+}
+message LockedDenomResponse {
+  string amount = 1 [
+
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.moretags) = "yaml:\"amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message LockedRequest { uint64 lock_id = 1; };
+message LockedResponse { PeriodLock lock = 1; };
+
+message LockRewardReceiverRequest { uint64 lock_id = 1; };
+message LockRewardReceiverResponse { string reward_receiver = 1; };
+
+message NextLockIDRequest {};
+message NextLockIDResponse { uint64 lock_id = 1; };
+
+message SyntheticLockupsByLockupIDRequest {
+  option deprecated = true;
+  uint64 lock_id = 1;
+}
+message SyntheticLockupsByLockupIDResponse {
+  option deprecated = true;
+  repeated SyntheticLock synthetic_locks = 1 [ (gogoproto.nullable) = false ];
+}
+
+message SyntheticLockupByLockupIDRequest { uint64 lock_id = 1; }
+message SyntheticLockupByLockupIDResponse {
+  SyntheticLock synthetic_lock = 1 [ (gogoproto.nullable) = false ];
+}
+
+message AccountLockedLongerDurationRequest {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  google.protobuf.Duration duration = 2 [
+    (gogoproto.stdduration) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"duration\""
+  ];
+};
+message AccountLockedLongerDurationResponse {
+  repeated PeriodLock locks = 1 [ (gogoproto.nullable) = false ];
+};
+
+message AccountLockedDurationRequest {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  google.protobuf.Duration duration = 2 [
+    (gogoproto.stdduration) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"duration\""
+  ];
+};
+message AccountLockedDurationResponse {
+  repeated PeriodLock locks = 1 [ (gogoproto.nullable) = false ];
+};
+
+message AccountLockedLongerDurationNotUnlockingOnlyRequest {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  google.protobuf.Duration duration = 2 [
+    (gogoproto.stdduration) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"duration\""
+  ];
+};
+message AccountLockedLongerDurationNotUnlockingOnlyResponse {
+  repeated PeriodLock locks = 1 [ (gogoproto.nullable) = false ];
+};
+
+message AccountLockedLongerDurationDenomRequest {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  google.protobuf.Duration duration = 2 [
+    (gogoproto.stdduration) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"duration\""
+  ];
+  string denom = 3;
+};
+message AccountLockedLongerDurationDenomResponse {
+  repeated PeriodLock locks = 1 [ (gogoproto.nullable) = false ];
+};
+
+message QueryParamsRequest {}
+message QueryParamsResponse {
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}

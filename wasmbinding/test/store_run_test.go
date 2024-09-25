@@ -15,15 +15,17 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v23/app"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v26/app"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
 )
 
 func TestNoStorageWithoutProposal(t *testing.T) {
 	// we use default config
-	symphony, ctx := CreateTestInput()
+	osmosis, ctx, homeDir := CreateTestInput()
+	defer os.RemoveAll(homeDir)
 
-	wasmKeeper := symphony.WasmKeeper
+	wasmKeeper := osmosis.WasmKeeper
 	// this wraps wasmKeeper, providing interfaces exposed to external messages
 	contractKeeper := keeper.NewDefaultPermissionKeeper(wasmKeeper)
 
@@ -36,14 +38,12 @@ func TestNoStorageWithoutProposal(t *testing.T) {
 	require.Error(t, err)
 }
 
-func storeCodeViaProposal(t *testing.T, ctx sdk.Context, symphony *app.SymphonyApp, addr sdk.AccAddress) {
+func storeCodeViaProposal(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sdk.AccAddress) {
 	t.Helper()
-	govKeeper := symphony.GovKeeper
+	govKeeper := osmosis.GovKeeper
 	wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")
 	require.NoError(t, err)
 
-	// UNFORKING C: It seems the sender needs to be the gov module account, otherwise
-	// when the prop is executed, there can't be two signers on the message.
 	msgStoreCode := wasmtypes.MsgStoreCode{Sender: addr.String(), WASMByteCode: wasmCode, InstantiatePermission: &types.AccessConfig{Permission: types.AccessTypeEverybody}}
 	msgStoreCodeSlice := []sdk.Msg{&msgStoreCode}
 
@@ -62,11 +62,13 @@ func storeCodeViaProposal(t *testing.T, ctx sdk.Context, symphony *app.SymphonyA
 
 func TestStoreCodeProposal(t *testing.T) {
 	apptesting.SkipIfWSL(t)
-	symphony, ctx := CreateTestInput()
-	wasmKeeper := symphony.WasmKeeper
+	osmosis, ctx, homeDir := CreateTestInput()
+	defer os.RemoveAll(homeDir)
 
-	govModuleAccount := symphony.AccountKeeper.GetModuleAccount(ctx, govtypes.ModuleName).GetAddress()
-	storeCodeViaProposal(t, ctx, symphony, govModuleAccount)
+	wasmKeeper := osmosis.WasmKeeper
+
+	govModuleAccount := osmosis.AccountKeeper.GetModuleAccount(ctx, govtypes.ModuleName).GetAddress()
+	storeCodeViaProposal(t, ctx, osmosis, govModuleAccount)
 
 	// then
 	cInfo := wasmKeeper.GetCodeInfo(ctx, 1)
@@ -89,15 +91,17 @@ type HackatomExampleInitMsg struct {
 
 func TestInstantiateContract(t *testing.T) {
 	apptesting.SkipIfWSL(t)
-	symphony, ctx := CreateTestInput()
+	osmosis, ctx, homeDir := CreateTestInput()
+	defer os.RemoveAll(homeDir)
+
 	instantiator := RandomAccountAddress()
 	benefit, arb := RandomAccountAddress(), RandomAccountAddress()
-	FundAccount(t, ctx, symphony, instantiator)
+	FundAccount(t, ctx, osmosis, instantiator)
 
-	govModuleAccount := symphony.AccountKeeper.GetModuleAccount(ctx, govtypes.ModuleName).GetAddress()
+	govModuleAccount := osmosis.AccountKeeper.GetModuleAccount(ctx, govtypes.ModuleName).GetAddress()
 
-	storeCodeViaProposal(t, ctx, symphony, govModuleAccount)
-	contractKeeper := keeper.NewDefaultPermissionKeeper(symphony.WasmKeeper)
+	storeCodeViaProposal(t, ctx, osmosis, govModuleAccount)
+	contractKeeper := keeper.NewDefaultPermissionKeeper(osmosis.WasmKeeper)
 	codeID := uint64(1)
 
 	initMsg := HackatomExampleInitMsg{
@@ -107,7 +111,7 @@ func TestInstantiateContract(t *testing.T) {
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
 
-	funds := sdk.NewInt64Coin("note", 123456)
+	funds := sdk.NewInt64Coin(appparams.BaseCoinUnit, 123456)
 	_, _, err = contractKeeper.Instantiate(ctx, codeID, instantiator, instantiator, initMsgBz, "demo contract", sdk.Coins{funds})
 	require.NoError(t, err)
 }

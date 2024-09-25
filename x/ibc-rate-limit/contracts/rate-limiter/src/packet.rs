@@ -1,6 +1,6 @@
-use crate::state::FlowType;
+use crate::state::flow::FlowType;
 use cosmwasm_std::{Addr, Deps, StdError, Uint256};
-use symphony_std_derive::CosmwasmExt;
+use osmosis_std_derive::CosmwasmExt;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -8,19 +8,19 @@ use sha2::{Digest, Sha256};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Height {
     /// Previously known as "epoch"
-    revision_number: Option<u64>,
+    pub revision_number: Option<u64>,
 
     /// The height of a block
-    revision_height: Option<u64>,
+    pub revision_height: Option<u64>,
 }
 
 // IBC transfer data
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct FungibleTokenData {
     pub denom: String,
-    amount: Uint256,
-    sender: Addr,
-    receiver: Addr,
+    pub amount: Uint256,
+    pub sender: Addr,
+    pub receiver: Addr,
 }
 
 // An IBC packet
@@ -37,7 +37,7 @@ pub struct Packet {
 }
 
 // SupplyOf query message definition.
-// symphony-std doesn't currently support the SupplyOf query, so I'm defining it localy so it can be used to obtain the channel value
+// osmosis-std doesn't currently support the SupplyOf query, so I'm defining it localy so it can be used to obtain the channel value
 #[derive(
     Clone,
     PartialEq,
@@ -71,7 +71,7 @@ pub struct QuerySupplyOfRequest {
 #[proto_message(type_url = "/cosmos.bank.v1beta1.QuerySupplyOf")]
 pub struct QuerySupplyOfResponse {
     #[prost(message, optional, tag = "1")]
-    pub amount: ::core::option::Option<symphony_std::types::cosmos::base::v1beta1::Coin>,
+    pub amount: ::core::option::Option<osmosis_std::types::cosmos::base::v1beta1::Coin>,
 }
 // End of SupplyOf query message definition
 
@@ -225,12 +225,12 @@ pub mod tests {
     #[test]
     fn send_native() {
         let packet = Packet::mock(
-            format!("channel-17-local"),
-            format!("channel-42-counterparty"),
-            format!("note"),
+            "channel-17-local".to_string(),
+            "channel-42-counterparty".to_string(),
+            "uosmo".to_string(),
             0_u128.into(),
         );
-        assert_eq!(packet.local_denom(&FlowType::Out), "note");
+        assert_eq!(packet.local_denom(&FlowType::Out), "uosmo");
     }
 
     #[test]
@@ -239,9 +239,9 @@ pub mod tests {
         // ibc/09E4864A262249507925831FBAD69DAD08F66FAAA0640714E765912A0751289A
         // to port/channel/denom before passing it along to the contrace
         let packet = Packet::mock(
-            format!("channel-17-local"),
-            format!("channel-42-counterparty"),
-            format!("transfer/channel-17-local/ujuno"),
+            "channel-17-local".to_string(),
+            "channel-42-counterparty".to_string(),
+            "transfer/channel-17-local/ujuno".to_string(),
             0_u128.into(),
         );
         assert_eq!(
@@ -254,9 +254,9 @@ pub mod tests {
     fn receive_non_native() {
         // The counterparty chain sends their own native token to us
         let packet = Packet::mock(
-            format!("channel-42-counterparty"), // The counterparty's channel is the source here
-            format!("channel-17-local"),        // Our channel is the dest channel
-            format!("ujuno"),                   // This is unwrapped. It is our job to wrap it
+            "channel-42-counterparty".to_string(), // The counterparty's channel is the source here
+            "channel-17-local".to_string(),        // Our channel is the dest channel
+            "ujuno".to_string(),                   // This is unwrapped. It is our job to wrap it
             0_u128.into(),
         );
         assert_eq!(
@@ -269,12 +269,12 @@ pub mod tests {
     fn receive_native() {
         // The counterparty chain sends us back our native token that they had wrapped
         let packet = Packet::mock(
-            format!("channel-42-counterparty"), // The counterparty's channel is the source here
-            format!("channel-17-local"),        // Our channel is the dest channel
-            format!("transfer/channel-42-counterparty/note"),
+            "channel-42-counterparty".to_string(), // The counterparty's channel is the source here
+            "channel-17-local".to_string(),        // Our channel is the dest channel
+            "transfer/channel-42-counterparty/uosmo".to_string(),
             0_u128.into(),
         );
-        assert_eq!(packet.local_denom(&FlowType::In), "note");
+        assert_eq!(packet.local_denom(&FlowType::In), "uosmo");
     }
 
     // Let's assume we have two chains A and B (local and counterparty) connected in the following way:
@@ -284,114 +284,114 @@ pub mod tests {
     // The following tests should pass
     //
 
-    const WRAPPED_MELODY_ON_HUB_TRACE: &str = "transfer/channel-141/note";
-    const WRAPPED_ATOM_ON_MELODYSIS_TRACE: &str = "transfer/channel-0/uatom";
-    const WRAPPED_ATOM_ON_MELODYSIS_HASH: &str =
+    const WRAPPED_OSMO_ON_HUB_TRACE: &str = "transfer/channel-141/uosmo";
+    const WRAPPED_ATOM_ON_OSMOSIS_TRACE: &str = "transfer/channel-0/uatom";
+    const WRAPPED_ATOM_ON_OSMOSIS_HASH: &str =
         "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2";
-    const WRAPPED_MELODY_ON_HUB_HASH: &str =
+    const WRAPPED_OSMO_ON_HUB_HASH: &str =
         "ibc/14F9BC3E44B8A9C1BE1FB08980FAB87034C9905EF17CF2F5008FC085218811CC";
 
     #[test]
     fn sanity_check() {
         // Examples using the official channels as of Nov 2022.
 
-        // uatom sent to symphony
+        // uatom sent to osmosis
         let packet = Packet::mock(
-            format!("channel-141"), // from: hub
-            format!("channel-0"),   // to: symphony
-            format!("uatom"),
+            "channel-141".to_string(), // from: hub
+            "channel-0".to_string(),   // to: osmosis
+            "uatom".to_string(),
             0_u128.into(),
         );
         assert_eq!(
             packet.local_denom(&FlowType::In),
-            WRAPPED_ATOM_ON_MELODYSIS_HASH.clone()
+            WRAPPED_ATOM_ON_OSMOSIS_HASH
         );
 
-        // uatom on symphony sent back to the hub
+        // uatom on osmosis sent back to the hub
         let packet = Packet::mock(
-            format!("channel-0"),                      // from: symphony
-            format!("channel-141"),                    // to: hub
-            WRAPPED_ATOM_ON_MELODYSIS_TRACE.to_string(), // unwrapped before reaching the contract
+            "channel-0".to_string(),                   // from: osmosis
+            "channel-141".to_string(),                 // to: hub
+            WRAPPED_ATOM_ON_OSMOSIS_TRACE.to_string(), // unwrapped before reaching the contract
             0_u128.into(),
         );
         assert_eq!(packet.local_denom(&FlowType::In), "uatom");
 
-        // melody sent to the hub
+        // osmo sent to the hub
         let packet = Packet::mock(
-            format!("channel-0"),   // from: symphony
-            format!("channel-141"), // to: hub
-            format!("note"),
+            "channel-0".to_string(),   // from: osmosis
+            "channel-141".to_string(), // to: hub
+            "uosmo".to_string(),
             0_u128.into(),
         );
-        assert_eq!(packet.local_denom(&FlowType::Out), "note");
+        assert_eq!(packet.local_denom(&FlowType::Out), "uosmo");
 
-        // melody on the hub sent back to symphony
+        // osmo on the hub sent back to osmosis
         // send
         let packet = Packet::mock(
-            format!("channel-141"),                // from: hub
-            format!("channel-0"),                  // to: symphony
-            WRAPPED_MELODY_ON_HUB_TRACE.to_string(), // unwrapped before reaching the contract
+            "channel-141".to_string(),             // from: hub
+            "channel-0".to_string(),               // to: osmosis
+            WRAPPED_OSMO_ON_HUB_TRACE.to_string(), // unwrapped before reaching the contract
             0_u128.into(),
         );
-        assert_eq!(packet.local_denom(&FlowType::Out), WRAPPED_MELODY_ON_HUB_HASH);
+        assert_eq!(packet.local_denom(&FlowType::Out), WRAPPED_OSMO_ON_HUB_HASH);
 
         // receive
         let packet = Packet::mock(
-            format!("channel-141"),                // from: hub
-            format!("channel-0"),                  // to: symphony
-            WRAPPED_MELODY_ON_HUB_TRACE.to_string(), // unwrapped before reaching the contract
+            "channel-141".to_string(),             // from: hub
+            "channel-0".to_string(),               // to: osmosis
+            WRAPPED_OSMO_ON_HUB_TRACE.to_string(), // unwrapped before reaching the contract
             0_u128.into(),
         );
-        assert_eq!(packet.local_denom(&FlowType::In), "note");
+        assert_eq!(packet.local_denom(&FlowType::In), "uosmo");
 
         // Now let's pretend we're the hub.
         // The following tests are from perspective of the the hub (i.e.: if this contract were deployed there)
         //
-        // melody sent to the hub
+        // osmo sent to the hub
         let packet = Packet::mock(
-            format!("channel-0"),   // from: symphony
-            format!("channel-141"), // to: hub
-            format!("note"),
+            "channel-0".to_string(),   // from: osmosis
+            "channel-141".to_string(), // to: hub
+            "uosmo".to_string(),
             0_u128.into(),
         );
-        assert_eq!(packet.local_denom(&FlowType::In), WRAPPED_MELODY_ON_HUB_HASH);
+        assert_eq!(packet.local_denom(&FlowType::In), WRAPPED_OSMO_ON_HUB_HASH);
 
-        // note on the hub sent back to the symphony
+        // uosmo on the hub sent back to the osmosis
         let packet = Packet::mock(
-            format!("channel-141"),                // from: hub
-            format!("channel-0"),                  // to: symphony
-            WRAPPED_MELODY_ON_HUB_TRACE.to_string(), // unwrapped before reaching the contract
+            "channel-141".to_string(),             // from: hub
+            "channel-0".to_string(),               // to: osmosis
+            WRAPPED_OSMO_ON_HUB_TRACE.to_string(), // unwrapped before reaching the contract
             0_u128.into(),
         );
-        assert_eq!(packet.local_denom(&FlowType::In), "note");
+        assert_eq!(packet.local_denom(&FlowType::In), "uosmo");
 
-        // uatom sent to symphony
+        // uatom sent to osmosis
         let packet = Packet::mock(
-            format!("channel-141"), // from: hub
-            format!("channel-0"),   // to: symphony
-            format!("uatom"),
+            "channel-141".to_string(), // from: hub
+            "channel-0".to_string(),   // to: osmosis
+            "uatom".to_string(),
             0_u128.into(),
         );
         assert_eq!(packet.local_denom(&FlowType::Out), "uatom");
 
-        // utaom on the symphony sent back to the hub
+        // utaom on the osmosis sent back to the hub
         // send
         let packet = Packet::mock(
-            format!("channel-0"),                      // from: symphony
-            format!("channel-141"),                    // to: hub
-            WRAPPED_ATOM_ON_MELODYSIS_TRACE.to_string(), // unwrapped before reaching the contract
+            "channel-0".to_string(),                   // from: osmosis
+            "channel-141".to_string(),                 // to: hub
+            WRAPPED_ATOM_ON_OSMOSIS_TRACE.to_string(), // unwrapped before reaching the contract
             0_u128.into(),
         );
         assert_eq!(
             packet.local_denom(&FlowType::Out),
-            WRAPPED_ATOM_ON_MELODYSIS_HASH
+            WRAPPED_ATOM_ON_OSMOSIS_HASH
         );
 
         // receive
         let packet = Packet::mock(
-            format!("channel-0"),                      // from: symphony
-            format!("channel-141"),                    // to: hub
-            WRAPPED_ATOM_ON_MELODYSIS_TRACE.to_string(), // unwrapped before reaching the contract
+            "channel-0".to_string(),                   // from: osmosis
+            "channel-141".to_string(),                 // to: hub
+            WRAPPED_ATOM_ON_OSMOSIS_TRACE.to_string(), // unwrapped before reaching the contract
             0_u128.into(),
         );
         assert_eq!(packet.local_denom(&FlowType::In), "uatom");
@@ -401,63 +401,63 @@ pub mod tests {
     fn sanity_double() {
         // Now let's deal with double wrapping
 
-        let juno_wrapped_symphony_wrapped_atom_hash =
+        let juno_wrapped_osmosis_wrapped_atom_hash =
             "ibc/6CDD4663F2F09CD62285E2D45891FC149A3568E316CE3EBBE201A71A78A69388";
 
-        // Send uatom on stored on symphony to juno
+        // Send uatom on stored on osmosis to juno
         // send
         let packet = Packet::mock(
-            format!("channel-42"),                     // from: symphony
-            format!("channel-0"),                      // to: juno
-            WRAPPED_ATOM_ON_MELODYSIS_TRACE.to_string(), // unwrapped before reaching the contract
+            "channel-42".to_string(),                  // from: osmosis
+            "channel-0".to_string(),                   // to: juno
+            WRAPPED_ATOM_ON_OSMOSIS_TRACE.to_string(), // unwrapped before reaching the contract
             0_u128.into(),
         );
         assert_eq!(
             packet.local_denom(&FlowType::Out),
-            WRAPPED_ATOM_ON_MELODYSIS_HASH
+            WRAPPED_ATOM_ON_OSMOSIS_HASH
         );
 
         // receive
         let packet = Packet::mock(
-            format!("channel-42"), // from: symphony
-            format!("channel-0"),  // to: juno
-            WRAPPED_ATOM_ON_MELODYSIS_TRACE.to_string(),
+            "channel-42".to_string(), // from: osmosis
+            "channel-0".to_string(),  // to: juno
+            WRAPPED_ATOM_ON_OSMOSIS_TRACE.to_string(),
             0_u128.into(),
         );
         assert_eq!(
             packet.local_denom(&FlowType::In),
-            juno_wrapped_symphony_wrapped_atom_hash
+            juno_wrapped_osmosis_wrapped_atom_hash
         );
 
-        // Send back that multi-wrapped token to symphony
+        // Send back that multi-wrapped token to osmosis
         // send
         let packet = Packet::mock(
-            format!("channel-0"),  // from: juno
-            format!("channel-42"), // to: symphony
-            format!("{}{}", "transfer/channel-0/", WRAPPED_ATOM_ON_MELODYSIS_TRACE), // unwrapped before reaching the contract
+            "channel-0".to_string(),  // from: juno
+            "channel-42".to_string(), // to: osmosis
+            format!("{}{}", "transfer/channel-0/", WRAPPED_ATOM_ON_OSMOSIS_TRACE), // unwrapped before reaching the contract
             0_u128.into(),
         );
         assert_eq!(
             packet.local_denom(&FlowType::Out),
-            juno_wrapped_symphony_wrapped_atom_hash
+            juno_wrapped_osmosis_wrapped_atom_hash
         );
 
         // receive
         let packet = Packet::mock(
-            format!("channel-0"),  // from: juno
-            format!("channel-42"), // to: symphony
-            format!("{}{}", "transfer/channel-0/", WRAPPED_ATOM_ON_MELODYSIS_TRACE), // unwrapped before reaching the contract
+            "channel-0".to_string(),  // from: juno
+            "channel-42".to_string(), // to: osmosis
+            format!("{}{}", "transfer/channel-0/", WRAPPED_ATOM_ON_OSMOSIS_TRACE), // unwrapped before reaching the contract
             0_u128.into(),
         );
         assert_eq!(
             packet.local_denom(&FlowType::In),
-            WRAPPED_ATOM_ON_MELODYSIS_HASH
+            WRAPPED_ATOM_ON_OSMOSIS_HASH
         );
     }
 
     #[test]
     fn tokenfactory_packet() {
-        let json = r#"{"send_packet":{"packet":{"sequence":4,"source_port":"transfer","source_channel":"channel-0","destination_port":"transfer","destination_channel":"channel-1491","data":{"denom":"transfer/channel-0/factory/symphony1p7mp7r9f9f6sf2c95ht42ncm6ga96ha8xghdeg/czar","amount":"100000000000000000","sender":"symphony1jpr5824frn5472qm73ckfe2c3rh6vrn4lvlgj7","receiver":"symphony1p822vyk8ylf3hpwh9qgv6p6dft7hedntyqyw7w"},"timeout_height":{},"timeout_timestamp":1668024476848430980}}}"#;
+        let json = r#"{"send_packet":{"packet":{"sequence":4,"source_port":"transfer","source_channel":"channel-0","destination_port":"transfer","destination_channel":"channel-1491","data":{"denom":"transfer/channel-0/factory/osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj/czar","amount":"100000000000000000","sender":"osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks","receiver":"osmo1c584m4lq25h83yp6ag8hh4htjr92d954vklzja"},"timeout_height":{},"timeout_timestamp":1668024476848430980}}}"#;
         let parsed: SudoMsg = serde_json_wasm::from_str(json).unwrap();
         //println!("{parsed:?}");
 

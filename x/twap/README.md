@@ -130,7 +130,7 @@ Example of historical TWAP pool indexed records for a pool containing 3 assets.
   historical_pool_index|1|denomA|denomC|2009-11-10T23:00:00.000000000
   historical_pool_index|1|denomB|denomC|2009-11-10T23:00:00.000000000
 
-Each twap record stores [(source)](../../proto/osmosis/twap/v1beta1/twap_record.proto):
+Each twap record stores [(source)](../../proto/symphony/twap/v1beta1/twap_record.proto):
 
 * last spot price of base asset A in terms of quote asset B
 * last spot price of base asset B in terms of quote asset A

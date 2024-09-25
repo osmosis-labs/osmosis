@@ -8,11 +8,12 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v23/app/apptesting"
-	incentiveskeeper "github.com/osmosis-labs/osmosis/v23/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v23/x/incentives/types"
-	poolincentivetypes "github.com/osmosis-labs/osmosis/v23/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v23/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	incentiveskeeper "github.com/osmosis-labs/osmosis/v26/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/incentives/types"
+	poolincentivetypes "github.com/osmosis-labs/osmosis/v26/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 type createGroupTestCase struct {
@@ -121,7 +122,7 @@ var (
 				numEpochPaidOver:    types.PerpetualNumEpochsPaidOver,
 				poolIDs:             []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID},
 				poolVolumesToSet:    []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount},
-				expectErr:           fmt.Errorf("spendable balance  is smaller than %s: insufficient funds", defaultCoins),
+				expectErr:           fmt.Errorf("spendable balance 0%s is smaller than %s: insufficient funds", appparams.BaseCoinUnit, defaultCoins),
 			},
 			{
 				name:                "error: owner does not have enough funds to pay creation fee",
@@ -130,7 +131,7 @@ var (
 				numEpochPaidOver:    types.PerpetualNumEpochsPaidOver,
 				poolIDs:             []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID},
 				poolVolumesToSet:    []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount},
-				expectErr:           fmt.Errorf("spendable balance  is smaller than %s: insufficient funds", customGroupCreationFee),
+				expectErr:           fmt.Errorf("spendable balance 0%s is smaller than %s: insufficient funds", feeDenom, customGroupCreationFee),
 			},
 			{
 				name:             "error: duplicate pool IDs",
@@ -220,7 +221,7 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 			)
 
 			// Set a custom creation fee to avoid test balances having false positives
-			// due to having MELODY added during test setup
+			// due to having OSMO added during test setup
 			s.App.IncentivesKeeper.SetParam(s.Ctx, types.KeyGroupCreationFee, customGroupCreationFee)
 
 			// Fund fee once to a specific test account

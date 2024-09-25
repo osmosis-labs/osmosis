@@ -2,12 +2,13 @@ package oracle
 
 import (
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmomath"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/keeper"
 
-	"github.com/osmosis-labs/osmosis/v23/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
 )
 
 // InitGenesis initialize default parameters
@@ -92,7 +93,7 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 	})
 
 	exchangeRates := []types.ExchangeRateTuple{}
-	keeper.IterateNoteExchangeRates(ctx, func(denom string, rate sdk.Dec) (stop bool) {
+	keeper.IterateNoteExchangeRates(ctx, func(denom string, rate osmomath.Dec) (stop bool) {
 		exchangeRates = append(exchangeRates, types.ExchangeRateTuple{Denom: denom, ExchangeRate: rate})
 		return false
 	})
@@ -119,7 +120,7 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 	})
 
 	tobinTaxes := []types.TobinTax{}
-	keeper.IterateTobinTaxes(ctx, func(denom string, tobinTax sdk.Dec) (stop bool) {
+	keeper.IterateTobinTaxes(ctx, func(denom string, tobinTax osmomath.Dec) (stop bool) {
 		tobinTaxes = append(tobinTaxes, types.TobinTax{Denom: denom, TobinTax: tobinTax})
 		return false
 	})
