@@ -28,31 +28,6 @@ func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string
 	// use a constant spread for all swaps which will result in 0.25% swap fees paid
 	spread := osmomath.NewDecWithPrec(25, 4) // 0.25%
 
-	// Symphony => Symphony swap
-	// Apply only tobin tax without constant product spread
-	// TODO: yurii: revisit stable => stable swaps, apply tobix tax if needed.
-	//if offerCoin.Denom != appParams.BaseCoinUnit && askDenom != appParams.BaseCoinUnit {
-	//	var tobinTax osmomath.Dec
-	//	offerTobinTax, err2 := k.OracleKeeper.GetTobinTax(ctx, offerCoin.Denom)
-	//	if err2 != nil {
-	//		return sdk.DecCoin{}, osmomath.Dec{}, err2
-	//	}
-	//
-	//	askTobinTax, err2 := k.OracleKeeper.GetTobinTax(ctx, askDenom)
-	//	if err2 != nil {
-	//		return sdk.DecCoin{}, osmomath.Dec{}, err2
-	//	}
-	//
-	//	// Apply highest tobin tax for the denoms in the swap operation
-	//	if askTobinTax.GT(offerTobinTax) {
-	//		tobinTax = askTobinTax
-	//	} else {
-	//		tobinTax = offerTobinTax
-	//	}
-	//
-	//	spread := tobinTax
-	//	return retDecCoin, spread, nil
-	//}
 	return retDecCoin, spread, nil
 }
 
