@@ -1,9 +1,10 @@
 package keeper
 
 import (
-	"github.com/osmosis-labs/osmosis/v23/ante"
+	errorsmod "cosmossdk.io/errors"
+	"github.com/osmosis-labs/osmosis/v26/ante"
 
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,11 +37,14 @@ type SDKMessageHandler struct {
 	bankKeeper     bankKeeper.Keeper
 }
 
+var _ wasmkeeper.Messenger = SDKMessageHandler{}
+
 func NewMessageHandler(
 	router MessageRouter,
 	ics4Wrapper wasmtypes.ICS4Wrapper,
 	channelKeeper wasmtypes.ChannelKeeper,
 	capabilityKeeper wasmtypes.CapabilityKeeper,
+	wasmKeeper wasmtypes.IBCContractKeeper,
 	bankKeeper bankKeeper.Keeper,
 	treasuryKeeper ante.TreasuryKeeper,
 	accountKeeper authkeeper.AccountKeeper,
@@ -54,7 +58,7 @@ func NewMessageHandler(
 	}
 	return wasmkeeper.NewMessageHandlerChain(
 		NewSDKMessageHandler(router, encoders, treasuryKeeper, accountKeeper, bankKeeper),
-		wasmkeeper.NewIBCRawPacketHandler(ics4Wrapper, channelKeeper, capabilityKeeper),
+		wasmkeeper.NewIBCRawPacketHandler(ics4Wrapper, wasmKeeper, channelKeeper, capabilityKeeper),
 		wasmkeeper.NewBurnCoinMessageHandler(bankKeeper),
 	)
 }
@@ -69,10 +73,20 @@ func NewSDKMessageHandler(router MessageRouter, encoders msgEncoder, treasuryKee
 	}
 }
 
-func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, contractIBCPortID string, msg wasmvmtypes.CosmosMsg) (events []sdk.Event, data [][]byte, err error) {
+func (h SDKMessageHandler) DispatchMsg(
+	ctx sdk.Context,
+	contractAddr sdk.AccAddress,
+	contractIBCPortID string,
+	msg wasmvmtypes.CosmosMsg,
+) (
+	events []sdk.Event,
+	data [][]byte,
+	msgResponses [][]*codectypes.Any,
+	err error,
+) {
 	sdkMsgs, err := h.encoders.Encode(ctx, contractAddr, contractIBCPortID, msg)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	for _, sdkMsg := range sdkMsgs {
@@ -82,7 +96,7 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 			eventManager := sdk.NewEventManager()
 			contractAcc := h.accountKeeper.GetAccount(ctx, contractAddr)
 			if err := cosmosante.DeductFees(h.bankKeeper, ctx.WithEventManager(eventManager), contractAcc, taxes); err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			}
 
 			events = eventManager.Events()
@@ -90,7 +104,7 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 
 		res, err := h.handleSdkMessage(ctx, contractAddr, sdkMsg)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		// append data
 		data = append(data, res.Data)
@@ -101,19 +115,22 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 		}
 		events = append(events, sdkEvents...)
 	}
-	return events, data, nil
+	return events, data, nil, nil
 }
 
 func (h SDKMessageHandler) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Address, msg sdk.Msg) (*sdk.Result, error) {
-	if err := msg.ValidateBasic(); err != nil {
-		return nil, err
-	}
-	// make sure this account can send it
-	for _, acct := range msg.GetSigners() {
-		if !acct.Equals(contractAddr) {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "contract doesn't have permission")
+	if hasValidateBasic, ok := msg.(sdk.HasValidateBasic); ok {
+		if err := hasValidateBasic.ValidateBasic(); err != nil {
+			return nil, err
 		}
 	}
+
+	//// make sure this account can send it
+	//for _, acct := range msg.GetSigners() {
+	//	if !acct.Equals(contractAddr) {
+	//		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "contract doesn't have permission")
+	//	}
+	//}
 
 	// find the handler and execute it
 	if handler := h.router.Handler(msg); handler != nil {
@@ -126,5 +143,5 @@ func (h SDKMessageHandler) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Ad
 	// proto messages and has registered all `Msg services`, then this
 	// path should never be called, because all those Msgs should be
 	// registered within the `msgServiceRouter` already.
-	return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
+	return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
 }

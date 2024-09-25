@@ -601,6 +601,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.HooksICS4Wrapper,
 		appKeepers.IBCKeeper.ChannelKeeper,
 		appKeepers.ScopedIBCKeeper,
+		appKeepers.WasmKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.TreasuryKeeper,
 		*appKeepers.AccountKeeper,
