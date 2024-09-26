@@ -4,7 +4,6 @@ package osmosis.gamm.v1beta1;
 import "gogoproto/gogo.proto";
 import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "osmosis/gamm/v1beta1/balancerPool.proto";
 import "osmosis/poolmanager/v1beta1/swap_route.proto";
 import "cosmos/msg/v1/msg.proto";
 
@@ -25,23 +24,6 @@ service Msg {
       returns (MsgExitSwapExternAmountOutResponse);
   rpc ExitSwapShareAmountIn(MsgExitSwapShareAmountIn)
       returns (MsgExitSwapShareAmountInResponse);
-}
-
-// ===================== MsgCreatePool
-// This is not used anymore, but must be retained in the file to allow indexers
-// to index blocks since genesis
-message MsgCreatePool {
-  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-
-  PoolParams poolParams = 2 [
-    (gogoproto.moretags) = "yaml:\"pool_params\"",
-    (gogoproto.nullable) = false
-  ];
-
-  repeated PoolAsset poolAssets = 3 [ (gogoproto.nullable) = false ];
-
-  string future_pool_governor = 4
-      [ (gogoproto.moretags) = "yaml:\"future_pool_governor\"" ];
 }
 
 // ===================== MsgJoinPool
@@ -284,19 +266,4 @@ message MsgExitSwapExternAmountOutResponse {
     (gogoproto.moretags) = "yaml:\"share_in_amount\"",
     (gogoproto.nullable) = false
   ];
-}
-
-// This is not used anymore, but must be retained in the file to allow indexers
-// to index blocks since genesis
-message MsgCreateBalancerPool {
-  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-
-  osmosis.gamm.v1beta1.PoolParams pool_params = 2
-      [ (gogoproto.moretags) = "yaml:\"pool_params\"" ];
-
-  repeated osmosis.gamm.v1beta1.PoolAsset pool_assets = 3
-      [ (gogoproto.nullable) = false ];
-
-  string future_pool_governor = 4
-      [ (gogoproto.moretags) = "yaml:\"future_pool_governor\"" ];
 }

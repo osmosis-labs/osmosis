@@ -42,10 +42,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-### Bug Fixes
-
-* [#8600](https://github.com/osmosis-labs/osmosis/pull/8600) Add missing protobuf definitions to be able to decode old block messages
-
 ### State Breaking
 
 * [#8682](https://github.com/osmosis-labs/osmosis/pull/8682) chore: bump cosmwasm-optimizer
@@ -56,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### State Compatible
 
 * [#8563](https://github.com/osmosis-labs/osmosis/pull/8563) Add additional queries in x/gauges
+* [#8726](https://github.com/osmosis-labs/osmosis/pull/8726) fix: multiple temp directories on command executions
 
 ## v26.0.0
 
