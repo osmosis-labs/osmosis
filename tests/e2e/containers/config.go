@@ -27,7 +27,7 @@ const (
 	previousVersionOsmoTag        = "26.0.0-alpine"
 	// Pre-upgrade repo/tag for osmosis initialization (this should be one version below upgradeVersion)
 	previousVersionInitRepository = "osmolabs/osmosis-e2e-init-chain"
-	previousVersionInitTag        = "26.0.0"
+	previousVersionInitTag        = "main-edaa9483-1727355809"
 	// Hermes repo/version for relayer
 	relayerRepository = "osmolabs/relayer"
 	relayerTag        = "1.5.1"
