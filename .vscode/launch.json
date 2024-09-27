@@ -47,7 +47,7 @@
                 "OSMOSIS_E2E_SKIP_UPGRADE": "false",
                 "OSMOSIS_E2E_SKIP_CLEANUP": "true",
                 "OSMOSIS_E2E_SKIP_STATE_SYNC": "true",
-                "OSMOSIS_E2E_UPGRADE_VERSION": "v26",
+                "OSMOSIS_E2E_UPGRADE_VERSION": "v27",
                 "OSMOSIS_E2E_DEBUG_LOG": "false",
             },
             "preLaunchTask": "e2e-setup"
