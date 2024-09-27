@@ -2,6 +2,7 @@ syntax = "proto3";
 package symphony.oracle.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v26/x/oracle/types";
 
@@ -27,6 +28,7 @@ service Msg {
 message MsgAggregateExchangeRatePrevote {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
+  option (cosmos.msg.v1.signer) = "feeder";
 
   string hash = 1 [ (gogoproto.moretags) = "yaml:\"hash\"" ];
   string feeder = 2 [ (gogoproto.moretags) = "yaml:\"feeder\"" ];
@@ -42,6 +44,7 @@ message MsgAggregateExchangeRatePrevoteResponse {}
 message MsgAggregateExchangeRateVote {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
+  option (cosmos.msg.v1.signer) = "feeder";
 
   string salt = 1 [ (gogoproto.moretags) = "yaml:\"salt\"" ];
   string exchange_rates = 2
@@ -59,6 +62,7 @@ message MsgAggregateExchangeRateVoteResponse {}
 message MsgDelegateFeedConsent {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
+  option (cosmos.msg.v1.signer) = "operator";
 
   string operator = 1 [ (gogoproto.moretags) = "yaml:\"operator\"" ];
   string delegate = 2 [ (gogoproto.moretags) = "yaml:\"delegate\"" ];

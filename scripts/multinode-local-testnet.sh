@@ -80,9 +80,6 @@ update_genesis '.app_state["mint"]["params"]["epoch_identifier"]="day"'
 update_genesis '.app_state["txfees"]["basedenom"]="note"'
 
 # update oracle genesis by adding test tokens to whitelist
-update_genesis '.app_state["oracle"]["params"]["whitelist"][0]["name"]="note"'
-update_genesis '.app_state["oracle"]["params"]["whitelist"][0]["tobin_tax"]="0.0"'
-
 update_genesis '.app_state["oracle"]["params"]["whitelist"][0]["name"]="peppe"'
 update_genesis '.app_state["oracle"]["params"]["whitelist"][0]["tobin_tax"]="0.0"'
 

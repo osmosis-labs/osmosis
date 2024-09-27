@@ -95,8 +95,8 @@ service Query {
   rpc SuperfluidDelegationsByValidatorDenom(
       SuperfluidDelegationsByValidatorDenomRequest)
       returns (SuperfluidDelegationsByValidatorDenomResponse) {
-    option (google.api.http).get =
-        "/symphony/superfluid/v1beta1/superfluid_delegations_by_validator_denom";
+    option (google.api.http).get = "/symphony/superfluid/v1beta1/"
+                                   "superfluid_delegations_by_validator_denom";
   }
 
   // Returns the amount of a specific denom delegated to a specific validator

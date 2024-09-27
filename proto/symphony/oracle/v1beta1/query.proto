@@ -32,7 +32,8 @@ service Query {
 
   // TobinTaxes returns tobin taxes of all denoms
   rpc TobinTaxes(QueryTobinTaxesRequest) returns (QueryTobinTaxesResponse) {
-    option (google.api.http).get = "/symphony/oracle/v1beta1/denoms/tobin_taxes";
+    option (google.api.http).get =
+        "/symphony/oracle/v1beta1/denoms/tobin_taxes";
   }
 
   // Actives returns all active denoms
@@ -62,8 +63,8 @@ service Query {
   // AggregatePrevote returns an aggregate prevote of a validator
   rpc AggregatePrevote(QueryAggregatePrevoteRequest)
       returns (QueryAggregatePrevoteResponse) {
-    option (google.api.http).get =
-        "/symphony/oracle/v1beta1/validators/{validator_addr}/aggregate_prevote";
+    option (google.api.http).get = "/symphony/oracle/v1beta1/validators/"
+                                   "{validator_addr}/aggregate_prevote";
   }
 
   // AggregatePrevotes returns aggregate prevotes of all validators

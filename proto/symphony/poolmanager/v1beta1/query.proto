@@ -56,8 +56,8 @@ service Query {
   // Estimates swap amount in given out.
   rpc EstimateSwapExactAmountOut(EstimateSwapExactAmountOutRequest)
       returns (EstimateSwapExactAmountOutResponse) {
-    option (google.api.http).get =
-        "/symphony/poolmanager/v1beta1/{pool_id}/estimate/swap_exact_amount_out";
+    option (google.api.http).get = "/symphony/poolmanager/v1beta1/{pool_id}/"
+                                   "estimate/swap_exact_amount_out";
   }
 
   // Estimates swap amount in given out.
