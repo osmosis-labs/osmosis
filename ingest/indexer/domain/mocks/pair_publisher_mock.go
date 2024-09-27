@@ -12,22 +12,22 @@ var _ indexerdomain.PairPublisher = &MockPairPublisher{}
 
 // MockPairPublisher is a mock implementation of the PairPublisherI interface.
 type MockPairPublisher struct {
-	PublishPoolPairsError    error
-	PublishPoolPairsCalled   bool
-	CalledWithPools          []poolmanagertypes.PoolI
-	CalledWithCreatedPoolIDs map[uint64]commondomain.PoolCreation
-	NumPoolsPublished        int
-	NumPoolsWithCreationData int
+	PublishPoolPairsError       error
+	PublishPoolPairsCalled      bool
+	CalledWithPools             []poolmanagertypes.PoolI
+	CalledWithCreatedPoolIDs    map[uint64]commondomain.PoolCreation
+	NumPoolPairPublished        int
+	NumPoolPairWithCreationData int
 }
 
 func (m *MockPairPublisher) PublishPoolPairs(ctx sdk.Context, pools []poolmanagertypes.PoolI, createdPoolIDs map[uint64]commondomain.PoolCreation) error {
 	m.PublishPoolPairsCalled = true
 	m.CalledWithPools = pools
 	m.CalledWithCreatedPoolIDs = createdPoolIDs
-	m.NumPoolsPublished += len(pools)
+	m.NumPoolPairPublished += len(pools)
 	for _, pool := range pools {
 		if _, ok := createdPoolIDs[pool.GetId()]; ok {
-			m.NumPoolsWithCreationData++
+			m.NumPoolPairWithCreationData++
 		}
 	}
 	return m.PublishPoolPairsError

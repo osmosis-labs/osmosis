@@ -142,13 +142,13 @@ func (s *BlockUpdateIndexerBlockProcessStrategyTestSuite) TestPublishCreatedPool
 			// Check that the pair publisher is called correctly
 			s.Require().Equal(test.expectedPublishPoolPairsCalled, pairPublisherMock.PublishPoolPairsCalled)
 			if test.expectedPublishPoolPairsCalled {
-				// Check that the number of pools published 
-				s.Require().Equal(test.expectedNumPoolsPublished, pairPublisherMock.NumPoolsPublished)
+				// Check that the number of pools published
+				s.Require().Equal(test.expectedNumPoolsPublished, pairPublisherMock.NumPoolPairPublished)
 				// Check that the pools and created pool IDs are set correctly
 				s.Require().Equal(blockPools.GetAll(), pairPublisherMock.CalledWithPools)
 				s.Require().Equal(test.createdPoolIDs, pairPublisherMock.CalledWithCreatedPoolIDs)
-				// Check that the number of pools with creation data 
-				s.Require().Equal(test.expectedNumPoolsWithCreationData, pairPublisherMock.NumPoolsWithCreationData)
+				// Check that the number of pools with creation data
+				s.Require().Equal(test.expectedNumPoolsWithCreationData, pairPublisherMock.NumPoolPairWithCreationData)
 			}
 		})
 	}
