@@ -31,7 +31,7 @@ func TestBlockUpdateIndexerBlockProcessStrategyTestSuite(t *testing.T) {
 	suite.Run(t, new(BlockUpdateIndexerBlockProcessStrategyTestSuite))
 }
 
-func (s *BlockUpdateIndexerBlockProcessStrategyTestSuite) TestProcessBlock() {
+func (s *BlockUpdateIndexerBlockProcessStrategyTestSuite) TestPublishCreatedPools() {
 	tests := []struct {
 		name                             string
 		createdPoolIDs                   map[uint64]commondomain.PoolCreation
@@ -136,13 +136,20 @@ func (s *BlockUpdateIndexerBlockProcessStrategyTestSuite) TestProcessBlock() {
 
 			bprocess := blockprocessor.NewBlockUpdatesIndexerBlockProcessStrategy(blockUpdatesProcessUtilsMock, publisherMock, poolsExtracter, pairPublisherMock)
 
-			err = bprocess.ProcessBlock(s.Ctx)
+			err = bprocess.PublishCreatedPools(s.Ctx)
 			s.Require().NoError(err)
 
+			// Check that the pair publisher is called correctly
 			s.Require().Equal(test.expectedPublishPoolPairsCalled, pairPublisherMock.PublishPoolPairsCalled)
-			s.Require().Equal(test.expectedNumPoolsPublished, pairPublisherMock.NumPoolsPublished)
-			s.Require().Equal(test.expectedNumPoolsWithCreationData, pairPublisherMock.NumPoolsWithCreationData)
-
+			if test.expectedPublishPoolPairsCalled {
+				// Check that the number of pools published 
+				s.Require().Equal(test.expectedNumPoolsPublished, pairPublisherMock.NumPoolsPublished)
+				// Check that the pools and created pool IDs are set correctly
+				s.Require().Equal(blockPools.GetAll(), pairPublisherMock.CalledWithPools)
+				s.Require().Equal(test.createdPoolIDs, pairPublisherMock.CalledWithCreatedPoolIDs)
+				// Check that the number of pools with creation data 
+				s.Require().Equal(test.expectedNumPoolsWithCreationData, pairPublisherMock.NumPoolsWithCreationData)
+			}
 		})
 	}
 }
