@@ -359,6 +359,14 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 	tempDir := tempDir()
 	tempApp := osmosis.NewOsmosisApp(log.NewNopLogger(), cosmosdb.NewMemDB(), nil, true, map[int64]bool{}, tempDir, 5, sims.EmptyAppOptions{}, osmosis.EmptyWasmOpts, baseapp.SetChainID("osmosis-1"))
+	defer func() {
+		if err := tempApp.Close(); err != nil {
+			panic(err)
+		}
+		if tempDir != osmosis.DefaultNodeHome {
+			os.RemoveAll(tempDir)
+		}
+	}()
 
 	// Allows you to add extra params to your client.toml
 	// gas, gas-price, gas-adjustment, and human-readable-denoms
@@ -501,7 +509,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 func tempDir() string {
 	dir, err := os.MkdirTemp("", "osmosisd")
 	if err != nil {
-		dir = osmosis.DefaultNodeHome
+		panic(fmt.Sprintf("failed creating temp directory: %s", err.Error()))
 	}
 	defer os.RemoveAll(dir)
 
