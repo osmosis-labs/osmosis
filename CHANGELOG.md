@@ -54,6 +54,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8563](https://github.com/osmosis-labs/osmosis/pull/8563) Add additional queries in x/gauges
 * [#8726](https://github.com/osmosis-labs/osmosis/pull/8726) fix: multiple temp directories on command executions
 
+### State Machine Breaking
+
+* [#8732](https://github.com/osmosis-labs/osmosis/pull/8732) fix: iterate delegations continue instead of erroring
+
 ## v26.0.0
 
 ### State Breaking
