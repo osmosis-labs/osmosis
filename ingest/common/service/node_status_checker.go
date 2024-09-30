@@ -3,18 +3,23 @@ package service
 import (
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/osmosis-labs/osmosis/v26/ingest/sqs/domain"
 )
+
+type NodeStatusChecker interface {
+	// IsNodeSyncing checks if the node is syncing.
+	// Returns true if the node is syncing, false otherwise.
+	// Returns error if the node syncing status cannot be determined.
+	IsNodeSyncing(ctx sdk.Context) (bool, error)
+}
 
 type nodeStatusChecker struct {
 	// example format: tcp://localhost:26657
 	address string
 }
 
-var _ domain.NodeStatusChecker = (*nodeStatusChecker)(nil)
+var _ NodeStatusChecker = (*nodeStatusChecker)(nil)
 
-func NewNodeStatusChecker(address string) domain.NodeStatusChecker {
+func NewNodeStatusChecker(address string) NodeStatusChecker {
 	return &nodeStatusChecker{
 		address: address,
 	}

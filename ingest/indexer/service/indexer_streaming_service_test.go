@@ -25,6 +25,7 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 
 	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
+	commonmocks "github.com/osmosis-labs/osmosis/v26/ingest/common/domain/mocks"
 	"github.com/osmosis-labs/osmosis/v26/ingest/common/pooltracker"
 )
 
@@ -178,6 +179,9 @@ func (s *IndexerServiceTestSuite) TestAdjustTokenInAmountBySpreadFactor() {
 			// Initialize a mock publisher
 			publisherMock := &indexermocks.PublisherMock{}
 
+			// Initialize the node status checker mock
+			nodeStatusCheckerMock := &commonmocks.NodeStatusCheckerMock{}
+
 			indexerStreamingService := indexerservice.New(
 				blockUpdatesProcessUtilsMock,
 				blockProcessStrategyManager,
@@ -187,6 +191,7 @@ func (s *IndexerServiceTestSuite) TestAdjustTokenInAmountBySpreadFactor() {
 				emptyPoolTracker,
 				keepers,
 				txDecoder,
+				nodeStatusCheckerMock,
 				logger)
 
 			// Create the event based on the test cases attributes
@@ -365,6 +370,9 @@ func (s *IndexerServiceTestSuite) TestAddTokenLiquidity() {
 			// Initialize a mock publisher
 			publisherMock := &indexermocks.PublisherMock{}
 
+			// Initialize the node status checker mock
+			nodeStatusCheckerMock := &commonmocks.NodeStatusCheckerMock{}
+
 			// Initialize an indexer streaming service
 			indexerStreamingService := indexerservice.New(
 				blockUpdatesProcessUtilsMock,
@@ -375,6 +383,7 @@ func (s *IndexerServiceTestSuite) TestAddTokenLiquidity() {
 				emptyPoolTracker,
 				keepers,
 				txDecoder,
+				nodeStatusCheckerMock,
 				logger)
 
 			// Create the event based on the test cases attributes
@@ -561,6 +570,9 @@ func (s *IndexerServiceTestSuite) TestTrackCreatedPoolID() {
 			// Initialize a mock publisher
 			publisherMock := &indexermocks.PublisherMock{}
 
+			// Initialize the node status checker mock
+			nodeStatusCheckerMock := &commonmocks.NodeStatusCheckerMock{}
+
 			// Initialize an indexer streaming service
 			indexerStreamingService := indexerservice.New(
 				blockUpdatesProcessUtilsMock,
@@ -571,6 +583,7 @@ func (s *IndexerServiceTestSuite) TestTrackCreatedPoolID() {
 				poolTracker,
 				keepers,
 				txDecoder,
+				nodeStatusCheckerMock,
 				logger)
 
 			// Create the event based on the test cases attributes

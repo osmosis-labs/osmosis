@@ -64,6 +64,7 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
 
 	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
+	commonservice "github.com/osmosis-labs/osmosis/v26/ingest/common/service"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 
@@ -378,7 +379,7 @@ func NewOsmosisApp(
 		if !ok {
 			panic(fmt.Sprintf("failed to retrieve %s from config.toml", rpcAddressConfigName))
 		}
-		nodeStatusChecker := sqsservice.NewNodeStatusChecker(rpcAddress)
+		nodeStatusChecker := commonservice.NewNodeStatusChecker(rpcAddress)
 
 		// Create the SQS streaming service by setting up the write listeners,
 		// the SQS ingester, and the pool tracker.
@@ -428,12 +429,17 @@ func NewOsmosisApp(
 		}
 
 		// Create the indexer streaming service.
+		rpcAddress, ok := appOpts.Get(rpcAddressConfigName).(string)
+		if !ok {
+			panic(fmt.Sprintf("failed to retrieve %s from config.toml", rpcAddressConfigName))
+		}
+		nodeStatusChecker := commonservice.NewNodeStatusChecker(rpcAddress)
 		blockUpdatesProcessUtils := &commondomain.BlockUpdateProcessUtils{
 			WriteListeners: writeListeners,
 			StoreKeyMap:    storeKeyMap,
 		}
 		poolExtractor := poolextractor.New(poolKeepers, poolTracker)
-		indexerStreamingService := indexerservice.New(blockUpdatesProcessUtils, blockProcessStrategyManager, indexerPublisher, storeKeyMap, poolExtractor, poolTracker, keepers, app.GetTxConfig().TxDecoder(), logger)
+		indexerStreamingService := indexerservice.New(blockUpdatesProcessUtils, blockProcessStrategyManager, indexerPublisher, storeKeyMap, poolExtractor, poolTracker, keepers, app.GetTxConfig().TxDecoder(), nodeStatusChecker, logger)
 
 		// Register the SQS streaming service with the app.
 		streamingServices = append(streamingServices, indexerStreamingService)

@@ -3,7 +3,7 @@ package mocks
 import (
 	"github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v26/ingest/sqs/domain"
+	commonservice "github.com/osmosis-labs/osmosis/v26/ingest/common/service"
 )
 
 // NodeStatusCheckerMock is a mock implementation of domain.NodeStatusChecker.
@@ -16,7 +16,7 @@ type NodeStatusCheckerMock struct {
 	IsNodeSyncingCalled bool
 }
 
-var _ domain.NodeStatusChecker = (*NodeStatusCheckerMock)(nil)
+var _ commonservice.NodeStatusChecker = (*NodeStatusCheckerMock)(nil)
 
 // IsNodeSyncing implements domain.NodeStatusChecker.
 func (n *NodeStatusCheckerMock) IsNodeSyncing(ctx types.Context) (bool, error) {

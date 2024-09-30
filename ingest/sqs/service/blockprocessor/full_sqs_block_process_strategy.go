@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/go-metrics"
 
 	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
+	commonservice "github.com/osmosis-labs/osmosis/v26/ingest/common/service"
 	"github.com/osmosis-labs/osmosis/v26/ingest/sqs/domain"
 )
 
@@ -17,7 +18,7 @@ type fullSQSBlockProcessStrategy struct {
 	poolExtractor    commondomain.PoolExtractor
 	poolsTransformer domain.PoolsTransformer
 
-	nodeStatusChecker domain.NodeStatusChecker
+	nodeStatusChecker commonservice.NodeStatusChecker
 
 	transformAndLoadFunc transformAndLoadFunc
 }
@@ -38,10 +39,10 @@ func (f *fullSQSBlockProcessStrategy) ProcessBlock(ctx sdk.Context) (err error) 
 			{Name: "err", Value: err.Error()},
 			{Name: "height", Value: fmt.Sprintf("%d", ctx.BlockHeight())},
 		})
-		return &domain.NodeSyncCheckError{Err: err}
+		return &commondomain.NodeSyncCheckError{Err: err}
 	}
 	if isNodesyncing {
-		return domain.ErrNodeIsSyncing
+		return commondomain.ErrNodeIsSyncing
 	}
 
 	pools, _, err := f.poolExtractor.ExtractAll(ctx)

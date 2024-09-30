@@ -15,6 +15,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v26/ingest/sqs/service"
 
 	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
+	commonmocks "github.com/osmosis-labs/osmosis/v26/ingest/common/domain/mocks"
 	"github.com/osmosis-labs/osmosis/v26/ingest/common/pooltracker"
 )
 
@@ -109,7 +110,7 @@ func (s *SQSServiceTestSuite) TestProcessBlockRecoverError() {
 			}
 
 			// Initialize the mocks that are not relevant to the test
-			nodeStatusCheckerMock := &mocks.NodeStatusCheckerMock{}
+			nodeStatusCheckerMock := &commonmocks.NodeStatusCheckerMock{}
 
 			poolTracker := pooltracker.NewMemory()
 			// Add some pools to the tracker.

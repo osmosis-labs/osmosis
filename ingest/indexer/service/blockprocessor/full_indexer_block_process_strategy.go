@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
+	commonservice "github.com/osmosis-labs/osmosis/v26/ingest/common/service"
 	"github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain"
 )
 
@@ -14,6 +15,7 @@ type fullIndexerBlockProcessStrategy struct {
 	keepers           domain.Keepers
 	poolExtractor     commondomain.PoolExtractor
 	poolPairPublisher domain.PairPublisher
+	nodeStatusChecker commonservice.NodeStatusChecker
 }
 
 var _ commondomain.BlockProcessor = &fullIndexerBlockProcessStrategy{}
@@ -25,6 +27,15 @@ func (f *fullIndexerBlockProcessStrategy) IsFullBlockProcessor() bool {
 
 // ProcessBlock implements commondomain.BlockProcessStrategy.
 func (f *fullIndexerBlockProcessStrategy) ProcessBlock(ctx sdk.Context) (err error) {
+	// Detect syncing
+	isNodesyncing, err := f.nodeStatusChecker.IsNodeSyncing(ctx)
+	if err != nil {
+		return &commondomain.NodeSyncCheckError{Err: err}
+	}
+	if isNodesyncing {
+		return commondomain.ErrNodeIsSyncing
+	}
+
 	wg := sync.WaitGroup{}
 
 	wg.Add(2)
