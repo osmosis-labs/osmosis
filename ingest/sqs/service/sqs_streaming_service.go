@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
+	commonservice "github.com/osmosis-labs/osmosis/v26/ingest/common/service"
 	"github.com/osmosis-labs/osmosis/v26/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v26/ingest/sqs/service/blockprocessor"
 )
@@ -29,7 +30,7 @@ type sqsStreamingService struct {
 	poolTracker                 domain.BlockPoolUpdateTracker
 	blockProcessStrategyManager commondomain.BlockProcessStrategyManager
 
-	nodeStatusChecker domain.NodeStatusChecker
+	nodeStatusChecker commonservice.NodeStatusChecker
 
 	blockUpdatesProcessUtil commondomain.BlockUpdateProcessUtilsI
 }
@@ -39,7 +40,7 @@ type sqsStreamingService struct {
 // sqsIngester is an ingester that ingests the block data into SQS.
 // poolTracker is a tracker that tracks the pools that were changed in the block.
 // nodeStatusChecker is a checker that checks if the node is syncing.
-func New(blockUpdatesProcessUtil commondomain.BlockUpdateProcessUtilsI, poolsExtractor commondomain.PoolExtractor, poolsTransformer domain.PoolsTransformer, poolTracker domain.BlockPoolUpdateTracker, grpcClient domain.SQSGRPClient, blockProcessStrategyManager commondomain.BlockProcessStrategyManager, nodeStatusChecker domain.NodeStatusChecker) *sqsStreamingService {
+func New(blockUpdatesProcessUtil commondomain.BlockUpdateProcessUtilsI, poolsExtractor commondomain.PoolExtractor, poolsTransformer domain.PoolsTransformer, poolTracker domain.BlockPoolUpdateTracker, grpcClient domain.SQSGRPClient, blockProcessStrategyManager commondomain.BlockProcessStrategyManager, nodeStatusChecker commonservice.NodeStatusChecker) *sqsStreamingService {
 	return &sqsStreamingService{
 		blockUpdatesProcessUtil:     blockUpdatesProcessUtil,
 		poolsExtractor:              poolsExtractor,

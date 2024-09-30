@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
+	commonservice "github.com/osmosis-labs/osmosis/v26/ingest/common/service"
 	"github.com/osmosis-labs/osmosis/v26/ingest/sqs/domain"
 )
 
@@ -26,7 +27,7 @@ func NewBlockUpdatesSQSBlockProcessStrategy(blockUpdateProcessUtils commondomain
 	}
 }
 
-func NewFullBlockSQSBlockProcessStrategy(sqsGRPCCLient domain.SQSGRPClient, poolsTransformer domain.PoolsTransformer, poolExtractor commondomain.PoolExtractor, nodeStatusChecker domain.NodeStatusChecker, transformAndLoadFunc transformAndLoadFunc) *FullBlockSQSBlockProcessStrategy {
+func NewFullBlockSQSBlockProcessStrategy(sqsGRPCCLient domain.SQSGRPClient, poolsTransformer domain.PoolsTransformer, poolExtractor commondomain.PoolExtractor, nodeStatusChecker commonservice.NodeStatusChecker, transformAndLoadFunc transformAndLoadFunc) *FullBlockSQSBlockProcessStrategy {
 	return &fullSQSBlockProcessStrategy{
 		sqsGRPCClient: sqsGRPCCLient,
 

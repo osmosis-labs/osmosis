@@ -1,8 +1,6 @@
 package domain
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
@@ -56,12 +54,4 @@ type BlockPoolUpdateTracker interface {
 
 	// Reset clears the internal state.
 	Reset()
-}
-
-// NodeStatusChecker is an interface for checking the node status.
-type NodeStatusChecker interface {
-	// IsNodeSyncing checks if the node is syncing.
-	// Returns true if the node is syncing, false otherwise.
-	// Returns error if the node syncing status cannot be determined.
-	IsNodeSyncing(ctx sdk.Context) (bool, error)
 }
