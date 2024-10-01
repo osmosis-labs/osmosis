@@ -218,35 +218,36 @@ func (n *NodeConfig) QueryGovModuleAccount(prev26 bool) string {
 	fmt.Println("=====starting gov module query")
 
 	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
-	fmt.Println("=====passed exec cmd")
 	require.NoError(n.t, err)
-	var result map[string][]interface{}
+	// var result map[string][]interface{}
+	var result interface{}
 	err = json.Unmarshal(out.Bytes(), &result)
 	fmt.Println("=====passed json unmarshal")
 	require.NoError(n.t, err)
 	fmt.Println("=====passed no err")
+	fmt.Println("Unmarshaled Result:", result)
 
-	for _, acc := range result["accounts"] {
-		account, ok := acc.(map[string]interface{})
-		require.True(n.t, ok)
-		if prev26 {
-			if account["name"] == "gov" {
-				baseAccount, ok := account["base_account"].(map[string]interface{})
-				require.True(n.t, ok)
-				moduleAccount, ok := baseAccount["address"].(string)
-				require.True(n.t, ok)
-				return moduleAccount
-			}
-		} else {
-			value, ok := account["value"].(map[string]interface{})
-			require.True(n.t, ok)
-			if value["name"] == "gov" {
-				moduleAccount, ok := value["address"].(string)
-				require.True(n.t, ok)
-				return moduleAccount
-			}
-		}
-	}
+	// for _, acc := range result["accounts"] {
+	// 	account, ok := acc.(map[string]interface{})
+	// 	require.True(n.t, ok)
+	// 	if prev26 {
+	// 		if account["name"] == "gov" {
+	// 			baseAccount, ok := account["base_account"].(map[string]interface{})
+	// 			require.True(n.t, ok)
+	// 			moduleAccount, ok := baseAccount["address"].(string)
+	// 			require.True(n.t, ok)
+	// 			return moduleAccount
+	// 		}
+	// 	} else {
+	// 		value, ok := account["value"].(map[string]interface{})
+	// 		require.True(n.t, ok)
+	// 		if value["name"] == "gov" {
+	// 			moduleAccount, ok := value["address"].(string)
+	// 			require.True(n.t, ok)
+	// 			return moduleAccount
+	// 		}
+	// 	}
+	// }
 	require.True(n.t, false, "gov module account not found")
 	return ""
 }

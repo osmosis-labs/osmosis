@@ -1,1 +1,0 @@
-{{define "call"}}{{.Name}}({{range $i, $el := .Parameters}}{{if $i}}, {{end}}{{if not .IsWriter}}tc.{{end}}{{Param .}}{{end}}){{end}}
