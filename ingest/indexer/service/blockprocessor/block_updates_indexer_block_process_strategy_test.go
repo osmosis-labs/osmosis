@@ -26,7 +26,7 @@ type BlockUpdateIndexerBlockProcessStrategyTestSuite struct {
 // - Happy path: single pool creation: should perform publishing
 // - Happy path: multiple pool creation: should perform publishing
 // - No pool creation: nothing is published
-// - Pool creation data without a match: still perform publishing but no creation data included
+// - Pool creation data without a match: nothing is published
 func TestBlockUpdateIndexerBlockProcessStrategyTestSuite(t *testing.T) {
 	suite.Run(t, new(BlockUpdateIndexerBlockProcessStrategyTestSuite))
 }
