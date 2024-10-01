@@ -17,7 +17,7 @@ require (
 	cosmossdk.io/x/tx v0.13.5
 	cosmossdk.io/x/upgrade v0.1.4
 	github.com/CosmWasm/wasmd v0.53.0
-	github.com/CosmWasm/wasmvm/v2 v2.1.2
+	github.com/CosmWasm/wasmvm/v2 v2.1.3
 	github.com/cometbft/cometbft v0.38.11
 	github.com/cometbft/cometbft-db v0.12.0
 	github.com/cosmos/cosmos-db v1.0.2
@@ -287,9 +287,9 @@ replace (
 	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.38.11-v26-osmo-1
 
 	// Direct cosmos-sdk branch link: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.50.x, current branch: osmo/v0.50.x.
-	// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/c88c7c36bf2b1c09b6c18a742bc5060f3cce1ebb
-	// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.50.6-v26-osmo-2
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.50.6-v26-osmo-2
+	// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/e7668cab6be057191ee826fee2dee9d0dc2caab7
+	// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.50.6-v26-osmo-3
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.50.6-v26-osmo-3
 
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7

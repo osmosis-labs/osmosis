@@ -111,8 +111,8 @@ func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpa
 func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, tokens string, token0MinAmt, token1MinAmt int64, poolId uint64) (uint64, osmomath.Dec) {
 	n.LogActionF("creating concentrated position")
 	// gas = 50,000 because e2e  default to 40,000, we hardcoded extra 10k gas to initialize tick
-	// fees = 1250 (because 50,000 * 0.0025 = 1250)
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", fmt.Sprint(poolId), lowerTick, upperTick, tokens, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), "--gas=500000", "--fees=1250uosmo", "-o json"}
+	// fees = 2500 (because 100,000 * 0.0025 = 1250)
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", fmt.Sprint(poolId), lowerTick, upperTick, tokens, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), "--gas=1000000", "--fees=2500uosmo", "-o json"}
 	resp, _, err := n.containerManager.ExecTxCmdWithSuccessStringJSON(n.t, n.chainId, n.Name, cmd, "\"code\":0,")
 	require.NoError(n.t, err)
 	response := formatNonJsonResponse(resp.String())
@@ -199,20 +199,13 @@ func (n *NodeConfig) QueryParams(subspace, key string, prev26 bool) string {
 	fmt.Println(out.String())
 
 	var value string
-	if prev26 {
-		result := &params{}
-		err = json.Unmarshal(out.Bytes(), &result)
-		value = result.Value
-	} else {
-		result := &ParamsResponse{}
-		err = json.Unmarshal(out.Bytes(), &result)
-		value = result.Param.Value
-	}
+	result := &ParamsResponse{}
+	err = json.Unmarshal(out.Bytes(), &result)
+	value = result.Param.Value
 	require.NoError(n.t, err)
 	return value
 }
 
-// TODO: Post v26, can be removed
 func (n *NodeConfig) QueryGovModuleAccount(prev26 bool) string {
 	cmd := []string{"osmosisd", "query", "auth", "module-accounts", "--output=json"}
 	fmt.Println("=====starting gov module query")
@@ -398,9 +391,35 @@ func (n *NodeConfig) SubmitProposal(cmdArgs []string, isExpedited bool, propDesc
 	return proposalID
 }
 
+func (n *NodeConfig) SubmitUpgradeProposalCmd(cmdArgs []string, isExpedited bool, propDescriptionForLogs string, isLegacy bool) int {
+	n.LogActionF("submitting proposal: %s", propDescriptionForLogs)
+	var cmd []string
+	if isLegacy {
+		cmd = append([]string{"osmosisd", "tx", "upgrade", "software-upgrade"}, cmdArgs...)
+	} else {
+		cmd = append([]string{"osmosisd", "tx", "gov", "submit-proposal"}, cmdArgs...)
+	}
+
+	depositAmt := sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinDeposit))
+	if isExpedited {
+		cmd = append(cmd, "--is-expedited=true")
+		depositAmt = sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.MinExpeditedDepositValue))
+	}
+	cmd = append(cmd, fmt.Sprintf("--deposit=%s", depositAmt))
+	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+
+	proposalID, err := extractProposalIdFromResponse(resp.String())
+	require.NoError(n.t, err)
+
+	n.LogActionF("successfully submitted proposal: %s", propDescriptionForLogs)
+
+	return proposalID
+}
+
 func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight int64, initialDeposit sdk.Coin, isLegacy bool) int {
-	cmd := []string{"software-upgrade", upgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", upgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%d", upgradeHeight), "--upgrade-info=\"\"", "--no-validate", "--from=val"}
-	return n.SubmitProposal(cmd, false, fmt.Sprintf("upgrade proposal %s for height %d", upgradeVersion, upgradeHeight), true)
+	cmd := []string{upgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", upgradeVersion), fmt.Sprintf("--summary=\"%s summary\"", upgradeVersion), fmt.Sprintf("--upgrade-height=%d", upgradeHeight), "--upgrade-info=\"\"", "--no-validate", "--from=val"}
+	return n.SubmitUpgradeProposalCmd(cmd, false, fmt.Sprintf("upgrade proposal %s for height %d", upgradeVersion, upgradeHeight), true)
 }
 
 func (n *NodeConfig) SubmitSuperfluidProposal(asset string, isLegacy bool) int {
@@ -512,7 +531,7 @@ func (n *NodeConfig) BankSend(amount string, sendAddress string, receiveAddress 
 
 func (n *NodeConfig) FundCommunityPool(sendAddress string, funds string) {
 	n.LogActionF("funding community pool from address %s with %s", sendAddress, funds)
-	cmd := []string{"osmosisd", "tx", "distribution", "fund-community-pool", funds, fmt.Sprintf("--from=%s", sendAddress), "--gas=600000", "--fees=1500uosmo"}
+	cmd := []string{"osmosisd", "tx", "distribution", "fund-community-pool", funds, fmt.Sprintf("--from=%s", sendAddress), "--gas=600000", "--fees=2500uosmo"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully funded community pool from address %s with %s", sendAddress, funds)
