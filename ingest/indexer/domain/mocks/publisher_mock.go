@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"context"
+	"sync"
 
 	indexerdomain "github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain"
 )
@@ -15,6 +16,7 @@ type PublisherMock struct {
 	CalledWithTransaction            indexerdomain.Transaction
 	NumPublishPairCalls              int
 	NumPublishPairCallsWithCreation  int
+	PublishPairCallMutex             sync.Mutex
 	NumPublishBlockCalls             int
 	NumPublishTokenSupplyCalls       int
 	NumPublishTokenSupplyOffsetCalls int
@@ -28,6 +30,8 @@ type PublisherMock struct {
 
 // PublishPair implements domain.Publisher.
 func (p *PublisherMock) PublishPair(ctx context.Context, pair indexerdomain.Pair) error {
+	p.PublishPairCallMutex.Lock()
+	defer p.PublishPairCallMutex.Unlock()
 	p.CalledWithPair = pair
 	p.NumPublishPairCalls++
 	if !pair.PairCreatedAt.IsZero() {
