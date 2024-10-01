@@ -216,6 +216,7 @@ func (n *NodeConfig) QueryGovModuleAccount(prev26 bool) string {
 	var result interface{}
 	err = json.Unmarshal(out.Bytes(), &result)
 	fmt.Println("=====passed json unmarshal")
+	fmt.Printf("Raw Output: %s\n", out.Bytes())
 	fmt.Println("Unmarshaled Result:", result)
 	require.NoError(n.t, err)
 	fmt.Println("=====passed no err")
