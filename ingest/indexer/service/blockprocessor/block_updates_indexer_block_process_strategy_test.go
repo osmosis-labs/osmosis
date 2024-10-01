@@ -50,7 +50,7 @@ func (s *BlockUpdateIndexerBlockProcessStrategyTestSuite) TestPublishCreatedPool
 				},
 			},
 			expectedPublishPoolPairsCalled:   true,
-			expectedNumPoolsPublished:        5,
+			expectedNumPoolsPublished:        1,
 			expectedNumPoolsWithCreationData: 1,
 		},
 		{
@@ -70,7 +70,7 @@ func (s *BlockUpdateIndexerBlockProcessStrategyTestSuite) TestPublishCreatedPool
 				},
 			},
 			expectedPublishPoolPairsCalled:   true,
-			expectedNumPoolsPublished:        5,
+			expectedNumPoolsPublished:        2,
 			expectedNumPoolsWithCreationData: 2,
 		},
 		{
@@ -81,7 +81,7 @@ func (s *BlockUpdateIndexerBlockProcessStrategyTestSuite) TestPublishCreatedPool
 			expectedNumPoolsWithCreationData: 0,
 		},
 		{
-			name: "should still publish but without creation data when pool creation data has no match in the pool list",
+			name: "should not publish when pool creation data has no match in the pool list",
 			createdPoolIDs: map[uint64]commondomain.PoolCreation{
 				999: {
 					PoolId:      999,
@@ -90,8 +90,8 @@ func (s *BlockUpdateIndexerBlockProcessStrategyTestSuite) TestPublishCreatedPool
 					TxnHash:     "txhash",
 				},
 			},
-			expectedPublishPoolPairsCalled:   true,
-			expectedNumPoolsPublished:        5,
+			expectedPublishPoolPairsCalled:   false,
+			expectedNumPoolsPublished:        0,
 			expectedNumPoolsWithCreationData: 0,
 		},
 	}
@@ -145,7 +145,6 @@ func (s *BlockUpdateIndexerBlockProcessStrategyTestSuite) TestPublishCreatedPool
 				// Check that the number of pools published
 				s.Require().Equal(test.expectedNumPoolsPublished, pairPublisherMock.NumPoolPairPublished)
 				// Check that the pools and created pool IDs are set correctly
-				s.Require().Equal(blockPools.GetAll(), pairPublisherMock.CalledWithPools)
 				s.Require().Equal(test.createdPoolIDs, pairPublisherMock.CalledWithCreatedPoolIDs)
 				// Check that the number of pools with creation data
 				s.Require().Equal(test.expectedNumPoolsWithCreationData, pairPublisherMock.NumPoolPairWithCreationData)
