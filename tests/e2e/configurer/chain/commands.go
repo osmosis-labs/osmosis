@@ -216,9 +216,9 @@ func (n *NodeConfig) QueryGovModuleAccount(prev26 bool) string {
 	var result interface{}
 	err = json.Unmarshal(out.Bytes(), &result)
 	fmt.Println("=====passed json unmarshal")
+	fmt.Println("Unmarshaled Result:", result)
 	require.NoError(n.t, err)
 	fmt.Println("=====passed no err")
-	fmt.Println("Unmarshaled Result:", result)
 
 	// for _, acc := range result["accounts"] {
 	// 	account, ok := acc.(map[string]interface{})
