@@ -275,7 +275,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	go func() {
 		defer wg.Done()
 		uc.t.Logf("Uploading rate limiting contract to chainA")
-		_, err := chainANode.SetupRateLimiting("", chainANode.QueryGovModuleAccount(true), chainA, true, true)
+		_, err := chainANode.SetupRateLimiting("", chainANode.QueryGovModuleAccount(), chainA, true, true)
 		errCh <- err
 	}()
 
@@ -296,7 +296,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	go func() {
 		defer wg.Done()
 		uc.t.Logf("Uploading rate limiting contract to chainB")
-		_, err := chainBNode.SetupRateLimiting("", chainBNode.QueryGovModuleAccount(true), chainB, true, true)
+		_, err := chainBNode.SetupRateLimiting("", chainBNode.QueryGovModuleAccount(), chainB, true, true)
 		errCh <- err
 	}()
 

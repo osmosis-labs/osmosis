@@ -864,7 +864,7 @@ func (s *IntegrationTestSuite) ExpeditedProposals() {
 	chainAB, chainABNode := s.getChainCfgs()
 
 	sender := chainABNode.GetWallet(initialization.ValidatorWalletName)
-	govModuleAccount := chainABNode.QueryGovModuleAccount(false)
+	govModuleAccount := chainABNode.QueryGovModuleAccount()
 	propMetadata := []byte{42}
 	validProp := fmt.Sprintf(`
 {
@@ -1026,7 +1026,7 @@ func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainA() {
 	chainA, chainANode := s.getChainACfgs()
 
 	sender := chainANode.GetWallet(initialization.ValidatorWalletName)
-	govModuleAccount := chainANode.QueryGovModuleAccount(false)
+	govModuleAccount := chainANode.QueryGovModuleAccount()
 	propMetadata := []byte{42}
 	validProp := fmt.Sprintf(`
 {
@@ -1088,7 +1088,7 @@ func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainB() {
 	chainB, chainBNode := s.getChainBCfgs()
 
 	sender := chainBNode.GetWallet(initialization.ValidatorWalletName)
-	govModuleAccount := chainBNode.QueryGovModuleAccount(false)
+	govModuleAccount := chainBNode.QueryGovModuleAccount()
 	propMetadata := []byte{42}
 	validProp := fmt.Sprintf(`
 {

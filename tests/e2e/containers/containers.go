@@ -184,7 +184,8 @@ func (m *Manager) ExecHermesCmd(t *testing.T, command []string, success string) 
 	return m.ExecCmd(t, hermesContainerName, command, success, false, false)
 }
 
-// ExecCmd executes command by running it on the node container (specified by containerName)
+//	executes command by running it on the node container (specified by containerName)
+//
 // success is the output of the command that needs to be observed for the command to be deemed successful.
 // It is found by checking if stdout or stderr contains the success string anywhere within it.
 // returns container std out, container std err, and error if any.

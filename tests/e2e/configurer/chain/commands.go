@@ -206,45 +206,92 @@ func (n *NodeConfig) QueryParams(subspace, key string, prev26 bool) string {
 	return value
 }
 
-func (n *NodeConfig) QueryGovModuleAccount(prev26 bool) string {
+func (n *NodeConfig) QueryGovModuleAccount() string {
 	cmd := []string{"osmosisd", "query", "auth", "module-accounts", "--output=json"}
-	fmt.Println("=====starting gov module query")
-
-	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
+	out, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
 	require.NoError(n.t, err)
-	// var result map[string][]interface{}
-	var result interface{}
-	err = json.Unmarshal(out.Bytes(), &result)
-	fmt.Println("=====passed json unmarshal")
-	fmt.Printf("Raw Output: %s\n", out.Bytes())
-	fmt.Println("Unmarshaled Result:", result)
-	require.NoError(n.t, err)
-	fmt.Println("=====passed no err")
+	var result map[string][]interface{}
 
-	// for _, acc := range result["accounts"] {
-	// 	account, ok := acc.(map[string]interface{})
-	// 	require.True(n.t, ok)
-	// 	if prev26 {
-	// 		if account["name"] == "gov" {
-	// 			baseAccount, ok := account["base_account"].(map[string]interface{})
-	// 			require.True(n.t, ok)
-	// 			moduleAccount, ok := baseAccount["address"].(string)
-	// 			require.True(n.t, ok)
-	// 			return moduleAccount
-	// 		}
-	// 	} else {
-	// 		value, ok := account["value"].(map[string]interface{})
-	// 		require.True(n.t, ok)
-	// 		if value["name"] == "gov" {
-	// 			moduleAccount, ok := value["address"].(string)
-	// 			require.True(n.t, ok)
-	// 			return moduleAccount
-	// 		}
-	// 	}
-	// }
+	// Check if 'out' is not empty, otherwise use 'errBuf' for unmarshalling
+	var dataToUnmarshal []byte
+	if len(out.Bytes()) > 0 {
+		dataToUnmarshal = out.Bytes()
+	} else if len(errBuf.Bytes()) > 0 {
+		dataToUnmarshal = errBuf.Bytes()
+	} else {
+		require.FailNow(n.t, "Both output and error buffers are empty")
+	}
+
+	err = json.Unmarshal(dataToUnmarshal, &result)
+	require.NoError(n.t, err)
+
+	for _, acc := range result["accounts"] {
+		account, ok := acc.(map[string]interface{})
+		require.True(n.t, ok)
+
+		value, ok := account["value"].(map[string]interface{})
+		require.True(n.t, ok)
+
+		if value["name"] == "gov" {
+			moduleAccount, ok := value["address"].(string)
+			require.True(n.t, ok)
+
+			return moduleAccount
+		}
+	}
+
 	require.True(n.t, false, "gov module account not found")
 	return ""
 }
+
+// func (n *NodeConfig) QueryGovModuleAccount() string {
+// 	cmd := []string{"osmosisd", "query", "auth", "module-accounts", "--output=json"}
+// 	fmt.Printf("=====starting gov module query for node %s \n", n.Name)
+
+// 	out, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
+// 	// fmt.Printf("Raw Output: %s for %s\n", out.Bytes(), n.Name)
+// 	// fmt.Printf("Error Buffer: %s for %s\n", errBuf.Bytes(), n.Name)
+// 	require.NoError(n.t, err)
+
+// 	var result map[string][]interface{}
+
+// 	// Check if 'out' is not empty, otherwise use 'errBuf' for unmarshalling
+// 	var dataToUnmarshal []byte
+// 	if len(out.Bytes()) > 0 {
+// 		dataToUnmarshal = out.Bytes()
+// 	} else if len(errBuf.Bytes()) > 0 {
+// 		dataToUnmarshal = errBuf.Bytes()
+// 	} else {
+// 		require.FailNow(n.t, "Both output and error buffers are empty")
+// 	}
+
+// 	err = json.Unmarshal(dataToUnmarshal, &result)
+// 	require.NoError(n.t, err)
+// 	fmt.Println("=====passed json unmarshal")
+// 	fmt.Printf("Unmarshaled Result for : %s, result: %s \n", n.Name, result)
+
+// 	a := result["accounts"][0]
+// 	account, ok := a.(map[string]interface{})
+// 	require.True(n.t, ok)
+// 	fmt.Println("Account: ", account)
+
+// 	for _, acc := range result["accounts"] {
+// 		account, ok := acc.(map[string]interface{})
+// 		require.True(n.t, ok)
+// 		fmt.Println("account: ", account)
+// 		fmt.Println("at least past here ", account["name"])
+// 		if account["name"] == "gov" {
+// 			fmt.Printf("Inside gov for : %s \n", n.Name)
+// 			moduleAccount, ok := account["base_account"].(map[string]interface{})["address"].(string)
+// 			fmt.Printf("mod account for : %s is %s \n", n.Name, moduleAccount)
+// 			require.True(n.t, ok)
+// 			return moduleAccount
+// 		}
+// 	}
+
+// 	require.True(n.t, false, "gov module account not found")
+// 	return ""
+// }
 
 func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string, isLegacy bool) int {
 	n.LogActionF("submitting param change proposal %s", proposalJson)
