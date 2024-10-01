@@ -14,6 +14,7 @@ type PublisherMock struct {
 	CalledWithTokenSupplyOffset      indexerdomain.TokenSupplyOffset
 	CalledWithTransaction            indexerdomain.Transaction
 	NumPublishPairCalls              int
+	NumPublishPairCallsWithCreation  int
 	NumPublishBlockCalls             int
 	NumPublishTokenSupplyCalls       int
 	NumPublishTokenSupplyOffsetCalls int
@@ -29,6 +30,9 @@ type PublisherMock struct {
 func (p *PublisherMock) PublishPair(ctx context.Context, pair indexerdomain.Pair) error {
 	p.CalledWithPair = pair
 	p.NumPublishPairCalls++
+	if !pair.PairCreatedAt.IsZero() {
+		p.NumPublishPairCallsWithCreation++
+	}
 	return p.ForcePairError
 }
 
