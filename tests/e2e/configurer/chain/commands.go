@@ -215,12 +215,17 @@ func (n *NodeConfig) QueryParams(subspace, key string, prev26 bool) string {
 // TODO: Post v26, can be removed
 func (n *NodeConfig) QueryGovModuleAccount(prev26 bool) string {
 	cmd := []string{"osmosisd", "query", "auth", "module-accounts", "--output=json"}
+	fmt.Println("=====starting gov module query")
 
 	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
+	fmt.Println("=====passed exec cmd")
 	require.NoError(n.t, err)
 	var result map[string][]interface{}
 	err = json.Unmarshal(out.Bytes(), &result)
+	fmt.Println("=====passed json unmarshal")
 	require.NoError(n.t, err)
+	fmt.Println("=====passed no err")
+
 	for _, acc := range result["accounts"] {
 		account, ok := acc.(map[string]interface{})
 		require.True(n.t, ok)
