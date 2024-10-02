@@ -30,6 +30,9 @@ type PublisherMock struct {
 
 // PublishPair implements domain.Publisher.
 func (p *PublisherMock) PublishPair(ctx context.Context, pair indexerdomain.Pair) error {
+	// Make it thread safe to achieve atomicity in concurrent calls.
+	// as PublishPair is called concurrently by multiple goroutines.
+	// See also: pair_publisher.go, PublishPoolPairs function.
 	p.PublishPairCallMutex.Lock()
 	defer p.PublishPairCallMutex.Unlock()
 	p.CalledWithPair = pair
