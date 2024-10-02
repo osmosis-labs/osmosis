@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"os"
+	"testing"
 	"time"
 
 	"cosmossdk.io/log"
@@ -17,6 +18,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cosmoserver "github.com/cosmos/cosmos-sdk/server"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -117,13 +120,55 @@ func GenesisStateWithValSet(app *OsmosisApp) GenesisState {
 var defaultGenesisStatebytes = []byte{}
 
 // SetupWithCustomHome initializes a new OsmosisApp with a custom home directory
-func SetupWithCustomHome(isCheckTx bool, dir string) *OsmosisApp {
-	return SetupWithCustomHomeAndChainId(isCheckTx, dir, "osmosis-1")
+func SetupWithCustomHome(isCheckTx bool, dir string, t ...*testing.T) *OsmosisApp {
+	return SetupWithCustomHomeAndChainId(isCheckTx, dir, "osmosis-1", t...)
 }
 
-func SetupWithCustomHomeAndChainId(isCheckTx bool, dir, chainId string) *OsmosisApp {
+// DebugAppOptions is a stub implementing AppOptions
+type DebugAppOptions struct{}
+
+// Get implements AppOptions
+func (ao DebugAppOptions) Get(o string) interface{} {
+	if o == cosmoserver.FlagTrace {
+		return true
+	}
+	return nil
+}
+
+func IsDebugLogEnabled() bool {
+	return os.Getenv("OSMO_KEEPER_DEBUG") != ""
+}
+
+func SetupWithCustomHomeAndChainId(isCheckTx bool, dir, chainId string, t ...*testing.T) *OsmosisApp {
 	db := cosmosdb.NewMemDB()
-	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, dir, 0, sims.EmptyAppOptions{}, EmptyWasmOpts, baseapp.SetChainID(chainId))
+	var (
+		l       log.Logger
+		appOpts servertypes.AppOptions
+	)
+	if IsDebugLogEnabled() {
+		appOpts = DebugAppOptions{}
+	} else {
+		appOpts = sims.EmptyAppOptions{}
+	}
+	if len(t) > 0 {
+		testEnv := t[0]
+		testEnv.Log("Using test environment logger")
+		l = log.NewTestLogger(testEnv)
+	} else {
+		l = log.NewNopLogger()
+	}
+	app := NewOsmosisApp(
+		l,
+		db,
+		nil,
+		true,
+		map[int64]bool{},
+		dir,
+		0,
+		appOpts,
+		EmptyWasmOpts,
+		baseapp.SetChainID(chainId),
+	)
 	if !isCheckTx {
 		if len(defaultGenesisStatebytes) == 0 {
 			var err error
