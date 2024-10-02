@@ -23,6 +23,16 @@ func CreateUpgradeHandler(
 		if err != nil {
 			return nil, err
 		}
+		bk := keepers.BankKeeper
+
+		// Get the old offset from the old key: []byte{0x88}
+		offsetOld := bk.GetSupplyOffsetOld(ctx, OsmoToken)
+
+		// Add the old offset to the new key: collection.NewPrefix(88)
+		bk.AddSupplyOffset(ctx, OsmoToken, offsetOld)
+
+		// Remove the old key: []byte{0x88}
+		bk.RemoveOldSupplyOffset(ctx, OsmoToken)
 
 		return migrations, nil
 	}
