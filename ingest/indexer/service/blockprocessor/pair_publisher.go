@@ -9,6 +9,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain"
@@ -49,7 +51,10 @@ func (p PairPublisher) PublishPoolPairs(ctx sdk.Context, pools []poolmanagertype
 
 	// Publish all the pools
 	for _, pool := range pools {
-		go func(pool poolmanagertypes.PoolI) {
+
+		go func(pool poolmanagertypes.PoolI, ctx sdk.Context) {
+			ctx = ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
+
 			denoms := pool.GetPoolDenoms(ctx)
 
 			mu.RLock()
@@ -156,7 +161,7 @@ func (p PairPublisher) PublishPoolPairs(ctx sdk.Context, pools []poolmanagertype
 			}
 
 			result <- nil
-		}(pool)
+		}(pool, ctx)
 	}
 
 	// Wait for all the results
