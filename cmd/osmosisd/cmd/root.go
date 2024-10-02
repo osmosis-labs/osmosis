@@ -1329,9 +1329,9 @@ func autoCliOpts(initClientCtx client.Context, tempApp *osmosis.OsmosisApp) auto
 		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
 		ConsensusAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
 		ClientCtx:             initClientCtx,
-		TxConfigOpts: tx.ConfigOptions{
-			EnabledSignModes:           tx.DefaultSignModes,
-			TextualCoinMetadataQueryFn: authtxconfig.NewGRPCCoinMetadataQueryFn(initClientCtx),
-		},
+		// TxConfigOpts: tx.ConfigOptions{
+		// 	EnabledSignModes:           tx.DefaultSignModes,
+		// 	TextualCoinMetadataQueryFn: authtxconfig.NewGRPCCoinMetadataQueryFn(initClientCtx),
+		// },
 	}
 }
