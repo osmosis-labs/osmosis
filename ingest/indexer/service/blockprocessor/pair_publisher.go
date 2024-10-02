@@ -52,7 +52,9 @@ func (p PairPublisher) PublishPoolPairs(ctx sdk.Context, pools []poolmanagertype
 		go func(pool poolmanagertypes.PoolI) {
 			denoms := pool.GetPoolDenoms(ctx)
 
+			mu.RLock()
 			spreadFactor := pool.GetSpreadFactor(ctx)
+			mu.RUnlock()
 			poolID := pool.GetId()
 
 			// Wait for all the pairs to be published
@@ -83,7 +85,9 @@ func (p PairPublisher) PublishPoolPairs(ctx sdk.Context, pools []poolmanagertype
 					mu.RUnlock()
 					if !ok {
 						var err error
+						mu.RLock()
 						takerFee, err = p.poolManagerKeeper.GetTradingPairTakerFee(ctx, denomI, denomJ)
+						mu.RUnlock()
 						if err != nil {
 							// This error should not happen. As a result, we do not skip it
 							result <- err
