@@ -645,6 +645,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.DistrKeeper,
 		appKeepers.StakingKeeper,
+		appKeepers.EpochsKeeper,
 		distrtypes.ModuleName,
 	)
 	appKeepers.OracleKeeper = &oracleKeeper
@@ -960,6 +961,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 			appKeepers.MintKeeper.Hooks(),
 			appKeepers.ProtoRevKeeper.EpochHooks(),
 			appKeepers.OracleKeeper.Hooks(),
+			appKeepers.TreasuryKeeper.Hooks(),
 		),
 	)
 

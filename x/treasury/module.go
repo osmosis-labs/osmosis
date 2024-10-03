@@ -139,13 +139,6 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 3 }
 
-// EndBlock returns the end blocker for the treasury module.
-func (am AppModule) EndBlock(context context.Context) error {
-	ctx := sdk.UnwrapSDKContext(context)
-	EndBlocker(ctx, am.keeper)
-	return nil
-}
-
 // ____________________________________________________________________________
 
 // AppModuleSimulation functions
