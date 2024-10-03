@@ -14,6 +14,17 @@ import (
 	"github.com/osmosis-labs/osmosis/v26/ingest/indexer/service/blockprocessor"
 )
 
+var (
+	DefaultConcentratedPoolId      = uint64(1)
+	DefaultConcentratedPoolHeight  = int64(12345)
+	DefaultConcentratedPoolTime    = time.Now()
+	DefaultConcentratedPoolTxnHash = "txhash"
+	DefaultCfmmPoolId              = uint64(2)
+	DefaultCfmmPoolHeight          = int64(12346)
+	DefaultCfmmPoolTime            = time.Now()
+	DefaultCfmmPoolTxnHash         = "txhash2"
+)
+
 type FullIndexerBlockProcessStrategyTestSuite struct {
 	apptesting.ConcentratedKeeperTestHelper
 }
@@ -107,15 +118,6 @@ func (s *FullIndexerBlockProcessStrategyTestSuite) TestPublishAllSupplies() {
 // while block_updates_indexer_block_process_strategy_test only publishes when there is a creation data.
 func (s *FullIndexerBlockProcessStrategyTestSuite) TestProcessPools() {
 
-	concentratedPoolId := uint64(1)
-	concentratedPoolHeight := int64(12345)
-	concentratedPoolTime := time.Now()
-	concentratedPoolTxnHash := "txhash"
-	cfmmPoolId := uint64(2)
-	cfmmPoolHeight := int64(12346)
-	cfmmPoolTime := time.Now()
-	cfmmPoolTxnHash := "txhash2"
-
 	tests := []struct {
 		name                             string
 		createdPoolIDs                   map[uint64]commondomain.PoolCreation
@@ -126,11 +128,11 @@ func (s *FullIndexerBlockProcessStrategyTestSuite) TestProcessPools() {
 		{
 			name: "happy path with one pool creation",
 			createdPoolIDs: map[uint64]commondomain.PoolCreation{
-				concentratedPoolId: {
-					PoolId:      concentratedPoolId,
-					BlockHeight: concentratedPoolHeight,
-					BlockTime:   concentratedPoolTime,
-					TxnHash:     concentratedPoolTxnHash,
+				DefaultConcentratedPoolId: {
+					PoolId:      DefaultConcentratedPoolId,
+					BlockHeight: DefaultConcentratedPoolHeight,
+					BlockTime:   DefaultConcentratedPoolTime,
+					TxnHash:     DefaultConcentratedPoolTxnHash,
 				},
 			},
 			expectedPublishPoolPairsCalled:   true,
@@ -140,17 +142,17 @@ func (s *FullIndexerBlockProcessStrategyTestSuite) TestProcessPools() {
 		{
 			name: "happy path with multiple pool creation",
 			createdPoolIDs: map[uint64]commondomain.PoolCreation{
-				concentratedPoolId: {
-					PoolId:      concentratedPoolId,
-					BlockHeight: concentratedPoolHeight,
-					BlockTime:   concentratedPoolTime,
-					TxnHash:     concentratedPoolTxnHash,
+				DefaultConcentratedPoolId: {
+					PoolId:      DefaultConcentratedPoolId,
+					BlockHeight: DefaultConcentratedPoolHeight,
+					BlockTime:   DefaultConcentratedPoolTime,
+					TxnHash:     DefaultConcentratedPoolTxnHash,
 				},
-				cfmmPoolId: {
-					PoolId:      cfmmPoolId,
-					BlockHeight: cfmmPoolHeight,
-					BlockTime:   cfmmPoolTime,
-					TxnHash:     cfmmPoolTxnHash,
+				DefaultCfmmPoolId: {
+					PoolId:      DefaultCfmmPoolId,
+					BlockHeight: DefaultCfmmPoolHeight,
+					BlockTime:   DefaultCfmmPoolTime,
+					TxnHash:     DefaultCfmmPoolTxnHash,
 				},
 			},
 			expectedPublishPoolPairsCalled:   true,

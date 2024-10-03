@@ -42,11 +42,11 @@ func (s *BlockUpdateIndexerBlockProcessStrategyTestSuite) TestPublishCreatedPool
 		{
 			name: "happy path with one pool creation",
 			createdPoolIDs: map[uint64]commondomain.PoolCreation{
-				1: {
-					PoolId:      1,
-					BlockHeight: 12345,
-					BlockTime:   time.Now(),
-					TxnHash:     "txhash",
+				DefaultConcentratedPoolId: {
+					PoolId:      DefaultConcentratedPoolId,
+					BlockHeight: DefaultConcentratedPoolHeight,
+					BlockTime:   DefaultConcentratedPoolTime,
+					TxnHash:     DefaultConcentratedPoolTxnHash,
 				},
 			},
 			expectedPublishPoolPairsCalled:   true,
@@ -56,17 +56,17 @@ func (s *BlockUpdateIndexerBlockProcessStrategyTestSuite) TestPublishCreatedPool
 		{
 			name: "happy path with multiple pool creation",
 			createdPoolIDs: map[uint64]commondomain.PoolCreation{
-				1: {
-					PoolId:      1,
-					BlockHeight: 12345,
-					BlockTime:   time.Now(),
-					TxnHash:     "txhash1",
+				DefaultConcentratedPoolId: {
+					PoolId:      DefaultConcentratedPoolId,
+					BlockHeight: DefaultConcentratedPoolHeight,
+					BlockTime:   DefaultConcentratedPoolTime,
+					TxnHash:     DefaultConcentratedPoolTxnHash,
 				},
-				2: {
-					PoolId:      2,
-					BlockHeight: 12346,
-					BlockTime:   time.Now(),
-					TxnHash:     "txhash2",
+				DefaultCfmmPoolId: {
+					PoolId:      DefaultCfmmPoolId,
+					BlockHeight: DefaultCfmmPoolHeight,
+					BlockTime:   DefaultCfmmPoolTime,
+					TxnHash:     DefaultCfmmPoolTxnHash,
 				},
 			},
 			expectedPublishPoolPairsCalled:   true,
