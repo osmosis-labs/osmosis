@@ -9,6 +9,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain"
@@ -39,7 +41,6 @@ func NewPairPublisher(client domain.Publisher, poolManagerKeeper domain.PoolMana
 // Invalid denoms are skipped as per domain.ShouldFilterDenom function.
 // Returns error if at least one of the pairs failed to be published.
 // Nil otherwise.
-// TODO: unit test
 func (p PairPublisher) PublishPoolPairs(ctx sdk.Context, pools []poolmanagertypes.PoolI, createdPoolIDs map[uint64]commondomain.PoolCreation) error {
 	result := make(chan error, len(pools))
 
@@ -50,10 +51,17 @@ func (p PairPublisher) PublishPoolPairs(ctx sdk.Context, pools []poolmanagertype
 
 	// Publish all the pools
 	for _, pool := range pools {
-		go func(pool poolmanagertypes.PoolI) {
-			denoms := pool.GetPoolDenoms(ctx)
+		go func(pool poolmanagertypes.PoolI, ctx sdk.Context) {
+			// This is to make each go routine have its own gas meter
+			// to avoid race conditions.
+			ctx = ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
 
+			denoms := pool.GetPoolDenoms(ctx)
+			// Get spread factor for the pool, note cosmossdk isn't thread safe
+			// so using mutex to make it thread safe.
+			mu.Lock()
 			spreadFactor := pool.GetSpreadFactor(ctx)
+			mu.Unlock()
 			poolID := pool.GetId()
 
 			// Wait for all the pairs to be published
@@ -84,7 +92,11 @@ func (p PairPublisher) PublishPoolPairs(ctx sdk.Context, pools []poolmanagertype
 					mu.RUnlock()
 					if !ok {
 						var err error
+						// Get taker fee for the denom pair, note cosmossdk isn't thread safe
+						// so using mutex to make it thread safe.
+						mu.Lock()
 						takerFee, err = p.poolManagerKeeper.GetTradingPairTakerFee(ctx, denomI, denomJ)
+						mu.Unlock()
 						if err != nil {
 							// This error should not happen. As a result, we do not skip it
 							result <- err
@@ -153,7 +165,7 @@ func (p PairPublisher) PublishPoolPairs(ctx sdk.Context, pools []poolmanagertype
 			}
 
 			result <- nil
-		}(pool)
+		}(pool, ctx)
 	}
 
 	// Wait for all the results
