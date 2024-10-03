@@ -5,6 +5,7 @@ import (
 
 	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 type blockUpdatesIndexerBlockProcessStrategy struct {
@@ -50,8 +51,21 @@ func (f *blockUpdatesIndexerBlockProcessStrategy) publishCreatedPools(ctx types.
 		return nil
 	}
 
+	// Filter pools to include only those with pool IDs found in createdPoolIDs
+	filteredPools := []poolmanagertypes.PoolI{}
+	for _, pool := range pools {
+		if _, exists := createdPoolIDs[pool.GetId()]; exists {
+			filteredPools = append(filteredPools, pool)
+		}
+	}
+
+	// Do nothing if no pools are left after filtering
+	if len(filteredPools) == 0 {
+		return nil
+	}
+
 	// Publish pool pairs
-	if err := f.poolPairPublisher.PublishPoolPairs(ctx, pools, createdPoolIDs); err != nil {
+	if err := f.poolPairPublisher.PublishPoolPairs(ctx, filteredPools, createdPoolIDs); err != nil {
 		return err
 	}
 

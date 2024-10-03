@@ -14,6 +14,17 @@ import (
 	"github.com/osmosis-labs/osmosis/v26/ingest/indexer/service/blockprocessor"
 )
 
+var (
+	DefaultConcentratedPoolId      = uint64(1)
+	DefaultConcentratedPoolHeight  = int64(12345)
+	DefaultConcentratedPoolTime    = time.Now()
+	DefaultConcentratedPoolTxnHash = "txhash"
+	DefaultCfmmPoolId              = uint64(2)
+	DefaultCfmmPoolHeight          = int64(12346)
+	DefaultCfmmPoolTime            = time.Now()
+	DefaultCfmmPoolTxnHash         = "txhash2"
+)
+
 type FullIndexerBlockProcessStrategyTestSuite struct {
 	apptesting.ConcentratedKeeperTestHelper
 }
@@ -39,7 +50,6 @@ func TestFullIndexerBlockProcessStrategyTestSuite(t *testing.T) {
 // - 8 calls to PublishTokenSupply
 // - 1 call to PublishTokenSupplyOffset
 func (s *FullIndexerBlockProcessStrategyTestSuite) TestPublishAllSupplies() {
-	//
 	tests := []struct {
 		name                                     string
 		expectedNumPublishTokenSupplyCalls       int
@@ -117,11 +127,11 @@ func (s *FullIndexerBlockProcessStrategyTestSuite) TestProcessPools() {
 		{
 			name: "happy path with one pool creation",
 			createdPoolIDs: map[uint64]commondomain.PoolCreation{
-				1: {
-					PoolId:      1,
-					BlockHeight: 12345,
-					BlockTime:   time.Now(),
-					TxnHash:     "txhash",
+				DefaultConcentratedPoolId: {
+					PoolId:      DefaultConcentratedPoolId,
+					BlockHeight: DefaultConcentratedPoolHeight,
+					BlockTime:   DefaultConcentratedPoolTime,
+					TxnHash:     DefaultConcentratedPoolTxnHash,
 				},
 			},
 			expectedPublishPoolPairsCalled:   true,
@@ -131,17 +141,17 @@ func (s *FullIndexerBlockProcessStrategyTestSuite) TestProcessPools() {
 		{
 			name: "happy path with multiple pool creation",
 			createdPoolIDs: map[uint64]commondomain.PoolCreation{
-				1: {
-					PoolId:      1,
-					BlockHeight: 12345,
-					BlockTime:   time.Now(),
-					TxnHash:     "txhash1",
+				DefaultConcentratedPoolId: {
+					PoolId:      DefaultConcentratedPoolId,
+					BlockHeight: DefaultConcentratedPoolHeight,
+					BlockTime:   DefaultConcentratedPoolTime,
+					TxnHash:     DefaultConcentratedPoolTxnHash,
 				},
-				2: {
-					PoolId:      2,
-					BlockHeight: 12346,
-					BlockTime:   time.Now(),
-					TxnHash:     "txhash2",
+				DefaultCfmmPoolId: {
+					PoolId:      DefaultCfmmPoolId,
+					BlockHeight: DefaultCfmmPoolHeight,
+					BlockTime:   DefaultCfmmPoolTime,
+					TxnHash:     DefaultCfmmPoolTxnHash,
 				},
 			},
 			expectedPublishPoolPairsCalled:   true,

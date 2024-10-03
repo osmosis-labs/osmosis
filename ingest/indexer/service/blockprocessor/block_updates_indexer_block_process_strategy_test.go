@@ -26,7 +26,7 @@ type BlockUpdateIndexerBlockProcessStrategyTestSuite struct {
 // - Happy path: single pool creation: should perform publishing
 // - Happy path: multiple pool creation: should perform publishing
 // - No pool creation: nothing is published
-// - Pool creation data without a match: still perform publishing but no creation data included
+// - Pool creation data without a match: nothing is published
 func TestBlockUpdateIndexerBlockProcessStrategyTestSuite(t *testing.T) {
 	suite.Run(t, new(BlockUpdateIndexerBlockProcessStrategyTestSuite))
 }
@@ -42,35 +42,35 @@ func (s *BlockUpdateIndexerBlockProcessStrategyTestSuite) TestPublishCreatedPool
 		{
 			name: "happy path with one pool creation",
 			createdPoolIDs: map[uint64]commondomain.PoolCreation{
-				1: {
-					PoolId:      1,
-					BlockHeight: 12345,
-					BlockTime:   time.Now(),
-					TxnHash:     "txhash",
+				DefaultConcentratedPoolId: {
+					PoolId:      DefaultConcentratedPoolId,
+					BlockHeight: DefaultConcentratedPoolHeight,
+					BlockTime:   DefaultConcentratedPoolTime,
+					TxnHash:     DefaultConcentratedPoolTxnHash,
 				},
 			},
 			expectedPublishPoolPairsCalled:   true,
-			expectedNumPoolsPublished:        5,
+			expectedNumPoolsPublished:        1,
 			expectedNumPoolsWithCreationData: 1,
 		},
 		{
 			name: "happy path with multiple pool creation",
 			createdPoolIDs: map[uint64]commondomain.PoolCreation{
-				1: {
-					PoolId:      1,
-					BlockHeight: 12345,
-					BlockTime:   time.Now(),
-					TxnHash:     "txhash1",
+				DefaultConcentratedPoolId: {
+					PoolId:      DefaultConcentratedPoolId,
+					BlockHeight: DefaultConcentratedPoolHeight,
+					BlockTime:   DefaultConcentratedPoolTime,
+					TxnHash:     DefaultConcentratedPoolTxnHash,
 				},
-				2: {
-					PoolId:      2,
-					BlockHeight: 12346,
-					BlockTime:   time.Now(),
-					TxnHash:     "txhash2",
+				DefaultCfmmPoolId: {
+					PoolId:      DefaultCfmmPoolId,
+					BlockHeight: DefaultCfmmPoolHeight,
+					BlockTime:   DefaultCfmmPoolTime,
+					TxnHash:     DefaultCfmmPoolTxnHash,
 				},
 			},
 			expectedPublishPoolPairsCalled:   true,
-			expectedNumPoolsPublished:        5,
+			expectedNumPoolsPublished:        2,
 			expectedNumPoolsWithCreationData: 2,
 		},
 		{
@@ -81,7 +81,7 @@ func (s *BlockUpdateIndexerBlockProcessStrategyTestSuite) TestPublishCreatedPool
 			expectedNumPoolsWithCreationData: 0,
 		},
 		{
-			name: "should still publish but without creation data when pool creation data has no match in the pool list",
+			name: "should not publish when pool creation data has no match in the pool list",
 			createdPoolIDs: map[uint64]commondomain.PoolCreation{
 				999: {
 					PoolId:      999,
@@ -90,8 +90,8 @@ func (s *BlockUpdateIndexerBlockProcessStrategyTestSuite) TestPublishCreatedPool
 					TxnHash:     "txhash",
 				},
 			},
-			expectedPublishPoolPairsCalled:   true,
-			expectedNumPoolsPublished:        5,
+			expectedPublishPoolPairsCalled:   false,
+			expectedNumPoolsPublished:        0,
 			expectedNumPoolsWithCreationData: 0,
 		},
 	}
@@ -145,7 +145,6 @@ func (s *BlockUpdateIndexerBlockProcessStrategyTestSuite) TestPublishCreatedPool
 				// Check that the number of pools published
 				s.Require().Equal(test.expectedNumPoolsPublished, pairPublisherMock.NumPoolPairPublished)
 				// Check that the pools and created pool IDs are set correctly
-				s.Require().Equal(blockPools.GetAll(), pairPublisherMock.CalledWithPools)
 				s.Require().Equal(test.createdPoolIDs, pairPublisherMock.CalledWithCreatedPoolIDs)
 				// Check that the number of pools with creation data
 				s.Require().Equal(test.expectedNumPoolsWithCreationData, pairPublisherMock.NumPoolPairWithCreationData)
