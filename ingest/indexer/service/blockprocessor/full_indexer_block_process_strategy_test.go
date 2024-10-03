@@ -39,7 +39,6 @@ func TestFullIndexerBlockProcessStrategyTestSuite(t *testing.T) {
 // - 8 calls to PublishTokenSupply
 // - 1 call to PublishTokenSupplyOffset
 func (s *FullIndexerBlockProcessStrategyTestSuite) TestPublishAllSupplies() {
-	//
 	tests := []struct {
 		name                                     string
 		expectedNumPublishTokenSupplyCalls       int
@@ -107,6 +106,16 @@ func (s *FullIndexerBlockProcessStrategyTestSuite) TestPublishAllSupplies() {
 // The difference is full_indexer_block_process_strategy_test always publishes all pool pairs,
 // while block_updates_indexer_block_process_strategy_test only publishes when there is a creation data.
 func (s *FullIndexerBlockProcessStrategyTestSuite) TestProcessPools() {
+
+	concentratedPoolId := uint64(1)
+	concentratedPoolHeight := int64(12345)
+	concentratedPoolTime := time.Now()
+	concentratedPoolTxnHash := "txhash"
+	cfmmPoolId := uint64(2)
+	cfmmPoolHeight := int64(12346)
+	cfmmPoolTime := time.Now()
+	cfmmPoolTxnHash := "txhash2"
+
 	tests := []struct {
 		name                             string
 		createdPoolIDs                   map[uint64]commondomain.PoolCreation
@@ -117,11 +126,11 @@ func (s *FullIndexerBlockProcessStrategyTestSuite) TestProcessPools() {
 		{
 			name: "happy path with one pool creation",
 			createdPoolIDs: map[uint64]commondomain.PoolCreation{
-				1: {
-					PoolId:      1,
-					BlockHeight: 12345,
-					BlockTime:   time.Now(),
-					TxnHash:     "txhash",
+				concentratedPoolId: {
+					PoolId:      concentratedPoolId,
+					BlockHeight: concentratedPoolHeight,
+					BlockTime:   concentratedPoolTime,
+					TxnHash:     concentratedPoolTxnHash,
 				},
 			},
 			expectedPublishPoolPairsCalled:   true,
@@ -131,17 +140,17 @@ func (s *FullIndexerBlockProcessStrategyTestSuite) TestProcessPools() {
 		{
 			name: "happy path with multiple pool creation",
 			createdPoolIDs: map[uint64]commondomain.PoolCreation{
-				1: {
-					PoolId:      1,
-					BlockHeight: 12345,
-					BlockTime:   time.Now(),
-					TxnHash:     "txhash1",
+				concentratedPoolId: {
+					PoolId:      concentratedPoolId,
+					BlockHeight: concentratedPoolHeight,
+					BlockTime:   concentratedPoolTime,
+					TxnHash:     concentratedPoolTxnHash,
 				},
-				2: {
-					PoolId:      2,
-					BlockHeight: 12346,
-					BlockTime:   time.Now(),
-					TxnHash:     "txhash2",
+				cfmmPoolId: {
+					PoolId:      cfmmPoolId,
+					BlockHeight: cfmmPoolHeight,
+					BlockTime:   cfmmPoolTime,
+					TxnHash:     cfmmPoolTxnHash,
 				},
 			},
 			expectedPublishPoolPairsCalled:   true,
