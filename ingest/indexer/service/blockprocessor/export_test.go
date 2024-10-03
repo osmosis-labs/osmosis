@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 
 	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
+	commonservice "github.com/osmosis-labs/osmosis/v26/ingest/common/service"
 	"github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain"
 )
 
@@ -22,12 +23,13 @@ func (s *blockUpdatesIndexerBlockProcessStrategy) PublishCreatedPools(ctx types.
 	return s.publishCreatedPools(ctx)
 }
 
-func NewFullIndexerBlockProcessStrategy(client domain.Publisher, keepers domain.Keepers, poolExtractor commondomain.PoolExtractor, poolPairPublisher domain.PairPublisher) *fullIndexerBlockProcessStrategy {
+func NewFullIndexerBlockProcessStrategy(client domain.Publisher, keepers domain.Keepers, poolExtractor commondomain.PoolExtractor, poolPairPublisher domain.PairPublisher, nodeStatusChecker commonservice.NodeStatusChecker) *fullIndexerBlockProcessStrategy {
 	return &fullIndexerBlockProcessStrategy{
 		client:            client,
 		keepers:           keepers,
 		poolExtractor:     poolExtractor,
 		poolPairPublisher: poolPairPublisher,
+		nodeStatusChecker: nodeStatusChecker,
 	}
 }
 
