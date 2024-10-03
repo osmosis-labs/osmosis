@@ -959,6 +959,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 			appKeepers.IncentivesKeeper.Hooks(),
 			appKeepers.MintKeeper.Hooks(),
 			appKeepers.ProtoRevKeeper.EpochHooks(),
+			appKeepers.OracleKeeper.Hooks(),
 		),
 	)
 

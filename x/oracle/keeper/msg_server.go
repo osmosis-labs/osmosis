@@ -44,7 +44,12 @@ func (ms msgServer) AggregateExchangeRatePrevote(goCtx context.Context, msg *typ
 		return nil, errorsmod.Wrap(types.ErrInvalidHash, err.Error())
 	}
 
-	aggregatePrevote := types.NewAggregateExchangeRatePrevote(voteHash, valAddr, uint64(ctx.BlockHeight()))
+	// lazy init currentVotePeriodEpochCounter when it is necessary
+	if ms.currentVotePeriodEpochCounter < 0 {
+		ms.currentVotePeriodEpochCounter = ms.epochKeeper.GetEpochInfo(ctx, ms.GetParams(ctx).VotePeriodEpochIdentifier).CurrentEpoch
+	}
+
+	aggregatePrevote := types.NewAggregateExchangeRatePrevote(voteHash, valAddr, uint64(ms.currentVotePeriodEpochCounter))
 	ms.SetAggregateExchangeRatePrevote(ctx, valAddr, aggregatePrevote)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -79,15 +84,16 @@ func (ms msgServer) AggregateExchangeRateVote(goCtx context.Context, msg *types.
 		return nil, err
 	}
 
-	params := ms.GetParams(ctx)
-
 	aggregatePrevote, err := ms.GetAggregateExchangeRatePrevote(ctx, valAddr)
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrNoAggregatePrevote, msg.Validator)
 	}
 
+	// at this point we have a guarantee that currentVotePeriodEpochCounter is initialized since there has to be
+	// a prevote to be able to vote
+
 	// Check a msg is submitted proper period
-	if (uint64(ctx.BlockHeight())/params.VotePeriod)-(aggregatePrevote.SubmitBlock/params.VotePeriod) != 1 {
+	if (uint64(ms.currentVotePeriodEpochCounter) - aggregatePrevote.SubmitEpochCounter) != 1 {
 		return nil, types.ErrRevealPeriodMissMatch
 	}
 

@@ -84,9 +84,9 @@ func TestValidate(t *testing.T) {
 	pairs := p1.ParamSetPairs()
 	for _, pair := range pairs {
 		switch {
-		case bytes.Equal(types.KeyVotePeriod, pair.Key) ||
+		case bytes.Equal(types.KeyVotePeriodEpochIdentifier, pair.Key) ||
 			bytes.Equal(types.KeyRewardDistributionWindow, pair.Key) ||
-			bytes.Equal(types.KeySlashWindow, pair.Key):
+			bytes.Equal(types.KeySlashWindowEpochIdentifier, pair.Key):
 			require.NoError(t, pair.ValidatorFn(uint64(1)))
 			require.Error(t, pair.ValidatorFn("invalid"))
 			require.Error(t, pair.ValidatorFn(uint64(0)))

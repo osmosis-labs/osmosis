@@ -1,12 +1,10 @@
-package oracle
+package keeper
 
 import (
 	"cosmossdk.io/math"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/osmomath"
-
-	"github.com/osmosis-labs/osmosis/v26/x/oracle/keeper"
 
 	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
 )
@@ -48,7 +46,7 @@ func ballotIsPassing(ballot types.ExchangeRateBallot, thresholdVotes math.Int) (
 // PickReferenceSymphony choose Reference Symphony with the highest voter turnout
 // If the voting power of the two denominations is the same,
 // select reference Symphony in alphabetical order.
-func PickReferenceSymphony(ctx sdk.Context, k keeper.Keeper, voteTargets map[string]osmomath.Dec, voteMap map[string]types.ExchangeRateBallot) (string, error) {
+func PickReferenceSymphony(ctx sdk.Context, k Keeper, voteTargets map[string]osmomath.Dec, voteMap map[string]types.ExchangeRateBallot) (string, error) {
 	largestBallotPower := int64(0)
 	referenceSymphony := ""
 

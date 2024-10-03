@@ -27,9 +27,15 @@ type Keeper struct {
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	distrKeeper   types.DistributionKeeper
+	epochKeeper   types.EpochKeeper
 	StakingKeeper types.StakingKeeper
 
 	distrName string
+
+	// currentVotePeriodEpochCounter is the current epoch counter for the vote period epoch
+	// it's cached to avoid fetching it from the store every time we need to process a vote
+	// this value is only updated in AfterEpochEnd hook
+	currentVotePeriodEpochCounter int64
 }
 
 // NewKeeper constructs a new keeper for oracle
@@ -41,6 +47,7 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	distrKeeper types.DistributionKeeper,
 	stakingKeeper types.StakingKeeper,
+	epochKeeper types.EpochKeeper,
 	distrName string,
 ) Keeper {
 	// ensure oracle module account is set
@@ -54,14 +61,16 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		cdc:           cdc,
-		storeKey:      storeKey,
-		paramSpace:    paramspace,
-		accountKeeper: accountKeeper,
-		bankKeeper:    bankKeeper,
-		distrKeeper:   distrKeeper,
-		StakingKeeper: stakingKeeper,
-		distrName:     distrName,
+		cdc:                           cdc,
+		storeKey:                      storeKey,
+		paramSpace:                    paramspace,
+		accountKeeper:                 accountKeeper,
+		bankKeeper:                    bankKeeper,
+		distrKeeper:                   distrKeeper,
+		StakingKeeper:                 stakingKeeper,
+		epochKeeper:                   epochKeeper,
+		distrName:                     distrName,
+		currentVotePeriodEpochCounter: -1,
 	}
 }
 
