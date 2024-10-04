@@ -1,4 +1,4 @@
-package domain
+package commondomain
 
 import (
 	storetypes "cosmossdk.io/store/types"
