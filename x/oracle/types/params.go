@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 	"github.com/osmosis-labs/osmosis/osmomath"
-	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
 
 	"gopkg.in/yaml.v2"
 
@@ -42,7 +42,7 @@ func DefaultParams() Params {
 		VotePeriodEpochIdentifier:  DefaultVotePeriodEpochIdentifier,
 		VoteThreshold:              DefaultVoteThreshold,
 		RewardBand:                 DefaultRewardBand,
-		RewardDistributionWindow:   0,
+		RewardDistributionWindow:   1, // TODO: yurii: this is not used
 		Whitelist:                  DefaultWhitelist,
 		SlashFraction:              DefaultSlashFraction,
 		SlashWindowEpochIdentifier: DefaultSlashWindowEpochIdentifier,

@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	epochtypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v26/x/incentives/types"
@@ -29,7 +30,6 @@ import (
 	protorevtypes "github.com/osmosis-labs/osmosis/v26/x/protorev/types"
 	twaptypes "github.com/osmosis-labs/osmosis/v26/x/twap/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v26/x/txfees/types"
-	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	types1 "github.com/cosmos/cosmos-sdk/codec/types"
 

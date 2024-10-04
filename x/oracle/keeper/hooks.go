@@ -6,17 +6,13 @@ import (
 	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
 	"time"
 
-	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // BeforeEpochStart is the epoch start hook.
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
-	params := k.GetParams(ctx)
-	if epochIdentifier == params.VotePeriodEpochIdentifier {
-		k.currentVotePeriodEpochCounter = epochNumber
-	}
 	return nil
 }
 
@@ -46,7 +42,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			validator, err := k.StakingKeeper.GetValidator(ctx, iterator.Value())
 
 			// Exclude not bonded validator
-			if err != nil && validator.IsBonded() {
+			if err == nil && validator.IsBonded() {
 				valAddrStr := validator.GetOperator()
 				valAddr, err := sdk.ValAddressFromBech32(valAddrStr)
 				if err != nil {
@@ -76,7 +72,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		// NOTE: **Make abstain votes to have zero vote power**
 		voteMap := k.OrganizeBallotByDenom(ctx, validatorClaimMap)
 
-		if referenceSymphony, err := PickReferenceSymphony(ctx, k, voteTargets, voteMap); err != nil && referenceSymphony != "" {
+		if referenceSymphony, err := PickReferenceSymphony(ctx, k, voteTargets, voteMap); err == nil && referenceSymphony != "" {
 			// make voteMap of Reference Symphony to calculate cross exchange rates
 			ballotRT := voteMap[referenceSymphony]
 			voteMapRT := ballotRT.ToMap()

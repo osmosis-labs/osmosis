@@ -1,10 +1,9 @@
 package keeper
 
 import (
-	"fmt"
-
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
+	"fmt"
 
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -31,11 +30,6 @@ type Keeper struct {
 	StakingKeeper types.StakingKeeper
 
 	distrName string
-
-	// currentVotePeriodEpochCounter is the current epoch counter for the vote period epoch
-	// it's cached to avoid fetching it from the store every time we need to process a vote
-	// this value is only updated in AfterEpochEnd hook
-	currentVotePeriodEpochCounter int64
 }
 
 // NewKeeper constructs a new keeper for oracle
@@ -61,16 +55,15 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		cdc:                           cdc,
-		storeKey:                      storeKey,
-		paramSpace:                    paramspace,
-		accountKeeper:                 accountKeeper,
-		bankKeeper:                    bankKeeper,
-		distrKeeper:                   distrKeeper,
-		StakingKeeper:                 stakingKeeper,
-		epochKeeper:                   epochKeeper,
-		distrName:                     distrName,
-		currentVotePeriodEpochCounter: -1,
+		cdc:           cdc,
+		storeKey:      storeKey,
+		paramSpace:    paramspace,
+		accountKeeper: accountKeeper,
+		bankKeeper:    bankKeeper,
+		distrKeeper:   distrKeeper,
+		StakingKeeper: stakingKeeper,
+		epochKeeper:   epochKeeper,
+		distrName:     distrName,
 	}
 }
 

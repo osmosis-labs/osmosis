@@ -14,7 +14,7 @@ func TestGenesisValidation(t *testing.T) {
 	genState := types.DefaultGenesisState()
 	require.NoError(t, types.ValidateGenesis(genState))
 
-	genState.Params.VotePeriod = 0
+	genState.Params.VotePeriodEpochIdentifier = ""
 	require.Error(t, types.ValidateGenesis(genState))
 }
 

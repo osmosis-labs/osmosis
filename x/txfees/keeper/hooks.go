@@ -12,8 +12,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	epochstypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v26/x/txfees/types"
-	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 var zeroDec = osmomath.ZeroDec()
