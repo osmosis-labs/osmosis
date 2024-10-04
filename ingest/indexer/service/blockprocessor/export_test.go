@@ -5,10 +5,13 @@ import (
 
 	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
 	commonservice "github.com/osmosis-labs/osmosis/v26/ingest/common/service"
-	"github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain"
+	indexerdomain "github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain"
 )
 
-func NewBlockUpdatesIndexerBlockProcessStrategy(blockUpdateProcessUtils commondomain.BlockUpdateProcessUtilsI, client domain.Publisher, poolExtractor commondomain.PoolExtractor, poolPairPublisher domain.PairPublisher) *blockUpdatesIndexerBlockProcessStrategy {
+// Alias to BlockUpdatesIndexerBlockProcessStrategy to allow exporting private functions for testing.
+type BlockUpdatesIndexerBlockProcessStrategy = blockUpdatesIndexerBlockProcessStrategy
+
+func NewBlockUpdatesIndexerBlockProcessStrategy(blockUpdateProcessUtils commondomain.BlockUpdateProcessUtilsI, client indexerdomain.Publisher, poolExtractor commondomain.PoolExtractor, poolPairPublisher indexerdomain.PairPublisher) *blockUpdatesIndexerBlockProcessStrategy {
 	return &blockUpdatesIndexerBlockProcessStrategy{
 		blockUpdateProcessUtils: blockUpdateProcessUtils,
 		client:                  client,
@@ -17,13 +20,14 @@ func NewBlockUpdatesIndexerBlockProcessStrategy(blockUpdateProcessUtils commondo
 	}
 }
 
-type BlockUpdatesIndexerBlockProcessStrategy = blockUpdatesIndexerBlockProcessStrategy
-
 func (s *blockUpdatesIndexerBlockProcessStrategy) PublishCreatedPools(ctx types.Context) error {
 	return s.publishCreatedPools(ctx)
 }
 
-func NewFullIndexerBlockProcessStrategy(client domain.Publisher, keepers domain.Keepers, poolExtractor commondomain.PoolExtractor, poolPairPublisher domain.PairPublisher, nodeStatusChecker commonservice.NodeStatusChecker) *fullIndexerBlockProcessStrategy {
+// Alias to FullIndexerBlockProcessStrategy to allow exporting private functions for testing.
+type FullIndexerBlockProcessStrategy = fullIndexerBlockProcessStrategy
+
+func NewFullIndexerBlockProcessStrategy(client indexerdomain.Publisher, keepers indexerdomain.Keepers, poolExtractor commondomain.PoolExtractor, poolPairPublisher indexerdomain.PairPublisher, nodeStatusChecker commonservice.NodeStatusChecker) *fullIndexerBlockProcessStrategy {
 	return &fullIndexerBlockProcessStrategy{
 		client:            client,
 		keepers:           keepers,
@@ -32,8 +36,6 @@ func NewFullIndexerBlockProcessStrategy(client domain.Publisher, keepers domain.
 		nodeStatusChecker: nodeStatusChecker,
 	}
 }
-
-type FullIndexerBlockProcessStrategy = fullIndexerBlockProcessStrategy
 
 func (s *fullIndexerBlockProcessStrategy) PublishAllSupplies(ctx types.Context) {
 	s.publishAllSupplies(ctx)
