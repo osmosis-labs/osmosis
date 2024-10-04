@@ -2,7 +2,6 @@ package blockprocessor_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -42,12 +41,7 @@ func (s *BlockUpdateIndexerBlockProcessStrategyTestSuite) TestPublishCreatedPool
 		{
 			name: "happy path with one pool creation",
 			createdPoolIDs: map[uint64]commondomain.PoolCreation{
-				DefaultConcentratedPoolId: {
-					PoolId:      DefaultConcentratedPoolId,
-					BlockHeight: DefaultConcentratedPoolHeight,
-					BlockTime:   DefaultConcentratedPoolTime,
-					TxnHash:     DefaultConcentratedPoolTxnHash,
-				},
+				DefaultConcentratedPoolId: NewPoolCreation(DefaultConcentratedPoolId, DefaultConcentratedPoolHeight, DefaultConcentratedPoolTime, DefaultConcentratedPoolTxnHash),
 			},
 			expectedPublishPoolPairsCalled:   true,
 			expectedNumPoolsPublished:        1,
@@ -56,18 +50,8 @@ func (s *BlockUpdateIndexerBlockProcessStrategyTestSuite) TestPublishCreatedPool
 		{
 			name: "happy path with multiple pool creation",
 			createdPoolIDs: map[uint64]commondomain.PoolCreation{
-				DefaultConcentratedPoolId: {
-					PoolId:      DefaultConcentratedPoolId,
-					BlockHeight: DefaultConcentratedPoolHeight,
-					BlockTime:   DefaultConcentratedPoolTime,
-					TxnHash:     DefaultConcentratedPoolTxnHash,
-				},
-				DefaultCfmmPoolId: {
-					PoolId:      DefaultCfmmPoolId,
-					BlockHeight: DefaultCfmmPoolHeight,
-					BlockTime:   DefaultCfmmPoolTime,
-					TxnHash:     DefaultCfmmPoolTxnHash,
-				},
+				DefaultConcentratedPoolId: NewPoolCreation(DefaultConcentratedPoolId, DefaultConcentratedPoolHeight, DefaultConcentratedPoolTime, DefaultConcentratedPoolTxnHash),
+				DefaultCfmmPoolId:         NewPoolCreation(DefaultCfmmPoolId, DefaultCfmmPoolHeight, DefaultCfmmPoolTime, DefaultCfmmPoolTxnHash),
 			},
 			expectedPublishPoolPairsCalled:   true,
 			expectedNumPoolsPublished:        2,
@@ -83,12 +67,7 @@ func (s *BlockUpdateIndexerBlockProcessStrategyTestSuite) TestPublishCreatedPool
 		{
 			name: "should not publish when pool creation data has no match in the pool list",
 			createdPoolIDs: map[uint64]commondomain.PoolCreation{
-				999: {
-					PoolId:      999,
-					BlockHeight: 12345,
-					BlockTime:   time.Now(),
-					TxnHash:     "txhash",
-				},
+				NonExistentPoolId: NewPoolCreation(NonExistentPoolId, NonExistentPoolHeight, NonExistentPoolTime, NonExistentPoolTxnHash),
 			},
 			expectedPublishPoolPairsCalled:   false,
 			expectedNumPoolsPublished:        0,

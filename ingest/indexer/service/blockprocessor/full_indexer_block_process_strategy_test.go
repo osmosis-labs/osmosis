@@ -24,8 +24,21 @@ var (
 	DefaultCfmmPoolHeight          = int64(12346)
 	DefaultCfmmPoolTime            = time.Now()
 	DefaultCfmmPoolTxnHash         = "txhash2"
-	defaultError                   = errors.New("default error")
+	NonExistentPoolId              = uint64(999)
+	NonExistentPoolHeight          = int64(12347)
+	NonExistentPoolTime            = time.Now()
+	NonExistentPoolTxnHash         = "txhash3"
+	defaultError                   = errors.New("default error")  
 )
+
+func NewPoolCreation(poolId uint64, blockHeight int64, blockTime time.Time, txnHash string) commondomain.PoolCreation {
+	return commondomain.PoolCreation{
+		PoolId:      poolId,
+		BlockHeight: blockHeight,
+		BlockTime:   blockTime,
+		TxnHash:     txnHash,
+	}
+}
 
 type FullIndexerBlockProcessStrategyTestSuite struct {
 	apptesting.ConcentratedKeeperTestHelper
@@ -266,7 +279,6 @@ func (s *FullIndexerBlockProcessStrategyTestSuite) TestPublishAllSupplies() {
 // The difference is full_indexer_block_process_strategy_test always publishes all pool pairs,
 // while block_updates_indexer_block_process_strategy_test only publishes when there is a creation data.
 func (s *FullIndexerBlockProcessStrategyTestSuite) TestProcessPools() {
-
 	tests := []struct {
 		name                             string
 		createdPoolIDs                   map[uint64]commondomain.PoolCreation
@@ -277,12 +289,7 @@ func (s *FullIndexerBlockProcessStrategyTestSuite) TestProcessPools() {
 		{
 			name: "happy path with one pool creation",
 			createdPoolIDs: map[uint64]commondomain.PoolCreation{
-				DefaultConcentratedPoolId: {
-					PoolId:      DefaultConcentratedPoolId,
-					BlockHeight: DefaultConcentratedPoolHeight,
-					BlockTime:   DefaultConcentratedPoolTime,
-					TxnHash:     DefaultConcentratedPoolTxnHash,
-				},
+				DefaultConcentratedPoolId: NewPoolCreation(DefaultConcentratedPoolId, DefaultConcentratedPoolHeight, DefaultConcentratedPoolTime, DefaultConcentratedPoolTxnHash),
 			},
 			expectedPublishPoolPairsCalled:   true,
 			expectedNumPoolsPublished:        5,
@@ -291,18 +298,8 @@ func (s *FullIndexerBlockProcessStrategyTestSuite) TestProcessPools() {
 		{
 			name: "happy path with multiple pool creation",
 			createdPoolIDs: map[uint64]commondomain.PoolCreation{
-				DefaultConcentratedPoolId: {
-					PoolId:      DefaultConcentratedPoolId,
-					BlockHeight: DefaultConcentratedPoolHeight,
-					BlockTime:   DefaultConcentratedPoolTime,
-					TxnHash:     DefaultConcentratedPoolTxnHash,
-				},
-				DefaultCfmmPoolId: {
-					PoolId:      DefaultCfmmPoolId,
-					BlockHeight: DefaultCfmmPoolHeight,
-					BlockTime:   DefaultCfmmPoolTime,
-					TxnHash:     DefaultCfmmPoolTxnHash,
-				},
+				DefaultConcentratedPoolId: NewPoolCreation(DefaultConcentratedPoolId, DefaultConcentratedPoolHeight, DefaultConcentratedPoolTime, DefaultConcentratedPoolTxnHash),
+				DefaultCfmmPoolId:         NewPoolCreation(DefaultCfmmPoolId, DefaultCfmmPoolHeight, DefaultCfmmPoolTime, DefaultCfmmPoolTxnHash),
 			},
 			expectedPublishPoolPairsCalled:   true,
 			expectedNumPoolsPublished:        5,
@@ -318,12 +315,7 @@ func (s *FullIndexerBlockProcessStrategyTestSuite) TestProcessPools() {
 		{
 			name: "should still publish but without creation data when pool creation data has no match in the pool list",
 			createdPoolIDs: map[uint64]commondomain.PoolCreation{
-				999: {
-					PoolId:      999,
-					BlockHeight: 12345,
-					BlockTime:   time.Now(),
-					TxnHash:     "txhash",
-				},
+				NonExistentPoolId: NewPoolCreation(NonExistentPoolId, NonExistentPoolHeight, NonExistentPoolTime, NonExistentPoolTxnHash),
 			},
 			expectedPublishPoolPairsCalled:   true,
 			expectedNumPoolsPublished:        5,
