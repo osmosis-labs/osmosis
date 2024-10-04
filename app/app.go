@@ -344,6 +344,14 @@ func NewOsmosisApp(
 
 	streamingServices := []storetypes.ABCIListener{}
 
+	// Note: address can be moved to config in the future if needed.
+	rpcAddress, ok := appOpts.Get(rpcAddressConfigName).(string)
+	if !ok {
+		panic(fmt.Sprintf("failed to retrieve %s from config.toml", rpcAddressConfigName))
+	}
+	// Create node status checker to be used by sqs and indexer streaming services.
+	nodeStatusChecker := commonservice.NewNodeStatusChecker(rpcAddress)
+
 	// Initialize the SQS ingester if it is enabled.
 	if sqsConfig.IsEnabled {
 		sqsKeepers := commondomain.PoolExtractorKeepers{
@@ -373,13 +381,6 @@ func NewOsmosisApp(
 
 		// Create write listeners for the SQS service.
 		writeListeners, storeKeyMap := getSQSServiceWriteListeners(app, appCodec, poolTracker, app.WasmKeeper)
-
-		// Note: address can be moved to config in the future if needed.
-		rpcAddress, ok := appOpts.Get(rpcAddressConfigName).(string)
-		if !ok {
-			panic(fmt.Sprintf("failed to retrieve %s from config.toml", rpcAddressConfigName))
-		}
-		nodeStatusChecker := commonservice.NewNodeStatusChecker(rpcAddress)
 
 		// Create the SQS streaming service by setting up the write listeners,
 		// the SQS ingester, and the pool tracker.
@@ -428,12 +429,6 @@ func NewOsmosisApp(
 			ConcentratedKeeper: app.ConcentratedLiquidityKeeper,
 		}
 
-		// Create the indexer streaming service.
-		rpcAddress, ok := appOpts.Get(rpcAddressConfigName).(string)
-		if !ok {
-			panic(fmt.Sprintf("failed to retrieve %s from config.toml", rpcAddressConfigName))
-		}
-		nodeStatusChecker := commonservice.NewNodeStatusChecker(rpcAddress)
 		blockUpdatesProcessUtils := &commondomain.BlockUpdateProcessUtils{
 			WriteListeners: writeListeners,
 			StoreKeyMap:    storeKeyMap,
