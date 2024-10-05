@@ -120,3 +120,14 @@ message MsgSetRewardReceiverAddress {
       [ (gogoproto.moretags) = "yaml:\"reward_receiver\"" ];
 }
 message MsgSetRewardReceiverAddressResponse { bool success = 1; }
+
+// DEPRECATED
+// Following messages are deprecated but kept to support indexing.
+message MsgUnlockPeriodLock {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  uint64 ID = 2;
+}
+
+message MsgUnlockTokens {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+}
