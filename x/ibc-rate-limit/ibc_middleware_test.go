@@ -316,16 +316,16 @@ func (suite *MiddlewareTestSuite) BuildRemovePath(channel, denom string) string 
     `, channel, denom)
 }
 
+func (suite *MiddlewareTestSuite) BuildResetPathQuota(channel, denom, quota_id string) string {
+	return fmt.Sprintf(`
+          {"reset_path_quota": {"channel_id": "%s", "denom": "%s", "quota_id": "%s"}}
+    `, channel, denom, quota_id)
+}
+
 func (suite *MiddlewareTestSuite) BuildSetDenomRestrictions(denom, allowedChannel string) string {
 	return fmt.Sprintf(`
           {"set_denom_restrictions": {"denom": "%s", "allowed_channels": ["%s"] }}
     `, denom, allowedChannel)
-}
-
-func (suite *MiddlewareTestSuite) BuildUnsetDenomRestrictions(denom, allowedChannel string) string {
-	return fmt.Sprintf(`
-          {"unset_denom_restrictions": {"denom": "%s"}}
-    `, denom)
 }
 
 // Tests
@@ -582,6 +582,7 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithRestrictedChannel() {
 	_, err = suite.chainA.ExecuteContract(contractAddr, osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName), []byte(restrictions), sdk.Coins{})
 	suite.Require().NoError(err)
 
+	// Should not error as restriction is only for outgoing transfers
 	_, err = suite.AssertReceive(true, suite.MessageFromBToA(sdk.DefaultBondDenom, osmomath.NewInt(1)))
 	suite.Require().NoError(err)
 }
@@ -747,4 +748,71 @@ func (suite *MiddlewareTestSuite) TestDenomRestrictionFlow() {
 	_, _, err = suite.FullSendAToC(suite.MessageFromAToC(denom, sendAmount))
 	suite.Require().NoError(err, "Send on previously blocked channel should succeed after unsetting restriction")
 
+}
+
+// Test that the rate limiting works as expected by sending to the quota and above before checking for errors
+func (suite *MiddlewareTestSuite) testSendQuota() {
+	quotaPercentage := 2
+	osmosisApp := suite.chainA.GetOsmosisApp()
+	denom := sdk.DefaultBondDenom
+	// This is the first one. Inside the tests. It works as expected.
+	channelValue := CalculateChannelValue(suite.chainA.GetContext(), denom, osmosisApp.BankKeeper)
+
+	// The amount to be sent is send 1% (quota is 2%)
+	quota := channelValue.QuoRaw(int64(100 / quotaPercentage))
+	// Get the denom and amount to send
+	sendAmount := quota.QuoRaw(2)
+
+	// send 1% (quota is 2%)
+	_, err := suite.AssertSend(true, suite.MessageFromAToB(denom, sendAmount))
+	suite.Require().NoError(err)
+
+	// send 1% (quota is 2%)
+	fmt.Println("trying to send ", sendAmount)
+	r, _ := suite.AssertSend(true, suite.MessageFromAToB(denom, sendAmount))
+
+	// Calculate remaining allowance in the quota
+	attrs := suite.ExtractAttributes(suite.FindEvent(r.GetEvents(), "wasm"))
+
+	used, ok := osmomath.NewIntFromString(attrs["weekly_used_out"])
+	suite.Require().True(ok)
+
+	suite.Require().Equal(used, sendAmount.MulRaw(2))
+
+	// Sending above the quota should fail. We use 2 instead of 1 here to avoid rounding issues
+	_, err = suite.AssertSend(false, suite.MessageFromAToB(denom, osmomath.NewInt(2)))
+	suite.Require().Error(err)
+}
+
+// Tests the ibc-rate-limit contract migration from v1 to v2
+func (suite *MiddlewareTestSuite) TestV1Migrate() {
+	suite.initializeEscrow()
+	// Get the denom and amount to send
+	denom := sdk.DefaultBondDenom
+	channel := "channel-0"
+	osmosisApp := suite.chainA.GetOsmosisApp()
+
+	// Store old and new contract code
+	v1CodeId := suite.chainA.StoreContractCodeDirect(&suite.Suite, "./bytecode/rate_limiter_v1.wasm")
+	newCodeId := suite.chainA.StoreContractCodeDirect(&suite.Suite, "./bytecode/rate_limiter.wasm")
+
+	// Setup contract
+	quotas := suite.BuildChannelQuota("weekly", channel, denom, 604800, 2, 2)
+	addr := suite.chainA.InstantiateRLContractRaw(v1CodeId, &suite.Suite, quotas)
+	suite.chainA.RegisterRateLimitingContract(addr)
+
+	// Test that the contract works as expected
+	suite.testSendQuota()
+
+	// Remove path quota to ensure restriction is applied
+	quotas = suite.BuildResetPathQuota("channel-0", sdk.DefaultBondDenom, "weekly")
+	_, err := suite.chainA.ExecuteContract(addr, osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName), []byte(quotas), sdk.Coins{})
+	suite.Require().NoError(err)
+
+	// Migrate to new contract
+	_, err = suite.chainA.MigrateContract(addr, osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName), newCodeId, []byte("{}"))
+	suite.Require().NoError(err)
+
+	// Test that the contract works as expected after migration
+	suite.testSendQuota()
 }
