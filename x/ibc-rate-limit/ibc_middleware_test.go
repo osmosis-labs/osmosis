@@ -758,9 +758,9 @@ func (suite *MiddlewareTestSuite) testSendQuota() {
 	// This is the first one. Inside the tests. It works as expected.
 	channelValue := CalculateChannelValue(suite.chainA.GetContext(), denom, osmosisApp.BankKeeper)
 
-	// The amount to be sent is send 1% (quota is 2%)
+	// The amount to be sent is 1% (quota is 2%)
 	quota := channelValue.QuoRaw(int64(100 / quotaPercentage))
-	// Get the denom and amount to send
+	// Amount is being sent over 2 transactions
 	sendAmount := quota.QuoRaw(2)
 
 	// send 1% (quota is 2%)
@@ -787,7 +787,6 @@ func (suite *MiddlewareTestSuite) testSendQuota() {
 // Tests the ibc-rate-limit contract migration from v1 to v2
 func (suite *MiddlewareTestSuite) TestV1Migrate() {
 	suite.initializeEscrow()
-	// Get the denom and amount to send
 	denom := sdk.DefaultBondDenom
 	channel := "channel-0"
 	osmosisApp := suite.chainA.GetOsmosisApp()
@@ -805,8 +804,8 @@ func (suite *MiddlewareTestSuite) TestV1Migrate() {
 	suite.testSendQuota()
 
 	// Reset path quota to test migration correctly
-	quotas = suite.BuildResetPathQuota("channel-0", sdk.DefaultBondDenom, "weekly")
-	_, err := suite.chainA.ExecuteContract(addr, osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName), []byte(quotas), sdk.Coins{})
+	resetQuota := suite.BuildResetPathQuota("channel-0", sdk.DefaultBondDenom, "weekly")
+	_, err := suite.chainA.ExecuteContract(addr, osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName), []byte(resetQuota), sdk.Coins{})
 	suite.Require().NoError(err)
 
 	// Migrate to new contract
