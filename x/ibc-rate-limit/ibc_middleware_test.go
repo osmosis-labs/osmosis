@@ -310,6 +310,18 @@ func (suite *MiddlewareTestSuite) BuildChannelQuota(name, channel, denom string,
     `, channel, denom, name, duration, send_percentage, recv_percentage)
 }
 
+func (suite *MiddlewareTestSuite) BuildSetDenomRestrictions(denom, allowedChannel string) string {
+	return fmt.Sprintf(`
+          {"set_denom_restrictions": {"denom": "%s", "allowed_channels": ["%s"] }}
+    `, denom, allowedChannel)
+}
+
+func (suite *MiddlewareTestSuite) BuildUnsetDenomRestrictions(denom, allowedChannel string) string {
+	return fmt.Sprintf(`
+          {"unset_denom_restrictions": {"denom": "%s"}}
+    `, denom)
+}
+
 // Tests
 
 // Test that Sending IBC messages works when the middleware isn't configured
@@ -354,9 +366,11 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	suite.initializeEscrow()
 	// Get the denom and amount to send
 	denom := sdk.DefaultBondDenom
+	restrictedDenom := denom
 	channel := "channel-0"
 	if !native {
 		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", denom))
+		restrictedDenom = denomTrace.GetFullDenomPath()
 		fmt.Println(denomTrace)
 		denom = denomTrace.IBCDenom()
 	}
@@ -379,9 +393,16 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	addr := suite.chainA.InstantiateRLContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
+	fmt.Printf("Setting channel restrictions for denom=%s, channel=%s\n", restrictedDenom, channel)
+
+	restrictions := suite.BuildSetDenomRestrictions(restrictedDenom, channel)
+	fmt.Println(restrictions)
+	_, err := suite.chainA.ExecuteContract(addr, osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName), []byte(restrictions), sdk.Coins{})
+	suite.Require().NoError(err)
+
 	// send 2.5% (quota is 5%)
 	fmt.Printf("Sending %s from A to B. Represented in chain A as wrapped? %v\n", denom, !native)
-	_, err := suite.AssertSend(true, suite.MessageFromAToB(denom, sendAmount))
+	_, err = suite.AssertSend(true, suite.MessageFromAToB(denom, sendAmount))
 	suite.Require().NoError(err)
 
 	// send 2.5% (quota is 5%)
@@ -439,6 +460,25 @@ func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 	suite.Require().NoError(err)
 }
 
+// Test that funds cannot be sent via a restricted channel
+func (suite *MiddlewareTestSuite) TestSendTransferWithRestrictedChannel() {
+	attrs := suite.fullSendTest(true)
+	osmosisApp := suite.chainA.GetOsmosisApp()
+
+	addrStr := attrs["_contract_address"]
+	contractAddr, err := sdk.AccAddressFromBech32(addrStr)
+	suite.Require().NoError(err)
+
+	// Set restriction to a different channel
+	restrictions := suite.BuildSetDenomRestrictions(sdk.DefaultBondDenom, "channel-1")
+	fmt.Println(restrictions)
+	_, err = suite.chainA.ExecuteContract(contractAddr, osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName), []byte(restrictions), sdk.Coins{})
+	suite.Require().NoError(err)
+
+	_, err = suite.AssertSend(false, suite.MessageFromAToB(sdk.DefaultBondDenom, osmomath.NewInt(1)))
+	suite.Require().Error(err)
+}
+
 // Test rate limiting on receives
 func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	quotaPercentage := 4
@@ -447,12 +487,15 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	sendDenom := sdk.DefaultBondDenom
 	localDenom := sdk.DefaultBondDenom
 	channel := "channel-0"
+	restrictedDenom := localDenom
 	if native {
 		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", localDenom))
 		localDenom = denomTrace.IBCDenom()
+		restrictedDenom = denomTrace.GetFullDenomPath()
 	} else {
 		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", sendDenom))
 		sendDenom = denomTrace.IBCDenom()
+		restrictedDenom = denomTrace.GetFullDenomPath()
 	}
 
 	osmosisApp := suite.chainA.GetOsmosisApp()
@@ -471,9 +514,16 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	addr := suite.chainA.InstantiateRLContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
+	fmt.Printf("Setting channel restrictions for denom=%s, channel=%s\n", restrictedDenom, channel)
+
+	restrictions := suite.BuildSetDenomRestrictions(restrictedDenom, channel)
+	fmt.Println(restrictions)
+	_, err := suite.chainA.ExecuteContract(addr, osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName), []byte(restrictions), sdk.Coins{})
+	suite.Require().NoError(err)
+
 	// receive 2.5% (quota is 5%)
 	fmt.Printf("Sending %s from B to A. Represented in chain A as wrapped? %v\n", sendDenom, native)
-	_, err := suite.AssertReceive(true, suite.MessageFromBToA(sendDenom, sendAmount))
+	_, err = suite.AssertReceive(true, suite.MessageFromBToA(sendDenom, sendAmount))
 	suite.Require().NoError(err)
 
 	// receive 2.5% (quota is 5%)
