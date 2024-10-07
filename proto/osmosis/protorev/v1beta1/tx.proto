@@ -173,5 +173,13 @@ message MsgSetBaseDenoms {
   ];
 }
 
-// MsgSetBaseDenomsResponse defines the Msg/SetBaseDenoms response type.
+// Deprecated, but must be retained in the file to allow indexers
+// to index blocks since genesis
 message MsgSetBaseDenomsResponse {}
+// MsgSetPoolWeights defines the Msg/SetPoolWeights request type.
+message MsgSetPoolWeights {
+  // admin is the account that is authorized to set the pool weights.
+  string admin = 1;
+  // pool_weights is the list of pool weights to set.
+  PoolWeights pool_weights = 2;
+}

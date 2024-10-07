@@ -52,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
+* [#8754](https://github.com/osmosis-labs/osmosis/pull/8754) Add missing proto files for indexing
 * [#8563](https://github.com/osmosis-labs/osmosis/pull/8563) Add additional queries in x/gauges
 * [#8726](https://github.com/osmosis-labs/osmosis/pull/8726) fix: multiple temp directories on command executions
 * [#8731](https://github.com/osmosis-labs/osmosis/pull/8731) fix: in place testnet logs
