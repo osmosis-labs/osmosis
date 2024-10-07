@@ -804,7 +804,7 @@ func (suite *MiddlewareTestSuite) TestV1Migrate() {
 	// Test that the contract works as expected
 	suite.testSendQuota()
 
-	// Remove path quota to ensure restriction is applied
+	// Reset path quota to test migration correctly
 	quotas = suite.BuildResetPathQuota("channel-0", sdk.DefaultBondDenom, "weekly")
 	_, err := suite.chainA.ExecuteContract(addr, osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName), []byte(quotas), sdk.Coins{})
 	suite.Require().NoError(err)
