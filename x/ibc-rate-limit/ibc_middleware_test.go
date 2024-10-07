@@ -310,6 +310,12 @@ func (suite *MiddlewareTestSuite) BuildChannelQuota(name, channel, denom string,
     `, channel, denom, name, duration, send_percentage, recv_percentage)
 }
 
+func (suite *MiddlewareTestSuite) BuildRemovePath(channel, denom string) string {
+	return fmt.Sprintf(`
+          {"remove_path": {"channel_id": "%s", "denom": "%s"}}
+    `, channel, denom)
+}
+
 func (suite *MiddlewareTestSuite) BuildSetDenomRestrictions(denom, allowedChannel string) string {
 	return fmt.Sprintf(`
           {"set_denom_restrictions": {"denom": "%s", "allowed_channels": ["%s"] }}
@@ -462,11 +468,17 @@ func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 
 // Test that funds cannot be sent via a restricted channel
 func (suite *MiddlewareTestSuite) TestSendTransferWithRestrictedChannel() {
+	// Ensure sends work as intended before checking restriction
 	attrs := suite.fullSendTest(true)
 	osmosisApp := suite.chainA.GetOsmosisApp()
 
 	addrStr := attrs["_contract_address"]
 	contractAddr, err := sdk.AccAddressFromBech32(addrStr)
+	suite.Require().NoError(err)
+
+	// Remove path quota to ensure restriction is applied
+	quotas := suite.BuildRemovePath("channel-0", sdk.DefaultBondDenom)
+	_, err = suite.chainA.ExecuteContract(contractAddr, osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName), []byte(quotas), sdk.Coins{})
 	suite.Require().NoError(err)
 
 	// Set restriction to a different channel
@@ -480,7 +492,7 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithRestrictedChannel() {
 }
 
 // Test rate limiting on receives
-func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
+func (suite *MiddlewareTestSuite) fullRecvTest(native bool) sdk.AccAddress {
 	quotaPercentage := 4
 	suite.initializeEscrow()
 	// Get the denom and amount to send
@@ -533,6 +545,8 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	// Sending above the quota should fail. We send 2 instead of 1 to account for rounding errors
 	_, err = suite.AssertReceive(false, suite.MessageFromBToA(sendDenom, osmomath.NewInt(2)))
 	suite.Require().NoError(err)
+
+	return addr
 }
 
 func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimitingNative() {
@@ -547,6 +561,29 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimitingNonNative() {
 	// Rate limit receives "transfer/channel-0/stake" in the packet and should turn it into "stake"
 	// types.ReceiverChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data.Denom) should return true => unprefix. If unprefixed is not local, hash.
 	suite.fullRecvTest(false)
+}
+
+// Test that funds can be sent via a restricted channel (restricted channels are only checked for outgoing)
+func (suite *MiddlewareTestSuite) TestRecvTransferWithRestrictedChannel() {
+	contractAddr := suite.fullRecvTest(true)
+	osmosisApp := suite.chainA.GetOsmosisApp()
+
+	denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", sdk.DefaultBondDenom))
+	localDenom := denomTrace.IBCDenom()
+
+	// Remove path quota to ensure restriction is checked
+	quotas := suite.BuildRemovePath("channel-0", localDenom)
+	_, err := suite.chainA.ExecuteContract(contractAddr, osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName), []byte(quotas), sdk.Coins{})
+	suite.Require().NoError(err)
+
+	// Set restriction to a different channel
+	restrictions := suite.BuildSetDenomRestrictions(localDenom, "channel-1")
+	fmt.Println(restrictions)
+	_, err = suite.chainA.ExecuteContract(contractAddr, osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName), []byte(restrictions), sdk.Coins{})
+	suite.Require().NoError(err)
+
+	_, err = suite.AssertReceive(true, suite.MessageFromBToA(sdk.DefaultBondDenom, osmomath.NewInt(1)))
+	suite.Require().NoError(err)
 }
 
 // Test no rate limiting occurs when the contract is set, but no quotas are configured for the path
