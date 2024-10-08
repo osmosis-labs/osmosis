@@ -60,11 +60,11 @@ func GenMinValidPerWindow(r *rand.Rand) osmomath.Dec {
 
 // RandomizedGenState generates a random GenesisState for oracle
 func RandomizedGenState(simState *module.SimulationState) {
-	var votePeriod uint64
-	simState.AppParams.GetOrGenerate(
-		votePeriodKey, &votePeriod, simState.Rand,
-		func(r *rand.Rand) { votePeriod = GenVotePeriod(r) },
-	)
+	//var votePeriod uint64
+	//simState.AppParams.GetOrGenerate(
+	//	votePeriodKey, &votePeriod, simState.Rand,
+	//	func(r *rand.Rand) { votePeriod = GenVotePeriod(r) },
+	//)
 
 	var voteThreshold osmomath.Dec
 	simState.AppParams.GetOrGenerate(
@@ -104,14 +104,14 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	oracleGenesis := types.NewGenesisState(
 		types.Params{
-			VotePeriod:               votePeriod,
-			VoteThreshold:            voteThreshold,
-			RewardBand:               rewardBand,
-			RewardDistributionWindow: rewardDistributionWindow,
-			Whitelist:                types.DenomList{},
-			SlashFraction:            slashFraction,
-			SlashWindow:              slashWindow,
-			MinValidPerWindow:        minValidPerWindow,
+			VotePeriodEpochIdentifier:  types.DefaultVotePeriodEpochIdentifier,
+			VoteThreshold:              voteThreshold,
+			RewardBand:                 rewardBand,
+			RewardDistributionWindow:   rewardDistributionWindow,
+			Whitelist:                  types.DenomList{},
+			SlashFraction:              slashFraction,
+			SlashWindowEpochIdentifier: types.DefaultSlashWindowEpochIdentifier,
+			MinValidPerWindow:          minValidPerWindow,
 		},
 		[]types.ExchangeRateTuple{},
 		[]types.FeederDelegation{},

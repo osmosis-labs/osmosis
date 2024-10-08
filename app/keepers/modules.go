@@ -45,6 +45,7 @@ import (
 	cwpoolclient "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/client"
 	cosmwasmpoolmodule "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/module"
 	downtimemodule "github.com/osmosis-labs/osmosis/v26/x/downtime-detector/module"
+	"github.com/osmosis-labs/osmosis/v26/x/epochs"
 	"github.com/osmosis-labs/osmosis/v26/x/gamm"
 	gammclient "github.com/osmosis-labs/osmosis/v26/x/gamm/client"
 	"github.com/osmosis-labs/osmosis/v26/x/ibc-rate-limit/ibcratelimitmodule"
@@ -67,7 +68,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v26/x/txfees"
 	txfeesclient "github.com/osmosis-labs/osmosis/v26/x/txfees/client"
 	valsetprefmodule "github.com/osmosis-labs/osmosis/v26/x/valset-pref/valpref-module"
-	"github.com/osmosis-labs/osmosis/x/epochs"
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 )
 

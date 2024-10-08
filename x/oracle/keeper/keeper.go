@@ -1,10 +1,9 @@
 package keeper
 
 import (
-	"fmt"
-
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
+	"fmt"
 
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -27,6 +26,7 @@ type Keeper struct {
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	distrKeeper   types.DistributionKeeper
+	epochKeeper   types.EpochKeeper
 	StakingKeeper types.StakingKeeper
 
 	distrName string
@@ -41,6 +41,7 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	distrKeeper types.DistributionKeeper,
 	stakingKeeper types.StakingKeeper,
+	epochKeeper types.EpochKeeper,
 	distrName string,
 ) Keeper {
 	// ensure oracle module account is set
@@ -61,6 +62,7 @@ func NewKeeper(
 		bankKeeper:    bankKeeper,
 		distrKeeper:   distrKeeper,
 		StakingKeeper: stakingKeeper,
+		epochKeeper:   epochKeeper,
 		distrName:     distrName,
 	}
 }

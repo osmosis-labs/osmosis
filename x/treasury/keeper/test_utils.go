@@ -35,6 +35,8 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/noapptest"
 	"github.com/osmosis-labs/osmosis/v26/app/apptesting/assets"
 	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	epochskeeper "github.com/osmosis-labs/osmosis/v26/x/epochs/keeper"
+	epochstypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v26/x/market"
 	marketkeeper "github.com/osmosis-labs/osmosis/v26/x/market/keeper"
 	markettypes "github.com/osmosis-labs/osmosis/v26/x/market/types"
@@ -129,6 +131,7 @@ func CreateTestInput(t *testing.T) TestInput {
 	keyStaking := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
 	keyDistr := storetypes.NewKVStoreKey(distrtypes.StoreKey)
 	keyMarket := storetypes.NewKVStoreKey(types.StoreKey)
+	keyEpochs := storetypes.NewKVStoreKey(epochstypes.StoreKey)
 
 	encodingConfig := MakeEncodingConfig(t)
 	appCodec, legacyAmino := encodingConfig.Marshaler, encodingConfig.Amino
@@ -181,6 +184,8 @@ func CreateTestInput(t *testing.T) TestInput {
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		log.NewNopLogger(),
 	)
+
+	epochKeeper := epochskeeper.NewKeeper(keyEpochs)
 
 	var err error
 
@@ -271,6 +276,7 @@ func CreateTestInput(t *testing.T) TestInput {
 		bankKeeper,
 		distrKeeper,
 		stakingKeeper,
+		epochKeeper,
 		distrtypes.ModuleName,
 	)
 	oracleDefaultParams := oracletypes.DefaultParams()

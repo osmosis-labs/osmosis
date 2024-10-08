@@ -5,9 +5,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v26/x/twap/types"
-	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 var (

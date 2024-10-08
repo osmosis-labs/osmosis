@@ -3,41 +3,35 @@ package types
 import (
 	"fmt"
 	"github.com/osmosis-labs/osmosis/osmomath"
+	epochtypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
 
 	"gopkg.in/yaml.v2"
-
-	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
 
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Parameter keys
 var (
-	KeyVotePeriod               = []byte("VotePeriod")
-	KeyVoteThreshold            = []byte("VoteThreshold")
-	KeyRewardBand               = []byte("RewardBand")
-	KeyRewardDistributionWindow = []byte("RewardDistributionWindow")
-	KeyWhitelist                = []byte("Whitelist")
-	KeySlashFraction            = []byte("SlashFraction")
-	KeySlashWindow              = []byte("SlashWindow")
-	KeyMinValidPerWindow        = []byte("MinValidPerWindow")
-)
-
-// Default parameter values
-const (
-	DefaultVotePeriod               = appparams.BlocksPerMinute / 2 // 30 seconds, 7.5 * 4 seconds per block
-	DefaultSlashWindow              = appparams.BlocksPerWeek       // window for a week
-	DefaultRewardDistributionWindow = appparams.BlocksPerYear       // window for a year
+	KeyVotePeriodEpochIdentifier  = []byte("VotePeriodEpochIdentifier")
+	KeyVoteThreshold              = []byte("VoteThreshold")
+	KeyRewardBand                 = []byte("RewardBand")
+	KeyRewardDistributionWindow   = []byte("RewardDistributionWindow")
+	KeyWhitelist                  = []byte("Whitelist")
+	KeySlashFraction              = []byte("SlashFraction")
+	KeySlashWindowEpochIdentifier = []byte("SlashWindowEpochIdentifier")
+	KeyMinValidPerWindow          = []byte("MinValidPerWindow")
 )
 
 // Default parameter values
 var (
-	DefaultVoteThreshold     = osmomath.NewDecWithPrec(50, 2) // 50%
-	DefaultRewardBand        = osmomath.NewDecWithPrec(2, 2)  // 2% (-1, 1)
-	DefaultTobinTax          = osmomath.NewDecWithPrec(25, 4) // 0.25%
-	DefaultWhitelist         = DenomList{}
-	DefaultSlashFraction     = osmomath.NewDecWithPrec(1, 4) // 0.01%
-	DefaultMinValidPerWindow = osmomath.NewDecWithPrec(5, 2) // 5%
+	DefaultVoteThreshold              = osmomath.NewDecWithPrec(50, 2) // 50%
+	DefaultRewardBand                 = osmomath.NewDecWithPrec(2, 2)  // 2% (-1, 1)
+	DefaultTobinTax                   = osmomath.NewDecWithPrec(25, 4) // 0.25%
+	DefaultWhitelist                  = DenomList{}
+	DefaultSlashFraction              = osmomath.NewDecWithPrec(1, 4) // 0.01%
+	DefaultMinValidPerWindow          = osmomath.NewDecWithPrec(5, 2) // 5%
+	DefaultVotePeriodEpochIdentifier  = "minute"
+	DefaultSlashWindowEpochIdentifier = "week"
 )
 
 var _ paramstypes.ParamSet = &Params{}
@@ -45,14 +39,14 @@ var _ paramstypes.ParamSet = &Params{}
 // DefaultParams creates default oracle module parameters
 func DefaultParams() Params {
 	return Params{
-		VotePeriod:               DefaultVotePeriod,
-		VoteThreshold:            DefaultVoteThreshold,
-		RewardBand:               DefaultRewardBand,
-		RewardDistributionWindow: DefaultRewardDistributionWindow,
-		Whitelist:                DefaultWhitelist,
-		SlashFraction:            DefaultSlashFraction,
-		SlashWindow:              DefaultSlashWindow,
-		MinValidPerWindow:        DefaultMinValidPerWindow,
+		VotePeriodEpochIdentifier:  DefaultVotePeriodEpochIdentifier,
+		VoteThreshold:              DefaultVoteThreshold,
+		RewardBand:                 DefaultRewardBand,
+		RewardDistributionWindow:   1, // TODO: yurii: this is not used
+		Whitelist:                  DefaultWhitelist,
+		SlashFraction:              DefaultSlashFraction,
+		SlashWindowEpochIdentifier: DefaultSlashWindowEpochIdentifier,
+		MinValidPerWindow:          DefaultMinValidPerWindow,
 	}
 }
 
@@ -65,13 +59,13 @@ func ParamKeyTable() paramstypes.KeyTable {
 // pairs of oracle module's parameters.
 func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
-		paramstypes.NewParamSetPair(KeyVotePeriod, &p.VotePeriod, validateVotePeriod),
+		paramstypes.NewParamSetPair(KeyVotePeriodEpochIdentifier, &p.VotePeriodEpochIdentifier, epochtypes.ValidateEpochIdentifierInterface),
 		paramstypes.NewParamSetPair(KeyVoteThreshold, &p.VoteThreshold, validateVoteThreshold),
 		paramstypes.NewParamSetPair(KeyRewardBand, &p.RewardBand, validateRewardBand),
 		paramstypes.NewParamSetPair(KeyRewardDistributionWindow, &p.RewardDistributionWindow, validateRewardDistributionWindow),
 		paramstypes.NewParamSetPair(KeyWhitelist, &p.Whitelist, validateWhitelist),
 		paramstypes.NewParamSetPair(KeySlashFraction, &p.SlashFraction, validateSlashFraction),
-		paramstypes.NewParamSetPair(KeySlashWindow, &p.SlashWindow, validateSlashWindow),
+		paramstypes.NewParamSetPair(KeySlashWindowEpochIdentifier, &p.SlashWindowEpochIdentifier, epochtypes.ValidateEpochIdentifierInterface),
 		paramstypes.NewParamSetPair(KeyMinValidPerWindow, &p.MinValidPerWindow, validateMinValidPerWindow),
 	}
 }
@@ -84,8 +78,11 @@ func (p Params) String() string {
 
 // Validate performs basic validation on oracle parameters.
 func (p Params) Validate() error {
-	if p.VotePeriod == 0 {
-		return fmt.Errorf("oracle parameter VotePeriod must be > 0, is %d", p.VotePeriod)
+	if epochtypes.ValidateEpochIdentifierString(p.VotePeriodEpochIdentifier) != nil {
+		return fmt.Errorf("oracle parameter VotePeriodEpochIdentifier must be valid, is %s", p.VotePeriodEpochIdentifier)
+	}
+	if epochtypes.ValidateEpochIdentifierString(p.SlashWindowEpochIdentifier) != nil {
+		return fmt.Errorf("oracle parameter SlashWindowEpochIdentifier must be valid, is %s", p.SlashWindowEpochIdentifier)
 	}
 	if p.VoteThreshold.LTE(osmomath.NewDecWithPrec(33, 2)) {
 		return fmt.Errorf("oracle parameter VoteThreshold must be greater than 33 percent")
@@ -95,16 +92,8 @@ func (p Params) Validate() error {
 		return fmt.Errorf("oracle parameter RewardBand must be between [0, 1]")
 	}
 
-	if p.RewardDistributionWindow < p.VotePeriod {
-		return fmt.Errorf("oracle parameter RewardDistributionWindow must be greater than or equal with VotePeriod")
-	}
-
 	if p.SlashFraction.GT(osmomath.OneDec()) || p.SlashFraction.IsNegative() {
 		return fmt.Errorf("oracle parameter SlashFraction must be between [0, 1]")
-	}
-
-	if p.SlashWindow < p.VotePeriod {
-		return fmt.Errorf("oracle parameter SlashWindow must be greater than or equal with VotePeriod")
 	}
 
 	if p.MinValidPerWindow.GT(osmomath.OneDec()) || p.MinValidPerWindow.IsNegative() {

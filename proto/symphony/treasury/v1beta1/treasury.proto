@@ -22,8 +22,9 @@ message Params {
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
-  uint64 window_short = 3 [ (gogoproto.moretags) = "yaml:\"window_short\"" ];
-  uint64 window_long = 4 [ (gogoproto.moretags) = "yaml:\"window_long\"" ];
-  uint64 window_probation = 5
+  string update_treasury_epoch_identifier = 3 [ (gogoproto.moretags) = "yaml:\"update_treasury_epoch_identifier\"" ];
+  uint64 window_short = 4 [ (gogoproto.moretags) = "yaml:\"window_short\"" ];
+  uint64 window_long = 5 [ (gogoproto.moretags) = "yaml:\"window_long\"" ];
+  uint64 window_probation = 6
       [ (gogoproto.moretags) = "yaml:\"window_probation\"" ];
 }

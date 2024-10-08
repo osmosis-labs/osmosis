@@ -25,13 +25,13 @@ import (
 	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
 	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/queryproto"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v26/x/protorev/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
 	twapqueryproto "github.com/osmosis-labs/osmosis/v26/x/twap/client/queryproto"
-	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // PropTallyResult is the result of a proposal tally.

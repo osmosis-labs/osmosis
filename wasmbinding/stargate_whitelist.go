@@ -21,6 +21,7 @@ import (
 	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/client/queryproto"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/client/queryproto"
 	downtimequerytypes "github.com/osmosis-labs/osmosis/v26/x/downtime-detector/client/queryproto"
+	epochtypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v26/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
@@ -32,7 +33,6 @@ import (
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v26/x/tokenfactory/types"
 	twapquerytypes "github.com/osmosis-labs/osmosis/v26/x/twap/client/queryproto"
 	txfeestypes "github.com/osmosis-labs/osmosis/v26/x/txfees/types"
-	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // stargateResponsePools keeps whitelist and its deterministic

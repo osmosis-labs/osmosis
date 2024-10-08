@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"github.com/osmosis-labs/osmosis/osmomath"
+	epochtypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
 
 	"gopkg.in/yaml.v2"
 
@@ -11,21 +12,23 @@ import (
 
 // Parameter keys
 var (
-	KeyReserveAllowableOffset = []byte("ReserveAllowableOffset")
-	KeyMaxFeeMultiplier       = []byte("MaxFeeMultiplier")
-	KeyWindowShort            = []byte("WindowShort")
-	KeyWindowLong             = []byte("WindowLong")
-	KeyWindowProbation        = []byte("WindowProbation")
+	KeyUpdateTreasuryEpochIdentifier = []byte("UpdateTreasuryEpochIdentifier")
+	KeyReserveAllowableOffset        = []byte("ReserveAllowableOffset")
+	KeyMaxFeeMultiplier              = []byte("MaxFeeMultiplier")
+	KeyWindowShort                   = []byte("WindowShort")
+	KeyWindowLong                    = []byte("WindowLong")
+	KeyWindowProbation               = []byte("WindowProbation")
 )
 
 // Default parameter values
 var (
-	DefaultWindowShort            = uint64(4)                     // a month
-	DefaultWindowLong             = uint64(52)                    // a year
-	DefaultWindowProbation        = uint64(12)                    // 3 month
-	DefaultTaxRate                = osmomath.NewDecWithPrec(1, 3) // 0.1%
-	DefaultMaxFeeMultiplier       = osmomath.NewDecWithPrec(1, 0) // 1%
-	DefaultReserveAllowableOffset = osmomath.NewDecWithPrec(5, 0) // 5%
+	DefaultWindowShort                   = uint64(4)                     // a month
+	DefaultWindowLong                    = uint64(52)                    // a year
+	DefaultWindowProbation               = uint64(12)                    // 3 month
+	DefaultTaxRate                       = osmomath.NewDecWithPrec(1, 3) // 0.1%
+	DefaultMaxFeeMultiplier              = osmomath.NewDecWithPrec(1, 0) // 1%
+	DefaultReserveAllowableOffset        = osmomath.NewDecWithPrec(5, 0) // 5%
+	DefaultUpdateTreasuryEpochIdentifier = "minute"
 )
 
 var _ paramstypes.ParamSet = &Params{}
@@ -33,11 +36,12 @@ var _ paramstypes.ParamSet = &Params{}
 // DefaultParams creates default treasury module parameters
 func DefaultParams() Params {
 	return Params{
-		ReserveAllowableOffset: DefaultReserveAllowableOffset,
-		MaxFeeMultiplier:       DefaultMaxFeeMultiplier,
-		WindowShort:            DefaultWindowShort,
-		WindowLong:             DefaultWindowLong,
-		WindowProbation:        DefaultWindowProbation,
+		UpdateTreasuryEpochIdentifier: DefaultUpdateTreasuryEpochIdentifier,
+		ReserveAllowableOffset:        DefaultReserveAllowableOffset,
+		MaxFeeMultiplier:              DefaultMaxFeeMultiplier,
+		WindowShort:                   DefaultWindowShort,
+		WindowLong:                    DefaultWindowLong,
+		WindowProbation:               DefaultWindowProbation,
 	}
 }
 
@@ -56,6 +60,7 @@ func (p Params) String() string {
 // pairs of treasury module's parameters.
 func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
+		paramstypes.NewParamSetPair(KeyUpdateTreasuryEpochIdentifier, &p.UpdateTreasuryEpochIdentifier, epochtypes.ValidateEpochIdentifierInterface),
 		paramstypes.NewParamSetPair(KeyWindowShort, &p.WindowShort, validateWindowShort),
 		paramstypes.NewParamSetPair(KeyWindowLong, &p.WindowLong, validateWindowLong),
 		paramstypes.NewParamSetPair(KeyWindowProbation, &p.WindowProbation, validateWindowProbation),
@@ -66,6 +71,9 @@ func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 
 // Validate performs basic validation on treasury parameters.
 func (p Params) Validate() error {
+	if epochtypes.ValidateEpochIdentifierString(p.UpdateTreasuryEpochIdentifier) != nil {
+		return fmt.Errorf("treasury parameter UpdateTreasuryEpochIdentifier must be a valid epoch identifier: %s", p.UpdateTreasuryEpochIdentifier)
+	}
 	if p.MaxFeeMultiplier.GT(osmomath.NewDecWithPrec(10, 0)) {
 		return fmt.Errorf("treasury parameter MaxFeeMultiplier must be lower than 10: %s", p.MaxFeeMultiplier)
 	}

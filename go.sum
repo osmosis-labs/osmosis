@@ -920,8 +920,6 @@ github.com/osmosis-labs/osmosis/osmomath v0.0.14 h1:L8EMgKjfbLUxjV5THSpGqJG9UBmw
 github.com/osmosis-labs/osmosis/osmomath v0.0.14/go.mod h1:hbw0oWTlkv3ls2S/4jBHlqZUdrejCQOGLhYeDm/CUgU=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.14 h1:TukuqS2qPMMH/LrQAV/BYIeuQGKkrD5VGM15pLM8GlA=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.14/go.mod h1:TGr6mFCyOZFL0TZMKvOqjqmZRkT7Z1RNzeGUP9b6ygc=
-github.com/osmosis-labs/osmosis/x/epochs v0.0.10 h1:AHEIfhF9k9MHonI1Bh60cN3xOZbYm7sIj/tYUUIMZM4=
-github.com/osmosis-labs/osmosis/x/epochs v0.0.10/go.mod h1:7ylCTvH4gEtZ5E8paiwSjmOzOKOOls8Br45W9uwWnP0=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.16 h1:/98KgAHWk/xI5T3iadzVP7Zbx6ocaCaWHOZQkkw/c/o=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.16/go.mod h1:AXHoG4L1AMDCMEGeSdzcy7ik2mBt5fTyzEAWlGt+aSc=
 github.com/osmosis-labs/sqs v0.19.2-rc2.0.20240826173240-e5733bb3700d h1:vf1KUnWuk54yzMxjbfU1aufHR45ELi80NG3gFr8ebks=

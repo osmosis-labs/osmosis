@@ -11,11 +11,11 @@ import (
 )
 
 // NewAggregateExchangeRatePrevote returns AggregateExchangeRatePrevote object
-func NewAggregateExchangeRatePrevote(hash AggregateVoteHash, voter sdk.ValAddress, submitBlock uint64) AggregateExchangeRatePrevote {
+func NewAggregateExchangeRatePrevote(hash AggregateVoteHash, voter sdk.ValAddress, currentEpoch uint64) AggregateExchangeRatePrevote {
 	return AggregateExchangeRatePrevote{
-		Hash:        hash.String(),
-		Voter:       voter.String(),
-		SubmitBlock: submitBlock,
+		Hash:               hash.String(),
+		Voter:              voter.String(),
+		SubmitEpochCounter: currentEpoch,
 	}
 }
 

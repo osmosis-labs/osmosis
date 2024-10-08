@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -21,7 +20,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
-func (ms msgServer) AggregateExchangeRatePrevote(goCtx context.Context, msg *types.MsgAggregateExchangeRatePrevote) (*types.MsgAggregateExchangeRatePrevoteResponse, error) {
+func (ms *msgServer) AggregateExchangeRatePrevote(goCtx context.Context, msg *types.MsgAggregateExchangeRatePrevote) (*types.MsgAggregateExchangeRatePrevoteResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	valAddr, err := sdk.ValAddressFromBech32(msg.Validator)
@@ -44,7 +43,9 @@ func (ms msgServer) AggregateExchangeRatePrevote(goCtx context.Context, msg *typ
 		return nil, errorsmod.Wrap(types.ErrInvalidHash, err.Error())
 	}
 
-	aggregatePrevote := types.NewAggregateExchangeRatePrevote(voteHash, valAddr, uint64(ctx.BlockHeight()))
+	// lazy init currentVotePeriodEpochCounter when it is necessary
+	currentEpochCounter := ms.epochKeeper.GetEpochInfo(ctx, ms.GetParams(ctx).VotePeriodEpochIdentifier).CurrentEpoch
+	aggregatePrevote := types.NewAggregateExchangeRatePrevote(voteHash, valAddr, uint64(currentEpochCounter))
 	ms.SetAggregateExchangeRatePrevote(ctx, valAddr, aggregatePrevote)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -79,16 +80,19 @@ func (ms msgServer) AggregateExchangeRateVote(goCtx context.Context, msg *types.
 		return nil, err
 	}
 
-	params := ms.GetParams(ctx)
-
 	aggregatePrevote, err := ms.GetAggregateExchangeRatePrevote(ctx, valAddr)
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrNoAggregatePrevote, msg.Validator)
 	}
 
+	// at this point we have a guarantee that currentVotePeriodEpochCounter is initialized since there has to be
+	// a prevote to be able to vote
+
 	// Check a msg is submitted proper period
-	if (uint64(ctx.BlockHeight())/params.VotePeriod)-(aggregatePrevote.SubmitBlock/params.VotePeriod) != 1 {
-		return nil, types.ErrRevealPeriodMissMatch
+	currentEpochCounter := ms.epochKeeper.GetEpochInfo(ctx, ms.GetParams(ctx).VotePeriodEpochIdentifier).CurrentEpoch
+	if (uint64(currentEpochCounter) - aggregatePrevote.SubmitEpochCounter) != 1 {
+		return nil, errorsmod.Wrapf(types.ErrRevealPeriodMissMatch, "expect %d - %d = 1",
+			currentEpochCounter, aggregatePrevote.SubmitEpochCounter)
 	}
 
 	exchangeRateTuples, err := types.ParseExchangeRateTuples(msg.ExchangeRates)

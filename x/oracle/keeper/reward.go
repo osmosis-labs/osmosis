@@ -74,7 +74,10 @@ func (k Keeper) RewardBallotWinners(
 		receiverVal, err := k.StakingKeeper.GetValidator(ctx, winner.Recipient)
 		// In case absence of the validator, we just skip distribution
 		if err != nil && !rewardCoins.IsZero() {
-			k.distrKeeper.AllocateTokensToValidator(ctx, receiverVal, sdk.NewDecCoinsFromCoins(rewardCoins...))
+			err = k.distrKeeper.AllocateTokensToValidator(ctx, receiverVal, sdk.NewDecCoinsFromCoins(rewardCoins...))
+			if err != nil {
+				panic("could not allocate tokens to validator")
+			}
 			distributedReward = distributedReward.Add(rewardCoins...)
 		} else {
 			valAddress, err := sdk.ValAddressFromBech32(receiverVal.GetOperator())

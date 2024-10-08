@@ -8,9 +8,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	cltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
-	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
