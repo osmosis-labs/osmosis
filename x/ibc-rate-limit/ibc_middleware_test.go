@@ -339,7 +339,9 @@ func (suite *MiddlewareTestSuite) RemovePath(addr sdk.AccAddress, channel, denom
 func (suite *MiddlewareTestSuite) ResetPathQuota(addr sdk.AccAddress, channel, denom, quota_id string) {
 	osmosisApp := suite.chainA.GetOsmosisApp()
 
+	fmt.Printf("resetting path quota for denom=%s channel=%s quota_id=%s", denom, channel, quota_id)
 	resetQuota := suite.BuildResetPathQuota(channel, denom, quota_id)
+	fmt.Println(resetQuota)
 	_, err := suite.chainA.ExecuteContract(addr, osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName), []byte(resetQuota), sdk.Coins{})
 	suite.Require().NoError(err)
 }
@@ -425,7 +427,7 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	addr := suite.chainA.InstantiateRLContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
-	// Set the restrictions to allow only channel-1
+	// Set the restrictions to allow only channel-0
 	suite.SetDenomRestrictions(addr, restrictedDenom, channel)
 
 	// send 2.5% (quota is 5%)
@@ -525,7 +527,7 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithRestrictedChannelNonNative
 	suite.RemovePath(contractAddr, "channel-0", denom)
 
 	// Set the restrictions to allow only channel-1
-	suite.SetDenomRestrictions(contractAddr, denom, "channel-1")
+	suite.SetDenomRestrictions(contractAddr, denomTrace.GetFullDenomPath(), "channel-1")
 
 	_, err = suite.AssertSend(false, suite.MessageFromAToB(denom, osmomath.NewInt(1)))
 	suite.Require().Error(err)
@@ -566,7 +568,7 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) sdk.AccAddress {
 	addr := suite.chainA.InstantiateRLContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
-	// Set the restrictions to allow only channel-1
+	// Set the restrictions to allow only channel-0
 	suite.SetDenomRestrictions(addr, restrictedDenom, channel)
 
 	// receive 2.5% (quota is 5%)
@@ -849,7 +851,7 @@ func (suite *MiddlewareTestSuite) TestV1Migrate() {
 	suite.testChannelQuota(sendAmount, 2)
 
 	// Reset path quota to test migration correctly
-	suite.ResetPathQuota(addr, "channel-0", sdk.DefaultBondDenom, "weekly")
+	suite.ResetPathQuota(addr, channel, denom, "weekly")
 
 	// send 1% before migrating so state is not default
 	fmt.Println("trying to send ", sendAmount)
