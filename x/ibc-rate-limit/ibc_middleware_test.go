@@ -862,6 +862,6 @@ func (suite *MiddlewareTestSuite) TestV1Migrate() {
 	// Set the restrictions to allow only channel-1
 	suite.SetDenomRestrictions(addr, denom, channel)
 
-	// send 1% post migration
+	// test channel quota post migration
 	suite.testChannelQuota(sendAmount, 1)
 }
