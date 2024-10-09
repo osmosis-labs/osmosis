@@ -339,7 +339,22 @@ func NewOsmosisApp(
 		ibcWasmConfig,
 	)
 
+	// Initialize the config object for the SQS ingester
 	sqsConfig := sqs.NewConfigFromOptions(appOpts)
+
+	// Initialize the config object for the indexer
+	indexerConfig := indexer.NewConfigFromOptions(appOpts)
+
+	var nodeStatusChecker commonservice.NodeStatusChecker
+	if sqsConfig.IsEnabled || indexerConfig.IsEnabled {
+		// Note: address can be moved to config in the future if needed.
+		rpcAddress, ok := appOpts.Get(rpcAddressConfigName).(string)
+		if !ok {
+			panic(fmt.Sprintf("failed to retrieve %s from config.toml", rpcAddressConfigName))
+		}
+		// Create node status checker to be used by sqs and indexer streaming services.
+		nodeStatusChecker = commonservice.NewNodeStatusChecker(rpcAddress)
+	}
 
 	streamingServices := []storetypes.ABCIListener{}
 
@@ -373,13 +388,6 @@ func NewOsmosisApp(
 		// Create write listeners for the SQS service.
 		writeListeners, storeKeyMap := getSQSServiceWriteListeners(app, appCodec, poolTracker, app.WasmKeeper)
 
-		// Note: address can be moved to config in the future if needed.
-		rpcAddress, ok := appOpts.Get(rpcAddressConfigName).(string)
-		if !ok {
-			panic(fmt.Sprintf("failed to retrieve %s from config.toml", rpcAddressConfigName))
-		}
-		nodeStatusChecker := commonservice.NewNodeStatusChecker(rpcAddress)
-
 		// Create the SQS streaming service by setting up the write listeners,
 		// the SQS ingester, and the pool tracker.
 		blockUpdatesProcessUtils := &commondomain.BlockUpdateProcessUtils{
@@ -390,9 +398,6 @@ func NewOsmosisApp(
 
 		streamingServices = append(streamingServices, sqsStreamingService)
 	}
-
-	// Initialize the config object for the indexer
-	indexerConfig := indexer.NewConfigFromOptions(appOpts)
 
 	// initialize indexer if enabled
 	if indexerConfig.IsEnabled {
@@ -433,7 +438,7 @@ func NewOsmosisApp(
 			StoreKeyMap:    storeKeyMap,
 		}
 		poolExtractor := poolextractor.New(poolKeepers, poolTracker)
-		indexerStreamingService := indexerservice.New(blockUpdatesProcessUtils, blockProcessStrategyManager, indexerPublisher, storeKeyMap, poolExtractor, poolTracker, keepers, app.GetTxConfig().TxDecoder(), logger)
+		indexerStreamingService := indexerservice.New(blockUpdatesProcessUtils, blockProcessStrategyManager, indexerPublisher, storeKeyMap, poolExtractor, poolTracker, keepers, app.GetTxConfig().TxDecoder(), nodeStatusChecker, logger)
 
 		// Register the SQS streaming service with the app.
 		streamingServices = append(streamingServices, indexerStreamingService)
