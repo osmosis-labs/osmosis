@@ -24,6 +24,7 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 
 	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
+	commonservice "github.com/osmosis-labs/osmosis/v26/ingest/common/service"
 	"github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain"
 	"github.com/osmosis-labs/osmosis/v26/ingest/indexer/service/blockprocessor"
 	sqsdomain "github.com/osmosis-labs/osmosis/v26/ingest/sqs/domain"
@@ -50,6 +51,8 @@ type indexerStreamingService struct {
 
 	poolTracker sqsdomain.BlockPoolUpdateTracker
 
+	nodeStatusChecker commonservice.NodeStatusChecker
+
 	txDecoder sdk.TxDecoder
 
 	logger log.Logger
@@ -60,7 +63,7 @@ type indexerStreamingService struct {
 // sqsIngester is an ingester that ingests the block data into SQS.
 // poolTracker is a tracker that tracks the pools that were changed in the block.
 // nodeStatusChecker is a checker that checks if the node is syncing.
-func New(blockUpdatesProcessUtils commondomain.BlockUpdateProcessUtilsI, blockProcessStrategyManager commondomain.BlockProcessStrategyManager, client domain.Publisher, storeKeyMap map[string]storetypes.StoreKey, poolExtractor commondomain.PoolExtractor, poolTracker sqsdomain.BlockPoolUpdateTracker, keepers domain.Keepers, txDecoder sdk.TxDecoder, logger log.Logger) *indexerStreamingService {
+func New(blockUpdatesProcessUtils commondomain.BlockUpdateProcessUtilsI, blockProcessStrategyManager commondomain.BlockProcessStrategyManager, client domain.Publisher, storeKeyMap map[string]storetypes.StoreKey, poolExtractor commondomain.PoolExtractor, poolTracker sqsdomain.BlockPoolUpdateTracker, keepers domain.Keepers, txDecoder sdk.TxDecoder, nodeStatusChecker commonservice.NodeStatusChecker, logger log.Logger) *indexerStreamingService {
 	return &indexerStreamingService{
 		blockProcessStrategyManager: blockProcessStrategyManager,
 
@@ -75,6 +78,8 @@ func New(blockUpdatesProcessUtils commondomain.BlockUpdateProcessUtilsI, blockPr
 		blockUpdatesProcessUtils: blockUpdatesProcessUtils,
 
 		txDecoder: txDecoder,
+
+		nodeStatusChecker: nodeStatusChecker,
 
 		logger: logger,
 	}
@@ -340,11 +345,21 @@ func (s *indexerStreamingService) ListenCommit(ctx context.Context, res abci.Res
 	s.blockUpdatesProcessUtils.SetChangeSet(changeSet)
 
 	// Create block processor
-	blockProcessor := blockprocessor.NewBlockProcessor(s.blockProcessStrategyManager, s.client, s.poolExtractor, s.keepers, s.blockUpdatesProcessUtils)
+	// Note the returned block processor can be either full or incremental depending on the strategy
+	// When node is syncing, it will be a full block processor
+	// When node is already synced, it will be an incremental block processor
+	blockProcessor := blockprocessor.NewBlockProcessor(s.blockProcessStrategyManager, s.client, s.poolExtractor, s.keepers, s.nodeStatusChecker, s.blockUpdatesProcessUtils)
 
 	// Process block.
 	if err := blockProcessor.ProcessBlock(sdkCtx); err != nil {
+		// In the case of full block processor, if any error is returned, including node is syncing or sync check fails,
+		// data is not marked as ingested and will be retried in the next block
 		return err
+	}
+
+	// If block processor is a full block processor, mark the initial data as ingested
+	if blockProcessor.IsFullBlockProcessor() {
+		s.blockProcessStrategyManager.MarkInitialDataIngested()
 	}
 
 	return nil
