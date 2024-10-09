@@ -64,6 +64,7 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
 
 	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
+	commonservice "github.com/osmosis-labs/osmosis/v26/ingest/common/service"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 
@@ -377,7 +378,7 @@ func NewOsmosisApp(
 		if !ok {
 			panic(fmt.Sprintf("failed to retrieve %s from config.toml", rpcAddressConfigName))
 		}
-		nodeStatusChecker := sqsservice.NewNodeStatusChecker(rpcAddress)
+		nodeStatusChecker := commonservice.NewNodeStatusChecker(rpcAddress)
 
 		// Create the SQS streaming service by setting up the write listeners,
 		// the SQS ingester, and the pool tracker.
