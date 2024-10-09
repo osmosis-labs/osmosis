@@ -340,17 +340,24 @@ func NewOsmosisApp(
 		ibcWasmConfig,
 	)
 
+	// Initialize the config object for the SQS
 	sqsConfig := sqs.NewConfigFromOptions(appOpts)
 
-	streamingServices := []storetypes.ABCIListener{}
+	// Initialize the config object for the indexer
+	indexerConfig := indexer.NewConfigFromOptions(appOpts)
 
-	// Note: address can be moved to config in the future if needed.
-	rpcAddress, ok := appOpts.Get(rpcAddressConfigName).(string)
-	if !ok {
-		panic(fmt.Sprintf("failed to retrieve %s from config.toml", rpcAddressConfigName))
+	var nodeStatusChecker commonservice.NodeStatusChecker
+	if sqsConfig.IsEnabled || indexerConfig.IsEnabled {
+		// Note: address can be moved to config in the future if needed.
+		rpcAddress, ok := appOpts.Get(rpcAddressConfigName).(string)
+		if !ok {
+			panic(fmt.Sprintf("failed to retrieve %s from config.toml", rpcAddressConfigName))
+		}
+		// Create node status checker to be used by sqs and indexer streaming services.
+		nodeStatusChecker = commonservice.NewNodeStatusChecker(rpcAddress)
 	}
-	// Create node status checker to be used by sqs and indexer streaming services.
-	nodeStatusChecker := commonservice.NewNodeStatusChecker(rpcAddress)
+
+	streamingServices := []storetypes.ABCIListener{}
 
 	// Initialize the SQS ingester if it is enabled.
 	if sqsConfig.IsEnabled {
@@ -392,9 +399,6 @@ func NewOsmosisApp(
 
 		streamingServices = append(streamingServices, sqsStreamingService)
 	}
-
-	// Initialize the config object for the indexer
-	indexerConfig := indexer.NewConfigFromOptions(appOpts)
 
 	// initialize indexer if enabled
 	if indexerConfig.IsEnabled {

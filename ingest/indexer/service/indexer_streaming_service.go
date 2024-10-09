@@ -350,10 +350,21 @@ func (s *indexerStreamingService) ListenCommit(ctx context.Context, res abci.Res
 	// When node is already synced, it will be an incremental block processor
 	blockProcessor := blockprocessor.NewBlockProcessor(s.blockProcessStrategyManager, s.client, s.poolExtractor, s.keepers, s.nodeStatusChecker, s.blockUpdatesProcessUtils)
 
+	// If block processor is a full block processor, check if the node is syncing
+	// If node is syncing, skip processing the block (which publishes token supplies and pools data)
+	// We can wait until node is synced to publish the token supplies and pools data as we only need the latest snapshot of it
+	if blockProcessor.IsFullBlockProcessor() {
+		isNodeSyncing, err := s.nodeStatusChecker.IsNodeSyncing(sdkCtx)
+		if err != nil {
+			return err
+		}
+		if isNodeSyncing {
+			// If node is syncing, skip processing the block
+			return nil
+		}
+	}
 	// Process block.
 	if err := blockProcessor.ProcessBlock(sdkCtx); err != nil {
-		// Mark the error observed, so that the next block will reprocess the entire block.
-		s.blockProcessStrategyManager.MarkErrorObserved()
 		return err
 	}
 

@@ -27,15 +27,6 @@ func (f *fullIndexerBlockProcessStrategy) IsFullBlockProcessor() bool {
 
 // ProcessBlock implements commondomain.BlockProcessStrategy.
 func (f *fullIndexerBlockProcessStrategy) ProcessBlock(ctx sdk.Context) (err error) {
-	// Detect syncing
-	isNodesyncing, err := f.nodeStatusChecker.IsNodeSyncing(ctx)
-	if err != nil {
-		return &commondomain.NodeSyncCheckError{Err: err}
-	}
-	if isNodesyncing {
-		return commondomain.ErrNodeIsSyncing
-	}
-
 	wg := sync.WaitGroup{}
 
 	wg.Add(2)
