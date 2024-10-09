@@ -495,7 +495,8 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithRestrictedChannelNative() 
 	// Ensure sends work as intended before checking restriction
 	attrs := suite.fullSendTest(true)
 
-	addrStr := attrs["_contract_address"]
+	addrStr, ok := attrs["_contract_address"]
+	suite.Require().True(ok)
 	contractAddr, err := sdk.AccAddressFromBech32(addrStr)
 	suite.Require().NoError(err)
 
@@ -519,7 +520,8 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithRestrictedChannelNonNative
 	fmt.Println(denomTrace)
 	denom := denomTrace.IBCDenom()
 
-	addrStr := attrs["_contract_address"]
+	addrStr, ok := attrs["_contract_address"]
+	suite.Require().True(ok)
 	contractAddr, err := sdk.AccAddressFromBech32(addrStr)
 	suite.Require().NoError(err)
 
