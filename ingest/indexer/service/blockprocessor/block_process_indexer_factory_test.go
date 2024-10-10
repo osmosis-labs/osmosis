@@ -55,8 +55,11 @@ func (suite *IndexerBlockProcessorTestSuite) TestNewBlockProcessor() {
 				blockStrategyManager.MarkInitialDataIngested()
 			}
 
+			// Initialize the node status checker mock
+			nodeStatusCheckerMock := &commonmocks.NodeStatusCheckerMock{}
+
 			// System under test
-			newBlockProcessor := blockprocessor.NewBlockProcessor(blockStrategyManager, publisherMock, poolsExtracter, domain.Keepers{}, nil)
+			newBlockProcessor := blockprocessor.NewBlockProcessor(blockStrategyManager, publisherMock, poolsExtracter, domain.Keepers{}, nodeStatusCheckerMock, nil)
 
 			// Check if the block processor is a full block processor
 			isFullBlockProcessor := newBlockProcessor.IsFullBlockProcessor()
