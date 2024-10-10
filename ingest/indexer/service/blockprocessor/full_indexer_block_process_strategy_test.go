@@ -1,6 +1,7 @@
 package blockprocessor_test
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -27,6 +28,7 @@ var (
 	NonExistentPoolHeight          = int64(12347)
 	NonExistentPoolTime            = time.Now()
 	NonExistentPoolTxnHash         = "txhash3"
+	defaultError                   = errors.New("default error")
 )
 
 func NewPoolCreation(poolId uint64, blockHeight int64, blockTime time.Time, txnHash string) commondomain.PoolCreation {
@@ -44,6 +46,153 @@ type FullIndexerBlockProcessStrategyTestSuite struct {
 
 func TestFullIndexerBlockProcessStrategyTestSuite(t *testing.T) {
 	suite.Run(t, new(FullIndexerBlockProcessStrategyTestSuite))
+}
+
+// This test aims to verify the behavior of the ProcessBlock method in two scenarios:
+// 1. When the node has caught up and is no longer syncing:
+//   - It publishes the correct number of token supplies and offsets.
+//   - It publishes the correct number of pool pairs, along with the expected number of pools with creation data.
+//   - It returns an error if it fails to verify the node's syncing status.
+//
+// 2. When the node is still syncing:
+//   - It returns an error, and no data should be published.
+func (s *FullIndexerBlockProcessStrategyTestSuite) TestProcessBlock() {
+	tests := []struct {
+		// name is the test name
+		name string
+		// createdPoolIDs is the map of pool IDs to pool creation data
+		createdPoolIDs map[uint64]commondomain.PoolCreation
+		// isSyncingMockValue is the value to mock out the node status checker's IsSyncing method
+		isSyncingMockValue bool
+		// isSyncingMockError is the error to mock out the node status checker's IsSyncing method
+		isSyncingMockError error
+		// expectedError is the expected error
+		expectedError error
+		// expectedPublishPoolPairsCalled is the expected value for whether the pair publisher's PublishPoolPairs method was called
+		expectedPublishPoolPairsCalled bool
+		// expectedNumPoolsPublished is the expected number of pools published
+		expectedNumPoolsPublished int
+		// expectedNumPoolsWithCreationData is the expected number of pools with creation data
+		expectedNumPoolsWithCreationData int
+		// expectedNumPublishTokenSupplyCalls is the expected number of calls to the publisher's PublishTokenSupply method
+		expectedNumPublishTokenSupplyCalls int
+		// expectedNumPublishTokenSupplyOffsetCalls is the expected number of calls to the publisher's PublishTokenSupplyOffset method
+		expectedNumPublishTokenSupplyOffsetCalls int
+	}{
+		{
+			name:                                     "happy path with no pool creation",
+			createdPoolIDs:                           map[uint64]commondomain.PoolCreation{},
+			isSyncingMockValue:                       false,
+			expectedPublishPoolPairsCalled:           true,
+			expectedNumPoolsPublished:                5,
+			expectedNumPoolsWithCreationData:         0,
+			expectedNumPublishTokenSupplyCalls:       8,
+			expectedNumPublishTokenSupplyOffsetCalls: 1,
+		},
+		{
+			name: "should process block with multiple pool creation",
+			createdPoolIDs: map[uint64]commondomain.PoolCreation{
+				DefaultConcentratedPoolId: {
+					PoolId:      DefaultConcentratedPoolId,
+					BlockHeight: DefaultConcentratedPoolHeight,
+					BlockTime:   DefaultConcentratedPoolTime,
+					TxnHash:     DefaultConcentratedPoolTxnHash,
+				},
+				DefaultCfmmPoolId: {
+					PoolId:      DefaultCfmmPoolId,
+					BlockHeight: DefaultCfmmPoolHeight,
+					BlockTime:   DefaultCfmmPoolTime,
+					TxnHash:     DefaultCfmmPoolTxnHash,
+				},
+			},
+			isSyncingMockValue:                       false,
+			expectedPublishPoolPairsCalled:           true,
+			expectedNumPoolsPublished:                5,
+			expectedNumPoolsWithCreationData:         2,
+			expectedNumPublishTokenSupplyCalls:       8,
+			expectedNumPublishTokenSupplyOffsetCalls: 1,
+		},
+		{
+			name:               "should error out when node is syncing",
+			createdPoolIDs:     map[uint64]commondomain.PoolCreation{},
+			isSyncingMockValue: true,
+			expectedError:      commondomain.ErrNodeIsSyncing,
+		},
+		{
+			name:               "should error out when node check syncing fails",
+			createdPoolIDs:     map[uint64]commondomain.PoolCreation{},
+			isSyncingMockValue: false,
+			isSyncingMockError: defaultError,
+			expectedError: &commondomain.NodeSyncCheckError{
+				Err: defaultError,
+			},
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.Setup()
+
+			// Initialized chain pools
+			s.PrepareAllSupportedPools()
+
+			// Get all chain pools from state for asserting later
+			// pool id 1 created below
+			concentratedPools, err := s.App.ConcentratedLiquidityKeeper.GetPools(s.Ctx)
+			s.Require().NoError(err)
+			// pool id 2, 3 created below
+			cfmmPools, err := s.App.GAMMKeeper.GetPools(s.Ctx)
+			s.Require().NoError(err)
+			// pool id 4, 5 created below
+			cosmWasmPools, err := s.App.CosmwasmPoolKeeper.GetPoolsWithWasmKeeper(s.Ctx)
+			s.Require().NoError(err)
+			blockPools := commondomain.BlockPools{
+				ConcentratedPools: concentratedPools,
+				CFMMPools:         cfmmPools,
+				CosmWasmPools:     cosmWasmPools,
+			}
+
+			// Mock out pool extractor
+			poolsExtracter := &commonmocks.PoolsExtractorMock{
+				BlockPools:     blockPools,
+				CreatedPoolIDs: test.createdPoolIDs,
+			}
+
+			// Mock out publisher
+			publisherMock := &indexermocks.PublisherMock{}
+
+			// Mock out pair publisher
+			pairPublisherMock := &indexermocks.MockPairPublisher{}
+
+			// Initialize keepers
+			keepers := indexerdomain.Keepers{
+				PoolManagerKeeper: s.App.PoolManagerKeeper,
+				BankKeeper:        s.App.BankKeeper,
+			}
+
+			// Mock out node status checker
+			nodeStatusCheckerMock := &commonmocks.NodeStatusCheckerMock{
+				IsSyncing:          test.isSyncingMockValue,
+				IsNodeSyncingError: test.isSyncingMockError,
+			}
+
+			blockProcessor := blockprocessor.NewFullIndexerBlockProcessStrategy(publisherMock, keepers, poolsExtracter, pairPublisherMock, nodeStatusCheckerMock)
+
+			err = blockProcessor.ProcessBlock(s.Ctx)
+			s.Require().Equal(test.expectedError, err)
+			if test.expectedError == nil {
+				s.Require().Equal(test.expectedPublishPoolPairsCalled, pairPublisherMock.PublishPoolPairsCalled)
+				if test.expectedPublishPoolPairsCalled {
+					s.Require().Equal(test.expectedNumPoolsPublished, pairPublisherMock.NumPoolPairPublished)
+					s.Require().Equal(test.expectedNumPoolsWithCreationData, pairPublisherMock.NumPoolPairWithCreationData)
+				}
+				s.Require().Equal(test.expectedNumPublishTokenSupplyCalls, publisherMock.NumPublishTokenSupplyCalls)
+				s.Require().Equal(test.expectedNumPublishTokenSupplyOffsetCalls, publisherMock.NumPublishTokenSupplyOffsetCalls)
+			}
+
+		})
+	}
+
 }
 
 // The purpose of this test is to verify that the PublishAllSupplies method correctly publishes
@@ -115,7 +264,7 @@ func (s *FullIndexerBlockProcessStrategyTestSuite) TestPublishAllSupplies() {
 				BankKeeper:        s.App.BankKeeper,
 			}
 
-			blockProcessor := blockprocessor.NewFullIndexerBlockProcessStrategy(publisherMock, keepers, poolsExtracter, pairPublisherMock)
+			blockProcessor := blockprocessor.NewFullIndexerBlockProcessStrategy(publisherMock, keepers, poolsExtracter, pairPublisherMock, nil)
 
 			blockProcessor.PublishAllSupplies(s.Ctx)
 			s.Require().Equal(test.expectedNumPublishTokenSupplyCalls, publisherMock.NumPublishTokenSupplyCalls)
@@ -215,7 +364,7 @@ func (s *FullIndexerBlockProcessStrategyTestSuite) TestProcessPools() {
 				BankKeeper:        s.App.BankKeeper,
 			}
 
-			blockProcessor := blockprocessor.NewFullIndexerBlockProcessStrategy(publisherMock, keepers, poolsExtracter, pairPublisherMock)
+			blockProcessor := blockprocessor.NewFullIndexerBlockProcessStrategy(publisherMock, keepers, poolsExtracter, pairPublisherMock, nil)
 
 			err = blockProcessor.ProcessPools(s.Ctx)
 			s.Require().NoError(err)
