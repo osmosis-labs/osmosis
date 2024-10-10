@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -14,6 +15,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
+	evidencetypes "cosmossdk.io/x/evidence/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -1049,6 +1052,83 @@ func (s *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 	}
 }
 
+func (s *KeeperTestSuite) TestForceUndelegateAndBurnOsmoTokens() {
+	testCases := []struct {
+		name              string
+		validatorStats    []stakingtypes.BondStatus
+		superDelegations  []superfluidDelegation
+		jailVal           bool
+		expectedShareDiff math.LegacyDec
+	}{
+		{
+			"with single validator and single superfluid delegation and single undelegation",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			false,
+			math.LegacyMustNewDecFromStr("10"),
+		},
+		{
+			"with single validator and single superfluid delegation and single undelegation",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			true,
+			math.LegacyMustNewDecFromStr("10"),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			// setup validators
+			valAddrs := s.SetupValidators(tc.validatorStats)
+
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
+
+			// setup superfluid delegations
+			_, intermediaryAccs, _ := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
+			s.checkIntermediaryAccountDelegations(intermediaryAccs)
+
+			delegationBeforeUndelegate, err := s.App.StakingKeeper.GetDelegation(s.Ctx, intermediaryAccs[0].GetAccAddress(), valAddrs[0])
+			s.Require().NoError(err)
+			fmt.Println(delegationBeforeUndelegate.String())
+
+			// jail the validator as part of set up
+			if tc.jailVal {
+				validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrs[0])
+				s.Require().NoError(err)
+				s.Ctx = s.Ctx.WithBlockHeight(100)
+				consAddr, err := validator.GetConsAddr()
+				s.Require().NoError(err)
+				// slash by slash factor
+				power := sdk.TokensToConsensusPower(validator.Tokens, sdk.DefaultPowerReduction)
+
+				// Note: this calls BeforeValidatorSlashed hook
+				s.handleEquivocationEvidence(s.Ctx, &evidencetypes.Equivocation{
+					Height:           80,
+					Time:             time.Time{},
+					Power:            power,
+					ConsensusAddress: sdk.ConsAddress(consAddr).String(),
+				})
+				val, err := s.App.StakingKeeper.GetValidatorByConsAddr(s.Ctx, consAddr)
+				s.Require().NoError(err)
+				s.Require().Equal(val.Jailed, true)
+			}
+
+			err = s.App.SuperfluidKeeper.ForceUndelegateAndBurnOsmoTokens(s.Ctx, math.NewInt(10), intermediaryAccs[0])
+			s.Require().NoError(err)
+
+			delegationAfterUndelegate, err := s.App.StakingKeeper.GetDelegation(s.Ctx, intermediaryAccs[0].GetAccAddress(), valAddrs[0])
+			s.Require().NoError(err)
+			fmt.Println(delegationAfterUndelegate.String())
+
+			shareDiff := delegationBeforeUndelegate.Shares.Sub(delegationAfterUndelegate.Shares)
+			s.Require().True(shareDiff.Equal(tc.expectedShareDiff))
+
+		})
+	}
+}
 func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 	defaultJoinTime := s.Ctx.BlockTime()
 	type tc struct {

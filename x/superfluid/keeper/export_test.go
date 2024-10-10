@@ -85,3 +85,9 @@ func (k Keeper) ConvertUnlockedToStake(ctx sdk.Context, sender sdk.AccAddress, v
 func (k Keeper) DelegateBaseOnValsetPref(ctx sdk.Context, sender sdk.AccAddress, valAddr, originalSuperfluidValAddr string, totalAmtToStake osmomath.Int) error {
 	return k.delegateBaseOnValsetPref(ctx, sender, valAddr, originalSuperfluidValAddr, totalAmtToStake)
 }
+
+func (k Keeper) ForceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
+	osmoAmount osmomath.Int, intermediaryAcc types.SuperfluidIntermediaryAccount,
+) error {
+	return k.forceUndelegateAndBurnOsmoTokens(ctx, osmoAmount, intermediaryAcc)
+}
