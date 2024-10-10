@@ -54,11 +54,19 @@ func (s *PoolExtractorTestSuite) TestExtractor() {
 	// Track tick change for a concentraed pool.
 	poolTracker.TrackConcentratedPoolIDTickChange(concentratedPoolWithPosition.GetId())
 
+	// Inject a new pool creation and track it
+	poolTracker.TrackCreatedPoolID(commondomain.PoolCreation{
+		PoolId:      concentratedPool.GetId(),
+		BlockHeight: 1000,
+		BlockTime:   s.Ctx.BlockTime(),
+		TxnHash:     "txnhash",
+	})
+
 	// Initialize the extractor
 	extractor := poolextractor.New(keepers, poolTracker)
 
 	// System under test #1
-	blockPools, err := extractor.ExtractAll(s.Ctx)
+	blockPools, createdPoolIDs, err := extractor.ExtractAll(s.Ctx)
 	s.Require().NoError(err)
 
 	// Validate all pools are extracted
@@ -74,6 +82,15 @@ func (s *PoolExtractorTestSuite) TestExtractor() {
 	// Validate only the changed pools are extracted
 	changedPools := blockPools.GetAll()
 	s.Require().Equal(2, len(changedPools))
+
+	// Validate that the newly created pool is extracted
+	// Since only one newly created pool is injected during the test in the above code earlier,
+	// the length of the createdPoolIDs should be 1.
+	// the length of the pools.GetAll() should be equal to the length of the createdPoolIDs.
+	pools, createdPoolIDs, err := extractor.ExtractCreated(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(len(createdPoolIDs), len(pools.GetAll()))
+	s.Require().Equal(1, len(createdPoolIDs))
 
 	// Validate that the tick change is detected
 	s.Require().Len(blockPools.ConcentratedPoolIDTickChange, 2)

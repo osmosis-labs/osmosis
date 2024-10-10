@@ -555,8 +555,7 @@ func (m *MsgSetBaseDenoms) GetBaseDenoms() []BaseDenom {
 	return nil
 }
 
-// MsgSetBaseDenomsResponse defines the Msg/SetBaseDenoms response type.
-// This is not used anymore, but must be retained in the file to allow indexers
+// Deprecated, but must be retained in the file to allow indexers
 // to index blocks since genesis
 type MsgSetBaseDenomsResponse struct {
 }

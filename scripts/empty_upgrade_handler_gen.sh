@@ -47,7 +47,8 @@ echo -e "\t$module/app/upgrades$bracks\n" >> $CONSTANTS_FILE
 echo -e '\tstore "cosmossdk.io/store/types"' >> $CONSTANTS_FILE
 
 # set imports for upgrades.go
-echo -e '\tsdk "github.com/cosmos/cosmos-sdk/types"' >> $UPGRADES_FILE
+echo -e '\t"context"' >> $UPGRADES_FILE
+echo -e '\n' >> $UPGRADES_FILE
 echo -e '\t"github.com/cosmos/cosmos-sdk/types/module"' >> $UPGRADES_FILE
 echo -e '\tupgradetypes "cosmossdk.io/x/upgrade/types"\n' >> $UPGRADES_FILE
 echo -e "\t$module/app/keepers$bracks" >> $UPGRADES_FILE
@@ -78,7 +79,7 @@ func CreateUpgradeHandler(
 	bpm upgrades.BaseAppParamManager,
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// Run migrations before applying any other state changes.
 		// NOTE: DO NOT PUT ANY STATE CHANGES BEFORE RunMigrations().
 		migrations, err := mm.RunMigrations(ctx, configurator, fromVM)

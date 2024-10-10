@@ -69,6 +69,10 @@ func (s *PoolTransformerTestSuite) TestConvertPool_EmptyPriceInfoMap_TakerFee() 
 			Denom0: USDC,
 			Denom1: USDT,
 		}: defaultPoolManagerTakerFee,
+		{
+			Denom0: USDT,
+			Denom1: USDC,
+		}: defaultPoolManagerTakerFee,
 	}
 
 	// Create OSMO / USDT pool and set the protorev route

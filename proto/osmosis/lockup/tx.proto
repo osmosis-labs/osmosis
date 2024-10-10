@@ -29,13 +29,6 @@ service Msg {
       returns (MsgSetRewardReceiverAddressResponse);
 }
 
-// This is not used anymore, but must be retained in the file to allow indexers
-// to index blocks since genesis
-message MsgUnlockPeriodLock {
-  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
-  uint64 ID = 2;
-}
-
 message MsgLockTokens {
   option (amino.name) = "osmosis/lockup/lock-tokens";
   option (cosmos.msg.v1.signer) = "owner";
@@ -53,12 +46,6 @@ message MsgLockTokens {
   ];
 }
 message MsgLockTokensResponse { uint64 ID = 1; }
-
-// This is not used anymore, but must be retained in the file to allow indexers
-// to index blocks since genesis
-message MsgUnlockTokens {
-  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
-}
 
 message MsgBeginUnlockingAll {
   option (amino.name) = "osmosis/lockup/begin-unlock-tokens";
@@ -135,3 +122,14 @@ message MsgSetRewardReceiverAddress {
       [ (gogoproto.moretags) = "yaml:\"reward_receiver\"" ];
 }
 message MsgSetRewardReceiverAddressResponse { bool success = 1; }
+
+// DEPRECATED
+// Following messages are deprecated but kept to support indexing.
+message MsgUnlockPeriodLock {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  uint64 ID = 2;
+}
+
+message MsgUnlockTokens {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+}

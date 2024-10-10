@@ -5,6 +5,7 @@ import (
 
 	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
 	"github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
 type blockUpdatesIndexerBlockProcessStrategy struct {
@@ -24,7 +25,7 @@ func (f *blockUpdatesIndexerBlockProcessStrategy) IsFullBlockProcessor() bool {
 // ProcessBlock implements commondomain.BlockProcessStrategy.
 func (f *blockUpdatesIndexerBlockProcessStrategy) ProcessBlock(ctx types.Context) error {
 	// Publish supplies
-	if err := f.publishChangedPools(ctx); err != nil {
+	if err := f.publishCreatedPools(ctx); err != nil {
 		return err
 	}
 
@@ -32,21 +33,39 @@ func (f *blockUpdatesIndexerBlockProcessStrategy) ProcessBlock(ctx types.Context
 }
 
 // publishChangedPools publishes the pools that were changed in the block.
-func (f *blockUpdatesIndexerBlockProcessStrategy) publishChangedPools(ctx types.Context) error {
+func (f *blockUpdatesIndexerBlockProcessStrategy) publishCreatedPools(ctx types.Context) error {
 	err := f.blockUpdateProcessUtils.ProcessBlockChangeSet()
 	if err != nil {
 		return err
 	}
 	// Extract the pools that were changed in the block
-	blockPools, err := f.poolExtractor.ExtractChanged(ctx)
+	blockPools, createdPoolIDs, err := f.poolExtractor.ExtractCreated(ctx)
 	if err != nil {
 		return err
 	}
 
 	pools := blockPools.GetAll()
 
+	// Do nothing if no pools were created, or pool metadata is nil
+	if len(createdPoolIDs) == 0 || len(pools) == 0 {
+		return nil
+	}
+
+	// Filter pools to include only those with pool IDs found in createdPoolIDs
+	filteredPools := []poolmanagertypes.PoolI{}
+	for _, pool := range pools {
+		if _, exists := createdPoolIDs[pool.GetId()]; exists {
+			filteredPools = append(filteredPools, pool)
+		}
+	}
+
+	// Do nothing if no pools are left after filtering
+	if len(filteredPools) == 0 {
+		return nil
+	}
+
 	// Publish pool pairs
-	if err := f.poolPairPublisher.PublishPoolPairs(ctx, pools); err != nil {
+	if err := f.poolPairPublisher.PublishPoolPairs(ctx, filteredPools, createdPoolIDs); err != nil {
 		return err
 	}
 

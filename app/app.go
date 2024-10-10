@@ -64,6 +64,7 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
 
 	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
+	commonservice "github.com/osmosis-labs/osmosis/v26/ingest/common/service"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 
@@ -134,6 +135,7 @@ import (
 	v24 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v24"
 	v25 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v25"
 	v26 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v26"
+	v27 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v27"
 	v3 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v3"
 	v4 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v4"
 	v5 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v5"
@@ -191,7 +193,7 @@ var (
 
 	_ runtime.AppI = (*OsmosisApp)(nil)
 
-	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade, v21.Upgrade, v22.Upgrade, v23.Upgrade, v24.Upgrade, v25.Upgrade, v26.Upgrade}
+	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade, v21.Upgrade, v22.Upgrade, v23.Upgrade, v24.Upgrade, v25.Upgrade, v26.Upgrade, v27.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 
 	// rpcAddressConfigName is the name of the config key that holds the RPC address.
@@ -338,7 +340,22 @@ func NewOsmosisApp(
 		ibcWasmConfig,
 	)
 
+	// Initialize the config object for the SQS ingester
 	sqsConfig := sqs.NewConfigFromOptions(appOpts)
+
+	// Initialize the config object for the indexer
+	indexerConfig := indexer.NewConfigFromOptions(appOpts)
+
+	var nodeStatusChecker commonservice.NodeStatusChecker
+	if sqsConfig.IsEnabled || indexerConfig.IsEnabled {
+		// Note: address can be moved to config in the future if needed.
+		rpcAddress, ok := appOpts.Get(rpcAddressConfigName).(string)
+		if !ok {
+			panic(fmt.Sprintf("failed to retrieve %s from config.toml", rpcAddressConfigName))
+		}
+		// Create node status checker to be used by sqs and indexer streaming services.
+		nodeStatusChecker = commonservice.NewNodeStatusChecker(rpcAddress)
+	}
 
 	streamingServices := []storetypes.ABCIListener{}
 
@@ -372,13 +389,6 @@ func NewOsmosisApp(
 		// Create write listeners for the SQS service.
 		writeListeners, storeKeyMap := getSQSServiceWriteListeners(app, appCodec, poolTracker, app.WasmKeeper)
 
-		// Note: address can be moved to config in the future if needed.
-		rpcAddress, ok := appOpts.Get(rpcAddressConfigName).(string)
-		if !ok {
-			panic(fmt.Sprintf("failed to retrieve %s from config.toml", rpcAddressConfigName))
-		}
-		nodeStatusChecker := sqsservice.NewNodeStatusChecker(rpcAddress)
-
 		// Create the SQS streaming service by setting up the write listeners,
 		// the SQS ingester, and the pool tracker.
 		blockUpdatesProcessUtils := &commondomain.BlockUpdateProcessUtils{
@@ -389,9 +399,6 @@ func NewOsmosisApp(
 
 		streamingServices = append(streamingServices, sqsStreamingService)
 	}
-
-	// Initialize the config object for the indexer
-	indexerConfig := indexer.NewConfigFromOptions(appOpts)
 
 	// initialize indexer if enabled
 	if indexerConfig.IsEnabled {
@@ -432,7 +439,7 @@ func NewOsmosisApp(
 			StoreKeyMap:    storeKeyMap,
 		}
 		poolExtractor := poolextractor.New(poolKeepers, poolTracker)
-		indexerStreamingService := indexerservice.New(blockUpdatesProcessUtils, blockProcessStrategyManager, indexerPublisher, storeKeyMap, poolExtractor, poolTracker, keepers, app.GetTxConfig().TxDecoder(), logger)
+		indexerStreamingService := indexerservice.New(blockUpdatesProcessUtils, blockProcessStrategyManager, indexerPublisher, storeKeyMap, poolExtractor, poolTracker, keepers, app.GetTxConfig().TxDecoder(), nodeStatusChecker, logger)
 
 		// Register the SQS streaming service with the app.
 		streamingServices = append(streamingServices, indexerStreamingService)

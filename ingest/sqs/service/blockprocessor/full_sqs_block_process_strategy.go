@@ -38,13 +38,13 @@ func (f *fullSQSBlockProcessStrategy) ProcessBlock(ctx sdk.Context) (err error) 
 			{Name: "err", Value: err.Error()},
 			{Name: "height", Value: fmt.Sprintf("%d", ctx.BlockHeight())},
 		})
-		return &domain.NodeSyncCheckError{Err: err}
+		return &commondomain.NodeSyncCheckError{Err: err}
 	}
 	if isNodesyncing {
-		return domain.ErrNodeIsSyncing
+		return commondomain.ErrNodeIsSyncing
 	}
 
-	pools, err := f.poolExtractor.ExtractAll(ctx)
+	pools, _, err := f.poolExtractor.ExtractAll(ctx)
 	if err != nil {
 		return err
 	}

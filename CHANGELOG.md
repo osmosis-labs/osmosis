@@ -42,9 +42,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-### Bug Fixes
+### State Breaking
 
-* [#8600](https://github.com/osmosis-labs/osmosis/pull/8600) Add missing protobuf definitions to be able to decode old block messages
+* [#8682](https://github.com/osmosis-labs/osmosis/pull/8682) chore: bump cosmwasm-optimizer
+* [#8734](https://github.com/osmosis-labs/osmosis/pull/8734) chore: update cosmwasm vm
+
+### Config
+
+
+### State Compatible
+
+* [#8754](https://github.com/osmosis-labs/osmosis/pull/8754) Add missing proto files for indexing
+* [#8563](https://github.com/osmosis-labs/osmosis/pull/8563) Add additional queries in x/gauges
+* [#8726](https://github.com/osmosis-labs/osmosis/pull/8726) fix: multiple temp directories on command executions
+* [#8731](https://github.com/osmosis-labs/osmosis/pull/8731) fix: in place testnet logs
+* [#8728](https://github.com/osmosis-labs/osmosis/pull/8728) fix unsupported sign-mode issue
+* [#8743](https://github.com/osmosis-labs/osmosis/pull/8743) chore: bump sdk and cometbft
+
+### State Machine Breaking
+
+* [#8732](https://github.com/osmosis-labs/osmosis/pull/8732) fix: iterate delegations continue instead of erroring
+
+## v26.0.1
+
+### State Machine Breaking
+
+* [#8732](https://github.com/osmosis-labs/osmosis/pull/8732) fix: iterate delegations continue instead of erroring
+
+## v26.0.0
 
 ### State Breaking
 
@@ -77,8 +102,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8543](https://github.com/osmosis-labs/osmosis/pull/8543) Add OTEL wiring and new configs in app.toml
 * [#8566](https://github.com/osmosis-labs/osmosis/pull/8566) Minor speedup to CalcExitCFMM shares
 * [#8665](https://github.com/osmosis-labs/osmosis/pull/8665) fix: smart account signing checktx error
-* [#8563](https://github.com/osmosis-labs/osmosis/pull/8563) Add additional queries in x/gauges
-
 
 ## v25.2.1
 * [#8546](https://github.com/osmosis-labs/osmosis/pull/8546) feat: reduce commit timeout to 500ms to enable faster blocks, and timeout propose to 1.8s

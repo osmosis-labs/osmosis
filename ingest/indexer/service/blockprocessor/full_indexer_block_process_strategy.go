@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
+	commonservice "github.com/osmosis-labs/osmosis/v26/ingest/common/service"
 	"github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain"
 )
 
@@ -14,6 +15,7 @@ type fullIndexerBlockProcessStrategy struct {
 	keepers           domain.Keepers
 	poolExtractor     commondomain.PoolExtractor
 	poolPairPublisher domain.PairPublisher
+	nodeStatusChecker commonservice.NodeStatusChecker
 }
 
 var _ commondomain.BlockProcessor = &fullIndexerBlockProcessStrategy{}
@@ -25,6 +27,17 @@ func (f *fullIndexerBlockProcessStrategy) IsFullBlockProcessor() bool {
 
 // ProcessBlock implements commondomain.BlockProcessStrategy.
 func (f *fullIndexerBlockProcessStrategy) ProcessBlock(ctx sdk.Context) (err error) {
+	// If block processor is a full block processor, check if the node is syncing
+	// If node is syncing, skip processing the block (which publishes token supplies and pools data)
+	// We can wait until node is synced to publish the token supplies and pools data as we only need the latest snapshot of it
+	isNodeSyncing, err := f.nodeStatusChecker.IsNodeSyncing(ctx)
+	if err != nil {
+		return &commondomain.NodeSyncCheckError{Err: err}
+	}
+	if isNodeSyncing {
+		return commondomain.ErrNodeIsSyncing
+	}
+
 	wg := sync.WaitGroup{}
 
 	wg.Add(2)
@@ -96,7 +109,7 @@ func (f *fullIndexerBlockProcessStrategy) publishAllSupplies(ctx sdk.Context) {
 
 // processPools publishes all the pools in the block.
 func (f *fullIndexerBlockProcessStrategy) processPools(ctx sdk.Context) error {
-	blockPools, err := f.poolExtractor.ExtractAll(ctx)
+	blockPools, createdPoolIDs, err := f.poolExtractor.ExtractAll(ctx)
 	if err != nil {
 		return err
 	}
@@ -105,7 +118,7 @@ func (f *fullIndexerBlockProcessStrategy) processPools(ctx sdk.Context) error {
 	pools := blockPools.GetAll()
 
 	// Process pool pairs
-	if err := f.poolPairPublisher.PublishPoolPairs(ctx, pools); err != nil {
+	if err := f.poolPairPublisher.PublishPoolPairs(ctx, pools, createdPoolIDs); err != nil {
 		return err
 	}
 
