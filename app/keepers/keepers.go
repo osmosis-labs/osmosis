@@ -574,17 +574,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// if we want to allow any custom callbacks
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
-	supportedFeatures := []string{
-		"iterator",
-		"staking",
-		"stargate",
-		"osmosis",
-		"cosmwasm_1_1",
-		"cosmwasm_1_2",
-		"cosmwasm_1_4",
-		"cosmwasm_2_0",
-		"cosmwasm_2_1",
-	}
+	wasmCapabilities := wasmkeeper.BuiltInCapabilities()
+	wasmCapabilities = append(wasmCapabilities, "osmosis")
 
 	wasmOpts = append(owasm.RegisterCustomPlugins(appKeepers.BankKeeper, appKeepers.TokenFactoryKeeper), wasmOpts...)
 	wasmOpts = append(owasm.RegisterStargateQueries(*bApp.GRPCQueryRouter(), appCodec), wasmOpts...)
@@ -605,7 +596,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		bApp.GRPCQueryRouter(),
 		wasmDir,
 		wasmConfig,
-		supportedFeatures,
+		wasmCapabilities,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		wasmOpts...,
 	)
