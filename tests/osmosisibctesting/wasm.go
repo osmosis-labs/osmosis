@@ -23,6 +23,11 @@ func (chain *TestChain) StoreContractCode(suite *suite.Suite, path string) {
 }
 
 func (chain *TestChain) InstantiateRLContract(suite *suite.Suite, quotas string) sdk.AccAddress {
+	addr := chain.InstantiateRLContractRaw(1, suite, quotas)
+	return addr
+}
+
+func (chain *TestChain) InstantiateRLContractRaw(codeId uint64, suite *suite.Suite, quotas string) sdk.AccAddress {
 	osmosisApp := chain.GetOsmosisApp()
 	transferModule := osmosisApp.AccountKeeper.GetModuleAddress(transfertypes.ModuleName)
 	govModule := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
@@ -35,9 +40,8 @@ func (chain *TestChain) InstantiateRLContract(suite *suite.Suite, quotas string)
 		govModule, transferModule, quotas))
 
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
-	codeID := uint64(1)
 	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
-	addr, _, err := contractKeeper.Instantiate(chain.GetContext(), codeID, creator, creator, initMsgBz, "rate limiting contract", nil)
+	addr, _, err := contractKeeper.Instantiate(chain.GetContext(), codeId, creator, creator, initMsgBz, "rate limiting contract", nil)
 	suite.Require().NoError(err)
 	return addr
 }
@@ -85,6 +89,12 @@ func (chain *TestChain) ExecuteContract(contract, sender sdk.AccAddress, msg []b
 	osmosisApp := chain.GetOsmosisApp()
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
 	return contractKeeper.Execute(chain.GetContext(), contract, sender, msg, funds)
+}
+
+func (chain *TestChain) MigrateContract(contract, sender sdk.AccAddress, newCodeId uint64, msg []byte) ([]byte, error) {
+	osmosisApp := chain.GetOsmosisApp()
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
+	return contractKeeper.Migrate(chain.GetContext(), contract, sender, newCodeId, msg)
 }
 
 func (chain *TestChain) RegisterRateLimitingContract(addr []byte) {
