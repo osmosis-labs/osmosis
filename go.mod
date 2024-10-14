@@ -3,7 +3,7 @@ module github.com/osmosis-labs/osmosis/v26
 go 1.22.4
 
 require (
-	cloud.google.com/go/pubsub v1.43.0
+	cloud.google.com/go/pubsub v1.44.0
 	cosmossdk.io/api v0.7.6
 	cosmossdk.io/client/v2 v2.0.0-beta.3
 	cosmossdk.io/core v0.12.1-0.20240725072823-6a2d039e1212
@@ -75,7 +75,7 @@ require (
 	cloud.google.com/go/auth v0.9.3 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.4 // indirect
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
-	cloud.google.com/go/iam v1.2.0 // indirect
+	cloud.google.com/go/iam v1.2.1 // indirect
 	cloud.google.com/go/storage v1.43.0 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/depinject v1.0.0 // indirect
@@ -118,7 +118,7 @@ require (
 	github.com/google/flatbuffers v23.5.26+incompatible // indirect
 	github.com/google/s2a-go v0.1.8 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/googleapis/enterprise-certificate-proxy v0.3.3 // indirect
+	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
 	github.com/googleapis/gax-go/v2 v2.13.0 // indirect
 	github.com/goware/urlx v0.3.2 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.22.0 // indirect
@@ -162,7 +162,7 @@ require (
 	go.opentelemetry.io/proto/otlp v1.3.1 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
-	google.golang.org/api v0.196.0 // indirect
+	google.golang.org/api v0.197.0 // indirect
 	google.golang.org/genproto v0.0.0-20240903143218-8af14fe29dc1 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
 	gotest.tools/v3 v3.5.1 // indirect
