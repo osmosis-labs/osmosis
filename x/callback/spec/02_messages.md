@@ -4,7 +4,7 @@ Section describes the processing of the module messages
 
 ## MsgUpdateParams
 
-The module params can be updated via a governance proposal using the x/gov module. The proposal needs to include [MsgUpdateParams](../../../proto/osmosis/callback/v1beta1/tx.proto#L25) message. All the parameters need to be provided when creating the msg.
+The module params can be updated via a governance proposal using the x/gov module. The proposal needs to include [MsgUpdateParams](../../../proto/osmosis/callback/v1beta1/tx.proto#L26) message. All the parameters need to be provided when creating the msg.
 
 On success: 
 * Module `Params` are updated to the new values
@@ -15,7 +15,7 @@ This message is expected to fail if:
 
 ## MsgRequestCallback
 
-A new callback can be registered by using the [MsgRequestCallback](../../../proto/osmosis/callback/v1beta1/tx.proto#L39) message.
+A new callback can be registered by using the [MsgRequestCallback](../../../proto/osmosis/callback/v1beta1/tx.proto#L40) message.
 
 On success:
 
@@ -36,7 +36,7 @@ This message is expected to fail if:
 
 ## MsgCancelCallback
 
-An existing callback can be cancelled by using th [MsgCancelCallback](../../../proto/osmosis/callback/v1beta1/tx.proto#L58) message,
+An existing callback can be cancelled by using th [MsgCancelCallback](../../../proto/osmosis/callback/v1beta1/tx.proto#L61) message,
 
 On success:
 
