@@ -35,10 +35,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Setup()
 	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
 
-	govKeeper := s.App.GovKeeper
-	pre, err := govKeeper.Constitution.Get(s.Ctx)
-	s.Require().NoError(err)
-	s.Require().Equal("", pre)
+	s.PrepareGovModuleConstitutionTest()
 
 	// Run the upgrade
 	dummyUpgrade(s)
@@ -46,9 +43,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 		_, err := s.preModule.PreBlock(s.Ctx)
 		s.Require().NoError(err)
 	})
-	post, err := govKeeper.Constitution.Get(s.Ctx)
-	s.Require().NoError(err)
-	s.Require().Equal("This chain has no constitution.", post)
+
+	s.ExecuteGovModuleConstitutionTest()
 }
 
 func dummyUpgrade(s *UpgradeTestSuite) {
@@ -60,4 +56,20 @@ func dummyUpgrade(s *UpgradeTestSuite) {
 	s.Require().NoError(err)
 
 	s.Ctx = s.Ctx.WithHeaderInfo(header.Info{Height: v27UpgradeHeight, Time: s.Ctx.BlockTime().Add(time.Second)}).WithBlockHeight(v27UpgradeHeight)
+}
+
+// PrepareGovModuleConstitutionTest prepares the gov module constitution migration test
+func (s *UpgradeTestSuite) PrepareGovModuleConstitutionTest() {
+	govKeeper := s.App.GovKeeper
+	pre, err := govKeeper.Constitution.Get(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().Equal("", pre)
+}
+
+// ExecuteGovModuleConstitutionTest executes the gov module constitution migration test
+func (s *UpgradeTestSuite) ExecuteGovModuleConstitutionTest() {
+	govKeeper := s.App.GovKeeper
+	post, err := govKeeper.Constitution.Get(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().Equal("This chain has no constitution.", post)
 }
