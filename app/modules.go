@@ -76,6 +76,8 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
 	_ "github.com/osmosis-labs/osmosis/v26/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v26/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v26/x/callback"
+	callbackTypes "github.com/osmosis-labs/osmosis/v26/x/callback/types"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/clmodule"
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
 	cwpoolmodule "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/module"
@@ -142,6 +144,7 @@ var moduleAccountPermissions = map[string][]string{
 	cosmwasmpooltypes.ModuleName:             nil,
 	auctiontypes.ModuleName:                  nil,
 	smartaccounttypes.ModuleName:             nil,
+	callbackTypes.ModuleName:                 nil,
 }
 
 // appModules return modules to initialize module manager.
@@ -209,6 +212,7 @@ func appModules(
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)),
 		auction.NewAppModule(appCodec, *app.AuctionKeeper),
 		smartaccount.NewAppModule(appCodec, *app.SmartAccountKeeper),
+		callback.NewAppModule(app.appCodec, app.CallbackKeeper, app.WasmKeeper),
 	}
 }
 
@@ -303,6 +307,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		packetforwardtypes.ModuleName,
 		cosmwasmpooltypes.ModuleName,
 		auctiontypes.ModuleName,
+		callbackTypes.ModuleName,
 	}
 }
 

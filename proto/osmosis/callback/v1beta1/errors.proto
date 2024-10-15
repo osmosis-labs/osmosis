@@ -1,0 +1,18 @@
+syntax = "proto3";
+package osmosis.callback.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/callback/types";
+
+// ModuleErrors defines the module level error codes
+enum ModuleErrors {
+  // ERR_UNKNOWN is the default error code
+  ERR_UNKNOWN = 0;
+  // ERR_OUT_OF_GAS is the error code when the contract callback exceeds the gas
+  // limit allowed by the module
+  ERR_OUT_OF_GAS = 1;
+  // ERR_CONTRACT_EXECUTION_FAILED is the error code when the contract callback
+  // execution fails
+  ERR_CONTRACT_EXECUTION_FAILED = 2;
+}

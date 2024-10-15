@@ -1,0 +1,82 @@
+syntax = "proto3";
+package osmosis.callback.v1beta1;
+
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/callback/types";
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
+import "osmosis/callback/v1beta1/callback.proto";
+
+// Msg defines the module messaging service.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+  // UpdateParams defines a governance operation for updating the x/callback
+  // module parameters. The authority is defined in the keeper.
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+  // RequestCallback defines a message for registering a callback at a specific
+  // height by a given contract
+  rpc RequestCallback(MsgRequestCallback) returns (MsgRequestCallbackResponse);
+
+  // CancelCallback defines a message for cancelling an existing callback
+  rpc CancelCallback(MsgCancelCallback) returns (MsgCancelCallbackResponse);
+}
+
+// MsgUpdateParams is the Msg/UpdateParams request type.
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) = "authority";
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1;
+  // params defines the x/callback parameters to update.
+  //
+  // NOTE: All parameters must be supplied.
+  Params params = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "params,omitempty"];
+}
+
+// MsgUpdateParamsResponse defines the response structure for executing a MsgUpdateParams message.
+message MsgUpdateParamsResponse {}
+
+// MsgRequestCallback is the Msg/RequestCallback request type.
+message MsgRequestCallback {
+  option (cosmos.msg.v1.signer) = "sender";
+  // sender is the address who is requesting the callback (bech32 encoded)
+  string sender = 1;
+  // contract_address is the address of the contract which is requesting the
+  // callback (bech32 encoded)
+  string contract_address = 2;
+  // job_id is an identifier the callback requestor can pass in to identify the
+  // callback when it happens
+  uint64 job_id = 3;
+  // callback_height is the height at which the callback is executed.
+  int64 callback_height = 4;
+  // fees is the amount of fees being paid to register the contract
+  cosmos.base.v1beta1.Coin fees = 5 [ (gogoproto.nullable) = false ];
+}
+
+// MsgRequestCallbackResponse defines the response structure for executing a
+// MsgRequestCallback message.
+message MsgRequestCallbackResponse {}
+
+// MsgCancelCallback is the Msg/CancelCallback request type.
+message MsgCancelCallback {
+  option (cosmos.msg.v1.signer) = "sender";
+  // sender is the address of the contract which is cancelling the callback
+  // (bech32 encoded)
+  string sender = 1;
+  // contract_address is the address of the contract (bech32 encoded)
+  string contract_address = 2;
+  // job_id is an identifier the callback requestor had passed during
+  // registration of the callback
+  uint64 job_id = 3;
+  // callback_height is the height at which the callback requestor had
+  // registered the callback
+  int64 callback_height = 4;
+}
+
+// MsgCancelCallbackResponse defines the response structure for executing a
+// MsgCancelCallback message.
+message MsgCancelCallbackResponse {
+  // refund is the amount of fees being refunded due to the cancellation of the
+  // callback
+  cosmos.base.v1beta1.Coin refund = 1 [ (gogoproto.nullable) = false ];
+}
