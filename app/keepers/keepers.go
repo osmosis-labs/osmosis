@@ -85,6 +85,8 @@ import (
 
 	_ "github.com/osmosis-labs/osmosis/v26/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v26/wasmbinding"
+	callbackKeeper "github.com/osmosis-labs/osmosis/v26/x/callback/keeper"
+	callbackTypes "github.com/osmosis-labs/osmosis/v26/x/callback/types"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity"
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v26/x/gamm/keeper"
@@ -178,6 +180,7 @@ type AppKeepers struct {
 	CosmwasmPoolKeeper           *cosmwasmpool.Keeper
 	SmartAccountKeeper           *smartaccountkeeper.Keeper
 	AuthenticatorManager         *authenticator.AuthenticatorManager
+	CallbackKeeper               callbackKeeper.Keeper
 
 	// IBC modules
 	// transfer module
@@ -621,6 +624,14 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.IBCHooksKeeper.ContractKeeper = appKeepers.ContractKeeper
 	appKeepers.ConcentratedLiquidityKeeper.SetContractKeeper(appKeepers.ContractKeeper)
 
+	appKeepers.CallbackKeeper = callbackKeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[callbackTypes.StoreKey],
+		appKeepers.WasmKeeper,
+		appKeepers.BankKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+
 	// register CosmWasm authenticator
 	appKeepers.AuthenticatorManager.RegisterAuthenticator(
 		authenticator.NewCosmwasmAuthenticator(appKeepers.ContractKeeper, appKeepers.AccountKeeper, appCodec))
@@ -829,6 +840,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(smartaccounttypes.ModuleName).WithKeyTable(smartaccounttypes.ParamKeyTable())
 	paramsKeeper.Subspace(txfeestypes.ModuleName)
 	paramsKeeper.Subspace(auctiontypes.ModuleName)
+	paramsKeeper.Subspace(callbackTypes.ModuleName)
 
 	return paramsKeeper
 }
@@ -953,5 +965,6 @@ func KVStoreKeys() []string {
 		cosmwasmpooltypes.StoreKey,
 		auctiontypes.StoreKey,
 		smartaccounttypes.StoreKey,
+		callbackTypes.StoreKey,
 	}
 }

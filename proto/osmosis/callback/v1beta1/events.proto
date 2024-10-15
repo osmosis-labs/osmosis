@@ -1,0 +1,71 @@
+syntax = "proto3";
+package osmosis.callback.v1beta1;
+
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/callback/types";
+
+import "osmosis/callback/v1beta1/callback.proto";
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+
+// CallbackRegisteredEvent is emitted when a callback is registered.
+message CallbackRegisteredEvent {
+  // contract_address is the address of the contract for which callback is being
+  // registered (bech32 encoded).
+  string contract_address = 1;
+  // job_id is an identifier of the callback.
+  uint64 job_id = 2;
+  // callback_height is the height at which the callback is executed.
+  int64 callback_height = 3;
+  // fee_split is the breakdown of the fees paid by the contract to reserve the
+  // callback
+  CallbackFeesFeeSplit fee_split = 4;
+  // reserved_by is the address which reserved the callback (bech32 encoded).
+  string reserved_by = 5;
+}
+
+// CallbackCancelledEvent is emitted when a callback is cancelled.
+message CallbackCancelledEvent {
+  // cancelled_by is the address of the contract whose callback is being
+  // cancelled (bech32 encoded)
+  string cancelled_by = 1;
+  // contract_address is the address of the contract (bech32 encoded)
+  string contract_address = 2;
+  // job_id is an identifier the callback requestor had passed during
+  // registration of the callback
+  uint64 job_id = 3;
+  // callback_height is the height at which the callback requestor had
+  // registered the callback
+  int64 callback_height = 4;
+  // refund_amount is the amount of fees which was refunded on cancellation
+  cosmos.base.v1beta1.Coin refund_amount = 5 [ (gogoproto.nullable) = false ];
+}
+
+// CallbackExecutedSuccessEvent is emitted when a callback is executed
+// successfully.
+message CallbackExecutedSuccessEvent {
+  // contract_address is the address of the contract for which callback is being
+  // executed (bech32 encoded).
+  string contract_address = 1;
+  // job_id is an identifier of the callback.
+  uint64 job_id = 2;
+  // sudo_msg is the input passed by the module to the contract
+  string sudo_msg = 3;
+  // gas_used is the amount of gas consumed during the callback execution
+  uint64 gas_used = 4;
+}
+
+// CallbackExecutedFailedEvent is emitted when a callback execution fails.
+message CallbackExecutedFailedEvent {
+  // contract_address is the address of the contract for which callback is being
+  // executed (bech32 encoded).
+  string contract_address = 1;
+  // job_id is an identifier of the callback.
+  uint64 job_id = 2;
+  // sudo_msg is the input passed by the module to the contract
+  string sudo_msg = 3;
+  // gas_used is the amount of gas consumed during the callback execution
+  uint64 gas_used = 4;
+  // error is the error returned during the callback execution
+  string error = 5;
+}
