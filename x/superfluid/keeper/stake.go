@@ -523,6 +523,9 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 		}
 
 		valShares, err := validator.SharesFromTokens(osmoAmount)
+		if err != nil {
+			return err
+		}
 		shares = math.LegacyMinDec(del.Shares, valShares)
 	}
 
