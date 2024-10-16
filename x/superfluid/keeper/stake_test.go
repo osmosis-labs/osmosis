@@ -1054,25 +1054,37 @@ func (s *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 
 func (s *KeeperTestSuite) TestForceUndelegateAndBurnOsmoTokens() {
 	testCases := []struct {
-		name              string
-		validatorStats    []stakingtypes.BondStatus
-		superDelegations  []superfluidDelegation
-		jailVal           bool
+		name                string
+		validatorStats      []stakingtypes.BondStatus
+		superDelegations    []superfluidDelegation
+		jailed              bool
+		jailValWithSmallAmt bool
+
 		expectedShareDiff math.LegacyDec
 	}{
-		// {
-		// 	"with single validator and single superfluid delegation and single undelegation",
-		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded},
-		// 	[]superfluidDelegation{{0, 0, 0, 1000000}},
-		// 	false,
-		// 	math.LegacyMustNewDecFromStr("10"),
-		// },
 		{
 			"with single validator and single superfluid delegation and single undelegation",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			false,
+			false,
+			math.LegacyMustNewDecFromStr("10"),
+		},
+		{
+			"jailed validator where superfluid delegation was major delegation",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1}},
 			true,
-			math.LegacyMustNewDecFromStr("10"),
+			true,
+			math.LegacyDec{},
+		},
+		{
+			"jailed validator where superfluid delegation was major delegation",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			true,
+			false,
+			math.LegacyMustNewDecFromStr("10.526315789473684210"),
 		},
 	}
 
@@ -1088,13 +1100,12 @@ func (s *KeeperTestSuite) TestForceUndelegateAndBurnOsmoTokens() {
 
 			// setup superfluid delegations
 			_, intermediaryAccs, _ := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
-			// s.checkIntermediaryAccountDelegations(intermediaryAccs)
 
 			delegationBeforeUndelegate, err := s.App.StakingKeeper.GetDelegation(s.Ctx, intermediaryAccs[0].GetAccAddress(), valAddrs[0])
 			s.Require().NoError(err)
 
 			// jail the validator as part of set up
-			if tc.jailVal {
+			if tc.jailed {
 				validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrs[0])
 				s.Require().NoError(err)
 				s.Ctx = s.Ctx.WithBlockHeight(100)
@@ -1113,23 +1124,19 @@ func (s *KeeperTestSuite) TestForceUndelegateAndBurnOsmoTokens() {
 				val, err := s.App.StakingKeeper.GetValidatorByConsAddr(s.Ctx, consAddr)
 				s.Require().NoError(err)
 				s.Require().Equal(val.Jailed, true)
-				fmt.Println(val.String())
 			}
-
-			delegationAfterUndelegate, err := s.App.StakingKeeper.GetDelegation(s.Ctx, intermediaryAccs[0].GetAccAddress(), valAddrs[0])
-			s.Require().NoError(err)
-			fmt.Println(delegationAfterUndelegate.String())
 
 			err = s.App.SuperfluidKeeper.ForceUndelegateAndBurnOsmoTokens(s.Ctx, math.NewInt(10), intermediaryAccs[0])
 			s.Require().NoError(err)
 
-			if !tc.jailVal {
+			if !tc.jailValWithSmallAmt {
+				delegationAfterUndelegate, err := s.App.StakingKeeper.GetDelegation(s.Ctx, intermediaryAccs[0].GetAccAddress(), valAddrs[0])
+				s.Require().NoError(err)
 
 				shareDiff := delegationBeforeUndelegate.Shares.Sub(delegationAfterUndelegate.Shares)
+				fmt.Println("share diff: ", shareDiff.String())
 				s.Require().True(shareDiff.Equal(tc.expectedShareDiff))
-
 			}
-
 		})
 	}
 }
