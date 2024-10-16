@@ -41,7 +41,6 @@ func (k Keeper) GetTotalSyntheticAssetsLocked(ctx sdk.Context, denom string) (os
 func (k Keeper) GetExpectedDelegationAmount(ctx sdk.Context, acc types.SuperfluidIntermediaryAccount) (osmomath.Int, error) {
 	// (1) Find how many tokens total T are locked for (denom, validator) pair
 	totalSuperfluidDelegation, err := k.GetTotalSyntheticAssetsLocked(ctx, stakingSyntheticDenom(acc.Denom, acc.ValAddr))
-	fmt.Println("expected del amount: ", totalSuperfluidDelegation.String())
 	if err != nil {
 		return osmomath.Int{}, err
 	}
