@@ -52,12 +52,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
+* [#8754](https://github.com/osmosis-labs/osmosis/pull/8754) Add missing proto files for indexing
 * [#8563](https://github.com/osmosis-labs/osmosis/pull/8563) Add additional queries in x/gauges
 * [#8726](https://github.com/osmosis-labs/osmosis/pull/8726) fix: multiple temp directories on command executions
 * [#8731](https://github.com/osmosis-labs/osmosis/pull/8731) fix: in place testnet logs
 * [#8728](https://github.com/osmosis-labs/osmosis/pull/8728) fix unsupported sign-mode issue
 * [#8743](https://github.com/osmosis-labs/osmosis/pull/8743) chore: bump sdk and cometbft
+
 * [#8563](https://github.com/osmosis-labs/osmosis/pull/8755) [x/concentratedliquidity]: Fix Incorrect Event Emission
+* [#8765](https://github.com/osmosis-labs/osmosis/pull/8765) fix concurrency issue in go test(x/lockup)
 
 ### State Machine Breaking
 
