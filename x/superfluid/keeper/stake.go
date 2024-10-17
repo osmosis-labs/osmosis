@@ -508,6 +508,9 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 	shares, err := k.sk.ValidateUnbondAmount(
 		ctx, intermediaryAcc.GetAccAddress(), valAddr, osmoAmount,
 	)
+	if err == stakingtypes.ErrNoDelegation {
+		return nil
+	}
 
 	if err != nil {
 		// if ValidateUnbondAmount has failed it indicates that the amount we're trying to unbond is
