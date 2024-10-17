@@ -45,7 +45,7 @@ func (suite *SQSBlockProcessorTestSuite) TestNewBlockProcessor() {
 		suite.Run(tt.name, func() {
 
 			// Initialize mock inputs that do not affect the test
-			nodeStatusCheckerMock := &mocks.NodeStatusCheckerMock{}
+			nodeStatusCheckerMock := &commonmocks.NodeStatusCheckerMock{}
 			poolsExtracter := &commonmocks.PoolsExtractorMock{}
 			poolsTransformer := &mocks.PoolsTransformerMock{}
 			grpcClientMock := &mocks.GRPCClientMock{}
