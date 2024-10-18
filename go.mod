@@ -290,7 +290,8 @@ replace (
 	// Direct cosmos-sdk branch link: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v26/v0.50.10, current branch: osmo-v26/v0.50.10
 	// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/5a045895704de7fdc69d144895dcd9f162481502
 	// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.50.10-v26-osmo-2
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.50.10-v26-osmo-2
+	// NOTE: TEMP TAG, will be replaced after review and tagging
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.50.10-v26-osmo-1.0.20241002161840-d2ff8f7253c7
 
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
