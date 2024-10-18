@@ -105,7 +105,7 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-// Direct cosmos-sdk branch link: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v26/v0.50.10, current branch: osmo-v26/v0.50.10
-// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/5a045895704de7fdc69d144895dcd9f162481502
-// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.50.10-v26-osmo-2
-replace github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.50.10-v26-osmo-2
+// Direct cosmos-sdk branch link: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v27/0.50.10, current branch: osmo-v27/0.50.10
+// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/33e0aaf2b1840a8bca4f1b2292700b6f15e5fad7
+// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.50.10-v27-osmo-1
+replace github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.50.10-v27-osmo-1
