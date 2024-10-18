@@ -8,6 +8,7 @@ import (
 
 	addresscodec "cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
+	math "cosmossdk.io/math"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -503,17 +504,34 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 	if err != nil {
 		return err
 	}
-	// TODO: Better understand and decide between ValidateUnbondAmount and SharesFromTokens
-	// briefly looked into it, did not understand what's correct.
-	// TODO: ensure that intermediate account has at least osmoAmount staked.
+
 	shares, err := k.sk.ValidateUnbondAmount(
 		ctx, intermediaryAcc.GetAccAddress(), valAddr, osmoAmount,
 	)
 	if err == stakingtypes.ErrNoDelegation {
 		return nil
-	} else if err != nil {
-		return err
 	}
+
+	if err != nil {
+		// if ValidateUnbondAmount has failed it indicates that the amount we're trying to unbond is
+		// greater then what validator has this can be due to different factors (e.g jail)
+		// in this case we brun min(amount_tpo_burn, total_delegation_share)
+		validator, err := k.sk.GetValidator(ctx, valAddr)
+		if err != nil {
+			return err
+		}
+		del, err := k.sk.GetDelegation(ctx, intermediaryAcc.GetAccAddress(), valAddr)
+		if err != nil {
+			return err
+		}
+
+		valShares, err := validator.SharesFromTokens(osmoAmount)
+		if err != nil {
+			return err
+		}
+		shares = math.LegacyMinDec(del.Shares, valShares)
+	}
+
 	err = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 		undelegatedCoins, err := k.sk.InstantUndelegate(cacheCtx, intermediaryAcc.GetAccAddress(), valAddr, shares)
 		if err != nil {
