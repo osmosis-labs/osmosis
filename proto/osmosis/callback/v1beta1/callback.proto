@@ -1,0 +1,76 @@
+syntax = "proto3";
+package osmosis.callback.v1beta1;
+
+import "google/protobuf/any.proto";
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/callback/types";
+
+// Callback defines the callback structure.
+message Callback {
+  // contract_address is the address of the contract which is requesting the
+  // callback (bech32 encoded).
+  string contract_address = 1;
+  // job_id is an identifier the callback requestor can pass in to identify the
+  // callback when it happens.
+  uint64 job_id = 2;
+  // callback_height is the height at which the callback is executed.
+  int64 callback_height = 3;
+  // fee_split is the breakdown of the fees paid by the contract to reserve the
+  // callback
+  CallbackFeesFeeSplit fee_split = 4;
+  // reserved_by is the address which reserved the callback (bech32 encoded).
+  string reserved_by = 5;
+  // callback_gas_limit is the maximum gas that can be consumed by this
+  // callback.
+  uint64 max_gas_limit = 6;
+}
+
+// CallbackFeesFeeSplit is the breakdown of all the fees that need to be paid by
+// the contract to reserve a callback
+message CallbackFeesFeeSplit {
+  // transaction_fees is the transaction fees for the callback based on its gas
+  // consumption
+  cosmos.base.v1beta1.Coin transaction_fees = 1;
+  // block_reservation_fees is the block reservation fees portion of the
+  // callback reservation fees
+  cosmos.base.v1beta1.Coin block_reservation_fees = 2;
+  // future_reservation_fees is the future reservation fees portion of the
+  // callback reservation fees
+  cosmos.base.v1beta1.Coin future_reservation_fees = 3;
+  // surplus_fees is any extra fees passed in for the registration of the
+  // callback
+  cosmos.base.v1beta1.Coin surplus_fees = 4;
+}
+
+// Params defines the module parameters.
+message Params {
+  // callback_gas_limit is the maximum gas that can be consumed by a callback.
+  uint64 callback_gas_limit = 1;
+  // max_block_reservation_limit is the maximum number of callbacks which can be
+  // registered in a given block.
+  uint64 max_block_reservation_limit = 2;
+  // max_future_reservation_limit is the maximum number of blocks in the future
+  // that a contract can request a callback in.
+  uint64 max_future_reservation_limit = 3;
+  // block_reservation_fee_multiplier is used to calculate a part of the
+  // reservation fees which will need to be paid when requesting the callback.
+  string block_reservation_fee_multiplier = 4 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+  // future_reservation_fee_multiplier is used to calculate a part of the
+  // reservation fees which will need to be paid while requesting the callback.
+  string future_reservation_fee_multiplier = 5 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+  // min_price_of_gas defines the minimum price for each single unit of gas in
+  // the network.
+  cosmos.base.v1beta1.Coin min_price_of_gas = 6
+      [ (gogoproto.nullable) = false ];
+}

@@ -1,0 +1,66 @@
+syntax = "proto3";
+package osmosis.callback.v1beta1;
+
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/callback/types";
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "osmosis/callback/v1beta1/callback.proto";
+
+// Query service for the callback module.
+service Query {
+  // Params returns module parameters
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/osmosis/callback/v1beta1/params";
+  }
+  // EstimateCallbackFees returns the total amount of callback fees a contract
+  // needs to pay to register the callback
+  rpc EstimateCallbackFees(QueryEstimateCallbackFeesRequest)
+      returns (QueryEstimateCallbackFeesResponse) {
+    option (google.api.http).get =
+        "/osmosis/callback/v1beta1/estimate_callback_fees";
+  }
+  // Callbacks returns all the callbacks registered at a given height
+  rpc Callbacks(QueryCallbacksRequest) returns (QueryCallbacksResponse) {
+    option (google.api.http).get = "/osmosis/callback/v1beta1/callbacks";
+  }
+}
+
+// QueryParamsRequest is the request for Query.Params.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response for Query.Params.
+message QueryParamsResponse {
+  // params defines all the module parameters.
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryEstimateCallbackFeesRequest is the request for
+// Query.EstimateCallbackFees.
+message QueryEstimateCallbackFeesRequest {
+  // block_height is the height at which to estimate the callback fees
+  int64 block_height = 1;
+}
+
+// QueryEstimateCallbackFeesResponse is the response for
+// Query.EstimateCallbackFees.
+message QueryEstimateCallbackFeesResponse {
+  // total_fees is the total fees that needs to be paid by the contract to
+  // reserve a callback
+  cosmos.base.v1beta1.Coin total_fees = 1;
+  // fee_split is the breakdown of the total_fees
+  CallbackFeesFeeSplit fee_split = 2;
+}
+
+// QueryCallbacksRequest is the request for Query.Callbacks.
+message QueryCallbacksRequest {
+  // block_height is the height at which to query the callbacks
+  int64 block_height = 1;
+}
+
+// QueryCallbacksResponse is the response for Query.Callbacks.
+message QueryCallbacksResponse {
+  // callbacks is the list of callbacks registered at the given height
+  repeated Callback callbacks = 1;
+}
