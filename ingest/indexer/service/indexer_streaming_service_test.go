@@ -422,6 +422,162 @@ func (s *IndexerServiceTestSuite) TestAddTokenLiquidity() {
 	}
 }
 
+func (s *IndexerServiceTestSuite) TestSetSpotPrice() {
+	testCases := []struct {
+		name              string // Test case name
+		eventType         string // Event type to be tested. Only gammtypes.TypeEvtTokenSwapped is valid
+		poolID            string // pool_id attribute value
+		tokenIn           string // token_in attribute value
+		tokenOut          string // token_out attribute value
+		expectedError     bool   // Expected error flag
+		expectedSpotPrice bool   // Expected spot price flag
+	}{
+		{
+			name:              "happy path",
+			eventType:         gammtypes.TypeEvtTokenSwapped,
+			poolID:            "3",
+			tokenIn:           "1000bar",
+			tokenOut:          "1000foo",
+			expectedError:     false,
+			expectedSpotPrice: true,
+		},
+		{
+			name:              "error when no pool_id attribute",
+			eventType:         gammtypes.TypeEvtTokenSwapped,
+			poolID:            "",
+			tokenIn:           "1000bar",
+			tokenOut:          "1000foo",
+			expectedError:     true,
+			expectedSpotPrice: false,
+		},
+		{
+			name:              "error when no token_in attribute",
+			eventType:         gammtypes.TypeEvtTokenSwapped,
+			poolID:            "3",
+			tokenIn:           "",
+			tokenOut:          "1000foo",
+			expectedError:     true,
+			expectedSpotPrice: false,
+		},
+		{
+			name:              "error when no token_out attribute",
+			eventType:         gammtypes.TypeEvtTokenSwapped,
+			poolID:            "3",
+			tokenIn:           "1000bar",
+			tokenOut:          "",
+			expectedError:     true,
+			expectedSpotPrice: false,
+		},
+	}
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			s.Setup()
+
+			// This test suite is to test the AddTokenLiquidity method in the indexer streaming service.
+			// where it applies to: token_swapped event only, i.e. gammtypes.TypeEvtTokenSwapped
+			// It then looks for the pool_id attribute (concentratedliquiditytypes.AttributeKeyPoolId) in the
+			// event attribute map.  With the pool_id, it then fetches the pool liquidity thru
+			// keepers.PoolManagerKeeper.GetTotalPoolLiquidity function. The pool liquidity data is then appended
+			// to the event attribute map with the key "liquidity_{denom}", value being the pool liquidity.
+
+			// Initialized chain pools
+			s.PrepareAllSupportedPools()
+
+			// Get all chain pools from state for asserting later
+			concentratedPools, err := s.App.ConcentratedLiquidityKeeper.GetPools(s.Ctx)
+
+			s.Require().NoError(err)
+
+			cfmmPools, err := s.App.GAMMKeeper.GetPools(s.Ctx)
+			s.Require().NoError(err)
+
+			cosmWasmPools, err := s.App.CosmwasmPoolKeeper.GetPoolsWithWasmKeeper(s.Ctx)
+			s.Require().NoError(err)
+
+			// Initialize a mock block update process utils
+			blockUpdatesProcessUtilsMock := &sqsmocks.BlockUpdateProcessUtilsMock{}
+
+			// Initialize an empty pool tracker
+			emptyPoolTracker := pooltracker.NewMemory()
+
+			// Initialize a mock pool extractor
+			poolExtractorMock := &sqsmocks.PoolsExtractorMock{
+				BlockPools: commondomain.BlockPools{
+					ConcentratedPools: concentratedPools,
+					CFMMPools:         cfmmPools,
+					CosmWasmPools:     cosmWasmPools,
+				},
+			}
+
+			// Initialize a block process strategy manager
+			blockProcessStrategyManager := commondomain.NewBlockProcessStrategyManager()
+
+			// Initialize keepers
+			keepers := indexerdomain.Keepers{
+				PoolManagerKeeper: s.App.PoolManagerKeeper,
+			}
+
+			// Initialize tx decoder and logger
+			txDecoder := s.App.GetTxConfig().TxDecoder()
+			logger := s.App.Logger()
+
+			// Initialize a mock publisher
+			publisherMock := &indexermocks.PublisherMock{}
+
+			// Initialize the node status checker mock
+			nodeStatusCheckerMock := &commonmocks.NodeStatusCheckerMock{}
+
+			// Initialize an indexer streaming service
+			indexerStreamingService := indexerservice.New(
+				blockUpdatesProcessUtilsMock,
+				blockProcessStrategyManager,
+				publisherMock,
+				emptyStoreKeyMap,
+				poolExtractorMock,
+				emptyPoolTracker,
+				keepers,
+				txDecoder,
+				nodeStatusCheckerMock,
+				logger)
+
+			// Create the event based on the test cases attributes
+			event := abcitypes.Event{
+				Type: tc.eventType,
+				Attributes: func() []abcitypes.EventAttribute {
+					attributes := []abcitypes.EventAttribute{
+						{
+							Key:   concentratedliquiditytypes.AttributeKeyPoolId,
+							Value: tc.poolID,
+							Index: false,
+						},
+						{
+							Key:   concentratedliquiditytypes.AttributeKeyTokensIn,
+							Value: tc.tokenIn,
+							Index: false,
+						},
+						{
+							Key:   concentratedliquiditytypes.AttributeKeyTokensOut,
+							Value: tc.tokenOut,
+							Index: false,
+						},
+					}
+					return attributes
+				}(),
+			}
+
+			// Pass the event to the SetSpotPrice method
+			err = indexerStreamingService.SetSpotPrice(s.Ctx, &event)
+			s.Require().Equal(tc.expectedError, err != nil)
+
+			// Assert the "quote_tokenin_base_tokenout" event attribute
+			if !tc.expectedError {
+				s.Require().Equal(tc.expectedSpotPrice, checkIfSpotPriceAttributeExists(event))
+			}
+
+		})
+	}
+}
+
 func (s *IndexerServiceTestSuite) TestTrackCreatedPoolID() {
 	testCases := []struct {
 		name                     string    // Test case name
@@ -645,4 +801,17 @@ func checkIfLiquidityAttributeExists(event abcitypes.Event, denoms []string) boo
 		}
 	}
 	return foundKey0 && foundKey1
+}
+
+// checkIfSpotPriceAttributeExists checks if the spot price attribute exists in the event attributes
+// as they should be appended by the SetSpotPrice method in the indexer streaming service.
+// i.e. "quote_tokenin_base_tokenout" must exist in the event.Attributes
+func checkIfSpotPriceAttributeExists(event abcitypes.Event) bool {
+	spotPriceKey := "quote_tokenin_base_tokenout"
+	for _, attribute := range event.Attributes {
+		if attribute.Key == spotPriceKey {
+			return true
+		}
+	}
+	return false
 }
