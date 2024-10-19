@@ -473,12 +473,13 @@ func (s *IndexerServiceTestSuite) TestSetSpotPrice() {
 		s.Run(tc.name, func() {
 			s.Setup()
 
-			// This test suite is to test the AddTokenLiquidity method in the indexer streaming service.
+			// This test suite is to test the SetSpotPrice method in the indexer streaming service.
 			// where it applies to: token_swapped event only, i.e. gammtypes.TypeEvtTokenSwapped
-			// It then looks for the pool_id attribute (concentratedliquiditytypes.AttributeKeyPoolId) in the
-			// event attribute map.  With the pool_id, it then fetches the pool liquidity thru
-			// keepers.PoolManagerKeeper.GetTotalPoolLiquidity function. The pool liquidity data is then appended
-			// to the event attribute map with the key "liquidity_{denom}", value being the pool liquidity.
+			// It then looks for the pool_id, token_in, and token_out attributes, i.e.
+			// (concentratedliquiditytypes.AttributeKeyPoolId, concentratedliquiditytypes.AttributeKeyTokensIn, and concentratedliquiditytypes.AttributeKeyTokensOut)
+			// in the event attribute map. With the pool_id, token in and out denom, it then fetches the spot price thru
+			// keepers.PoolManagerKeeper::RouteCalculateSpotPrice function. The spot price data is then appended
+			// to the event attribute map with the key "quote_tokenin_base_tokenout", value being the spot price.
 
 			// Initialized chain pools
 			s.PrepareAllSupportedPools()
