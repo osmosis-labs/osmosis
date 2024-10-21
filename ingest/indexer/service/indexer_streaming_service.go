@@ -108,7 +108,7 @@ func (s *indexerStreamingService) publishBlock(ctx context.Context, req abci.Req
 
 // setSpotPrice sets the spot price for the token swapped event in the event's attributes map
 // This approach ensures a reliable and consistent way to provide PriceNative data for token_swapped events.
-// Using the event's token amount may introduce rounding errors, especially with small amounts.
+// Using the event's token amount to provide priceNative may introduce rounding errors, especially with small amounts.
 // Additionally, determining PriceNative from pool reserves is not applicable to all pool types (e.g., CL pools).
 // Please note the spot price is set in the event's attributes map, keyed by "quote_tokenin_base_tokenout",
 // which means it's a quote using tokenin denom using tokenout as the base denom, it may require reversing in the /events endpoint
