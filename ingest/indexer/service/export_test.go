@@ -20,3 +20,7 @@ func (s *indexerStreamingService) AdjustTokenInAmountBySpreadFactor(ctx context.
 func (s *indexerStreamingService) TrackCreatedPoolID(event abci.Event, blockHeight int64, blockTime time.Time, txHash string) error {
 	return s.trackCreatedPoolID(event, blockHeight, blockTime, txHash)
 }
+
+func (s *indexerStreamingService) SetSpotPrice(ctx context.Context, event *abci.Event) error {
+	return s.setSpotPrice(ctx, event)
+}
