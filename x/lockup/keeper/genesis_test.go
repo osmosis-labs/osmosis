@@ -176,13 +176,6 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 	// Ensure no panic occurs when initializing genesis in a fresh app
 	assert.NotPanics(t, func() {
-		// Setup a new app instance
-		app := osmoapp.Setup(false)
-		ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
-		ctx = ctx.WithBlockTime(now.Add(time.Second))
-
-		// Initialize genesis with the exported state
-		am := lockup.NewAppModule(*app.LockupKeeper, app.AccountKeeper, app.BankKeeper)
 		am.InitGenesis(ctx, appCodec, genesisExported)
 	})
 }
