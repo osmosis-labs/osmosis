@@ -92,7 +92,7 @@ To simplify (and speed up) the process of writing unit tests that fit our standa
 
 #### 1. Setup
 
-Note: this section assumes you already have the Go plugin for Vscode installed. Please refer to our [IDE setup docs](https:/docs.osmosis.zone/osmosis-core/ide-guide) if you haven't done any IDE setup yet.
+Note: this section assumes you already have the Go plugin for Vscode installed. Please refer to our [IDE setup docs](https://github.com/osmosis-labs/docs/blob/main/docs/osmosis-core/ide-guide.md) if you haven't done any IDE setup yet.
 
 Copy the `templates` folder into your `.vscode` folder from our main repo [here](https://github.com/osmosis-labs/osmosis/tree/main/.vscode). This folder has our custom templates for generating tests that fit our testing standards as accurately as possible.
 
