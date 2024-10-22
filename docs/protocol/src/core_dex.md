@@ -6,7 +6,7 @@ By separating the AMM curve logic and math from the core swapping functionality,
 
 - Traditional 50/50  weighted pools
 - Custom weights like 80/20 for controlled exposure
-- Solidity-style Stableswap curve
+- Solidly-style Stableswap curve
 - Concentrated Liquidity pools
 - CosmWasm pools
 
