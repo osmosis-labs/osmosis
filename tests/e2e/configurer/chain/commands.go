@@ -193,38 +193,60 @@ func (n *NodeConfig) WasmExecute(contract, execMsg, from string) {
 func (n *NodeConfig) QueryParams(subspace, key string, prev26 bool) string {
 	cmd := []string{"osmosisd", "query", "params", "subspace", subspace, key, "--output=json"}
 
-	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
+	out, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
 	require.NoError(n.t, err)
 
-	fmt.Println(out.String())
+	var dataToUnmarshal []byte
+	if len(out.Bytes()) > 0 {
+		dataToUnmarshal = out.Bytes()
+	} else if len(errBuf.Bytes()) > 0 {
+		dataToUnmarshal = errBuf.Bytes()
+	} else {
+		require.FailNow(n.t, "Both output and error buffers are empty")
+	}
 
 	var value string
 	result := &ParamsResponse{}
-	err = json.Unmarshal(out.Bytes(), &result)
+	err = json.Unmarshal(dataToUnmarshal, &result)
 	value = result.Param.Value
 	require.NoError(n.t, err)
 	return value
 }
 
-func (n *NodeConfig) QueryGovModuleAccount(prev26 bool) string {
+func (n *NodeConfig) QueryGovModuleAccount() string {
 	cmd := []string{"osmosisd", "query", "auth", "module-accounts", "--output=json"}
-
-	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
+	out, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
 	require.NoError(n.t, err)
 	var result map[string][]interface{}
-	err = json.Unmarshal(out.Bytes(), &result)
+
+	// Check if 'out' is not empty, otherwise use 'errBuf' for unmarshalling
+	var dataToUnmarshal []byte
+	if len(out.Bytes()) > 0 {
+		dataToUnmarshal = out.Bytes()
+	} else if len(errBuf.Bytes()) > 0 {
+		dataToUnmarshal = errBuf.Bytes()
+	} else {
+		require.FailNow(n.t, "Both output and error buffers are empty")
+	}
+
+	err = json.Unmarshal(dataToUnmarshal, &result)
 	require.NoError(n.t, err)
+
 	for _, acc := range result["accounts"] {
 		account, ok := acc.(map[string]interface{})
 		require.True(n.t, ok)
+
 		value, ok := account["value"].(map[string]interface{})
 		require.True(n.t, ok)
+
 		if value["name"] == "gov" {
 			moduleAccount, ok := value["address"].(string)
 			require.True(n.t, ok)
+
 			return moduleAccount
 		}
 	}
+
 	require.True(n.t, false, "gov module account not found")
 	return ""
 }

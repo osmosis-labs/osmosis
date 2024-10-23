@@ -1,4 +1,4 @@
-package commondomain
+package domain
 
 // BlockProcessStrategyManager is an interface for managing the strategy of pushing the blocks.
 // Either all block data or only the block update are the possible options

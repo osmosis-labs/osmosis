@@ -24,6 +24,7 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 
 	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
+	commonservice "github.com/osmosis-labs/osmosis/v26/ingest/common/service"
 	"github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain"
 	"github.com/osmosis-labs/osmosis/v26/ingest/indexer/service/blockprocessor"
 	sqsdomain "github.com/osmosis-labs/osmosis/v26/ingest/sqs/domain"
@@ -50,6 +51,8 @@ type indexerStreamingService struct {
 
 	poolTracker sqsdomain.BlockPoolUpdateTracker
 
+	nodeStatusChecker commonservice.NodeStatusChecker
+
 	txDecoder sdk.TxDecoder
 
 	logger log.Logger
@@ -60,7 +63,7 @@ type indexerStreamingService struct {
 // sqsIngester is an ingester that ingests the block data into SQS.
 // poolTracker is a tracker that tracks the pools that were changed in the block.
 // nodeStatusChecker is a checker that checks if the node is syncing.
-func New(blockUpdatesProcessUtils commondomain.BlockUpdateProcessUtilsI, blockProcessStrategyManager commondomain.BlockProcessStrategyManager, client domain.Publisher, storeKeyMap map[string]storetypes.StoreKey, poolExtractor commondomain.PoolExtractor, poolTracker sqsdomain.BlockPoolUpdateTracker, keepers domain.Keepers, txDecoder sdk.TxDecoder, logger log.Logger) *indexerStreamingService {
+func New(blockUpdatesProcessUtils commondomain.BlockUpdateProcessUtilsI, blockProcessStrategyManager commondomain.BlockProcessStrategyManager, client domain.Publisher, storeKeyMap map[string]storetypes.StoreKey, poolExtractor commondomain.PoolExtractor, poolTracker sqsdomain.BlockPoolUpdateTracker, keepers domain.Keepers, txDecoder sdk.TxDecoder, nodeStatusChecker commonservice.NodeStatusChecker, logger log.Logger) *indexerStreamingService {
 	return &indexerStreamingService{
 		blockProcessStrategyManager: blockProcessStrategyManager,
 
@@ -75,6 +78,8 @@ func New(blockUpdatesProcessUtils commondomain.BlockUpdateProcessUtilsI, blockPr
 		blockUpdatesProcessUtils: blockUpdatesProcessUtils,
 
 		txDecoder: txDecoder,
+
+		nodeStatusChecker: nodeStatusChecker,
 
 		logger: logger,
 	}
@@ -99,6 +104,61 @@ func (s *indexerStreamingService) publishBlock(ctx context.Context, req abci.Req
 		GasConsumed: gasConsumed,
 	}
 	return s.client.PublishBlock(sdkCtx, block)
+}
+
+// setSpotPrice sets the spot price for the token swapped event in the event's attributes map
+// This approach ensures a reliable and consistent way to provide PriceNative data for token_swapped events.
+// Using the event's token amount to provide priceNative may introduce rounding errors, especially with small amounts.
+// Additionally, determining PriceNative from pool reserves is not applicable to all pool types (e.g., CL pools).
+// Please note the spot price is set in the event's attributes map, keyed by "quote_tokenin_base_tokenout",
+// which means it's a quote using tokenin denom using tokenout as the base denom, it may require reversing in the /events endpoint
+func (s *indexerStreamingService) setSpotPrice(ctx context.Context, event *abci.Event) error {
+	var poolId string
+	var tokensIn sdk.Coin
+	var tokensOut sdk.Coin
+	// Find the pool id, tokens in and tokens out from the event attributes
+	for _, attribute := range event.Attributes {
+		if attribute.Key == concentratedliquiditytypes.AttributeKeyPoolId {
+			poolId = attribute.Value
+		}
+		if attribute.Key == concentratedliquiditytypes.AttributeKeyTokensIn {
+			var err error
+			tokensIn, err = sdk.ParseCoinNormalized(attribute.Value)
+			if err != nil {
+				s.logger.Error("Error parsing tokens in", "error", err)
+				continue
+			}
+		}
+		if attribute.Key == concentratedliquiditytypes.AttributeKeyTokensOut {
+			var err error
+			tokensOut, err = sdk.ParseCoinNormalized(attribute.Value)
+			if err != nil {
+				s.logger.Error("Error parsing tokens out", "error", err)
+				continue
+			}
+		}
+		if !tokensIn.IsNil() && !tokensOut.IsNil() && poolId != "" {
+			break
+		}
+	}
+	if poolId == "" || tokensIn.IsNil() || tokensOut.IsNil() {
+		return fmt.Errorf("pool ID, tokens in, or tokens out not found in token_swapped event")
+	}
+	poolIdUint, err := strconv.ParseUint(poolId, 10, 64)
+	if err != nil {
+		return fmt.Errorf("error parsing pool ID %v", err)
+	}
+	// Get the spot price from the pool manager keeper
+	spotPrice, err := s.keepers.PoolManagerKeeper.RouteCalculateSpotPrice(sdk.UnwrapSDKContext(ctx), poolIdUint, tokensIn.Denom, tokensOut.Denom)
+	if err != nil {
+		return fmt.Errorf("error getting spot price %v", err)
+	}
+	// Set the spot price in the event's attributes map
+	event.Attributes = append(event.Attributes, abci.EventAttribute{
+		Key:   "quote_tokenin_base_tokenout",
+		Value: spotPrice.String(),
+	})
+	return nil
 }
 
 // publishTxn iterates through the transactions in the block and publishes them to the indexer backend.
@@ -153,6 +213,14 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 					continue
 				}
 				eventType := clonedEvent.Type
+				if eventType == gammtypes.TypeEvtTokenSwapped {
+					// Set the spot price for the token swapped event in the event's attributes map
+					err := s.setSpotPrice(ctx, clonedEvent)
+					if err != nil {
+						s.logger.Error("Error setting spot price", "error", err)
+						continue
+					}
+				}
 				if eventType == gammtypes.TypeEvtTokenSwapped || eventType == gammtypes.TypeEvtPoolJoined || eventType == gammtypes.TypeEvtPoolExited || eventType == concentratedliquiditytypes.TypeEvtCreatePosition || eventType == concentratedliquiditytypes.TypeEvtWithdrawPosition {
 					includedEvents = append(includedEvents, domain.EventWrapper{Index: i, Event: *clonedEvent})
 				}
@@ -340,11 +408,21 @@ func (s *indexerStreamingService) ListenCommit(ctx context.Context, res abci.Res
 	s.blockUpdatesProcessUtils.SetChangeSet(changeSet)
 
 	// Create block processor
-	blockProcessor := blockprocessor.NewBlockProcessor(s.blockProcessStrategyManager, s.client, s.poolExtractor, s.keepers, s.blockUpdatesProcessUtils)
+	// Note the returned block processor can be either full or incremental depending on the strategy
+	// When node is syncing, it will be a full block processor
+	// When node is already synced, it will be an incremental block processor
+	blockProcessor := blockprocessor.NewBlockProcessor(s.blockProcessStrategyManager, s.client, s.poolExtractor, s.keepers, s.nodeStatusChecker, s.blockUpdatesProcessUtils)
 
 	// Process block.
 	if err := blockProcessor.ProcessBlock(sdkCtx); err != nil {
+		// In the case of full block processor, if any error is returned, including node is syncing or sync check fails,
+		// data is not marked as ingested and will be retried in the next block
 		return err
+	}
+
+	// If block processor is a full block processor, mark the initial data as ingested
+	if blockProcessor.IsFullBlockProcessor() {
+		s.blockProcessStrategyManager.MarkInitialDataIngested()
 	}
 
 	return nil
