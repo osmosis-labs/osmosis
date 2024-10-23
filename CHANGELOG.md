@@ -47,7 +47,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8682](https://github.com/osmosis-labs/osmosis/pull/8682) chore: bump cosmwasm-optimizer
 * [#8734](https://github.com/osmosis-labs/osmosis/pull/8734) chore: update cosmwasm vm
 * [#8777](https://github.com/osmosis-labs/osmosis/pull/8777) fix: state export for gov module constitution
+* [#8751](https://github.com/osmosis-labs/osmosis/pull/8751) fix: supply offsets for osmo token
 * [#8764](https://github.com/osmosis-labs/osmosis/pull/8764) chore: add cosmwasm 1_3 feature
+* [#8779](https://github.com/osmosis-labs/osmosis/pull/8779) chore: bump cometbft/cosmos-sdk versions
 
 ### Config
 

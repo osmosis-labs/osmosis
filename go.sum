@@ -910,10 +910,10 @@ github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
 github.com/ory/dockertest/v3 v3.11.0 h1:OiHcxKAvSDUwsEVh2BjxQQc/5EHz9n0va9awCtNGuyA=
 github.com/ory/dockertest/v3 v3.11.0/go.mod h1:VIPxS1gwT9NpPOrfD3rACs8Y9Z7yhzO4SB194iUDnUI=
-github.com/osmosis-labs/cometbft v0.38.12-v26-osmo-2 h1:9X9qTF0nXgn/U/jb6BV1kgRg5t/CdTHHOmx9cwsiDdw=
-github.com/osmosis-labs/cometbft v0.38.12-v26-osmo-2/go.mod h1:a8NBI2IdO283RZdpH0MuXlze3j+lv6PXuzOtTCq4YGE=
-github.com/osmosis-labs/cosmos-sdk v0.50.10-v26-osmo-2 h1:R0ahhobLCJ+GIA/RxC6NzNapQcwAilT7779Mep0Uu4o=
-github.com/osmosis-labs/cosmos-sdk v0.50.10-v26-osmo-2/go.mod h1:sYSfC78jZEx6m0WOprklQJG4PMGSmNJ0Y8lYrsv/MfU=
+github.com/osmosis-labs/cometbft v0.38.12-v27-osmo-1 h1:rQgVL3+kX65PSXQ8//o7F8gUfOQyQnYvA6c3D5hD/5U=
+github.com/osmosis-labs/cometbft v0.38.12-v27-osmo-1/go.mod h1:a8NBI2IdO283RZdpH0MuXlze3j+lv6PXuzOtTCq4YGE=
+github.com/osmosis-labs/cosmos-sdk v0.50.10-v27-osmo-1 h1:h15nNpKcnNOpijSJLBsieD2P5NUmlMDk9ovDeGCW2t0=
+github.com/osmosis-labs/cosmos-sdk v0.50.10-v27-osmo-1/go.mod h1:sYSfC78jZEx6m0WOprklQJG4PMGSmNJ0Y8lYrsv/MfU=
 github.com/osmosis-labs/cosmos-sdk/store v0.1.0-alpha.1.0.20240509221435-b8feb2ffb728 h1:AMz4HWC+WA/MwBQdsb11yIF9ForIvSLYYVy/jyhJ3/I=
 github.com/osmosis-labs/cosmos-sdk/store v0.1.0-alpha.1.0.20240509221435-b8feb2ffb728/go.mod h1:gjE3DZe4t/+VeIk6CmrouyqiuDbZ7QOVDDq3nLqBTpg=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
@@ -961,8 +961,8 @@ github.com/prometheus/client_golang v1.0.0/go.mod h1:db9x61etRT2tGnBNRi70OPL5Fsn
 github.com/prometheus/client_golang v1.3.0/go.mod h1:hJaj2vgQTGQmVCsAACORcieXFeDPbaTKGT+JTgUa3og=
 github.com/prometheus/client_golang v1.4.0/go.mod h1:e9GMxYsXl05ICDXkRhurwBS4Q3OK1iX/F2sw+iXX5zU=
 github.com/prometheus/client_golang v1.7.1/go.mod h1:PY5Wy2awLA44sXw4AOSfFBetzPP4j5+D6mVACh+pe2M=
-github.com/prometheus/client_golang v1.20.4 h1:Tgh3Yr67PaOv/uTqloMsCEdeuFTatm5zIq5+qNN23vI=
-github.com/prometheus/client_golang v1.20.4/go.mod h1:PIEt8X02hGcP8JWbeHyeZ53Y/jReSnHgO035n//V5WE=
+github.com/prometheus/client_golang v1.20.5 h1:cxppBPuYhUnsO6yo/aoRol4L7q7UFfdm+bR9r+8l63Y=
+github.com/prometheus/client_golang v1.20.5/go.mod h1:PIEt8X02hGcP8JWbeHyeZ53Y/jReSnHgO035n//V5WE=
 github.com/prometheus/client_model v0.0.0-20180712105110-5c3871d89910/go.mod h1:MbSGuTsp3dbXC40dX6PRTWyKYBIrTGTE9sqQNg2J8bo=
 github.com/prometheus/client_model v0.0.0-20190115171406-56726106282f/go.mod h1:MbSGuTsp3dbXC40dX6PRTWyKYBIrTGTE9sqQNg2J8bo=
 github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90/go.mod h1:xMI15A0UPsDsEKsMN9yxemIoYk6Tm2C1GtYGdfGttqA=

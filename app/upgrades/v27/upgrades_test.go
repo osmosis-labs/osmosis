@@ -8,14 +8,13 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/x/upgrade"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
 	v27 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v27"
-
-	"cosmossdk.io/x/upgrade"
-
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 )
 
 const (
@@ -36,6 +35,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
 
 	s.PrepareGovModuleConstitutionTest()
+	s.PrepareSupplyOffsetTest()
 
 	// Run the upgrade
 	dummyUpgrade(s)
@@ -45,6 +45,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	})
 
 	s.ExecuteGovModuleConstitutionTest()
+	s.ExecuteSupplyOffsetTest()
 }
 
 func dummyUpgrade(s *UpgradeTestSuite) {
@@ -72,4 +73,20 @@ func (s *UpgradeTestSuite) ExecuteGovModuleConstitutionTest() {
 	post, err := govKeeper.Constitution.Get(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().Equal("This chain has no constitution.", post)
+}
+
+func (s *UpgradeTestSuite) PrepareSupplyOffsetTest() {
+	// Set some supply offsets
+	s.App.BankKeeper.AddSupplyOffset(s.Ctx, v27.OsmoToken, osmomath.NewInt(1000))
+	s.App.BankKeeper.AddSupplyOffsetOld(s.Ctx, v27.OsmoToken, osmomath.NewInt(-500))
+}
+
+func (s *UpgradeTestSuite) ExecuteSupplyOffsetTest() {
+	coin := s.App.BankKeeper.GetSupplyWithOffset(s.Ctx, v27.OsmoToken)
+	offset := s.App.BankKeeper.GetSupplyOffset(s.Ctx, v27.OsmoToken)
+	oldOffset := s.App.BankKeeper.GetSupplyOffsetOld(s.Ctx, v27.OsmoToken)
+
+	s.Require().Equal("500uosmo", coin.String())
+	s.Require().Equal("500", offset.String())
+	s.Require().Equal("0", oldOffset.String())
 }
