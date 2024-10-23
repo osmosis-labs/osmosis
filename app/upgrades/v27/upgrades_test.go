@@ -8,16 +8,13 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
-
-	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
-	v27 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v27"
-
 	"cosmossdk.io/x/upgrade"
-
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	v27 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v27"
 )
 
 const (
@@ -37,6 +34,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Setup()
 	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
 
+	s.PrepareGovModuleConstitutionTest()
 	s.PrepareSupplyOffsetTest()
 
 	// Run the upgrade
@@ -46,6 +44,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 		s.Require().NoError(err)
 	})
 
+	s.ExecuteGovModuleConstitutionTest()
 	s.ExecuteSupplyOffsetTest()
 }
 
@@ -58,6 +57,22 @@ func dummyUpgrade(s *UpgradeTestSuite) {
 	s.Require().NoError(err)
 
 	s.Ctx = s.Ctx.WithHeaderInfo(header.Info{Height: v27UpgradeHeight, Time: s.Ctx.BlockTime().Add(time.Second)}).WithBlockHeight(v27UpgradeHeight)
+}
+
+// PrepareGovModuleConstitutionTest prepares the gov module constitution migration test
+func (s *UpgradeTestSuite) PrepareGovModuleConstitutionTest() {
+	govKeeper := s.App.GovKeeper
+	pre, err := govKeeper.Constitution.Get(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().Equal("", pre)
+}
+
+// ExecuteGovModuleConstitutionTest executes the gov module constitution migration test
+func (s *UpgradeTestSuite) ExecuteGovModuleConstitutionTest() {
+	govKeeper := s.App.GovKeeper
+	post, err := govKeeper.Constitution.Get(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().Equal("This chain has no constitution.", post)
 }
 
 func (s *UpgradeTestSuite) PrepareSupplyOffsetTest() {
