@@ -40,6 +40,7 @@ import (
 	"github.com/skip-mev/block-sdk/v2/x/auction"
 
 	_ "github.com/osmosis-labs/osmosis/v26/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v26/x/callback"
 	clclient "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/client"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/clmodule"
 	cwpoolclient "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/client"
@@ -133,4 +134,5 @@ var AppModuleBasics = module.NewBasicManager(
 	tendermint.AppModuleBasic{},
 	auction.AppModuleBasic{},
 	smartaccount.AppModuleBasic{},
+	callback.AppModuleBasic{},
 )
