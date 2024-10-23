@@ -5,12 +5,12 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ibctesting "github.com/cosmos/ibc-go/v7/testing"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
-// This sets up PFM on chainB and tests that it works as expected. We assume ChainA is symphony
+// This sets up PFM on chainB and tests that it works as expected. We assume ChainA is osmosis
 func (suite *HooksTestSuite) SetupAndTestPFM(chainBId Chain, chainBName string, registryAddr sdk.AccAddress) {
 	targetChain := suite.GetChain(chainBId)
 	sendFrom := targetChain.SenderAccount.GetAddress()
@@ -18,8 +18,8 @@ func (suite *HooksTestSuite) SetupAndTestPFM(chainBId Chain, chainBName string, 
 	reverseDirection := suite.GetDirection(chainBId, ChainA)
 	sender, receiver := suite.GetEndpoints(suite.GetDirection(ChainA, chainBId))
 
-	symphonyApp := suite.chainA.GetSymphonyApp()
-	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(symphonyApp.WasmKeeper)
+	osmosisApp := suite.chainA.GetOsmosisApp()
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
 
 	pfm_msg := fmt.Sprintf(`{"has_packet_forwarding": {"chain": "%s"}}`, chainBName)
 	forwarding := suite.chainA.QueryContractJson(&suite.Suite, registryAddr, []byte(pfm_msg))
@@ -28,7 +28,7 @@ func (suite *HooksTestSuite) SetupAndTestPFM(chainBId Chain, chainBName string, 
 	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", osmomath.NewInt(2000)), targetChain.SenderAccount.GetAddress().String(), sendFrom.String(), suite.GetSenderChannel(chainBId, ChainA), "")
 	suite.FullSend(transferMsg, reverseDirection)
 	tokenBA := suite.GetIBCDenom(chainBId, ChainA, "token0")
-	balance := symphonyApp.BankKeeper.GetBalance(suite.chainA.GetContext(), sendFrom, tokenBA)
+	balance := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), sendFrom, tokenBA)
 
 	ctx := suite.chainA.GetContext()
 
@@ -37,7 +37,7 @@ func (suite *HooksTestSuite) SetupAndTestPFM(chainBId Chain, chainBName string, 
 	suite.Require().NoError(err)
 
 	// Check that the funds were sent to the contract
-	intermediateBalance := symphonyApp.BankKeeper.GetBalance(suite.chainA.GetContext(), sendFrom, tokenBA)
+	intermediateBalance := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), sendFrom, tokenBA)
 	suite.Require().Equal(balance.Amount, intermediateBalance.Amount.Add(osmomath.NewInt(1)))
 
 	forwarding = suite.chainA.QueryContractJson(&suite.Suite, registryAddr, []byte(pfm_msg))
@@ -54,7 +54,7 @@ func (suite *HooksTestSuite) SetupAndTestPFM(chainBId Chain, chainBName string, 
 	suite.Require().NoError(err)
 
 	events := ctx.EventManager().Events()
-	packet0, err := ibctesting.ParsePacketFromEvents(events)
+	packet0, err := ibctesting.ParsePacketFromEvents(events.ToABCIEvents())
 	suite.Require().NoError(err)
 	result := suite.RelayPacketNoAck(packet0, direction) // No ack because it's a forward
 
@@ -83,7 +83,7 @@ func (suite *HooksTestSuite) SetupAndTestPFM(chainBId Chain, chainBName string, 
 	forwarding = suite.chainA.QueryContractJson(&suite.Suite, registryAddr, []byte(pfm_msg))
 	suite.Require().True(forwarding.Bool())
 
-	newBalance := symphonyApp.BankKeeper.GetBalance(suite.chainA.GetContext(), sendFrom, tokenBA)
+	newBalance := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), sendFrom, tokenBA)
 	// Ensure that the funds have been returned to the user
 	suite.Require().Equal(balance, newBalance)
 }
@@ -93,16 +93,16 @@ func (suite *HooksTestSuite) TestPathValidation() {
 	registryAddr, _, _, _ := suite.SetupCrosschainRegistry(ChainA)
 	suite.setChainChannelLinks(registryAddr, ChainA)
 
-	symphonyApp := suite.chainA.GetSymphonyApp()
-	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(symphonyApp.WasmKeeper)
+	osmosisApp := suite.chainA.GetOsmosisApp()
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
 
 	msg := fmt.Sprintf(`{
 		"modify_bech32_prefixes": {
 		  "operations": [
-			{"operation": "set", "chain_name": "symphony", "prefix": "symphony"},
-			{"operation": "set", "chain_name": "chainA", "prefix": "symphony"},
-			{"operation": "set", "chain_name": "chainB", "prefix": "symphony"},
-			{"operation": "set", "chain_name": "chainC", "prefix": "symphony"}
+			{"operation": "set", "chain_name": "osmosis", "prefix": "osmo"},
+			{"operation": "set", "chain_name": "chainA", "prefix": "osmo"},
+			{"operation": "set", "chain_name": "chainB", "prefix": "osmo"},
+			{"operation": "set", "chain_name": "chainC", "prefix": "osmo"}
 		  ]
 		}
 	  }
