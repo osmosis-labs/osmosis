@@ -9,10 +9,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	cltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v26/x/incentives/types"
 	"github.com/osmosis-labs/osmosis/v26/x/pool-incentives/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
-	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // AccountKeeper defines the account contract that must be fulfilled when

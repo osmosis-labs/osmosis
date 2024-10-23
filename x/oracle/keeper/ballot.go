@@ -56,13 +56,13 @@ func (k Keeper) OrganizeBallotByDenom(ctx sdk.Context, validatorClaimMap map[str
 }
 
 // ClearBallots clears all tallied prevotes and votes from the store
-func (k Keeper) ClearBallots(ctx sdk.Context, votePeriod uint64) {
+func (k Keeper) ClearBallots(ctx sdk.Context, currentEpochCounter uint64) {
 	// Clear all aggregate prevotes
 	k.IterateAggregateExchangeRatePrevotes(ctx, func(voterAddr sdk.ValAddress, aggregatePrevote types.AggregateExchangeRatePrevote) (stop bool) {
-		if ctx.BlockHeight() > int64(aggregatePrevote.SubmitBlock+votePeriod) {
+		// leave prevotes for the current epoch, since they will be resolved by votes in next epoch
+		if currentEpochCounter < aggregatePrevote.SubmitEpochCounter {
 			k.DeleteAggregateExchangeRatePrevote(ctx, voterAddr)
 		}
-
 		return false
 	})
 

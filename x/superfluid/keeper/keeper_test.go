@@ -12,6 +12,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
+	epochtypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
 	incentivetypes "github.com/osmosis-labs/osmosis/v26/x/incentives/types"
@@ -19,7 +20,6 @@ import (
 	minttypes "github.com/osmosis-labs/osmosis/v26/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v26/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
-	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 var DefaultGammAsset = "gamm/pool/1"

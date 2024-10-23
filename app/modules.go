@@ -86,6 +86,8 @@ import (
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
 	cwpoolmodule "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/module"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v26/x/epochs"
+	epochstypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v26/x/gamm"
 	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v26/x/ibc-rate-limit/ibcratelimitmodule"
@@ -112,8 +114,6 @@ import (
 	txfeestypes "github.com/osmosis-labs/osmosis/v26/x/txfees/types"
 	valsetpreftypes "github.com/osmosis-labs/osmosis/v26/x/valset-pref/types"
 	valsetprefmodule "github.com/osmosis-labs/osmosis/v26/x/valset-pref/valpref-module"
-	"github.com/osmosis-labs/osmosis/x/epochs"
-	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // moduleAccountPermissions defines module account permissions

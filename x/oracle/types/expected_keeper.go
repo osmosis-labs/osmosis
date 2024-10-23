@@ -8,6 +8,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/osmosis-labs/osmosis/osmomath"
+	epochstypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
 )
 
 // StakingKeeper is expected keeper for staking module
@@ -28,6 +29,11 @@ type DistributionKeeper interface {
 
 	// only used for simulation
 	GetValidatorOutstandingRewardsCoins(ctx context.Context, val sdk.ValAddress) (sdk.DecCoins, error)
+}
+
+type EpochKeeper interface {
+	GetEpochInfo(ctx sdk.Context, identifier string) epochstypes.EpochInfo
+	NumBlocksSinceEpochStart(ctx sdk.Context, identifier string) (int64, error)
 }
 
 // AccountKeeper is expected keeper for auth module

@@ -94,6 +94,8 @@ import (
 	owasm "github.com/osmosis-labs/osmosis/v26/wasmbinding"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity"
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	epochskeeper "github.com/osmosis-labs/osmosis/v26/x/epochs/keeper"
+	epochstypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v26/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v26/x/incentives/keeper"
@@ -119,8 +121,6 @@ import (
 	txfeestypes "github.com/osmosis-labs/osmosis/v26/x/txfees/types"
 	valsetpref "github.com/osmosis-labs/osmosis/v26/x/valset-pref"
 	valsetpreftypes "github.com/osmosis-labs/osmosis/v26/x/valset-pref/types"
-	epochskeeper "github.com/osmosis-labs/osmosis/x/epochs/keeper"
-	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	auctionkeeper "github.com/skip-mev/block-sdk/v2/x/auction/keeper"
 	auctiontypes "github.com/skip-mev/block-sdk/v2/x/auction/types"
@@ -645,6 +645,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.DistrKeeper,
 		appKeepers.StakingKeeper,
+		appKeepers.EpochsKeeper,
 		distrtypes.ModuleName,
 	)
 	appKeepers.OracleKeeper = &oracleKeeper
@@ -959,6 +960,8 @@ func (appKeepers *AppKeepers) SetupHooks() {
 			appKeepers.IncentivesKeeper.Hooks(),
 			appKeepers.MintKeeper.Hooks(),
 			appKeepers.ProtoRevKeeper.EpochHooks(),
+			appKeepers.OracleKeeper.Hooks(),
+			appKeepers.TreasuryKeeper.Hooks(),
 		),
 	)
 

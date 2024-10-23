@@ -9,7 +9,7 @@ import (
 
 // VotePeriod returns the number of blocks during which voting takes place.
 func (k Keeper) VotePeriod(ctx sdk.Context) (res uint64) {
-	k.paramSpace.Get(ctx, types.KeyVotePeriod, &res)
+	k.paramSpace.Get(ctx, types.KeyVotePeriodEpochIdentifier, &res)
 	return
 }
 
@@ -51,7 +51,7 @@ func (k Keeper) SlashFraction(ctx sdk.Context) (res osmomath.Dec) {
 
 // SlashWindow returns # of vote period for oracle slashing
 func (k Keeper) SlashWindow(ctx sdk.Context) (res uint64) {
-	k.paramSpace.Get(ctx, types.KeySlashWindow, &res)
+	k.paramSpace.Get(ctx, types.KeySlashWindowEpochIdentifier, &res)
 	return
 }
 

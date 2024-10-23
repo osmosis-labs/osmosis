@@ -22,7 +22,6 @@ var (
 // Default parameter values
 var (
 	DefaultBasePool           = osmomath.NewDec(1000000 * params.MicroUnit) // 1000,000sdr = 1000,000,000,000usdr
-	DefaultPoolRecoveryPeriod = params.BlocksPerDay                         // 14,400
 	DefaultMinStabilitySpread = osmomath.NewDecWithPrec(2, 2)               // 2%
 )
 
@@ -30,7 +29,9 @@ var _ paramstypes.ParamSet = &Params{}
 
 // DefaultParams creates default market module parameters
 func DefaultParams() Params {
-	return Params{}
+	return Params{
+		//ExchangePool: DefaultBasePool,
+	}
 }
 
 // ParamKeyTable returns the parameter key table.

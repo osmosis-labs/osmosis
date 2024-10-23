@@ -17,10 +17,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	epochtypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v26/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
-	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 var byGroupQueryCondition = lockuptypes.QueryCondition{LockQueryType: lockuptypes.ByGroup}

@@ -5,7 +5,7 @@ import (
 
 	"cosmossdk.io/log"
 
-	"github.com/osmosis-labs/osmosis/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v26/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 

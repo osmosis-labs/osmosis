@@ -10,7 +10,7 @@ message Params {
   option (gogoproto.equal) = true;
   option (gogoproto.goproto_stringer) = false;
 
-  uint64 vote_period = 1 [ (gogoproto.moretags) = "yaml:\"vote_period\"" ];
+  string vote_period_epoch_identifier = 1;
   string vote_threshold = 2 [
     (gogoproto.moretags) = "yaml:\"vote_threshold\"",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
@@ -33,7 +33,7 @@ message Params {
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
-  uint64 slash_window = 7 [ (gogoproto.moretags) = "yaml:\"slash_window\"" ];
+  string slash_window_epoch_identifier = 7;
   string min_valid_per_window = 8 [
     (gogoproto.moretags) = "yaml:\"min_valid_per_window\"",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
@@ -66,7 +66,7 @@ message AggregateExchangeRatePrevote {
 
   string hash = 1 [ (gogoproto.moretags) = "yaml:\"hash\"" ];
   string voter = 2 [ (gogoproto.moretags) = "yaml:\"voter\"" ];
-  uint64 submit_block = 3 [ (gogoproto.moretags) = "yaml:\"submit_block\"" ];
+  uint64 submit_epoch_counter = 3 [ (gogoproto.moretags) = "yaml:\"submit_epoch_counter\"" ];
 }
 
 // MsgAggregateExchangeRateVote - struct for voting on

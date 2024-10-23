@@ -1,25 +1,27 @@
-package oracle
+package keeper
 
 import (
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
 	"time"
 
-	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	epochstypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
 
-	"github.com/osmosis-labs/osmosis/v26/x/oracle/keeper"
-
-	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
-
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// EndBlocker is called at the end of every block
-func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
+// BeforeEpochStart is the epoch start hook.
+func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return nil
+}
 
+// AfterEpochEnd is the epoch end hook.
+func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 	params := k.GetParams(ctx)
-	if appparams.IsPeriodLastBlock(ctx, params.VotePeriod) {
+
+	if epochIdentifier == params.VotePeriodEpochIdentifier {
 		// Build claim map over all validators in active set
 		validatorClaimMap := make(map[string]types.Claim)
 
@@ -40,7 +42,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 			validator, err := k.StakingKeeper.GetValidator(ctx, iterator.Value())
 
 			// Exclude not bonded validator
-			if err != nil && validator.IsBonded() {
+			if err == nil && validator.IsBonded() {
 				valAddrStr := validator.GetOperator()
 				valAddr, err := sdk.ValAddressFromBech32(valAddrStr)
 				if err != nil {
@@ -60,17 +62,17 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 		// Clear all exchange rates
 		// TODO: yurii: enable cleaning of exchange rates
-		//k.IterateNoteExchangeRates(ctx, func(denom string, _ osmomath.Dec) (stop bool) {
-		//	k.DeleteMelodyExchangeRate(ctx, denom)
-		//	return false
-		//})
+		k.IterateNoteExchangeRates(ctx, func(denom string, _ osmomath.Dec) (stop bool) {
+			k.DeleteMelodyExchangeRate(ctx, denom)
+			return false
+		})
 
 		// Organize votes to ballot by denom
 		// NOTE: **Filter out inactive or jailed validators**
 		// NOTE: **Make abstain votes to have zero vote power**
 		voteMap := k.OrganizeBallotByDenom(ctx, validatorClaimMap)
 
-		if referenceSymphony, err := PickReferenceSymphony(ctx, k, voteTargets, voteMap); err != nil && referenceSymphony != "" {
+		if referenceSymphony, err := PickReferenceSymphony(ctx, k, voteTargets, voteMap); err == nil && referenceSymphony != "" {
 			// make voteMap of Reference Symphony to calculate cross exchange rates
 			ballotRT := voteMap[referenceSymphony]
 			voteMapRT := ballotRT.ToMap()
@@ -109,17 +111,18 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 			k.SetMissCounter(ctx, claim.Recipient, k.GetMissCounter(ctx, claim.Recipient)+1)
 		}
 
+		// TODO: no rewards so far
 		// Distribute rewards to ballot winners
-		k.RewardBallotWinners(
-			ctx,
-			(int64)(params.VotePeriod),
-			(int64)(params.RewardDistributionWindow),
-			voteTargets,
-			validatorClaimMap,
-		)
+		//k.RewardBallotWinners(
+		//	ctx,
+		//	(int64)(params.VotePeriod),
+		//	(int64)(params.RewardDistributionWindow),
+		//	voteTargets,
+		//	validatorClaimMap,
+		//)
 
 		// Clear the ballot
-		k.ClearBallots(ctx, params.VotePeriod)
+		k.ClearBallots(ctx, uint64(epochNumber))
 
 		// Update vote targets and tobin tax
 		k.ApplyWhitelist(ctx, params.Whitelist, voteTargets)
@@ -127,8 +130,39 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 	// Do slash who did miss voting over threshold and
 	// reset miss counters of all validators at the last block of slash window
-	if appparams.IsPeriodLastBlock(ctx, params.SlashWindow) {
+	if params.SlashWindowEpochIdentifier == epochIdentifier {
 		// TODO: yurii: enable slashing
 		//k.SlashAndResetMissCounters(ctx)
 	}
+
+	return nil
+}
+
+// ___________________________________________________________________________________________________
+
+// Hooks is the wrapper struct for the incentives keeper.
+type Hooks struct {
+	k Keeper
+}
+
+var _ epochstypes.EpochHooks = Hooks{}
+
+// Hooks returns the hook wrapper struct.
+func (k Keeper) Hooks() Hooks {
+	return Hooks{k}
+}
+
+// GetModuleName implements types.EpochHooks.
+func (Hooks) GetModuleName() string {
+	return types.ModuleName
+}
+
+// BeforeEpochStart is the epoch start hook.
+func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
+}
+
+// AfterEpochEnd is the epoch end hook.
+func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
 }

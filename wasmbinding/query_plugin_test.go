@@ -27,8 +27,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v26/app"
 	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	epochtypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
-	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	"github.com/osmosis-labs/osmosis/v26/wasmbinding"
 )
