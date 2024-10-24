@@ -821,34 +821,93 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	if err != nil {
 		tmos.Exit(err.Error())
 	}
+	fmt.Println("-here")
 	for ; iterator.Valid(); iterator.Next() {
+		validator, err := app.StakingKeeper.GetValidator(ctx, iterator.Value())
+		if err == nil {
+
+			if validator.OperatorAddress == "osmovaloper13xfu3eeux3u80fxh9w4lpdg6fd34723cfgxnlv" {
+				fmt.Println("skipping val")
+			}
+
+		}
+		fmt.Println(validator.OperatorAddress)
 		stakingStore.Delete(iterator.Key())
 	}
 	iterator.Close()
 
+	fmt.Println("next")
 	// Remove all valdiators from last validators store
 	iterator, err = app.StakingKeeper.LastValidatorsIterator(ctx)
+	fmt.Println("before starting 2nd iterator")
 	if err != nil {
 		tmos.Exit(err.Error())
 	}
+	fmt.Println("Starting 2nd iterator")
 	for ; iterator.Valid(); iterator.Next() {
-		stakingStore.Delete(iterator.Key())
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+				}
+			}()
+
+			validator, err := app.StakingKeeper.GetValidator(ctx, iterator.Value())
+			if err == nil {
+				if validator.OperatorAddress == "osmovaloper13xfu3eeux3u80fxh9w4lpdg6fd34723cfgxnlv" {
+					fmt.Println("skipping val")
+				}
+			}
+			stakingStore.Delete(iterator.Key())
+		}()
 	}
+
 	iterator.Close()
 
 	// Remove all validators from validators store
+	fmt.Println("Starting 3rd iterator")
 	iterator = storetypes.KVStorePrefixIterator(stakingStore, stakingtypes.ValidatorsKey)
 	for ; iterator.Valid(); iterator.Next() {
-		stakingStore.Delete(iterator.Key())
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+				}
+			}()
+
+			addr := sdk.ValAddress(stakingtypes.AddressFromValidatorsKey(iterator.Key()))
+			validator, err := app.StakingKeeper.GetValidator(ctx, addr)
+			if err == nil {
+				if validator.OperatorAddress == "osmovaloper13xfu3eeux3u80fxh9w4lpdg6fd34723cfgxnlv" {
+					fmt.Println("skipping val")
+				}
+			}
+			stakingStore.Delete(iterator.Key())
+		}()
 	}
 	iterator.Close()
 
+	fmt.Println("starting 4th iterator")
 	// Remove all validators from unbonding queue
 	iterator = storetypes.KVStorePrefixIterator(stakingStore, stakingtypes.ValidatorQueueKey)
 	for ; iterator.Valid(); iterator.Next() {
-		stakingStore.Delete(iterator.Key())
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+				}
+			}()
+
+			addr := sdk.ValAddress(stakingtypes.AddressFromValidatorsKey(iterator.Key()))
+			validator, err := app.StakingKeeper.GetValidator(ctx, addr)
+			if err == nil {
+				if validator.OperatorAddress == "osmovaloper13xfu3eeux3u80fxh9w4lpdg6fd34723cfgxnlv" {
+					fmt.Println("skipping val")
+				}
+			}
+			stakingStore.Delete(iterator.Key())
+		}()
+
 	}
 	iterator.Close()
+	fmt.Println("finished with iterators")
 
 	// Add our validator to power and last validators store
 	err = app.StakingKeeper.SetValidator(ctx, newVal)
@@ -900,6 +959,7 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 		tmos.Exit(err.Error())
 	}
 
+	fmt.Println("here2")
 	// SLASHING
 	//
 
@@ -943,7 +1003,7 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 	//
 
 	dayEpochInfo := app.EpochsKeeper.GetEpochInfo(ctx, "day")
-	dayEpochInfo.Duration = time.Hour * 6
+	dayEpochInfo.Duration = time.Minute * 6
 	// Prevents epochs from running back to back
 	dayEpochInfo.CurrentEpochStartTime = time.Now().UTC()
 	// If you want epoch to run a minute after starting the chain, uncomment the line below and comment the line above
@@ -1036,6 +1096,7 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 
 	// UPGRADE
 	//
+	fmt.Println("here3")
 
 	if upgradeToTrigger != "" {
 		upgradePlan := upgradetypes.Plan{
