@@ -191,6 +191,10 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 		var includedEvents []domain.EventWrapper
 		txResults := res.GetTxResults()
 		for _, txResult := range txResults {
+			if txResult.IsErr() {
+				// Skip if the transaction is not successful, so that its corresponding events are not included in the publishing and not counted in by the dexscreener
+				continue
+			}
 			events := txResult.GetEvents()
 			// Iterate through the events in the transaction
 			// Include these events only:
