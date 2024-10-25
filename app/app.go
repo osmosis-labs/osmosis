@@ -870,6 +870,7 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 		func() {
 			defer func() {
 				if r := recover(); r != nil {
+					// handle recovery
 				}
 			}()
 
@@ -878,8 +879,11 @@ func InitOsmosisAppForTestnet(app *OsmosisApp, newValAddr bytes.HexBytes, newVal
 			if err == nil {
 				if validator.OperatorAddress == "osmovaloper13xfu3eeux3u80fxh9w4lpdg6fd34723cfgxnlv" {
 					fmt.Println("skipping val")
+					// Continue to the next iteration without deleting
+					return
 				}
 			}
+			// Only delete if the OperatorAddress does not match
 			stakingStore.Delete(iterator.Key())
 		}()
 	}
