@@ -43,6 +43,13 @@ type Params struct {
 	// orders at prices in terms of token1 (quote asset) that are easy to reason
 	// about.
 	AuthorizedQuoteDenoms []string `protobuf:"bytes,3,rep,name=authorized_quote_denoms,json=authorizedQuoteDenoms,proto3" json:"authorized_quote_denoms,omitempty" yaml:"authorized_quote_denoms"`
+	// affiliate_contract_address is the address of the affiliate contract.
+	// This is used to send the affiliate fee to the affiliate contract.
+	// The affiliate fee is a portion of the taker fee that is sent to the
+	// affiliate contract.
+	// The affiliate contract is responsible for distributing the affiliate fee
+	// to the affiliates.
+	AffiliateContractAddress string `protobuf:"bytes,4,opt,name=affiliate_contract_address,json=affiliateContractAddress,proto3" json:"affiliate_contract_address,omitempty" yaml:"affiliate_contract_address"`
 }
 
 func (m *Params) Reset()         { *m = Params{} }

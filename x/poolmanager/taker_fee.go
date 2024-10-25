@@ -11,6 +11,9 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v26/x/txfees/types"
@@ -123,6 +126,14 @@ func (k Keeper) GetAllTradingPairTakerFees(ctx sdk.Context) ([]types.DenomPairTa
 	return takerFees, nil
 }
 
+func (k Keeper) execWasmMsg(ctx sdk.Context, execMsg *wasmtypes.MsgExecuteContract) (*wasmtypes.MsgExecuteContractResponse, error) {
+	if err := execMsg.ValidateBasic(); err != nil {
+		return nil, types.ErrBadExecution
+	}
+	wasmMsgServer := wasmkeeper.NewMsgServerImpl(k.ContractKeeper)
+	return wasmMsgServer.ExecuteContract(ctx, execMsg)
+}
+
 // chargeTakerFee extracts the taker fee from the given tokenIn and sends it to the appropriate
 // module account. It returns the tokenIn after the taker fee has been extracted.
 // If the sender is in the taker fee reduced whitelisted, it returns the tokenIn without extracting the taker fee.
@@ -152,10 +163,67 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 		tokenInAfterTakerFee, takerFeeCoin = CalcTakerFeeExactOut(tokenIn, takerFee)
 	}
 
+	// query the affiliate status from the affiliate cosmwasm contract for the sender
+	// if the sender is an affiliate, then we 30% of the taker fee to the affiliate account
+	// and the rest to the taker fee module account
+	// if the sender is not an affiliate, then we send the entire taker fee to the taker fee module account
+
+	affiliateContractAddressStr := k.GetParams(ctx).AffiliateContractAddress
+
+	if affiliateContractAddressStr == "" {
+		queryMsg := map[string]interface{}{
+			"affiliated": sender.String(),
+		}
+		queryMsgBz, err := json.Marshal(queryMsg)
+		if err != nil {
+			return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("failed to marshal query message: %w", err)
+		}
+
+		affiliateContractAddress, err := sdk.AccAddressFromBech32(affiliateContractAddressStr)
+		if err != nil {
+			return sdk.Coin{}, sdk.Coin{}, err
+		}
+
+		response, err := k.wasmKeeper.QuerySmart(ctx, affiliateContractAddress, queryMsgBz)
+		if err != nil {
+			return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("failed to query contract state: %w", err)
+		}
+		isAffiliated := false
+		err = json.Unmarshal(response, &isAffiliated)
+		if err != nil {
+			return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("failed to unmarshal response: %w", err)
+		}
+
+		if isAffiliated {
+			affiliateFee := takerFeeCoin.Amount.Mul(osmomath.NewInt(3)).Quo(osmomath.NewInt(10))
+			affiliateFeeCoin := sdk.Coin{Denom: takerFeeCoin.Denom, Amount: affiliateFee}
+			takerFeeCoin = sdk.Coin{Denom: takerFeeCoin.Denom, Amount: takerFeeCoin.Amount.Sub(affiliateFee)}
+
+			// send the affiliate fee to the affiliate cosmwasm contract
+			// the contract then distributes to the affiliated parents
+			msgBytes, err := json.Marshal(map[string]interface{}{
+				"distribute": map[string]interface{}{},
+			})
+			if err != nil {
+				return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("failed to marshal message: %w", err)
+			}
+			_, err = k.execWasmMsg(ctx, &wasmtypes.MsgExecuteContract{
+				Sender:   sender.String(),
+				Contract: affiliateContractAddress.String(),
+				Msg:      msgBytes,
+				Funds:    sdk.Coins{affiliateFeeCoin},
+			})
+			if err != nil {
+				return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("failed to distribute affiliate fees: %w", err)
+			}
+		}
+	}
+
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, takerFeeModuleAccountName, sdk.NewCoins(takerFeeCoin))
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, err
 	}
+
 	return tokenInAfterTakerFee, takerFeeCoin, nil
 }
 

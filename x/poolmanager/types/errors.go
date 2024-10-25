@@ -24,6 +24,7 @@ var (
 	ErrSetRegisteredAlloyedPool                  = errors.New("error setting registered alloyed pool")
 	ErrInvalidKeyFormat                          = errors.New("invalid key format")
 	ErrTotalAlloyedLiquidityIsZero               = errors.New("totalAlloyedLiquidity is zero")
+	ErrBadExecution                              = errors.New("cannot execute contract: %v")
 )
 
 type nonPositiveAmountError struct {

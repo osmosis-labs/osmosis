@@ -446,6 +446,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.StakingKeeper,
 		appKeepers.ProtoRevKeeper,
 		appKeepers.WasmKeeper,
+		nil,
 	)
 	appKeepers.PoolManagerKeeper.SetStakingKeeper(appKeepers.StakingKeeper)
 	appKeepers.GAMMKeeper.SetPoolManager(appKeepers.PoolManagerKeeper)
@@ -620,6 +621,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.CosmwasmPoolKeeper.SetContractKeeper(appKeepers.ContractKeeper)
 	appKeepers.IBCHooksKeeper.ContractKeeper = appKeepers.ContractKeeper
 	appKeepers.ConcentratedLiquidityKeeper.SetContractKeeper(appKeepers.ContractKeeper)
+	appKeepers.PoolManagerKeeper.ContractKeeper = appKeepers.WasmKeeper
 
 	// register CosmWasm authenticator
 	appKeepers.AuthenticatorManager.RegisterAuthenticator(
