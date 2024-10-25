@@ -171,11 +171,6 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 	affiliateFee := k.GetParams(ctx).AffiliateFee
 	affiliateContractAddressStr := k.GetParams(ctx).AffiliateContractAddress
 
-	fmt.Println("affiliateContractAddressStr", affiliateContractAddressStr)
-	fmt.Println("sender", sender.String())
-	fmt.Println("takerFeeCoin", takerFeeCoin)
-	fmt.Println("affiliateFee", affiliateFee)
-
 	if affiliateContractAddressStr == "" {
 		queryMsg := map[string]interface{}{
 			"affiliated": sender.String(),

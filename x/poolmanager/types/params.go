@@ -123,7 +123,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyReducedTakerFeeByWhitelist, &p.TakerFeeParams.ReducedFeeWhitelist, osmoutils.ValidateAddressList),
 
 		paramtypes.NewParamSetPair(KeyAffFee, &p.AffiliateFee, validateDefaultTakerFee),
-		paramtypes.NewParamSetPair(KeyAffAddr, &p.AffiliateContractAddress, nil),
+		paramtypes.NewParamSetPair(KeyAffAddr, &p.AffiliateContractAddress, validateAdminAddress),
 	}
 }
 
@@ -186,6 +186,23 @@ func validateAdminAddresses(i interface{}) error {
 				return fmt.Errorf("invalid account address: %s", adminAddress)
 			}
 		}
+	}
+
+	return nil
+}
+
+func validateAdminAddress(i interface{}) error {
+	adminAddress, ok := i.(string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if len(adminAddress) == 0 {
+		return nil
+	}
+
+	if _, err := sdk.AccAddressFromBech32(adminAddress); err != nil {
+		return fmt.Errorf("invalid account address: %s", adminAddress)
 	}
 
 	return nil

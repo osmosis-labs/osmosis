@@ -431,8 +431,8 @@ func (s *KeeperTestSuite) TestProcessAlloyedAssetShareAgreements() {
 // tests if fees are distributed to affiliates if set
 func (s *KeeperTestSuite) TestDistributeAffiliateFee() {
 	var (
-		defaultTakerFee = osmomath.MustNewDecFromStr("0.01")
-		defaultAmount   = osmomath.NewInt(10000000)
+	// defaultTakerFee = osmomath.MustNewDecFromStr("0.01")
+	// defaultAmount   = osmomath.NewInt(10000000)
 	)
 
 	tests := map[string]struct {
@@ -440,18 +440,18 @@ func (s *KeeperTestSuite) TestDistributeAffiliateFee() {
 		tokenOutDenom string
 		takerFee      osmomath.Dec
 
-		expectedResult sdk.Coin
-		expectError    error
-		sendCoins      bool
+		expectedBalance sdk.Coins // expected balance of the fee account after
+		expectError     error
+		sendCoins       bool
 
 		affiliateFee osmomath.Dec
 	}{
-		"fee charged on token in": {
-			takerFee:       defaultTakerFee,
-			tokenIn:        sdk.NewCoin(apptesting.ETH, defaultAmount),
-			tokenOutDenom:  apptesting.USDC,
-			expectedResult: sdk.NewCoin(apptesting.ETH, defaultAmount.ToLegacyDec().Mul(osmomath.OneDec().Sub(defaultTakerFee)).TruncateInt()),
-			affiliateFee:   osmomath.MustNewDecFromStr("0.1"),
+		"fee charged in full as no affiliate set": {
+			takerFee:        osmomath.MustNewDecFromStr("0.01"),
+			tokenIn:         sdk.NewCoin(apptesting.ETH, osmomath.NewInt(10000000)),
+			tokenOutDenom:   apptesting.USDC,
+			expectedBalance: sdk.NewCoins(sdk.NewCoin(apptesting.ETH, osmomath.NewInt(100000))),
+			affiliateFee:    osmomath.MustNewDecFromStr("0.2"),
 		},
 	}
 
@@ -463,6 +463,7 @@ func (s *KeeperTestSuite) TestDistributeAffiliateFee() {
 			poolManagerParams := poolManager.GetParams(s.Ctx)
 			poolManagerParams.AffiliateFee = tc.affiliateFee
 			poolManagerParams.AffiliateContractAddress = s.TestAccs[1].String() // TODO use a real contract address
+
 			poolManager.SetParams(s.Ctx, poolManagerParams)
 
 			// Create pool.
@@ -475,7 +476,7 @@ func (s *KeeperTestSuite) TestDistributeAffiliateFee() {
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(tc.tokenIn))
 
 			// System under test.
-			tokenInAfterTakerFee, _, err := poolManager.ChargeTakerFee(s.Ctx, tc.tokenIn, tc.tokenOutDenom, s.TestAccs[0], true)
+			_, _, err := poolManager.ChargeTakerFee(s.Ctx, tc.tokenIn, tc.tokenOutDenom, s.TestAccs[0], true)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)
@@ -483,11 +484,9 @@ func (s *KeeperTestSuite) TestDistributeAffiliateFee() {
 			}
 			s.Require().NoError(err)
 
-			// expected taker fee minus affiliate fee
-			takerFeeTaken := tc.affiliateFee.MulInt(tokenInAfterTakerFee.Amount.Sub(tc.tokenIn.Amount)).TruncateInt()
-
 			takerFeeModuleAccBal := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(txfeestypes.TakerFeeCollectorName))
-			s.Require().True(sdk.NewCoins(sdk.NewCoin(tokenInAfterTakerFee.Denom, takerFeeTaken)).Equal(takerFeeModuleAccBal))
+
+			s.Require().Equal(tc.expectedBalance, takerFeeModuleAccBal)
 
 			// TODO test affiliate fee message
 		})
