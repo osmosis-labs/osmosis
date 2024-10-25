@@ -168,7 +168,13 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 	// and the rest to the taker fee module account
 	// if the sender is not an affiliate, then we send the entire taker fee to the taker fee module account
 
+	affiliateFee := k.GetParams(ctx).AffiliateFee
 	affiliateContractAddressStr := k.GetParams(ctx).AffiliateContractAddress
+
+	fmt.Println("affiliateContractAddressStr", affiliateContractAddressStr)
+	fmt.Println("sender", sender.String())
+	fmt.Println("takerFeeCoin", takerFeeCoin)
+	fmt.Println("affiliateFee", affiliateFee)
 
 	if affiliateContractAddressStr == "" {
 		queryMsg := map[string]interface{}{
@@ -195,7 +201,7 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 		}
 
 		if isAffiliated {
-			affiliateFee := takerFeeCoin.Amount.Mul(osmomath.NewInt(3)).Quo(osmomath.NewInt(10))
+			affiliateFee := affiliateFee.MulInt(takerFeeCoin.Amount).TruncateInt()
 			affiliateFeeCoin := sdk.Coin{Denom: takerFeeCoin.Denom, Amount: affiliateFee}
 			takerFeeCoin = sdk.Coin{Denom: takerFeeCoin.Denom, Amount: takerFeeCoin.Amount.Sub(affiliateFee)}
 

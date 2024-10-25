@@ -123,3 +123,8 @@ type ProtorevKeeper interface {
 type WasmKeeper interface {
 	QuerySmart(ctx context.Context, contractAddress sdk.AccAddress, queryMsg []byte) ([]byte, error)
 }
+
+type AffiliateKeeper interface {
+	IsAffiliate(ctx sdk.Context, address sdk.AccAddress) (bool, error)
+	GetAffiliates(ctx sdk.Context, address sdk.AccAddress) ([]sdk.AccAddress, error)
+}

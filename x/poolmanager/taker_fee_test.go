@@ -428,6 +428,72 @@ func (s *KeeperTestSuite) TestProcessAlloyedAssetShareAgreements() {
 	}
 }
 
+// tests if fees are distributed to affiliates if set
+func (s *KeeperTestSuite) TestDistributeAffiliateFee() {
+	var (
+		defaultTakerFee = osmomath.MustNewDecFromStr("0.01")
+		defaultAmount   = osmomath.NewInt(10000000)
+	)
+
+	tests := map[string]struct {
+		tokenIn       sdk.Coin
+		tokenOutDenom string
+		takerFee      osmomath.Dec
+
+		expectedResult sdk.Coin
+		expectError    error
+		sendCoins      bool
+
+		affiliateFee osmomath.Dec
+	}{
+		"fee charged on token in": {
+			takerFee:       defaultTakerFee,
+			tokenIn:        sdk.NewCoin(apptesting.ETH, defaultAmount),
+			tokenOutDenom:  apptesting.USDC,
+			expectedResult: sdk.NewCoin(apptesting.ETH, defaultAmount.ToLegacyDec().Mul(osmomath.OneDec().Sub(defaultTakerFee)).TruncateInt()),
+			affiliateFee:   osmomath.MustNewDecFromStr("0.1"),
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+
+			poolManager := s.App.PoolManagerKeeper
+			poolManagerParams := poolManager.GetParams(s.Ctx)
+			poolManagerParams.AffiliateFee = tc.affiliateFee
+			poolManagerParams.AffiliateContractAddress = s.TestAccs[1].String() // TODO use a real contract address
+			poolManager.SetParams(s.Ctx, poolManagerParams)
+
+			// Create pool.
+			s.PrepareConcentratedPool()
+
+			// Set taker fee.
+			poolManager.SetDenomPairTakerFee(s.Ctx, tc.tokenIn.Denom, tc.tokenOutDenom, tc.takerFee)
+
+			// Pre-fund owner.
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(tc.tokenIn))
+
+			// System under test.
+			tokenInAfterTakerFee, _, err := poolManager.ChargeTakerFee(s.Ctx, tc.tokenIn, tc.tokenOutDenom, s.TestAccs[0], true)
+
+			if tc.expectError != nil {
+				s.Require().Error(err)
+				return
+			}
+			s.Require().NoError(err)
+
+			// expected taker fee minus affiliate fee
+			takerFeeTaken := tc.affiliateFee.MulInt(tokenInAfterTakerFee.Amount.Sub(tc.tokenIn.Amount)).TruncateInt()
+
+			takerFeeModuleAccBal := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(txfeestypes.TakerFeeCollectorName))
+			s.Require().True(sdk.NewCoins(sdk.NewCoin(tokenInAfterTakerFee.Denom, takerFeeTaken)).Equal(takerFeeModuleAccBal))
+
+			// TODO test affiliate fee message
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestValidatePercentage() {
 	tests := map[string]struct {
 		percentage    osmomath.Dec

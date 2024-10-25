@@ -4,8 +4,12 @@
 package types
 
 import (
-	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+
+	cosmossdk_io_math "cosmossdk.io/math"
 	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/cosmos-sdk/codec/types"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
@@ -13,9 +17,8 @@ import (
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	_ "google.golang.org/protobuf/types/known/durationpb"
-	io "io"
-	math "math"
-	math_bits "math/bits"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -50,6 +53,8 @@ type Params struct {
 	// The affiliate contract is responsible for distributing the affiliate fee
 	// to the affiliates.
 	AffiliateContractAddress string `protobuf:"bytes,4,opt,name=affiliate_contract_address,json=affiliateContractAddress,proto3" json:"affiliate_contract_address,omitempty" yaml:"affiliate_contract_address"`
+	// affiliate_fee is the portion of the taker fee that is sent to the affiliate
+	AffiliateFee osmomath.Dec `protobuf:"bytes,5,opt,name=affiliate_fee,json=affiliateFee,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"affiliate_fee" yaml:"affiliate_fee"`
 }
 
 func (m *Params) Reset()         { *m = Params{} }

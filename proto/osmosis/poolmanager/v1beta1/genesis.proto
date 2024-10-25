@@ -33,6 +33,19 @@ message Params {
   // about.
   repeated string authorized_quote_denoms = 3
       [ (gogoproto.moretags) = "yaml:\"authorized_quote_denoms\"" ];
+  // affiliate_fee is the portion of the taker fee that is sent to the affiliate
+  string affiliate_fee = 4 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.customname) = "AffiliateFee",
+    (gogoproto.nullable) = false
+  ];
+  // affiliate_contract_address is the address of the affiliate contract.
+	// This is used to send the affiliate fee to the affiliate contract.
+	// The affiliate fee is a portion of the taker fee that is sent to the
+	// affiliate contract.
+	// The affiliate contract is responsible for distributing the affiliate fee
+	// to the affiliates.
+  string affiliate_contract_address = 5;
 }
 
 // GenesisState defines the poolmanager module's genesis state.

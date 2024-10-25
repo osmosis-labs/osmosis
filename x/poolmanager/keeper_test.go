@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/gogoproto/proto"
 
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -126,6 +127,8 @@ func (s *KeeperTestSuite) createBalancerPoolsFromCoins(poolCoins []sdk.Coins) {
 }
 
 func (s *KeeperTestSuite) TestInitGenesis() {
+	affiliationFee := math.LegacyMustNewDecFromStr("0.2")
+
 	s.App.PoolManagerKeeper.InitGenesis(s.Ctx, &types.GenesisState{
 		Params: types.Params{
 			PoolCreationFee: testPoolCreationFee,
@@ -136,7 +139,9 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 				AdminAddresses:                                 testAdminAddresses,
 				CommunityPoolDenomToSwapNonWhitelistedAssetsTo: testCommunityPoolDenomToSwapNonWhitelistedAssetsTo,
 			},
-			AuthorizedQuoteDenoms: testAuthorizedQuoteDenoms,
+			AuthorizedQuoteDenoms:    testAuthorizedQuoteDenoms,
+			AffiliateFee:             affiliationFee,
+			AffiliateContractAddress: "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2",
 		},
 		NextPoolId:             testExpectedPoolId,
 		PoolRoutes:             testPoolRoute,
@@ -153,6 +158,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 	s.Require().Equal(testNonOsmoTakerFeeDistribution, params.TakerFeeParams.NonOsmoTakerFeeDistribution)
 	s.Require().Equal(testAdminAddresses, params.TakerFeeParams.AdminAddresses)
 	s.Require().Equal(testCommunityPoolDenomToSwapNonWhitelistedAssetsTo, params.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo)
+	s.Require().Equal(affiliationFee, params.AffiliateFee)
 	s.Require().Equal(testAuthorizedQuoteDenoms, params.AuthorizedQuoteDenoms)
 	s.Require().Equal(testPoolRoute, s.App.PoolManagerKeeper.GetAllPoolRoutes(s.Ctx))
 	s.Require().Equal(testTakerFeesTracker.TakerFeesToStakers, s.App.PoolManagerKeeper.GetTakerFeeTrackerForStakers(s.Ctx))
