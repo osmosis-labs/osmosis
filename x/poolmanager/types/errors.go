@@ -19,6 +19,7 @@ var (
 	ErrDuplicateRoutesNotAllowed                 = errors.New("duplicate multihop routes are not allowed")
 	ErrUnauthorizedGov                           = errors.New("only the governance module is allowed to execute this message")
 	ErrSetTakerFeeShareAgreementsMapCached       = errors.New("error setting taker fee share agreements map cache")
+	ErrSetTakerFeeRevenueShareUserMapCached      = errors.New("error setting taker fee revenue share user map cache")
 	ErrSetAllRegisteredAlloyedPoolsByDenomCached = errors.New("error setting all registered alloyed pools by denom cache")
 	ErrSetAllRegisteredAlloyedPoolsIdArrayCached = errors.New("error setting registered alloyed pool ID array cache")
 	ErrSetRegisteredAlloyedPool                  = errors.New("error setting registered alloyed pool")

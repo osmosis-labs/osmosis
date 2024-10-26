@@ -61,3 +61,13 @@ message AlloyContractTakerFeeShareState {
     (gogoproto.nullable) = false
   ];
 }
+
+// TODO
+message RevenueShareUser {
+  // user_address is the address of the user that has a revenue share agreement.
+  string user_address = 1
+      [ (gogoproto.moretags) = "yaml:\"user_address\"" ];
+  // parents is the chain of addresses that the revenue share will be distributed to.
+  repeated string parents = 2
+      [ (gogoproto.moretags) = "yaml:\"parents\"" ];
+}

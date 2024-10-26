@@ -13,4 +13,5 @@ const (
 	AttributeKeyTakerFeeShareDenom       = "taker_fee_share_denom"
 	AttributeKeyTakerFeeShareSkimPercent = "taker_fee_share_skim_percent"
 	AttributeKeyTakerFeeShareSkimAddress = "taker_fee_share_skim_address"
+	AttributeKeyReferrer                 = "referrer"
 )

@@ -24,6 +24,8 @@ service Msg {
       returns (MsgSetTakerFeeShareAgreementForDenomResponse);
   rpc SetRegisteredAlloyedPool(MsgSetRegisteredAlloyedPool)
       returns (MsgSetRegisteredAlloyedPoolResponse);
+  rpc SetRevenueShareUser(MsgSetRevenueShareUser)
+      returns (MsgSetRevenueShareUserResponse);
 }
 
 // ===================== MsgSwapExactAmountIn
@@ -192,6 +194,18 @@ message MsgSetRegisteredAlloyedPool {
 }
 
 message MsgSetRegisteredAlloyedPoolResponse {}
+
+// ===================== MsgSetRevenueShareUser
+message MsgSetRevenueShareUser {
+  option (amino.name) = "osmosis/poolmanager/set-revenue-share-user";
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+
+  string referrer = 2 [ (gogoproto.moretags) = "yaml:\"referrer\"" ];
+}
+
+message MsgSetRevenueShareUserResponse {}
 
 message DenomPairTakerFee {
   // DEPRECATED: Now that we are using uni-directional trading pairs, we are

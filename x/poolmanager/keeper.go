@@ -53,6 +53,7 @@ type Keeper struct {
 	defaultTakerFeeVal osmomath.Dec
 
 	cachedTakerFeeShareAgreementMap          map[string]types.TakerFeeShareAgreement
+	cachedTakerFeeRevenueShareUserMap        map[string]types.RevenueShareUser
 	cachedRegisteredAlloyPoolByAlloyDenomMap map[string]types.AlloyContractTakerFeeShareState
 }
 
@@ -75,6 +76,7 @@ func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gam
 
 	cachedPoolModules := &sync.Map{}
 	cachedTakerFeeShareAgreementMap := make(map[string]types.TakerFeeShareAgreement)
+	cachedTakerFeeRevenueShareUserMap := make(map[string]types.RevenueShareUser)
 	cachedRegisteredAlloyPoolMap := make(map[string]types.AlloyContractTakerFeeShareState)
 
 	return &Keeper{
@@ -93,6 +95,7 @@ func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gam
 		wasmKeeper:                               wasmKeeper,
 		cachedPoolModules:                        cachedPoolModules,
 		cachedTakerFeeShareAgreementMap:          cachedTakerFeeShareAgreementMap,
+		cachedTakerFeeRevenueShareUserMap:        cachedTakerFeeRevenueShareUserMap,
 		cachedRegisteredAlloyPoolByAlloyDenomMap: cachedRegisteredAlloyPoolMap,
 		ContractKeeper:                           contractKeeper,
 	}
@@ -242,6 +245,13 @@ func (k *Keeper) BeginBlock(ctx sdk.Context) {
 		err = k.setAllRegisteredAlloyedPoolsByDenomCached(ctx)
 		if err != nil {
 			ctx.Logger().Error(fmt.Errorf("%w", types.ErrSetAllRegisteredAlloyedPoolsByDenomCached).Error())
+		}
+	}
+
+	if len(k.cachedTakerFeeRevenueShareUserMap) == 0 {
+		err := k.setTakerFeeRevenueShareUserMapCached(ctx)
+		if err != nil {
+			ctx.Logger().Error(fmt.Errorf("%w", types.ErrSetTakerFeeShareAgreementsMapCached).Error())
 		}
 	}
 }

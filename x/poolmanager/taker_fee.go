@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -168,55 +169,27 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 	// and the rest to the taker fee module account
 	// if the sender is not an affiliate, then we send the entire taker fee to the taker fee module account
 
-	affiliateFee := k.GetParams(ctx).AffiliateFee
-	affiliateContractAddressStr := k.GetParams(ctx).AffiliateContractAddress
+	affiliateFee := k.GetParams(ctx).TakerFeeParams.AffiliateFee
 
-	if affiliateContractAddressStr == "" {
-		queryMsg := map[string]interface{}{
-			"affiliated": sender.String(),
-		}
-		queryMsgBz, err := json.Marshal(queryMsg)
-		if err != nil {
-			return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("failed to marshal query message: %w", err)
-		}
+	revenueShareUser, err := k.getRevenueShareUser(ctx, sender)
+	if err != nil {
+		return sdk.Coin{}, sdk.Coin{}, err
+	}
 
-		affiliateContractAddress, err := sdk.AccAddressFromBech32(affiliateContractAddressStr)
-		if err != nil {
-			return sdk.Coin{}, sdk.Coin{}, err
-		}
+	if len(revenueShareUser.Parents) > 0 {
+		fmt.Println("revenueShareUser.Parents", revenueShareUser.Parents, len(revenueShareUser.Parents))
+		affiliateFeeAmount := affiliateFee.MulInt(takerFeeCoin.Amount).TruncateInt()
+		affiliateFeeCoin := sdk.Coin{Denom: takerFeeCoin.Denom, Amount: affiliateFee.MulInt(takerFeeCoin.Amount).TruncateInt()}
+		takerFeeCoin = sdk.Coin{Denom: takerFeeCoin.Denom, Amount: math.LegacyOneDec().Sub(affiliateFee).MulInt(takerFeeCoin.Amount).TruncateInt()}
 
-		response, err := k.wasmKeeper.QuerySmart(ctx, affiliateContractAddress, queryMsgBz)
-		if err != nil {
-			return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("failed to query contract state: %w", err)
-		}
-		isAffiliated := false
-		err = json.Unmarshal(response, &isAffiliated)
-		if err != nil {
-			return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("failed to unmarshal response: %w", err)
-		}
-
-		if isAffiliated {
-			affiliateFee := affiliateFee.MulInt(takerFeeCoin.Amount).TruncateInt()
-			affiliateFeeCoin := sdk.Coin{Denom: takerFeeCoin.Denom, Amount: affiliateFee}
-			takerFeeCoin = sdk.Coin{Denom: takerFeeCoin.Denom, Amount: takerFeeCoin.Amount.Sub(affiliateFee)}
-
-			// send the affiliate fee to the affiliate cosmwasm contract
-			// the contract then distributes to the affiliated parents
-			msgBytes, err := json.Marshal(map[string]interface{}{
-				"distribute": map[string]interface{}{},
-			})
-			if err != nil {
-				return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("failed to marshal message: %w", err)
+		parentsLen := len(revenueShareUser.Parents)
+		for i, parent := range revenueShareUser.Parents {
+			// we pay the referrer of the referrer
+			if i < parentsLen-1 {
+				share := math.LegacyOneDec().Sub(affiliateFee).MulInt(affiliateFeeAmount).TruncateInt()
+				affiliateFeeAmount = affiliateFeeAmount.Sub(share)
 			}
-			_, err = k.execWasmMsg(ctx, &wasmtypes.MsgExecuteContract{
-				Sender:   sender.String(),
-				Contract: affiliateContractAddress.String(),
-				Msg:      msgBytes,
-				Funds:    sdk.Coins{affiliateFeeCoin},
-			})
-			if err != nil {
-				return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("failed to distribute affiliate fees: %w", err)
-			}
+			k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, parent, sdk.NewCoins(sdk.NewCoin(affiliateFeeCoin.Denom, affiliateFeeAmount)))
 		}
 	}
 

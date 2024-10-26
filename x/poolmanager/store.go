@@ -68,6 +68,15 @@ func (k *Keeper) setTakerFeeShareAgreementsMapCached(ctx sdk.Context) error {
 	return nil
 }
 
+func (k *Keeper) setTakerFeeRevenueShareUserMapCached(ctx sdk.Context) error {
+	revenueShareUsers, err := k.getAllTakerFeeRevenueShareUsersMap(ctx)
+	if err != nil {
+		return err
+	}
+	k.cachedTakerFeeRevenueShareUserMap = revenueShareUsers
+	return nil
+}
+
 // getTakerFeeShareAgreementFromDenom retrieves a specific taker fee share agreement from the store.
 func (k Keeper) getTakerFeeShareAgreementFromDenom(takerFeeShareDenom string) (types.TakerFeeShareAgreement, bool) {
 	takerFeeShareAgreement, found := k.cachedTakerFeeShareAgreementMap[takerFeeShareDenom]
@@ -637,4 +646,57 @@ func (k Keeper) getAlloyedDenomFromPoolId(ctx sdk.Context, poolId uint64) (strin
 		}
 	}
 	return "", types.NoRegisteredAlloyedPoolError{PoolId: poolId}
+}
+
+//
+// Revenue Share For Users
+//
+
+func (k Keeper) getAllTakerFeeRevenueShareUsersMap(ctx sdk.Context) (map[string]types.RevenueShareUser, error) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyRevenueShareUser)
+	defer iterator.Close()
+
+	takerFeeRevenueShareUserMap := make(map[string]types.RevenueShareUser)
+	for ; iterator.Valid(); iterator.Next() {
+		revenueShareUser := types.RevenueShareUser{}
+		if err := proto.Unmarshal(iterator.Value(), &revenueShareUser); err != nil {
+			return nil, err
+		}
+		takerFeeRevenueShareUserMap[revenueShareUser.UserAddress] = revenueShareUser
+	}
+
+	return takerFeeRevenueShareUserMap, nil
+}
+
+func (k Keeper) getRevenueShareUser(ctx sdk.Context, user sdk.AccAddress) (types.RevenueShareUser, error) {
+	revenueShareUser := k.cachedTakerFeeRevenueShareUserMap[user.String()]
+	return revenueShareUser, nil
+}
+
+func (k *Keeper) setRevenueShareUser(ctx sdk.Context, user sdk.AccAddress, referrer sdk.AccAddress) error {
+	store := ctx.KVStore(k.storeKey)
+	key := types.FormatRevenueShareAddressKey(user)
+
+	parents := []string{}
+	if referrer != nil {
+		parents = append(parents, referrer.String())
+		parents = append(parents, k.cachedTakerFeeRevenueShareUserMap[referrer.String()].Parents...)
+	}
+
+	revenueShareUser := types.RevenueShareUser{
+		UserAddress: user.String(),
+		Parents:     parents,
+	}
+
+	bz, err := proto.Marshal(&revenueShareUser)
+	if err != nil {
+		return err
+	}
+	store.Set(key, bz)
+
+	// Set cache value
+	k.cachedTakerFeeRevenueShareUserMap[user.String()] = revenueShareUser
+
+	return nil
 }

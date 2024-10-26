@@ -445,6 +445,11 @@ func (s *KeeperTestSuite) TestDistributeAffiliateFee() {
 		sendCoins       bool
 
 		affiliateFee osmomath.Dec
+		// affiliateList is a list of addresses and their associated parents
+		affiliateList []struct {
+			address string
+			parents []string
+		}
 	}{
 		"fee charged in full as no affiliate set": {
 			takerFee:        osmomath.MustNewDecFromStr("0.01"),
@@ -452,6 +457,18 @@ func (s *KeeperTestSuite) TestDistributeAffiliateFee() {
 			tokenOutDenom:   apptesting.USDC,
 			expectedBalance: sdk.NewCoins(sdk.NewCoin(apptesting.ETH, osmomath.NewInt(100000))),
 			affiliateFee:    osmomath.MustNewDecFromStr("0.2"),
+			affiliateList:   nil,
+		},
+		"fee charged minus affiliate fee": {
+			takerFee:        osmomath.MustNewDecFromStr("0.01"),
+			tokenIn:         sdk.NewCoin(apptesting.ETH, osmomath.NewInt(10000000)),
+			tokenOutDenom:   apptesting.USDC,
+			expectedBalance: sdk.NewCoins(sdk.NewCoin(apptesting.ETH, osmomath.NewInt(80000))),
+			affiliateFee:    osmomath.MustNewDecFromStr("0.2"),
+			affiliateList: []struct {
+				address string
+				parents []string
+			}{{s.TestAccs[0].String(), []string{s.TestAccs[1].String(), s.TestAccs[2].String()}}},
 		},
 	}
 
@@ -461,8 +478,7 @@ func (s *KeeperTestSuite) TestDistributeAffiliateFee() {
 
 			poolManager := s.App.PoolManagerKeeper
 			poolManagerParams := poolManager.GetParams(s.Ctx)
-			poolManagerParams.AffiliateFee = tc.affiliateFee
-			poolManagerParams.AffiliateContractAddress = s.TestAccs[1].String() // TODO use a real contract address
+			poolManagerParams.TakerFeeParams.AffiliateFee = tc.affiliateFee
 
 			poolManager.SetParams(s.Ctx, poolManagerParams)
 
@@ -539,4 +555,11 @@ func (s *KeeperTestSuite) setupTakerFeeShareAgreement(denom string, skimPercent 
 		SkimPercent: osmomath.MustNewDecFromStr(skimPercent),
 		SkimAddress: skimAddress,
 	})
+}
+
+func reverse(arr []string) []string {
+	for i, j := 0, len(arr)-1; i < j; i, j = i+1, j-1 {
+		arr[i], arr[j] = arr[j], arr[i]
+	}
+	return arr
 }

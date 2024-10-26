@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
@@ -169,4 +170,28 @@ func (server msgServer) SetRegisteredAlloyedPool(goCtx context.Context, msg *typ
 	})
 
 	return &types.MsgSetRegisteredAlloyedPoolResponse{}, nil
+}
+
+func (server msgServer) SetRevenueShareUser(goCtx context.Context, msg *types.MsgSetRevenueShareUser) (*types.MsgSetRevenueShareUserResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if err := osmoutils.ValidateAddressList([]string{msg.Referrer}); err != nil {
+		return nil, err
+	}
+
+	err := server.keeper.setRevenueShareUser(ctx, sdk.AccAddress(msg.Sender), sdk.AccAddress(msg.Referrer))
+	if err != nil {
+		return nil, err
+	}
+
+	// Emit event
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeMsgSetRegisteredAlloyedPool,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(types.AttributeKeyReferrer, msg.Referrer),
+		),
+	})
+
+	return &types.MsgSetRevenueShareUserResponse{}, nil
 }

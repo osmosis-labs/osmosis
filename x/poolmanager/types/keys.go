@@ -57,6 +57,9 @@ var (
 
 	// KeyRegisteredAlloyPool defines the key to store registered alloy pool data.
 	KeyRegisteredAlloyPool = []byte{0x0C}
+
+	// KeyRevenueShareUser defines the key to store user revenue share registrations.
+	KeyRevenueShareUser = []byte{0x0D}
 )
 
 // ModuleRouteToBytes serializes moduleRoute to bytes.
@@ -146,4 +149,9 @@ func FormatRegisteredAlloyPoolKey(poolId uint64, alloyedDenom string) []byte {
 // The key is used to store and retrieve the registered alloy pool data without specifying the alloyed denomination.
 func FormatRegisteredAlloyPoolKeyPoolIdOnly(poolId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%s%d", KeyRegisteredAlloyPool, KeySeparator, poolId))
+}
+
+// TODO
+func FormatRevenueShareAddressKey(user sdk.AccAddress) []byte {
+	return []byte(fmt.Sprintf("%s%s%d", KeyRevenueShareUser, KeySeparator, user.String()))
 }
