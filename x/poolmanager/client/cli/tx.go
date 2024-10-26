@@ -37,6 +37,7 @@ func NewTxCmd() *cobra.Command {
 	osmocli.AddTxCmd(txCmd, NewSwapExactAmountOutCmd)
 	osmocli.AddTxCmd(txCmd, NewSplitRouteSwapExactAmountIn)
 	osmocli.AddTxCmd(txCmd, NewSplitRouteSwapExactAmountOut)
+	osmocli.AddTxCmd(txCmd, NewSetRevenueShareUser)
 	txCmd.AddCommand(NewSetDenomPairTakerFeeCmd())
 
 	txCmd.AddCommand(
@@ -56,6 +57,14 @@ func NewSwapExactAmountInCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountIn)
 		},
 		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
 	}, &types.MsgSwapExactAmountIn{}
+}
+
+func NewSetRevenueShareUser() (*osmocli.TxCliDesc, *types.MsgSetRevenueShareUser) {
+	return &osmocli.TxCliDesc{
+		Use:     "revenue-share",
+		Short:   "sign up for revenue sharing with a referrer",
+		Example: "osmosisd tx poolmanager revenue-share osmo13jwg8f7hk9d6ys6f5wg5kxvud8r7l526rd8dcq --from test2 --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo",
+	}, &types.MsgSetRevenueShareUser{}
 }
 
 func NewSwapExactAmountOutCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountOut) {

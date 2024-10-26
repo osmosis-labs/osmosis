@@ -9,7 +9,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/queryprotov2"
 	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
@@ -41,7 +40,6 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetRegisteredAlloyedPoolFromDenom)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetRegisteredAlloyedPoolFromPoolId)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetAllRegisteredAlloyedPools)
-	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, IsAffiliated)
 	cmd.AddCommand(
 		osmocli.GetParams[*queryproto.ParamsRequest](
 			types.ModuleName, queryproto.NewQueryClient),
@@ -280,13 +278,4 @@ func GetAllRegisteredAlloyedPools() (*osmocli.QueryDescriptor, *queryproto.AllRe
 		Short: "Query all registered alloyed pools",
 		Long:  "{{.Short}}",
 	}, &queryproto.AllRegisteredAlloyedPoolsRequest{}
-}
-
-func IsAffiliated() (*osmocli.QueryDescriptor, *queryprotov2.IsAffiliatedRequest) {
-	return &osmocli.QueryDescriptor{
-		Use:         "is-affiliated",
-		Short:       "Query if an account joined the revenue share program",
-		Long:        "{.Short}} osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj",
-		QueryFnName: "IsAffiliated",
-	}, &queryprotov2.IsAffiliatedRequest{}
 }
