@@ -189,56 +189,56 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 
 		// Looping through the transaction results, each result has a list of events to be looped through
 		var includedEvents []domain.EventWrapper
-		txResults := res.GetTxResults()
-		for _, txResult := range txResults {
-			if txResult.IsErr() {
-				// Skip if the transaction is not successful, so that its corresponding events are not included in the publishing and not counted in by the dexscreener
+
+		txnResult := res.TxResults[txnIndex]
+		if txnResult.IsErr() {
+			// Skip if the transaction is not successful, so that its corresponding events are not included in the publishing and not counted in by the dexscreener
+			continue
+		}
+		events := txnResult.GetEvents()
+
+		// Iterate through the events in the transaction
+		// Include these events only:
+		// - token_swapped
+		// - pool_joined
+		// - pool_exited
+		// - create_position
+		// - withdraw_position
+		for i, event := range events {
+			clonedEvent := deepCloneEvent(&event)
+			// Add the token liquidity to the event
+			err := s.addTokenLiquidity(ctx, clonedEvent)
+			if err != nil {
+				s.logger.Error("Error adding token liquidity to event", "error", err)
+				return err
+			}
+			err = s.adjustTokenInAmountBySpreadFactor(ctx, clonedEvent)
+			if err != nil {
+				s.logger.Error("Error adjusting amount by spread factor", "error", err)
 				continue
 			}
-			events := txResult.GetEvents()
-			// Iterate through the events in the transaction
-			// Include these events only:
-			// - token_swapped
-			// - pool_joined
-			// - pool_exited
-			// - create_position
-			// - withdraw_position
-			for i, event := range events {
-				clonedEvent := deepCloneEvent(&event)
-				// Add the token liquidity to the event
-				err := s.addTokenLiquidity(ctx, clonedEvent)
+			eventType := clonedEvent.Type
+			if eventType == gammtypes.TypeEvtTokenSwapped {
+				// Set the spot price for the token swapped event in the event's attributes map
+				err := s.setSpotPrice(ctx, clonedEvent)
 				if err != nil {
-					s.logger.Error("Error adding token liquidity to event", "error", err)
-					return err
-				}
-				err = s.adjustTokenInAmountBySpreadFactor(ctx, clonedEvent)
-				if err != nil {
-					s.logger.Error("Error adjusting amount by spread factor", "error", err)
+					s.logger.Error("Error setting spot price", "error", err)
 					continue
 				}
-				eventType := clonedEvent.Type
-				if eventType == gammtypes.TypeEvtTokenSwapped {
-					// Set the spot price for the token swapped event in the event's attributes map
-					err := s.setSpotPrice(ctx, clonedEvent)
-					if err != nil {
-						s.logger.Error("Error setting spot price", "error", err)
-						continue
-					}
-				}
-				if eventType == gammtypes.TypeEvtTokenSwapped || eventType == gammtypes.TypeEvtPoolJoined || eventType == gammtypes.TypeEvtPoolExited || eventType == concentratedliquiditytypes.TypeEvtCreatePosition || eventType == concentratedliquiditytypes.TypeEvtWithdrawPosition {
-					includedEvents = append(includedEvents, domain.EventWrapper{Index: i, Event: *clonedEvent})
-				}
-				// Track the newly created pool ID
-				// IMPORTANT NOTE:
-				// 1. Using event attributes in a transaction, ONLY pool ID of the newly created pool is available and being tracked by the underlying pool tracker.
-				// 2. For the other pool metadata of the newly created pool, such as denoms and fees, they are available and tracked thru OnWrite listeners in the common/writelistener package.
-				// 3. See: block_updates_indexer_block_process_strategy.go::publishCreatedPools for more details.
-				if eventType == poolmanagertypes.TypeEvtPoolCreated {
-					err := s.trackCreatedPoolID(event, sdkCtx.BlockHeight(), sdkCtx.BlockTime().UTC(), txHash)
-					if err != nil {
-						s.logger.Error("Error tracking newly created pool ID %v. event skipped.", err)
-						continue
-					}
+			}
+			if eventType == gammtypes.TypeEvtTokenSwapped || eventType == gammtypes.TypeEvtPoolJoined || eventType == gammtypes.TypeEvtPoolExited || eventType == concentratedliquiditytypes.TypeEvtCreatePosition || eventType == concentratedliquiditytypes.TypeEvtWithdrawPosition {
+				includedEvents = append(includedEvents, domain.EventWrapper{Index: i, Event: *clonedEvent})
+			}
+			// Track the newly created pool ID
+			// IMPORTANT NOTE:
+			// 1. Using event attributes in a transaction, ONLY pool ID of the newly created pool is available and being tracked by the underlying pool tracker.
+			// 2. For the other pool metadata of the newly created pool, such as denoms and fees, they are available and tracked thru OnWrite listeners in the common/writelistener package.
+			// 3. See: block_updates_indexer_block_process_strategy.go::publishCreatedPools for more details.
+			if eventType == poolmanagertypes.TypeEvtPoolCreated {
+				err := s.trackCreatedPoolID(event, sdkCtx.BlockHeight(), sdkCtx.BlockTime().UTC(), txHash)
+				if err != nil {
+					s.logger.Error("Error tracking newly created pool ID %v. event skipped.", err)
+					continue
 				}
 			}
 		}
