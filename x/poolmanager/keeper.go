@@ -52,9 +52,10 @@ type Keeper struct {
 	defaultTakerFeeBz  []byte
 	defaultTakerFeeVal osmomath.Dec
 
-	cachedTakerFeeShareAgreementMap          map[string]types.TakerFeeShareAgreement
-	cachedTakerFeeRevenueShareUserMap        map[string]types.RevenueShareUser
-	cachedRegisteredAlloyPoolByAlloyDenomMap map[string]types.AlloyContractTakerFeeShareState
+	cachedTakerFeeShareAgreementMap map[string]types.TakerFeeShareAgreement
+	// cachedTakerFeeRevenueShareUserMap         map[string]types.RevenueShareUser
+	cachedTakerFeeRevenueShareSignupLookupMap map[string]uint64
+	cachedRegisteredAlloyPoolByAlloyDenomMap  map[string]types.AlloyContractTakerFeeShareState
 }
 
 func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.ConcentratedI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI, stakingKeeper types.StakingKeeper, protorevKeeper types.ProtorevKeeper, wasmKeeper types.WasmKeeper, contractKeeper *wasmkeeper.Keeper) *Keeper {
@@ -76,26 +77,26 @@ func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gam
 
 	cachedPoolModules := &sync.Map{}
 	cachedTakerFeeShareAgreementMap := make(map[string]types.TakerFeeShareAgreement)
-	cachedTakerFeeRevenueShareUserMap := make(map[string]types.RevenueShareUser)
+	// cachedTakerFeeRevenueShareUserMap := make(map[string]types.RevenueShareUser)
 	cachedRegisteredAlloyPoolMap := make(map[string]types.AlloyContractTakerFeeShareState)
 
 	return &Keeper{
-		storeKey:                                 storeKey,
-		paramSpace:                               paramSpace,
-		gammKeeper:                               gammKeeper,
-		concentratedKeeper:                       concentratedKeeper,
-		cosmwasmpoolKeeper:                       cosmwasmpoolKeeper,
-		bankKeeper:                               bankKeeper,
-		accountKeeper:                            accountKeeper,
-		communityPoolKeeper:                      communityPoolKeeper,
-		routes:                                   routesMap,
-		poolModules:                              routesList,
-		stakingKeeper:                            stakingKeeper,
-		protorevKeeper:                           protorevKeeper,
-		wasmKeeper:                               wasmKeeper,
-		cachedPoolModules:                        cachedPoolModules,
-		cachedTakerFeeShareAgreementMap:          cachedTakerFeeShareAgreementMap,
-		cachedTakerFeeRevenueShareUserMap:        cachedTakerFeeRevenueShareUserMap,
+		storeKey:                        storeKey,
+		paramSpace:                      paramSpace,
+		gammKeeper:                      gammKeeper,
+		concentratedKeeper:              concentratedKeeper,
+		cosmwasmpoolKeeper:              cosmwasmpoolKeeper,
+		bankKeeper:                      bankKeeper,
+		accountKeeper:                   accountKeeper,
+		communityPoolKeeper:             communityPoolKeeper,
+		routes:                          routesMap,
+		poolModules:                     routesList,
+		stakingKeeper:                   stakingKeeper,
+		protorevKeeper:                  protorevKeeper,
+		wasmKeeper:                      wasmKeeper,
+		cachedPoolModules:               cachedPoolModules,
+		cachedTakerFeeShareAgreementMap: cachedTakerFeeShareAgreementMap,
+		// cachedTakerFeeRevenueShareUserMap:        cachedTakerFeeRevenueShareUserMap,
 		cachedRegisteredAlloyPoolByAlloyDenomMap: cachedRegisteredAlloyPoolMap,
 		ContractKeeper:                           contractKeeper,
 	}
@@ -245,13 +246,6 @@ func (k *Keeper) BeginBlock(ctx sdk.Context) {
 		err = k.setAllRegisteredAlloyedPoolsByDenomCached(ctx)
 		if err != nil {
 			ctx.Logger().Error(fmt.Errorf("%w", types.ErrSetAllRegisteredAlloyedPoolsByDenomCached).Error())
-		}
-	}
-
-	if len(k.cachedTakerFeeRevenueShareUserMap) == 0 {
-		err := k.setTakerFeeRevenueShareUserMapCached(ctx)
-		if err != nil {
-			ctx.Logger().Error(fmt.Errorf("%w", types.ErrSetTakerFeeShareAgreementsMapCached).Error())
 		}
 	}
 }

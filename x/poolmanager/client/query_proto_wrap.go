@@ -479,3 +479,32 @@ func (q Querier) AllRegisteredAlloyedPools(ctx sdk.Context, req queryproto.AllRe
 		ContractStates: contractStates,
 	}, nil
 }
+
+func (q Querier) IsAffiliated(ctx sdk.Context, req queryprotov2.IsAffiliatedRequest) (*queryprotov2.IsAffiliatedResponse, error) {
+	isAffiliated, err := q.K.IsAffiliated(ctx, sdk.MustAccAddressFromBech32(req.Address))
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &queryprotov2.IsAffiliatedResponse{
+		IsAffiliated: isAffiliated,
+	}, nil
+}
+
+func (q Querier) GetRevenueShareSummary(ctx sdk.Context, req queryprotov2.RevenueShareSummaryRequest) (*queryprotov2.RevenueShareSummaryResponse, error) {
+	revenueShareSummary, err := q.K.GetRevenueShareSummary(ctx, sdk.MustAccAddressFromBech32(req.Address))
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return revenueShareSummary, nil
+}
+
+func (q Querier) GetRevenueShareLeaderboard(ctx sdk.Context, req queryprotov2.RevenueShareLeaderboardRequest) (*queryprotov2.RevenueShareLeaderboardResponse, error) {
+	revenueShareLeaderboard, err := q.K.GetRevenueShareLeaderboard(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return revenueShareLeaderboard, nil
+}

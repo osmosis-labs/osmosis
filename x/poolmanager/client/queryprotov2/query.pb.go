@@ -8,6 +8,7 @@ import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/cosmos-sdk/codec/types"
+	_ "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -135,9 +136,287 @@ func (m *SpotPriceResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SpotPriceResponse proto.InternalMessageInfo
 
+type IsAffiliatedRequest struct {
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+}
+
+func (m *IsAffiliatedRequest) Reset()         { *m = IsAffiliatedRequest{} }
+func (m *IsAffiliatedRequest) String() string { return proto.CompactTextString(m) }
+func (*IsAffiliatedRequest) ProtoMessage()    {}
+func (*IsAffiliatedRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_eb2850debe8fb398, []int{2}
+}
+func (m *IsAffiliatedRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *IsAffiliatedRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_IsAffiliatedRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *IsAffiliatedRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_IsAffiliatedRequest.Merge(m, src)
+}
+func (m *IsAffiliatedRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *IsAffiliatedRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_IsAffiliatedRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_IsAffiliatedRequest proto.InternalMessageInfo
+
+func (m *IsAffiliatedRequest) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+type IsAffiliatedResponse struct {
+	IsAffiliated bool `protobuf:"varint,1,opt,name=is_affiliated,json=isAffiliated,proto3" json:"is_affiliated,omitempty"`
+}
+
+func (m *IsAffiliatedResponse) Reset()         { *m = IsAffiliatedResponse{} }
+func (m *IsAffiliatedResponse) String() string { return proto.CompactTextString(m) }
+func (*IsAffiliatedResponse) ProtoMessage()    {}
+func (*IsAffiliatedResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_eb2850debe8fb398, []int{3}
+}
+func (m *IsAffiliatedResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *IsAffiliatedResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_IsAffiliatedResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *IsAffiliatedResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_IsAffiliatedResponse.Merge(m, src)
+}
+func (m *IsAffiliatedResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *IsAffiliatedResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_IsAffiliatedResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_IsAffiliatedResponse proto.InternalMessageInfo
+
+func (m *IsAffiliatedResponse) GetIsAffiliated() bool {
+	if m != nil {
+		return m.IsAffiliated
+	}
+	return false
+}
+
+type RevenueShareSummaryRequest struct {
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+}
+
+func (m *RevenueShareSummaryRequest) Reset()         { *m = RevenueShareSummaryRequest{} }
+func (m *RevenueShareSummaryRequest) String() string { return proto.CompactTextString(m) }
+func (*RevenueShareSummaryRequest) ProtoMessage()    {}
+func (*RevenueShareSummaryRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_eb2850debe8fb398, []int{4}
+}
+func (m *RevenueShareSummaryRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RevenueShareSummaryRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RevenueShareSummaryRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RevenueShareSummaryRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RevenueShareSummaryRequest.Merge(m, src)
+}
+func (m *RevenueShareSummaryRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *RevenueShareSummaryRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_RevenueShareSummaryRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RevenueShareSummaryRequest proto.InternalMessageInfo
+
+func (m *RevenueShareSummaryRequest) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+type RevenueShareSummaryResponse struct {
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	Signups uint64 `protobuf:"varint,2,opt,name=signups,proto3" json:"signups,omitempty"`
+}
+
+func (m *RevenueShareSummaryResponse) Reset()         { *m = RevenueShareSummaryResponse{} }
+func (m *RevenueShareSummaryResponse) String() string { return proto.CompactTextString(m) }
+func (*RevenueShareSummaryResponse) ProtoMessage()    {}
+func (*RevenueShareSummaryResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_eb2850debe8fb398, []int{5}
+}
+func (m *RevenueShareSummaryResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RevenueShareSummaryResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RevenueShareSummaryResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RevenueShareSummaryResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RevenueShareSummaryResponse.Merge(m, src)
+}
+func (m *RevenueShareSummaryResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *RevenueShareSummaryResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_RevenueShareSummaryResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RevenueShareSummaryResponse proto.InternalMessageInfo
+
+func (m *RevenueShareSummaryResponse) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+func (m *RevenueShareSummaryResponse) GetSignups() uint64 {
+	if m != nil {
+		return m.Signups
+	}
+	return 0
+}
+
+type RevenueShareLeaderboardRequest struct {
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+}
+
+func (m *RevenueShareLeaderboardRequest) Reset()         { *m = RevenueShareLeaderboardRequest{} }
+func (m *RevenueShareLeaderboardRequest) String() string { return proto.CompactTextString(m) }
+func (*RevenueShareLeaderboardRequest) ProtoMessage()    {}
+func (*RevenueShareLeaderboardRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_eb2850debe8fb398, []int{6}
+}
+func (m *RevenueShareLeaderboardRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RevenueShareLeaderboardRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RevenueShareLeaderboardRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RevenueShareLeaderboardRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RevenueShareLeaderboardRequest.Merge(m, src)
+}
+func (m *RevenueShareLeaderboardRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *RevenueShareLeaderboardRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_RevenueShareLeaderboardRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RevenueShareLeaderboardRequest proto.InternalMessageInfo
+
+func (m *RevenueShareLeaderboardRequest) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+type RevenueShareLeaderboardResponse struct {
+	Leaderboard []*RevenueShareSummaryResponse `protobuf:"bytes,1,rep,name=leaderboard,proto3" json:"leaderboard,omitempty"`
+}
+
+func (m *RevenueShareLeaderboardResponse) Reset()         { *m = RevenueShareLeaderboardResponse{} }
+func (m *RevenueShareLeaderboardResponse) String() string { return proto.CompactTextString(m) }
+func (*RevenueShareLeaderboardResponse) ProtoMessage()    {}
+func (*RevenueShareLeaderboardResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_eb2850debe8fb398, []int{7}
+}
+func (m *RevenueShareLeaderboardResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RevenueShareLeaderboardResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RevenueShareLeaderboardResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RevenueShareLeaderboardResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RevenueShareLeaderboardResponse.Merge(m, src)
+}
+func (m *RevenueShareLeaderboardResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *RevenueShareLeaderboardResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_RevenueShareLeaderboardResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RevenueShareLeaderboardResponse proto.InternalMessageInfo
+
+func (m *RevenueShareLeaderboardResponse) GetLeaderboard() []*RevenueShareSummaryResponse {
+	if m != nil {
+		return m.Leaderboard
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*SpotPriceRequest)(nil), "osmosis.poolmanager.v2.SpotPriceRequest")
 	proto.RegisterType((*SpotPriceResponse)(nil), "osmosis.poolmanager.v2.SpotPriceResponse")
+	proto.RegisterType((*IsAffiliatedRequest)(nil), "osmosis.poolmanager.v2.IsAffiliatedRequest")
+	proto.RegisterType((*IsAffiliatedResponse)(nil), "osmosis.poolmanager.v2.IsAffiliatedResponse")
+	proto.RegisterType((*RevenueShareSummaryRequest)(nil), "osmosis.poolmanager.v2.RevenueShareSummaryRequest")
+	proto.RegisterType((*RevenueShareSummaryResponse)(nil), "osmosis.poolmanager.v2.RevenueShareSummaryResponse")
+	proto.RegisterType((*RevenueShareLeaderboardRequest)(nil), "osmosis.poolmanager.v2.RevenueShareLeaderboardRequest")
+	proto.RegisterType((*RevenueShareLeaderboardResponse)(nil), "osmosis.poolmanager.v2.RevenueShareLeaderboardResponse")
 }
 
 func init() {
@@ -145,37 +424,53 @@ func init() {
 }
 
 var fileDescriptor_eb2850debe8fb398 = []byte{
-	// 472 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x52, 0xc1, 0x8a, 0xd4, 0x4c,
-	0x10, 0x9e, 0xde, 0xff, 0x77, 0x65, 0x5a, 0x58, 0x77, 0x82, 0xe8, 0x38, 0x2e, 0xc9, 0xd2, 0xa7,
-	0x11, 0x31, 0x2d, 0x11, 0xf6, 0xe0, 0xcd, 0xb0, 0x0b, 0x0a, 0x1e, 0x34, 0x82, 0x07, 0x2f, 0xa1,
-	0x93, 0x69, 0xb3, 0x8d, 0x49, 0x2a, 0x33, 0xdd, 0x19, 0x1c, 0x44, 0x10, 0x9f, 0x40, 0xf0, 0xe6,
-	0xd9, 0x87, 0xd9, 0xe3, 0x80, 0x17, 0xf1, 0x10, 0x64, 0xc6, 0x27, 0x98, 0x27, 0x90, 0xee, 0xce,
-	0xb8, 0xbb, 0xa3, 0xa2, 0xa7, 0x54, 0xd5, 0xf7, 0xf5, 0x57, 0x55, 0xa9, 0x0f, 0x13, 0x90, 0x05,
-	0x48, 0x21, 0x69, 0x05, 0x90, 0x17, 0xac, 0x64, 0x19, 0x9f, 0xd0, 0x69, 0x40, 0xc7, 0x35, 0x9f,
-	0xcc, 0xfc, 0x6a, 0x02, 0x0a, 0x9c, 0xab, 0x2d, 0xc7, 0x3f, 0xc3, 0xf1, 0xa7, 0xc1, 0xe0, 0x4a,
-	0x06, 0x19, 0x18, 0x0a, 0xd5, 0x91, 0x65, 0x0f, 0xf6, 0x32, 0x80, 0x2c, 0xe7, 0x94, 0x55, 0x82,
-	0xb2, 0xb2, 0x04, 0xc5, 0x94, 0x80, 0x52, 0xb6, 0xe8, 0xf5, 0x16, 0x35, 0x59, 0x52, 0xbf, 0xa0,
-	0xac, 0x9c, 0xad, 0xa1, 0xd4, 0xf4, 0x89, 0xad, 0xa2, 0x4d, 0x5a, 0xc8, 0xdb, 0x7c, 0xa5, 0x44,
-	0xc1, 0xa5, 0x62, 0x45, 0x65, 0x09, 0x64, 0x8e, 0xf0, 0xee, 0xd3, 0x0a, 0xd4, 0xe3, 0x89, 0x48,
-	0x79, 0xc4, 0xc7, 0x35, 0x97, 0xca, 0xb9, 0x85, 0x2f, 0xea, 0x89, 0x63, 0x31, 0xea, 0xa3, 0x7d,
-	0x34, 0xfc, 0x3f, 0x74, 0x56, 0x8d, 0xb7, 0x33, 0x63, 0x45, 0x7e, 0x8f, 0xb4, 0x00, 0x89, 0xb6,
-	0x75, 0xf4, 0x70, 0xe4, 0x1c, 0xe1, 0xdd, 0x84, 0x49, 0x1e, 0x33, 0x29, 0xb9, 0x8a, 0x47, 0xbc,
-	0x84, 0xa2, 0xbf, 0xb5, 0x8f, 0x86, 0xdd, 0xf0, 0xc6, 0xaa, 0xf1, 0xae, 0xd9, 0x57, 0x9b, 0x0c,
-	0x12, 0xed, 0xe8, 0xd2, 0x7d, 0x5d, 0x39, 0xd4, 0x05, 0xe7, 0x01, 0xee, 0x8d, 0x6b, 0x50, 0xe7,
-	0x75, 0xfe, 0x33, 0x3a, 0x7b, 0xab, 0xc6, 0xeb, 0x5b, 0x9d, 0x5f, 0x28, 0x24, 0xba, 0x6c, 0x6a,
-	0xa7, 0x4a, 0xe4, 0x2d, 0xc2, 0xbd, 0x33, 0x2b, 0xc9, 0x0a, 0x4a, 0xc9, 0x9d, 0x97, 0x18, 0xcb,
-	0x0a, 0x54, 0x5c, 0xe9, 0xaa, 0x59, 0xab, 0x1b, 0x3e, 0x3a, 0x69, 0xbc, 0xce, 0xd7, 0xc6, 0xa3,
-	0x99, 0x50, 0xc7, 0x75, 0xe2, 0xa7, 0x50, 0xd0, 0xf6, 0x64, 0xb7, 0x73, 0x96, 0xc8, 0x75, 0x62,
-	0xbe, 0x05, 0x53, 0xc7, 0x7e, 0x28, 0xb2, 0x43, 0x9e, 0xae, 0x1a, 0xaf, 0x67, 0xe7, 0x39, 0x95,
-	0x24, 0x51, 0x57, 0xae, 0x9b, 0x06, 0x9f, 0x10, 0xbe, 0xf0, 0x44, 0x1b, 0xc1, 0xf9, 0x88, 0xf0,
-	0xa5, 0x9f, 0xc3, 0x3c, 0x0b, 0x9c, 0xa1, 0xff, 0x7b, 0x4f, 0xf8, 0x9b, 0x47, 0x18, 0xdc, 0xfc,
-	0x07, 0xa6, 0xdd, 0x8d, 0x1c, 0xbc, 0xfb, 0xfc, 0xfd, 0xc3, 0xd6, 0x1d, 0xc7, 0xa7, 0x7f, 0x30,
-	0xa5, 0x4e, 0x25, 0x7d, 0xdd, 0xde, 0xee, 0x0d, 0x35, 0x13, 0xcb, 0x30, 0x3e, 0x59, 0xb8, 0x68,
-	0xbe, 0x70, 0xd1, 0xb7, 0x85, 0x8b, 0xde, 0x2f, 0xdd, 0xce, 0x7c, 0xe9, 0x76, 0xbe, 0x2c, 0xdd,
-	0xce, 0xf3, 0xa3, 0xbf, 0xfd, 0x91, 0x69, 0x70, 0x40, 0x5f, 0x9d, 0x6b, 0x93, 0xe6, 0x82, 0x97,
-	0xca, 0xfa, 0xdf, 0x78, 0x6b, 0x1a, 0x24, 0xdb, 0x26, 0xb8, 0xfb, 0x23, 0x00, 0x00, 0xff, 0xff,
-	0x55, 0xcb, 0xa6, 0xac, 0x2d, 0x03, 0x00, 0x00,
+	// 733 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x55, 0xcd, 0x4e, 0xdb, 0x40,
+	0x10, 0x8e, 0xf9, 0x2d, 0x0b, 0xa5, 0xb0, 0xa0, 0x92, 0x06, 0x64, 0x23, 0xf7, 0x92, 0x0a, 0xea,
+	0x2d, 0xa6, 0x0a, 0x82, 0x1e, 0x2a, 0x22, 0x90, 0x8a, 0xc4, 0xa1, 0x18, 0xb5, 0x87, 0x5e, 0xac,
+	0x4d, 0xb2, 0x98, 0x55, 0x63, 0xaf, 0xf1, 0xae, 0x23, 0x22, 0x84, 0x54, 0xf5, 0x09, 0x2a, 0xf5,
+	0xd6, 0x4b, 0x1f, 0xa5, 0xa7, 0x4a, 0x1c, 0x23, 0xf5, 0x52, 0xf5, 0x10, 0x55, 0xd0, 0x27, 0xc8,
+	0x13, 0x54, 0x5e, 0x3b, 0x24, 0x40, 0x5c, 0x42, 0x4f, 0xde, 0x99, 0xf9, 0xe6, 0x9b, 0x19, 0xcf,
+	0xb7, 0x36, 0xd0, 0x19, 0x77, 0x19, 0xa7, 0x1c, 0xf9, 0x8c, 0x55, 0x5d, 0xec, 0x61, 0x87, 0x04,
+	0xa8, 0x66, 0xa2, 0xa3, 0x90, 0x04, 0x75, 0xc3, 0x0f, 0x98, 0x60, 0xf0, 0x61, 0x82, 0x31, 0xba,
+	0x30, 0x46, 0xcd, 0xcc, 0xcd, 0x3a, 0xcc, 0x61, 0x12, 0x82, 0xa2, 0x53, 0x8c, 0xce, 0x2d, 0x38,
+	0x8c, 0x39, 0x55, 0x82, 0xb0, 0x4f, 0x11, 0xf6, 0x3c, 0x26, 0xb0, 0xa0, 0xcc, 0xe3, 0x49, 0xf4,
+	0x51, 0x12, 0x95, 0x56, 0x29, 0x3c, 0x40, 0xd8, 0xab, 0xb7, 0x43, 0x65, 0x59, 0xc7, 0x8e, 0x19,
+	0x63, 0x23, 0x09, 0x69, 0xd7, 0xb3, 0x04, 0x75, 0x09, 0x17, 0xd8, 0xf5, 0x13, 0x80, 0x1a, 0xc3,
+	0x51, 0x09, 0x73, 0x82, 0x6a, 0x2b, 0x25, 0x22, 0xf0, 0x0a, 0x2a, 0x33, 0xea, 0xc5, 0x71, 0xbd,
+	0xa1, 0x80, 0xa9, 0x7d, 0x9f, 0x89, 0xd7, 0x01, 0x2d, 0x13, 0x8b, 0x1c, 0x85, 0x84, 0x0b, 0xb8,
+	0x04, 0x46, 0xa3, 0x89, 0x6c, 0x5a, 0xc9, 0x2a, 0x8b, 0x4a, 0x7e, 0xa8, 0x08, 0x5b, 0x4d, 0x6d,
+	0xb2, 0x8e, 0xdd, 0xea, 0x86, 0x9e, 0x04, 0x74, 0x6b, 0x24, 0x3a, 0xed, 0x54, 0xe0, 0x36, 0x98,
+	0x8a, 0xc8, 0x6d, 0xcc, 0x39, 0x11, 0x76, 0x85, 0x78, 0xcc, 0xcd, 0x0e, 0x2c, 0x2a, 0xf9, 0xb1,
+	0xe2, 0x7c, 0xab, 0xa9, 0xcd, 0xc5, 0x59, 0xd7, 0x11, 0xba, 0x35, 0x19, 0xb9, 0x36, 0x23, 0xcf,
+	0x56, 0xe4, 0x80, 0xaf, 0xc0, 0xf4, 0x51, 0xc8, 0xc4, 0x55, 0x9e, 0x41, 0xc9, 0xb3, 0xd0, 0x6a,
+	0x6a, 0xd9, 0x98, 0xe7, 0x06, 0x44, 0xb7, 0x1e, 0x48, 0x5f, 0x87, 0x49, 0xff, 0xa0, 0x80, 0xe9,
+	0xae, 0x91, 0xb8, 0xcf, 0x3c, 0x4e, 0xe0, 0x7b, 0x00, 0xb8, 0xcf, 0x84, 0xed, 0x47, 0x5e, 0x39,
+	0xd6, 0x58, 0x71, 0xf7, 0xac, 0xa9, 0x65, 0x7e, 0x35, 0x35, 0xe4, 0x50, 0x71, 0x18, 0x96, 0x8c,
+	0x32, 0x73, 0x51, 0xb2, 0xd2, 0xa7, 0x55, 0x5c, 0xe2, 0x6d, 0x43, 0x3e, 0x5d, 0x2c, 0x0e, 0x8d,
+	0x22, 0x75, 0xb6, 0x48, 0xb9, 0xd5, 0xd4, 0xa6, 0xe3, 0x7e, 0x3a, 0x94, 0xba, 0x35, 0xc6, 0xdb,
+	0x45, 0x75, 0x04, 0x66, 0x76, 0xf8, 0xe6, 0xc1, 0x01, 0xad, 0x52, 0x2c, 0x48, 0xa5, 0xfd, 0x5e,
+	0xb3, 0x60, 0x14, 0x57, 0x2a, 0x01, 0xe1, 0x3c, 0x6e, 0xc0, 0x6a, 0x9b, 0xfa, 0x0b, 0x30, 0x7b,
+	0x35, 0x21, 0xe9, 0xfa, 0x31, 0xb8, 0x4f, 0xb9, 0x8d, 0x2f, 0x03, 0x32, 0xef, 0x9e, 0x35, 0x41,
+	0xbb, 0xc0, 0x7a, 0x01, 0xe4, 0x2c, 0x52, 0x23, 0x5e, 0x48, 0xf6, 0x0f, 0x71, 0x40, 0xf6, 0x43,
+	0xd7, 0xc5, 0x41, 0xfd, 0xf6, 0xa2, 0x7b, 0x60, 0xbe, 0x67, 0x5e, 0x52, 0x3b, 0x35, 0x31, 0x8a,
+	0x70, 0xea, 0x78, 0xa1, 0xcf, 0xe5, 0xa6, 0x87, 0xac, 0xb6, 0xa9, 0x6f, 0x00, 0xb5, 0x9b, 0x72,
+	0x97, 0xe0, 0x0a, 0x09, 0x4a, 0x0c, 0x07, 0x7d, 0xbc, 0x83, 0x63, 0xa0, 0xa5, 0xe6, 0x26, 0x2d,
+	0xbd, 0x01, 0xe3, 0xd5, 0x8e, 0x3b, 0xab, 0x2c, 0x0e, 0xe6, 0xc7, 0xcd, 0x55, 0xa3, 0xf7, 0x35,
+	0x34, 0xfe, 0x31, 0x9c, 0xd5, 0xcd, 0x63, 0x36, 0x86, 0xc1, 0xf0, 0x5e, 0x74, 0xaf, 0xe1, 0x17,
+	0x05, 0x8c, 0x5f, 0x6a, 0xe7, 0xad, 0x09, 0xf3, 0x69, 0xdc, 0xd7, 0xef, 0x4c, 0xee, 0x49, 0x1f,
+	0xc8, 0xb8, 0xb6, 0x5e, 0xf8, 0xf8, 0xe3, 0xcf, 0xe7, 0x81, 0x67, 0xd0, 0x40, 0x29, 0xdf, 0x98,
+	0xc8, 0xe4, 0xe8, 0x24, 0xb9, 0x6a, 0xa7, 0x48, 0x0a, 0x8c, 0xc3, 0xaf, 0x0a, 0x98, 0xe8, 0x56,
+	0x09, 0x5c, 0x4a, 0xab, 0xd9, 0x43, 0x7c, 0xb9, 0xe5, 0xfe, 0xc0, 0x49, 0x8f, 0xcf, 0x65, 0x8f,
+	0x06, 0x5c, 0x4e, 0xeb, 0xb1, 0xa3, 0x49, 0x74, 0x92, 0x6c, 0xf0, 0x14, 0x7e, 0x57, 0xc0, 0x5c,
+	0xca, 0x0e, 0x61, 0xa1, 0x9f, 0x35, 0xdd, 0x14, 0x4c, 0x6e, 0xed, 0xce, 0x79, 0xc9, 0x08, 0xeb,
+	0x72, 0x84, 0x55, 0xb8, 0x92, 0x36, 0x42, 0x10, 0x13, 0xd8, 0x3c, 0x62, 0xb0, 0xbb, 0x04, 0x01,
+	0xbf, 0x29, 0x60, 0xa6, 0x87, 0x7a, 0xa0, 0x79, 0x27, 0xa9, 0xc5, 0xfd, 0xff, 0x8f, 0x3c, 0xf5,
+	0x97, 0xb2, 0xf7, 0x75, 0xb8, 0xd6, 0x5f, 0xef, 0x3c, 0x4e, 0xef, 0x6c, 0xa2, 0x68, 0x9f, 0x9d,
+	0xab, 0x4a, 0xe3, 0x5c, 0x55, 0x7e, 0x9f, 0xab, 0xca, 0xa7, 0x0b, 0x35, 0xd3, 0xb8, 0x50, 0x33,
+	0x3f, 0x2f, 0xd4, 0xcc, 0xbb, 0xed, 0xdb, 0x3e, 0x76, 0x35, 0xb3, 0x80, 0x8e, 0xaf, 0xd4, 0x2b,
+	0x57, 0x29, 0xf1, 0x44, 0xfc, 0xeb, 0x93, 0xbf, 0x8d, 0x9a, 0x59, 0x1a, 0x91, 0x87, 0xd5, 0xbf,
+	0x01, 0x00, 0x00, 0xff, 0xff, 0x5e, 0xbb, 0xff, 0xd1, 0x28, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -196,6 +491,9 @@ type QueryClient interface {
 	// modules perform sig fig rounding so most of the rightmost decimals can be
 	// zeroes.
 	SpotPriceV2(ctx context.Context, in *SpotPriceRequest, opts ...grpc.CallOption) (*SpotPriceResponse, error)
+	IsAffiliated(ctx context.Context, in *IsAffiliatedRequest, opts ...grpc.CallOption) (*IsAffiliatedResponse, error)
+	RevenueShareLeaderboard(ctx context.Context, in *RevenueShareLeaderboardRequest, opts ...grpc.CallOption) (*RevenueShareLeaderboardResponse, error)
+	RevenueShareSummary(ctx context.Context, in *RevenueShareSummaryRequest, opts ...grpc.CallOption) (*RevenueShareSummaryResponse, error)
 }
 
 type queryClient struct {
@@ -215,6 +513,33 @@ func (c *queryClient) SpotPriceV2(ctx context.Context, in *SpotPriceRequest, opt
 	return out, nil
 }
 
+func (c *queryClient) IsAffiliated(ctx context.Context, in *IsAffiliatedRequest, opts ...grpc.CallOption) (*IsAffiliatedResponse, error) {
+	out := new(IsAffiliatedResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.poolmanager.v2.Query/IsAffiliated", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) RevenueShareLeaderboard(ctx context.Context, in *RevenueShareLeaderboardRequest, opts ...grpc.CallOption) (*RevenueShareLeaderboardResponse, error) {
+	out := new(RevenueShareLeaderboardResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.poolmanager.v2.Query/RevenueShareLeaderboard", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) RevenueShareSummary(ctx context.Context, in *RevenueShareSummaryRequest, opts ...grpc.CallOption) (*RevenueShareSummaryResponse, error) {
+	out := new(RevenueShareSummaryResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.poolmanager.v2.Query/RevenueShareSummary", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// SpotPriceV2 defines a gRPC query handler that returns the spot price given
@@ -223,6 +548,9 @@ type QueryServer interface {
 	// modules perform sig fig rounding so most of the rightmost decimals can be
 	// zeroes.
 	SpotPriceV2(context.Context, *SpotPriceRequest) (*SpotPriceResponse, error)
+	IsAffiliated(context.Context, *IsAffiliatedRequest) (*IsAffiliatedResponse, error)
+	RevenueShareLeaderboard(context.Context, *RevenueShareLeaderboardRequest) (*RevenueShareLeaderboardResponse, error)
+	RevenueShareSummary(context.Context, *RevenueShareSummaryRequest) (*RevenueShareSummaryResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -231,6 +559,15 @@ type UnimplementedQueryServer struct {
 
 func (*UnimplementedQueryServer) SpotPriceV2(ctx context.Context, req *SpotPriceRequest) (*SpotPriceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SpotPriceV2 not implemented")
+}
+func (*UnimplementedQueryServer) IsAffiliated(ctx context.Context, req *IsAffiliatedRequest) (*IsAffiliatedResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IsAffiliated not implemented")
+}
+func (*UnimplementedQueryServer) RevenueShareLeaderboard(ctx context.Context, req *RevenueShareLeaderboardRequest) (*RevenueShareLeaderboardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RevenueShareLeaderboard not implemented")
+}
+func (*UnimplementedQueryServer) RevenueShareSummary(ctx context.Context, req *RevenueShareSummaryRequest) (*RevenueShareSummaryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RevenueShareSummary not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -255,6 +592,60 @@ func _Query_SpotPriceV2_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_IsAffiliated_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IsAffiliatedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).IsAffiliated(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.poolmanager.v2.Query/IsAffiliated",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).IsAffiliated(ctx, req.(*IsAffiliatedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_RevenueShareLeaderboard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RevenueShareLeaderboardRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).RevenueShareLeaderboard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.poolmanager.v2.Query/RevenueShareLeaderboard",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).RevenueShareLeaderboard(ctx, req.(*RevenueShareLeaderboardRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_RevenueShareSummary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RevenueShareSummaryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).RevenueShareSummary(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.poolmanager.v2.Query/RevenueShareSummary",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).RevenueShareSummary(ctx, req.(*RevenueShareSummaryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.poolmanager.v2.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -262,6 +653,18 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SpotPriceV2",
 			Handler:    _Query_SpotPriceV2_Handler,
+		},
+		{
+			MethodName: "IsAffiliated",
+			Handler:    _Query_IsAffiliated_Handler,
+		},
+		{
+			MethodName: "RevenueShareLeaderboard",
+			Handler:    _Query_RevenueShareLeaderboard_Handler,
+		},
+		{
+			MethodName: "RevenueShareSummary",
+			Handler:    _Query_RevenueShareSummary_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -343,6 +746,201 @@ func (m *SpotPriceResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *IsAffiliatedRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *IsAffiliatedRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *IsAffiliatedRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *IsAffiliatedResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *IsAffiliatedResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *IsAffiliatedResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.IsAffiliated {
+		i--
+		if m.IsAffiliated {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *RevenueShareSummaryRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RevenueShareSummaryRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RevenueShareSummaryRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *RevenueShareSummaryResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RevenueShareSummaryResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RevenueShareSummaryResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Signups != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Signups))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *RevenueShareLeaderboardRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RevenueShareLeaderboardRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RevenueShareLeaderboardRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *RevenueShareLeaderboardResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RevenueShareLeaderboardResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RevenueShareLeaderboardResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Leaderboard) > 0 {
+		for iNdEx := len(m.Leaderboard) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Leaderboard[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -382,6 +980,88 @@ func (m *SpotPriceResponse) Size() (n int) {
 	_ = l
 	l = m.SpotPrice.Size()
 	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *IsAffiliatedRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *IsAffiliatedResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.IsAffiliated {
+		n += 2
+	}
+	return n
+}
+
+func (m *RevenueShareSummaryRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *RevenueShareSummaryResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.Signups != 0 {
+		n += 1 + sovQuery(uint64(m.Signups))
+	}
+	return n
+}
+
+func (m *RevenueShareLeaderboardRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *RevenueShareLeaderboardResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Leaderboard) > 0 {
+		for _, e := range m.Leaderboard {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -584,6 +1264,507 @@ func (m *SpotPriceResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.SpotPrice.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *IsAffiliatedRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: IsAffiliatedRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: IsAffiliatedRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *IsAffiliatedResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: IsAffiliatedResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: IsAffiliatedResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IsAffiliated", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.IsAffiliated = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RevenueShareSummaryRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RevenueShareSummaryRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RevenueShareSummaryRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RevenueShareSummaryResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RevenueShareSummaryResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RevenueShareSummaryResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signups", wireType)
+			}
+			m.Signups = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Signups |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RevenueShareLeaderboardRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RevenueShareLeaderboardRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RevenueShareLeaderboardRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RevenueShareLeaderboardResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RevenueShareLeaderboardResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RevenueShareLeaderboardResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Leaderboard", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Leaderboard = append(m.Leaderboard, &RevenueShareSummaryResponse{})
+			if err := m.Leaderboard[len(m.Leaderboard)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

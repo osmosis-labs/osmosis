@@ -430,11 +430,6 @@ func (s *KeeperTestSuite) TestProcessAlloyedAssetShareAgreements() {
 
 // tests if fees are distributed to affiliates if set
 func (s *KeeperTestSuite) TestDistributeAffiliateFee() {
-	var (
-	// defaultTakerFee = osmomath.MustNewDecFromStr("0.01")
-	// defaultAmount   = osmomath.NewInt(10000000)
-	)
-
 	tests := map[string]struct {
 		tokenIn       sdk.Coin
 		tokenOutDenom string
@@ -446,10 +441,8 @@ func (s *KeeperTestSuite) TestDistributeAffiliateFee() {
 
 		affiliateFee osmomath.Dec
 		// affiliateList is a list of addresses and their associated parents
-		affiliateList []struct {
-			address string
-			parents []string
-		}
+		affiliateList []string
+		receiveList   sdk.Coins
 	}{
 		"fee charged in full as no affiliate set": {
 			takerFee:        osmomath.MustNewDecFromStr("0.01"),
@@ -457,7 +450,8 @@ func (s *KeeperTestSuite) TestDistributeAffiliateFee() {
 			tokenOutDenom:   apptesting.USDC,
 			expectedBalance: sdk.NewCoins(sdk.NewCoin(apptesting.ETH, osmomath.NewInt(100000))),
 			affiliateFee:    osmomath.MustNewDecFromStr("0.2"),
-			affiliateList:   nil,
+			affiliateList:   []string{},
+			receiveList:     sdk.Coins{},
 		},
 		"fee charged minus affiliate fee": {
 			takerFee:        osmomath.MustNewDecFromStr("0.01"),
@@ -465,16 +459,33 @@ func (s *KeeperTestSuite) TestDistributeAffiliateFee() {
 			tokenOutDenom:   apptesting.USDC,
 			expectedBalance: sdk.NewCoins(sdk.NewCoin(apptesting.ETH, osmomath.NewInt(80000))),
 			affiliateFee:    osmomath.MustNewDecFromStr("0.2"),
-			affiliateList: []struct {
-				address string
-				parents []string
-			}{{s.TestAccs[0].String(), []string{s.TestAccs[1].String(), s.TestAccs[2].String()}}},
+			affiliateList:   []string{s.TestAccs[0].String(), s.TestAccs[1].String()},
+			receiveList: sdk.Coins{sdk.NewCoin(
+				apptesting.ETH,
+				osmomath.NewInt(16000),
+			)},
+		},
+		"fee charged minus affiliate fee only once even with many parents": {
+			takerFee:        osmomath.MustNewDecFromStr("0.01"),
+			tokenIn:         sdk.NewCoin(apptesting.ETH, osmomath.NewInt(10000000)),
+			tokenOutDenom:   apptesting.USDC,
+			expectedBalance: sdk.NewCoins(sdk.NewCoin(apptesting.ETH, osmomath.NewInt(80000))),
+			affiliateFee:    osmomath.MustNewDecFromStr("0.2"),
+			affiliateList:   []string{s.TestAccs[0].String(), s.TestAccs[1].String(), s.TestAccs[2].String()},
+			receiveList: sdk.Coins{sdk.NewCoin(
+				apptesting.ETH,
+				osmomath.NewInt(16000),
+			), sdk.NewCoin(
+				apptesting.ETH,
+				osmomath.NewInt(3200),
+			)},
 		},
 	}
 
 	for name, tc := range tests {
 		s.Run(name, func() {
 			s.SetupTest()
+			require := s.Require()
 
 			poolManager := s.App.PoolManagerKeeper
 			poolManagerParams := poolManager.GetParams(s.Ctx)
@@ -491,20 +502,32 @@ func (s *KeeperTestSuite) TestDistributeAffiliateFee() {
 			// Pre-fund owner.
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(tc.tokenIn))
 
+			// we start from the back as parents records are used in child calculations
+			for i := len(tc.affiliateList) - 2; i >= 0; i-- {
+				err := poolManager.Affiliate(s.Ctx,
+					sdk.MustAccAddressFromBech32(tc.affiliateList[i]),
+					sdk.MustAccAddressFromBech32(tc.affiliateList[i+1]))
+				require.NoError(err)
+			}
+
 			// System under test.
 			_, _, err := poolManager.ChargeTakerFee(s.Ctx, tc.tokenIn, tc.tokenOutDenom, s.TestAccs[0], true)
-
 			if tc.expectError != nil {
-				s.Require().Error(err)
+				require.Error(err)
 				return
+			} else {
+				require.NoError(err)
 			}
-			s.Require().NoError(err)
 
 			takerFeeModuleAccBal := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(txfeestypes.TakerFeeCollectorName))
 
-			s.Require().Equal(tc.expectedBalance, takerFeeModuleAccBal)
+			require.Equal(tc.expectedBalance, takerFeeModuleAccBal)
 
-			// TODO test affiliate fee message
+			// check receive list against parents balances
+			for i, expectedBalance := range tc.receiveList {
+				actualBalance := s.App.BankKeeper.GetBalance(s.Ctx, sdk.MustAccAddressFromBech32(tc.affiliateList[i+1]), apptesting.ETH)
+				require.Equal(expectedBalance, actualBalance)
+			}
 		})
 	}
 }

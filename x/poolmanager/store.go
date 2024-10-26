@@ -68,14 +68,32 @@ func (k *Keeper) setTakerFeeShareAgreementsMapCached(ctx sdk.Context) error {
 	return nil
 }
 
-func (k *Keeper) setTakerFeeRevenueShareUserMapCached(ctx sdk.Context) error {
-	revenueShareUsers, err := k.getAllTakerFeeRevenueShareUsersMap(ctx)
-	if err != nil {
-		return err
-	}
-	k.cachedTakerFeeRevenueShareUserMap = revenueShareUsers
-	return nil
-}
+// func (k *Keeper) setTakerFeeRevenueShareUserMapCached(ctx sdk.Context) error {
+// 	revenueShareUsers, err := k.getAllTakerFeeRevenueShareUsersMap(ctx)
+// 	fmt.Println("revenueShareUsers", revenueShareUsers)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	k.cachedTakerFeeRevenueShareUserMap = revenueShareUsers
+
+// 	return nil
+// }
+
+// func (k *Keeper) setTakerFeeRevenueShareSignupLookupCached(ctx sdk.Context) error {
+// 	// Initialize the signup lookup map
+// 	k.cachedTakerFeeRevenueShareSignupLookupMap = make(map[string]uint64)
+
+// 	for _, user := range k.cachedTakerFeeRevenueShareUserMap {
+// 		for _, parent := range user.Parents {
+// 			if _, ok := k.cachedTakerFeeRevenueShareSignupLookupMap[parent]; !ok {
+// 				k.cachedTakerFeeRevenueShareSignupLookupMap[parent] = 0
+// 			}
+// 			k.cachedTakerFeeRevenueShareSignupLookupMap[parent] = k.cachedTakerFeeRevenueShareSignupLookupMap[parent] + 1
+// 		}
+// 	}
+
+// 	return nil
+// }
 
 // getTakerFeeShareAgreementFromDenom retrieves a specific taker fee share agreement from the store.
 func (k Keeper) getTakerFeeShareAgreementFromDenom(takerFeeShareDenom string) (types.TakerFeeShareAgreement, bool) {
@@ -669,11 +687,21 @@ func (k Keeper) getAllTakerFeeRevenueShareUsersMap(ctx sdk.Context) (map[string]
 	return takerFeeRevenueShareUserMap, nil
 }
 
+// This should be cached as this is called with every transaction
 func (k Keeper) getRevenueShareUser(ctx sdk.Context, user sdk.AccAddress) (types.RevenueShareUser, error) {
-	revenueShareUser := k.cachedTakerFeeRevenueShareUserMap[user.String()]
-	return revenueShareUser, nil
+	store := ctx.KVStore(k.storeKey)
+	key := types.FormatRevenueShareAddressKey(user)
+	bz := store.Get(key)
+	if bz == nil {
+		return types.RevenueShareUser{}, nil
+	}
+
+	revenueShareUser := &types.RevenueShareUser{}
+	err := revenueShareUser.Unmarshal(bz)
+	return *revenueShareUser, err
 }
 
+// this should update a cache on top of the store as we need the cache for this frequently used lookup
 func (k *Keeper) setRevenueShareUser(ctx sdk.Context, user sdk.AccAddress, referrer sdk.AccAddress) error {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FormatRevenueShareAddressKey(user)
@@ -681,7 +709,11 @@ func (k *Keeper) setRevenueShareUser(ctx sdk.Context, user sdk.AccAddress, refer
 	parents := []string{}
 	if referrer != nil {
 		parents = append(parents, referrer.String())
-		parents = append(parents, k.cachedTakerFeeRevenueShareUserMap[referrer.String()].Parents...)
+		revenueShareUser, err := k.getRevenueShareUser(ctx, referrer)
+		if err != nil {
+			return err
+		}
+		parents = append(parents, revenueShareUser.Parents...)
 	}
 
 	revenueShareUser := types.RevenueShareUser{
@@ -696,7 +728,19 @@ func (k *Keeper) setRevenueShareUser(ctx sdk.Context, user sdk.AccAddress, refer
 	store.Set(key, bz)
 
 	// Set cache value
-	k.cachedTakerFeeRevenueShareUserMap[user.String()] = revenueShareUser
+	// k.cachedTakerFeeRevenueShareUserMap[user.String()] = revenueShareUser
+
+	// signupLookup := map[string]uint64{}
+	// for _, parent := range parents {
+	// 	key = types.FormatRevenueShareAddressKey(sdk.MustAccAddressFromBech32(parent))
+	// 	counter := signupLookup[parent]
+
+	// 	bz = make([]byte, 8)
+	// 	binary.BigEndian.PutUint64(bz, uint64(counter+1))
+
+	// 	store.Set(key, bz)
+	// 	signupLookup[parent] = uint64(counter + 1)
+	// }
 
 	return nil
 }

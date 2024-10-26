@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"sort"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -15,6 +16,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/queryprotov2"
 	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 )
 
@@ -1157,6 +1159,56 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactConcentratedLiquidity(
 	return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
 		InputCoin:  currFromCoin,
 		OutputCoin: tokenOut,
+	}, nil
+}
+
+func (k Keeper) IsAffiliated(ctx sdk.Context, address sdk.AccAddress) (bool, error) {
+	affiliation, err := k.getRevenueShareUser(ctx, address)
+	if err != nil {
+		return false, err
+	}
+	if len(affiliation.Parents) == 0 {
+		return false, nil
+	}
+	return true, nil
+}
+
+func (k Keeper) GetRevenueShareSummary(ctx sdk.Context, address sdk.AccAddress) (*queryprotov2.RevenueShareSummaryResponse, error) {
+	signups := k.cachedTakerFeeRevenueShareSignupLookupMap[address.String()]
+
+	return &queryprotov2.RevenueShareSummaryResponse{
+		Signups: signups,
+	}, nil
+}
+
+func (k Keeper) GetRevenueShareLeaderboard(ctx sdk.Context) (*queryprotov2.RevenueShareLeaderboardResponse, error) {
+	// Extract key-value pairs and sort by values
+	type kv struct {
+		Key   string
+		Value uint64
+	}
+
+	var kvs []kv
+	for k, v := range k.cachedTakerFeeRevenueShareSignupLookupMap {
+		kvs = append(kvs, kv{k, v})
+	}
+
+	sort.Slice(kvs, func(i, j int) bool {
+		return kvs[i].Value > kvs[j].Value // Change to > for descending order
+	})
+
+	kvs = kvs[:10]
+	summaries := make([]*queryprotov2.RevenueShareSummaryResponse, 0, len(kvs))
+	for _, kv := range kvs {
+		signups := kv.Value
+		summaries = append(summaries, &queryprotov2.RevenueShareSummaryResponse{
+			Address: kv.Key,
+			Signups: signups,
+		})
+	}
+
+	return &queryprotov2.RevenueShareLeaderboardResponse{
+		Leaderboard: summaries,
 	}, nil
 }
 

@@ -154,3 +154,7 @@ func (k *Keeper) SetCacheTrackers(takerFeeShareAgreement map[string]types.TakerF
 func (k Keeper) FundCommunityPoolIfNotWhitelisted(ctx sdk.Context, sender sdk.AccAddress) error {
 	return k.fundCommunityPoolIfNotWhitelisted(ctx, sender)
 }
+
+func (k Keeper) Affiliate(ctx sdk.Context, user sdk.AccAddress, parent sdk.AccAddress) error {
+	return k.setRevenueShareUser(ctx, user, parent)
+}

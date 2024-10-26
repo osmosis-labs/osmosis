@@ -1,4 +1,3 @@
-
 package grpc
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
@@ -11,8 +10,10 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/client"
 	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/queryprotov2"
 )
 
 type Querier struct {
@@ -261,3 +262,29 @@ func (q Querier) AllPools(grpcCtx context.Context,
 	return q.Q.AllPools(ctx, *req)
 }
 
+func (q Querier) IsAffiliated(grpcCtx context.Context,
+	req *queryprotov2.IsAffiliatedRequest,
+) (*queryprotov2.IsAffiliatedResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.IsAffiliated(ctx, *req)
+}
+
+func (q Querier) GetRevenueShareSummary(grpcCtx context.Context,
+	req *queryprotov2.RevenueShareSummaryRequest,
+) (*queryprotov2.RevenueShareSummaryResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.GetRevenueShareSummary(ctx, *req)
+}
+
+func (q Querier) GetRevenueShareLeaderboard(grpcCtx context.Context,
+	req *queryprotov2.RevenueShareLeaderboardRequest,
+) (*queryprotov2.RevenueShareLeaderboardResponse, error) {
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.GetRevenueShareLeaderboard(ctx, *req)
+}

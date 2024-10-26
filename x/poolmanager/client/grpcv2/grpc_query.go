@@ -31,3 +31,43 @@ func (q Querier) SpotPriceV2(grpcCtx context.Context,
 	return q.Q.SpotPriceV2(ctx, *req)
 }
 
+func (q Querier) IsAffiliated(grpcCtx context.Context,
+	req *queryprotov2.IsAffiliatedRequest,
+) (*queryprotov2.IsAffiliatedResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	isAffilated, err := q.Q.K.IsAffiliated(ctx, sdk.AccAddress(req.Address))
+	if err != nil {
+		return nil, err
+	}
+	return &queryprotov2.IsAffiliatedResponse{
+		IsAffiliated: isAffilated,
+	}, nil
+}
+
+func (q Querier) RevenueShareSummary(grpcCtx context.Context,
+	req *queryprotov2.RevenueShareSummaryRequest,
+) (*queryprotov2.RevenueShareSummaryResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	revenueShareSummary, err := q.Q.K.GetRevenueShareSummary(ctx, sdk.AccAddress(req.Address))
+	if err != nil {
+		return nil, err
+	}
+	return revenueShareSummary, nil
+}
+
+func (q Querier) RevenueShareLeaderboard(grpcCtx context.Context,
+	req *queryprotov2.RevenueShareLeaderboardRequest,
+) (*queryprotov2.RevenueShareLeaderboardResponse, error) {
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	leaderboard, err := q.Q.K.GetRevenueShareLeaderboard(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return leaderboard, nil
+}

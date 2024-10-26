@@ -7,6 +7,7 @@ import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/timestamp.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/queryprotov2";
 
@@ -19,6 +20,15 @@ service Query {
   rpc SpotPriceV2(SpotPriceRequest) returns (SpotPriceResponse) {
     option (google.api.http).get =
         "/osmosis/poolmanager/v2/pools/{pool_id}/prices";
+  }
+  rpc IsAffiliated(IsAffiliatedRequest) returns (IsAffiliatedResponse) {
+    option (google.api.http).get = "/osmosis/poolmanager/v2/affiliated/{address}";
+  }
+  rpc RevenueShareLeaderboard(RevenueShareLeaderboardRequest) returns (RevenueShareLeaderboardResponse) {
+    option (google.api.http).get = "/osmosis/poolmanager/v2/revenue_share_leaderboard";
+  }
+  rpc RevenueShareSummary(RevenueShareSummaryRequest) returns (RevenueShareSummaryResponse) {
+    option (google.api.http).get = "/osmosis/poolmanager/v2/revenue_share_summary/{address}";
   }
 }
 
@@ -41,4 +51,29 @@ message SpotPriceResponse {
     (gogoproto.moretags) = "yaml:\"spot_price\"",
     (gogoproto.nullable) = false
   ];
+}
+
+message IsAffiliatedRequest {
+  string address = 1;
+}
+
+message IsAffiliatedResponse {
+  bool is_affiliated = 1;
+}
+
+message RevenueShareSummaryRequest {
+  string address = 1;
+}
+
+message RevenueShareSummaryResponse {
+  string address = 1;
+  uint64 signups = 2;
+}
+
+message RevenueShareLeaderboardRequest {
+  string address = 1;
+}
+
+message RevenueShareLeaderboardResponse {
+  repeated RevenueShareSummaryResponse leaderboard = 1;
 }

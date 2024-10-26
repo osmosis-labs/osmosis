@@ -60,6 +60,9 @@ var (
 
 	// KeyRevenueShareUser defines the key to store user revenue share registrations.
 	KeyRevenueShareUser = []byte{0x0D}
+
+	// KeyRevenueShareChildCounter defines the key to store user revenue subscriptions.
+	KeyRevenueShareChildCounter = []byte{0x0E}
 )
 
 // ModuleRouteToBytes serializes moduleRoute to bytes.
@@ -151,7 +154,10 @@ func FormatRegisteredAlloyPoolKeyPoolIdOnly(poolId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%s%d", KeyRegisteredAlloyPool, KeySeparator, poolId))
 }
 
-// TODO
 func FormatRevenueShareAddressKey(user sdk.AccAddress) []byte {
+	return []byte(fmt.Sprintf("%s%s%d", KeyRevenueShareUser, KeySeparator, user.String()))
+}
+
+func FormatRevenueShareChildCounterKey(user sdk.AccAddress) []byte {
 	return []byte(fmt.Sprintf("%s%s%d", KeyRevenueShareUser, KeySeparator, user.String()))
 }

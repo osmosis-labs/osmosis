@@ -177,19 +177,19 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 	}
 
 	if len(revenueShareUser.Parents) > 0 {
-		fmt.Println("revenueShareUser.Parents", revenueShareUser.Parents, len(revenueShareUser.Parents))
 		affiliateFeeAmount := affiliateFee.MulInt(takerFeeCoin.Amount).TruncateInt()
 		affiliateFeeCoin := sdk.Coin{Denom: takerFeeCoin.Denom, Amount: affiliateFee.MulInt(takerFeeCoin.Amount).TruncateInt()}
-		takerFeeCoin = sdk.Coin{Denom: takerFeeCoin.Denom, Amount: math.LegacyOneDec().Sub(affiliateFee).MulInt(takerFeeCoin.Amount).TruncateInt()}
+		takerFeeCoin = sdk.Coin{Denom: takerFeeCoin.Denom, Amount: takerFeeCoin.Amount.Sub(affiliateFeeAmount)}
 
-		parentsLen := len(revenueShareUser.Parents)
-		for i, parent := range revenueShareUser.Parents {
-			// we pay the referrer of the referrer
-			if i < parentsLen-1 {
-				share := math.LegacyOneDec().Sub(affiliateFee).MulInt(affiliateFeeAmount).TruncateInt()
-				affiliateFeeAmount = affiliateFeeAmount.Sub(share)
+		for _, parent := range revenueShareUser.Parents {
+			share := math.LegacyOneDec().Sub(affiliateFee).MulInt(affiliateFeeAmount).TruncateInt()
+			err := k.bankKeeper.SendCoins(ctx, sender, sdk.MustAccAddressFromBech32(parent), sdk.NewCoins(sdk.NewCoin(affiliateFeeCoin.Denom, share)))
+
+			// rest goes up the referral list
+			affiliateFeeAmount = affiliateFeeAmount.Sub(share)
+			if err != nil {
+				return sdk.Coin{}, sdk.Coin{}, err
 			}
-			k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, parent, sdk.NewCoins(sdk.NewCoin(affiliateFeeCoin.Denom, affiliateFeeAmount)))
 		}
 	}
 
