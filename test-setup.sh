@@ -72,8 +72,8 @@ build/osmosisd tx bank send $KEY $(build/osmosisd keys show account2 -a --keyrin
 # Affiliate account2 with account1
 build/osmosisd tx poolmanager revenue-share $(build/osmosisd keys show account1 -a --keyring-backend $KEYRING) --from account2 --keyring-backend test --chain-id $CHAIN_ID --fees 20000uosmo --yes
 
-# Check if the account is affiliated
-curl -s http://localhost:1317/osmosis/poolmanager/v2/affiliated/$(build/osmosisd keys show account2 -a --keyring-backend $KEYRING) | jq
+# Check if the account is revenue sharer
+curl -s http://localhost:1317/osmosis/poolmanager/v2/revenue_sharer/$(build/osmosisd keys show account2 -a --keyring-backend $KEYRING) | jq
 
 # Check balance of account1 before
 build/osmosisd query bank balances $(build/osmosisd keys show account1 -a --keyring-backend $KEYRING)
