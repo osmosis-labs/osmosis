@@ -179,7 +179,16 @@ func (server msgServer) SetRevenueShareUser(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 
-	err := server.keeper.setRevenueShareUser(ctx, sdk.AccAddress(msg.Sender), sdk.AccAddress(msg.Referrer))
+	// revenueShareUser, err := server.keeper.getRevenueShareUser(ctx, sdk.MustAccAddressFromBech32(msg.Sender))
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// if len(revenueShareUser.Parents) > 0 {
+	// 	return nil, fmt.Errorf("user is already registered")
+	// }
+
+	err := server.keeper.setRevenueShareUser(ctx, sdk.MustAccAddressFromBech32(msg.Sender), sdk.MustAccAddressFromBech32(msg.Referrer))
 	if err != nil {
 		return nil, err
 	}

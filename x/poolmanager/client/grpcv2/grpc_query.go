@@ -38,12 +38,13 @@ func (q Querier) IsAffiliated(grpcCtx context.Context,
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	isAffilated, err := q.Q.K.IsAffiliated(ctx, sdk.AccAddress(req.Address))
+	referrer, err := q.Q.K.IsAffiliated(ctx, sdk.MustAccAddressFromBech32(req.Address))
 	if err != nil {
 		return nil, err
 	}
 	return &queryprotov2.IsAffiliatedResponse{
-		IsAffiliated: isAffilated,
+		IsAffiliated: referrer != "",
+		Referrer:     referrer,
 	}, nil
 }
 
@@ -54,7 +55,7 @@ func (q Querier) RevenueShareSummary(grpcCtx context.Context,
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	revenueShareSummary, err := q.Q.K.GetRevenueShareSummary(ctx, sdk.AccAddress(req.Address))
+	revenueShareSummary, err := q.Q.K.GetRevenueShareSummary(ctx, sdk.MustAccAddressFromBech32(req.Address))
 	if err != nil {
 		return nil, err
 	}

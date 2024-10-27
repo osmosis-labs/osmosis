@@ -25,6 +25,7 @@ sed -i '' 's/cors_allowed_origins = \[\]/cors_allowed_origins = ["*"]/g' ~/.osmo
 
 # Reduce pool creation fee to 1000uosmo
 jq '.app_state.poolmanager.params.pool_creation_fee[0].amount = "1000"' $GENESIS_FILE > tmp.json && mv tmp.json $GENESIS_FILE
+jq '.app_state.poolmanager.params.taker_fee_params.default_taker_fee = "0.1"' $GENESIS_FILE > tmp.json && mv tmp.json $GENESIS_FILE
 
 # Generate a genesis transaction
 build/osmosisd gentx $KEY 1000000uosmo --chain-id $CHAIN_ID --keyring-backend $KEYRING

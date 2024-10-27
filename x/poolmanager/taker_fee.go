@@ -169,7 +169,9 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 	// and the rest to the taker fee module account
 	// if the sender is not an affiliate, then we send the entire taker fee to the taker fee module account
 
-	affiliateFee := k.GetParams(ctx).TakerFeeParams.AffiliateFee
+	// TODO
+	// affiliateFee := k.GetParams(ctx).TakerFeeParams.AffiliateFee
+	affiliateFee := osmomath.MustNewDecFromStr("0.2")
 
 	revenueShareUser, err := k.getRevenueShareUser(ctx, sender)
 	if err != nil {
@@ -183,6 +185,7 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 
 		for _, parent := range revenueShareUser.Parents {
 			share := math.LegacyOneDec().Sub(affiliateFee).MulInt(affiliateFeeAmount).TruncateInt()
+			// panic(fmt.Sprintf("share: %s, affiliateFeeAmount: %s, affiliateFee: %s, takeFeeCoin: %s", share.String(), affiliateFeeAmount.String(), affiliateFee.String(), takerFeeCoin.String()))
 			err := k.bankKeeper.SendCoins(ctx, sender, sdk.MustAccAddressFromBech32(parent), sdk.NewCoins(sdk.NewCoin(affiliateFeeCoin.Denom, share)))
 
 			// rest goes up the referral list

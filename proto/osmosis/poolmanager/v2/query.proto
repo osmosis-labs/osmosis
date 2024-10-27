@@ -59,6 +59,7 @@ message IsAffiliatedRequest {
 
 message IsAffiliatedResponse {
   bool is_affiliated = 1;
+  string referrer = 2;
 }
 
 message RevenueShareSummaryRequest {

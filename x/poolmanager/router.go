@@ -1162,15 +1162,15 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactConcentratedLiquidity(
 	}, nil
 }
 
-func (k Keeper) IsAffiliated(ctx sdk.Context, address sdk.AccAddress) (bool, error) {
+func (k Keeper) IsAffiliated(ctx sdk.Context, address sdk.AccAddress) (string, error) {
 	affiliation, err := k.getRevenueShareUser(ctx, address)
 	if err != nil {
-		return false, err
+		return "", err
 	}
 	if len(affiliation.Parents) == 0 {
-		return false, nil
+		return "", nil
 	}
-	return true, nil
+	return affiliation.Parents[0], nil
 }
 
 func (k Keeper) GetRevenueShareSummary(ctx sdk.Context, address sdk.AccAddress) (*queryprotov2.RevenueShareSummaryResponse, error) {
