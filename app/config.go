@@ -63,7 +63,7 @@ func NewAppConstructor(chainId string) network.AppConstructor {
 		return NewOsmosisApp(
 			valCtx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), valCtx.Config.RootDir, 0,
 			sims.EmptyAppOptions{},
-			EmptyWasmOpts,
+			nil,
 			baseapp.SetMinGasPrices(appConfig.MinGasPrices),
 			baseapp.SetChainID(chainId),
 		)

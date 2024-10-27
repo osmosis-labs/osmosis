@@ -123,7 +123,7 @@ func SetupWithCustomHome(isCheckTx bool, dir string) *OsmosisApp {
 
 func SetupWithCustomHomeAndChainId(isCheckTx bool, dir, chainId string) *OsmosisApp {
 	db := cosmosdb.NewMemDB()
-	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, dir, 0, sims.EmptyAppOptions{}, EmptyWasmOpts, baseapp.SetChainID(chainId))
+	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, dir, 0, sims.EmptyAppOptions{}, nil, baseapp.SetChainID(chainId))
 	if !isCheckTx {
 		if len(defaultGenesisStatebytes) == 0 {
 			var err error
@@ -167,7 +167,7 @@ func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func
 		panic(err)
 	}
 
-	app = NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, sims.EmptyAppOptions{}, EmptyWasmOpts, baseapp.SetChainID("osmosis-1"))
+	app = NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, sims.EmptyAppOptions{}, nil, baseapp.SetChainID("osmosis-1"))
 	if !isCheckTx {
 		genesisState := GenesisStateWithValSet(app)
 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")

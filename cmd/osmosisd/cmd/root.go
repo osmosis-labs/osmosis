@@ -358,7 +358,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithViper("OSMOSIS")
 
 	tempDir := tempDir()
-	tempApp := osmosis.NewOsmosisApp(log.NewNopLogger(), cosmosdb.NewMemDB(), nil, true, map[int64]bool{}, tempDir, 5, sims.EmptyAppOptions{}, osmosis.EmptyWasmOpts, baseapp.SetChainID("osmosis-1"))
+	tempApp := osmosis.NewOsmosisApp(log.NewNopLogger(), cosmosdb.NewMemDB(), nil, true, map[int64]bool{}, tempDir, 5, sims.EmptyAppOptions{}, nil, baseapp.SetChainID("osmosis-1"))
 	defer func() {
 		if err := tempApp.Close(); err != nil {
 			panic(err)

@@ -13,7 +13,7 @@ import (
 
 func TestOrderEndBlockers_Determinism(t *testing.T) {
 	db := dbm.NewMemDB()
-	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, sims.EmptyAppOptions{}, EmptyWasmOpts, baseapp.SetChainID("osmosis-1"))
+	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, sims.EmptyAppOptions{}, nil, baseapp.SetChainID("osmosis-1"))
 
 	for i := 0; i < 1000; i++ {
 		a := OrderEndBlockers(app.mm.ModuleNames())
