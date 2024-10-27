@@ -294,6 +294,8 @@ replace (
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 
+	nhooyr.io/websocket => github.com/coder/websocket v1.8.10
+
 // // Local replaces commented for development
 // github.com/osmosis-labs/osmosis/osmomath => ./osmomath
 // github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
