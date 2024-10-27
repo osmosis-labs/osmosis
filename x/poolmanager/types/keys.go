@@ -60,9 +60,6 @@ var (
 
 	// KeyRevenueShareUser defines the key to store user revenue share registrations.
 	KeyRevenueShareUser = []byte{0x0D}
-
-	// KeyRevenueShareChildCounter defines the key to store user revenue subscriptions.
-	KeyRevenueShareChildCounter = []byte{0x0E}
 )
 
 // ModuleRouteToBytes serializes moduleRoute to bytes.

@@ -21,8 +21,6 @@ var (
 	KeyCommunityPoolDenomToSwapNonWhitelistedAssetsTo = []byte("CommunityPoolDenomToSwapNonWhitelistedAssetsTo")
 	KeyAuthorizedQuoteDenoms                          = []byte("AuthorizedQuoteDenoms")
 	KeyReducedTakerFeeByWhitelist                     = []byte("ReducedTakerFeeByWhitelist")
-	KeyAffFee                                         = []byte("AffFee")
-	KeyAffAddr                                        = []byte("AffFeeAddr")
 
 	ZeroDec = osmomath.ZeroDec()
 	OneDec  = osmomath.OneDec()
@@ -120,7 +118,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyCommunityPoolDenomToSwapNonWhitelistedAssetsTo, &p.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo, validateCommunityPoolDenomToSwapNonWhitelistedAssetsTo),
 		paramtypes.NewParamSetPair(KeyAuthorizedQuoteDenoms, &p.AuthorizedQuoteDenoms, validateAuthorizedQuoteDenoms),
 		paramtypes.NewParamSetPair(KeyReducedTakerFeeByWhitelist, &p.TakerFeeParams.ReducedFeeWhitelist, osmoutils.ValidateAddressList),
-		paramtypes.NewParamSetPair(KeyAffFee, &p.TakerFeeParams.AffiliateFee, validateDefaultTakerFee),
 	}
 }
 

@@ -727,20 +727,5 @@ func (k *Keeper) setRevenueShareUser(ctx sdk.Context, user sdk.AccAddress, refer
 	}
 	store.Set(key, bz)
 
-	// Set cache value
-	// k.cachedTakerFeeRevenueShareUserMap[user.String()] = revenueShareUser
-
-	// signupLookup := map[string]uint64{}
-	// for _, parent := range parents {
-	// 	key = types.FormatRevenueShareAddressKey(sdk.MustAccAddressFromBech32(parent))
-	// 	counter := signupLookup[parent]
-
-	// 	bz = make([]byte, 8)
-	// 	binary.BigEndian.PutUint64(bz, uint64(counter+1))
-
-	// 	store.Set(key, bz)
-	// 	signupLookup[parent] = uint64(counter + 1)
-	// }
-
 	return nil
 }

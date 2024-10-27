@@ -126,5 +126,4 @@ type WasmKeeper interface {
 
 type AffiliateKeeper interface {
 	IsAffiliate(ctx sdk.Context, address sdk.AccAddress) (bool, error)
-	GetAffiliates(ctx sdk.Context, address sdk.AccAddress) ([]sdk.AccAddress, error)
 }
