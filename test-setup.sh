@@ -87,7 +87,8 @@ build/osmosisd tx gamm swap-exact-amount-in \
     --fees 20000uosmo \
     --yes \
     --swap-route-denoms uion \
-    --swap-route-pool-ids 1
+    --swap-route-pool-ids 1 \
+    --gas 300000
 
 # Check balance of account1 after
 build/osmosisd query bank balances $(build/osmosisd keys show account1 -a --keyring-backend $KEYRING)
