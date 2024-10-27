@@ -480,15 +480,15 @@ func (q Querier) AllRegisteredAlloyedPools(ctx sdk.Context, req queryproto.AllRe
 	}, nil
 }
 
-func (q Querier) IsAffiliated(ctx sdk.Context, req queryprotov2.IsAffiliatedRequest) (*queryprotov2.IsAffiliatedResponse, error) {
-	referrer, err := q.K.IsAffiliated(ctx, sdk.MustAccAddressFromBech32(req.Address))
+func (q Querier) IsRevenueSharer(ctx sdk.Context, req queryprotov2.IsRevenueSharerRequest) (*queryprotov2.IsRevenueSharerResponse, error) {
+	referrer, err := q.K.IsRevenueSharer(ctx, sdk.MustAccAddressFromBech32(req.Address))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &queryprotov2.IsAffiliatedResponse{
-		IsAffiliated: referrer != "",
-		Referrer:     referrer,
+	return &queryprotov2.IsRevenueSharerResponse{
+		IsRevenueSharer: referrer != "",
+		Referrer:        referrer,
 	}, nil
 }
 

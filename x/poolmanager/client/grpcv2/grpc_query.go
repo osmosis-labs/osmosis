@@ -31,19 +31,19 @@ func (q Querier) SpotPriceV2(grpcCtx context.Context,
 	return q.Q.SpotPriceV2(ctx, *req)
 }
 
-func (q Querier) IsAffiliated(grpcCtx context.Context,
-	req *queryprotov2.IsAffiliatedRequest,
-) (*queryprotov2.IsAffiliatedResponse, error) {
+func (q Querier) IsRevenueSharer(grpcCtx context.Context,
+	req *queryprotov2.IsRevenueSharerRequest,
+) (*queryprotov2.IsRevenueSharerResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	referrer, err := q.Q.K.IsAffiliated(ctx, sdk.MustAccAddressFromBech32(req.Address))
+	referrer, err := q.Q.K.IsRevenueSharer(ctx, sdk.MustAccAddressFromBech32(req.Address))
 	if err != nil {
 		return nil, err
 	}
-	return &queryprotov2.IsAffiliatedResponse{
-		IsAffiliated: referrer != "",
+	return &queryprotov2.IsRevenueSharerResponse{
+		IsRevenueSharer: referrer != "",
 		Referrer:     referrer,
 	}, nil
 }

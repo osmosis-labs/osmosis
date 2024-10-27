@@ -428,7 +428,7 @@ func (s *KeeperTestSuite) TestProcessAlloyedAssetShareAgreements() {
 	}
 }
 
-// tests if fees are distributed to affiliates if set
+// tests if fees are distributed to revenue sharers if set
 func (s *KeeperTestSuite) TestDistributeAffiliateFee() {
 	tests := map[string]struct {
 		tokenIn       sdk.Coin
@@ -439,39 +439,39 @@ func (s *KeeperTestSuite) TestDistributeAffiliateFee() {
 		expectError     error
 		sendCoins       bool
 
-		affiliateFee osmomath.Dec
-		// affiliateList is a list of addresses and their associated parents
-		affiliateList []string
-		receiveList   sdk.Coins
+		revenueShareFee osmomath.Dec
+		// revenueSharerList is a list of addresses and their associated parents
+		revenueSharerList []string
+		receiveList       sdk.Coins
 	}{
-		"fee charged in full as no affiliate set": {
-			takerFee:        osmomath.MustNewDecFromStr("0.01"),
-			tokenIn:         sdk.NewCoin(apptesting.ETH, osmomath.NewInt(10000000)),
-			tokenOutDenom:   apptesting.USDC,
-			expectedBalance: sdk.NewCoins(sdk.NewCoin(apptesting.ETH, osmomath.NewInt(100000))),
-			affiliateFee:    osmomath.MustNewDecFromStr("0.2"),
-			affiliateList:   []string{},
-			receiveList:     sdk.Coins{},
+		"fee charged in full as no revenue sharer set": {
+			takerFee:          osmomath.MustNewDecFromStr("0.01"),
+			tokenIn:           sdk.NewCoin(apptesting.ETH, osmomath.NewInt(10000000)),
+			tokenOutDenom:     apptesting.USDC,
+			expectedBalance:   sdk.NewCoins(sdk.NewCoin(apptesting.ETH, osmomath.NewInt(100000))),
+			revenueShareFee:   osmomath.MustNewDecFromStr("0.2"),
+			revenueSharerList: []string{},
+			receiveList:       sdk.Coins{},
 		},
-		"fee charged minus affiliate fee": {
-			takerFee:        osmomath.MustNewDecFromStr("0.01"),
-			tokenIn:         sdk.NewCoin(apptesting.ETH, osmomath.NewInt(10000000)),
-			tokenOutDenom:   apptesting.USDC,
-			expectedBalance: sdk.NewCoins(sdk.NewCoin(apptesting.ETH, osmomath.NewInt(80000))),
-			affiliateFee:    osmomath.MustNewDecFromStr("0.2"),
-			affiliateList:   []string{s.TestAccs[0].String(), s.TestAccs[1].String()},
+		"fee charged minus revenue sharer fee": {
+			takerFee:          osmomath.MustNewDecFromStr("0.01"),
+			tokenIn:           sdk.NewCoin(apptesting.ETH, osmomath.NewInt(10000000)),
+			tokenOutDenom:     apptesting.USDC,
+			expectedBalance:   sdk.NewCoins(sdk.NewCoin(apptesting.ETH, osmomath.NewInt(80000))),
+			revenueShareFee:   osmomath.MustNewDecFromStr("0.2"),
+			revenueSharerList: []string{s.TestAccs[0].String(), s.TestAccs[1].String()},
 			receiveList: sdk.Coins{sdk.NewCoin(
 				apptesting.ETH,
 				osmomath.NewInt(16000),
 			)},
 		},
-		"fee charged minus affiliate fee only once even with many parents": {
-			takerFee:        osmomath.MustNewDecFromStr("0.01"),
-			tokenIn:         sdk.NewCoin(apptesting.ETH, osmomath.NewInt(10000000)),
-			tokenOutDenom:   apptesting.USDC,
-			expectedBalance: sdk.NewCoins(sdk.NewCoin(apptesting.ETH, osmomath.NewInt(80000))),
-			affiliateFee:    osmomath.MustNewDecFromStr("0.2"),
-			affiliateList:   []string{s.TestAccs[0].String(), s.TestAccs[1].String(), s.TestAccs[2].String()},
+		"fee charged minus revenue sharer fee only once even with many sharer parents": {
+			takerFee:          osmomath.MustNewDecFromStr("0.01"),
+			tokenIn:           sdk.NewCoin(apptesting.ETH, osmomath.NewInt(10000000)),
+			tokenOutDenom:     apptesting.USDC,
+			expectedBalance:   sdk.NewCoins(sdk.NewCoin(apptesting.ETH, osmomath.NewInt(80000))),
+			revenueShareFee:   osmomath.MustNewDecFromStr("0.2"),
+			revenueSharerList: []string{s.TestAccs[0].String(), s.TestAccs[1].String(), s.TestAccs[2].String()},
 			receiveList: sdk.Coins{sdk.NewCoin(
 				apptesting.ETH,
 				osmomath.NewInt(16000),
@@ -489,7 +489,7 @@ func (s *KeeperTestSuite) TestDistributeAffiliateFee() {
 
 			poolManager := s.App.PoolManagerKeeper
 			poolManagerParams := poolManager.GetParams(s.Ctx)
-			poolManagerParams.TakerFeeParams.AffiliateFee = tc.affiliateFee
+			poolManagerParams.TakerFeeParams.RevenueShareFee = tc.revenueShareFee
 
 			poolManager.SetParams(s.Ctx, poolManagerParams)
 
@@ -503,10 +503,10 @@ func (s *KeeperTestSuite) TestDistributeAffiliateFee() {
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(tc.tokenIn))
 
 			// we start from the back as parents records are used in child calculations
-			for i := len(tc.affiliateList) - 2; i >= 0; i-- {
+			for i := len(tc.revenueSharerList) - 2; i >= 0; i-- {
 				err := poolManager.Affiliate(s.Ctx,
-					sdk.MustAccAddressFromBech32(tc.affiliateList[i]),
-					sdk.MustAccAddressFromBech32(tc.affiliateList[i+1]))
+					sdk.MustAccAddressFromBech32(tc.revenueSharerList[i]),
+					sdk.MustAccAddressFromBech32(tc.revenueSharerList[i+1]))
 				require.NoError(err)
 			}
 
@@ -525,7 +525,7 @@ func (s *KeeperTestSuite) TestDistributeAffiliateFee() {
 
 			// check receive list against parents balances
 			for i, expectedBalance := range tc.receiveList {
-				actualBalance := s.App.BankKeeper.GetBalance(s.Ctx, sdk.MustAccAddressFromBech32(tc.affiliateList[i+1]), apptesting.ETH)
+				actualBalance := s.App.BankKeeper.GetBalance(s.Ctx, sdk.MustAccAddressFromBech32(tc.revenueSharerList[i+1]), apptesting.ETH)
 				require.Equal(expectedBalance, actualBalance)
 			}
 		})

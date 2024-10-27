@@ -21,6 +21,7 @@ var (
 	KeyCommunityPoolDenomToSwapNonWhitelistedAssetsTo = []byte("CommunityPoolDenomToSwapNonWhitelistedAssetsTo")
 	KeyAuthorizedQuoteDenoms                          = []byte("AuthorizedQuoteDenoms")
 	KeyReducedTakerFeeByWhitelist                     = []byte("ReducedTakerFeeByWhitelist")
+	KeyRevenueShareFee                                = []byte("RevenueShareFee")
 
 	ZeroDec = osmomath.ZeroDec()
 	OneDec  = osmomath.OneDec()
@@ -66,7 +67,7 @@ func DefaultParams() Params {
 			AdminAddresses: []string{},
 			CommunityPoolDenomToSwapNonWhitelistedAssetsTo: "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // USDC
 			ReducedFeeWhitelist:                            []string{},
-			AffiliateFee:                                   osmomath.MustNewDecFromStr("0.2"),
+			RevenueShareFee:                                osmomath.MustNewDecFromStr("0.2"),
 		},
 		AuthorizedQuoteDenoms: []string{
 			appparams.BaseCoinUnit,
@@ -118,6 +119,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyCommunityPoolDenomToSwapNonWhitelistedAssetsTo, &p.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo, validateCommunityPoolDenomToSwapNonWhitelistedAssetsTo),
 		paramtypes.NewParamSetPair(KeyAuthorizedQuoteDenoms, &p.AuthorizedQuoteDenoms, validateAuthorizedQuoteDenoms),
 		paramtypes.NewParamSetPair(KeyReducedTakerFeeByWhitelist, &p.TakerFeeParams.ReducedFeeWhitelist, osmoutils.ValidateAddressList),
+		paramtypes.NewParamSetPair(KeyRevenueShareFee, &p.TakerFeeParams.RevenueShareFee, validateDefaultTakerFee),
 	}
 }
 

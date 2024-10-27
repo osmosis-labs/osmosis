@@ -262,14 +262,14 @@ func (q Querier) AllPools(grpcCtx context.Context,
 	return q.Q.AllPools(ctx, *req)
 }
 
-func (q Querier) IsAffiliated(grpcCtx context.Context,
-	req *queryprotov2.IsAffiliatedRequest,
-) (*queryprotov2.IsAffiliatedResponse, error) {
+func (q Querier) IsRevenueSharer(grpcCtx context.Context,
+	req *queryprotov2.IsRevenueSharerRequest,
+) (*queryprotov2.IsRevenueSharerResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	return q.Q.IsAffiliated(ctx, *req)
+	return q.Q.IsRevenueSharer(ctx, *req)
 }
 
 func (q Querier) GetRevenueShareSummary(grpcCtx context.Context,

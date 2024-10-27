@@ -107,10 +107,10 @@ message TakerFeeParams {
   repeated string reduced_fee_whitelist = 6
       [ (gogoproto.moretags) = "yaml:\"reduced_fee_whitelist\"" ];
       
-  // affiliate_fee is the portion of the taker fee that is sent to the affiliate
-  string affiliate_fee = 7 [
+  // revenue_sharer_fee is the portion of the taker fee that is sent to the revenue sharer
+  string revenue_sharer_fee = 7 [
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
-    (gogoproto.customname) = "AffiliateFee",
+    (gogoproto.customname) = "RevenueShareFee",
     (gogoproto.nullable) = false
   ];
 }

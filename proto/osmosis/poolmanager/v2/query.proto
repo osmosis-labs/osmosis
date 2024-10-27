@@ -21,8 +21,8 @@ service Query {
     option (google.api.http).get =
         "/osmosis/poolmanager/v2/pools/{pool_id}/prices";
   }
-  rpc IsAffiliated(IsAffiliatedRequest) returns (IsAffiliatedResponse) {
-    option (google.api.http).get = "/osmosis/poolmanager/v2/affiliated/{address}";
+  rpc IsRevenueSharer(IsRevenueSharerRequest) returns (IsRevenueSharerResponse) {
+    option (google.api.http).get = "/osmosis/poolmanager/v2/revenue_sharer/{address}";
   }
   rpc RevenueShareLeaderboard(RevenueShareLeaderboardRequest) returns (RevenueShareLeaderboardResponse) {
     option (google.api.http).get = "/osmosis/poolmanager/v2/revenue_share_leaderboard";
@@ -53,12 +53,12 @@ message SpotPriceResponse {
   ];
 }
 
-message IsAffiliatedRequest {
+message IsRevenueSharerRequest {
   string address = 1;
 }
 
-message IsAffiliatedResponse {
-  bool is_affiliated = 1;
+message IsRevenueSharerResponse {
+  bool is_revenue_sharer = 1;
   string referrer = 2;
 }
 

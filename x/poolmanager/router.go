@@ -1161,7 +1161,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactConcentratedLiquidity(
 	}, nil
 }
 
-func (k Keeper) IsAffiliated(ctx sdk.Context, address sdk.AccAddress) (string, error) {
+func (k Keeper) IsRevenueSharer(ctx sdk.Context, address sdk.AccAddress) (string, error) {
 	affiliation, err := k.getRevenueShareUser(ctx, address)
 	if err != nil {
 		return "", err

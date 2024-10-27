@@ -138,7 +138,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 				NonOsmoTakerFeeDistribution:                    testNonOsmoTakerFeeDistribution,
 				AdminAddresses:                                 testAdminAddresses,
 				CommunityPoolDenomToSwapNonWhitelistedAssetsTo: testCommunityPoolDenomToSwapNonWhitelistedAssetsTo,
-				AffiliateFee:                                   affiliationFee,
+				RevenueShareFee:                                affiliationFee,
 			},
 			AuthorizedQuoteDenoms: testAuthorizedQuoteDenoms,
 		},
@@ -157,7 +157,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 	s.Require().Equal(testNonOsmoTakerFeeDistribution, params.TakerFeeParams.NonOsmoTakerFeeDistribution)
 	s.Require().Equal(testAdminAddresses, params.TakerFeeParams.AdminAddresses)
 	s.Require().Equal(testCommunityPoolDenomToSwapNonWhitelistedAssetsTo, params.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo)
-	s.Require().Equal(affiliationFee, params.TakerFeeParams.AffiliateFee)
+	s.Require().Equal(affiliationFee, params.TakerFeeParams.RevenueShareFee)
 	s.Require().Equal(testAuthorizedQuoteDenoms, params.AuthorizedQuoteDenoms)
 	s.Require().Equal(testPoolRoute, s.App.PoolManagerKeeper.GetAllPoolRoutes(s.Ctx))
 	s.Require().Equal(testTakerFeesTracker.TakerFeesToStakers, s.App.PoolManagerKeeper.GetTakerFeeTrackerForStakers(s.Ctx))

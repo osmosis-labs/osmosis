@@ -157,13 +157,13 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 	// Revenue share with marketers
 	//
 
-	// query the affiliate status from the affiliate cosmwasm contract for the sender
-	// if the sender is an affiliate, then we skim 20% of the taker fee to the affiliate account
+	// query the revenue sharer status
+	// if the sender is an revenue sharer, then we skim 20% of the taker fee to the revenue sharer account
 	// and the rest to the taker fee module account
-	// if the sender is not an affiliate, then we send the entire taker fee to the taker fee module account
-	affiliateFee := k.GetParams(ctx).TakerFeeParams.AffiliateFee
+	// if the sender is not an revenue sharer, then we send the entire taker fee to the taker fee module account
+	revenueShareFee := k.GetParams(ctx).TakerFeeParams.RevenueShareFee
 
-	// this is the record of the affiliate status of the sender and his parents
+	// this is the record of the revenue sharer status of the sender and his parents
 	revenueShareUser, err := k.getRevenueShareUser(ctx, sender)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, err
@@ -171,18 +171,18 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 
 	if len(revenueShareUser.Parents) > 0 {
 		// calculate the amount to skim
-		affiliateFeeAmount := affiliateFee.MulInt(takerFeeCoin.Amount).TruncateInt()
-		affiliateFeeCoin := sdk.Coin{Denom: takerFeeCoin.Denom, Amount: affiliateFee.MulInt(takerFeeCoin.Amount).TruncateInt()}
+		revenueShareAmount := revenueShareFee.MulInt(takerFeeCoin.Amount).TruncateInt()
+		revenueShareFeeCoin := sdk.Coin{Denom: takerFeeCoin.Denom, Amount: revenueShareFee.MulInt(takerFeeCoin.Amount).TruncateInt()}
 		// calculate the remaining fees
-		takerFeeCoin = sdk.Coin{Denom: takerFeeCoin.Denom, Amount: takerFeeCoin.Amount.Sub(affiliateFeeAmount)}
+		takerFeeCoin = sdk.Coin{Denom: takerFeeCoin.Denom, Amount: takerFeeCoin.Amount.Sub(revenueShareAmount)}
 
 		// go through parents and give each 20% of the child
 		for _, parent := range revenueShareUser.Parents {
-			share := math.LegacyOneDec().Sub(affiliateFee).MulInt(affiliateFeeAmount).TruncateInt()
-			err := k.bankKeeper.SendCoins(ctx, sender, sdk.MustAccAddressFromBech32(parent), sdk.NewCoins(sdk.NewCoin(affiliateFeeCoin.Denom, share)))
+			share := math.LegacyOneDec().Sub(revenueShareFee).MulInt(revenueShareAmount).TruncateInt()
+			err := k.bankKeeper.SendCoins(ctx, sender, sdk.MustAccAddressFromBech32(parent), sdk.NewCoins(sdk.NewCoin(revenueShareFeeCoin.Denom, share)))
 
 			// rest goes up the referral list
-			affiliateFeeAmount = affiliateFeeAmount.Sub(share)
+			revenueShareAmount = revenueShareAmount.Sub(share)
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, err
 			}
