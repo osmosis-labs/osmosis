@@ -8,7 +8,7 @@ services:
       dockerfile: Dockerfile
       args:
         RUNNER_IMAGE: alpine:3.19
-        GO_VERSION: "1.21"
+        GO_VERSION: "1.22.4"
     volumes:
       - ./scripts/setup_chain.sh:/symphony/setup.sh
       - $HOME/.symphonyd-local-a/:/symphony/.symphonyd/
@@ -38,7 +38,7 @@ services:
       FAUCET_PORT: 8000
       FAUCET_GAS_PRICE: 0.025note
       FAUCET_PATH_PATTERN: "m/44'/118'/0'/0/a"
-      FAUCET_ADDRESS_PREFIX: melody
+      FAUCET_ADDRESS_PREFIX: symphony
       FAUCET_TOKENS: note,uion
       FAUCET_CREDIT_AMOUNT_NOTE: 10000000 # 10 melody
       FAUCET_CREDIT_AMOUNT_UION: 100000 # 0.1 ion
@@ -59,7 +59,7 @@ services:
       dockerfile: Dockerfile
       args:
         RUNNER_IMAGE: alpine:3.19
-        GO_VERSION: "1.21"
+        GO_VERSION: "1.22.4"
     volumes:
       - ./scripts/setup_chain.sh:/symphony/setup.sh
       - $HOME/.symphonyd-local-b/:/symphony/.symphonyd/
@@ -90,7 +90,7 @@ services:
       FAUCET_PORT: 8000
       FAUCET_GAS_PRICE: 0.025note
       FAUCET_PATH_PATTERN: "m/44'/118'/0'/0/a"
-      FAUCET_ADDRESS_PREFIX: melody
+      FAUCET_ADDRESS_PREFIX: symphony
       FAUCET_TOKENS: note,uion
       FAUCET_CREDIT_AMOUNT_NOTE: 10000000 # 10 melody
       FAUCET_CREDIT_AMOUNT_UION: 100000 # 0.1 ion
@@ -105,7 +105,7 @@ services:
       - localsymphony
 
   hermes:
-    image: informalsystems/hermes:1.1.0
+    image: informalsystems/hermes:1.10.3
     user: root:root
     volumes:
       - ./scripts/setup_hermes.sh:/home/hermes/setup.sh

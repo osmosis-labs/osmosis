@@ -23,27 +23,35 @@ install_prerequisites () {
 
 edit_genesis () {
 
+    echo "Editing genesis.json"
+
     GENESIS=$CONFIG_FOLDER/genesis.json
 
+    echo "Update staking module"
+
     # Update staking module
-    dasel put string -f $GENESIS '.app_state.staking.params.bond_denom' 'note'
-    dasel put string -f $GENESIS '.app_state.staking.params.unbonding_time' '240s'
+    dasel put -t string -f $GENESIS '.app_state.staking.params.bond_denom' -v 'note'
+    dasel put -t string -f $GENESIS '.app_state.staking.params.unbonding_time' -v '240s'
+
+    echo "Update crisis module"
 
     # Update crisis module
-    dasel put string -f $GENESIS '.app_state.crisis.constant_fee.denom' 'note'
+    dasel put -t string -f $GENESIS '.app_state.crisis.constant_fee.denom' -v 'note'
 
     # Update gov module
-    dasel put string -f $GENESIS '.app_state.gov.voting_params.voting_period' '60s'
-    dasel put string -f $GENESIS '.app_state.gov.deposit_params.min_deposit.[0].denom' 'note'
+    dasel put -t string -f $GENESIS '.app_state.gov.voting_params.voting_period' -v '60s'
+    dasel put -t string -f $GENESIS '.app_state.gov.params.min_deposit.[0].denom' -v 'note'
 
     # Update epochs module
     dasel put -t string -f $GENESIS '.app_state.epochs.epochs.[1].duration' -v "60s"
 
+    echo "Update poolincentives module"
+
     # Update poolincentives module
-    dasel put string -f $GENESIS '.app_state.poolincentives.lockable_durations.[0]' "120s"
-    dasel put string -f $GENESIS '.app_state.poolincentives.lockable_durations.[1]' "180s"
-    dasel put string -f $GENESIS '.app_state.poolincentives.lockable_durations.[2]' "240s"
-    dasel put string -f $GENESIS '.app_state.poolincentives.params.minted_denom' "note"
+    dasel put -t string -f $GENESIS '.app_state.poolincentives.lockable_durations.[0]' -v "120s"
+    dasel put -t string -f $GENESIS '.app_state.poolincentives.lockable_durations.[1]' -v "180s"
+    dasel put -t string -f $GENESIS '.app_state.poolincentives.lockable_durations.[2]' -v "240s"
+    dasel put -t string -f $GENESIS '.app_state.poolincentives.params.minted_denom' -v "note"
 
     # Update incentives module
     dasel put -t string -f $GENESIS '.app_state.incentives.lockable_durations.[0]' -v "1s"
@@ -52,15 +60,17 @@ edit_genesis () {
     dasel put -t string -f $GENESIS '.app_state.incentives.lockable_durations.[3]' -v "240s"
     dasel put -t string -f $GENESIS '.app_state.incentives.params.distr_epoch_identifier' -v "day"
 
+    echo "Update mint module"
+
     # Update mint module
-    dasel put string -f $GENESIS '.app_state.mint.params.mint_denom' "note"
-    dasel put string -f $GENESIS '.app_state.mint.params.epoch_identifier' "day"
+    dasel put -t string -f $GENESIS '.app_state.mint.params.mint_denom' -v "note"
+    dasel put -t string -f $GENESIS '.app_state.mint.params.epoch_identifier' -v "day"
 
     # Update gamm module
-    dasel put string -f $GENESIS '.app_state.gamm.params.pool_creation_fee.[0].denom' "note"
+    dasel put -t string -f $GENESIS '.app_state.gamm.params.pool_creation_fee.[0].denom' -v "note"
 
     # Update txfee basedenom
-    dasel put string -f $GENESIS '.app_state.txfees.basedenom' "note"
+    dasel put -t string -f $GENESIS '.app_state.txfees.basedenom' -v "note"
 
     # Update wasm permission (Nobody or Everybody)
     dasel put -t string -f $GENESIS '.app_state.wasm.params.code_upload_access.permission' -v "Everybody"
@@ -72,19 +82,19 @@ add_genesis_accounts () {
     echo "⚖️ Add validator account"
     echo $VALIDATOR_MNEMONIC | symphonyd keys add $VALIDATOR_MONIKER --recover --keyring-backend=test --home $OSMOSIS_HOME
     VALIDATOR_ACCOUNT=$(symphonyd keys show -a $VALIDATOR_MONIKER --keyring-backend test --home $OSMOSIS_HOME)
-    symphonyd add-genesis-account $VALIDATOR_ACCOUNT 100000000000note,100000000000uion,100000000000stake --home $OSMOSIS_HOME
+    symphonyd add-genesis-account $VALIDATOR_ACCOUNT 100000000000note,100000000000uion --home $OSMOSIS_HOME
     
     # Faucet
     echo "🚰 Add faucet account"
     echo $FAUCET_MNEMONIC | symphonyd keys add faucet --recover --keyring-backend=test --home $OSMOSIS_HOME
     FAUCET_ACCOUNT=$(symphonyd keys show -a faucet --keyring-backend test --home $OSMOSIS_HOME)
-    symphonyd add-genesis-account $FAUCET_ACCOUNT 100000000000note,100000000000uion,100000000000stake --home $OSMOSIS_HOME
+    symphonyd add-genesis-account $FAUCET_ACCOUNT 100000000000note,100000000000uion --home $OSMOSIS_HOME
 
     # Relayer
     echo "🔗 Add relayer account"
     echo $RELAYER_MNEMONIC | symphonyd keys add relayer --recover --keyring-backend=test --home $OSMOSIS_HOME
     RELAYER_ACCOUNT=$(symphonyd keys show -a relayer --keyring-backend test --home $OSMOSIS_HOME)
-    symphonyd add-genesis-account $RELAYER_ACCOUNT 1000000000note,1000000000uion,1000000000stake --home $OSMOSIS_HOME
+    symphonyd add-genesis-account $RELAYER_ACCOUNT 1000000000note,1000000000uion --home $OSMOSIS_HOME
     
     symphonyd gentx $VALIDATOR_MONIKER 500000000note --keyring-backend=test --chain-id=$CHAIN_ID --home $OSMOSIS_HOME
     symphonyd collect-gentxs --home $OSMOSIS_HOME
@@ -105,7 +115,7 @@ if [[ ! -d $CONFIG_FOLDER ]]
 then
     install_prerequisites
     echo "🧪 Creating Symphony home for $VALIDATOR_MONIKER"
-    echo $VALIDATOR_MNEMONIC | symphonyd init -o --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --recover $VALIDATOR_MONIKER
+    echo $VALIDATOR_MNEMONIC | symphonyd init $VALIDATOR_MONIKER -o --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --recover
     edit_genesis
     add_genesis_accounts
     edit_config

@@ -174,7 +174,7 @@ hermes tx ft-transfer --timeout-seconds 1000 \
     --src-port transfer \
     --src-channel channel-0 \
     --amount 100 \
-    --denom uosmo
+    --denom note
 ```
 
 Expected output:

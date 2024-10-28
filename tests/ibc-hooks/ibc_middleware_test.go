@@ -829,7 +829,7 @@ func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) (sdk.AccAd
 	// Setup contract
 	chain.StoreContractCode(&suite.Suite, "./bytecode/crosschain_registry.wasm")
 	registryAddr := chain.InstantiateContract(&suite.Suite, fmt.Sprintf(`{"owner": "%s"}`, owner), 1)
-	_, err := sdk.Bech32ifyAddressBytes("osmo", registryAddr)
+	_, err := sdk.Bech32ifyAddressBytes("symphony", registryAddr)
 	suite.Require().NoError(err)
 
 	// Send some token0 tokens from C to B

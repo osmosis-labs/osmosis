@@ -54,6 +54,8 @@ create_channel(){
         sleep 5
     done
 
+    sleep 5
+
     echo "📺 Creating channel $CHAIN_A_ID <> $CHAIN_B_ID"
     hermes create channel \
     --a-chain $CHAIN_A_ID \

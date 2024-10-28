@@ -29,18 +29,19 @@ host = '0.0.0.0'
 port = 3001
 
 [[chains]]
-id = 'localosmosis-b'
+id = 'localsymphony-b'
 type = 'CosmosSdk'
-rpc_addr = 'http://localosmosis-b:26657'
-grpc_addr = 'http://localosmosis-b:9090'
-websocket_addr = 'ws://localosmosis-b:26657/websocket'
+rpc_addr = 'http://localsymphony-b:26657'
+grpc_addr = 'http://localsymphony-b:9090'
+event_source = { mode = 'push', url = 'ws://localsymphony-b:26657/websocket', batch_delay = '500ms' }
 rpc_timeout = '10s'
-account_prefix = 'osmo'
-key_name = 'localosmosis-b'
+account_prefix = 'symphony'
+key_name = 'localsymphony-b'
 key_store_type = 'Test'
 store_prefix = 'ibc'
 default_gas = 100000
 max_gas = 4000000
+gas_price = { price = 0.1, denom = 'note' }
 gas_multiplier = 1.1
 max_msg_num = 30
 max_tx_size = 2097152
@@ -48,38 +49,25 @@ clock_drift = '5s'
 max_block_time = '30s'
 memo_prefix = ''
 sequential_batch_tx = false
-
-[chains.trust_threshold]
-numerator = '1'
-denominator = '3'
-
-[chains.gas_price]
-price = 0.1
-denom = 'uosmo'
-
-[chains.packet_filter]
-policy = 'allow'
-list = [[
-    'transfer',
-    'channel-*',
-]]
-
-[chains.address_type]
-derivation = 'cosmos'
+trusting_period = '14days'
+trust_threshold = '2/3'
+address_type = { derivation = 'cosmos' }
+packet_filter = { policy = 'allow', list = [[ 'transfer', 'channel-*' ]] }
 
 [[chains]]
-id = 'localosmosis-a'
+id = 'localsymphony-a'
 type = 'CosmosSdk'
-rpc_addr = 'http://localosmosis-a:26657'
-grpc_addr = 'http://localosmosis-a:9090'
-websocket_addr = 'ws://localosmosis-a:26657/websocket'
+rpc_addr = 'http://localsymphony-a:26657'
+grpc_addr = 'http://localsymphony-a:9090'
+event_source = { mode = 'push', url = 'ws://localsymphony-a:26657/websocket', batch_delay = '500ms' }
 rpc_timeout = '10s'
-account_prefix = 'osmo'
-key_name = 'localosmosis-a'
+account_prefix = 'symphony'
+key_name = 'localsymphony-a'
 key_store_type = 'Test'
 store_prefix = 'ibc'
 default_gas = 100000
 max_gas = 400000
+gas_price = { price = 0.1, denom = 'note' }
 gas_multiplier = 1.1
 max_msg_num = 30
 max_tx_size = 2097152
@@ -87,21 +75,7 @@ clock_drift = '5s'
 max_block_time = '30s'
 memo_prefix = ''
 sequential_batch_tx = false
-
-[chains.trust_threshold]
-numerator = '1'
-denominator = '3'
-
-[chains.gas_price]
-price = 0.1
-denom = 'uosmo'
-
-[chains.packet_filter]
-policy = 'allow'
-list = [[
-    'transfer',
-    'channel-*',
-]]
-
-[chains.address_type]
-derivation = 'cosmos'
+trusting_period = '14days'
+trust_threshold = '2/3'
+address_type = { derivation = 'cosmos' }
+packet_filter = { policy = 'allow', list = [[ 'transfer', 'channel-*']] }

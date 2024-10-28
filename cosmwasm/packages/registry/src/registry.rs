@@ -140,7 +140,7 @@ pub struct MultiHopDenom {
 }
 
 // The name of the chain on which the contract using this lib is instantiated
-pub const CONTRACT_CHAIN: &str = "osmosis";
+pub const CONTRACT_CHAIN: &str = "symphony";
 
 pub struct Registry<'a> {
     pub deps: Deps<'a>,
