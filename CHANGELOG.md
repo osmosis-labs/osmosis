@@ -65,6 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8765, 8768](https://github.com/osmosis-labs/osmosis/pull/8765) fix concurrency issue in go test(x/lockup)
 * [#8563](https://github.com/osmosis-labs/osmosis/pull/8755) [x/concentratedliquidity]: Fix Incorrect Event Emission
 * [#8765](https://github.com/osmosis-labs/osmosis/pull/8765) fix concurrency issue in go test(x/lockup)
+* [#8791](https://github.com/osmosis-labs/osmosis/pull/8791) fix: superfluid log for error that should be ignored
 
 ### State Machine Breaking
 
