@@ -237,11 +237,11 @@ func (p Pool) getPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
 	})
 
 	if i < 0 || i >= len(p.PoolAssets) {
-		return -1, PoolAsset{}, errorsmod.Wrapf(types.ErrDenomNotFoundInPool, fmt.Sprintf(formatNoPoolAssetFoundErrFormat, denom))
+		return -1, PoolAsset{}, errorsmod.Wrapf(types.ErrDenomNotFoundInPool, formatNoPoolAssetFoundErrFormat, denom)
 	}
 
 	if p.PoolAssets[i].Token.Denom != denom {
-		return -1, PoolAsset{}, errorsmod.Wrapf(types.ErrDenomNotFoundInPool, fmt.Sprintf(formatNoPoolAssetFoundErrFormat, denom))
+		return -1, PoolAsset{}, errorsmod.Wrapf(types.ErrDenomNotFoundInPool, formatNoPoolAssetFoundErrFormat, denom)
 	}
 
 	return i, p.PoolAssets[i], nil
