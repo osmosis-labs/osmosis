@@ -226,7 +226,7 @@ func (p Pool) getPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
 	}
 
 	if len(p.PoolAssets) == 0 {
-		return -1, PoolAsset{}, errorsmod.Wrapf(types.ErrDenomNotFoundInPool, fmt.Sprintf(formatNoPoolAssetFoundErrFormat, denom))
+		return -1, PoolAsset{}, errorsmod.Wrapf(types.ErrDenomNotFoundInPool, formatNoPoolAssetFoundErrFormat, denom)
 	}
 
 	i := sort.Search(len(p.PoolAssets), func(i int) bool {
