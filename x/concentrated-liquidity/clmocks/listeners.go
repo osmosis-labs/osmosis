@@ -1,7 +1,7 @@
 package clmocks
 
 import (
-	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

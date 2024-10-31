@@ -22,9 +22,9 @@ import (
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
-	v25 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v25"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
+	v25 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v25"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
 )
 
 const (

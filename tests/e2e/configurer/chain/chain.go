@@ -10,11 +10,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v26/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v27/tests/e2e/configurer/config"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v26/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v26/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v27/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v27/tests/e2e/initialization"
 )
 
 type Config struct {

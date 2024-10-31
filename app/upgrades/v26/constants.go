@@ -1,7 +1,7 @@
 package v26
 
 import (
-	"github.com/osmosis-labs/osmosis/v26/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v27/app/upgrades"
 
 	storetypes "cosmossdk.io/store/types"
 	circuittypes "cosmossdk.io/x/circuit/types"
