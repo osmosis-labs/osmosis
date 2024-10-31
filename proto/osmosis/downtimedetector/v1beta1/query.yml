@@ -1,7 +1,7 @@
 keeper:
-  path: "github.com/osmosis-labs/osmosis/v26/x/downtime-detector"
+  path: "github.com/osmosis-labs/osmosis/v27/x/downtime-detector"
   struct: "Keeper"
-client_path: "github.com/osmosis-labs/osmosis/v26/x/downtime-detector/client"
+client_path: "github.com/osmosis-labs/osmosis/v27/x/downtime-detector/client"
 queries:
   RecoveredSinceDowntimeOfLength:
     proto_wrapper:

@@ -3,8 +3,8 @@ package blockprocessor
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
-	"github.com/osmosis-labs/osmosis/v26/ingest/sqs/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v27/ingest/common/domain"
+	"github.com/osmosis-labs/osmosis/v27/ingest/sqs/domain"
 )
 
 // transformAndLoad transforms the pools and loads them into the SQS.

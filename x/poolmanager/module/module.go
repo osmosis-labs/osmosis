@@ -15,16 +15,16 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 
-	"github.com/osmosis-labs/osmosis/v26/simulation/simtypes"
-	gammsimulation "github.com/osmosis-labs/osmosis/v26/x/gamm/simulation"
-	"github.com/osmosis-labs/osmosis/v26/x/poolmanager"
-	pmclient "github.com/osmosis-labs/osmosis/v26/x/poolmanager/client"
-	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/cli"
-	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/grpc"
-	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/grpcv2"
-	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/queryprotov2"
-	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v27/simulation/simtypes"
+	gammsimulation "github.com/osmosis-labs/osmosis/v27/x/gamm/simulation"
+	"github.com/osmosis-labs/osmosis/v27/x/poolmanager"
+	pmclient "github.com/osmosis-labs/osmosis/v27/x/poolmanager/client"
+	"github.com/osmosis-labs/osmosis/v27/x/poolmanager/client/cli"
+	"github.com/osmosis-labs/osmosis/v27/x/poolmanager/client/grpc"
+	"github.com/osmosis-labs/osmosis/v27/x/poolmanager/client/grpcv2"
+	"github.com/osmosis-labs/osmosis/v27/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v27/x/poolmanager/client/queryprotov2"
+	"github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
 )
 
 var (

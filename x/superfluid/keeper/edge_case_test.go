@@ -11,7 +11,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v27/x/lockup/types"
 )
 
 func (s *KeeperTestSuite) TestSuperfluidDelegatedValidatorJailed() {

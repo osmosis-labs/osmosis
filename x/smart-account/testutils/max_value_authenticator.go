@@ -12,7 +12,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v26/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/authenticator"
 )
 
 // This is a very naive implementation of an authenticator that tracks sends and blocks if the total amount sent is greater than 3_000

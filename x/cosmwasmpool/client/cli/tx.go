@@ -18,8 +18,8 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool/types"
 )
 
 func NewTxCmd() *cobra.Command {

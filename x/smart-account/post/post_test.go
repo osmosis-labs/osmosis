@@ -21,11 +21,11 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v26/app"
-	"github.com/osmosis-labs/osmosis/v26/app/params"
-	"github.com/osmosis-labs/osmosis/v26/x/smart-account/post"
-	"github.com/osmosis-labs/osmosis/v26/x/smart-account/testutils"
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v26/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v27/app"
+	"github.com/osmosis-labs/osmosis/v27/app/params"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/post"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/testutils"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v27/x/smart-account/types"
 
 	storetypes "cosmossdk.io/store/types"
 	"github.com/stretchr/testify/suite"

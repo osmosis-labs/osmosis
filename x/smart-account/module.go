@@ -10,9 +10,9 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 
-	"github.com/osmosis-labs/osmosis/v26/x/smart-account/client/cli"
-	"github.com/osmosis-labs/osmosis/v26/x/smart-account/keeper"
-	"github.com/osmosis-labs/osmosis/v26/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/client/cli"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/keeper"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

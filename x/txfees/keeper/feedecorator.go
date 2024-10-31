@@ -13,10 +13,10 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
-	mempool1559 "github.com/osmosis-labs/osmosis/v26/x/txfees/keeper/mempool-1559"
-	"github.com/osmosis-labs/osmosis/v26/x/txfees/keeper/txfee_filters"
-	"github.com/osmosis-labs/osmosis/v26/x/txfees/types"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
+	mempool1559 "github.com/osmosis-labs/osmosis/v27/x/txfees/keeper/mempool-1559"
+	"github.com/osmosis-labs/osmosis/v27/x/txfees/keeper/txfee_filters"
+	"github.com/osmosis-labs/osmosis/v27/x/txfees/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )

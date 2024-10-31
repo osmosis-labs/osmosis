@@ -13,8 +13,8 @@ import (
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/v26/simulation/executor/internal/stats"
-	"github.com/osmosis-labs/osmosis/v26/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v27/simulation/executor/internal/stats"
+	"github.com/osmosis-labs/osmosis/v27/simulation/simtypes"
 )
 
 type simState struct {

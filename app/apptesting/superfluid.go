@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v27/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v27/x/superfluid/types"
 )
 
 func (s *KeeperTestHelper) SuperfluidDelegateToDefaultVal(sender sdk.AccAddress, poolId uint64, lockId uint64) error {

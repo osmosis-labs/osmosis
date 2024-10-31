@@ -1,4 +1,4 @@
-module github.com/osmosis-labs/osmosis/v26
+module github.com/osmosis-labs/osmosis/v27
 
 go 1.22.4
 
@@ -18,7 +18,7 @@ require (
 	cosmossdk.io/x/upgrade v0.1.4
 	github.com/CosmWasm/wasmd v0.53.0
 	github.com/CosmWasm/wasmvm/v2 v2.1.3
-	github.com/cometbft/cometbft v0.38.12
+	github.com/cometbft/cometbft v0.38.13
 	github.com/cometbft/cometbft-db v0.12.0
 	github.com/cosmos/cosmos-db v1.0.2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -44,7 +44,7 @@ require (
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.14
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.10
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.16
-	github.com/osmosis-labs/sqs/sqsdomain v0.26.0
+	github.com/osmosis-labs/sqs/sqsdomain v0.26.1-0.20241031114249-c9d8055d865c
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/skip-mev/block-sdk/v2 v2.1.5
@@ -144,7 +144,6 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a // indirect
 	github.com/oklog/run v1.1.0 // indirect
-	github.com/osmosis-labs/sqs v0.19.2-rc2.0.20240826173240-e5733bb3700d // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect

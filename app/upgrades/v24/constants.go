@@ -4,7 +4,7 @@ import (
 	ibcwasmtypes "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
 	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
 
-	"github.com/osmosis-labs/osmosis/v26/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v27/app/upgrades"
 
 	store "cosmossdk.io/store/types"
 )

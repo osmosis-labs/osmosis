@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v26/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v27/x/lockup/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -14,10 +14,10 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/model"
-	types "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/model"
+	types "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v27/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
 )
 
 // InitializePool initializes a new concentrated liquidity pool with the given PoolI interface and creator address.

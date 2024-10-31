@@ -5,13 +5,13 @@ import (
 	"testing"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
-	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v27/x/poolmanager/client/queryproto"
 )
 
 type QueryTestSuite struct {

@@ -15,7 +15,7 @@ import (
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v26/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v27/x/txfees/types"
 )
 
 const FlagFeeTokens = "fee-tokens"

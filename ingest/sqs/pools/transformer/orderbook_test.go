@@ -7,8 +7,8 @@ import (
 	sqscosmwasmpool "github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
-	poolstransformer "github.com/osmosis-labs/osmosis/v26/ingest/sqs/pools/transformer"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
+	poolstransformer "github.com/osmosis-labs/osmosis/v27/ingest/sqs/pools/transformer"
 )
 
 const (

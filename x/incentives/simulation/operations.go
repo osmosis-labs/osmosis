@@ -5,13 +5,13 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmosimtypes "github.com/osmosis-labs/osmosis/v26/simulation/simtypes"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v27/simulation/simtypes"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
-	"github.com/osmosis-labs/osmosis/v26/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v26/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v27/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v27/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v27/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

@@ -6,13 +6,13 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
-	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/stableswap"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v26/x/protorev/keeper"
-	protorevtypes "github.com/osmosis-labs/osmosis/v26/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v26/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/pool-models/stableswap"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v27/x/protorev/keeper"
+	protorevtypes "github.com/osmosis-labs/osmosis/v27/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v27/x/protorev/types"
 )
 
 // Mainnet Arb Route - 2 Asset, Same Weights (Block: 5905150)

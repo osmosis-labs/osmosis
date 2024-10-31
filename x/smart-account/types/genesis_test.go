@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v26/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/types"
 )
 
 func TestGenesisState_Validate(t *testing.T) {

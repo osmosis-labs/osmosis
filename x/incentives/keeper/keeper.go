@@ -7,7 +7,7 @@ import (
 	"cosmossdk.io/log"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v26/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v27/x/incentives/types"
 
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
