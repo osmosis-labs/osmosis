@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 
-	"github.com/osmosis-labs/osmosis/v26/wasmbinding/bindings"
+	"github.com/osmosis-labs/osmosis/v27/wasmbinding/bindings"
 )
 
 // StargateQuerier dispatches whitelisted stargate queries

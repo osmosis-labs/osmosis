@@ -2,8 +2,8 @@ package swapstrategy_test
 
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
 )
 
 var hundredDec = osmomath.NewDec(100)

@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v26/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/authenticator"
 )
 
 func (s *KeeperTestSuite) TestKeeper_AddAuthenticatorWithId() {

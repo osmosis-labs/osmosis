@@ -27,12 +27,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v26/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v26/x/lockup/client/cli"
-	"github.com/osmosis-labs/osmosis/v26/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/v27/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v27/x/lockup/client/cli"
+	"github.com/osmosis-labs/osmosis/v27/x/lockup/keeper"
 
-	simulation "github.com/osmosis-labs/osmosis/v26/x/lockup/simulation"
-	"github.com/osmosis-labs/osmosis/v26/x/lockup/types"
+	simulation "github.com/osmosis-labs/osmosis/v27/x/lockup/simulation"
+	"github.com/osmosis-labs/osmosis/v27/x/lockup/types"
 )
 
 var (

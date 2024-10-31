@@ -16,15 +16,15 @@ import (
 
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
-	"github.com/osmosis-labs/osmosis/v26/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/authenticator"
 
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v26/x/smart-account/types"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v27/x/smart-account/types"
 
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/osmosis-labs/osmosis/v26/app"
-	"github.com/osmosis-labs/osmosis/v26/app/params"
-	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v27/app"
+	"github.com/osmosis-labs/osmosis/v27/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
 )
 
 type BaseAuthenticatorSuite struct {

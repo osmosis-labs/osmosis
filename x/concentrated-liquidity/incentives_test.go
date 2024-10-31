@@ -11,12 +11,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	cl "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
+	cl "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v27/x/gamm/types"
 )
 
 var (

@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v26/app/keepers"
+	"github.com/osmosis-labs/osmosis/v27/app/keepers"
 )
 
 // BaseAppParamManager defines an interrace that BaseApp is expected to fulfill

@@ -1,7 +1,7 @@
 keeper:
-  path: "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity"
+  path: "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity"
   struct: "Keeper"
-client_path: "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/client"
+client_path: "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/client"
 queries:
   Pools:
     proto_wrapper:

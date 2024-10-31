@@ -9,10 +9,10 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
-	"github.com/osmosis-labs/osmosis/v26/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v26/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
+	"github.com/osmosis-labs/osmosis/v27/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v27/x/protorev/types"
 )
 
 // BenchmarkEpochHook benchmarks the epoch hook. In particular, it benchmarks the UpdatePools function.

@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sqscosmwasmpool "github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
 
-	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v27/ingest/common/domain"
 )
 
 const (

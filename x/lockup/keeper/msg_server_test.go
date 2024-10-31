@@ -4,9 +4,9 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v26/x/lockup/keeper"
-	"github.com/osmosis-labs/osmosis/v26/x/lockup/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v27/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v27/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/v27/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"

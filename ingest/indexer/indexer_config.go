@@ -4,8 +4,8 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain"
-	service "github.com/osmosis-labs/osmosis/v26/ingest/indexer/service/client"
+	"github.com/osmosis-labs/osmosis/v27/ingest/indexer/domain"
+	service "github.com/osmosis-labs/osmosis/v27/ingest/indexer/service/client"
 )
 
 // Config defines the config for the indexer.

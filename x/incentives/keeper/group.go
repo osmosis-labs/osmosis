@@ -9,8 +9,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v26/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v27/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v27/x/lockup/types"
 )
 
 var emptyCoins = sdk.NewCoins()

@@ -2,7 +2,7 @@ package keeper_test
 
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v27/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestSuperfluidAssetSetGetDeleteFlow() {

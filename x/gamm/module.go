@@ -24,14 +24,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v26/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v26/x/gamm/client/cli"
-	"github.com/osmosis-labs/osmosis/v26/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/stableswap"
-	simulation "github.com/osmosis-labs/osmosis/v26/x/gamm/simulation"
-	"github.com/osmosis-labs/osmosis/v26/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v26/x/gamm/v2types"
+	"github.com/osmosis-labs/osmosis/v27/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/client/cli"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/pool-models/stableswap"
+	simulation "github.com/osmosis-labs/osmosis/v27/x/gamm/simulation"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/v2types"
 )
 
 var (

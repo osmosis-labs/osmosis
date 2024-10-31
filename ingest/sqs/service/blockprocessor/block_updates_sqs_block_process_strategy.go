@@ -3,8 +3,8 @@ package blockprocessor
 import (
 	"github.com/cosmos/cosmos-sdk/types"
 
-	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
-	"github.com/osmosis-labs/osmosis/v26/ingest/sqs/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v27/ingest/common/domain"
+	"github.com/osmosis-labs/osmosis/v27/ingest/sqs/domain"
 )
 
 type blockUpdatesSQSBlockProcessStrategy struct {

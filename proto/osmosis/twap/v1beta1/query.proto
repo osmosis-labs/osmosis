@@ -12,7 +12,7 @@ import "google/protobuf/any.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/twap/client/queryproto";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/twap/client/queryproto";
 
 service Query {
   rpc Params(ParamsRequest) returns (ParamsResponse) {

@@ -1,7 +1,7 @@
 keeper:
-  path: "github.com/osmosis-labs/osmosis/v26/x/valset-pref"
+  path: "github.com/osmosis-labs/osmosis/v27/x/valset-pref"
   struct: "Keeper"
-client_path: "github.com/osmosis-labs/osmosis/v26/x/valset-pref/client"
+client_path: "github.com/osmosis-labs/osmosis/v27/x/valset-pref/client"
 queries:
   UserValidatorPreferences:
     proto_wrapper:

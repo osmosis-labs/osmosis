@@ -4,7 +4,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool/types"
 )
 
 // InitGenesis initializes the store state from a genesis state.

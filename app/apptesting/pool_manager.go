@@ -6,9 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
-	poolmanager "github.com/osmosis-labs/osmosis/v26/x/poolmanager"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/pool-models/balancer"
+	poolmanager "github.com/osmosis-labs/osmosis/v27/x/poolmanager"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
 )
 
 func (s *KeeperTestHelper) RunBasicSwap(poolId uint64) {

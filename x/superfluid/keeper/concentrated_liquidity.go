@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v27/x/superfluid/types"
 )
 
 // addToConcentratedLiquiditySuperfluidPosition adds the specified amounts of tokens to an existing superfluid staked

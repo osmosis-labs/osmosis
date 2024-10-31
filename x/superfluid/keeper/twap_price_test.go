@@ -2,8 +2,8 @@ package keeper_test
 
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v27/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

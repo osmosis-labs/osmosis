@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/osmosis-labs/osmosis/v26/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v27/x/protorev/types"
 )
 
 type (

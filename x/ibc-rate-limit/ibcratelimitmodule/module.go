@@ -17,12 +17,12 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 
-	ibcratelimit "github.com/osmosis-labs/osmosis/v26/x/ibc-rate-limit"
-	ibcratelimitclient "github.com/osmosis-labs/osmosis/v26/x/ibc-rate-limit/client"
-	ibcratelimitcli "github.com/osmosis-labs/osmosis/v26/x/ibc-rate-limit/client/cli"
-	"github.com/osmosis-labs/osmosis/v26/x/ibc-rate-limit/client/grpc"
-	"github.com/osmosis-labs/osmosis/v26/x/ibc-rate-limit/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v26/x/ibc-rate-limit/types"
+	ibcratelimit "github.com/osmosis-labs/osmosis/v27/x/ibc-rate-limit"
+	ibcratelimitclient "github.com/osmosis-labs/osmosis/v27/x/ibc-rate-limit/client"
+	ibcratelimitcli "github.com/osmosis-labs/osmosis/v27/x/ibc-rate-limit/client/cli"
+	"github.com/osmosis-labs/osmosis/v27/x/ibc-rate-limit/client/grpc"
+	"github.com/osmosis-labs/osmosis/v27/x/ibc-rate-limit/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v27/x/ibc-rate-limit/types"
 )
 
 var (

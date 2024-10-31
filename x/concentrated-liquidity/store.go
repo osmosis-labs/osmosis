@@ -11,9 +11,9 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types/genesis"
+	"github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types/genesis"
 )
 
 const (
