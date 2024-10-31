@@ -7,15 +7,15 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	v8constants "github.com/osmosis-labs/osmosis/v26/app/upgrades/v8/constants"
-	cltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v26/x/gamm/types/migration"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v26/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v26/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
+	v8constants "github.com/osmosis-labs/osmosis/v27/app/upgrades/v8/constants"
+	cltypes "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v27/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v27/x/gamm/types/migration"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v27/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v27/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v27/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v27/x/superfluid/types"
 )
 
 var defaultFunds = sdk.NewCoins(defaultPoolAssets[0].Token, sdk.NewCoin("stake", osmomath.NewInt(5000000000)))

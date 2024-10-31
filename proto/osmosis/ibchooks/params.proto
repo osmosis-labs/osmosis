@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/duration.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/ibc-hooks/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/ibc-hooks/types";
 
 message Params {
   repeated string allowed_async_ack_contracts = 1

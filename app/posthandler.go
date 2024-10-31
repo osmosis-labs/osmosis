@@ -6,10 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
-	smartaccountkeeper "github.com/osmosis-labs/osmosis/v26/x/smart-account/keeper"
-	smartaccountpost "github.com/osmosis-labs/osmosis/v26/x/smart-account/post"
+	smartaccountkeeper "github.com/osmosis-labs/osmosis/v27/x/smart-account/keeper"
+	smartaccountpost "github.com/osmosis-labs/osmosis/v27/x/smart-account/post"
 
-	protorevkeeper "github.com/osmosis-labs/osmosis/v26/x/protorev/keeper"
+	protorevkeeper "github.com/osmosis-labs/osmosis/v27/x/protorev/keeper"
 )
 
 func NewPostHandler(

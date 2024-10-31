@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v26/x/mint/simulation"
-	"github.com/osmosis-labs/osmosis/v26/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v27/x/mint/simulation"
+	"github.com/osmosis-labs/osmosis/v27/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

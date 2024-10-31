@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v26/x/downtime-detector/client/cli"
-	"github.com/osmosis-labs/osmosis/v26/x/downtime-detector/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v26/x/downtime-detector/types"
+	"github.com/osmosis-labs/osmosis/v27/x/downtime-detector/client/cli"
+	"github.com/osmosis-labs/osmosis/v27/x/downtime-detector/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v27/x/downtime-detector/types"
 )
 
 // We test the custom duration parser via this

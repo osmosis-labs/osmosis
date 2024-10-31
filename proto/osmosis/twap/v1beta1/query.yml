@@ -1,7 +1,7 @@
 keeper:
-  path: "github.com/osmosis-labs/osmosis/v26/x/twap"
+  path: "github.com/osmosis-labs/osmosis/v27/x/twap"
   struct: "Keeper"
-client_path: "github.com/osmosis-labs/osmosis/v26/x/twap/client"
+client_path: "github.com/osmosis-labs/osmosis/v27/x/twap/client"
 queries:
   ArithmeticTwap:
     proto_wrapper:

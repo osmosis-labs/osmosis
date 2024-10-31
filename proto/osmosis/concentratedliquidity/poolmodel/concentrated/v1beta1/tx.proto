@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "amino/amino.proto";
 import "cosmos/msg/v1/msg.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/model";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/model";
 
 service Msg {
   rpc CreateConcentratedPool(MsgCreateConcentratedPool)

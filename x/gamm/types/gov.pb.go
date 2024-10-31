@@ -10,7 +10,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
-	migration "github.com/osmosis-labs/osmosis/v26/x/gamm/types/migration"
+	migration "github.com/osmosis-labs/osmosis/v27/x/gamm/types/migration"
 	io "io"
 	math "math"
 	math_bits "math/bits"

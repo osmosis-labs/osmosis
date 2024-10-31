@@ -3,11 +3,11 @@ package blockprocessor_test
 import (
 	"errors"
 
-	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
-	commonmocks "github.com/osmosis-labs/osmosis/v26/ingest/common/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v26/ingest/sqs/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v26/ingest/sqs/service/blockprocessor"
-	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
+	commondomain "github.com/osmosis-labs/osmosis/v27/ingest/common/domain"
+	commonmocks "github.com/osmosis-labs/osmosis/v27/ingest/common/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v27/ingest/sqs/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v27/ingest/sqs/service/blockprocessor"
+	"github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
 )
 
 var (
