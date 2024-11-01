@@ -169,12 +169,20 @@ Send a transaction:
 
 ```bash
 hermes tx ft-transfer --timeout-seconds 1000 \
-    --dst-chain localosmosis-a \
-    --src-chain localosmosis-b \
+    --dst-chain localsymphony-a \
+    --src-chain localsymphony-b \
     --src-port transfer \
     --src-channel channel-0 \
     --amount 100 \
     --denom note
+    
+hermes tx ft-transfer --timeout-seconds 1000 \
+    --dst-chain localsymphony-b \
+    --src-chain localsymphony-a \
+    --src-port transfer \
+    --src-channel channel-0 \
+    --amount 50 \
+    --denom ibc/C409CCF754D78F7B2659E99FD83FDD26B9A4C49E88DCEB0B143FAB9156D36FFD
 ```
 
 Expected output:

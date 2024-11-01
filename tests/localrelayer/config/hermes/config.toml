@@ -49,7 +49,6 @@ clock_drift = '5s'
 max_block_time = '30s'
 memo_prefix = ''
 sequential_batch_tx = false
-trusting_period = '14days'
 trust_threshold = '2/3'
 address_type = { derivation = 'cosmos' }
 packet_filter = { policy = 'allow', list = [[ 'transfer', 'channel-*' ]] }
@@ -75,7 +74,6 @@ clock_drift = '5s'
 max_block_time = '30s'
 memo_prefix = ''
 sequential_batch_tx = false
-trusting_period = '14days'
 trust_threshold = '2/3'
 address_type = { derivation = 'cosmos' }
 packet_filter = { policy = 'allow', list = [[ 'transfer', 'channel-*']] }
