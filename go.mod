@@ -44,7 +44,7 @@ require (
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.14
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.10
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.16
-	github.com/osmosis-labs/sqs/sqsdomain v0.26.1-0.20241031114249-c9d8055d865c
+	github.com/osmosis-labs/sqs/sqsdomain v0.27.0-rc1
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/skip-mev/block-sdk/v2 v2.1.5
