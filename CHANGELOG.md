@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8751](https://github.com/osmosis-labs/osmosis/pull/8751) fix: supply offsets for osmo token
 * [#8764](https://github.com/osmosis-labs/osmosis/pull/8764) chore: add cosmwasm 1_3 feature
 * [#8779](https://github.com/osmosis-labs/osmosis/pull/8779) chore: bump cometbft/cosmos-sdk versions
+* [#8801](https://github.com/osmosis-labs/osmosis/pull/8801) chore: update tagged submodules for v27
 
 ### Config
 

@@ -66,7 +66,12 @@ func (k Keeper) forceTransfer(ctx sdk.Context, amount sdk.Coin, fromAddr string,
 		return err
 	}
 
-	fromAcc, err := sdk.AccAddressFromBech32(fromAddr)
+	fromSdkAddr, err := sdk.AccAddressFromBech32(fromAddr)
+	if err != nil {
+		return err
+	}
+
+	toSdkAddr, err := sdk.AccAddressFromBech32(toAddr)
 	if err != nil {
 		return err
 	}
@@ -83,19 +88,13 @@ func (k Keeper) forceTransfer(ctx sdk.Context, amount sdk.Coin, fromAddr string,
 			return status.Errorf(codes.NotFound, "account %s not found", moduleName)
 		}
 
-		if account.GetAddress().Equals(fromAcc) {
+		if account.GetAddress().Equals(fromSdkAddr) {
 			return status.Errorf(codes.Internal, "send from module acc not available")
 		}
-	}
 
-	fromSdkAddr, err := sdk.AccAddressFromBech32(fromAddr)
-	if err != nil {
-		return err
-	}
-
-	toSdkAddr, err := sdk.AccAddressFromBech32(toAddr)
-	if err != nil {
-		return err
+		if account.GetAddress().Equals(toSdkAddr) {
+			return status.Errorf(codes.Internal, "send to module acc not available")
+		}
 	}
 
 	return k.bankKeeper.SendCoins(ctx, fromSdkAddr, toSdkAddr, sdk.NewCoins(amount))

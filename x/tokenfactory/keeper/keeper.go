@@ -54,10 +54,10 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		storeKey:   storeKey,
-		paramSpace: paramSpace,
-		permAddrs:  permAddrs,
-
+		storeKey:            storeKey,
+		paramSpace:          paramSpace,
+		permAddrs:           permAddrs,
+		permAddrMap:         permAddrMap,
 		accountKeeper:       accountKeeper,
 		bankKeeper:          bankKeeper,
 		communityPoolKeeper: communityPoolKeeper,
