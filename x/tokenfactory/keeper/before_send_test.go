@@ -131,7 +131,7 @@ func (s *KeeperTestSuite) TestBeforeSendHook() {
 				for _, coin := range sendTc.msg(denom).Amount {
 					_, err = s.msgServer.Mint(s.Ctx, types.NewMsgMint(s.TestAccs[0].String(), sdk.NewInt64Coin(coin.Denom, coin.Amount.Int64())))
 					if coin.Denom == denom && coin.Amount.Equal(osmomath.NewInt(100)) {
-						s.Require().Error(err, "test: %v", sendTc.desc)
+						s.Require().NoError(err, "test: %v", sendTc.desc)
 					}
 				}
 
