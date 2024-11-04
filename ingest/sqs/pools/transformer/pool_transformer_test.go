@@ -12,13 +12,13 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
-	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
-	poolstransformer "github.com/osmosis-labs/osmosis/v26/ingest/sqs/pools/transformer"
-	clqueryproto "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/client/queryproto"
-	cltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v26/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
+	commondomain "github.com/osmosis-labs/osmosis/v27/ingest/common/domain"
+	poolstransformer "github.com/osmosis-labs/osmosis/v27/ingest/sqs/pools/transformer"
+	clqueryproto "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/client/queryproto"
+	cltypes "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v27/x/protorev/types"
 )
 
 type PoolTransformerTestSuite struct {

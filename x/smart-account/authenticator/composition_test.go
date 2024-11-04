@@ -16,9 +16,9 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/osmosis-labs/osmosis/v26/x/smart-account/authenticator"
-	"github.com/osmosis-labs/osmosis/v26/x/smart-account/testutils"
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v26/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/testutils"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v27/x/smart-account/types"
 )
 
 type AggregatedAuthenticatorsTest struct {

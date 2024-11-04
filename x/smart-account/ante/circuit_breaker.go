@@ -5,8 +5,8 @@ import (
 
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 
-	smartaccountkeeper "github.com/osmosis-labs/osmosis/v26/x/smart-account/keeper"
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v26/x/smart-account/types"
+	smartaccountkeeper "github.com/osmosis-labs/osmosis/v27/x/smart-account/keeper"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v27/x/smart-account/types"
 )
 
 // CircuitBreakerDecorator routes transactions through appropriate ante handlers based on

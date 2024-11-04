@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/osmosis-labs/osmosis/v26/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v27/x/txfees/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

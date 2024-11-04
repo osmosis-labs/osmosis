@@ -1,11 +1,9 @@
 package blockprocessor_test
 
 import (
-	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
-	commonmocks "github.com/osmosis-labs/osmosis/v26/ingest/common/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v26/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v26/ingest/sqs/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v26/ingest/sqs/service/blockprocessor"
+	commondomain "github.com/osmosis-labs/osmosis/v27/ingest/common/domain"
+	commonmocks "github.com/osmosis-labs/osmosis/v27/ingest/common/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v27/ingest/sqs/service/blockprocessor"
 )
 
 // TestProcessBlock tests the PublishChangedPools method by
@@ -60,7 +58,7 @@ func (s *SQSBlockProcessorTestSuite) TestProcessBlock_FullBlockProcessStrategy()
 			transformAndLoadMockError: nil,
 			isSyncingMockValue:        true,
 
-			expectedError: domain.ErrNodeIsSyncing,
+			expectedError: commondomain.ErrNodeIsSyncing,
 		},
 
 		{
@@ -72,7 +70,7 @@ func (s *SQSBlockProcessorTestSuite) TestProcessBlock_FullBlockProcessStrategy()
 			isSyncingMockValue:        false,
 			isSyncingMockError:        defaultError,
 
-			expectedError: &domain.NodeSyncCheckError{
+			expectedError: &commondomain.NodeSyncCheckError{
 				Err: defaultError,
 			},
 		},
@@ -91,7 +89,7 @@ func (s *SQSBlockProcessorTestSuite) TestProcessBlock_FullBlockProcessStrategy()
 				Error: tt.transformAndLoadMockError,
 			}
 
-			nodeStatusCheckerMock := &mocks.NodeStatusCheckerMock{
+			nodeStatusCheckerMock := &commonmocks.NodeStatusCheckerMock{
 				IsSyncing:          tt.isSyncingMockValue,
 				IsNodeSyncingError: tt.isSyncingMockError,
 			}

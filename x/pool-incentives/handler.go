@@ -7,8 +7,8 @@ import (
 
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	"github.com/osmosis-labs/osmosis/v26/x/pool-incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v26/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v27/x/pool-incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v27/x/pool-incentives/types"
 )
 
 // NewPoolIncentivesProposalHandler is a handler for governance proposals on new pool incentives.

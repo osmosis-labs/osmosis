@@ -46,6 +46,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#8682](https://github.com/osmosis-labs/osmosis/pull/8682) chore: bump cosmwasm-optimizer
 * [#8734](https://github.com/osmosis-labs/osmosis/pull/8734) chore: update cosmwasm vm
+* [#8777](https://github.com/osmosis-labs/osmosis/pull/8777) fix: state export for gov module constitution
+* [#8751](https://github.com/osmosis-labs/osmosis/pull/8751) fix: supply offsets for osmo token
+* [#8764](https://github.com/osmosis-labs/osmosis/pull/8764) chore: add cosmwasm 1_3 feature
+* [#8779](https://github.com/osmosis-labs/osmosis/pull/8779) chore: bump cometbft/cosmos-sdk versions
 
 ### Config
 
@@ -58,6 +62,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8731](https://github.com/osmosis-labs/osmosis/pull/8731) fix: in place testnet logs
 * [#8728](https://github.com/osmosis-labs/osmosis/pull/8728) fix unsupported sign-mode issue
 * [#8743](https://github.com/osmosis-labs/osmosis/pull/8743) chore: bump sdk and cometbft
+* [#8765, 8768](https://github.com/osmosis-labs/osmosis/pull/8765) fix concurrency issue in go test(x/lockup)
+* [#8563](https://github.com/osmosis-labs/osmosis/pull/8755) [x/concentratedliquidity]: Fix Incorrect Event Emission
+* [#8765](https://github.com/osmosis-labs/osmosis/pull/8765) fix concurrency issue in go test(x/lockup)
+* [#8791](https://github.com/osmosis-labs/osmosis/pull/8791) fix: superfluid log for error that should be ignored
 
 ### State Machine Breaking
 

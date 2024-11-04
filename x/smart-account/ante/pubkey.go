@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v26/x/smart-account/types"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v27/x/smart-account/types"
 )
 
 // EmitPubKeyDecoratorEvents emits the events that the SetPubKeyDecorator would emit. This is needed for backwards

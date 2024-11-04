@@ -176,15 +176,15 @@ require (
 )
 
 replace (
-	// Direct cometbft branch link: https://github.com/osmosis-labs/cometbft/tree/osmo-v26/v0.38.12, current branch: osmo-v26/v0.38.12
-	// Direct commit link: https://github.com/osmosis-labs/cometbft/commit/3f71114d937296cdc7bcb585d56182d1f17432e1
-	// Direct tag link: https://github.com/osmosis-labs/cometbft/releases/tag/v0.38.12-v26-osmo-2
-	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.38.12-v26-osmo-2
+	// Direct cometbft branch link: https://github.com/osmosis-labs/cometbft/tree/osmo-v27/0.38.12, current branch: osmo-v27/v0.38.12
+	// Direct commit link: https://github.com/osmosis-labs/cometbft/commit/2305cecebc3aadee694c6d5e05f9d34b5630f564
+	// Direct tag link: https://github.com/osmosis-labs/cometbft/releases/tag/v0.38.12-v27-osmo-1
+	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.38.12-v27-osmo-1
 
-	// Direct cosmos-sdk branch link: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v26/v0.50.10, current branch: osmo-v26/v0.50.10
-	// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/5a045895704de7fdc69d144895dcd9f162481502
-	// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.50.10-v26-osmo-2
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.50.10-v26-osmo-2
+	// Direct cosmos-sdk branch link: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v27/0.50.10, current branch: osmo-v27/0.50.10
+	// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/33e0aaf2b1840a8bca4f1b2292700b6f15e5fad7
+	// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.50.10-v27-osmo-1
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.50.10-v27-osmo-1
 
 	github.com/osmosis-labs/osmosis/osmomath => github.com/osmosis-labs/osmosis/osmomath v0.0.14
 	github.com/osmosis-labs/osmosis/osmoutils => github.com/osmosis-labs/osmosis/osmoutils v0.0.14

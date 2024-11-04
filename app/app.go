@@ -47,23 +47,24 @@ import (
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
 
-	"github.com/osmosis-labs/osmosis/v26/ingest/common/poolextractor"
-	"github.com/osmosis-labs/osmosis/v26/ingest/common/pooltracker"
-	"github.com/osmosis-labs/osmosis/v26/ingest/common/writelistener"
-	"github.com/osmosis-labs/osmosis/v26/ingest/indexer"
-	indexerdomain "github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain"
-	indexerservice "github.com/osmosis-labs/osmosis/v26/ingest/indexer/service"
-	indexerwritelistener "github.com/osmosis-labs/osmosis/v26/ingest/indexer/service/writelistener"
-	"github.com/osmosis-labs/osmosis/v26/ingest/sqs"
-	"github.com/osmosis-labs/osmosis/v26/ingest/sqs/domain"
-	poolstransformer "github.com/osmosis-labs/osmosis/v26/ingest/sqs/pools/transformer"
+	"github.com/osmosis-labs/osmosis/v27/ingest/common/poolextractor"
+	"github.com/osmosis-labs/osmosis/v27/ingest/common/pooltracker"
+	"github.com/osmosis-labs/osmosis/v27/ingest/common/writelistener"
+	"github.com/osmosis-labs/osmosis/v27/ingest/indexer"
+	indexerdomain "github.com/osmosis-labs/osmosis/v27/ingest/indexer/domain"
+	indexerservice "github.com/osmosis-labs/osmosis/v27/ingest/indexer/service"
+	indexerwritelistener "github.com/osmosis-labs/osmosis/v27/ingest/indexer/service/writelistener"
+	"github.com/osmosis-labs/osmosis/v27/ingest/sqs"
+	"github.com/osmosis-labs/osmosis/v27/ingest/sqs/domain"
+	poolstransformer "github.com/osmosis-labs/osmosis/v27/ingest/sqs/pools/transformer"
 
-	sqsservice "github.com/osmosis-labs/osmosis/v26/ingest/sqs/service"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
+	sqsservice "github.com/osmosis-labs/osmosis/v27/ingest/sqs/service"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v27/x/gamm/types"
 
-	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v27/ingest/common/domain"
+	commonservice "github.com/osmosis-labs/osmosis/v27/ingest/common/service"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 
@@ -110,40 +111,40 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 
-	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
 
-	minttypes "github.com/osmosis-labs/osmosis/v26/x/mint/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v26/x/protorev/types"
+	minttypes "github.com/osmosis-labs/osmosis/v27/x/mint/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v27/x/protorev/types"
 
-	"github.com/osmosis-labs/osmosis/v26/app/keepers"
-	"github.com/osmosis-labs/osmosis/v26/app/upgrades"
-	v10 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v10"
-	v11 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v11"
-	v12 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v12"
-	v13 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v13"
-	v14 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v14"
-	v15 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v15"
-	v16 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v16"
-	v17 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v17"
-	v18 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v18"
-	v19 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v19"
-	v20 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v20"
-	v21 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v21"
-	v22 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v22"
-	v23 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v23"
-	v24 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v24"
-	v25 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v25"
-	v26 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v26"
-	v27 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v27"
-	v3 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v3"
-	v4 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v4"
-	v5 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v5"
-	v6 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v6"
-	v7 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v7"
-	v8 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v8"
-	v9 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v9"
-	_ "github.com/osmosis-labs/osmosis/v26/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v26/x/mint"
+	"github.com/osmosis-labs/osmosis/v27/app/keepers"
+	"github.com/osmosis-labs/osmosis/v27/app/upgrades"
+	v10 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v10"
+	v11 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v11"
+	v12 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v12"
+	v13 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v13"
+	v14 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v14"
+	v15 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v15"
+	v16 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v16"
+	v17 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v17"
+	v18 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v18"
+	v19 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v19"
+	v20 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v20"
+	v21 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v21"
+	v22 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v22"
+	v23 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v23"
+	v24 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v24"
+	v25 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v25"
+	v26 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v26"
+	v27 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v27"
+	v3 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v3"
+	v4 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v4"
+	v5 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v5"
+	v6 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v6"
+	v7 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v7"
+	v8 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v8"
+	v9 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v9"
+	_ "github.com/osmosis-labs/osmosis/v27/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v27/x/mint"
 
 	blocksdkabci "github.com/skip-mev/block-sdk/v2/abci"
 	"github.com/skip-mev/block-sdk/v2/abci/checktx"
@@ -152,14 +153,14 @@ import (
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 
-	clclient "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/client"
-	cwpoolclient "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/client"
-	gammclient "github.com/osmosis-labs/osmosis/v26/x/gamm/client"
-	incentivesclient "github.com/osmosis-labs/osmosis/v26/x/incentives/client"
-	poolincentivesclient "github.com/osmosis-labs/osmosis/v26/x/pool-incentives/client"
-	poolmanagerclient "github.com/osmosis-labs/osmosis/v26/x/poolmanager/client"
-	superfluidclient "github.com/osmosis-labs/osmosis/v26/x/superfluid/client"
-	txfeesclient "github.com/osmosis-labs/osmosis/v26/x/txfees/client"
+	clclient "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/client"
+	cwpoolclient "github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool/client"
+	gammclient "github.com/osmosis-labs/osmosis/v27/x/gamm/client"
+	incentivesclient "github.com/osmosis-labs/osmosis/v27/x/incentives/client"
+	poolincentivesclient "github.com/osmosis-labs/osmosis/v27/x/pool-incentives/client"
+	poolmanagerclient "github.com/osmosis-labs/osmosis/v27/x/poolmanager/client"
+	superfluidclient "github.com/osmosis-labs/osmosis/v27/x/superfluid/client"
+	txfeesclient "github.com/osmosis-labs/osmosis/v27/x/txfees/client"
 )
 
 const appName = "OsmosisApp"
@@ -339,7 +340,22 @@ func NewOsmosisApp(
 		ibcWasmConfig,
 	)
 
+	// Initialize the config object for the SQS ingester
 	sqsConfig := sqs.NewConfigFromOptions(appOpts)
+
+	// Initialize the config object for the indexer
+	indexerConfig := indexer.NewConfigFromOptions(appOpts)
+
+	var nodeStatusChecker commonservice.NodeStatusChecker
+	if sqsConfig.IsEnabled || indexerConfig.IsEnabled {
+		// Note: address can be moved to config in the future if needed.
+		rpcAddress, ok := appOpts.Get(rpcAddressConfigName).(string)
+		if !ok {
+			panic(fmt.Sprintf("failed to retrieve %s from config.toml", rpcAddressConfigName))
+		}
+		// Create node status checker to be used by sqs and indexer streaming services.
+		nodeStatusChecker = commonservice.NewNodeStatusChecker(rpcAddress)
+	}
 
 	streamingServices := []storetypes.ABCIListener{}
 
@@ -373,13 +389,6 @@ func NewOsmosisApp(
 		// Create write listeners for the SQS service.
 		writeListeners, storeKeyMap := getSQSServiceWriteListeners(app, appCodec, poolTracker, app.WasmKeeper)
 
-		// Note: address can be moved to config in the future if needed.
-		rpcAddress, ok := appOpts.Get(rpcAddressConfigName).(string)
-		if !ok {
-			panic(fmt.Sprintf("failed to retrieve %s from config.toml", rpcAddressConfigName))
-		}
-		nodeStatusChecker := sqsservice.NewNodeStatusChecker(rpcAddress)
-
 		// Create the SQS streaming service by setting up the write listeners,
 		// the SQS ingester, and the pool tracker.
 		blockUpdatesProcessUtils := &commondomain.BlockUpdateProcessUtils{
@@ -390,9 +399,6 @@ func NewOsmosisApp(
 
 		streamingServices = append(streamingServices, sqsStreamingService)
 	}
-
-	// Initialize the config object for the indexer
-	indexerConfig := indexer.NewConfigFromOptions(appOpts)
 
 	// initialize indexer if enabled
 	if indexerConfig.IsEnabled {
@@ -433,7 +439,7 @@ func NewOsmosisApp(
 			StoreKeyMap:    storeKeyMap,
 		}
 		poolExtractor := poolextractor.New(poolKeepers, poolTracker)
-		indexerStreamingService := indexerservice.New(blockUpdatesProcessUtils, blockProcessStrategyManager, indexerPublisher, storeKeyMap, poolExtractor, poolTracker, keepers, app.GetTxConfig().TxDecoder(), logger)
+		indexerStreamingService := indexerservice.New(blockUpdatesProcessUtils, blockProcessStrategyManager, indexerPublisher, storeKeyMap, poolExtractor, poolTracker, keepers, app.GetTxConfig().TxDecoder(), nodeStatusChecker, logger)
 
 		// Register the SQS streaming service with the app.
 		streamingServices = append(streamingServices, indexerStreamingService)

@@ -1,12 +1,12 @@
-package commondomain_test
+package domain_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
-	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
+	commondomain "github.com/osmosis-labs/osmosis/v27/ingest/common/domain"
 )
 
 type CommonDomainTestSuite struct {

@@ -1,7 +1,7 @@
 keeper:
-  path: "github.com/osmosis-labs/osmosis/v26/x/ibc-rate-limit"
+  path: "github.com/osmosis-labs/osmosis/v27/x/ibc-rate-limit"
   struct: "Keeper"
-client_path: "github.com/osmosis-labs/osmosis/v26/x/ibc-rate-limit/client"
+client_path: "github.com/osmosis-labs/osmosis/v27/x/ibc-rate-limit/client"
 queries:
   Params:
     proto_wrapper:

@@ -9,7 +9,7 @@ import (
 	sqscosmwasmpool "github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v27/ingest/common/domain"
 )
 
 const (

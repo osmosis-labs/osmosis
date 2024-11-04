@@ -1,9 +1,9 @@
-package commondomain
+package domain
 
 import (
 	"time"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
 )
 
 // PoolCreation contains the information about a pool creation.

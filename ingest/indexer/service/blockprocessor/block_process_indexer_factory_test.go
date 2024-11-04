@@ -5,12 +5,12 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
-	commondomain "github.com/osmosis-labs/osmosis/v26/ingest/common/domain"
-	commonmocks "github.com/osmosis-labs/osmosis/v26/ingest/common/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain"
-	"github.com/osmosis-labs/osmosis/v26/ingest/indexer/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v26/ingest/indexer/service/blockprocessor"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
+	commondomain "github.com/osmosis-labs/osmosis/v27/ingest/common/domain"
+	commonmocks "github.com/osmosis-labs/osmosis/v27/ingest/common/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v27/ingest/indexer/domain"
+	"github.com/osmosis-labs/osmosis/v27/ingest/indexer/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v27/ingest/indexer/service/blockprocessor"
 )
 
 type IndexerBlockProcessorTestSuite struct {
@@ -55,8 +55,11 @@ func (suite *IndexerBlockProcessorTestSuite) TestNewBlockProcessor() {
 				blockStrategyManager.MarkInitialDataIngested()
 			}
 
+			// Initialize the node status checker mock
+			nodeStatusCheckerMock := &commonmocks.NodeStatusCheckerMock{}
+
 			// System under test
-			newBlockProcessor := blockprocessor.NewBlockProcessor(blockStrategyManager, publisherMock, poolsExtracter, domain.Keepers{}, nil)
+			newBlockProcessor := blockprocessor.NewBlockProcessor(blockStrategyManager, publisherMock, poolsExtracter, domain.Keepers{}, nodeStatusCheckerMock, nil)
 
 			// Check if the block processor is a full block processor
 			isFullBlockProcessor := newBlockProcessor.IsFullBlockProcessor()

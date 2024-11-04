@@ -191,3 +191,11 @@ pull_request_rules:
       backport:
         branches:
           - v26.x
+  - name: backport patches to v27.x branch
+    conditions:
+      - base=main
+      - label=A:backport/v27.x
+    actions:
+      backport:
+        branches:
+          - v27.x
