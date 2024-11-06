@@ -67,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8563](https://github.com/osmosis-labs/osmosis/pull/8755) [x/concentratedliquidity]: Fix Incorrect Event Emission
 * [#8765](https://github.com/osmosis-labs/osmosis/pull/8765) fix concurrency issue in go test(x/lockup)
 * [#8791](https://github.com/osmosis-labs/osmosis/pull/8791) fix: superfluid log for error that should be ignored
+* [#8803](https://github.com/osmosis-labs/osmosis/pull/8803) fix: nhooyr.io/websocket dependency (moved permanently)
 
 ### State Machine Breaking
 
@@ -110,7 +111,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8543](https://github.com/osmosis-labs/osmosis/pull/8543) Add OTEL wiring and new configs in app.toml
 * [#8566](https://github.com/osmosis-labs/osmosis/pull/8566) Minor speedup to CalcExitCFMM shares
 * [#8665](https://github.com/osmosis-labs/osmosis/pull/8665) fix: smart account signing checktx error
-* [#](https://github.com/osmosis-labs/osmosis/pull/) fix: nhooyr.io/websocket dependency (moved permanently)
 
 ## v25.2.1
 * [#8546](https://github.com/osmosis-labs/osmosis/pull/8546) feat: reduce commit timeout to 500ms to enable faster blocks, and timeout propose to 1.8s
