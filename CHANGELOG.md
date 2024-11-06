@@ -110,6 +110,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8543](https://github.com/osmosis-labs/osmosis/pull/8543) Add OTEL wiring and new configs in app.toml
 * [#8566](https://github.com/osmosis-labs/osmosis/pull/8566) Minor speedup to CalcExitCFMM shares
 * [#8665](https://github.com/osmosis-labs/osmosis/pull/8665) fix: smart account signing checktx error
+* [#](https://github.com/osmosis-labs/osmosis/pull/) fix: nhooyr.io/websocket dependency (moved permanently)
 
 ## v25.2.1
 * [#8546](https://github.com/osmosis-labs/osmosis/pull/8546) feat: reduce commit timeout to 500ms to enable faster blocks, and timeout propose to 1.8s
