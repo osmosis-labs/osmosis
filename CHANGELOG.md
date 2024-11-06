@@ -45,12 +45,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### State Breaking
 
 * [#8682](https://github.com/osmosis-labs/osmosis/pull/8682) chore: bump cosmwasm-optimizer
+* [#8732](https://github.com/osmosis-labs/osmosis/pull/8732) fix: iterate delegations continue instead of erroring
 * [#8734](https://github.com/osmosis-labs/osmosis/pull/8734) chore: update cosmwasm vm
 * [#8777](https://github.com/osmosis-labs/osmosis/pull/8777) fix: state export for gov module constitution
 * [#8751](https://github.com/osmosis-labs/osmosis/pull/8751) fix: supply offsets for osmo token
 * [#8764](https://github.com/osmosis-labs/osmosis/pull/8764) chore: add cosmwasm 1_3 feature
 * [#8779](https://github.com/osmosis-labs/osmosis/pull/8779) chore: bump cometbft/cosmos-sdk versions
 * [#8801](https://github.com/osmosis-labs/osmosis/pull/8801) chore: update tagged submodules for v27
+
+### API
+
+* [#8804](https://github.com/osmosis-labs/osmosis/pull/8804) chore: cleanup `app` package unused globals: `WasmProposalsEnabled`, `EnableSpecificWasmProposals`, `EmptyWasmOpts`.
 
 ### Config
 
@@ -67,10 +72,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8563](https://github.com/osmosis-labs/osmosis/pull/8755) [x/concentratedliquidity]: Fix Incorrect Event Emission
 * [#8765](https://github.com/osmosis-labs/osmosis/pull/8765) fix concurrency issue in go test(x/lockup)
 * [#8791](https://github.com/osmosis-labs/osmosis/pull/8791) fix: superfluid log for error that should be ignored
-
-### State Machine Breaking
-
-* [#8732](https://github.com/osmosis-labs/osmosis/pull/8732) fix: iterate delegations continue instead of erroring
 
 ## v26.0.1
 
