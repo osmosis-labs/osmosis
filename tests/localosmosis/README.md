@@ -98,13 +98,15 @@ Running an osmosis network with mainnet state is now as easy as setting up a sta
 
    - **Mainnet is on version X, and you want to create a testnet on version X+1.**
 
-     On version X, run:
+     On version X, build binary and run:
 
       ```bash
-      osmosisd in-place-testnet localosmosis osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj --trigger-testnet-upgrade
+      osmosisd in-place-testnet localosmosis osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj --trigger-testnet-upgrade=vXX
       ```
 
-      Where the first input is the desired chain-id of the new network and the second input is the desired validator operator address (where you vote from).
+      where vXX indicates the next version that mainnet needs to be upgraded to. For exmaple when current mainnet state is at v26, the flag value should be `--trigger-testnet-upgrade=v27`.
+
+      The first input is the desired chain-id of the new network and the second input is the desired validator operator address (where you vote from).
       The address provided above is included in the localosmosis keyring under the name 'val'.
 
      The network will start and hit 10 blocks, at which point the upgrade will trigger and the network will halt.
@@ -116,6 +118,10 @@ Running an osmosis network with mainnet state is now as easy as setting up a sta
       ```
 
 You now have a network you own with the mainnet state on version X+1.
+
+
+The settings for in place testnet are done in https://github.com/osmosis-labs/osmosis/blob/bb7a94e2561cc63b60ee76ec71a3e04e9688b22c/app/app.go#L773. Modify the parameters in `InitOsmosisAppForTestnet` to modify in place testnet parameters. For example, if you were to modify epoch hours, you would be modifying https://github.com/osmosis-labs/osmosis/blob/bb7a94e2561cc63b60ee76ec71a3e04e9688b22c/app/app.go#L942-L967 .
+
 
 ## LocalOsmosis Accounts and Keys
 
