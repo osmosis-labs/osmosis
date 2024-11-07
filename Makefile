@@ -173,7 +173,7 @@ go-mock-update:
 ###                                Release                                  ###
 ###############################################################################
 GORELEASER_IMAGE := ghcr.io/goreleaser/goreleaser-cross:v$(GO_VERSION)
-COSMWASM_VERSION := $(shell go list -m github.com/CosmWasm/wasmvm | sed 's/.* //')
+COSMWASM_VERSION := $(shell go list -m github.com/CosmWasm/wasmvm/v2 | sed 's/.* //')
 
 ifdef GITHUB_TOKEN
 release:

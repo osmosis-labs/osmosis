@@ -1,67 +1,11 @@
+version: 2
+
 project_name: symphonyd
 
 env:
   - CGO_ENABLED=1
 
 builds:
-  - id: symphonyd-darwin-amd64
-    main: ./cmd/symphonyd/main.go
-    binary: symphonyd
-    hooks:
-      pre:
-        - wget https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvmstatic_darwin.a -O /lib/libwasmvmstatic_darwin.a
-    env:
-      - CC=o64-clang
-      - CGO_LDFLAGS=-L/lib
-    goos:
-      - darwin
-    goarch:
-      - amd64
-    flags:
-      - -mod=readonly
-      - -trimpath
-    ldflags:
-      - -X github.com/cosmos/cosmos-sdk/version.Name=symphony
-      - -X github.com/cosmos/cosmos-sdk/version.AppName=symphonyd
-      - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }}
-      - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
-      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,static_wasm
-      - -w -s
-      - -linkmode=external
-    tags:
-      - netgo
-      - ledger
-      - static_wasm
-
-  - id: symphonyd-darwin-arm64
-    main: ./cmd/symphonyd/main.go
-    binary: symphonyd
-    hooks:
-      pre:
-        - wget https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvmstatic_darwin.a -O /lib/libwasmvmstatic_darwin.a
-    env:
-      - CC=oa64-clang
-      - CGO_LDFLAGS=-L/lib
-    goos:
-      - darwin
-    goarch:
-      - arm64
-    flags:
-      - -mod=readonly
-      - -trimpath
-    ldflags:
-      - -X github.com/cosmos/cosmos-sdk/version.Name=symphony
-      - -X github.com/cosmos/cosmos-sdk/version.AppName=symphonyd
-      - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }}
-      - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
-      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,static_wasm
-      - -w -s
-      - -linkmode=external
-    tags:
-      - netgo
-      - ledger
-      - static_wasm
-
   - id: symphonyd-linux-amd64
     main: ./cmd/symphonyd
     binary: symphonyd
@@ -110,7 +54,7 @@ builds:
     ldflags:
       - -X github.com/cosmos/cosmos-sdk/version.Name=symphony
       - -X github.com/cosmos/cosmos-sdk/version.AppName=symphonyd
-      - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }} 
+      - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }}
       - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
       - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,muslc,osusergo
       - -w -s
@@ -121,13 +65,6 @@ builds:
       - ledger
       - muslc
       - osusergo
-
-universal_binaries:
-  - id: symphonyd-darwin-universal
-    ids:
-      - symphonyd-darwin-amd64
-      - symphonyd-darwin-arm64
-    replace: false
 
 archives:
   - id: zipped
@@ -152,8 +89,6 @@ archives:
     format: binary
     files:
       - none*
-snapshot:
-  name_template: 'v0.3.0'
 
 checksum:
   name_template: "sha256sum.txt"
@@ -161,12 +96,12 @@ checksum:
 
 # Docs: https://goreleaser.com/customization/changelog/
 changelog:
-  skip: true
+  disable: true
 
 # Docs: https://goreleaser.com/customization/release/
 release:
   github:
-    owner: osmosis-labs
+    owner: symphony-labs
     name: symphony
   replace_existing_draft: true
   header: |
@@ -174,7 +109,7 @@ release:
 
     ## Changelog
 
-    See the full changelog [here](https://github.com/osmosis-labs/osmosis/blob/v{{ .Version }}/CHANGELOG.md)
+    See the full changelog [here](https://github.com/symphony-labs/symphony/blob/v{{ .Version }}/CHANGELOG.md)
 
     ## ⚡️ Binaries
 
@@ -185,8 +120,8 @@ release:
     If you prefer to build from source, you can use the following commands:
 
     ````bash
-    git clone https://github.com/osmosis-labs/osmosis
-    cd osmosis && git checkout v{{ .Version }}
+    git clone https://github.com/symphony-labs/symphony
+    cd symphony && git checkout v{{ .Version }}
     make install
     ````
 
@@ -197,34 +132,34 @@ release:
 
     | Image Name                                   | Base                                 | Description                       |
     |----------------------------------------------|--------------------------------------|-----------------------------------|
-    | `osmolabs/osmosis:{{ .Version }}`            | `distroless/static-debian11`         | Default image based on Distroless |
-    | `osmolabs/osmosis:{{ .Version }}-distroless` | `distroless/static-debian11`         | Distroless image (same as above)  |
-    | `osmolabs/osmosis:{{ .Version }}-nonroot`    | `distroless/static-debian11:nonroot` | Distroless non-root image         |
-    | `osmolabs/osmosis:{{ .Version }}-alpine`     | `alpine`                             | Alpine image                      |
+    | `osmolabs/symphony:{{ .Version }}`            | `distroless/static-debian11`         | Default image based on Distroless |
+    | `osmolabs/symphony:{{ .Version }}-distroless` | `distroless/static-debian11`         | Distroless image (same as above)  |
+    | `osmolabs/symphony:{{ .Version }}-nonroot`    | `distroless/static-debian11:nonroot` | Distroless non-root image         |
+    | `osmolabs/symphony:{{ .Version }}-alpine`     | `alpine`                             | Alpine image                      |
 
     Example run:
 
     ```bash
-    docker run osmolabs/osmosis:{{ .Version }} version
+    docker run osmolabs/symphony:{{ .Version }} version
     # v{{ .Version }}
     ````
 
     All the images support `arm64` and `amd64` architectures.
 
-  name_template: "Osmosis v{{.Version}} 🧪"
+  name_template: "symphony v{{.Version}} 🧪"
   mode: replace
   draft: true
-
-# Docs: https://goreleaser.com/customization/announce/
-# We could automatically announce the release in
-# - discord
-# - slack
-# - twitter
-# - webhooks
-# - telegram
-# - reddit
-#
-# announce:
+  
+  # Docs: https://goreleaser.com/customization/announce/
+  # We could automatically announce the release in
+  # - discord
+  # - slack
+  # - twitter
+  # - webhooks
+  # - telegram
+  # - reddit
+  #
+  # announce:
   # discord:
   #   enabled: true
   #   message_template: 'New {{.Tag}} is out!'
