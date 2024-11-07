@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/libs/bytes"
-	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
@@ -142,7 +142,7 @@ func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick strin
 
 	n.LogActionF("successfully created concentrated position from %s to %s", lowerTick, upperTick)
 
-	return uint64(positionID), sdk.MustNewDecFromStr(liquidityStr)
+	return uint64(positionID), osmomath.MustNewDecFromStr(liquidityStr)
 }
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) int {

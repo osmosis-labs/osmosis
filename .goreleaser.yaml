@@ -11,7 +11,7 @@ builds:
     binary: symphonyd
     hooks:
       pre:
-        - wget https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.x86_64.a -O /usr/lib/x86_64-linux-gnu/libwasmvm_muslc.a
+        - wget https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.x86_64.a -O /usr/lib/x86_64-linux-gnu/libwasmvm_muslc.x86_64.a
     goos:
       - linux
     goarch:
@@ -41,7 +41,7 @@ builds:
     binary: symphonyd
     hooks:
       pre:
-        - wget https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.aarch64.a -O /usr/lib/aarch64-linux-gnu/libwasmvm_muslc.a
+        - wget https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.COSMWASM_VERSION }}/libwasmvm_muslc.aarch64.a -O /usr/lib/aarch64-linux-gnu/libwasmvm_muslc.aarch64.a
     goos:
       - linux
     goarch:
