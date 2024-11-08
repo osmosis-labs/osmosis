@@ -1,6 +1,6 @@
 module github.com/osmosis-labs/osmosis/v27
 
-go 1.22.4
+go 1.22.7
 
 require (
 	cloud.google.com/go/pubsub v1.44.0
@@ -19,7 +19,7 @@ require (
 	github.com/CosmWasm/wasmd v0.53.0
 	github.com/CosmWasm/wasmvm/v2 v2.1.3
 	github.com/cometbft/cometbft v0.38.13
-	github.com/cometbft/cometbft-db v0.12.0
+	github.com/cometbft/cometbft-db v0.14.1
 	github.com/cosmos/cosmos-db v1.0.2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.50.10
@@ -89,7 +89,6 @@ require (
 	github.com/aws/aws-sdk-go v1.44.327 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/bits-and-blooms/bitset v1.8.0 // indirect
-	github.com/btcsuite/btcd/btcec/v2 v2.3.4 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
 	github.com/cockroachdb/errors v1.11.3 // indirect
@@ -105,7 +104,7 @@ require (
 	github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect
 	github.com/creachadair/atomicfile v0.3.1 // indirect
 	github.com/creachadair/tomledit v0.0.24 // indirect
-	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect
 	github.com/dgraph-io/badger/v4 v4.2.0 // indirect
 	github.com/distribution/reference v0.5.0 // indirect
 	github.com/emicklei/dot v1.6.2 // indirect
@@ -235,16 +234,16 @@ require (
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/opencontainers/runc v1.1.14 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
-	github.com/petermattis/goid v0.0.0-20231207134359-e60b3f734c67 // indirect
+	github.com/petermattis/goid v0.0.0-20240813172612-4fcff4a6cae7 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.57.0 // indirect
+	github.com/prometheus/common v0.60.1 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rs/cors v1.11.1 // indirect
 	github.com/rs/zerolog v1.33.0 // indirect
-	github.com/sasha-s/go-deadlock v0.3.1 // indirect
+	github.com/sasha-s/go-deadlock v0.3.5 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
@@ -281,10 +280,10 @@ replace (
 	// Also, snapshot nodes need to have all fast nodes enabled in order to prune quickly.
 	cosmossdk.io/store => github.com/osmosis-labs/cosmos-sdk/store v0.1.0-alpha.1.0.20240509221435-b8feb2ffb728
 
-	// Direct cometbft branch link: https://github.com/osmosis-labs/cometbft/tree/osmo-v27/0.38.12, current branch: osmo-v27/v0.38.12
-	// Direct commit link: https://github.com/osmosis-labs/cometbft/commit/2305cecebc3aadee694c6d5e05f9d34b5630f564
-	// Direct tag link: https://github.com/osmosis-labs/cometbft/releases/tag/v0.38.12-v27-osmo-1
-	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.38.12-v27-osmo-1
+	// Direct cometbft branch link: https://github.com/osmosis-labs/cometbft/tree/osmo-v27/0.38.15, current branch: osmo-v27/v0.38.15
+	// Direct commit link: https://github.com/osmosis-labs/cometbft/commit/08ef650391304dae90486e906b59ded36cd16e49
+	// Direct tag link: https://github.com/osmosis-labs/cometbft/releases/tag/v0.38.15-v27-osmo-1
+	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.38.15-v27-osmo-1
 
 	// Direct cosmos-sdk branch link: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v27/0.50.10, current branch: osmo-v27/0.50.10
 	// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/33e0aaf2b1840a8bca4f1b2292700b6f15e5fad7
