@@ -29,7 +29,7 @@ func computeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget bool, amoun
 		return osmomath.ZeroDec()
 	} else if spreadFactor.IsNegative() {
 		// This should never happen but is added as a defense-in-depth measure.
-		panic(fmt.Errorf("spread factor must be non-negative, was (%s)", spreadFactor))
+		panic(fmt.Errorf("spread factor must be non-negative, was (%s), if figure is more than -1 this panic is known and not an issue", spreadFactor))
 	}
 
 	var spreadRewardChargeTotal osmomath.Dec
@@ -50,7 +50,7 @@ func computeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget bool, amoun
 
 	if spreadRewardChargeTotal.IsNegative() {
 		// This should never happen but is added as a defense-in-depth measure.
-		panic(fmt.Errorf("spread factor charge must be non-negative, was (%s)", spreadRewardChargeTotal))
+		panic(fmt.Errorf("spread factor charge must be non-negative, was (%s), if figure is more than -1 this panic is known and not an issue", spreadRewardChargeTotal))
 	}
 
 	return spreadRewardChargeTotal
