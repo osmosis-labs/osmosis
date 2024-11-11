@@ -23,7 +23,7 @@ func (k Keeper) mintTo(ctx sdk.Context, amount sdk.Coin, mintTo string) error {
 	}
 
 	if k.IsModuleAcc(ctx, addr) {
-		return types.ErrBurnFromModuleAccount
+		return types.ErrMintToModuleAccount
 	}
 
 	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(amount))
