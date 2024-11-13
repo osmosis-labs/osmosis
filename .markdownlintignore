@@ -39,3 +39,4 @@ x/gamm/spec/01_concepts.md
 x/gamm/README.md
 x/gamm/breaking_changes_notes.md
 x/epochs/spec/04_keeper.md
+tests/localosmosis/README.md
