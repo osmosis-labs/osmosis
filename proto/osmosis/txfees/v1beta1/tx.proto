@@ -9,6 +9,8 @@ import "cosmos/msg/v1/msg.proto";
 option go_package = "github.com/osmosis-labs/osmosis/v27/x/txfees/types";
 
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   rpc SetFeeTokens(MsgSetFeeTokens) returns (MsgSetFeeTokensResponse);
 }
 

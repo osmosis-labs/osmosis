@@ -8,6 +8,8 @@ option go_package = "github.com/osmosis-labs/osmosis/v27/x/smart-account/types";
 
 // Msg defines the Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   rpc AddAuthenticator(MsgAddAuthenticator)
       returns (MsgAddAuthenticatorResponse);
   rpc RemoveAuthenticator(MsgRemoveAuthenticator)

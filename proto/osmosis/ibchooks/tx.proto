@@ -9,6 +9,8 @@ option go_package = "github.com/osmosis-labs/osmosis/v27/x/ibc-hooks/types";
 
 // Msg defines the Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // EmitIBCAck checks the sender can emit the ack and writes the IBC
   // acknowledgement
   rpc EmitIBCAck(MsgEmitIBCAck) returns (MsgEmitIBCAckResponse);

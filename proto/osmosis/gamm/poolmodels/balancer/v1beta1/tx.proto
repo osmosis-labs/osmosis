@@ -11,6 +11,8 @@ import "cosmos/msg/v1/msg.proto";
 option go_package = "github.com/osmosis-labs/osmosis/v27/x/gamm/pool-models/balancer";
 
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   rpc CreateBalancerPool(MsgCreateBalancerPool)
       returns (MsgCreateBalancerPoolResponse);
 }

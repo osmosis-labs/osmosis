@@ -12,6 +12,8 @@ import "cosmos/msg/v1/msg.proto";
 option go_package = "github.com/osmosis-labs/osmosis/v27/x/incentives/types";
 
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   rpc CreateGauge(MsgCreateGauge) returns (MsgCreateGaugeResponse);
   rpc AddToGauge(MsgAddToGauge) returns (MsgAddToGaugeResponse);
   rpc CreateGroup(MsgCreateGroup) returns (MsgCreateGroupResponse);

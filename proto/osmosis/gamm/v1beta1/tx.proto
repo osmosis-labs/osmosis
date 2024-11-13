@@ -10,6 +10,8 @@ import "cosmos/msg/v1/msg.proto";
 option go_package = "github.com/osmosis-labs/osmosis/v27/x/gamm/types";
 
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   rpc JoinPool(MsgJoinPool) returns (MsgJoinPoolResponse);
   rpc ExitPool(MsgExitPool) returns (MsgExitPoolResponse);
   rpc SwapExactAmountIn(MsgSwapExactAmountIn)

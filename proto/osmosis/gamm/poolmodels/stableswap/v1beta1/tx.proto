@@ -10,6 +10,8 @@ import "cosmos/msg/v1/msg.proto";
 option go_package = "github.com/osmosis-labs/osmosis/v27/x/gamm/pool-models/stableswap";
 
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   rpc CreateStableswapPool(MsgCreateStableswapPool)
       returns (MsgCreateStableswapPoolResponse);
   rpc StableSwapAdjustScalingFactors(MsgStableSwapAdjustScalingFactors)

@@ -13,6 +13,8 @@ option go_package = "github.com/osmosis-labs/osmosis/v27/x/superfluid/types";
 
 // Msg defines the Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // Execute superfluid delegation for a lockup
   rpc SuperfluidDelegate(MsgSuperfluidDelegate)
       returns (MsgSuperfluidDelegateResponse);

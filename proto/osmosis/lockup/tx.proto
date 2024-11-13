@@ -12,6 +12,8 @@ option go_package = "github.com/osmosis-labs/osmosis/v27/x/lockup/types";
 
 // Msg defines the Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // LockTokens lock tokens
   rpc LockTokens(MsgLockTokens) returns (MsgLockTokensResponse);
   // BeginUnlockingAll begin unlocking all tokens

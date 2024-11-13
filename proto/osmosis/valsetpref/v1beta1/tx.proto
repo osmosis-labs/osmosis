@@ -12,6 +12,8 @@ option go_package = "github.com/osmosis-labs/osmosis/v27/x/valset-pref/types";
 
 // Msg defines the valset-pref module's gRPC message service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // SetValidatorSetPreference creates a set of validator preference.
   // This message will process both create + update request.
   rpc SetValidatorSetPreference(MsgSetValidatorSetPreference)

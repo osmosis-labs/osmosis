@@ -11,6 +11,8 @@ import "cosmos/msg/v1/msg.proto";
 option go_package = "github.com/osmosis-labs/osmosis/v27/x/protorev/types";
 
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // SetHotRoutes sets the hot routes that will be explored when creating
   // cyclic arbitrage routes. Can only be called by the admin account.
   rpc SetHotRoutes(MsgSetHotRoutes) returns (MsgSetHotRoutesResponse) {

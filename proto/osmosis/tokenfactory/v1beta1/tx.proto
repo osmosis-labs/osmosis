@@ -11,6 +11,8 @@ option go_package = "github.com/osmosis-labs/osmosis/v27/x/tokenfactory/types";
 
 // Msg defines the tokefactory module's gRPC message service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   rpc CreateDenom(MsgCreateDenom) returns (MsgCreateDenomResponse);
   rpc Mint(MsgMint) returns (MsgMintResponse);
   rpc Burn(MsgBurn) returns (MsgBurnResponse);
