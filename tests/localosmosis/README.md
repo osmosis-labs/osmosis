@@ -79,7 +79,7 @@ make localnet-clean
 
 Running an osmosis network with mainnet state is now as easy as setting up a stateless localnet.
 
-1. Set up a mainnet node and stop it at whatever height you want to fork the network at.
+1. Set up a mainnet node, allowing it to start and sync a few blocks. Then, stop it at the desired height where you want to fork the network.
 
 2. There are now two options you can choose from:
 
@@ -98,13 +98,15 @@ Running an osmosis network with mainnet state is now as easy as setting up a sta
 
    - **Mainnet is on version X, and you want to create a testnet on version X+1.**
 
-     On version X, run:
+     On version X, build binary and run:
 
       ```bash
-      osmosisd in-place-testnet localosmosis osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj --trigger-testnet-upgrade
+      osmosisd in-place-testnet localosmosis osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj --trigger-testnet-upgrade=vXX
       ```
 
-      Where the first input is the desired chain-id of the new network and the second input is the desired validator operator address (where you vote from).
+      where vXX indicates the next version that mainnet needs to be upgraded to. For example when current mainnet state is at v26, the flag value should be `--trigger-testnet-upgrade=v27`.
+
+      The first input is the desired chain-id of the new network and the second input is the desired validator operator address (where you vote from).
       The address provided above is included in the localosmosis keyring under the name 'val'.
 
      The network will start and hit 10 blocks, at which point the upgrade will trigger and the network will halt.
@@ -116,6 +118,21 @@ Running an osmosis network with mainnet state is now as easy as setting up a sta
       ```
 
 You now have a network you own with the mainnet state on version X+1.
+
+### Removing unnecessary log lines 
+Running in-place-testnet would be resulting in noise in the log lines that looks something like this.
+```
+{"level": "info", "module": "server", "module": "consensus", "err": "cannot find validator 122 in valSet of size 1: invalid valid ator index", "time": "2024-10-21T21:34:30Z" ,"message": "failed attempting to add vote"} {"level": "error" , "module": "server", "module":" consensus" ,"height" :22731539, "round" :0, "peer": "27e14df66c9e4cd6b176b@dcabadfa 96750f911", "msg_type": "*consensus. VoteMessage", "err": "error adding vote", "time": "2024-10-21T21:34:307","message":"failed to process message"} {"level": "info" ,"module": "server"
+', "module": "consensus", "err": "cannot find validator 107 in valSet of size 1: invalid valid
+ator index", "time": "2024-10-21T21:34:30Z", "message": "failed attempting to add vote"}
+```
+
+To remove the noise, remove existing addrbook.json from config folder, and replace it with an empty json.
+
+### Changing In Place Testnet Parameters
+
+The settings for in place testnet are done in https://github.com/osmosis-labs/osmosis/blob/bb7a94e2561cc63b60ee76ec71a3e04e9688b22c/app/app.go#L773. Modify the parameters in `InitOsmosisAppForTestnet` to modify in place testnet parameters. For example, if you were to modify epoch hours, you would be modifying https://github.com/osmosis-labs/osmosis/blob/bb7a94e2561cc63b60ee76ec71a3e04e9688b22c/app/app.go#L942-L967 .
+
 
 ## LocalOsmosis Accounts and Keys
 
