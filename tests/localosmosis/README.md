@@ -79,7 +79,7 @@ make localnet-clean
 
 Running an osmosis network with mainnet state is now as easy as setting up a stateless localnet.
 
-1. Set up a mainnet node and stop it at whatever height you want to fork the network at.
+1. Set up a mainnet node, allowing it to start and sync a few blocks. Then, stop it at the desired height where you want to fork the network.
 
 2. There are now two options you can choose from:
 
