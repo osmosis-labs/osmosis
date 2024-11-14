@@ -336,13 +336,13 @@ func DeductFees(txFeesKeeper types.TxFeesKeeper, bankKeeper types.BankKeeper, ct
 		// sends to FeeCollectorName module account, which distributes staking rewards
 		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), authtypes.FeeCollectorName, fees)
 		if err != nil {
-			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, "insufficient funds: %v", err)
 		}
 	} else {
 		// sends to FeeCollectorForStakingRewardsName module account
 		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.NonNativeTxFeeCollectorName, fees)
 		if err != nil {
-			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, "insufficient funds: %v", err)
 		}
 	}
 
