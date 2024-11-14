@@ -2,7 +2,7 @@
 
 ## Overview
 
-- **v27 Proposal**: [Proposal Page](https://www.mintscan.io/osmosis/proposals/T.B.D)
+- **v27 Proposal**: [Proposal Page](https://www.mintscan.io/osmosis/proposals/861)
 - **v27 Upgrade Block Height**: 24250100
 - **v27 Upgrade Countdown**: [Block Countdown](https://www.mintscan.io/osmosis/blocks/24250100)
 
