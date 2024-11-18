@@ -42,6 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### State Compatible
+* [#8831](https://github.com/osmosis-labs/osmosis/pull/8831) chore: bump cometbft
+
 ## v27.0.0
 
 ### State Breaking
