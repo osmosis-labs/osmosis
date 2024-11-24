@@ -384,7 +384,10 @@ func NewOsmosisApp(
 		blockProcessStrategyManager := commondomain.NewBlockProcessStrategyManager()
 
 		// Create sqs grpc client
-		sqsGRPCClient := sqsservice.NewGRPCCLient(sqsConfig.GRPCIngestAddress, sqsConfig.GRPCIngestMaxCallSizeBytes, appCodec)
+		sqsGRPCClients := make([]domain.SQSGRPClient, len(sqsConfig.GRPCIngestAddress))
+		for i, grpcIngestAddress := range sqsConfig.GRPCIngestAddress {
+			sqsGRPCClients[i] = sqsservice.NewGRPCCLient(grpcIngestAddress, sqsConfig.GRPCIngestMaxCallSizeBytes, appCodec)
+		}
 
 		// Create write listeners for the SQS service.
 		writeListeners, storeKeyMap := getSQSServiceWriteListeners(app, appCodec, poolTracker, app.WasmKeeper)
@@ -395,7 +398,7 @@ func NewOsmosisApp(
 			WriteListeners: writeListeners,
 			StoreKeyMap:    storeKeyMap,
 		}
-		sqsStreamingService := sqsservice.New(blockUpdatesProcessUtils, poolExtractor, poolsTransformer, poolTracker, sqsGRPCClient, blockProcessStrategyManager, nodeStatusChecker)
+		sqsStreamingService := sqsservice.New(blockUpdatesProcessUtils, poolExtractor, poolsTransformer, poolTracker, sqsGRPCClients, blockProcessStrategyManager, nodeStatusChecker)
 
 		streamingServices = append(streamingServices, sqsStreamingService)
 	}

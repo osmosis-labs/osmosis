@@ -3,6 +3,9 @@ package service
 import (
 	"context"
 	"fmt"
+	"sync"
+
+	// "sync"
 	"time"
 
 	storetypes "cosmossdk.io/store/types"
@@ -23,7 +26,7 @@ var _ storetypes.ABCIListener = (*sqsStreamingService)(nil)
 // It does so by either processing the entire block data or only the pools that were changed in the block.
 // The service uses a pool tracker to keep track of the pools that were changed in the block.
 type sqsStreamingService struct {
-	grpcClient                  domain.SQSGRPClient
+	grpcClient                  []domain.SQSGRPClient
 	poolsExtractor              commondomain.PoolExtractor
 	poolsTransformer            domain.PoolsTransformer
 	poolTracker                 domain.BlockPoolUpdateTracker
@@ -39,7 +42,7 @@ type sqsStreamingService struct {
 // sqsIngester is an ingester that ingests the block data into SQS.
 // poolTracker is a tracker that tracks the pools that were changed in the block.
 // nodeStatusChecker is a checker that checks if the node is syncing.
-func New(blockUpdatesProcessUtil commondomain.BlockUpdateProcessUtilsI, poolsExtractor commondomain.PoolExtractor, poolsTransformer domain.PoolsTransformer, poolTracker domain.BlockPoolUpdateTracker, grpcClient domain.SQSGRPClient, blockProcessStrategyManager commondomain.BlockProcessStrategyManager, nodeStatusChecker domain.NodeStatusChecker) *sqsStreamingService {
+func New(blockUpdatesProcessUtil commondomain.BlockUpdateProcessUtilsI, poolsExtractor commondomain.PoolExtractor, poolsTransformer domain.PoolsTransformer, poolTracker domain.BlockPoolUpdateTracker, grpcClient []domain.SQSGRPClient, blockProcessStrategyManager commondomain.BlockProcessStrategyManager, nodeStatusChecker domain.NodeStatusChecker) *sqsStreamingService {
 	return &sqsStreamingService{
 		blockUpdatesProcessUtil:     blockUpdatesProcessUtil,
 		poolsExtractor:              poolsExtractor,
@@ -113,18 +116,24 @@ func (s *sqsStreamingService) processBlockRecoverError(ctx sdk.Context) (err err
 		}
 	}()
 
-	blockProcessor := blockprocessor.NewBlockProcessor(s.blockProcessStrategyManager, s.grpcClient, s.poolsExtractor, s.poolsTransformer, s.nodeStatusChecker, s.blockUpdatesProcessUtil)
+	var wg sync.WaitGroup
+	for _, client := range s.grpcClient {
+		wg.Add(1)
+		go func(c domain.SQSGRPClient) {
+			defer wg.Done()
+			blockProcessor := blockprocessor.NewBlockProcessor(s.blockProcessStrategyManager, client, s.poolsExtractor, s.poolsTransformer, s.nodeStatusChecker, s.blockUpdatesProcessUtil)
+			if err := blockProcessor.ProcessBlock(ctx); err != nil {
+				// Due to error, we set shouldProcessAllBlockData to true to reprocess the entire block.
+				// Be careful when changing this behavior.
+				s.blockProcessStrategyManager.MarkErrorObserved()
 
-	if err := blockProcessor.ProcessBlock(ctx); err != nil {
-		// Due to error, we set shouldProcessAllBlockData to true to reprocess the entire block.
-		// Be careful when changing this behavior.
-		s.blockProcessStrategyManager.MarkErrorObserved()
-
-		// Emit telemetry for the error.
-		emitFailureTelemetry(ctx, err, domain.SQSProcessBlockErrorMetricName)
-
-		return err
+				// Emit telemetry for the error.
+				emitFailureTelemetry(ctx, err, domain.SQSProcessBlockErrorMetricName)
+			}
+		}(client)
 	}
+
+	wg.Wait()
 
 	return nil
 }
