@@ -47,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8831](https://github.com/osmosis-labs/osmosis/pull/8831) chore: bump cometbft
 
 ### State Breaking
-* [8847](https://github.com/osmosis-labs/osmosis/pull/8847) fix: whitelisted protorev receiving module addresses 
+* [8847](https://github.com/osmosis-labs/osmosis/pull/8847) fix: whitelisted txfees receiving module addresses 
 
 ## v27.0.0
 

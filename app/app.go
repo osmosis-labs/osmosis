@@ -174,6 +174,7 @@ var (
 	maccPerms = moduleAccountPermissions
 
 	// module accounts that are allowed to receive tokens.
+	// NonNativeTxFeeCollectorName, TakerFeeCommunityPoolName, TakerFeeStakersName are added to unblock the txfees module at epoch
 	allowedReceivingModAcc = map[string]bool{protorevtypes.ModuleName: true, txfeestypes.NonNativeTxFeeCollectorName: true, txfeestypes.TakerFeeCommunityPoolName: true, txfeestypes.TakerFeeStakersName: true}
 
 	// TODO: Refactor wasm items into a wasm.go file
