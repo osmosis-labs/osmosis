@@ -161,6 +161,7 @@ import (
 	poolmanagerclient "github.com/osmosis-labs/osmosis/v27/x/poolmanager/client"
 	superfluidclient "github.com/osmosis-labs/osmosis/v27/x/superfluid/client"
 	txfeesclient "github.com/osmosis-labs/osmosis/v27/x/txfees/client"
+	txfeestypes "github.com/osmosis-labs/osmosis/v27/x/txfees/types"
 )
 
 const appName = "OsmosisApp"
@@ -173,7 +174,7 @@ var (
 	maccPerms = moduleAccountPermissions
 
 	// module accounts that are allowed to receive tokens.
-	allowedReceivingModAcc = map[string]bool{protorevtypes.ModuleName: true}
+	allowedReceivingModAcc = map[string]bool{protorevtypes.ModuleName: true, txfeestypes.NonNativeTxFeeCollectorName: true, txfeestypes.TakerFeeCommunityPoolName: true, txfeestypes.TakerFeeStakersName: true}
 
 	// TODO: Refactor wasm items into a wasm.go file
 	// WasmProposalsEnabled enables all x/wasm proposals when it's value is "true"
