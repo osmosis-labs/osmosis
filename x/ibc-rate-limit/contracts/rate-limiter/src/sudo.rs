@@ -1,8 +1,9 @@
 use cosmwasm_std::{DepsMut, Response, Timestamp, Uint256};
 
 use crate::{
+    blocking::check_restricted_denoms,
     packet::Packet,
-    state::{FlowType, Path, RateLimit, RATE_LIMIT_TRACKERS},
+    state::{flow::FlowType, path::Path, rate_limit::RateLimit, storage::RATE_LIMIT_TRACKERS},
     ContractError,
 };
 
@@ -20,9 +21,11 @@ pub fn process_packet(
     now: Timestamp,
     #[cfg(test)] channel_value_mock: Option<Uint256>,
 ) -> Result<Response, ContractError> {
+    check_restricted_denoms(deps.as_ref(), &packet, &direction)?;
+
     let (channel_id, denom) = packet.path_data(&direction);
     #[allow(clippy::needless_borrow)]
-    let path = &Path::new(&channel_id, &denom);
+    let path = &Path::new(channel_id, denom);
     let funds = packet.get_funds();
 
     #[cfg(test)]
@@ -98,11 +101,12 @@ pub fn try_transfer(
     // Adds the attributes for each path to the response. In prod, the
     // addtribute add_rate_limit_attributes is a noop
     let response: Result<Response, ContractError> =
-        any_results.iter().fold(Ok(response), |acc, result| {
-            Ok(add_rate_limit_attributes(acc?, result))
+        any_results.iter().try_fold(response, |acc, result| {
+            Ok(add_rate_limit_attributes(acc, result))
         });
-    results.iter().fold(Ok(response?), |acc, result| {
-        Ok(add_rate_limit_attributes(acc?, result))
+
+    results.iter().try_fold(response?, |acc, result| {
+        Ok(add_rate_limit_attributes(acc, result))
     })
 }
 
@@ -146,7 +150,7 @@ pub fn undo_send(deps: DepsMut, packet: Packet) -> Result<Response, ContractErro
     // Sudo call. Only go modules should be allowed to access this
     let (channel_id, denom) = packet.path_data(&FlowType::Out); // Sends have direction out.
     #[allow(clippy::needless_borrow)]
-    let path = &Path::new(&channel_id, &denom);
+    let path = &Path::new(channel_id, &denom);
     let any_path = Path::new("any", &denom);
     let funds = packet.get_funds();
 

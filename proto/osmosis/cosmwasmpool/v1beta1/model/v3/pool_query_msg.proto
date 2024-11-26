@@ -1,0 +1,38 @@
+syntax = "proto3";
+package osmosis.cosmwasmpool.v1beta1.model.v3;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool/cosmwasm/msg/v3";
+
+// ===================== ShareDenomResponse
+message ShareDenomResponse {
+  // share_denom is the share denomination.
+  string share_denom = 1;
+}
+
+// ===================== TotalPoolLiquidityResponse
+message TotalPoolLiquidityResponse {
+  // total_pool_liquidity is the total liquidity in the pool denominated in
+  // coins.
+  repeated cosmos.base.v1beta1.Coin total_pool_liquidity = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+// ===================== AssetConfig
+message AssetConfig {
+  // denom is the asset denomination.
+  string denom = 1;
+
+  // normalization_factor is the normalization factor for the asset.
+  string normalization_factor = 2;
+}
+
+// ===================== ListAssetConfigsResponse
+message ListAssetConfigsResponse {
+  // asset_configs is the list of asset configurations.
+  repeated AssetConfig asset_configs = 1 [ (gogoproto.nullable) = false ];
+}

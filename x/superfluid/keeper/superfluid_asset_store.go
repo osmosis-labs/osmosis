@@ -4,12 +4,11 @@ package keeper
 
 import (
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/osmosis-labs/osmosis/osmomath"
 
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v27/x/superfluid/types"
 
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -63,59 +62,4 @@ func (k Keeper) GetAllSuperfluidAssets(ctx sdk.Context) []types.SuperfluidAsset 
 		assets = append(assets, asset)
 	}
 	return assets
-}
-
-func (k Keeper) SetDenomRiskFactor(ctx sdk.Context, denom string, riskFactor osmomath.Dec) error {
-	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, types.KeyPrefixDenomRiskFactor)
-	riskFactorRecord := types.DenomRiskFactor{
-		RiskFactor: riskFactor,
-	}
-	bz, err := proto.Marshal(&riskFactorRecord)
-	if err != nil {
-		return err
-	}
-	prefixStore.Set([]byte(denom), bz)
-	return nil
-}
-
-func (k Keeper) DeleteDenomRiskFactor(ctx sdk.Context, denom string) {
-	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, types.KeyPrefixDenomRiskFactor)
-	prefixStore.Delete([]byte(denom))
-}
-
-func (k Keeper) GetDenomRiskFactor(ctx sdk.Context, denom string) (osmomath.Dec, bool) {
-	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, types.KeyPrefixDenomRiskFactor)
-	bz := prefixStore.Get([]byte(denom))
-	if bz == nil {
-		return osmomath.ZeroDec(), false
-	}
-	denomRiskFactor := types.DenomRiskFactor{}
-	err := proto.Unmarshal(bz, &denomRiskFactor)
-	if err != nil {
-		return osmomath.ZeroDec(), false
-	}
-	return denomRiskFactor.RiskFactor, true
-}
-
-func (k Keeper) GetAllDenomRiskFactors(ctx sdk.Context) []types.DenomRiskFactor {
-	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, types.KeyPrefixDenomRiskFactor)
-	iterator := prefixStore.Iterator(nil, nil)
-	defer iterator.Close()
-
-	denomRiskFactors := []types.DenomRiskFactor{}
-	for ; iterator.Valid(); iterator.Next() {
-		denomRiskFactor := types.DenomRiskFactor{}
-
-		err := proto.Unmarshal(iterator.Value(), &denomRiskFactor)
-		if err != nil {
-			panic(err)
-		}
-
-		denomRiskFactors = append(denomRiskFactors, denomRiskFactor)
-	}
-	return denomRiskFactors
 }

@@ -7,7 +7,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/poolmanager/v1beta1/swap_route.proto";
 import "cosmos/msg/v1/msg.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types";
 
 service Msg {
   rpc SwapExactAmountIn(MsgSwapExactAmountIn)
@@ -20,6 +20,10 @@ service Msg {
       returns (MsgSplitRouteSwapExactAmountOutResponse);
   rpc SetDenomPairTakerFee(MsgSetDenomPairTakerFee)
       returns (MsgSetDenomPairTakerFeeResponse);
+  rpc SetTakerFeeShareAgreementForDenom(MsgSetTakerFeeShareAgreementForDenom)
+      returns (MsgSetTakerFeeShareAgreementForDenomResponse);
+  rpc SetRegisteredAlloyedPool(MsgSetRegisteredAlloyedPool)
+      returns (MsgSetRegisteredAlloyedPoolResponse);
 }
 
 // ===================== MsgSwapExactAmountIn
@@ -144,11 +148,63 @@ message MsgSetDenomPairTakerFee {
 
 message MsgSetDenomPairTakerFeeResponse { bool success = 1; }
 
+// ===================== MsgSetTakerFeeShareAgreementForDenom
+message MsgSetTakerFeeShareAgreementForDenom {
+  option (amino.name) =
+      "osmosis/poolmanager/set-taker-fee-share-agreement-for-denom";
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+
+  // denom is the denom that the taker fee share agreement is being set for.
+  // Ex. If this is set to "nBTC", then any trade route that includes "nBTC"
+  // will have the skim_percent skimmed from the taker fees and sent to the
+  // skim_address.
+  string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+
+  // skim_percent is the percentage of taker fees that will be skimmed for the
+  // bridge provider, in the event that the bridge provider's denom is included
+  // in the swap route.
+  string skim_percent = 3 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.moretags) = "yaml:\"skim_percent\"",
+    (gogoproto.nullable) = false
+  ];
+
+  // skim_address is the address belonging to the respective bridge provider
+  // that the skimmed taker fees will be sent to at the end of each epoch.
+  string skim_address = 4 [ (gogoproto.moretags) = "yaml:\"skim_address\"" ];
+}
+
+message MsgSetTakerFeeShareAgreementForDenomResponse {}
+
+// ===================== MsgSetRegisteredAlloyedPool
+message MsgSetRegisteredAlloyedPool {
+  option (amino.name) = "osmosis/poolmanager/set-registered-alloyed-pool";
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+
+  // pool_id is the id of the pool that is being registered as an alloyed pool.
+  // Only alloyed pools that intend to be used in taker fee revenue sharing
+  // should be registered.
+  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+
+message MsgSetRegisteredAlloyedPoolResponse {}
+
 message DenomPairTakerFee {
-  // Field 1 used to be denom0 and field 2 used to be denom1,
-  // But now that we are using uni-directional trading pairs, we are using
-  // tokenInDenom and tokenOutDenom to prevent confusion.
-  reserved 1, 2;
+  // DEPRECATED: Now that we are using uni-directional trading pairs, we are
+  // using tokenInDenom and tokenOutDenom instead of denom0 and denom1 to
+  // prevent confusion.
+  string denom0 = 1 [
+    (gogoproto.moretags) = "yaml:\"denom0\",deprecated:\"true\"",
+    deprecated = true
+  ];
+  string denom1 = 2 [
+    (gogoproto.moretags) = "yaml:\"denom1\",deprecated:\"true\"",
+    deprecated = true
+  ];
   string taker_fee = 3 [
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"taker_fee\"",

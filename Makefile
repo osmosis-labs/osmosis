@@ -44,7 +44,7 @@ LEDGER_ENABLED ?= true
 SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 BUILDDIR ?= $(CURDIR)/build
 DOCKER := $(shell which docker)
-E2E_UPGRADE_VERSION := "v26"
+E2E_UPGRADE_VERSION := "v27"
 #SHELL := /bin/bash
 
 # Go version to be used in docker images
@@ -144,12 +144,51 @@ endif
 ###                            Build & Install                              ###
 ###############################################################################
 
+update-deps:
+	@if [ -n "$(SDK_HASH)" ]; then \
+		echo "Updating cosmos-sdk to hash $(SDK_HASH)"; \
+		SDK_VERSION=$$(go get github.com/osmosis-labs/cosmos-sdk@$(SDK_HASH) 2>&1 | sed -n 's/.*github.com\/osmosis-labs\/cosmos-sdk@\([^ :]*\).*/\1/p'); \
+		echo "Extracted SDK version: $${SDK_VERSION}"; \
+		sed -i.bak "s|github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk .*|github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk $${SDK_VERSION}|" go.mod; \
+	fi
+	@if [ -n "$(COMET_HASH)" ]; then \
+		echo "Updating cometbft to hash $(COMET_HASH)"; \
+		COMET_VERSION=$$(go get github.com/osmosis-labs/cometbft@$(COMET_HASH) 2>&1 | sed -n 's/.*github.com\/osmosis-labs\/cometbft@\([^ :]*\).*/\1/p'); \
+		echo "Extracted Comet version: $${COMET_VERSION}"; \
+		sed -i.bak "s|github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft .*|github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft $${COMET_VERSION}|" go.mod; \
+	fi
+	@if [ -n "$(SDK_HASH)" ] || [ -n "$(COMET_HASH)" ]; then \
+		go mod tidy; \
+	fi
+
 build: build-check-version go.sum
+	@if [ -n "$(SDK_HASH)" ] || [ -n "$(COMET_HASH)" ]; then \
+		cp go.mod go.mod.backup; \
+		cp go.sum go.sum.backup; \
+		$(MAKE) update-deps; \
+	fi
 	mkdir -p $(BUILDDIR)/
-	GOWORK=off go build -mod=readonly  $(BUILD_FLAGS) -o $(BUILDDIR)/ $(GO_MODULE)/cmd/osmosisd
+	GOWORK=off go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ $(GO_MODULE)/cmd/osmosisd
+	@if [ -n "$(SDK_HASH)" ] || [ -n "$(COMET_HASH)" ]; then \
+		mv go.mod.backup go.mod; \
+		mv go.sum.backup go.sum; \
+		rm -f go.mod.bak; \
+		go mod tidy; \
+	fi
 
 install: build-check-version go.sum
+	@if [ -n "$(SDK_HASH)" ] || [ -n "$(COMET_HASH)" ]; then \
+		cp go.mod go.mod.backup; \
+		cp go.sum go.sum.backup; \
+		$(MAKE) update-deps; \
+	fi
 	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
+	@if [ -n "$(SDK_HASH)" ] || [ -n "$(COMET_HASH)" ]; then \
+		mv go.mod.backup go.mod; \
+		mv go.sum.backup go.sum; \
+		rm -f go.mod.bak; \
+		go mod tidy; \
+	fi
 
 ###############################################################################
 ###                                Gen                                      ###
@@ -173,7 +212,7 @@ go-mock-update:
 ###                                Release                                  ###
 ###############################################################################
 GORELEASER_IMAGE := ghcr.io/goreleaser/goreleaser-cross:v$(GO_VERSION)
-COSMWASM_VERSION := $(shell go list -m github.com/CosmWasm/wasmvm | sed 's/.* //')
+COSMWASM_VERSION := $(shell go list -m github.com/CosmWasm/wasmvm/v2 | sed 's/.* //')
 
 ifdef GITHUB_TOKEN
 release:
@@ -195,4 +234,4 @@ endif
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \
 	test test-all test-build test-cover test-unit test-race benchmark \
-	release release-dry-run release-snapshot
+	release release-dry-run release-snapshot update-deps

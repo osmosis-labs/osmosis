@@ -9,7 +9,7 @@ import (
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	gammmigration "github.com/osmosis-labs/osmosis/v25/x/gamm/types/migration"
+	gammmigration "github.com/osmosis-labs/osmosis/v27/x/gamm/types/migration"
 )
 
 const (

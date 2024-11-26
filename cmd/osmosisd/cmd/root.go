@@ -20,22 +20,23 @@ import (
 	"cosmossdk.io/core/appmodule"
 	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 
 	cosmosdb "github.com/cosmos/cosmos-db"
 
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/app/params"
-	v23 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v23" // should be automated to be updated to current version every upgrade
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs"
+	"github.com/osmosis-labs/osmosis/v27/app/params"
+	v23 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v23" // should be automated to be updated to current version every upgrade
+	"github.com/osmosis-labs/osmosis/v27/ingest/indexer"
+	"github.com/osmosis-labs/osmosis/v27/ingest/sqs"
 
 	"cosmossdk.io/log"
 	tmcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/libs/bytes"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
-	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/snapshot"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -61,7 +62,9 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
@@ -74,7 +77,7 @@ import (
 
 	"github.com/joho/godotenv"
 
-	osmosis "github.com/osmosis-labs/osmosis/v25/app"
+	osmosis "github.com/osmosis-labs/osmosis/v27/app"
 )
 
 type AssetList struct {
@@ -144,12 +147,12 @@ var (
 		{
 			Section: "consensus",
 			Key:     "timeout_commit",
-			Value:   "1s",
+			Value:   "500ms",
 		},
 		{
 			Section: "consensus",
 			Key:     "timeout_propose",
-			Value:   "2s",
+			Value:   "1.8s",
 		},
 		{
 			Section: "consensus",
@@ -354,7 +357,16 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithHomeDir(homeDir).
 		WithViper("OSMOSIS")
 
-	tempApp := osmosis.NewOsmosisApp(log.NewNopLogger(), cosmosdb.NewMemDB(), nil, true, map[int64]bool{}, osmosis.DefaultNodeHome, 5, sims.EmptyAppOptions{}, osmosis.EmptyWasmOpts, baseapp.SetChainID("osmosis-1"))
+	tempDir := tempDir()
+	tempApp := osmosis.NewOsmosisApp(log.NewNopLogger(), cosmosdb.NewMemDB(), nil, true, map[int64]bool{}, tempDir, 5, sims.EmptyAppOptions{}, osmosis.EmptyWasmOpts, baseapp.SetChainID("osmosis-1"))
+	defer func() {
+		if err := tempApp.Close(); err != nil {
+			panic(err)
+		}
+		if tempDir != osmosis.DefaultNodeHome {
+			os.RemoveAll(tempDir)
+		}
+	}()
 
 	// Allows you to add extra params to your client.toml
 	// gas, gas-price, gas-adjustment, and human-readable-denoms
@@ -378,6 +390,24 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			initClientCtx, err = config.ReadFromClientConfig(initClientCtx)
 			if err != nil {
 				return err
+			}
+
+			// This needs to go after ReadFromClientConfig, as that function
+			// sets the RPC client needed for SIGN_MODE_TEXTUAL. This sign mode
+			// is only available if the client is online.
+			if !initClientCtx.Offline {
+				txConfigOpts := tx.ConfigOptions{
+					EnabledSignModes:           append(tx.DefaultSignModes, signing.SignMode_SIGN_MODE_TEXTUAL),
+					TextualCoinMetadataQueryFn: authtxconfig.NewGRPCCoinMetadataQueryFn(initClientCtx),
+				}
+				txConfigWithTextual, err := tx.NewTxConfigWithOptions(
+					initClientCtx.Codec,
+					txConfigOpts,
+				)
+				if err != nil {
+					return err
+				}
+				initClientCtx = initClientCtx.WithTxConfig(txConfigWithTextual)
 			}
 
 			// Only loads asset list into a map if human readable denoms are enabled.
@@ -468,12 +498,22 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 	initRootCmd(rootCmd, encodingConfig, tempApp)
 
-	// UNFORKING v2 TODO: I don't think we have an option but to implement this. With out, the sdk queries do not show up in the CLI.
 	if err := autoCliOpts(initClientCtx, tempApp).EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}
 
 	return rootCmd, encodingConfig
+}
+
+// tempDir create a temporary directory to initialize the command line client
+func tempDir() string {
+	dir, err := os.MkdirTemp("", "osmosisd")
+	if err != nil {
+		panic(fmt.Sprintf("failed creating temp directory: %s", err.Error()))
+	}
+	defer os.RemoveAll(dir)
+
+	return dir
 }
 
 // overwriteConfigTomlValues overwrites config.toml values. Returns error if config.toml does not exist
@@ -524,7 +564,7 @@ func overwriteConfigTomlValues(serverCtx *server.Context) error {
 		}()
 
 		// Check if the file is writable
-		if fileInfo.Mode()&os.FileMode(0200) != 0 {
+		if fileInfo.Mode()&os.FileMode(0o200) != 0 {
 			// It will be re-read in server.InterceptConfigsPreRunHandler
 			// this may panic for permissions issues. So we catch the panic.
 			// Note that this exits with a non-zero exit code if fails to write the file.
@@ -585,7 +625,7 @@ func overwriteAppTomlValues(serverCtx *server.Context) error {
 		}
 
 		// Check if the file is writable
-		if fileInfo.Mode()&os.FileMode(0200) != 0 {
+		if fileInfo.Mode()&os.FileMode(0o200) != 0 {
 			// It will be re-read in server.InterceptConfigsPreRunHandler
 			// this may panic for permissions issues. So we catch the panic.
 			// Note that this exits with a non-zero exit code if fails to write the file.
@@ -635,10 +675,14 @@ func initAppConfig() (string, interface{}) {
 
 		SidecarQueryServerConfig sqs.Config `mapstructure:"osmosis-sqs"`
 
+		IndexerConfig indexer.Config `mapstructure:"osmosis-indexer"`
+
+		OTELConfig osmosis.OTELConfig `mapstructure:"otel"`
+
 		WasmConfig wasmtypes.WasmConfig `mapstructure:"wasm"`
 	}
 
-	var DefaultOsmosisMempoolConfig = OsmosisMempoolConfig{
+	DefaultOsmosisMempoolConfig := OsmosisMempoolConfig{
 		MaxGasWantedPerTx:         "60000000",
 		MinGasPriceForArbitrageTx: ".1",
 		MinGasPriceForHighGasTx:   ".0025",
@@ -657,9 +701,11 @@ func initAppConfig() (string, interface{}) {
 
 	sqsCfg := sqs.DefaultConfig
 
+	indexCfg := indexer.DefaultConfig
+
 	wasmCfg := wasmtypes.DefaultWasmConfig()
 
-	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg, SidecarQueryServerConfig: sqsCfg, WasmConfig: wasmCfg}
+	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg, SidecarQueryServerConfig: sqsCfg, IndexerConfig: indexCfg, WasmConfig: wasmCfg}
 
 	OsmosisAppTemplate := serverconfig.DefaultConfigTemplate + `
 ###############################################################################
@@ -697,6 +743,51 @@ grpc-ingest-address = "{{ .SidecarQueryServerConfig.GRPCIngestAddress }}"
 grpc-ingest-max-call-size-bytes = "{{ .SidecarQueryServerConfig.GRPCIngestMaxCallSizeBytes }}"
 
 ###############################################################################
+###              Osmosis Indexer Configuration                              ###
+###############################################################################
+[osmosis-indexer]
+
+# The indexer service is disabled by default.
+is-enabled = "{{ .IndexerConfig.IsEnabled }}"
+
+# Max publish delay in seconds for the indexer service.
+# Migitate the issue of messages remaining pending when the publishing rate is low,
+# ensuring timely delivery and preventing messages from appearing undelivered
+max-publish-delay = "{{ .IndexerConfig.MaxPublishDelay }}"
+
+# The GCP project id to use for the indexer service.
+gcp-project-id = "{{ .IndexerConfig.GCPProjectId }}"
+
+# The topic id to use for the publishing block data
+block-topic-id = "{{ .IndexerConfig.BlockTopicId }}"
+
+# The topic id to use for the publishing transaction data
+transaction-topic-id = "{{ .IndexerConfig.TransactionTopicId }}"
+
+# The topic id to use for the publishing pool data
+pool-topic-id = "{{ .IndexerConfig.PoolTopicId }}"
+
+# The topic id to use for the publishing token supply data
+token-supply-topic-id = "{{ .IndexerConfig.TokenSupplyTopicId }}"
+
+# The topic id to use for the publishing token supply offset data
+token-supply-offset-topic-id = "{{ .IndexerConfig.TokenSupplyOffsetTopicId }}"
+
+# The topic id to use for publishing pair metadata
+pair-topic-id = "{{ .IndexerConfig.PairTopicId }}"
+
+###############################################################################
+###              OpenTelemetry (OTEL) Configuration                         ###
+###############################################################################
+[otel]
+
+# Flag that enables OTEL
+enabled = "{{ .OTELConfig.Enabled }}"
+
+# The service name to use for OTEL
+service-name = "{{ .OTELConfig.ServiceName }}"
+
+###############################################################################
 ###                            Wasm Configuration                           ###
 ###############################################################################
 ` + wasmtypes.DefaultConfigTemplate()
@@ -717,6 +808,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, t
 	rootCmd.AddCommand(
 		// genutilcli.InitCmd(tempApp.ModuleBasics, osmosis.DefaultNodeHome),
 		forceprune(),
+		moduleHashByHeightQuery(newApp),
 		InitCmd(tempApp.ModuleBasics, osmosis.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, osmosis.DefaultNodeHome, genutiltypes.DefaultMessageValidator, valOperAddressCodec),
 		ExportDeriveBalancesCmd(),
@@ -778,10 +870,11 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, t
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
 		server.StatusCommand(),
-		queryCommand(tempApp.ModuleBasics),
+		queryCommand(),
 		txCommand(tempApp.ModuleBasics),
 		keys.Commands(),
 	)
+	rootCmd.AddCommand(CmdListQueries(rootCmd))
 	// add rosetta
 	rootCmd.AddCommand(rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
 }
@@ -790,6 +883,28 @@ func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
 	wasm.AddModuleInitFlags(startCmd)
 	startCmd.Flags().Bool(FlagRejectConfigDefaults, false, "Reject some select recommended default values from being automatically set in the config.toml and app.toml")
+}
+
+// CmdListQueries list all available modules' queries
+func CmdListQueries(rootCmd *cobra.Command) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list-queries",
+		Short: "listing all available modules' queries",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			for _, cmd := range rootCmd.Commands() {
+				if cmd.Name() != "query" {
+					continue
+				}
+				for _, cmd := range cmd.Commands() {
+					for _, cmd := range cmd.Commands() {
+						fmt.Println(cmd.CommandPath())
+					}
+				}
+			}
+			return nil
+		},
+	}
+	return cmd
 }
 
 func CmdModuleNameToAddress() *cobra.Command {
@@ -810,7 +925,7 @@ func CmdModuleNameToAddress() *cobra.Command {
 }
 
 // queryCommand adds transaction and account querying commands.
-func queryCommand(moduleBasics module.BasicManager) *cobra.Command {
+func queryCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "query",
 		Aliases:                    []string{"q"},
@@ -828,8 +943,6 @@ func queryCommand(moduleBasics module.BasicManager) *cobra.Command {
 		CmdModuleNameToAddress(),
 	)
 
-	// UNFORKING v2 TODO: Auto CLI claims we can remove this, but was having issues with AddTxCommands counterpart. See line for comment.
-	moduleBasics.AddQueryCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -856,8 +969,8 @@ func txCommand(moduleBasics module.BasicManager) *cobra.Command {
 		authcmd.GetDecodeCommand(),
 	)
 
-	// UNFORKING v2 TODO: Auto CLI claims we can remove this, but if we do, then the legacy proposal sub commands will not be available.
 	moduleBasics.AddTxCommands(cmd)
+
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -899,7 +1012,7 @@ func newApp(logger log.Logger, db cosmosdb.DB, traceStore io.Writer, appOpts ser
 	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
 	if chainID == "" {
 		// fallback to genesis chain-id
-		appGenesis, err := tmtypes.GenesisDocFromFile(filepath.Join(homeDir, "config", "genesis.json"))
+		appGenesis, err := genutiltypes.AppGenesisFromFile(filepath.Join(homeDir, "config", "genesis.json"))
 		if err != nil {
 			panic(err)
 		}
@@ -1216,6 +1329,5 @@ func autoCliOpts(initClientCtx client.Context, tempApp *osmosis.OsmosisApp) auto
 		AddressCodec:          authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
 		ConsensusAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
-		ClientCtx:             initClientCtx,
-	}
+		ClientCtx:             initClientCtx}
 }

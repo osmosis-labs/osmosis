@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	"fmt"
+	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -11,12 +14,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmoapp "github.com/osmosis-labs/osmosis/v25/app"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	osmoapp "github.com/osmosis-labs/osmosis/v27/app"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
 
-	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v27/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v27/x/lockup/types"
 )
 
 var (
@@ -171,7 +174,9 @@ func TestIncentivesExportGenesis(t *testing.T) {
 
 // TestIncentivesInitGenesis takes a genesis state and tests initializing that genesis for the incentives module.
 func TestIncentivesInitGenesis(t *testing.T) {
-	app := osmoapp.Setup(false)
+	dirName := fmt.Sprintf("%d", rand.Int())
+	app := osmoapp.SetupWithCustomHome(false, dirName)
+
 	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 
 	// checks that the default genesis parameters pass validation
@@ -228,6 +233,8 @@ func TestIncentivesInitGenesis(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, groups, 1)
 	require.Equal(t, expectedGroups, groups)
+
+	os.RemoveAll(dirName)
 }
 
 func createAllGaugeTypes(t *testing.T, app *osmoapp.OsmosisApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins, startTime time.Time) {

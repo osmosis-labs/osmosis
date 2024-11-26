@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -14,24 +14,24 @@ import (
 
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	gammv2types "github.com/osmosis-labs/osmosis/v25/x/gamm/v2types"
+	gammv2types "github.com/osmosis-labs/osmosis/v27/x/gamm/v2types"
 
 	"github.com/cosmos/gogoproto/proto"
 
-	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/client/queryproto"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/client/queryproto"
-	downtimequerytypes "github.com/osmosis-labs/osmosis/v25/x/downtime-detector/client/queryproto"
-	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v25/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v25/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
-	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v25/x/poolmanager/client/queryproto"
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v25/x/tokenfactory/types"
-	twapquerytypes "github.com/osmosis-labs/osmosis/v25/x/twap/client/queryproto"
-	txfeestypes "github.com/osmosis-labs/osmosis/v25/x/txfees/types"
+	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/client/queryproto"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool/client/queryproto"
+	downtimequerytypes "github.com/osmosis-labs/osmosis/v27/x/downtime-detector/client/queryproto"
+	gammtypes "github.com/osmosis-labs/osmosis/v27/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v27/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v27/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v27/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v27/x/pool-incentives/types"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v27/x/poolmanager/client/queryproto"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v27/x/smart-account/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v27/x/superfluid/types"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v27/x/tokenfactory/types"
+	twapquerytypes "github.com/osmosis-labs/osmosis/v27/x/twap/client/queryproto"
+	txfeestypes "github.com/osmosis-labs/osmosis/v27/x/txfees/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 

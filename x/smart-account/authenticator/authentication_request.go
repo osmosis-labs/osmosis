@@ -71,7 +71,6 @@ func GetSignerAndSignatures(tx sdk.Tx) (signers []sdk.AccAddress, signatures []s
 	}
 
 	// Retrieve messages from the transaction.
-	// UNFORKING v2 TODO: I dont know if ranging over the address bytes and assigning to AccAddress is correct
 	signerBytes, err := sigTx.GetSigners()
 	if err != nil {
 		return nil, nil, err
@@ -91,30 +90,7 @@ func GetSignerAndSignatures(tx sdk.Tx) (signers []sdk.AccAddress, signatures []s
 }
 
 // getSignerData returns the signer data for a given account. This is part of the data that needs to be signed.
-func getSignerData(ctx sdk.Context, ak authante.AccountKeeper, account sdk.AccAddress) txsigning.SignerData {
-	// Retrieve and build the signer data struct
-	baseAccount := ak.GetAccount(ctx, account)
-	genesis := ctx.BlockHeight() == 0
-	chainID := ctx.ChainID()
-	var accNum uint64
-	if !genesis {
-		accNum = baseAccount.GetAccountNumber()
-	}
-	var sequence uint64
-	if baseAccount != nil {
-		sequence = baseAccount.GetSequence()
-	}
-
-	return txsigning.SignerData{
-		ChainID:       chainID,
-		AccountNumber: accNum,
-		Sequence:      sequence,
-	}
-}
-
-// getSignerData returns the signer data for a given account. This is part of the data that needs to be signed.
-// UNFORKING v2 TODO: Maybe we can just type cast txsigning.SignerData to authsigning.SignerData instead of using whole new method.
-func getSignerDataOld(ctx sdk.Context, ak authante.AccountKeeper, account sdk.AccAddress) authsigning.SignerData {
+func getSignerData(ctx sdk.Context, ak authante.AccountKeeper, account sdk.AccAddress) authsigning.SignerData {
 	// Retrieve and build the signer data struct
 	baseAccount := ak.GetAccount(ctx, account)
 	genesis := ctx.BlockHeight() == 0
@@ -137,7 +113,7 @@ func getSignerDataOld(ctx sdk.Context, ak authante.AccountKeeper, account sdk.Ac
 
 // extractExplicitTxData makes the transaction data concrete for the authentication request. This is necessary to
 // pass the parsed data to the cosmwasm authenticator.
-func extractExplicitTxData(tx sdk.Tx, signerData txsigning.SignerData) (ExplicitTxData, error) {
+func extractExplicitTxData(tx sdk.Tx, signerData authsigning.SignerData) (ExplicitTxData, error) {
 	timeoutTx, ok := tx.(sdk.TxWithTimeoutHeight)
 	if !ok {
 		return ExplicitTxData{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithTimeoutHeight")
@@ -234,16 +210,7 @@ func GenerateAuthenticationRequest(
 	}
 
 	// Get the signer data for the account. This is needed in the SignDoc
-	// UNFORKING v2 TODO: Use a single method and maybe type case as needed, instead of using a whole new getSignerDataOld method
 	signerData := getSignerData(ctx, ak, account)
-	signerDataOld := getSignerDataOld(ctx, ak, account)
-
-	// Get the sign bytes for the transaction
-	// UNFORKING v2 TODO: I don't know if using the adapter here is correct, we just dont have access to the TxData but have the sdk.Tx
-	signBytes, err := authsigning.GetSignBytesAdapter(ctx, sigModeHandler, signing.SignMode_SIGN_MODE_DIRECT, signerDataOld, tx)
-	if err != nil {
-		return AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signBytes")
-	}
 
 	// Get the concrete transaction data to be passed to the authenticators
 	txData, err := extractExplicitTxData(tx, signerData)
@@ -257,7 +224,8 @@ func GenerateAuthenticationRequest(
 		return AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signatures")
 	}
 
-	return AuthenticationRequest{
+	// Build the authentication request
+	authRequest := AuthenticationRequest{
 		Account:    account,
 		FeePayer:   feePayer,
 		FeeGranter: feeGranter,
@@ -266,8 +234,8 @@ func GenerateAuthenticationRequest(
 		MsgIndex:   uint64(msgIndex),
 		Signature:  msgSignature,
 		TxData:     txData,
-		SignModeTxData: SignModeData{ // TODO: Add other sign modes. Specifically textual when it becomes available
-			Direct: signBytes,
+		SignModeTxData: SignModeData{
+			Direct: []byte("signBytes"),
 		},
 		SignatureData: SimplifiedSignatureData{
 			Signers:    txSigners,
@@ -275,5 +243,23 @@ func GenerateAuthenticationRequest(
 		},
 		Simulate:            simulate,
 		AuthenticatorParams: nil,
-	}, nil
+	}
+
+	// We do not generate the sign bytes if simulate is true or isCheckTx is true
+	if simulate && ctx.IsCheckTx() {
+		return authRequest, nil
+	}
+
+	// Get the sign bytes for the transaction
+	signBytes, err := authsigning.GetSignBytesAdapter(ctx, sigModeHandler, signing.SignMode_SIGN_MODE_DIRECT, signerData, tx)
+	if err != nil {
+		return AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signBytes")
+	}
+
+	// TODO: Add other sign modes. Specifically json when it becomes available
+	authRequest.SignModeTxData = SignModeData{
+		Direct: signBytes,
+	}
+
+	return authRequest, nil
 }

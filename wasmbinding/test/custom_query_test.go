@@ -9,21 +9,21 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
-	"github.com/osmosis-labs/osmosis/v25/app"
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v25/wasmbinding/bindings"
+	"github.com/osmosis-labs/osmosis/v27/app"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v27/wasmbinding/bindings"
 )
 
-func SetupCustomApp(t *testing.T, addr sdk.AccAddress) (*app.OsmosisApp, sdk.Context) {
+func SetupCustomApp(t *testing.T, addr sdk.AccAddress) (*app.OsmosisApp, sdk.Context, string) {
 	t.Helper()
 
-	osmosis, ctx := CreateTestInput()
+	osmosis, ctx, homeDir := CreateTestInput()
 	wasmKeeper := osmosis.WasmKeeper
 
 	storeReflectCode(t, ctx, osmosis, addr)
@@ -31,13 +31,14 @@ func SetupCustomApp(t *testing.T, addr sdk.AccAddress) (*app.OsmosisApp, sdk.Con
 	cInfo := wasmKeeper.GetCodeInfo(ctx, 1)
 	require.NotNil(t, cInfo)
 
-	return osmosis, ctx
+	return osmosis, ctx, homeDir
 }
 
 func TestQueryFullDenom(t *testing.T) {
 	apptesting.SkipIfWSL(t)
 	actor := RandomAccountAddress()
-	osmosis, ctx := SetupCustomApp(t, actor)
+	osmosis, ctx, homeDir := SetupCustomApp(t, actor)
+	defer os.RemoveAll(homeDir)
 
 	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
 	require.NotEmpty(t, reflect)
@@ -54,6 +55,7 @@ func TestQueryFullDenom(t *testing.T) {
 
 	expected := fmt.Sprintf("factory/%s/ustart", reflect.String())
 	require.EqualValues(t, expected, resp.Denom)
+
 }
 
 type ReflectQuery struct {

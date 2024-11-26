@@ -2,6 +2,9 @@ package ante_test
 
 import (
 	"encoding/hex"
+	"fmt"
+	"math/rand"
+	"os"
 	"testing"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -13,13 +16,13 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v25/app"
-	"github.com/osmosis-labs/osmosis/v25/app/params"
-	"github.com/osmosis-labs/osmosis/v25/x/smart-account/ante"
+	"github.com/osmosis-labs/osmosis/v27/app"
+	"github.com/osmosis-labs/osmosis/v27/app/params"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/ante"
 )
 
-// AutherticatorSetPubKeyAnteSuite is a test suite for the authenticator and SetPubKey AnteDecorator.
-type AutherticatorSetPubKeyAnteSuite struct {
+// AuthenticatorSetPubKeyAnteSuite is a test suite for the authenticator and SetPubKey AnteDecorator.
+type AuthenticatorSetPubKeyAnteSuite struct {
 	suite.Suite
 	OsmosisApp             *app.OsmosisApp
 	Ctx                    sdk.Context
@@ -28,15 +31,16 @@ type AutherticatorSetPubKeyAnteSuite struct {
 	TestKeys               []string
 	TestAccAddress         []sdk.AccAddress
 	TestPrivKeys           []*secp256k1.PrivKey
+	HomeDir                string
 }
 
-// TestAutherticatorSetPubKeyAnteSuite runs the test suite for the authenticator and SetPubKey AnteDecorator.
-func TestAutherticatorSetPubKeyAnteSuite(t *testing.T) {
-	suite.Run(t, new(AutherticatorSetPubKeyAnteSuite))
+// TestAuthenticatorSetPubKeyAnteSuite runs the test suite for the authenticator and SetPubKey AnteDecorator.
+func TestAuthenticatorSetPubKeyAnteSuite(t *testing.T) {
+	suite.Run(t, new(AuthenticatorSetPubKeyAnteSuite))
 }
 
 // SetupTest initializes the test data and prepares the test environment.
-func (s *AutherticatorSetPubKeyAnteSuite) SetupTest() {
+func (s *AuthenticatorSetPubKeyAnteSuite) SetupTest() {
 	// Test data for authenticator signature verification
 	TestKeys := []string{
 		"6cf5103c60c939a5f38e383b52239c5296c968579eec1c68a47d70fbf1d19159",
@@ -48,7 +52,8 @@ func (s *AutherticatorSetPubKeyAnteSuite) SetupTest() {
 	s.EncodingConfig = app.MakeEncodingConfig()
 
 	// Initialize the Osmosis application
-	s.OsmosisApp = app.Setup(false)
+	s.HomeDir = fmt.Sprintf("%d", rand.Int())
+	s.OsmosisApp = app.SetupWithCustomHome(false, s.HomeDir)
 
 	s.Ctx = s.OsmosisApp.NewContextLegacy(false, tmproto.Header{})
 
@@ -71,8 +76,12 @@ func (s *AutherticatorSetPubKeyAnteSuite) SetupTest() {
 	}
 }
 
+func (s *AuthenticatorSetPubKeyAnteSuite) TearDownTest() {
+	os.RemoveAll(s.HomeDir)
+}
+
 // TestSetPubKeyAnte verifies that the SetPubKey AnteDecorator functions correctly.
-func (s *AutherticatorSetPubKeyAnteSuite) TestSetPubKeyAnte() {
+func (s *AuthenticatorSetPubKeyAnteSuite) TestSetPubKeyAnte() {
 	osmoToken := "osmo"
 	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
@@ -111,7 +120,7 @@ func (s *AutherticatorSetPubKeyAnteSuite) TestSetPubKeyAnte() {
 }
 
 // TestSetPubKeyAnteWithSenderNotSigner verifies that SetPubKey AnteDecorator correctly handles a non-signer sender.
-func (s *AutherticatorSetPubKeyAnteSuite) TestSetPubKeyAnteWithSenderNotSigner() {
+func (s *AuthenticatorSetPubKeyAnteSuite) TestSetPubKeyAnteWithSenderNotSigner() {
 	osmoToken := "osmo"
 	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 

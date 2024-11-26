@@ -3,10 +3,11 @@ package types
 import (
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
 )
 
 type ConcentratedPoolExtension interface {
@@ -21,7 +22,7 @@ type ConcentratedPoolExtension interface {
 	GetCurrentTick() int64
 	GetExponentAtPriceOne() int64
 	GetTickSpacing() uint64
-	GetLiquidity() osmomath.Dec
+	GetLiquidity() sdkmath.LegacyDec
 	GetLastLiquidityUpdate() time.Time
 	SetCurrentSqrtPrice(newSqrtPrice osmomath.BigDec)
 	SetCurrentTick(newTick int64)

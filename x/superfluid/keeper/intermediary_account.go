@@ -5,8 +5,8 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v27/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v27/x/superfluid/types"
 
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
@@ -100,9 +100,6 @@ func (k Keeper) GetOrCreateIntermediaryAccount(ctx sdk.Context, denom, valAddr s
 	// create a new account. We use base accounts, as this is what's done for cosmwasm smart contract accounts.
 	// and in the off-chance someone manages to find a bug that forces the account's creation.
 	if !k.ak.HasAccount(ctx, intermediaryAcct.GetAccAddress()) {
-		// UNFORKING v2 TODO: I now need to set NextAccountNumber with k.ak.NextAccountNumber(ctx) instead of using zero, due to new invariant checks.
-		// Verify that this is correct. If it is, make sure every call the NewBaseAccount does this.
-		// k.ak.SetAccount(ctx, authtypes.NewBaseAccount(intermediaryAcct.GetAccAddress(), nil, 0, 0))
 		k.ak.SetAccount(ctx, authtypes.NewBaseAccount(intermediaryAcct.GetAccAddress(), nil, k.ak.NextAccountNumber(ctx), 0))
 	}
 

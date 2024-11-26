@@ -3,7 +3,7 @@ package osmosis.concentratedliquidity.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types";
 
 // CreateConcentratedLiquidityPoolsProposal is a gov Content type for creating
 // concentrated liquidity pools. If a CreateConcentratedLiquidityPoolsProposal
@@ -51,7 +51,13 @@ message PoolRecord {
   string denom0 = 1 [ (gogoproto.moretags) = "yaml:\"denom0\"" ];
   string denom1 = 2 [ (gogoproto.moretags) = "yaml:\"denom1\"" ];
   uint64 tick_spacing = 3 [ (gogoproto.moretags) = "yaml:\"tick_spacing\"" ];
-  reserved 4;
+  // DEPRECATED
+  string exponent_at_price_one = 4 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.moretags) = "yaml:\"exponent_at_price_one\",deprecated:\"true\"",
+    (gogoproto.nullable) = false,
+    deprecated = true
+  ];
   string spread_factor = 5 [
 
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",

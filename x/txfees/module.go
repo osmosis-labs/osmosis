@@ -27,10 +27,10 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/x/txfees/client/cli"
-	"github.com/osmosis-labs/osmosis/v25/x/txfees/keeper"
-	mempool1559 "github.com/osmosis-labs/osmosis/v25/x/txfees/keeper/mempool-1559"
-	"github.com/osmosis-labs/osmosis/v25/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v27/x/txfees/client/cli"
+	"github.com/osmosis-labs/osmosis/v27/x/txfees/keeper"
+	mempool1559 "github.com/osmosis-labs/osmosis/v27/x/txfees/keeper/mempool-1559"
+	"github.com/osmosis-labs/osmosis/v27/x/txfees/types"
 )
 
 var (
@@ -190,8 +190,6 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 // If they have, we unmarshal the current consensus params, update the target gas, and cache the value.
 // This is done to improve performance by not having to fetch and unmarshal the consensus params on every block.
 // TODO: Move this to EIP-1559 code
-// UNFORKING v2 TODO: Do we still want to use cachedConsParams here? I guess it removes the need to do arithmetic operations on every block.
-// We used to have a method that only pulled the bytes to avoid the unmarshal, but that is no longer possible AFAIK in the new sdk.
 func (am AppModule) CheckAndSetTargetGas(ctx sdk.Context) {
 	// Check if the block gas limit has changed.
 	// If it has, update the target gas for eip1559.

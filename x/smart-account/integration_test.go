@@ -3,17 +3,18 @@ package authenticator_test
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	txfeetypes "github.com/osmosis-labs/osmosis/v25/x/txfees/types"
+	txfeetypes "github.com/osmosis-labs/osmosis/v27/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
-	"github.com/osmosis-labs/osmosis/v25/x/smart-account/testutils"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/testutils"
 
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v25/app"
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v27/app"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v27/x/smart-account/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -23,9 +24,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v25/app/params"
-	"github.com/osmosis-labs/osmosis/v25/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v27/app/params"
+	"github.com/osmosis-labs/osmosis/v27/tests/osmosisibctesting"
 )
 
 type AuthenticatorSuite struct {
@@ -72,6 +73,12 @@ func (s *AuthenticatorSuite) SetupTest() {
 
 	// Initialize a test account with the first private key
 	s.Account = s.CreateAccount(s.PrivKeys[0], 500_000)
+}
+
+func (suite *AuthenticatorSuite) TearDownSuite() {
+	for _, dir := range osmosisibctesting.TestingDirectories {
+		os.RemoveAll(dir)
+	}
 }
 
 func (s *AuthenticatorSuite) CreateAccount(privKey cryptotypes.PrivKey, amount int) sdk.AccountI {

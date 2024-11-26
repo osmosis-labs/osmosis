@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	"fmt"
+	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -10,11 +13,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	simapp "github.com/osmosis-labs/osmosis/v25/app"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
-	pool_incentives "github.com/osmosis-labs/osmosis/v25/x/pool-incentives"
-	"github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
+	simapp "github.com/osmosis-labs/osmosis/v27/app"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/v27/x/lockup/types"
+	pool_incentives "github.com/osmosis-labs/osmosis/v27/x/pool-incentives"
+	"github.com/osmosis-labs/osmosis/v27/x/pool-incentives/types"
 )
 
 var (
@@ -64,7 +67,9 @@ var (
 )
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
-	app := simapp.Setup(false)
+	dirName := fmt.Sprintf("%d", rand.Int())
+	app := simapp.SetupWithCustomHome(false, dirName)
+
 	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 
@@ -77,6 +82,8 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	assert.Equal(t, app.PoolIncentivesKeeper.GetDistrInfo(ctx), *testGenesis.DistrInfo)
 
 	genesisExported := am.ExportGenesis(ctx, appCodec)
+	os.RemoveAll(dirName)
+
 	assert.NotPanics(t, func() {
 		app := simapp.Setup(false)
 		ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
@@ -87,7 +94,9 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 }
 
 func TestInitGenesis(t *testing.T) {
-	app := simapp.Setup(false)
+	dirName := fmt.Sprintf("%d", rand.Int())
+	app := simapp.SetupWithCustomHome(false, dirName)
+
 	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
@@ -101,6 +110,8 @@ func TestInitGenesis(t *testing.T) {
 
 	distrInfo := app.PoolIncentivesKeeper.GetDistrInfo(ctx)
 	require.Equal(t, distrInfo, *genesis.DistrInfo)
+
+	os.RemoveAll(dirName)
 }
 
 func (s *KeeperTestSuite) TestExportGenesis() {

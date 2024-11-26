@@ -6,9 +6,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
-	"github.com/osmosis-labs/osmosis/v25/x/smart-account/keeper"
-	"github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/keeper"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/types"
 )
 
 func (s *KeeperTestSuite) TestMsgServer_AddAuthenticator() {
@@ -26,9 +26,9 @@ func (s *KeeperTestSuite) TestMsgServer_AddAuthenticator() {
 
 	// Create a test message
 	msg := &types.MsgAddAuthenticator{
-		Sender: accAddress.String(),
-		Type:   authenticator.SignatureVerification{}.Type(),
-		Data:   priv.PubKey().Bytes(),
+		Sender:            accAddress.String(),
+		AuthenticatorType: authenticator.SignatureVerification{}.Type(),
+		Data:              priv.PubKey().Bytes(),
 	}
 
 	resp, err := msgServer.AddAuthenticator(ctx, msg)
@@ -41,7 +41,7 @@ func (s *KeeperTestSuite) TestMsgServer_AddAuthenticator() {
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributeKeyAuthenticatorType, msg.Type),
+			sdk.NewAttribute(types.AttributeKeyAuthenticatorType, msg.AuthenticatorType),
 			sdk.NewAttribute(types.AttributeKeyAuthenticatorId, "1"),
 		),
 	})
@@ -62,12 +62,12 @@ func (s *KeeperTestSuite) TestMsgServer_AddAuthenticatorFail() {
 
 	// Create a test message
 	msg := &types.MsgAddAuthenticator{
-		Sender: accAddress.String(),
-		Type:   authenticator.SignatureVerification{}.Type(),
-		Data:   priv.PubKey().Bytes(),
+		Sender:            accAddress.String(),
+		AuthenticatorType: authenticator.SignatureVerification{}.Type(),
+		Data:              priv.PubKey().Bytes(),
 	}
 
-	msg.Type = "PassKeyAuthenticator"
+	msg.AuthenticatorType = "PassKeyAuthenticator"
 	_, err := msgServer.AddAuthenticator(ctx, msg)
 	s.Require().Error(err)
 }
@@ -84,9 +84,9 @@ func (s *KeeperTestSuite) TestMsgServer_RemoveAuthenticator() {
 
 	// Create a test message
 	addMsg := &types.MsgAddAuthenticator{
-		Sender: accAddress.String(),
-		Type:   authenticator.SignatureVerification{}.Type(),
-		Data:   priv.PubKey().Bytes(),
+		Sender:            accAddress.String(),
+		AuthenticatorType: authenticator.SignatureVerification{}.Type(),
+		Data:              priv.PubKey().Bytes(),
 	}
 	_, err := msgServer.AddAuthenticator(ctx, addMsg)
 	s.Require().NoError(err)
@@ -192,9 +192,9 @@ func (s *KeeperTestSuite) TestMsgServer_SmartAccountsNotActive() {
 
 	// Create a test message
 	msg := &types.MsgAddAuthenticator{
-		Sender: "",
-		Type:   authenticator.SignatureVerification{}.Type(),
-		Data:   []byte(""),
+		Sender:            "",
+		AuthenticatorType: authenticator.SignatureVerification{}.Type(),
+		Data:              []byte(""),
 	}
 
 	_, err := msgServer.AddAuthenticator(ctx, msg)

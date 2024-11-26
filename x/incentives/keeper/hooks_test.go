@@ -10,10 +10,10 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v27/x/incentives/types"
 )
 
 var (
@@ -503,7 +503,7 @@ func (s *KeeperTestSuite) increaseVolumeBySwap(poolID uint64, tokeInCoin sdk.Coi
 
 	originalVoume := s.App.PoolManagerKeeper.GetOsmoVolumeForPool(s.Ctx, poolID)
 
-	_, err := s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], poolID, tokeInCoin, denomOut, osmomath.ZeroInt())
+	_, _, err := s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], poolID, tokeInCoin, denomOut, osmomath.ZeroInt())
 	s.Require().NoError(err)
 
 	finalVolume := s.App.PoolManagerKeeper.GetOsmoVolumeForPool(s.Ctx, poolID)

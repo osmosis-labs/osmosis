@@ -2,6 +2,8 @@ package v4_test
 
 import (
 	"fmt"
+	"math/rand"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -10,8 +12,8 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v25/app"
-	v4 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v4"
+	"github.com/osmosis-labs/osmosis/v27/app"
+	v4 "github.com/osmosis-labs/osmosis/v27/app/upgrades/v4"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
@@ -20,7 +22,7 @@ import (
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
 )
 
 type UpgradeTestSuite struct {
@@ -29,12 +31,19 @@ type UpgradeTestSuite struct {
 	ctx       sdk.Context
 	app       *app.OsmosisApp
 	preModule appmodule.HasPreBlocker
+	HomeDir   string
 }
 
 func (s *UpgradeTestSuite) SetupTest() {
-	s.app = app.Setup(false)
+	s.HomeDir = fmt.Sprintf("%d", rand.Int())
+	s.app = app.SetupWithCustomHome(false, s.HomeDir)
+
 	s.ctx = s.app.BaseApp.NewContextLegacy(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
 	s.preModule = upgrade.NewAppModule(s.app.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
+}
+
+func (s *UpgradeTestSuite) TearDownTest() {
+	os.RemoveAll(s.HomeDir)
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -136,8 +145,6 @@ func (s *UpgradeTestSuite) TestUpgradePayments() {
 
 	for _, tc := range testCases {
 		s.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			s.SetupTest() // reset
-
 			tc.pre_update()
 			tc.update()
 			tc.post_update()

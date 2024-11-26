@@ -11,7 +11,6 @@ import (
 	"time"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	"cosmossdk.io/x/tx/signing"
 	tmconfig "github.com/cometbft/cometbft/config"
 	tmos "github.com/cometbft/cometbft/libs/os"
 	"github.com/cometbft/cometbft/p2p"
@@ -34,8 +33,8 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	keepers "github.com/osmosis-labs/osmosis/v25/app/keepers"
-	"github.com/osmosis-labs/osmosis/v25/tests/e2e/util"
+	keepers "github.com/osmosis-labs/osmosis/v27/app/keepers"
+	"github.com/osmosis-labs/osmosis/v27/tests/e2e/util"
 )
 
 type internalNode struct {
@@ -284,8 +283,6 @@ func (n *internalNode) init() error {
 	}
 
 	genDoc.ChainID = n.chain.chainMeta.Id
-	// UNFORKING v2 TODO: This used to be genDoc.Consensus.Validators = nil, but got the error that Consensus can't be nil.
-	// Verify that this is the correct fix.
 	genDoc.Consensus = &genutiltypes.ConsensusGenesis{}
 	genDoc.AppState = appState
 
@@ -383,15 +380,10 @@ func (n *internalNode) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 	txBuilder.SetFeeAmount(sdk.NewCoins())
 	txBuilder.SetGasLimit(uint64(200000 * len(msgs)))
 
-	// UNFORKING v2 TODO: Verify that the type casting to V2AdaptableTx is correct.
-	adaptableTx, ok := txBuilder.GetTx().(authsigning.V2AdaptableTx)
-	if !ok {
-		return nil, fmt.Errorf("expected tx to be V2AdaptableTx, got %T", adaptableTx)
-	}
-	txData := adaptableTx.GetSigningTxData()
+	tx := txBuilder.GetTx()
 
 	// TODO: Find a better way to sign this tx with less code.
-	signerData := signing.SignerData{
+	signerData := authsigning.SignerData{
 		ChainID:       n.chain.chainMeta.Id,
 		AccountNumber: 0,
 		Sequence:      0,
@@ -423,13 +415,17 @@ func (n *internalNode) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 		return nil, err
 	}
 
-	bytesToSign, err := util.EncodingConfig.TxConfig.SignModeHandler().GetSignBytes(
-		// UNFORKING v2 TODO: Verify that empty context is fine due to sign mode direct and not textual.
-		// Should we be expecting to eventually support textual mode?
+	protoSignMode, err := authsigning.APISignModeToInternal(signingv1beta1.SignMode_SIGN_MODE_DIRECT)
+	if err != nil {
+		return nil, err
+	}
+
+	bytesToSign, err := authsigning.GetSignBytesAdapter(
 		context.Background(),
-		signingv1beta1.SignMode_SIGN_MODE_DIRECT,
+		util.EncodingConfig.TxConfig.SignModeHandler(),
+		protoSignMode,
 		signerData,
-		txData,
+		tx,
 	)
 	if err != nil {
 		return nil, err

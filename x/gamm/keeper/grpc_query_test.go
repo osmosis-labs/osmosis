@@ -9,13 +9,24 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v25/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v25/x/gamm/v2types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/v2types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
 )
+
+func (s *KeeperTestSuite) TestParams() {
+	queryClient := s.queryClient
+	ctx := s.Ctx
+
+	expectedParams := s.App.GAMMKeeper.GetParams(s.Ctx)
+
+	params, err := queryClient.Params(ctx, &types.ParamsRequest{})
+	s.Require().NoError(err)
+	s.Require().Equal(expectedParams, params.Params)
+}
 
 func (s *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 	queryClient := s.queryClient

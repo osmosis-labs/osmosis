@@ -17,7 +17,7 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v27/x/smart-account/types"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 
@@ -27,7 +27,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 
-	"github.com/osmosis-labs/osmosis/v25/app"
+	"github.com/osmosis-labs/osmosis/v27/app"
 )
 
 const SimAppChainID = "simulation-app"
@@ -36,8 +36,16 @@ type TestChain struct {
 	*ibctesting.TestChain
 }
 
+// NOTE: we create a global variable here to deal with testing directories,
+// this is necessary as there is now a lock file in the latest wasm that will panics our tests,
+// this is a workaround, we should do something smarter that sets the home dir and removes the home dir
+var TestingDirectories []string
+
 func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
-	osmosisApp := app.Setup(false)
+	// TODO: find a better way to do this, the likely hood that this will collide is small but not 0
+	dirName := fmt.Sprintf("%d", rand.Int())
+	osmosisApp := app.SetupWithCustomHome(false, dirName)
+	TestingDirectories = append(TestingDirectories, dirName)
 	return osmosisApp, app.NewDefaultGenesisState()
 }
 
@@ -74,6 +82,14 @@ func (chain *TestChain) SendMsgsNoCheck(msgs ...sdk.Msg) (*abci.ExecTxResult, er
 	// ensure the chain has the latest time
 	chain.Coordinator.UpdateTimeForChain(chain.TestChain)
 
+	// increment acc sequence regardless of success or failure tx execution
+	defer func() {
+		err := chain.SenderAccount.SetSequence(chain.SenderAccount.GetSequence() + 1)
+		if err != nil {
+			panic(err)
+		}
+	}()
+
 	resp, err := SignAndDeliver(chain.TB, chain.TxConfig, chain.App.GetBaseApp(), msgs, chain.ChainID, []uint64{chain.SenderAccount.GetAccountNumber()}, []uint64{chain.SenderAccount.GetSequence()}, chain.CurrentHeader.GetTime(), chain.NextVals.Hash(), chain.SenderPrivKey)
 	if err != nil {
 		return nil, err
@@ -88,12 +104,6 @@ func (chain *TestChain) SendMsgsNoCheck(msgs ...sdk.Msg) (*abci.ExecTxResult, er
 
 	if txResult.Code != 0 {
 		return txResult, fmt.Errorf("%s/%d: %q", txResult.Codespace, txResult.Code, txResult.Log)
-	}
-
-	// increment sequence for successful transaction execution
-	err = chain.SenderAccount.SetSequence(chain.SenderAccount.GetSequence() + 1)
-	if err != nil {
-		return nil, err
 	}
 
 	chain.Coordinator.IncrementTime()

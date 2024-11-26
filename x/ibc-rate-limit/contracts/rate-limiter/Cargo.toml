@@ -28,11 +28,11 @@ verbose_responses = []
 optimize = """docker run --rm -v "$(pwd)":/code \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  cosmwasm/rust-optimizer:0.12.6
+  cosmwasm/rust-optimizer:0.16.0
 """
 
 [dependencies]
-cosmwasm-std = { version =  "1.1.5", features = ["stargate", "cosmwasm_1_1"]}
+cosmwasm-std = { version = "1.1.5", features = ["stargate", "cosmwasm_1_1"] }
 cosmwasm-schema = "1.1.5"
 cosmwasm-storage = "1.1.5"
 cw-storage-plus = "0.16.0"
@@ -40,8 +40,10 @@ cw2 = "0.13.2"
 schemars = "0.8.8"
 serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
-prost = {version = "0.11.2", default-features = false, features = ["prost-derive"]}
-osmosis-std-derive = {version = "0.12.0"}
+prost = { version = "0.11.2", default-features = false, features = [
+  "prost-derive",
+] }
+osmosis-std-derive = { version = "0.12.0" }
 osmosis-std = "0.12.0"
 sha2 = "0.10.6"
 hex = "0.4.3"
@@ -49,3 +51,4 @@ hex = "0.4.3"
 [dev-dependencies]
 cw-multi-test = "0.13.2"
 serde-json-wasm = "0.5.2"
+itertools = "0.13"

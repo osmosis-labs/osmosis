@@ -9,7 +9,7 @@ import "google/protobuf/timestamp.proto";
 import "osmosis/superfluid/superfluid.proto";
 import "cosmos/msg/v1/msg.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v25/x/superfluid/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/superfluid/types";
 
 // Msg defines the Msg service.
 service Msg {
@@ -58,11 +58,6 @@ service Msg {
   // converts them to osmo then stakes the osmo to the designated validator.
   rpc UnbondConvertAndStake(MsgUnbondConvertAndStake)
       returns (MsgUnbondConvertAndStakeResponse);
-
-  rpc SetDenomRiskFactor(MsgSetDenomRiskFactor)
-      returns (MsgSetDenomRiskFactorResponse);
-  rpc UnsetDenomRiskFactor(MsgUnsetDenomRiskFactor)
-      returns (MsgUnsetDenomRiskFactorResponse);
 }
 
 message MsgSuperfluidDelegate {
@@ -299,28 +294,3 @@ message MsgUnbondConvertAndStakeResponse {
     (gogoproto.nullable) = false
   ];
 }
-
-// ===================== MsgSetDenomRiskFactor
-message MsgSetDenomRiskFactor {
-  option (amino.name) = "osmosis/set-denom-risk-factor";
-  option (cosmos.msg.v1.signer) = "sender";
-
-  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
-  string risk_factor = 3 [
-    (gogoproto.moretags) = "yaml:\"risk_factor\"",
-    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
-    (gogoproto.nullable) = false
-  ];
-}
-message MsgSetDenomRiskFactorResponse {}
-
-// ===================== MsgUnsetDenomRiskFactor
-message MsgUnsetDenomRiskFactor {
-  option (amino.name) = "osmosis/unset-denom-risk-factor";
-  option (cosmos.msg.v1.signer) = "sender";
-
-  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
-}
-message MsgUnsetDenomRiskFactorResponse {}

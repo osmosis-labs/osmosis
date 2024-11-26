@@ -4,11 +4,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/stableswap"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v25/x/protorev/types"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/pool-models/stableswap"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v27/x/protorev/types"
 )
 
 // Tests the hook implementation that is called after swapping
@@ -34,7 +34,7 @@ func (s *KeeperTestSuite) TestSwapping() {
 					},
 				},
 				executeSwap: func() {
-					_, err := s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], 1, sdk.NewCoin("akash", osmomath.NewInt(100)), "Atom", osmomath.NewInt(1))
+					_, _, err := s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], 1, sdk.NewCoin("akash", osmomath.NewInt(100)), "Atom", osmomath.NewInt(1))
 					s.Require().NoError(err)
 				},
 			},

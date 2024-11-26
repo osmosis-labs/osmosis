@@ -21,16 +21,16 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v25/x/ibc-rate-limit/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v27/x/ibc-rate-limit/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	"github.com/osmosis-labs/osmosis/v25/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v25/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v25/tests/e2e/initialization"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
+	"github.com/osmosis-labs/osmosis/v27/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v27/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v27/tests/e2e/initialization"
 )
 
 var (
@@ -864,7 +864,7 @@ func (s *IntegrationTestSuite) ExpeditedProposals() {
 	chainAB, chainABNode := s.getChainCfgs()
 
 	sender := chainABNode.GetWallet(initialization.ValidatorWalletName)
-	govModuleAccount := chainABNode.QueryGovModuleAccount(false)
+	govModuleAccount := chainABNode.QueryGovModuleAccount()
 	propMetadata := []byte{42}
 	validProp := fmt.Sprintf(`
 {
@@ -1026,7 +1026,7 @@ func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainA() {
 	chainA, chainANode := s.getChainACfgs()
 
 	sender := chainANode.GetWallet(initialization.ValidatorWalletName)
-	govModuleAccount := chainANode.QueryGovModuleAccount(false)
+	govModuleAccount := chainANode.QueryGovModuleAccount()
 	propMetadata := []byte{42}
 	validProp := fmt.Sprintf(`
 {
@@ -1088,7 +1088,7 @@ func (s *IntegrationTestSuite) SetExpeditedVotingPeriodChainB() {
 	chainB, chainBNode := s.getChainBCfgs()
 
 	sender := chainBNode.GetWallet(initialization.ValidatorWalletName)
-	govModuleAccount := chainBNode.QueryGovModuleAccount(false)
+	govModuleAccount := chainBNode.QueryGovModuleAccount()
 	propMetadata := []byte{42}
 	validProp := fmt.Sprintf(`
 {

@@ -11,9 +11,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	poolmanager "github.com/osmosis-labs/osmosis/v25/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v25/x/twap/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v25/x/twap/types"
+	poolmanager "github.com/osmosis-labs/osmosis/v27/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v27/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v27/x/twap/types"
 )
 
 // twapQueryParseArgs represents the outcome
@@ -30,6 +30,10 @@ func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
 	cmd.AddCommand(GetQueryArithmeticCommand())
 	cmd.AddCommand(GetQueryGeometricCommand())
+	cmd.AddCommand(
+		osmocli.GetParams[*queryproto.ParamsRequest](
+			types.ModuleName, queryproto.NewQueryClient),
+	)
 
 	return cmd
 }

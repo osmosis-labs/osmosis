@@ -1,14 +1,15 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v27/x/gamm/types"
 
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
 )
 
 const (
@@ -72,7 +73,7 @@ func (p *SetSuperfluidAssetsProposal) ValidateBasic() error {
 				return fmt.Errorf("denom %s must be from CL", asset.Denom)
 			}
 		default:
-			return fmt.Errorf("unsupported superfluid asset type")
+			return errors.New("unsupported superfluid asset type")
 		}
 	}
 
@@ -151,7 +152,7 @@ func (p *UpdateUnpoolWhiteListProposal) ValidateBasic() error {
 
 	for _, id := range p.Ids {
 		if id == 0 {
-			return fmt.Errorf("pool id cannot be 0")
+			return errors.New("pool id cannot be 0")
 		}
 	}
 

@@ -8,7 +8,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/types"
 )
 
 type msgServer struct {
@@ -43,7 +43,7 @@ func (m msgServer) AddAuthenticator(
 	}
 
 	// Finally, add the authenticator to the store.
-	id, err := m.Keeper.AddAuthenticator(ctx, sender, msg.Type, msg.Data)
+	id, err := m.Keeper.AddAuthenticator(ctx, sender, msg.AuthenticatorType, msg.Data)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (m msgServer) AddAuthenticator(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributeKeyAuthenticatorType, msg.Type),
+			sdk.NewAttribute(types.AttributeKeyAuthenticatorType, msg.AuthenticatorType),
 			sdk.NewAttribute(types.AttributeKeyAuthenticatorId, strconv.FormatUint(id, 10)),
 		),
 	})

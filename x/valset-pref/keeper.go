@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"math"
 
@@ -12,7 +13,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/x/valset-pref/types"
+	"github.com/osmosis-labs/osmosis/v27/x/valset-pref/types"
 
 	storetypes "cosmossdk.io/store/types"
 )
@@ -92,7 +93,7 @@ func (k Keeper) GetValSetPreferencesWithDelegations(ctx sdk.Context, delegator s
 
 	// No existing delegations for a delegator when valSet does not exist
 	if !exists && len(existingDelegations) == 0 {
-		return types.ValidatorSetPreferences{}, fmt.Errorf("No Existing delegation to unbond from")
+		return types.ValidatorSetPreferences{}, errors.New("No Existing delegation to unbond from")
 	}
 
 	// Returning existing valSet when there are no existing delegations

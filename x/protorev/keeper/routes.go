@@ -1,13 +1,14 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v25/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v27/x/protorev/types"
 )
 
 type RouteMetaData struct {
@@ -258,7 +259,7 @@ func (k Keeper) CalculateRoutePoolPoints(ctx sdk.Context, route poolmanagertypes
 
 			totalWeight += weight
 		default:
-			return 0, fmt.Errorf("invalid pool type")
+			return 0, errors.New("invalid pool type")
 		}
 	}
 

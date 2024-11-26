@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	"fmt"
+	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -9,9 +12,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmoapp "github.com/osmosis-labs/osmosis/v25/app"
-	"github.com/osmosis-labs/osmosis/v25/x/lockup"
-	"github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	osmoapp "github.com/osmosis-labs/osmosis/v27/app"
+	"github.com/osmosis-labs/osmosis/v27/x/lockup"
+	"github.com/osmosis-labs/osmosis/v27/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -82,7 +85,9 @@ func TestInitGenesis(t *testing.T) {
 }
 
 func TestExportGenesis(t *testing.T) {
-	app := osmoapp.Setup(false)
+	dirName := fmt.Sprintf("%d", rand.Int())
+	app := osmoapp.SetupWithCustomHome(false, dirName)
+
 	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
@@ -135,10 +140,21 @@ func TestExportGenesis(t *testing.T) {
 	require.Equal(t, genesisExported.Params, &types.Params{
 		ForceUnlockAllowedAddresses: []string{acc1.String(), acc2.String()},
 	})
+	os.RemoveAll(dirName)
 }
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
-	app := osmoapp.Setup(false)
+	// Create a unique temporary directory for each test
+	dirName, err := os.MkdirTemp("", "osmoapp_test")
+	require.NoError(t, err)
+
+	// Ensure the directory is cleaned up after the test completes
+	defer os.RemoveAll(dirName)
+
+	// Setup the app with the custom directory
+	app := osmoapp.SetupWithCustomHome(false, dirName)
+
+	// Continue with the rest of your test setup
 	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 
@@ -146,17 +162,20 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	appCodec := encodingConfig.Marshaler
 	am := lockup.NewAppModule(*app.LockupKeeper, app.AccountKeeper, app.BankKeeper)
 
-	err := testutil.FundAccount(ctx, app.BankKeeper, acc2, sdk.Coins{sdk.NewInt64Coin("foo", 5000000)})
+	// Fund account and create lock
+	err = testutil.FundAccount(ctx, app.BankKeeper, acc2, sdk.Coins{sdk.NewInt64Coin("foo", 5000000)})
 	require.NoError(t, err)
 	_, err = app.LockupKeeper.CreateLock(ctx, acc2, sdk.Coins{sdk.NewInt64Coin("foo", 5000000)}, time.Second*5)
 	require.NoError(t, err)
 
+	// Export genesis state
 	genesisExported := am.ExportGenesis(ctx, appCodec)
+
+	// After removing the temp directory, the app should no longer have access to it
+	os.RemoveAll(dirName)
+
+	// Ensure no panic occurs when initializing genesis in a fresh app
 	assert.NotPanics(t, func() {
-		app := osmoapp.Setup(false)
-		ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
-		ctx = ctx.WithBlockTime(now.Add(time.Second))
-		am := lockup.NewAppModule(*app.LockupKeeper, app.AccountKeeper, app.BankKeeper)
 		am.InitGenesis(ctx, appCodec, genesisExported)
 	})
 }

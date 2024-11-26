@@ -9,7 +9,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
 )
 
 type Keeper struct {
@@ -151,4 +151,8 @@ func (k Keeper) SetAuthorizedQuoteDenoms(ctx sdk.Context, authorizedQuoteDenoms 
 	params := k.poolmanagerKeeper.GetParams(ctx)
 	params.AuthorizedQuoteDenoms = authorizedQuoteDenoms
 	k.poolmanagerKeeper.SetParams(ctx, params)
+}
+
+func (k Keeper) GetWhitelistedAddresses(ctx sdk.Context) []string {
+	return k.GetParams(ctx).UnrestrictedPoolCreatorWhitelist
 }

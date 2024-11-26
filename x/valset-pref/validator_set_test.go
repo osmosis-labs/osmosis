@@ -6,8 +6,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	valPref "github.com/osmosis-labs/osmosis/v25/x/valset-pref"
-	"github.com/osmosis-labs/osmosis/v25/x/valset-pref/types"
+	valPref "github.com/osmosis-labs/osmosis/v27/x/valset-pref"
+	"github.com/osmosis-labs/osmosis/v27/x/valset-pref/types"
 )
 
 func (s *KeeperTestSuite) TestValidateLockForForceUnlock() {

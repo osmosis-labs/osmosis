@@ -6,9 +6,8 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/lockup/lock.proto";
-import "osmosis/poolmanager/v1beta1/swap_route.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v25/x/superfluid/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/superfluid/types";
 
 // SuperfluidAssetType indicates whether the superfluid asset is
 // a native token, lp share of a pool, or concentrated share of a pool
@@ -30,9 +29,6 @@ message SuperfluidAsset {
   // AssetType indicates whether the superfluid asset is a native token or an lp
   // share
   SuperfluidAssetType asset_type = 2;
-  // For non-osmo native assets, we need a route to determine the
-  // twap of the asset into osmo
-  repeated osmosis.poolmanager.v1beta1.SwapAmountInRoute price_route = 3;
 }
 
 // SuperfluidIntermediaryAccount takes the role of intermediary between LP token
@@ -100,17 +96,4 @@ message ConcentratedPoolUserPositionRecord {
   ];
   cosmos.base.v1beta1.Coin equivalent_staked_amount = 6
       [ (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin" ];
-}
-
-// The DenomRiskFactor stores the risk factor of a superfluid asset
-message DenomRiskFactor {
-  // superfluid asset denom, can be LP token or native token
-  string denom = 1;
-  // risk_factor is to be cut on OSMO equivalent value of the denom tokens
-  // for superfluid staking. It defaults to params.minimum_risk_factor
-  string risk_factor = 2 [
-    (gogoproto.moretags) = "yaml:\"risk_factor\"",
-    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
-    (gogoproto.nullable) = false
-  ];
 }

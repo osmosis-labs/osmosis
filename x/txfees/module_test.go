@@ -2,6 +2,9 @@ package txfees_test
 
 import (
 	"encoding/json"
+	"fmt"
+	"math/rand"
+	"os"
 	"testing"
 
 	coreheader "cosmossdk.io/core/header"
@@ -13,10 +16,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmosisapp "github.com/osmosis-labs/osmosis/v25/app"
+	osmosisapp "github.com/osmosis-labs/osmosis/v27/app"
 
-	simapp "github.com/osmosis-labs/osmosis/v25/app"
-	mempool1559 "github.com/osmosis-labs/osmosis/v25/x/txfees/keeper/mempool-1559"
+	simapp "github.com/osmosis-labs/osmosis/v27/app"
+	mempool1559 "github.com/osmosis-labs/osmosis/v27/x/txfees/keeper/mempool-1559"
 )
 
 func TestSetBaseDenomOnInitBlock(t *testing.T) {
@@ -44,7 +47,9 @@ func TestSetBaseDenomOnInitBlock(t *testing.T) {
 }
 
 func TestBeginBlock(t *testing.T) {
-	app := simapp.Setup(false)
+	dirName := fmt.Sprintf("%d", rand.Int())
+	app := simapp.SetupWithCustomHome(false, dirName)
+
 	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{ChainID: "osmosis-1", Height: 1})
 
 	genesisState := osmosisapp.GenesisStateWithValSet(app)
@@ -93,6 +98,8 @@ func TestBeginBlock(t *testing.T) {
 	RunFinalizeBlock(ctx, app)
 	expectedNewBlockTargetGas := mempool1559.TargetBlockSpacePercent.Mul(osmomath.NewDec(newDefaultBlockMaxGas)).TruncateInt().Int64()
 	require.Equal(t, expectedNewBlockTargetGas, mempool1559.TargetGas)
+
+	os.RemoveAll(dirName)
 }
 
 func RunFinalizeBlock(ctx sdk.Context, app *simapp.OsmosisApp) sdk.Context {

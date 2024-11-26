@@ -1,10 +1,13 @@
 package types
 
 import (
+	fmt "fmt"
+	"strconv"
+	"strings"
 	time "time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v27/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -57,4 +60,29 @@ func (gauge Gauge) IsLastNonPerpetualDistribution() bool {
 	// in MsgCreateGauge.ValidateBasic. Additionally, FilledEpoch is always initialized to 0
 	// at gauge creation time.
 	return !gauge.IsPerpetual && gauge.FilledEpochs+1 >= gauge.NumEpochsPaidOver
+}
+
+func (gauge Gauge) IsDurationLockGauge() bool {
+	return gauge.DistributeTo.LockQueryType == lockuptypes.ByDuration
+}
+
+// IsInternalGauge will check if gauge prefix is a NoLockInternalPrefix
+// To check for additional prefix, it is required to pass them as argument
+func (gauge Gauge) IsInternalGauge(prefixes []string) bool {
+	prefixes = append(prefixes, NoLockInternalPrefix)
+	for _, prefix := range prefixes {
+		if strings.HasPrefix(gauge.DistributeTo.GetDenom(), prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+func (gauge Gauge) IsExternalGauge() bool {
+	return strings.HasPrefix(gauge.DistributeTo.GetDenom(), NoLockExternalPrefix)
+}
+
+func (gauge Gauge) IsLinkedToPool(poolID uint64) bool {
+	_, foundSuffix := strings.CutSuffix(gauge.DistributeTo.Denom, fmt.Sprintf("/%s", strconv.FormatUint(poolID, 10)))
+	return foundSuffix
 }

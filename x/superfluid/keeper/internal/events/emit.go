@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v27/x/superfluid/types"
 )
 
 func EmitSetSuperfluidAssetEvent(ctx sdk.Context, denom string, assetType types.SuperfluidAssetType) {
@@ -44,20 +44,22 @@ func newRemoveSuperfluidAssetEvent(denom string) sdk.Event {
 	)
 }
 
-func EmitSuperfluidDelegateEvent(ctx sdk.Context, lockId uint64, valAddress string) {
+func EmitSuperfluidDelegateEvent(ctx sdk.Context, lockId uint64, valAddress string, lockCoins sdk.Coins) {
 	if ctx.EventManager() == nil {
 		return
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
-		newSuperfluidDelegateEvent(lockId, valAddress),
+		newSuperfluidDelegateEvent(lockId, valAddress, lockCoins),
 	})
 }
 
-func newSuperfluidDelegateEvent(lockId uint64, valAddress string) sdk.Event {
+func newSuperfluidDelegateEvent(lockId uint64, valAddress string, lockCoins sdk.Coins) sdk.Event {
 	return sdk.NewEvent(
 		types.TypeEvtSuperfluidDelegate,
 		sdk.NewAttribute(types.AttributeLockId, osmoutils.Uint64ToString(lockId)),
+		sdk.NewAttribute(types.AttributeLockAmount, lockCoins[0].Amount.String()),
+		sdk.NewAttribute(types.AttributeLockDenom, lockCoins[0].Denom),
 		sdk.NewAttribute(types.AttributeValidator, valAddress),
 	)
 }
@@ -99,20 +101,22 @@ func newSuperfluidIncreaseDelegationEvent(lockId uint64, amount sdk.Coins) sdk.E
 	)
 }
 
-func EmitSuperfluidUndelegateEvent(ctx sdk.Context, lockId uint64) {
+func EmitSuperfluidUndelegateEvent(ctx sdk.Context, lockId uint64, lockCoins sdk.Coins) {
 	if ctx.EventManager() == nil {
 		return
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
-		newSuperfluidUndelegateEvent(lockId),
+		newSuperfluidUndelegateEvent(lockId, lockCoins),
 	})
 }
 
-func newSuperfluidUndelegateEvent(lockId uint64) sdk.Event {
+func newSuperfluidUndelegateEvent(lockId uint64, lockCoins sdk.Coins) sdk.Event {
 	return sdk.NewEvent(
 		types.TypeEvtSuperfluidUndelegate,
 		sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", lockId)),
+		sdk.NewAttribute(types.AttributeLockAmount, lockCoins[0].Amount.String()),
+		sdk.NewAttribute(types.AttributeLockDenom, lockCoins[0].Denom),
 	)
 }
 

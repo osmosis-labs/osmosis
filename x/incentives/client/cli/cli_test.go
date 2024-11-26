@@ -6,8 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
+	"github.com/osmosis-labs/osmosis/v27/x/incentives/types"
 )
 
 func TestGetCmdGauges(t *testing.T) {
@@ -91,6 +91,46 @@ func TestGetCmdUpcomingGaugesPerDenom(t *testing.T) {
 			ExpectedQuery: &types.UpcomingGaugesPerDenomRequest{
 				Denom:      appparams.BaseCoinUnit,
 				Pagination: &query.PageRequest{Key: []uint8{}, Offset: 2, Limit: 100},
+			},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
+}
+
+func TestGetCmdGaugesByPoolID(t *testing.T) {
+	desc, _ := GetCmdGaugesByPoolID()
+	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryGaugesByPoolIDRequest]{
+		"basic test": {
+			Cmd: "1",
+			ExpectedQuery: &types.QueryGaugesByPoolIDRequest{
+				Id:         1,
+				Pagination: &query.PageRequest{Key: []uint8{}, Offset: 0, Limit: 100},
+			},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
+}
+
+func TestGetCmdExternalGauges(t *testing.T) {
+	desc, _ := GetCmdExternalGauges()
+	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryExternalGaugesRequest]{
+		"basic test": {
+			Cmd: "",
+			ExpectedQuery: &types.QueryExternalGaugesRequest{
+				Pagination: &query.PageRequest{Key: []uint8{}, Offset: 0, Limit: 100},
+			},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
+}
+
+func TestGetCmdInternalGauges(t *testing.T) {
+	desc, _ := GetCmdInternalGauges()
+	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryInternalGaugesRequest]{
+		"basic test": {
+			Cmd: "",
+			ExpectedQuery: &types.QueryInternalGaugesRequest{
+				Pagination: &query.PageRequest{Key: []uint8{}, Offset: 0, Limit: 100},
 			},
 		},
 	}

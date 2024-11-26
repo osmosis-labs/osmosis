@@ -11,8 +11,8 @@ import (
 	cosmosdb "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
-	"github.com/osmosis-labs/osmosis/v25/simulation/executor/internal/stats"
-	"github.com/osmosis-labs/osmosis/v25/simulation/simtypes/simlogger"
+	"github.com/osmosis-labs/osmosis/v27/simulation/executor/internal/stats"
+	"github.com/osmosis-labs/osmosis/v27/simulation/simtypes/simlogger"
 )
 
 const SimAppChainID = "osmosis-test"

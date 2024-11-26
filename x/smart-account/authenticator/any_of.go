@@ -64,6 +64,10 @@ func (aoa AnyOf) Initialize(config []byte) (Authenticator, error) {
 		return nil, errorsmod.Wrap(err, "failed to parse sub-authenticators initialization data")
 	}
 
+	if len(initDatas) <= 1 {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "anyOf must have at least 2 sub-authenticators")
+	}
+
 	// Call Initialize on each sub-authenticator with its appropriate data using AuthenticatorManager
 	for _, initData := range initDatas {
 		authenticatorCode := aoa.am.GetAuthenticatorByType(initData.Type)

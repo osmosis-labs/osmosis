@@ -79,7 +79,7 @@ make localnet-clean
 
 Running an osmosis network with mainnet state is now as easy as setting up a stateless localnet.
 
-1. Set up a mainnet node and stop it at whatever height you want to fork the network at.
+1. Set up a mainnet node, allowing it to start and sync a few blocks. Then, stop it at the desired height where you want to fork the network.
 
 2. There are now two options you can choose from:
 
@@ -98,13 +98,15 @@ Running an osmosis network with mainnet state is now as easy as setting up a sta
 
    - **Mainnet is on version X, and you want to create a testnet on version X+1.**
 
-     On version X, run:
+     On version X, build binary and run:
 
       ```bash
-      osmosisd in-place-testnet localosmosis osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj --trigger-testnet-upgrade
+      osmosisd in-place-testnet localosmosis osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj --trigger-testnet-upgrade=vXX
       ```
 
-      Where the first input is the desired chain-id of the new network and the second input is the desired validator operator address (where you vote from).
+      where vXX indicates the next version that mainnet needs to be upgraded to. For example when current mainnet state is at v26, the flag value should be `--trigger-testnet-upgrade=v27`.
+
+      The first input is the desired chain-id of the new network and the second input is the desired validator operator address (where you vote from).
       The address provided above is included in the localosmosis keyring under the name 'val'.
 
      The network will start and hit 10 blocks, at which point the upgrade will trigger and the network will halt.
@@ -117,7 +119,22 @@ Running an osmosis network with mainnet state is now as easy as setting up a sta
 
 You now have a network you own with the mainnet state on version X+1.
 
-## LocalOsmosis Accounts
+### Removing unnecessary log lines 
+Running in-place-testnet would be resulting in noise in the log lines that looks something like this.
+```
+{"level": "info", "module": "server", "module": "consensus", "err": "cannot find validator 122 in valSet of size 1: invalid valid ator index", "time": "2024-10-21T21:34:30Z" ,"message": "failed attempting to add vote"} {"level": "error" , "module": "server", "module":" consensus" ,"height" :22731539, "round" :0, "peer": "27e14df66c9e4cd6b176b@dcabadfa 96750f911", "msg_type": "*consensus. VoteMessage", "err": "error adding vote", "time": "2024-10-21T21:34:307","message":"failed to process message"} {"level": "info" ,"module": "server"
+', "module": "consensus", "err": "cannot find validator 107 in valSet of size 1: invalid valid
+ator index", "time": "2024-10-21T21:34:30Z", "message": "failed attempting to add vote"}
+```
+
+To remove the noise, remove existing addrbook.json from config folder, and replace it with an empty json.
+
+### Changing In Place Testnet Parameters
+
+The settings for in place testnet are done in https://github.com/osmosis-labs/osmosis/blob/bb7a94e2561cc63b60ee76ec71a3e04e9688b22c/app/app.go#L773. Modify the parameters in `InitOsmosisAppForTestnet` to modify in place testnet parameters. For example, if you were to modify epoch hours, you would be modifying https://github.com/osmosis-labs/osmosis/blob/bb7a94e2561cc63b60ee76ec71a3e04e9688b22c/app/app.go#L942-L967 .
+
+
+## LocalOsmosis Accounts and Keys
 
 LocalOsmosis is pre-configured with one validator and 9 accounts with ION and OSMO balances.
 
@@ -134,6 +151,16 @@ LocalOsmosis is pre-configured with one validator and 9 accounts with ION and OS
 | lo-test8  | `osmo1f4tvsdukfwh6s9swrc24gkuz23tp8pd3e9r5fa`                                                          | `cream sport mango believe inhale text fish rely elegant below earth april wall rug ritual blossom cherry detail length blind digital proof identify ride`                 |
 | lo-test9  | `osmo1myv43sqgnj5sm4zl98ftl45af9cfzk7nhjxjqh`                                                          | `index light average senior silent limit usual local involve delay update rack cause inmate wall render magnet common feature laundry exact casual resource hundred`       |
 | lo-test10 | `osmo14gs9zqh8m49yy9kscjqu9h72exyf295afg6kgk`                                                          | `prefer forget visit mistake mixture feel eyebrow autumn shop pair address airport diesel street pass vague innocent poem method awful require hurry unhappy shoulder`     |
+
+To list all keys in the keyring named `test`
+```bash
+osmosisd keys list --keyring-backend test
+```
+
+To import an account into the keyring `test`. NOTE: replace the address with any of the above user accounts. 
+```bash
+osmosisd keys add osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks --keyring-backend test --recover
+```
 
 ## Tests
 
@@ -183,6 +210,13 @@ services:
 ```
 
 2. Checkout the Osmosis repository to a different `ref` that includes the new version, and then rebuild and restart LocalOsmosis using `make localnet-start`. Make sure to don't delete your `~/.osmosisd-local` folder.
+
+### Create a pool 
+You can create a concentrated liquidity pool in `localosmosis`:
+```bash
+osmosisd tx concentratedliquidity create-pool uion uosmo 100 0.01 --from osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks --chain-id localosmosis -b sync --keyring-backend test --fees 3000uosmo --gas 1000000
+```
+NOTE: Check `--from` and `--keyring-backend`. See also: [LocalOsmosis Accounts and Keys](#localosmosis-accounts-and-keys)
 
 ## FAQ
 

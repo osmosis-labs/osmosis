@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/store/prefix"
@@ -13,8 +14,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v25/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v27/x/protorev/types"
 )
 
 // ----------------------- Statistics Stores  ----------------------- //
@@ -25,7 +26,7 @@ func (k Keeper) GetNumberOfTrades(ctx sdk.Context) (osmomath.Int, error) {
 
 	bz := store.Get(types.KeyPrefixNumberOfTrades)
 	if len(bz) == 0 {
-		return osmomath.ZeroInt(), fmt.Errorf("no trades have been executed by the protorev module")
+		return osmomath.ZeroInt(), errors.New("no trades have been executed by the protorev module")
 	}
 
 	trades := osmomath.Int{}

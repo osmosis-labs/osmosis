@@ -9,10 +9,10 @@ import (
 	distribution "github.com/cosmos/cosmos-sdk/x/distribution"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v25/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v27/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v27/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v27/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
@@ -281,7 +281,7 @@ func (s *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 			superDelegations:      []superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			superUnbondingLockIds: []uint64{1, 2},
 			slashedValIndexes:     []int64{0},
-			expSlashedLockIds:     []uint64{}, // UNFORKING v2 TODO: We no longer slash unbonded validators so we no longer expect this to be slashed, verify that this is correct.
+			expSlashedLockIds:     []uint64{},
 			expUnslashedLockIds:   []uint64{1, 2},
 		},
 	}

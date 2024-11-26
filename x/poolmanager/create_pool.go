@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
 )
 
 // validateCreatedPool checks that the pool was created with the correct pool ID and address.
@@ -45,10 +45,9 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 		return 0, err
 	}
 
-	// Send pool creation fee from pool creator to community pool
-	poolCreationFee := k.GetParams(ctx).PoolCreationFee
 	sender := msg.PoolCreator()
-	if err := k.communityPoolKeeper.FundCommunityPool(ctx, poolCreationFee, sender); err != nil {
+	err = k.fundCommunityPoolIfNotWhitelisted(ctx, sender)
+	if err != nil {
 		return 0, err
 	}
 
@@ -154,6 +153,7 @@ func (k Keeper) getNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 func (k *Keeper) SetPoolRoute(ctx sdk.Context, poolId uint64, poolType types.PoolType) {
 	store := ctx.KVStore(k.storeKey)
 	osmoutils.MustSet(store, types.FormatModuleRouteKey(poolId), &types.ModuleRoute{PoolType: poolType})
+	k.cachedPoolModules.Delete(poolId)
 }
 
 type poolModuleCacheValue struct {
@@ -247,4 +247,30 @@ func parsePoolRouteWithKey(key []byte, value []byte) (types.ModuleRoute, error) 
 	}
 	parsedValue.PoolId = poolId
 	return parsedValue, nil
+}
+
+// fundCommunityPoolIfNotWhitelisted checks if the sender is in the UnrestrictedPoolCreatorWhitelist
+// and funds the community pool if the sender is not whitelisted.
+func (k Keeper) fundCommunityPoolIfNotWhitelisted(ctx sdk.Context, sender sdk.AccAddress) error {
+	// Get the UnrestrictedPoolCreatorWhitelist from the concentrated pool module
+	whitelist := k.concentratedKeeper.GetWhitelistedAddresses(ctx)
+
+	// Check if sender is in the whitelist
+	isWhitelisted := false
+	for _, addr := range whitelist {
+		if addr == sender.String() {
+			isWhitelisted = true
+			break
+		}
+	}
+
+	// Run FundCommunityPool logic if sender is not in the whitelist
+	if !isWhitelisted {
+		poolCreationFee := k.GetParams(ctx).PoolCreationFee
+		if err := k.communityPoolKeeper.FundCommunityPool(ctx, poolCreationFee, sender); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

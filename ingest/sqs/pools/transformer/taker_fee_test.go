@@ -4,7 +4,7 @@ import (
 	"github.com/osmosis-labs/sqs/sqsdomain"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolstransformer "github.com/osmosis-labs/osmosis/v25/ingest/sqs/pools/transformer"
+	poolstransformer "github.com/osmosis-labs/osmosis/v27/ingest/sqs/pools/transformer"
 )
 
 var (
@@ -54,6 +54,10 @@ func (s *PoolTransformerTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 					Denom0: USDC,
 					Denom1: USDT,
 				}: defaultCustomTakerFee,
+				{
+					Denom0: USDT,
+					Denom1: USDC,
+				}: defaultPoolManagerTakerFee,
 			},
 		},
 		"one denom pair, taker fee is in the map, pre-set taker fee": {
@@ -84,6 +88,10 @@ func (s *PoolTransformerTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 					Denom1: USDT,
 					// As a result, value A from state is ignored.
 				}: otherCustomTakerFee,
+				{
+					Denom0: USDT,
+					Denom1: USDC,
+				}: defaultPoolManagerTakerFee,
 			},
 		},
 		"one denom pair, taker fee is not in the map, do not pre-set taker fee (take from params)": {
@@ -98,6 +106,10 @@ func (s *PoolTransformerTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 				{
 					Denom0: USDC,
 					Denom1: USDT,
+				}: defaultPoolManagerTakerFee,
+				{
+					Denom0: USDT,
+					Denom1: USDC,
 				}: defaultPoolManagerTakerFee,
 			},
 		},
@@ -127,13 +139,25 @@ func (s *PoolTransformerTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 					Denom1: USDT,
 				}: defaultCustomTakerFee,
 				{
+					Denom0: USDT,
+					Denom1: USDC,
+				}: defaultPoolManagerTakerFee,
+				{
 					Denom0: USDC,
 					Denom1: USDW,
+				}: defaultPoolManagerTakerFee,
+				{
+					Denom0: USDW,
+					Denom1: USDC,
 				}: defaultPoolManagerTakerFee,
 				{
 					Denom0: USDT,
 					Denom1: USDW,
 				}: otherCustomTakerFee,
+				{
+					Denom0: USDW,
+					Denom1: USDT,
+				}: defaultPoolManagerTakerFee,
 			},
 		},
 	}

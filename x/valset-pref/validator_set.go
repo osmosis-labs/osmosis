@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"time"
@@ -11,9 +12,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	appParams "github.com/osmosis-labs/osmosis/v25/app/params"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v25/x/valset-pref/types"
+	appParams "github.com/osmosis-labs/osmosis/v27/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/v27/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v27/x/valset-pref/types"
 )
 
 type valSet struct {
@@ -62,14 +63,14 @@ func (k Keeper) ValidateValidatorSetPreference(ctx sdk.Context, delegator string
 		// check if the new preferences is the same as the existing preferences
 		isEqual := k.IsValidatorSetEqual(existingValSet.Preferences, preferences)
 		if isEqual {
-			return types.ValidatorSetPreferences{}, fmt.Errorf("The preferences (validator and weights) are the same")
+			return types.ValidatorSetPreferences{}, errors.New("The preferences (validator and weights) are the same")
 		}
 	}
 
 	// checks that all the validators exist on chain
 	valSetPref, err := k.IsPreferenceValid(ctx, preferences)
 	if err != nil {
-		return types.ValidatorSetPreferences{}, fmt.Errorf("The validator preference list is not valid")
+		return types.ValidatorSetPreferences{}, errors.New("The validator preference list is not valid")
 	}
 
 	return types.ValidatorSetPreferences{Preferences: valSetPref}, nil
@@ -497,7 +498,7 @@ func (k Keeper) withdrawExistingValSetStakingPosition(ctx sdk.Context, delegator
 	for _, dels := range delegations {
 		valAddr, err := sdk.ValAddressFromBech32(dels.ValOperAddress)
 		if err != nil {
-			return fmt.Errorf("validator address not formatted")
+			return errors.New("validator address not formatted")
 		}
 
 		_, err = k.distirbutionKeeper.WithdrawDelegationRewards(ctx, delegator, valAddr)
@@ -527,7 +528,7 @@ func (k Keeper) ForceUnlockBondedOsmo(ctx sdk.Context, lockID uint64, delegatorA
 	}
 	// TODO: use found
 	if synthLocks != (lockuptypes.SyntheticLock{}) {
-		return sdk.Coin{}, fmt.Errorf("cannot use DelegateBondedTokens being used for superfluid.")
+		return sdk.Coin{}, errors.New("cannot use DelegateBondedTokens being used for superfluid.")
 	}
 
 	// ForceUnlock ignores lockup duration and unlock tokens immediately.
@@ -546,7 +547,7 @@ func (k Keeper) ForceUnlockBondedOsmo(ctx sdk.Context, lockID uint64, delegatorA
 func (k Keeper) getValAddrAndVal(ctx sdk.Context, valOperAddress string) (sdk.ValAddress, stakingtypes.Validator, error) {
 	valAddr, err := sdk.ValAddressFromBech32(valOperAddress)
 	if err != nil {
-		return nil, stakingtypes.Validator{}, fmt.Errorf("validator address not formatted")
+		return nil, stakingtypes.Validator{}, errors.New("validator address not formatted")
 	}
 
 	validator, err := k.stakingKeeper.GetValidator(ctx, valAddr)
@@ -652,7 +653,7 @@ func (k Keeper) validateLockForForceUnlock(ctx sdk.Context, lockID uint64, deleg
 	// check that lock contains only 1 token
 	coin, err := lock.SingleCoin()
 	if err != nil {
-		return nil, osmomath.Int{}, fmt.Errorf("lock fails to meet expected invariant, it contains multiple coins")
+		return nil, osmomath.Int{}, errors.New("lock fails to meet expected invariant, it contains multiple coins")
 	}
 
 	// check that the lock denom is uosmo
@@ -662,12 +663,12 @@ func (k Keeper) validateLockForForceUnlock(ctx sdk.Context, lockID uint64, deleg
 
 	// check if there is enough uosmo token in the lock
 	if lockedOsmoAmount.LTE(osmomath.NewInt(0)) {
-		return nil, osmomath.Int{}, fmt.Errorf("lock does not contain osmo denom, or there isn't enough osmo to unbond")
+		return nil, osmomath.Int{}, errors.New("lock does not contain osmo denom, or there isn't enough osmo to unbond")
 	}
 
 	// Checks if lock ID is bonded and ensure that the duration is <= 2 weeks
 	if lock.IsUnlocking() || lock.Duration > time.Hour*24*7*2 {
-		return nil, osmomath.Int{}, fmt.Errorf("the tokens have to bonded and the duration has to be <= 2weeks")
+		return nil, osmomath.Int{}, errors.New("the tokens have to bonded and the duration has to be <= 2weeks")
 	}
 
 	return lock, lockedOsmoAmount, nil

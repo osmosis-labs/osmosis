@@ -8,7 +8,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/poolmanager/v1beta1/genesis.proto";
 import "osmosis/txfees/v1beta1/genesis.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v25/x/protorev/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/protorev/types";
 
 // TokenPairArbRoutes tracks all of the hot routes for a given pair of tokens
 message TokenPairArbRoutes {
@@ -198,12 +198,12 @@ message AllProtocolRevenue {
     (gogoproto.moretags) = "yaml:\"taker_fees_tracker\"",
     (gogoproto.nullable) = false
   ];
-  // osmosis.txfees.v1beta1.TxFeesTracker tx_fees_tracker = 2 [
-  //   (gogoproto.moretags) = "yaml:\"tx_fees_tracker\"",
-  //   (gogoproto.nullable) = false
-  // ];
-  reserved 2;                 // Reserve the field number
-  reserved "tx_fees_tracker"; // Reserve the field name
+  // DEPRECATED
+  osmosis.txfees.v1beta1.TxFeesTracker tx_fees_tracker = 2 [
+    (gogoproto.moretags) = "yaml:\"tx_fees_tracker\",deprecated:\"true\"",
+    (gogoproto.nullable) = false,
+    deprecated = true
+  ];
   CyclicArbTracker cyclic_arb_tracker = 3 [
     (gogoproto.moretags) = "yaml:\"cyclic_arb_tracker\"",
     (gogoproto.nullable) = false

@@ -3,11 +3,12 @@ package keeper
 import (
 	"context"
 	"encoding/json"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v25/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v27/x/tokenfactory/types"
 
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
@@ -26,6 +27,28 @@ func (k Keeper) setBeforeSendHook(ctx sdk.Context, denom string, cosmwasmAddress
 	if cosmwasmAddress == "" {
 		store.Delete([]byte(types.BeforeSendHookAddressPrefixKey))
 		return nil
+	} else {
+		// if a contract is being set, call the contract using cache context
+		// to test if the contract is an existing, valid contract.
+		cacheCtx, _ := ctx.CacheContext()
+
+		cwAddr, err := sdk.AccAddressFromBech32(cosmwasmAddress)
+		if err != nil {
+			return err
+		}
+
+		tempMsg := types.TrackBeforeSendSudoMsg{
+			TrackBeforeSend: types.TrackBeforeSendMsg{},
+		}
+		msgBz, err := json.Marshal(tempMsg)
+		if err != nil {
+			return err
+		}
+		_, err = k.contractKeeper.Sudo(cacheCtx, cwAddr, msgBz)
+
+		if err != nil && strings.Contains(err.Error(), "no such contract") {
+			return err
+		}
 	}
 
 	_, err = sdk.AccAddressFromBech32(cosmwasmAddress)
@@ -142,6 +165,13 @@ func (k Keeper) callBeforeSendListener(context context.Context, from, to sdk.Acc
 			childCtx := ctx.WithGasMeter(storetypes.NewGasMeter(types.BeforeSendHookGasLimit))
 			_, err = k.contractKeeper.Sudo(childCtx.WithEventManager(em), cwAddr, msgBz)
 			if err != nil {
+				if strings.Contains(err.Error(), "no such contract") {
+					return nil
+				}
+				if k.IsModuleAcc(ctx, from) {
+					return nil
+				}
+
 				return errorsmod.Wrapf(err, "failed to call before send hook for denom %s", coin.Denom)
 			}
 

@@ -4,20 +4,18 @@ import (
 	context "context"
 	"time"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	addresscodec "cosmossdk.io/core/address"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v25/x/gamm/types/migration"
-	incentivestypes "github.com/osmosis-labs/osmosis/v25/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v27/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v27/x/gamm/types/migration"
+	incentivestypes "github.com/osmosis-labs/osmosis/v27/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v27/x/lockup/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -137,13 +135,9 @@ type PoolManagerKeeper interface {
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
 		tokenOutMinAmount osmomath.Int,
-	) (osmomath.Int, error)
+	) (osmomath.Int, sdk.Coin, error)
 }
 
 type ValSetPreferenceKeeper interface {
 	DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error
-}
-
-type TwapKeeper interface {
-	UnsafeGetMultiPoolArithmeticTwapToNow(ctx sdk.Context, route []*poolmanagertypes.SwapAmountInRoute, baseAssetDenom string, quoteAssetDenom string, startTime time.Time) (osmomath.Dec, error)
 }

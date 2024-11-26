@@ -34,9 +34,11 @@ on:
 
 env:
   DOCKER_REPOSITORY: osmolabs/osmosis
+  DOCKER_REPOSITORY_COSMOVISOR: osmolabs/osmosis-cosmovisor
   RUNNER_BASE_IMAGE_DISTROLESS: gcr.io/distroless/static-debian11
   RUNNER_BASE_IMAGE_NONROOT: gcr.io/distroless/static-debian11:nonroot
-  RUNNER_BASE_IMAGE_ALPINE: alpine:3.17
+  RUNNER_BASE_IMAGE_ALPINE: alpine:3.20
+  COSMOVISOR_VERSION: v1.5.0
 
 jobs:
   push-docker-images:
@@ -74,7 +76,7 @@ jobs:
       # Distroless Docker image (default)
       - name: Build and push (distroless)
         id: build_push_distroless
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           file: Dockerfile
           context: .
@@ -95,7 +97,7 @@ jobs:
       # Distroless nonroot Docker image
       - name: Build and push (nonroot)
         id: build_push_nonroot
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           file: Dockerfile
           context: .
@@ -113,7 +115,7 @@ jobs:
       # Alpine Docker image
       - name: Build and push (alpine)
         id: build_push_alpine
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           file: Dockerfile
           context: .
@@ -130,7 +132,7 @@ jobs:
             ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.PATCH_VERSION }}-alpine
       - if: startsWith(github.ref, 'refs/tags/v') && endsWith(github.ref, '.0')
         name: Build and push (e2e-chain-init)
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           file: tests/e2e/initialization/init.Dockerfile
           context: .
@@ -142,6 +144,24 @@ jobs:
             osmolabs/osmosis-e2e-init-chain:${{ env.MAJOR_VERSION }}
             osmolabs/osmosis-e2e-init-chain:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}
             osmolabs/osmosis-e2e-init-chain:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.PATCH_VERSION }}
+      # Cosmovisor image
+      - name: Build and Push Cosmovisor Docker Images
+        uses: docker/build-push-action@v6
+        with:
+          file: Dockerfile.cosmovisor
+          context: .
+          push: true
+          platforms: linux/amd64
+          build-args: |
+            GO_VERSION=${{ env.GO_VERSION }}
+            RUNNER_IMAGE=${{ env.RUNNER_BASE_IMAGE_ALPINE }}
+            GIT_VERSION=${{ env.VERSION }}
+            GIT_COMMIT=${{ github.sha }}
+            COSMOVISOR_VERSION=${{ env.COSMOVISOR_VERSION }}
+          tags: |
+            ${{ env.DOCKER_REPOSITORY_COSMOVISOR }}:${{ env.MAJOR_VERSION }}
+            ${{ env.DOCKER_REPOSITORY_COSMOVISOR }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}
+            ${{ env.DOCKER_REPOSITORY_COSMOVISOR }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.PATCH_VERSION }}
 
   push-iavl-docker-images:
     runs-on: buildjet-4vcpu-ubuntu-2204
@@ -178,7 +198,7 @@ jobs:
       # Distroless Docker image (default)
       - name: Build and push (distroless)
         id: build_push_distroless
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           file: Dockerfile
           context: .
@@ -197,7 +217,7 @@ jobs:
       # Distroless nonroot Docker image
       - name: Build and push (nonroot)
         id: build_push_nonroot
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           file: Dockerfile
           context: .
@@ -214,7 +234,7 @@ jobs:
       # Alpine Docker image
       - name: Build and push (alpine)
         id: build_push_alpine
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           file: Dockerfile
           context: .

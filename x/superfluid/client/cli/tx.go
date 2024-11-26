@@ -1,11 +1,10 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
-
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -13,7 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v27/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -23,8 +22,8 @@ import (
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	cltypes "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v27/x/gamm/types"
 )
 
 // GetTxCmd returns the transaction commands for this module.
@@ -213,10 +212,8 @@ func parseSetSuperfluidAssetsArgsToContent(cmd *cobra.Command) (govtypesv1beta1.
 			assetType = types.SuperfluidAssetTypeLPShare
 		} else if strings.HasPrefix(asset, cltypes.ConcentratedLiquidityTokenPrefix) {
 			assetType = types.SuperfluidAssetTypeConcentratedShare
-		} else if asset == appparams.BaseCoinUnit {
-			return nil, fmt.Errorf("invalid asset type: %s", asset)
 		} else {
-			assetType = types.SuperfluidAssetTypeNative
+			return nil, fmt.Errorf("Invalid asset prefix: %s", asset)
 		}
 
 		superfluidAssets = append(superfluidAssets, types.SuperfluidAsset{
@@ -440,7 +437,7 @@ func NewUnbondConvertAndStake() *cobra.Command {
 			if len(args) >= 3 {
 				convertedInt, ok := osmomath.NewIntFromString(args[2])
 				if !ok {
-					return fmt.Errorf("Conversion for osmomath.Int failed")
+					return errors.New("Conversion for osmomath.Int failed")
 				}
 				minAmtToStake = convertedInt
 				if len(args) == 4 {

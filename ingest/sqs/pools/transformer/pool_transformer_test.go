@@ -8,16 +8,17 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/sqs/sqsdomain"
+	sqscosmwasmpool "github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
-	poolstransformer "github.com/osmosis-labs/osmosis/v25/ingest/sqs/pools/transformer"
-	clqueryproto "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/client/queryproto"
-	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v25/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
+	commondomain "github.com/osmosis-labs/osmosis/v27/ingest/common/domain"
+	poolstransformer "github.com/osmosis-labs/osmosis/v27/ingest/sqs/pools/transformer"
+	clqueryproto "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/client/queryproto"
+	cltypes "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v27/x/protorev/types"
 )
 
 type PoolTransformerTestSuite struct {
@@ -67,6 +68,10 @@ func (s *PoolTransformerTestSuite) TestConvertPool_EmptyPriceInfoMap_TakerFee() 
 		{
 			Denom0: USDC,
 			Denom1: USDT,
+		}: defaultPoolManagerTakerFee,
+		{
+			Denom0: USDT,
+			Denom1: USDC,
 		}: defaultPoolManagerTakerFee,
 	}
 
@@ -429,7 +434,7 @@ func (s *PoolTransformerTestSuite) TestProcessBlock() {
 	s.App.PoolManagerKeeper.SetDenomPairTakerFee(s.Ctx, customTakerFeeConcentratedPool.GetToken0(), customTakerFeeConcentratedPool.GetToken1(), defaultCustomTakerFee)
 	s.App.PoolManagerKeeper.SetDenomPairTakerFee(s.Ctx, customTakerFeeConcentratedPool.GetToken1(), customTakerFeeConcentratedPool.GetToken0(), defaultCustomTakerFee)
 
-	sqsKeepers := domain.SQSIngestKeepers{
+	sqsKeepers := commondomain.PoolExtractorKeepers{
 		GammKeeper:         s.App.GAMMKeeper,
 		ConcentratedKeeper: s.App.ConcentratedLiquidityKeeper,
 		WasmKeeper:         s.App.WasmKeeper,
@@ -459,7 +464,7 @@ func (s *PoolTransformerTestSuite) TestProcessBlock() {
 	usdcUosmoPoolID := s.CreateDefaultQuoteDenomUOSMOPool()
 	poolTransformer := poolstransformer.NewPoolTransformer(sqsKeepers, usdcUosmoPoolID)
 
-	blockPools := domain.BlockPools{
+	blockPools := commondomain.BlockPools{
 		ConcentratedPools: []poolmanagertypes.PoolI{
 			concentratedPool,
 			customTakerFeeConcentratedPool,
@@ -777,8 +782,8 @@ func (s *PoolTransformerTestSuite) TestInitCosmWasmPoolModel() {
 
 	pool := s.PrepareCosmWasmPool()
 	cwpm := poolIngester.InitCosmWasmPoolModel(s.Ctx, pool)
-	s.Equal(sqsdomain.CosmWasmPoolModel{
-		ContractInfo: sqsdomain.ContractInfo{
+	s.Equal(sqscosmwasmpool.CosmWasmPoolModel{
+		ContractInfo: sqscosmwasmpool.ContractInfo{
 			Contract: "crates.io:transmuter",
 			Version:  "0.1.0",
 		},
@@ -793,8 +798,8 @@ func (s *PoolTransformerTestSuite) TestInitCosmWasmPoolModel() {
 	})
 
 	cwpm = poolIngester.InitCosmWasmPoolModel(s.Ctx, pool)
-	s.Equal(sqsdomain.CosmWasmPoolModel{
-		ContractInfo: sqsdomain.ContractInfo{
+	s.Equal(sqscosmwasmpool.CosmWasmPoolModel{
+		ContractInfo: sqscosmwasmpool.ContractInfo{
 			Contract: "crates.io:transmuter",
 			Version:  "3.0.0",
 		},
@@ -835,7 +840,7 @@ func (s *PoolTransformerTestSuite) validatePoolConversion(expectedPool poolmanag
 
 func (s *PoolTransformerTestSuite) initializePoolIngester(defaultUSDCUOSMOPoolID uint64) *poolstransformer.PoolTransformer {
 
-	sqsKeepers := domain.SQSIngestKeepers{
+	sqsKeepers := commondomain.PoolExtractorKeepers{
 		GammKeeper:         s.App.GAMMKeeper,
 		ConcentratedKeeper: s.App.ConcentratedLiquidityKeeper,
 		BankKeeper:         s.App.BankKeeper,

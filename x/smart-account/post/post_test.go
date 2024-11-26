@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -20,11 +21,11 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v25/app"
-	"github.com/osmosis-labs/osmosis/v25/app/params"
-	"github.com/osmosis-labs/osmosis/v25/x/smart-account/post"
-	"github.com/osmosis-labs/osmosis/v25/x/smart-account/testutils"
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v27/app"
+	"github.com/osmosis-labs/osmosis/v27/app/params"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/post"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/testutils"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v27/x/smart-account/types"
 
 	storetypes "cosmossdk.io/store/types"
 	"github.com/stretchr/testify/suite"
@@ -39,6 +40,7 @@ type AuthenticatorPostSuite struct {
 	TestKeys                   []string
 	TestAccAddress             []sdk.AccAddress
 	TestPrivKeys               []*secp256k1.PrivKey
+	HomeDir                    string
 }
 
 func TestAuthenticatorPostSuite(t *testing.T) {
@@ -54,7 +56,8 @@ func (s *AuthenticatorPostSuite) SetupTest() {
 	}
 	s.EncodingConfig = app.MakeEncodingConfig()
 
-	s.OsmosisApp = app.Setup(false)
+	s.HomeDir = fmt.Sprintf("%d", rand.Int())
+	s.OsmosisApp = app.SetupWithCustomHome(false, s.HomeDir)
 
 	s.Ctx = s.OsmosisApp.NewContextLegacy(false, tmproto.Header{})
 
@@ -82,6 +85,10 @@ func (s *AuthenticatorPostSuite) SetupTest() {
 		sdk.ChainPostDecorators(sdk.Terminator{}), //nolint
 	)
 	s.Ctx = s.Ctx.WithGasMeter(storetypes.NewGasMeter(1_000_000))
+}
+
+func (s *AuthenticatorPostSuite) TearDownTest() {
+	os.RemoveAll(s.HomeDir)
 }
 
 // TestAutenticatorPostHandlerSuccess tests that the post handler can succeed with the default authenticator

@@ -10,6 +10,7 @@ const (
 	AttributePeriodLockID         = "period_lock_id"
 	AttributePeriodLockOwner      = "owner"
 	AttributePeriodLockAmount     = "amount"
+	AttributePeriodLockDenom      = "denom"
 	AttributePeriodLockDuration   = "duration"
 	AttributePeriodLockUnlockTime = "unlock_time"
 	AttributeUnlockedCoins        = "unlocked_coins"

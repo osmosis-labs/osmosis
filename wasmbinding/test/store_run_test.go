@@ -15,14 +15,15 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v25/app"
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	"github.com/osmosis-labs/osmosis/v27/app"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
 )
 
 func TestNoStorageWithoutProposal(t *testing.T) {
 	// we use default config
-	osmosis, ctx := CreateTestInput()
+	osmosis, ctx, homeDir := CreateTestInput()
+	defer os.RemoveAll(homeDir)
 
 	wasmKeeper := osmosis.WasmKeeper
 	// this wraps wasmKeeper, providing interfaces exposed to external messages
@@ -61,7 +62,9 @@ func storeCodeViaProposal(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp
 
 func TestStoreCodeProposal(t *testing.T) {
 	apptesting.SkipIfWSL(t)
-	osmosis, ctx := CreateTestInput()
+	osmosis, ctx, homeDir := CreateTestInput()
+	defer os.RemoveAll(homeDir)
+
 	wasmKeeper := osmosis.WasmKeeper
 
 	govModuleAccount := osmosis.AccountKeeper.GetModuleAccount(ctx, govtypes.ModuleName).GetAddress()
@@ -88,7 +91,9 @@ type HackatomExampleInitMsg struct {
 
 func TestInstantiateContract(t *testing.T) {
 	apptesting.SkipIfWSL(t)
-	osmosis, ctx := CreateTestInput()
+	osmosis, ctx, homeDir := CreateTestInput()
+	defer os.RemoveAll(homeDir)
+
 	instantiator := RandomAccountAddress()
 	benefit, arb := RandomAccountAddress(), RandomAccountAddress()
 	FundAccount(t, ctx, osmosis, instantiator)

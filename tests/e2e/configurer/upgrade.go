@@ -11,11 +11,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	"github.com/osmosis-labs/osmosis/v25/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v25/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v25/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v25/tests/e2e/initialization"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
+	"github.com/osmosis-labs/osmosis/v27/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v27/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v27/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v27/tests/e2e/initialization"
 )
 
 type UpgradeSettings struct {
@@ -275,7 +275,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	go func() {
 		defer wg.Done()
 		uc.t.Logf("Uploading rate limiting contract to chainA")
-		_, err := chainANode.SetupRateLimiting("", chainANode.QueryGovModuleAccount(true), chainA, true, true)
+		_, err := chainANode.SetupRateLimiting("", chainANode.QueryGovModuleAccount(), chainA, true, true)
 		errCh <- err
 	}()
 
@@ -296,7 +296,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	go func() {
 		defer wg.Done()
 		uc.t.Logf("Uploading rate limiting contract to chainB")
-		_, err := chainBNode.SetupRateLimiting("", chainBNode.QueryGovModuleAccount(true), chainB, true, true)
+		_, err := chainBNode.SetupRateLimiting("", chainBNode.QueryGovModuleAccount(), chainB, true, true)
 		errCh <- err
 	}()
 

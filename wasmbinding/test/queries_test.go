@@ -2,6 +2,7 @@ package wasmbinding
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,9 +10,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	"github.com/osmosis-labs/osmosis/v25/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
+	"github.com/osmosis-labs/osmosis/v27/wasmbinding"
 )
 
 func TestFullDenom(t *testing.T) {
@@ -67,7 +68,8 @@ func TestFullDenom(t *testing.T) {
 func TestDenomAdmin(t *testing.T) {
 	apptesting.SkipIfWSL(t)
 	addr := RandomAccountAddress()
-	app, ctx := SetupCustomApp(t, addr)
+	app, ctx, homeDir := SetupCustomApp(t, addr)
+	defer os.RemoveAll(homeDir)
 
 	// set token creation fee to zero to make testing easier
 	tfParams := app.TokenFactoryKeeper.GetParams(ctx)

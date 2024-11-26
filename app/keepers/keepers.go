@@ -43,17 +43,17 @@ import (
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/keeper"
 	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	"github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
-	downtimedetector "github.com/osmosis-labs/osmosis/v25/x/downtime-detector"
-	downtimetypes "github.com/osmosis-labs/osmosis/v25/x/downtime-detector/types"
-	"github.com/osmosis-labs/osmosis/v25/x/gamm"
-	ibcratelimit "github.com/osmosis-labs/osmosis/v25/x/ibc-rate-limit"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v25/x/ibc-rate-limit/types"
-	"github.com/osmosis-labs/osmosis/v25/x/poolmanager"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v25/x/protorev"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
+	"github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool/types"
+	downtimedetector "github.com/osmosis-labs/osmosis/v27/x/downtime-detector"
+	downtimetypes "github.com/osmosis-labs/osmosis/v27/x/downtime-detector/types"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm"
+	ibcratelimit "github.com/osmosis-labs/osmosis/v27/x/ibc-rate-limit"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v27/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v27/x/poolmanager"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v27/x/protorev"
 	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
@@ -79,39 +79,39 @@ import (
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 
-	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
-	smartaccountkeeper "github.com/osmosis-labs/osmosis/v25/x/smart-account/keeper"
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/authenticator"
+	smartaccountkeeper "github.com/osmosis-labs/osmosis/v27/x/smart-account/keeper"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v27/x/smart-account/types"
 
-	_ "github.com/osmosis-labs/osmosis/v25/client/docs/statik"
-	owasm "github.com/osmosis-labs/osmosis/v25/wasmbinding"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
-	gammkeeper "github.com/osmosis-labs/osmosis/v25/x/gamm/keeper"
-	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
-	incentiveskeeper "github.com/osmosis-labs/osmosis/v25/x/incentives/keeper"
-	incentivestypes "github.com/osmosis-labs/osmosis/v25/x/incentives/types"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v25/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
-	mintkeeper "github.com/osmosis-labs/osmosis/v25/x/mint/keeper"
-	minttypes "github.com/osmosis-labs/osmosis/v25/x/mint/types"
-	poolincentives "github.com/osmosis-labs/osmosis/v25/x/pool-incentives"
-	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/keeper"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
-	protorevkeeper "github.com/osmosis-labs/osmosis/v25/x/protorev/keeper"
-	protorevtypes "github.com/osmosis-labs/osmosis/v25/x/protorev/types"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid"
-	superfluidkeeper "github.com/osmosis-labs/osmosis/v25/x/superfluid/keeper"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
-	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v25/x/tokenfactory/keeper"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v25/x/tokenfactory/types"
-	"github.com/osmosis-labs/osmosis/v25/x/twap"
-	twaptypes "github.com/osmosis-labs/osmosis/v25/x/twap/types"
-	"github.com/osmosis-labs/osmosis/v25/x/txfees"
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v25/x/txfees/keeper"
-	txfeestypes "github.com/osmosis-labs/osmosis/v25/x/txfees/types"
-	valsetpref "github.com/osmosis-labs/osmosis/v25/x/valset-pref"
-	valsetpreftypes "github.com/osmosis-labs/osmosis/v25/x/valset-pref/types"
+	_ "github.com/osmosis-labs/osmosis/v27/client/docs/statik"
+	owasm "github.com/osmosis-labs/osmosis/v27/wasmbinding"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
+	gammkeeper "github.com/osmosis-labs/osmosis/v27/x/gamm/keeper"
+	gammtypes "github.com/osmosis-labs/osmosis/v27/x/gamm/types"
+	incentiveskeeper "github.com/osmosis-labs/osmosis/v27/x/incentives/keeper"
+	incentivestypes "github.com/osmosis-labs/osmosis/v27/x/incentives/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v27/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v27/x/lockup/types"
+	mintkeeper "github.com/osmosis-labs/osmosis/v27/x/mint/keeper"
+	minttypes "github.com/osmosis-labs/osmosis/v27/x/mint/types"
+	poolincentives "github.com/osmosis-labs/osmosis/v27/x/pool-incentives"
+	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v27/x/pool-incentives/keeper"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v27/x/pool-incentives/types"
+	protorevkeeper "github.com/osmosis-labs/osmosis/v27/x/protorev/keeper"
+	protorevtypes "github.com/osmosis-labs/osmosis/v27/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v27/x/superfluid"
+	superfluidkeeper "github.com/osmosis-labs/osmosis/v27/x/superfluid/keeper"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v27/x/superfluid/types"
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v27/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v27/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v27/x/twap"
+	twaptypes "github.com/osmosis-labs/osmosis/v27/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v27/x/txfees"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v27/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/v27/x/txfees/types"
+	valsetpref "github.com/osmosis-labs/osmosis/v27/x/valset-pref"
+	valsetpreftypes "github.com/osmosis-labs/osmosis/v27/x/valset-pref/types"
 	epochskeeper "github.com/osmosis-labs/osmosis/x/epochs/keeper"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
@@ -340,6 +340,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		bApp.MsgServiceRouter(),
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
+	icaHostKeeper.WithQueryRouter(bApp.GRPCQueryRouter())
 	appKeepers.ICAHostKeeper = &icaHostKeeper
 
 	icaControllerKeeper := icacontrollerkeeper.NewKeeper(
@@ -444,6 +445,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.DistrKeeper,
 		appKeepers.StakingKeeper,
 		appKeepers.ProtoRevKeeper,
+		appKeepers.WasmKeeper,
 	)
 	appKeepers.PoolManagerKeeper.SetStakingKeeper(appKeepers.StakingKeeper)
 	appKeepers.GAMMKeeper.SetPoolManager(appKeepers.PoolManagerKeeper)
@@ -566,11 +568,14 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.SuperfluidKeeper = superfluidkeeper.NewKeeper(
 		appKeepers.keys[superfluidtypes.StoreKey], appKeepers.GetSubspace(superfluidtypes.ModuleName),
 		*appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.StakingKeeper, appKeepers.DistrKeeper, appKeepers.EpochsKeeper, appKeepers.LockupKeeper, appKeepers.GAMMKeeper, appKeepers.IncentivesKeeper,
-		lockupkeeper.NewMsgServerImpl(appKeepers.LockupKeeper), appKeepers.ConcentratedLiquidityKeeper, appKeepers.PoolManagerKeeper, appKeepers.ValidatorSetPreferenceKeeper, appKeepers.TwapKeeper)
+		lockupkeeper.NewMsgServerImpl(appKeepers.LockupKeeper), appKeepers.ConcentratedLiquidityKeeper, appKeepers.PoolManagerKeeper, appKeepers.ValidatorSetPreferenceKeeper)
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
-	supportedFeatures := "iterator,staking,stargate,osmosis,cosmwasm_1_1,cosmwasm_1_2,cosmwasm_1_4"
+	// The last arguments can contain custom message handlers, and custom query handlers,
+	// if we want to allow any custom callbacks
+	wasmCapabilities := wasmkeeper.BuiltInCapabilities()
+	wasmCapabilities = append(wasmCapabilities, "osmosis")
 
 	wasmOpts = append(owasm.RegisterCustomPlugins(appKeepers.BankKeeper, appKeepers.TokenFactoryKeeper), wasmOpts...)
 	wasmOpts = append(owasm.RegisterStargateQueries(*bApp.GRPCQueryRouter(), appCodec), wasmOpts...)
@@ -591,12 +596,13 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		bApp.GRPCQueryRouter(),
 		wasmDir,
 		wasmConfig,
-		supportedFeatures,
+		wasmCapabilities,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		wasmOpts...,
 	)
 	appKeepers.WasmKeeper = &wasmKeeper
 	appKeepers.CosmwasmPoolKeeper.SetWasmKeeper(appKeepers.WasmKeeper)
+	appKeepers.PoolManagerKeeper.SetWasmKeeper(appKeepers.WasmKeeper)
 
 	// Pass the contract keeper to all the structs (generally ICS4Wrappers for ibc middlewares) that need it
 	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
@@ -623,11 +629,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	govRouter := govtypesv1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govtypesv1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(*appKeepers.ParamsKeeper)).
-		// UNFORKING v2 TODO: Verify that removing the two ibc routes are okay (they use the new v1 gov props)
-		// Also verify that NewSoftwareUpgradeProposalHandler is okay to remove here, as it should be done with new v1 gov props
-		// AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(appKeepers.IBCKeeper.ClientKeeper)).
-		// AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(appKeepers.UpgradeKeeper)).
-		// AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(appKeepers.IBCKeeper.ClientKeeper)).
 		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(*appKeepers.PoolIncentivesKeeper)).
 		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*appKeepers.TxFeesKeeper)).
 		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(*appKeepers.SuperfluidKeeper, *appKeepers.EpochsKeeper, *appKeepers.GAMMKeeper)).

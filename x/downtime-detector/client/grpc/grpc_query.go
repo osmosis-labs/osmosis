@@ -11,8 +11,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v25/x/downtime-detector/client"
-	"github.com/osmosis-labs/osmosis/v25/x/downtime-detector/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v27/x/downtime-detector/client"
+	"github.com/osmosis-labs/osmosis/v27/x/downtime-detector/client/queryproto"
 )
 
 type Querier struct {

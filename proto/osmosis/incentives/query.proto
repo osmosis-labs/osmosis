@@ -9,8 +9,9 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "osmosis/incentives/gauge.proto";
 import "osmosis/lockup/lock.proto";
 import "osmosis/incentives/group.proto";
+import "osmosis/incentives/params.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v25/x/incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/incentives/types";
 
 // Query defines the gRPC querier service
 service Query {
@@ -94,6 +95,25 @@ service Query {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/current_weight_by_group_gauge_id/"
         "{group_gauge_id}";
+  }
+  rpc InternalGauges(QueryInternalGaugesRequest)
+      returns (QueryInternalGaugesResponse) {
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/internal_gauges";
+  }
+  rpc ExternalGauges(QueryExternalGaugesRequest)
+      returns (QueryExternalGaugesResponse) {
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/external_gauges";
+  }
+  rpc GaugesByPoolID(QueryGaugesByPoolIDRequest)
+      returns (QueryGaugesByPoolIDResponse) {
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/gauges_by_pool_id/{id}";
+  }
+  // Params returns incentives module params.
+  rpc Params(ParamsRequest) returns (ParamsResponse) {
+    option (google.api.http).get = "/osmosis/incentives/v1beta1/params";
   }
 }
 
@@ -237,3 +257,38 @@ message GaugeWeight {
     (gogoproto.nullable) = false
   ];
 }
+
+message QueryInternalGaugesRequest {
+  // Pagination defines pagination for the request
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+message QueryInternalGaugesResponse {
+  repeated Gauge gauges = 1 [ (gogoproto.nullable) = false ];
+  // Pagination defines pagination for the response
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryExternalGaugesRequest {
+  // Pagination defines pagination for the request
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+message QueryExternalGaugesResponse {
+  repeated Gauge gauges = 1 [ (gogoproto.nullable) = false ];
+  // Pagination defines pagination for the response
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryGaugesByPoolIDRequest {
+  uint64 id = 1;
+  // Pagination defines pagination for the request
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryGaugesByPoolIDResponse {
+  repeated Gauge gauges = 1 [ (gogoproto.nullable) = false ];
+  // Pagination defines pagination for the response
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message ParamsRequest {}
+message ParamsResponse { Params params = 1 [ (gogoproto.nullable) = false ]; }

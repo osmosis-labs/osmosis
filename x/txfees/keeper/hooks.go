@@ -12,7 +12,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	txfeestypes "github.com/osmosis-labs/osmosis/v25/x/txfees/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v27/x/txfees/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -48,6 +48,9 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	if err != nil {
 		incTelementryCounter(txfeestypes.TakerFeeFailedNativeRewardUpdateMetricName, baseDenomCoins.String(), err.Error())
 	}
+
+	// Send skimmed taker fees to respective fee collectors.
+	k.clearTakerFeeShareAccumulators(ctx)
 
 	// Distribute and track the taker fees.
 	k.calculateDistributeAndTrackTakerFees(ctx, defaultFeesDenom)
@@ -300,6 +303,31 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 	}
 
 	return totalCoinOut
+}
+
+// clearTakerFeeShareAccumulators retrieves all taker fee share accumulators and sends the coins to the respective addresses.
+// This is used to clear the taker fee share accumulators at the end of each epoch, prior to distributing the rest of the taker fees.
+func (k Keeper) clearTakerFeeShareAccumulators(ctx sdk.Context) {
+	takerFeeSkimAccumulators, err := k.poolManager.GetAllTakerFeeShareAccumulators(ctx)
+	if err != nil {
+		ctx.Logger().Error("Error getting all taker fee share accumulators", "error", err)
+		return
+	}
+	for _, takerFeeSkimAccumulator := range takerFeeSkimAccumulators {
+		takerFeeShareAgreement, found := k.poolManager.GetTakerFeeShareAgreementFromDenomNoCache(ctx, takerFeeSkimAccumulator.Denom)
+		if !found {
+			ctx.Logger().Error(fmt.Sprintf("Error getting taker fee share from denom: %s", takerFeeSkimAccumulator.Denom))
+			continue
+		}
+		skimAddress := sdk.MustAccAddressFromBech32(takerFeeShareAgreement.SkimAddress)
+		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, txfeestypes.TakerFeeCollectorName, skimAddress, takerFeeSkimAccumulator.SkimmedTakerFees)
+		if err != nil {
+			ctx.Logger().Error("Error sending coins from module to account", "error", err)
+			continue
+		}
+		// If no errors occurred, delete every denom accumulator for the specified taker fee share denom.
+		k.poolManager.DeleteAllTakerFeeShareAccumulatorsForTakerFeeShareDenom(ctx, takerFeeSkimAccumulator.Denom)
+	}
 }
 
 // isDenomWhitelisted checks if the denom provided exists in the list of authorized quote denoms.

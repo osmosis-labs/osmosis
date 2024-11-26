@@ -8,7 +8,7 @@ import (
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
 )
 
 // SpotPriceCalculator defines the contract that must be fulfilled by a spot price calculator
@@ -33,7 +33,7 @@ type PoolManager interface {
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
 		tokenOutMinAmount osmomath.Int,
-	) (osmomath.Int, error)
+	) (osmomath.Int, sdk.Coin, error)
 
 	SwapExactAmountInNoTakerFee(
 		ctx sdk.Context,
@@ -54,6 +54,9 @@ type PoolManager interface {
 	) (price osmomath.BigDec, err error)
 	UpdateTakerFeeTrackerForCommunityPoolByDenom(ctx sdk.Context, denom string, increasedAmt osmomath.Int) error
 	UpdateTakerFeeTrackerForStakersByDenom(ctx sdk.Context, denom string, increasedAmt osmomath.Int) error
+	GetAllTakerFeeShareAccumulators(ctx sdk.Context) ([]poolmanagertypes.TakerFeeSkimAccumulator, error)
+	GetTakerFeeShareAgreementFromDenomNoCache(ctx sdk.Context, takerFeeShareDenom string) (poolmanagertypes.TakerFeeShareAgreement, bool)
+	DeleteAllTakerFeeShareAccumulatorsForTakerFeeShareDenom(ctx sdk.Context, takerFeeShareDenom string)
 }
 
 // AccountKeeper defines the contract needed for AccountKeeper related APIs.
@@ -76,6 +79,7 @@ type BankKeeper interface {
 	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	IsSendEnabledCoins(ctx context.Context, coins ...sdk.Coin) error
 	SendCoins(ctx context.Context, from, to sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 }
 
 // TxFeesKeeper defines the expected transaction fee keeper

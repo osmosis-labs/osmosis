@@ -4,18 +4,19 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/rand"
+	"os"
 	"testing"
 	"time"
 
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v25/x/txfees/keeper"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v27/x/txfees/keeper"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v27/x/smart-account/types"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -30,10 +31,10 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v25/app"
-	"github.com/osmosis-labs/osmosis/v25/app/params"
-	"github.com/osmosis-labs/osmosis/v25/x/smart-account/ante"
-	"github.com/osmosis-labs/osmosis/v25/x/smart-account/testutils"
+	"github.com/osmosis-labs/osmosis/v27/app"
+	"github.com/osmosis-labs/osmosis/v27/app/params"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/ante"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/testutils"
 )
 
 type AuthenticatorAnteSuite struct {
@@ -45,6 +46,7 @@ type AuthenticatorAnteSuite struct {
 	TestKeys               []string
 	TestAccAddress         []sdk.AccAddress
 	TestPrivKeys           []*secp256k1.PrivKey
+	HomeDir                string
 }
 
 func TestAuthenticatorAnteSuite(t *testing.T) {
@@ -60,7 +62,8 @@ func (s *AuthenticatorAnteSuite) SetupTest() {
 	}
 	s.EncodingConfig = app.MakeEncodingConfig()
 
-	s.OsmosisApp = app.Setup(false)
+	s.HomeDir = fmt.Sprintf("%d", rand.Int())
+	s.OsmosisApp = app.SetupWithCustomHome(false, s.HomeDir)
 
 	s.Ctx = s.OsmosisApp.NewContextLegacy(false, tmproto.Header{})
 
@@ -89,6 +92,10 @@ func (s *AuthenticatorAnteSuite) SetupTest() {
 		deductFeeDecorator,
 	)
 	s.Ctx = s.Ctx.WithGasMeter(storetypes.NewGasMeter(1_000_000))
+}
+
+func (s *AuthenticatorAnteSuite) TearDownTest() {
+	os.RemoveAll(s.HomeDir)
 }
 
 // TestSignatureVerificationNoAuthenticatorInStore test a non-smart account signature verification

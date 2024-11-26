@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -12,13 +13,13 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v25/app/params"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v25/x/valset-pref/types"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v27/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/v27/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v27/x/valset-pref/types"
 
-	valPref "github.com/osmosis-labs/osmosis/v25/x/valset-pref"
+	valPref "github.com/osmosis-labs/osmosis/v27/x/valset-pref"
 )
 
 type KeeperTestSuite struct {
@@ -110,7 +111,7 @@ func (s *KeeperTestSuite) PrepareExistingDelegations(ctx sdk.Context, valAddrs [
 	for i := 0; i < len(valAddrs); i++ {
 		valAddr, err := sdk.ValAddressFromBech32(valAddrs[i])
 		if err != nil {
-			return fmt.Errorf("validator address not formatted")
+			return errors.New("validator address not formatted")
 		}
 
 		validator, err := s.App.StakingKeeper.GetValidator(ctx, valAddr)
