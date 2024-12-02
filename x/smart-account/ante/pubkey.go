@@ -48,10 +48,15 @@ func (spkd EmitPubKeyDecoratorEvents) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	}
 
 	var events sdk.Events
+
 	for i, sig := range sigs {
+		signerStr, err := spkd.ak.AddressCodec().BytesToString(signers[i])
+		if err != nil {
+			return sdk.Context{}, err
+		}
 		events = append(events, sdk.NewEvent(sdk.EventTypeTx,
-			sdk.NewAttribute(sdk.AttributeKeyAccountSequence, fmt.Sprintf("%s/%d", signers[i], sig.Sequence)),
-			sdk.NewAttribute(smartaccounttypes.AttributeKeyAccountSequenceAuthenticator, fmt.Sprintf("%s/%d", signers[i], sig.Sequence)),
+			sdk.NewAttribute(sdk.AttributeKeyAccountSequence, fmt.Sprintf("%s/%d", signerStr, sig.Sequence)),
+			sdk.NewAttribute(smartaccounttypes.AttributeKeyAccountSequenceAuthenticator, fmt.Sprintf("%s/%d", signerStr, sig.Sequence)),
 		))
 
 		sigBzs, err := signatureDataToBz(sig.Data)
