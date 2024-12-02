@@ -6,9 +6,9 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 
-	commondomain "github.com/osmosis-labs/osmosis/v27/ingest/common/domain"
-	"github.com/osmosis-labs/osmosis/v27/ingest/sqs/domain"
-	gammtypes "github.com/osmosis-labs/osmosis/v27/x/gamm/types"
+	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"
+	"github.com/osmosis-labs/osmosis/v28/ingest/sqs/domain"
+	gammtypes "github.com/osmosis-labs/osmosis/v28/x/gamm/types"
 )
 
 var _ commondomain.WriteListener = (*cfmmPoolWriteListener)(nil)

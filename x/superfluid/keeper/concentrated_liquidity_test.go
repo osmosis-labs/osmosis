@@ -9,10 +9,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
-	cltypes "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v27/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v27/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
+	cltypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {

@@ -13,8 +13,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	v3 "github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool/cosmwasm/msg/v3"
-	"github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
+	v3 "github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/cosmwasm/msg/v3"
+	"github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
 )
 
 //

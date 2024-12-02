@@ -5,8 +5,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v27/x/pool-incentives/keeper"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v27/x/pool-incentives/types"
+	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v28/x/pool-incentives/keeper"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v28/x/pool-incentives/types"
 )
 
 // This file implements logic for accelerated incentive proposals.
