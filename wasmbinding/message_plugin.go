@@ -125,6 +125,9 @@ func PerformMint(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, ctx sdk
 	if err != nil {
 		return errorsmod.Wrap(err, "minting coins from message")
 	}
+	if f.IsModuleAcc(ctx, rcpt) {
+		return tokenfactorytypes.ErrMintToModuleAccount
+	}
 	err = b.SendCoins(ctx, contractAddr, rcpt, sdk.NewCoins(coin))
 	if err != nil {
 		return errorsmod.Wrap(err, "sending newly minted coins from message")
