@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/osmosis-labs/osmosis/v27/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v28/x/protorev/types"
 )
 
 var _ types.QueryServer = Querier{}

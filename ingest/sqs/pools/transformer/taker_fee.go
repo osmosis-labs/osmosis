@@ -5,7 +5,7 @@ import (
 
 	"github.com/osmosis-labs/sqs/sqsdomain"
 
-	commondomain "github.com/osmosis-labs/osmosis/v27/ingest/common/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"
 )
 
 // retrieveTakerFeeToMapIfNotExists retrieves the taker fee for the denom pair if it does not exist in the map
