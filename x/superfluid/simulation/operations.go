@@ -3,13 +3,13 @@ package simulation
 import (
 	"math/rand"
 
-	osmosimtypes "github.com/osmosis-labs/osmosis/v27/simulation/simtypes"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v28/simulation/simtypes"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v27/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v27/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v27/x/superfluid/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

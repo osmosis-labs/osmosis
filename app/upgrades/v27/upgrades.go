@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 
-	"github.com/osmosis-labs/osmosis/v27/app/keepers"
-	"github.com/osmosis-labs/osmosis/v27/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v28/app/keepers"
+	"github.com/osmosis-labs/osmosis/v28/app/upgrades"
 )
 
 func CreateUpgradeHandler(

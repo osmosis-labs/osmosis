@@ -10,10 +10,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
-	"github.com/osmosis-labs/osmosis/v27/wasmbinding/bindings"
+	"github.com/osmosis-labs/osmosis/v28/wasmbinding/bindings"
 
-	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v27/x/tokenfactory/keeper"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v27/x/tokenfactory/types"
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v28/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v28/x/tokenfactory/types"
 )
 
 // CustomMessageDecorator returns decorator for custom CosmWasm bindings messages
@@ -124,6 +124,9 @@ func PerformMint(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, ctx sdk
 	_, err = msgServer.Mint(ctx, sdkMsg)
 	if err != nil {
 		return errorsmod.Wrap(err, "minting coins from message")
+	}
+	if f.IsModuleAcc(ctx, rcpt) {
+		return tokenfactorytypes.ErrMintToModuleAccount
 	}
 	err = b.SendCoins(ctx, contractAddr, rcpt, sdk.NewCoins(coin))
 	if err != nil {

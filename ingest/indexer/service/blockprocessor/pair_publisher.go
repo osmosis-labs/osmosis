@@ -12,9 +12,9 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	commondomain "github.com/osmosis-labs/osmosis/v27/ingest/common/domain"
-	"github.com/osmosis-labs/osmosis/v27/ingest/indexer/domain"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
+	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"
+	"github.com/osmosis-labs/osmosis/v28/ingest/indexer/domain"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
 )
 
 type PairPublisher struct {

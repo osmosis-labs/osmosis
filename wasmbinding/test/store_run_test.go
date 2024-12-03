@@ -15,9 +15,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v27/app"
-	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
+	"github.com/osmosis-labs/osmosis/v28/app"
+	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
 )
 
 func TestNoStorageWithoutProposal(t *testing.T) {

@@ -5,9 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	commondomain "github.com/osmosis-labs/osmosis/v27/ingest/common/domain"
-	commonservice "github.com/osmosis-labs/osmosis/v27/ingest/common/service"
-	"github.com/osmosis-labs/osmosis/v27/ingest/indexer/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"
+	commonservice "github.com/osmosis-labs/osmosis/v28/ingest/common/service"
+	"github.com/osmosis-labs/osmosis/v28/ingest/indexer/domain"
 )
 
 type fullIndexerBlockProcessStrategy struct {

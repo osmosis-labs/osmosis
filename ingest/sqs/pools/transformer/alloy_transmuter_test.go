@@ -11,9 +11,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
-	commondomain "github.com/osmosis-labs/osmosis/v27/ingest/common/domain"
-	poolstransformer "github.com/osmosis-labs/osmosis/v27/ingest/sqs/pools/transformer"
+	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
+	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"
+	poolstransformer "github.com/osmosis-labs/osmosis/v28/ingest/sqs/pools/transformer"
 )
 
 type mockWasmKeeper struct {
