@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-
-	// "sync"
 	"time"
 
 	storetypes "cosmossdk.io/store/types"
