@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
-	commondomain "github.com/osmosis-labs/osmosis/v27/ingest/common/domain"
+	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
+	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"
 )
 
 type CommonDomainTestSuite struct {

@@ -4,8 +4,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/sqs/sqsdomain"
 
-	commondomain "github.com/osmosis-labs/osmosis/v27/ingest/common/domain"
-	"github.com/osmosis-labs/osmosis/v27/ingest/sqs/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"
+	"github.com/osmosis-labs/osmosis/v28/ingest/sqs/domain"
 )
 
 type PoolsTransformerMock struct {

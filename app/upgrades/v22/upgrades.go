@@ -9,8 +9,8 @@ import (
 
 	tmtypes "github.com/cometbft/cometbft/types"
 
-	"github.com/osmosis-labs/osmosis/v27/app/keepers"
-	"github.com/osmosis-labs/osmosis/v27/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v28/app/keepers"
+	"github.com/osmosis-labs/osmosis/v28/app/upgrades"
 )
 
 func CreateUpgradeHandler(

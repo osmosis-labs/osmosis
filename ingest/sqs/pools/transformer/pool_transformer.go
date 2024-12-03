@@ -13,16 +13,16 @@ import (
 	"github.com/osmosis-labs/sqs/sqsdomain"
 	sqscosmwasmpool "github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
 
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	commondomain "github.com/osmosis-labs/osmosis/v27/ingest/common/domain"
-	"github.com/osmosis-labs/osmosis/v27/ingest/sqs/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"
+	"github.com/osmosis-labs/osmosis/v28/ingest/sqs/domain"
 
-	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
-	"github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/client/queryproto"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
+	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
+	"github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/client/queryproto"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
 )
 
 // poolTransformer is a transformer for pools.
