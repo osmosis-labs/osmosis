@@ -3,7 +3,7 @@ package v13
 import (
 	store "cosmossdk.io/store/types"
 
-	"github.com/osmosis-labs/osmosis/v27/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v28/app/upgrades"
 )
 
 // UpgradeName defines the on-chain upgrade name for the Osmosis v13 upgrade.

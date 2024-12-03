@@ -8,9 +8,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
-	cltypes "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v27/x/superfluid/types"
+	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
+	cltypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestGRPCParams() {

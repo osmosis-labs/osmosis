@@ -3,7 +3,7 @@ package osmosis.smartaccount.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v27/x/smart-account/types";
+option go_package = "github.com/osmosis-labs/osmosis/v28/x/smart-account/types";
 
 // Params defines the parameters for the module.
 message Params {

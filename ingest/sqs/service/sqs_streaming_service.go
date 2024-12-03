@@ -12,9 +12,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	commondomain "github.com/osmosis-labs/osmosis/v27/ingest/common/domain"
-	"github.com/osmosis-labs/osmosis/v27/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v27/ingest/sqs/service/blockprocessor"
+	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"
+	"github.com/osmosis-labs/osmosis/v28/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v28/ingest/sqs/service/blockprocessor"
 )
 
 var _ storetypes.ABCIListener = (*sqsStreamingService)(nil)

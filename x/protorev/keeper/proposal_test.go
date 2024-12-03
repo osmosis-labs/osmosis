@@ -1,9 +1,9 @@
 package keeper_test
 
 import (
-	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v27/x/protorev"
-	"github.com/osmosis-labs/osmosis/v27/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v28/x/protorev"
+	"github.com/osmosis-labs/osmosis/v28/x/protorev/types"
 )
 
 // TestSetProtoRevAdminAccount tests that the admin account can be set through a proposal

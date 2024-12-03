@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	validatorprefkeeper "github.com/osmosis-labs/osmosis/v27/x/valset-pref"
-	"github.com/osmosis-labs/osmosis/v27/x/valset-pref/client/queryproto"
+	validatorprefkeeper "github.com/osmosis-labs/osmosis/v28/x/valset-pref"
+	"github.com/osmosis-labs/osmosis/v28/x/valset-pref/client/queryproto"
 )
 
 type Querier struct {

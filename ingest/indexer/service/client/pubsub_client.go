@@ -8,7 +8,7 @@ import (
 
 	"cloud.google.com/go/pubsub"
 
-	indexerdomain "github.com/osmosis-labs/osmosis/v27/ingest/indexer/domain"
+	indexerdomain "github.com/osmosis-labs/osmosis/v28/ingest/indexer/domain"
 )
 
 // PubSubClient is a client for publishing messages to a PubSub topic.

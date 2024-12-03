@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
 )
 
 type CosmWasmPoolSuite struct {
