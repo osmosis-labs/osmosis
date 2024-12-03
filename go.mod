@@ -44,7 +44,7 @@ require (
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.15
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.11
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.17
-	github.com/osmosis-labs/sqs/sqsdomain v0.27.0
+	github.com/osmosis-labs/sqs/sqsdomain v0.27.2-0.20241203124638-27f22c2853c2
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/skip-mev/block-sdk/v2 v2.1.5
@@ -139,6 +139,8 @@ require (
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
+	github.com/labstack/echo/v4 v4.12.0 // indirect
+	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/linxGnu/grocksdb v1.8.14 // indirect
 	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
@@ -148,6 +150,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a // indirect
 	github.com/oklog/run v1.1.0 // indirect
+	github.com/osmosis-labs/sqs v0.19.3 // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
@@ -157,6 +160,8 @@ require (
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
+	github.com/valyala/bytebufferpool v1.0.0 // indirect
+	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/zimmski/go-mutesting v0.0.0-20210610104036-6d9217011a00 // indirect
 	github.com/zondax/ledger-go v0.14.3 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.54.0 // indirect
