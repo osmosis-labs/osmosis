@@ -92,10 +92,11 @@ func (s *sqsStreamingService) ListenCommit(ctx context.Context, res types.Respon
 // It processes only the pools that were changed in the block in the following cases:
 // - The node is not in cold start and the previous block was processed successfully.
 func (s *sqsStreamingService) processBlockRecoverError(ctx sdk.Context) (err error) {
-	defer func() {
+	panicRecover := func(s *sqsStreamingService, errCh chan error) {
 		// Reset pool tracking for this block.
 		s.poolTracker.Reset()
 
+		var err error
 		if r := recover(); r != nil {
 			// Due to panic, we set shouldProcessAllBlockData to true to reprocess the entire block.
 			// Be careful when changing this behavior.
@@ -112,13 +113,25 @@ func (s *sqsStreamingService) processBlockRecoverError(ctx sdk.Context) (err err
 			// so that the next block processes only the pools that were changed.
 			s.blockProcessStrategyManager.MarkInitialDataIngested()
 		}
-	}()
 
-	var wg sync.WaitGroup
-	for _, client := range s.grpcClient {
+		errCh <- err
+	}
+
+	var (
+		wg    sync.WaitGroup
+		errCh = make(chan error, len(s.grpcClient) * 2)
+	)
+
+	for i, client := range s.grpcClient {
 		wg.Add(1)
+
+		fmt.Println("Processing block: client", s.grpcClient[i])
+
 		go func(c domain.SQSGRPClient) {
 			defer wg.Done()
+
+			defer panicRecover(s, errCh) // Recover from panics
+
 			blockProcessor := blockprocessor.NewBlockProcessor(s.blockProcessStrategyManager, client, s.poolsExtractor, s.poolsTransformer, s.nodeStatusChecker, s.blockUpdatesProcessUtil)
 			if err := blockProcessor.ProcessBlock(ctx); err != nil {
 				// Due to error, we set shouldProcessAllBlockData to true to reprocess the entire block.
@@ -127,11 +140,23 @@ func (s *sqsStreamingService) processBlockRecoverError(ctx sdk.Context) (err err
 
 				// Emit telemetry for the error.
 				emitFailureTelemetry(ctx, err, domain.SQSProcessBlockErrorMetricName)
+
+				// Notify the error channel.
+				errCh <- err
 			}
 		}(client)
 	}
 
-	wg.Wait()
+	wg.Wait()    // Wait for all the goroutines to finish
+	close(errCh) // Close the error channel
+
+	// Check for errors and return the first encountered
+	for err := range errCh {
+		fmt.Println("Error encountered", err)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
