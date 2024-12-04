@@ -40,11 +40,11 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.11.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.15
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.15
+	github.com/osmosis-labs/osmosis/osmomath v0.0.16
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.16
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.11
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.17
-	github.com/osmosis-labs/sqs/sqsdomain v0.27.2-0.20241203132855-a211412c429b
+	github.com/osmosis-labs/sqs/sqsdomain v0.28.0-rc1
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/skip-mev/block-sdk/v2 v2.1.5
@@ -150,7 +150,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a // indirect
 	github.com/oklog/run v1.1.0 // indirect
-	github.com/osmosis-labs/sqs v0.19.4-0.20241203132855-a211412c429b // indirect
+	github.com/osmosis-labs/sqs v0.19.4-0.20241203161210-bc472931207e // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
