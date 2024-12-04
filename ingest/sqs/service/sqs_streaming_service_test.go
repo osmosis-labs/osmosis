@@ -11,6 +11,7 @@ import (
 	"github.com/osmosis-labs/sqs/sqsdomain"
 
 	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v28/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v28/ingest/sqs/domain/mocks"
 	"github.com/osmosis-labs/osmosis/v28/ingest/sqs/service"
 
@@ -142,7 +143,7 @@ func (s *SQSServiceTestSuite) TestProcessBlockRecoverError() {
 
 			blockUpdatesProcessUtilsMock := &mocks.BlockUpdateProcessUtilsMock{}
 
-			sqsStreamingService := service.New(blockUpdatesProcessUtilsMock, poolExtractorMock, poolTransformerMock, poolTracker, grpcClientMock, blockProcessStrategyManager, nodeStatusCheckerMock)
+			sqsStreamingService := service.New(blockUpdatesProcessUtilsMock, poolExtractorMock, poolTransformerMock, poolTracker, []domain.SQSGRPClient{grpcClientMock}, blockProcessStrategyManager, nodeStatusCheckerMock)
 
 			// System under test.
 			err = sqsStreamingService.ProcessBlockRecoverError(s.Ctx)
