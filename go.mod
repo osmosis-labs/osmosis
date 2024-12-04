@@ -40,8 +40,8 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.11.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.15
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.15
+	github.com/osmosis-labs/osmosis/osmomath v0.0.16
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.16
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.11
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.17
 	github.com/osmosis-labs/sqs/sqsdomain v0.28.0-rc1
