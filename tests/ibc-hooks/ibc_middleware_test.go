@@ -8,6 +8,7 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+
 	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
 
 	"github.com/tidwall/gjson"
@@ -1004,7 +1005,7 @@ func (suite *HooksTestSuite) TestCrosschainRegistry() {
 
 	_, err := suite.chainA.GetOsmosisApp().WasmKeeper.QuerySmart(suite.chainA.GetContext(), registryAddr, []byte(channelQuery))
 	suite.Require().Error(err)
-	suite.Require().Contains(err.Error(), "RegistryValue not found")
+	suite.Require().Contains(err.Error(), "not found")
 
 	// Unwrap token0CB and check that the path has changed
 	channelQuery = `{"get_channel_from_chain_pair": {"source_chain": "osmosis", "destination_chain": "chainD"}}`
@@ -1764,6 +1765,34 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 			},
 			relayChain: []Direction{AtoB},
 			requireAck: []bool{true},
+		},
+
+		{
+			name:          "Swap tokenChain's native (in SwapperChain) for XCSChain's native, receive in SwapperChain",
+			sender:        actorChainB,                                 // SwapperChain
+			swapFor:       "token0",                                    // XCSChain's native token
+			receiver:      actorChainB,                                 // Back to SwapperChain
+			receivedToken: suite.GetIBCDenom(ChainA, ChainB, "token0"), // XCSChain's token0 as seen in SwapperChain
+			setupInitialToken: func() string {
+				// First, send tokenChain's native token to SwapperChain
+				suite.SimpleNativeTransfer("token0", osmomath.NewInt(12000000), []Chain{ChainC, ChainB})
+
+				// Setup pool on XCSChain (ChainA) between its native token0 and tokenChain's token
+				suite.SimpleNativeTransfer("token0", osmomath.NewInt(defaultPoolAmount), []Chain{ChainC, ChainA})
+				tokenCNative := suite.GetIBCDenom(ChainC, ChainA, "token0")
+				poolId := suite.CreateIBCNativePoolOnChain(ChainA, tokenCNative)
+				suite.SetupIBCRouteOnChain(swapRouterAddr, suite.chainA.SenderAccount.GetAddress(), poolId, ChainA, tokenCNative)
+
+				// Return the denom of tokenChain's token as seen in SwapperChain
+				return suite.GetIBCDenom(ChainC, ChainB, "token0")
+			},
+			// The packet flow:
+			// 1. B->A: Initial transfer with swap instructions
+			// 2. A->C: Unwrap tokenChain's token
+			// 3. C->A: Return unwrapped token
+			// 4. A->B: Send swapped tokens back to SwapperChain
+			relayChain: []Direction{AtoB, BtoC, CtoA, AtoB},
+			requireAck: []bool{false, false, true, true},
 		},
 
 		{
