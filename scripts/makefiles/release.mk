@@ -24,7 +24,7 @@ release-dry-run:
 		$(GORELEASER_IMAGE) \
 		release \
 		--clean \
-		--skip-publish
+		--skip=publish
 
 release-snapshot:
 	docker run \
@@ -37,5 +37,4 @@ release-snapshot:
 		release \
 		--clean \
 		--snapshot \
-		--skip-validate \
-		--skip-publish
+		--skip=publish,validate
