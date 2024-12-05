@@ -96,7 +96,6 @@ func (s *sqsStreamingService) processBlockRecoverError(ctx sdk.Context) (err err
 		// Reset pool tracking for this block.
 		s.poolTracker.Reset()
 
-		var err error
 		if r := recover(); r != nil {
 			// Due to panic, we set shouldProcessAllBlockData to true to reprocess the entire block.
 			// Be careful when changing this behavior.
@@ -105,16 +104,8 @@ func (s *sqsStreamingService) processBlockRecoverError(ctx sdk.Context) (err err
 			// Emit telemetry for the panic.
 			emitFailureTelemetry(ctx, r, domain.SQSProcessBlockPanicMetricName)
 
-			err = fmt.Errorf("panic: %v", r)
+			errCh <- fmt.Errorf("panic: %v", r)
 		}
-
-		if err == nil {
-			// If no error or panic occurred, mark the data as ingested
-			// so that the next block processes only the pools that were changed.
-			s.blockProcessStrategyManager.MarkInitialDataIngested()
-		}
-
-		errCh <- err
 	}
 
 	var (
@@ -122,10 +113,8 @@ func (s *sqsStreamingService) processBlockRecoverError(ctx sdk.Context) (err err
 		errCh = make(chan error, len(s.grpcClient) * 2)
 	)
 
-	for i, client := range s.grpcClient {
+	for _, client := range s.grpcClient {
 		wg.Add(1)
-
-		fmt.Println("Processing block: client", s.grpcClient[i])
 
 		go func(c domain.SQSGRPClient) {
 			defer wg.Done()
@@ -152,11 +141,13 @@ func (s *sqsStreamingService) processBlockRecoverError(ctx sdk.Context) (err err
 
 	// Check for errors and return the first encountered
 	for err := range errCh {
-		fmt.Println("Error encountered", err)
 		if err != nil {
 			return err
 		}
 	}
+
+	// If no error occurred, mark the data as ingested
+	s.blockProcessStrategyManager.MarkInitialDataIngested()
 
 	return nil
 }
