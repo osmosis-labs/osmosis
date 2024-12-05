@@ -139,7 +139,7 @@ func (s *SQSServiceTestSuite) TestProcessBlockRecoverError() {
 				&mocks.GRPCClientMock{},
 			}
 
-			for i, _ := range grpcClientMocks {
+			for i := range grpcClientMocks {
 				if tc.mockNilGRPCClientPanic {
 					grpcClientMocks[i] = nil
 				}
