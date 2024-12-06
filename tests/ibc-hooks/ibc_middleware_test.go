@@ -1802,10 +1802,11 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 				return suite.GetIBCDenom(ChainB, ChainC, "token0")
 			},
 			// The packet flow:
-			// 1. B->A: Initial transfer with swap instructions
+			// 1. C->A: Initial transfer with swap instructions
 			// 2. A->C: Unwrap tokenChain's token
-			// 3. C->A: Return unwrapped token
-			// 4. A->B: Send swapped tokens back to SwapperChain
+			// 3. C->B: Send to tertiary chain
+			// 4. B->A: Send swapped tokens back to SwapperChain
+			// 5. A->C: Receive swapped tokens
 			relayChain: []Direction{AtoC, CtoB, BtoA, AtoC},
 			requireAck: []bool{false, false, true, true},
 		},
