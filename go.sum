@@ -1133,8 +1133,8 @@ github.com/zimmski/osutil v0.0.0-20190128123334-0d0b3ca231ac h1:uiFRlKzyIzHeLOth
 github.com/zimmski/osutil v0.0.0-20190128123334-0d0b3ca231ac/go.mod h1:wJ9WGevuM/rw8aB2pQPFMUgXZWeaouI0ueFamR0DUPE=
 github.com/zondax/hid v0.9.2 h1:WCJFnEDMiqGF64nlZz28E9qLVZ0KSJ7xpc5DLEyma2U=
 github.com/zondax/hid v0.9.2/go.mod h1:l5wttcP0jwtdLjqjMMWFVEE7d1zO0jvSPA9OPZxWpEM=
-github.com/zondax/ledger-go v0.14.3 h1:wEpJt2CEcBJ428md/5MgSLsXLBos98sBOyxNmCjfUCw=
-github.com/zondax/ledger-go v0.14.3/go.mod h1:IKKaoxupuB43g4NxeQmbLXv7T9AlQyie1UpHb342ycI=
+github.com/zondax/ledger-go v1.0.0 h1:BvNoksIyRqyQTW78rIZP9A44WwAminKiomQa7jXp9EI=
+github.com/zondax/ledger-go v1.0.0/go.mod h1:HpgkgFh3Jkwi9iYLDATdyRxc8CxqxcywsFj6QerWzvo=
 go.einride.tech/aip v0.68.0 h1:4seM66oLzTpz50u4K1zlJyOXQ3tCzcJN7I22tKkjipw=
 go.einride.tech/aip v0.68.0/go.mod h1:7y9FF8VtPWqpxuAxl0KQWqaULxW4zFIesD6zF5RIHHg=
 go.etcd.io/bbolt v1.3.3/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
