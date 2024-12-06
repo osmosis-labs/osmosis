@@ -477,8 +477,8 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.SlashingParams.SlashFractionDowntime = osmomath.ZeroDec()                   // 0% liveness slashing
 
 	genParams.Epochs = epochstypes.DefaultGenesis().Epochs
-	for _, epoch := range genParams.Epochs {
-		epoch.StartTime = genParams.GenesisTime
+	for i := range genParams.Epochs {
+		genParams.Epochs[i].StartTime = genParams.GenesisTime
 	}
 
 	genParams.IncentivesGenesis = *incentivestypes.DefaultGenesis()
@@ -526,8 +526,8 @@ func TestnetGenesisParams() GenesisParams {
 		EpochCountingStarted:  false,
 	})
 
-	for _, epoch := range genParams.Epochs {
-		epoch.StartTime = genParams.GenesisTime
+	for i := range genParams.Epochs {
+		genParams.Epochs[i].StartTime = genParams.GenesisTime
 	}
 
 	genParams.StakingParams.UnbondingTime = time.Hour * 24 * 7 * 2 // 2 weeks
