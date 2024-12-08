@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	gogotypes "github.com/cosmos/gogoproto/types"
@@ -259,7 +260,7 @@ func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 
 	bz := store.Get(types.KeyNextGlobalPoolId)
 	if bz == nil {
-		panic(fmt.Errorf("pool has not been initialized -- Should have been done in InitGenesis"))
+		panic(errors.New("pool has not been initialized -- Should have been done in InitGenesis"))
 	} else {
 		val := gogotypes.UInt64Value{}
 

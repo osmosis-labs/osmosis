@@ -96,7 +96,7 @@ func RandomCreateUniV2Msg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context
 	}
 	poolCoins, ok := sim.GetRandSubsetOfKDenoms(ctx, sender, 2)
 	if !ok {
-		return nil, fmt.Errorf("provided sender with requested number of denoms does not exist")
+		return nil, errors.New("provided sender with requested number of denoms does not exist")
 	}
 	if poolCoins.Add(PoolCreationFee).IsAnyGT(sim.BankKeeper().SpendableCoins(ctx, sender.Address)) {
 		return nil, errors.New("chose an account / creation amount that didn't pass fee bar")

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -64,7 +65,7 @@ func (p *ReplaceMigrationRecordsProposal) ValidateBasic() error {
 		return err
 	}
 	if len(p.Records) == 0 {
-		return fmt.Errorf("empty proposal records")
+		return errors.New("empty proposal records")
 	}
 
 	return nil
@@ -116,7 +117,7 @@ func (p *UpdateMigrationRecordsProposal) ValidateBasic() error {
 		return err
 	}
 	if len(p.Records) == 0 {
-		return fmt.Errorf("empty proposal records")
+		return errors.New("empty proposal records")
 	}
 
 	return nil
@@ -174,11 +175,11 @@ func (p *CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal) ValidateBasic() 
 
 	for _, record := range p.PoolRecordsWithCfmmLink {
 		if record.TickSpacing <= 0 {
-			return fmt.Errorf("tick spacing must be positive")
+			return errors.New("tick spacing must be positive")
 		}
 
 		if record.Denom0 == record.Denom1 {
-			return fmt.Errorf("denom0 and denom1 must be different")
+			return errors.New("denom0 and denom1 must be different")
 		}
 
 		if sdk.ValidateDenom(record.Denom0) != nil {
@@ -191,11 +192,11 @@ func (p *CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal) ValidateBasic() 
 
 		spreadFactor := record.SpreadFactor
 		if spreadFactor.IsNegative() || spreadFactor.GTE(osmomath.OneDec()) {
-			return fmt.Errorf("Invalid Spread factor")
+			return errors.New("Invalid Spread factor")
 		}
 
 		if record.BalancerPoolId <= 0 {
-			return fmt.Errorf("Invalid Balancer Pool Id")
+			return errors.New("Invalid Balancer Pool Id")
 		}
 	}
 	return nil

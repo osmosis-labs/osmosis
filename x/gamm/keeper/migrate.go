@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 
@@ -48,7 +49,7 @@ func (k Keeper) MigrateUnlockedPositionFromBalancerToConcentrated(ctx sdk.Contex
 	}
 	// Defense in depth, ensuring we are returning exactly two coins.
 	if len(exitCoins) != 2 {
-		return cltypes.CreateFullRangePositionData{}, superfluidtypes.MigrationPoolIDs{}, fmt.Errorf("Balancer pool must have exactly two tokens")
+		return cltypes.CreateFullRangePositionData{}, superfluidtypes.MigrationPoolIDs{}, errors.New("Balancer pool must have exactly two tokens")
 	}
 
 	// Create a full range (min to max tick) concentrated liquidity position.

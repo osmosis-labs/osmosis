@@ -1,7 +1,7 @@
 package balancer
 
 import (
-	"fmt"
+	"errors"
 	"sort"
 	"strings"
 
@@ -23,7 +23,7 @@ type poolAssetPretty struct {
 // validates a pool asset, to check if it has a valid weight.
 func (pa PoolAsset) validateWeight() error {
 	if pa.Weight.LTE(osmomath.ZeroInt()) {
-		return fmt.Errorf("a token's weight in the pool must be greater than 0")
+		return errors.New("a token's weight in the pool must be greater than 0")
 	}
 
 	// TODO: add validation for asset weight overflow:

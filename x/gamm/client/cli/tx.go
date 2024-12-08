@@ -527,7 +527,7 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, fs *flag.FlagSet)
 			scalingFactors = append(scalingFactors, u)
 		}
 		if len(scalingFactors) != len(deposit) {
-			return nil, fmt.Errorf("number of scaling factors doesn't match number of assets")
+			return nil, errors.New("number of scaling factors doesn't match number of assets")
 		}
 	}
 
@@ -817,7 +817,7 @@ func parsePoolRecordsWithCFMMLink(cmd *cobra.Command) ([]types.PoolRecordWithCFM
 	poolRecordsWithCFMMLink := strings.Split(poolRecordsStr, ",")
 
 	if len(poolRecordsWithCFMMLink)%6 != 0 {
-		return nil, fmt.Errorf("poolRecordswithCFMMLink must be a list of denom0, denom1, tickSpacing, exponentAtPriceOne, spreadFactor and balancerPoolId")
+		return nil, errors.New("poolRecordswithCFMMLink must be a list of denom0, denom1, tickSpacing, exponentAtPriceOne, spreadFactor and balancerPoolId")
 	}
 
 	finalPoolRecords := []types.PoolRecordWithCFMMLink{}
