@@ -242,7 +242,7 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
                     Weight: osmomath.NewInt(400),
                 },
             },
-            err: errors.New(balancer.ErrMsgFormatRepeatingPoolAssetsNotAllowed, "uosmo"),
+            err: fmt.Errorf(balancer.ErrMsgFormatRepeatingPoolAssetsNotAllowed, "uosmo"),
         },
     }
 
