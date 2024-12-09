@@ -24,7 +24,7 @@ rpath = false
 
 [workspace.dependencies]
 cosmwasm-schema = "1.1.2"
-cosmwasm-std = {version = "1.2", features = ["stargate"]}
+cosmwasm-std = {version = "=1.4.4", features = ["stargate"]}
 cosmwasm-storage = "1.1.2"
 cw-storage-plus = "1.0.1"
 cw2 = "1.0.0"
