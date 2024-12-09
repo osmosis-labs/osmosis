@@ -940,7 +940,7 @@ func (suite *HooksTestSuite) modifyChainChannelLinks(registryAddr sdk.AccAddress
 			{"operation": "remove","source_chain": "chainB","destination_chain": "chainC","channel_id": "channel-1"},
 			{"operation": "set","source_chain": "chainD","destination_chain": "ChainC","channel_id": "channel-1"},
 			{"operation": "remove","source_chain": "chainC","destination_chain": "chainB","channel_id": "channel-1"},
-			{"operation": "set","source_chain": "ChainC","destination_chain": "chainD","channel_id": "channel-2"},
+			{"operation": "set","source_chain": "chainC","destination_chain": "chainD","channel_id": "channel-2"},
 			{"operation": "change","source_chain": "chainB","destination_chain": "osmosis","new_source_chain": "chainD"},
 			{"operation": "change","source_chain": "osmosis","destination_chain": "chainB","new_destination_chain": "chainD"}
 		  ]
