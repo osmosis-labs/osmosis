@@ -1645,7 +1645,7 @@ func (suite *HooksTestSuite) SimpleNativeTransfer(token string, amount osmomath.
 		_, _, _, err := suite.FullSend(transferMsg, suite.GetDirection(fromChain, toChain))
 		suite.Require().NoError(err)
 		receiveChannel := suite.GetReceiverChannel(fromChain, toChain)
-		// Transfers must be preprended to the denom path before hashing
+		// Transfers must be prepended to the denom path before hashing
 		// Trailing/Prepended slashes are trimmed as necessary
 		newPrefix := strings.TrimRight(transfertypes.GetDenomPrefix("transfer", receiveChannel), "/")
 		prevPrefix = strings.TrimRight(newPrefix+"/"+prevPrefix, "/")
