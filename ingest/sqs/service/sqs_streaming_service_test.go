@@ -103,10 +103,10 @@ func (s *SQSServiceTestSuite) TestProcessBlockRecoverError() {
 				CosmWasmPools:     cosmWasmPools,
 			}
 
-			transformedPools := []sqsdomain.PoolI{}
+			transformedPools := []types.PoolI{}
 			for _, pool := range blockPools.GetAll() {
 				// Note: balances are irrelevant for the test so we supply empty balances
-				transformedPool := sqsdomain.NewPool(pool, pool.GetSpreadFactor(s.Ctx), sdk.Coins{})
+				transformedPool := types.NewPool(pool, pool.GetSpreadFactor(s.Ctx), sdk.Coins{})
 				transformedPools = append(transformedPools, transformedPool)
 			}
 
