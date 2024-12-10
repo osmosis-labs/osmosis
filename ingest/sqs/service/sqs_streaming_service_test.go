@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/sqs/sqsdomain"
+	"github.com/osmosis-labs/osmosis/v28/ingest/types"
 
 	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v28/ingest/sqs/domain"

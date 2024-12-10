@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	api "github.com/osmosis-labs/sqs/pkg/api/v1beta1/pools"
-	sqspassthroughdomain "github.com/osmosis-labs/sqs/sqsdomain/passthroughdomain"
+	sqspassthroughdomain "github.com/osmosis-labs/osmosis/v28/ingest/types/passthroughdomain"
 )
 
 func TestPoolWrapper_Incentive(t *testing.T) {

@@ -3,9 +3,9 @@ package poolstransformer
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/sqs/sqsdomain"
 	"github.com/osmosis-labs/osmosis/v28/ingest/types"
-	sqscosmwasmpool "github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
+	"github.com/osmosis-labs/osmosis/v28/ingest/types"
+	sqscosmwasmpool "github.com/osmosis-labs/osmosis/v28/ingest/types/cosmwasmpool"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"

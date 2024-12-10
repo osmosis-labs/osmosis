@@ -3,7 +3,7 @@ package poolstransformer
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/sqs/sqsdomain"
+	"github.com/osmosis-labs/osmosis/v28/ingest/types"
 
 	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"
 )
@@ -14,7 +14,7 @@ import (
 // For example, the taker fees for a pair of denoms (A, B) is stored BOTH as (A, B) and (B, A).
 // If the taker fee for a denom pair already exists in the map, it is not retrieved again.
 // Returns error if fails to retrieve taker fee from chain. Nil otherwise
-func retrieveTakerFeeToMapIfNotExists(ctx sdk.Context, denoms []string, denomPairToTakerFeeMap sqsdomain.TakerFeeMap, poolManagerKeeper commondomain.PoolManagerKeeper) error {
+func retrieveTakerFeeToMapIfNotExists(ctx sdk.Context, denoms []string, denomPairToTakerFeeMap types.TakerFeeMap, poolManagerKeeper commondomain.PoolManagerKeeper) error {
 	for i, denomI := range denoms {
 		for j, denomJ := range denoms {
 			if i != j {

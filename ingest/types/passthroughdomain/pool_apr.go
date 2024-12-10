@@ -1,10 +1,10 @@
-package sqspassthroughdomain
+package passthroughdomain
 
 import (
 	"fmt"
 	"strconv"
 
-	"github.com/osmosis-labs/sqs/sqsdomain/json"
+	"github.com/osmosis-labs/osmosis/v28/ingest/types/json"
 )
 
 // PoolDataRange represents the range of the pool APR data.

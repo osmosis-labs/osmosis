@@ -1,7 +1,7 @@
-package sqspassthroughdomain
+package passthroughdomain
 
 import (
-	"github.com/osmosis-labs/sqs/sqsdomain/json"
+	"github.com/osmosis-labs/osmosis/v28/ingest/types/json" // TODO
 )
 
 // PoolFee represents the fees data of a pool.

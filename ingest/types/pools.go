@@ -9,9 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	api "github.com/osmosis-labs/sqs/pkg/api/v1beta1/pools"
-	"github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
-	sqspassthroughdomain "github.com/osmosis-labs/sqs/sqsdomain/passthroughdomain"
+	"github.com/osmosis-labs/osmosis/v28/ingest/types/cosmwasmpool"
+	"github.com/osmosis-labs/osmosis/v28/ingest/types/passthroughdomain"
+	api "github.com/osmosis-labs/sqs/pkg/api/v1beta1/pools" // TODO
 
 	clqueryproto "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/client/queryproto"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
@@ -44,9 +44,9 @@ type PoolI interface {
 	// GetLiquidityCapError returns the pool liquidity capitalization error.
 	GetLiquidityCapError() string
 
-	GetAPRData() sqspassthroughdomain.PoolAPRDataStatusWrap
+	GetAPRData() passthroughdomain.PoolAPRDataStatusWrap
 
-	GetFeesData() sqspassthroughdomain.PoolFeesDataStatusWrap
+	GetFeesData() passthroughdomain.PoolFeesDataStatusWrap
 
 	// Incentive returns the incentive type for the pool
 	Incentive() api.IncentiveType
@@ -63,10 +63,10 @@ type PoolI interface {
 	SetLiquidityCapError(liquidityCapError string)
 
 	// SetAPRData sets the APR data for the pool
-	SetAPRData(aprData sqspassthroughdomain.PoolAPRDataStatusWrap)
+	SetAPRData(aprData passthroughdomain.PoolAPRDataStatusWrap)
 
 	// SetFeesData sets the fees data for the pool
-	SetFeesData(feesData sqspassthroughdomain.PoolFeesDataStatusWrap)
+	SetFeesData(feesData passthroughdomain.PoolFeesDataStatusWrap)
 
 	// Validate validates the pool
 	// Returns nil if the pool is valid
@@ -95,11 +95,11 @@ type SQSPool struct {
 }
 
 type PoolWrapper struct {
-	ChainModel poolmanagertypes.PoolI                      `json:"underlying_pool"`
-	SQSModel   SQSPool                                     `json:"sqs_model"`
-	APRData    sqspassthroughdomain.PoolAPRDataStatusWrap  `json:"apr_data,omitempty"`
-	FeesData   sqspassthroughdomain.PoolFeesDataStatusWrap `json:"fees_data,omitempty"`
-	TickModel  *TickModel                                  `json:"tick_model,omitempty"`
+	ChainModel poolmanagertypes.PoolI                   `json:"underlying_pool"`
+	SQSModel   SQSPool                                  `json:"sqs_model"`
+	APRData    passthroughdomain.PoolAPRDataStatusWrap  `json:"apr_data,omitempty"`
+	FeesData   passthroughdomain.PoolFeesDataStatusWrap `json:"fees_data,omitempty"`
+	TickModel  *TickModel                               `json:"tick_model,omitempty"`
 }
 
 var _ PoolI = &PoolWrapper{}
@@ -212,27 +212,26 @@ func (p *PoolWrapper) SetLiquidityCapError(liquidityCapError string) {
 }
 
 // SetAPRData implements PoolI.
-func (p *PoolWrapper) SetAPRData(aprData sqspassthroughdomain.PoolAPRDataStatusWrap) {
+func (p *PoolWrapper) SetAPRData(aprData passthroughdomain.PoolAPRDataStatusWrap) {
 	p.APRData = aprData
 }
 
 // SetFeesData implements PoolI.
-func (p *PoolWrapper) SetFeesData(feesData sqspassthroughdomain.PoolFeesDataStatusWrap) {
+func (p *PoolWrapper) SetFeesData(feesData passthroughdomain.PoolFeesDataStatusWrap) {
 	p.FeesData = feesData
 }
 
 // GetAPRData implements PoolI.
-func (p *PoolWrapper) GetAPRData() sqspassthroughdomain.PoolAPRDataStatusWrap {
+func (p *PoolWrapper) GetAPRData() passthroughdomain.PoolAPRDataStatusWrap {
 	return p.APRData
 }
-
 
 // Incentive implements PoolI.
 func (p *PoolWrapper) Incentive() api.IncentiveType {
 	apr := p.GetAPRData()
 
 	checks := []struct {
-		apr       sqspassthroughdomain.PoolDataRange
+		apr       passthroughdomain.PoolDataRange
 		incentive api.IncentiveType
 	}{
 		{apr.SuperfluidAPR, api.IncentiveType_SUPERFLUID},
@@ -250,6 +249,6 @@ func (p *PoolWrapper) Incentive() api.IncentiveType {
 }
 
 // GetFeesData implements PoolI.
-func (p *PoolWrapper) GetFeesData() sqspassthroughdomain.PoolFeesDataStatusWrap {
+func (p *PoolWrapper) GetFeesData() passthroughdomain.PoolFeesDataStatusWrap {
 	return p.FeesData
 }

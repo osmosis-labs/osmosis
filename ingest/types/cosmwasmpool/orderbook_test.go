@@ -4,7 +4,8 @@ import (
 	"testing"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
+	"github.com/osmosis-labs/osmosis/v28/ingest/types/cosmwasmpool"
+
 	"github.com/stretchr/testify/assert"
 )
 
