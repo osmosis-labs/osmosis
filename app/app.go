@@ -372,33 +372,37 @@ func NewOsmosisApp(
 			ConcentratedKeeper: app.ConcentratedLiquidityKeeper,
 		}
 
-		// Create pool tracker that tracks pool updates
-		// made by the write listenetrs.
-		poolTracker := pooltracker.NewMemory()
-
-		// Create pool extractor
-		poolExtractor := poolextractor.New(sqsKeepers, poolTracker)
-
-		// Create pools ingester
-		poolsTransformer := poolstransformer.NewPoolTransformer(sqsKeepers, sqs.DefaultUSDCUOSMOPool)
-
-		blockProcessStrategyManager := commondomain.NewBlockProcessStrategyManager()
-
 		// Create sqs grpc client
-		sqsGRPCClient := sqsservice.NewGRPCCLient(sqsConfig.GRPCIngestAddress, sqsConfig.GRPCIngestMaxCallSizeBytes, appCodec)
-
-		// Create write listeners for the SQS service.
-		writeListeners, storeKeyMap := getSQSServiceWriteListeners(app, appCodec, poolTracker, app.WasmKeeper)
-
-		// Create the SQS streaming service by setting up the write listeners,
-		// the SQS ingester, and the pool tracker.
-		blockUpdatesProcessUtils := &commondomain.BlockUpdateProcessUtils{
-			WriteListeners: writeListeners,
-			StoreKeyMap:    storeKeyMap,
+		sqsGRPCClients := make([]domain.SQSGRPClient, len(sqsConfig.GRPCIngestAddress))
+		for i, grpcIngestAddress := range sqsConfig.GRPCIngestAddress {
+			sqsGRPCClients[i] = sqsservice.NewGRPCCLient(grpcIngestAddress, sqsConfig.GRPCIngestMaxCallSizeBytes, appCodec)
 		}
-		sqsStreamingService := sqsservice.New(blockUpdatesProcessUtils, poolExtractor, poolsTransformer, poolTracker, sqsGRPCClient, blockProcessStrategyManager, nodeStatusChecker)
 
-		streamingServices = append(streamingServices, sqsStreamingService)
+		for _, grpcClient := range sqsGRPCClients {
+			// Create pool tracker that tracks pool updates
+			// made by the write listenetrs.
+			poolTracker := pooltracker.NewMemory()
+
+			// Create pool extractor
+			poolExtractor := poolextractor.New(sqsKeepers, poolTracker)
+
+			// Create pools ingester
+			poolsTransformer := poolstransformer.NewPoolTransformer(sqsKeepers, sqs.DefaultUSDCUOSMOPool)
+
+			blockProcessStrategyManager := commondomain.NewBlockProcessStrategyManager()
+			// Create write listeners for the SQS service.
+			writeListeners, storeKeyMap := getSQSServiceWriteListeners(app, appCodec, poolTracker, app.WasmKeeper)
+
+			// Create the SQS streaming service by setting up the write listeners,
+			// the SQS ingester, and the pool tracker.
+			blockUpdatesProcessUtils := &commondomain.BlockUpdateProcessUtils{
+				WriteListeners: writeListeners,
+				StoreKeyMap:    storeKeyMap,
+			}
+
+			sqsStreamingService := sqsservice.New(blockUpdatesProcessUtils, poolExtractor, poolsTransformer, poolTracker, grpcClient, blockProcessStrategyManager, nodeStatusChecker)
+			streamingServices = append(streamingServices, sqsStreamingService)
+		}
 	}
 
 	// initialize indexer if enabled

@@ -1,6 +1,8 @@
 package sqs
 
 import (
+	"strings"
+
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -11,7 +13,7 @@ type Config struct {
 	// IsEnabled defines if the sidecar query server is enabled.
 	IsEnabled bool `mapstructure:"enabled"`
 	// GRPCIngestAddress defines the gRPC address of the sidecar query server ingest.
-	GRPCIngestAddress string `mapstructure:"grpc-ingest-address"`
+	GRPCIngestAddress []string `mapstructure:"grpc-ingest-address"`
 	// GRPCIngestMaxCallSizeBytes defines the maximum size of a gRPC ingest call in bytes.
 	GRPCIngestMaxCallSizeBytes int `mapstructure:"grpc-ingest-max-call-size-bytes"`
 }
@@ -29,7 +31,7 @@ const (
 var DefaultConfig = Config{
 	IsEnabled: false,
 	// Default gRPC address is localhost:50051
-	GRPCIngestAddress: "localhost:50051",
+	GRPCIngestAddress: []string{"localhost:50051"},
 	// 50 MB by default. Our pool data is estimated to be at approximately 15MB.
 	// During normal operation, we should not approach even 1 MB since we are to stream only
 	// modified pools.
@@ -46,7 +48,7 @@ func NewConfigFromOptions(opts servertypes.AppOptions) Config {
 		}
 	}
 
-	grpcIngestAddress := osmoutils.ParseString(opts, groupOptName, "grpc-ingest-address")
+	grpcIngestAddress := strings.Split(osmoutils.ParseString(opts, groupOptName, "grpc-ingest-address"), ",")
 
 	grpcIngestMaxCallSizeBytes := osmoutils.ParseInt(opts, groupOptName, "grpc-ingest-max-call-size-bytes")
 
