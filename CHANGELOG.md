@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 * [#8831](https://github.com/osmosis-labs/osmosis/pull/8831) chore: bump cometbft
+* [#8876](https://github.com/osmosis-labs/osmosis/pull/8876) (xcs) fix: XCS incorrect channel
 
 ## v27.0.0
 
