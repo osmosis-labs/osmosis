@@ -3,8 +3,8 @@
 ## Overview
 
 - **v28 Proposal**: [Proposal Page](https://www.mintscan.io/osmosis/proposals/T.B.D)
-- **v28 Upgrade Block Height**: T.B.D
-- **v28 Upgrade Countdown**: [Block Countdown](https://www.mintscan.io/osmosis/blocks/T.B.D)
+- **v28 Upgrade Block Height**: 25866000
+- **v28 Upgrade Countdown**: [Block Countdown](https://www.mintscan.io/osmosis/blocks/25866000)
 
 ## Hardware Requirements
 
@@ -95,7 +95,7 @@ At the designated block height, Cosmovisor will automatically upgrade to version
 
 Follow these steps if you opt for a manual upgrade:
 
-1. Monitor Osmosis until it reaches the specified upgrade block height: T.B.D.
+1. Monitor Osmosis until it reaches the specified upgrade block height: 25866000.
 2. Observe for a panic message followed by continuous peer logs, then halt the daemon.
 3. Perform these steps:
 
