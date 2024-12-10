@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package sqs.ingest.v1beta1;
+option go_package = "sqsdomain/proto/types";
+
+// SQSIngester is a a data ingester from an Osmosis node to
+// the sidecar query server.
+service SQSIngester {
+  // ProcessBlock processes a block from the Osmosis node.
+  rpc ProcessBlock(ProcessBlockRequest) returns (ProcessBlockReply) {}
+}
+
+// PoolData represents a structure encapsulating an Osmosis liquidity pool.
+message PoolData {
+  // ChainModel is the chain representation model of the pool.
+  bytes chain_model = 1;
+
+  // SqsModel is additional pool data used by the sidecar query server.
+  bytes sqs_model = 2;
+
+  // TickModel is the tick data of a concentrated liquidity pool.
+  // This field is only valid and set for concentrated pools. It is nil
+  // otherwise.
+  bytes tick_model = 3;
+}
+
+// ProcessBlock
+////////////////////////////////////////////////////////////////////
+
+// The block process request.
+// Sends taker fees, block height and pools.
+message ProcessBlockRequest {
+  // block height is the height of the block being processed.
+  uint64 block_height = 1;
+  // taker_fees_map is the map of taker fees for the block.
+  bytes taker_fees_map = 2;
+  // pools in the block.
+  repeated PoolData pools = 3;
+}
+
+// The response after completing the block processing.
+message ProcessBlockReply {}
