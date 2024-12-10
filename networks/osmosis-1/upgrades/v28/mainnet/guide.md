@@ -1,10 +1,10 @@
-# Mainnet Upgrade Guide: From Version v26 to v28
+# Mainnet Upgrade Guide: From Version v27 to v28
 
 ## Overview
 
-- **v28 Proposal**: [Proposal Page](https://www.mintscan.io/osmosis/proposals/TODO)
-- **v28 Upgrade Block Height**: 24250100
-- **v28 Upgrade Countdown**: [Block Countdown](https://www.mintscan.io/osmosis/blocks/TODO)
+- **v28 Proposal**: [Proposal Page](https://www.mintscan.io/osmosis/proposals/T.B.D)
+- **v28 Upgrade Block Height**: T.B.D
+- **v28 Upgrade Countdown**: [Block Countdown](https://www.mintscan.io/osmosis/blocks/T.B.D)
 
 ## Hardware Requirements
 
@@ -57,8 +57,8 @@ mkdir -p ~/.osmosisd/cosmovisor/genesis
 mkdir -p ~/.osmosisd/cosmovisor/genesis/bin
 mkdir -p ~/.osmosisd/cosmovisor/upgrades
 cp $GOPATH/bin/osmosisd ~/.osmosisd/cosmovisor/genesis/bin
-mkdir -p ~/.osmosisd/cosmovisor/upgrades/v26/bin
-cp $GOPATH/bin/osmosisd ~/.osmosisd/cosmovisor/upgrades/v26/bin
+mkdir -p ~/.osmosisd/cosmovisor/upgrades/v28/bin
+cp $GOPATH/bin/osmosisd ~/.osmosisd/cosmovisor/upgrades/v28/bin
 ```
 
 _Add these lines to your profile to set up environment variables_:
@@ -95,7 +95,7 @@ At the designated block height, Cosmovisor will automatically upgrade to version
 
 Follow these steps if you opt for a manual upgrade:
 
-1. Monitor Osmosis until it reaches the specified upgrade block height: 24250100.
+1. Monitor Osmosis until it reaches the specified upgrade block height: T.B.D.
 2. Observe for a panic message followed by continuous peer logs, then halt the daemon.
 3. Perform these steps:
 
