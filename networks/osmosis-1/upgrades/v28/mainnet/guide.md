@@ -3,8 +3,8 @@
 ## Overview
 
 - **v28 Proposal**: [Proposal Page](https://www.mintscan.io/osmosis/proposals/T.B.D)
-- **v28 Upgrade Block Height**: 25866000
-- **v28 Upgrade Countdown**: [Block Countdown](https://www.mintscan.io/osmosis/blocks/25866000)
+- **v28 Upgrade Block Height**: 25861100
+- **v28 Upgrade Countdown**: [Block Countdown](https://www.mintscan.io/osmosis/blocks/25861100)
 
 ## Hardware Requirements
 
