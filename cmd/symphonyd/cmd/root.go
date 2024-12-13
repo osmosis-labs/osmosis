@@ -664,7 +664,7 @@ func initAppConfig() (string, interface{}) {
 	// server config.
 	srvCfg := serverconfig.DefaultConfig()
 	srvCfg.API.Enable = true
-	srvCfg.MinGasPrices = "0uosmo"
+	srvCfg.MinGasPrices = "0note"
 
 	// 128MB IAVL cache
 	srvCfg.IAVLCacheSize = 781250
