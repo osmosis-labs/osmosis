@@ -17,7 +17,7 @@ import (
 )
 
 // CustomMessageDecorator returns decorator for custom CosmWasm bindings messages
-func CustomMessageDecorator(bank *bankkeeper.BaseKeeper, tokenFactory *tokenfactorykeeper.Keeper) func(wasmkeeper.Messenger) wasmkeeper.Messenger {
+func CustomMessageDecorator(bank bankkeeper.Keeper, tokenFactory *tokenfactorykeeper.Keeper) func(wasmkeeper.Messenger) wasmkeeper.Messenger {
 	return func(old wasmkeeper.Messenger) wasmkeeper.Messenger {
 		return &CustomMessenger{
 			wrapped:      old,
@@ -29,7 +29,7 @@ func CustomMessageDecorator(bank *bankkeeper.BaseKeeper, tokenFactory *tokenfact
 
 type CustomMessenger struct {
 	wrapped      wasmkeeper.Messenger
-	bank         *bankkeeper.BaseKeeper
+	bank         bankkeeper.Keeper
 	tokenFactory *tokenfactorykeeper.Keeper
 }
 
@@ -70,7 +70,7 @@ func (m *CustomMessenger) createDenom(ctx sdk.Context, contractAddr sdk.AccAddre
 }
 
 // PerformCreateDenom is used with createDenom to create a token denom; validates the msgCreateDenom.
-func PerformCreateDenom(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, ctx sdk.Context, contractAddr sdk.AccAddress, createDenom *bindings.CreateDenom) error {
+func PerformCreateDenom(f *tokenfactorykeeper.Keeper, b bankkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, createDenom *bindings.CreateDenom) error {
 	if createDenom == nil {
 		return wasmvmtypes.InvalidRequest{Err: "create denom null create denom"}
 	}
@@ -104,7 +104,7 @@ func (m *CustomMessenger) mintTokens(ctx sdk.Context, contractAddr sdk.AccAddres
 }
 
 // PerformMint used with mintTokens to validate the mint message and mint through token factory.
-func PerformMint(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, ctx sdk.Context, contractAddr sdk.AccAddress, mint *bindings.MintTokens) error {
+func PerformMint(f *tokenfactorykeeper.Keeper, b bankkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, mint *bindings.MintTokens) error {
 	if mint == nil {
 		return wasmvmtypes.InvalidRequest{Err: "mint token null mint"}
 	}

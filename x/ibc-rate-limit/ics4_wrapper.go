@@ -28,7 +28,7 @@ var (
 type ICS4Wrapper struct {
 	channel        porttypes.ICS4Wrapper
 	accountKeeper  *authkeeper.AccountKeeper
-	bankKeeper     *bankkeeper.BaseKeeper
+	bankKeeper     bankkeeper.Keeper
 	ContractKeeper *wasmkeeper.PermissionedKeeper
 	paramSpace     paramtypes.Subspace
 }
@@ -40,7 +40,7 @@ func (i *ICS4Wrapper) GetAppVersion(ctx sdk.Context, portID, channelID string) (
 func NewICS4Middleware(
 	channel porttypes.ICS4Wrapper,
 	accountKeeper *authkeeper.AccountKeeper, contractKeeper *wasmkeeper.PermissionedKeeper,
-	bankKeeper *bankkeeper.BaseKeeper, paramSpace paramtypes.Subspace,
+	bankKeeper bankkeeper.Keeper, paramSpace paramtypes.Subspace,
 ) ICS4Wrapper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())

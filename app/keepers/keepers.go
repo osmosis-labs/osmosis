@@ -42,6 +42,7 @@ import (
 	icacontroller "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/keeper"
 	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
+	custombankkeeper "github.com/osmosis-labs/osmosis/v26/custom/bank/keeper"
 
 	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
 	customwasmkeeper "github.com/osmosis-labs/osmosis/v26/custom/wasm/keeper"
@@ -140,6 +141,7 @@ type AppKeepers struct {
 	CrisisKeeper          *crisiskeeper.Keeper
 	UpgradeKeeper         *upgradekeeper.Keeper
 	ConsensusParamsKeeper *consensusparamkeeper.Keeper
+	BankKeeper            *custombankkeeper.CustomKeeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
@@ -151,7 +153,6 @@ type AppKeepers struct {
 
 	// "Normal" keepers
 	AccountKeeper                *authkeeper.AccountKeeper
-	BankKeeper                   *bankkeeper.BaseKeeper
 	AuthzKeeper                  *authzkeeper.Keeper
 	StakingKeeper                *stakingkeeper.Keeper
 	DistrKeeper                  *distrkeeper.Keeper
@@ -240,7 +241,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		bApp.Logger(),
 	)
-	appKeepers.BankKeeper = &bankKeeper
+	customBankKeeper := custombankkeeper.NewCustomKeeper(&bankKeeper, appKeepers.AccountKeeper)
+	appKeepers.BankKeeper = &customBankKeeper
 
 	// Initialize authenticators
 	appKeepers.AuthenticatorManager = authenticator.NewAuthenticatorManager()

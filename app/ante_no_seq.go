@@ -6,8 +6,6 @@ package app
 import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	ibcante "github.com/cosmos/ibc-go/v7/modules/core/ante"
-	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,8 +14,6 @@ import (
 
 	osmoante "github.com/osmosis-labs/osmosis/v26/ante"
 	v9 "github.com/osmosis-labs/osmosis/v26/app/upgrades/v9"
-
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v26/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v26/x/txfees/types"
