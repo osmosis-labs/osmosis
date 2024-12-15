@@ -39,7 +39,7 @@ may find that it is not highly performant or prone to crashing.
 
 ## Documentation
 
-For the most up to date documentation please visit
+For the most up-to-date documentation please visit
 [docs.osmosis.zone](https://docs.osmosis.zone/)
 
 ## Joining the Mainnet
