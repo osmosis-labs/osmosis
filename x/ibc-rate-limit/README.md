@@ -71,7 +71,7 @@ Definitely needs far more ideation and iteration!
 
 ## Parameterizing the rate limit
 
-One element is we don't want any rate limit timespan that's too short, e.g. not enough time for humans to react to. So we wouldn't want a 1 hour rate limit, unless we think that if its hit, it could be assessed within an hour.
+One element is we don't want any rate limit timespan that's too short, e.g. not enough time for humans to react to. So we wouldn't want a 1-hour rate limit, unless we think that if its hit, it could be assessed within an hour.
 
 ### Handling rate limit boundaries
 
