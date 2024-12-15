@@ -227,7 +227,7 @@ New ValSet        20osmos {ValD-> 0.2, ValE-> 0.2, ValF-> 0.6} [ValD-> 4osmo, Va
 
 
 ## Redelegation Constraints 
-1. ValA -> ValB redelegate upto 7 times in 21 day period 
+1. ValA -> ValB redelegate upto 7 times in 21-day period 
 2. ValA -> ValB (redelegate) ValB -> ValC (redelegate) **CONSECUTIVE REDELEGATION DOES NOT WORK**
 3. Once you redelegate from ValA -> ValB, you will not be able to redelegate from ValB to another validator for the next 21 days.
   - the validator on the receiving end of redelegation will be on a 21-day redelegation lock
