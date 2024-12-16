@@ -62,20 +62,24 @@ func (s *sqsStreamingService) ListenFinalizeBlock(goCtx context.Context, req typ
 }
 
 func (s *sqsStreamingService) ListenCommit(ctx context.Context, res types.ResponseCommit, changeSet []*storetypes.StoreKVPair) error {
-	blockProcessStartTime := time.Now()
-	defer func() {
-		// Emit telemetry for the duration of processing the block.
-		telemetry.MeasureSince(blockProcessStartTime, domain.SQSProcessBlockDurationMetricName)
-		// Reset the change set after processing the block.
-		s.blockUpdatesProcessUtil.SetChangeSet(nil)
+	go func() {
+		blockProcessStartTime := time.Now()
+		defer func() {
+			// Emit telemetry for the duration of processing the block.
+			telemetry.MeasureSince(blockProcessStartTime, domain.SQSProcessBlockDurationMetricName)
+			// Reset the change set after processing the block.
+			s.blockUpdatesProcessUtil.SetChangeSet(nil)
+		}()
+
+		// Set the change set on the block update process utils.
+		s.blockUpdatesProcessUtil.SetChangeSet(changeSet)
+
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+		_ = s.processBlockRecoverError(sdkCtx)
 	}()
 
-	// Set the change set on the block update process utils.
-	s.blockUpdatesProcessUtil.SetChangeSet(changeSet)
-
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Always return nil to avoid making this consensus breaking.
-	_ = s.processBlockRecoverError(sdkCtx)
 	return nil
 }
 
