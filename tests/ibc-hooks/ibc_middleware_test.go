@@ -2137,3 +2137,96 @@ func (suite *HooksTestSuite) TestOutpostExplicit() {
 	initializer := suite.chainB.SenderAccount.GetAddress()
 	suite.ExecuteOutpostSwap(initializer, initializer, fmt.Sprintf(`ibc:channel-0/%s`, initializer.String()))
 }
+
+func (suite *HooksTestSuite) TestCrosschainSwapsFinalMemo() {
+	// Start on B with `token0`, swap on A with `C/token0`,
+	// then use the final memo to forward the swapped tokens
+	// to C. On C, we should end up with native `token0`.
+
+	accountA := suite.chainA.SenderAccount.GetAddress()
+	accountB := suite.chainB.SenderAccount.GetAddress()
+	accountC := suite.chainC.SenderAccount.GetAddress()
+
+	swapRouterAddr, crosschainAddr := suite.SetupCrosschainSwaps(ChainA, true)
+
+	preToken0BalanceOnC := suite.chainC.GetOsmosisApp().BankKeeper.GetBalance(suite.chainC.GetContext(), accountC, "token0")
+	preToken0BalanceOnB := suite.chainB.GetOsmosisApp().BankKeeper.GetBalance(suite.chainB.GetContext(), accountB, "token0")
+
+	const (
+		transferAmount int64 = 12000000
+		swapAmount     int64 = 1000
+		receiveAmount  int64 = 980
+	)
+	suite.Require().Greater(transferAmount, defaultPoolAmount)
+	suite.Require().Greater(defaultPoolAmount, swapAmount)
+
+	// Setup initial tokens
+	suite.SimpleNativeTransfer("token0", osmomath.NewInt(transferAmount), []Chain{ChainB, ChainA})
+	suite.SimpleNativeTransfer("token0", osmomath.NewInt(transferAmount), []Chain{ChainC, ChainA})
+
+	// Balance of token0 on C should have decreased by the transfer amt
+	postToken0BalanceOnC := suite.chainC.GetOsmosisApp().BankKeeper.GetBalance(suite.chainC.GetContext(), accountC, "token0")
+	suite.Require().Equal(int64(-transferAmount), (postToken0BalanceOnC.Amount.Sub(preToken0BalanceOnC.Amount)).Int64())
+
+	// Likewise for token0 on B
+	postToken0BalanceOnB := suite.chainB.GetOsmosisApp().BankKeeper.GetBalance(suite.chainB.GetContext(), accountB, "token0")
+	suite.Require().Equal(int64(-transferAmount), (postToken0BalanceOnB.Amount.Sub(preToken0BalanceOnB.Amount)).Int64())
+
+	// Setup pool
+	token0BA := suite.GetIBCDenom(ChainB, ChainA, "token0")
+	token0CA := suite.GetIBCDenom(ChainC, ChainA, "token0")
+
+	poolId := suite.CreateIBCPoolOnChain(ChainA, token0BA, token0CA, osmomath.NewInt(defaultPoolAmount))
+	suite.SetupIBCSimpleRouteOnChain(swapRouterAddr, accountA, poolId, ChainA, token0BA, token0CA)
+
+	// Generate forward instructions to receive natve token0 on C
+	forwardMsg := fmt.Sprintf(`{"forward":{"receiver":"%s", "port":"transfer", "channel":%q}}`,
+		accountC,
+		suite.GetSenderChannel(ChainB, ChainC),
+	)
+
+	// Generate swap instructions for the contract
+	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":%q,"slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"chainB/%s", "on_failed_delivery": "do_nothing", "final_memo":%s}}`,
+		token0CA,
+		accountB,
+		forwardMsg,
+	)
+
+	// Generate full memo
+	msg := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, swapMsg)
+
+	// Send IBC transfer with the memo with crosschain-swap instructions
+	channelBA := suite.GetSenderChannel(ChainB, ChainA)
+	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", osmomath.NewInt(swapAmount)), accountB.String(), crosschainAddr.String(), channelBA, msg)
+	_, res, _, err := suite.FullSend(transferMsg, BtoA)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+
+	// Declare the expected amounts on C
+	expectedPreToken0BalanceOnC2 := postToken0BalanceOnC.Amount
+	expectedPostToken0BalanceOnC2 := postToken0BalanceOnC.Amount.Add(osmomath.NewInt(receiveAmount))
+
+	preToken0BalanceOnC2 := suite.chainC.GetOsmosisApp().BankKeeper.GetBalance(suite.chainC.GetContext(), accountC, "token0")
+	suite.Require().Equal(expectedPreToken0BalanceOnC2, preToken0BalanceOnC2.Amount)
+
+	// Forward chain: A => C => B (=> C)
+
+	// A => C
+	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents())
+	suite.Require().NoError(err)
+	res = suite.RelayPacketNoAck(packet, AtoC)
+
+	// C => B
+	packet, err = ibctesting.ParsePacketFromEvents(res.GetEvents())
+	suite.Require().NoError(err)
+	res = suite.RelayPacketNoAck(packet, CtoB)
+
+	// B => C
+	packet, err = ibctesting.ParsePacketFromEvents(res.GetEvents())
+	suite.Require().NoError(err)
+	res = suite.RelayPacketNoAck(packet, BtoC)
+
+	// Check C's balance
+	postToken0BalanceOnC2 := suite.chainC.GetOsmosisApp().BankKeeper.GetBalance(suite.chainC.GetContext(), accountC, "token0")
+	suite.Require().Equal(expectedPostToken0BalanceOnC2, postToken0BalanceOnC2.Amount)
+}
