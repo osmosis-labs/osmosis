@@ -15,7 +15,7 @@ pub fn parse_swaprouter_reply(msg: Reply) -> Result<SwapResponse, ContractError>
     let SubMsgResult::Ok(SubMsgResponse { data: Some(b), .. }) = msg.result else {
         return Err(ContractError::FailedSwap {
             msg: format!("No data in swaprouter reply"),
-        })
+        });
     };
 
     // Parse underlying response from the chain
@@ -42,7 +42,9 @@ pub fn build_memo(
     // Include the callback key in the memo without modifying the rest of the
     // provided memo
     let memo = {
-        let serde_cw_value::Value::Map(mut m) = memo.0 else { unreachable!() };
+        let serde_cw_value::Value::Map(mut m) = memo.into_value() else {
+            unreachable!()
+        };
         m.insert(
             serde_cw_value::Value::String(CALLBACK_KEY.to_string()),
             serde_cw_value::Value::String(contract_addr.to_string()),
