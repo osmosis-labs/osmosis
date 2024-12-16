@@ -52,6 +52,7 @@ pub fn execute_swap(
         receiver,
         slippage,
         next_memo,
+        final_memo: None,
         on_failed_delivery,
         route,
     };

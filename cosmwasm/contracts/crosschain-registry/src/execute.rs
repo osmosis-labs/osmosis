@@ -131,6 +131,7 @@ pub fn propose_pfm(
         own_addr.to_string(),
         env.block.time,
         format!(r#"{{"ibc_callback":"{own_addr}"}}"#),
+        String::new(), // no last transfer memo
         Some(Callback {
             contract: own_addr,
             msg: format!(r#"{{"validate_pfm": {{"chain": "{chain}"}} }}"#).try_into()?,
