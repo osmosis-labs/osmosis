@@ -2316,3 +2316,100 @@ func (suite *HooksTestSuite) assertForwardMemoStructure(memo map[string]any, cha
 	suite.Require().Equal(port, forward["port"])
 	suite.Require().Equal(receiver, forward["receiver"])
 }
+
+func (suite *HooksTestSuite) TestCrosschainSwapsFinalMemoOneHop() {
+	// Start on B with `token0`, swap on A with A's `token0`.
+
+	accountA := suite.chainA.SenderAccount.GetAddress()
+	accountB := suite.chainB.SenderAccount.GetAddress()
+
+	swapRouterAddr, crosschainAddr := suite.SetupCrosschainSwaps(ChainA, true)
+
+	preToken0BalanceOnB := suite.chainB.GetOsmosisApp().BankKeeper.GetBalance(suite.chainB.GetContext(), accountB, "token0")
+
+	const (
+		transferAmount int64 = 12000000
+		swapAmount     int64 = 1000
+		receiveAmount  int64 = 980
+	)
+	suite.Require().Greater(transferAmount, defaultPoolAmount)
+	suite.Require().Greater(defaultPoolAmount, swapAmount)
+
+	// Setup initial tokens
+	suite.SimpleNativeTransfer("token0", osmomath.NewInt(transferAmount), []Chain{ChainB, ChainA})
+	suite.SimpleNativeTransfer("token0", osmomath.NewInt(transferAmount), []Chain{ChainC, ChainA})
+
+	// Balance of token0 on B should have decreased by the transfer amt
+	postToken0BalanceOnB := suite.chainB.GetOsmosisApp().BankKeeper.GetBalance(suite.chainB.GetContext(), accountB, "token0")
+	suite.Require().Equal(int64(-transferAmount), (postToken0BalanceOnB.Amount.Sub(preToken0BalanceOnB.Amount)).Int64())
+
+	// Setup pool
+	token0BA := suite.GetIBCDenom(ChainB, ChainA, "token0")
+	token0 := "token0"
+
+	poolId := suite.CreateIBCPoolOnChain(ChainA, token0BA, token0, osmomath.NewInt(defaultPoolAmount))
+	suite.SetupIBCSimpleRouteOnChain(swapRouterAddr, accountA, poolId, ChainA, token0BA, token0)
+
+	// Generate next memo
+	nextMemoStr := `{"a":{"a":"a"}}`
+	finalMemoStr := `{"b":{"b":"b"}}`
+
+	// Generate swap instructions for the contract
+	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":%q,"slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"chainB/%s", "on_failed_delivery": "do_nothing", "next_memo":%s, "final_memo":%s}}`,
+		token0,
+		accountB,
+		nextMemoStr,
+		finalMemoStr,
+	)
+
+	// Generate full memo
+	msg := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, swapMsg)
+
+	// Send IBC transfer with the memo with crosschain-swap instructions
+	channelBA := suite.GetSenderChannel(ChainB, ChainA)
+	transferMsg := NewMsgTransfer(sdk.NewCoin(token0, osmomath.NewInt(swapAmount)), accountB.String(), crosschainAddr.String(), channelBA, msg)
+	_, res, _, err := suite.FullSend(transferMsg, BtoA)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+
+	// Check that we include next and final memos
+	fungibleTokenPacketEvent := findFungibleTokenPacketEvent(res.GetEvents())
+	suite.Require().NotNil(fungibleTokenPacketEvent)
+
+	memo, err := parseFungibleTokenPacketEventMemo(fungibleTokenPacketEvent)
+	suite.Require().NotNil(memo)
+	suite.Require().NoError(err)
+
+	nextMemo, finalMemo := extractNextAndFinalMemosFromSwapMsg(memo)
+	suite.Require().NotNil(nextMemo)
+	suite.Require().NotNil(finalMemo)
+
+	aaa, ok := nextMemo["a"].(map[string]any)
+	suite.Require().True(ok)
+	suite.Require().Equal("a", aaa["a"])
+
+	bbb, ok := finalMemo["b"].(map[string]any)
+	suite.Require().True(ok)
+	suite.Require().Equal("b", bbb["b"])
+
+	// Forward: A => B
+	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents())
+	suite.Require().NoError(err)
+	res = suite.RelayPacketNoAck(packet, AtoB)
+
+	// Test that the next and final memos get merged
+	fungibleTokenPacketEvent = findFungibleTokenPacketEvent(res.GetEvents())
+	suite.Require().NotNil(fungibleTokenPacketEvent)
+
+	memo, err = parseFungibleTokenPacketEventMemo(fungibleTokenPacketEvent)
+	suite.Require().NotNil(memo)
+	suite.Require().NoError(err)
+
+	aaa, ok = memo["a"].(map[string]any)
+	suite.Require().True(ok)
+	suite.Require().Equal("a", aaa["a"])
+
+	bbb, ok = memo["b"].(map[string]any)
+	suite.Require().True(ok)
+	suite.Require().Equal("b", bbb["b"])
+}
