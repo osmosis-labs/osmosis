@@ -2138,7 +2138,7 @@ func (suite *HooksTestSuite) TestOutpostExplicit() {
 	suite.ExecuteOutpostSwap(initializer, initializer, fmt.Sprintf(`ibc:channel-0/%s`, initializer.String()))
 }
 
-func (suite *HooksTestSuite) TestCrosschainSwapsFinalMemo() {
+func (suite *HooksTestSuite) TestCrosschainSwapsFinalMemoMultipleHops() {
 	// Start on B with `token0`, swap on A with `C/token0`,
 	// then use the final memo to forward the swapped tokens
 	// to C. On C, we should end up with native `token0`.
