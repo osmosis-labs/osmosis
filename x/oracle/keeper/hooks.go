@@ -61,7 +61,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		})
 
 		// Clear all exchange rates
-		// TODO: yurii: enable cleaning of exchange rates
 		k.IterateNoteExchangeRates(ctx, func(denom string, _ osmomath.Dec) (stop bool) {
 			k.DeleteMelodyExchangeRate(ctx, denom)
 			return false

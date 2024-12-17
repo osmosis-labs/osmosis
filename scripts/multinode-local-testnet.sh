@@ -80,11 +80,13 @@ update_genesis '.app_state["mint"]["params"]["epoch_identifier"]="day"'
 update_genesis '.app_state["txfees"]["basedenom"]="note"'
 
 # update oracle genesis by adding test tokens to whitelist
-update_genesis '.app_state["oracle"]["params"]["whitelist"][0]["name"]="peppe"'
-update_genesis '.app_state["oracle"]["params"]["whitelist"][0]["tobin_tax"]="0.0"'
+#update_genesis '.app_state["oracle"]["params"]["whitelist"][0]["name"]="peppe"'
+update_genesis '.app_state["oracle"]["tobin_taxes"][3]["denom"]="peppe"'
+update_genesis '.app_state["oracle"]["tobin_taxes"][3]["tobin_tax"]="0.015"'
 
-update_genesis '.app_state["oracle"]["params"]["whitelist"][1]["name"]="usdr"'
-update_genesis '.app_state["oracle"]["params"]["whitelist"][1]["tobin_tax"]="0.0"'
+#update_genesis '.app_state["oracle"]["params"]["whitelist"][1]["name"]="usdr"'
+update_genesis '.app_state["oracle"]["tobin_taxes"][4]["denom"]="usdr"'
+update_genesis '.app_state["oracle"]["tobin_taxes"][4]["tobin_tax"]="0.01"'
 
 # update oracle genesis by adding exchange rate for test tokens
 update_genesis '.app_state["oracle"]["exchange_rates"][0]["denom"]="peppe"'
