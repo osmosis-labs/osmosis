@@ -235,6 +235,11 @@ release:
 		$(GORELEASER_IMAGE) \
 		release \
 		--clean
+
+else
+release:
+	@echo "Error: GITHUB_TOKEN is not defined. Please define it before running 'make release'."
+endif
 else
 release:
 	@echo "Error: S3_ENDPOINT is not defined. Please define it before running 'make release'."
@@ -245,15 +250,11 @@ release:
 endif
 else
 release:
-	@echo "Error: AWS_SECRET_ACCESS_KEY is not defined. Please define it before running 'make release'."
-endif
-else
-release:
 	@echo "Error: AWS_ACCESS_KEY_ID is not defined. Please define it before running 'make release'."
 endif
 else
 release:
-	@echo "Error: GITHUB_TOKEN is not defined. Please define it before running 'make release'."
+	@echo "Error: AWS_SECRET_ACCESS_KEY is not defined. Please define it before running 'make release'."
 endif
 
 .PHONY: all build-linux install format lint \
