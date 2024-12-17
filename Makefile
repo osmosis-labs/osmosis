@@ -219,7 +219,6 @@ ifdef S3_ENDPOINT
 ifdef S3_REGION
 ifdef AWS_ACCESS_KEY_ID
 ifdef AWS_SECRET_ACCESS_KEY
-ifdef S3_ENDPOINT
 
 release:
 	docker run \
