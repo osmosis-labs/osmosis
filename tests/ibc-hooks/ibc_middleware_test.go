@@ -2202,6 +2202,22 @@ func (suite *HooksTestSuite) TestCrosschainSwapsFinalMemo() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
+	fungibleTokenPacketEvent := findFungibleTokenPacketEvent(res.GetEvents())
+	suite.Require().NotNil(fungibleTokenPacketEvent)
+
+	memo, err := parseFungibleTokenPacketEventMemo(fungibleTokenPacketEvent)
+	suite.Require().NotNil(memo)
+	suite.Require().NoError(err)
+
+	_, finalMemo := extractNextAndFinalMemosFromSwapMsg(memo)
+	suite.Require().NotNil(finalMemo)
+	suite.assertForwardMemoStructure(
+		finalMemo,
+		suite.GetSenderChannel(ChainB, ChainC),
+		"transfer",
+		accountC.String(),
+	)
+
 	// Declare the expected amounts on C
 	expectedPreToken0BalanceOnC2 := postToken0BalanceOnC.Amount
 	expectedPostToken0BalanceOnC2 := postToken0BalanceOnC.Amount.Add(osmomath.NewInt(receiveAmount))
@@ -2229,4 +2245,74 @@ func (suite *HooksTestSuite) TestCrosschainSwapsFinalMemo() {
 	// Check C's balance
 	postToken0BalanceOnC2 := suite.chainC.GetOsmosisApp().BankKeeper.GetBalance(suite.chainC.GetContext(), accountC, "token0")
 	suite.Require().Equal(expectedPostToken0BalanceOnC2, postToken0BalanceOnC2.Amount)
+}
+
+func findFungibleTokenPacketEvent(events []abci.Event) *abci.Event {
+	for i := 0; i < len(events); i++ {
+		if events[i].Type == "fungible_token_packet" {
+			return &events[i]
+		}
+	}
+	return nil
+}
+
+func parseFungibleTokenPacketEventMemo(event *abci.Event) (map[string]any, error) {
+	for i := 0; i < len(event.Attributes); i++ {
+		if event.Attributes[i].Key == "memo" {
+			var memo map[string]any
+			decoder := json.NewDecoder(strings.NewReader(event.Attributes[i].Value))
+			err := decoder.Decode(&memo)
+			if err != nil {
+				return nil, err
+			}
+			return memo, nil
+		}
+	}
+	return nil, fmt.Errorf("could not find memo in event")
+}
+
+func extractNextAndFinalMemosFromSwapMsg(memo map[string]any) (nextMemo map[string]any, finalMemo map[string]any) {
+	var ok bool
+
+	wasm, ok := memo["wasm"].(map[string]any)
+	if !ok {
+		return nil, nil
+	}
+
+	msg, ok := wasm["msg"].(map[string]any)
+	if !ok {
+		return nil, nil
+	}
+
+	osmosisSwap, ok := msg["osmosis_swap"].(map[string]any)
+	if !ok {
+		return nil, nil
+	}
+
+	nextMemoAny := osmosisSwap["next_memo"]
+	if nextMemoAny != nil {
+		nextMemo, ok = nextMemoAny.(map[string]any)
+		if !ok {
+			return nil, nil
+		}
+	}
+
+	finalMemoAny := osmosisSwap["final_memo"]
+	if finalMemoAny != nil {
+		finalMemo, ok = finalMemoAny.(map[string]any)
+		if !ok {
+			return nil, nil
+		}
+	}
+
+	return
+}
+
+func (suite *HooksTestSuite) assertForwardMemoStructure(memo map[string]any, channel, port, receiver string) {
+	forward, ok := memo["forward"].(map[string]any)
+	suite.Require().True(ok)
+
+	suite.Require().Equal(channel, forward["channel"])
+	suite.Require().Equal(port, forward["port"])
+	suite.Require().Equal(receiver, forward["receiver"])
 }
