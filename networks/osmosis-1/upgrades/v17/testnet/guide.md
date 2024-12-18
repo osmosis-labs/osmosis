@@ -55,7 +55,7 @@ To install Cosmovisor:
 go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v1.0.0
 ```
 
-After this, you must make the necessary folders for cosmosvisor in your
+After this, you must make the necessary folders for cosmovisor in your
 daemon home directory (\~/.osmosisd).
 
 ``` {.sh}
