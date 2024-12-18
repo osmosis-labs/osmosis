@@ -11,6 +11,7 @@ import (
 	"github.com/osmosis-labs/sqs/sqsdomain"
 
 	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v28/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v28/ingest/sqs/domain/mocks"
 	"github.com/osmosis-labs/osmosis/v28/ingest/sqs/service"
 
@@ -133,42 +134,50 @@ func (s *SQSServiceTestSuite) TestProcessBlockRecoverError() {
 			}
 
 			// Trigger a specific error or panic by setting the grpc client to nil
-			grpcClientMock := &mocks.GRPCClientMock{}
-			if tc.mockNilGRPCClientPanic {
-				grpcClientMock = nil
+			grpcClientMocks := []domain.SQSGRPClient{
+				&mocks.GRPCClientMock{},
+				&mocks.GRPCClientMock{},
+			}
+
+			for i := range grpcClientMocks {
+				if tc.mockNilGRPCClientPanic {
+					grpcClientMocks[i] = nil
+				}
 			}
 
 			blockProcessStrategyManager := commondomain.NewBlockProcessStrategyManager()
 
 			blockUpdatesProcessUtilsMock := &mocks.BlockUpdateProcessUtilsMock{}
 
-			sqsStreamingService := service.New(blockUpdatesProcessUtilsMock, poolExtractorMock, poolTransformerMock, poolTracker, grpcClientMock, blockProcessStrategyManager, nodeStatusCheckerMock)
+			for _, grpcClientMock := range grpcClientMocks {
+				// System under test.
+				sqsStreamingService := service.New(blockUpdatesProcessUtilsMock, poolExtractorMock, poolTransformerMock, poolTracker, grpcClientMock, blockProcessStrategyManager, nodeStatusCheckerMock)
+				err = sqsStreamingService.ProcessBlockRecoverError(s.Ctx)
 
-			// System under test.
-			err = sqsStreamingService.ProcessBlockRecoverError(s.Ctx)
+				// We expect the pool tracker to always be reset
+				s.Require().Empty(poolTracker.GetCFMMPools())
+				s.Require().Empty(poolTracker.GetConcentratedPools())
+				s.Require().Empty(poolTracker.GetCosmWasmPools())
+				s.Require().Empty(poolTracker.GetConcentratedPoolIDTickChange())
 
-			// We expect the pool tracker to always be reset
-			s.Require().Empty(poolTracker.GetCFMMPools())
-			s.Require().Empty(poolTracker.GetConcentratedPools())
-			s.Require().Empty(poolTracker.GetCosmWasmPools())
-			s.Require().Empty(poolTracker.GetConcentratedPoolIDTickChange())
+				// Pool Tracker is reset
+				// Note: we only initialized it with concentrated pools above
+				s.Require().Empty(poolTracker.GetConcentratedPools())
 
-			// Pool Tracker is reset
-			// Note: we only initialized it with concentrated pools above
-			s.Require().Empty(poolTracker.GetConcentratedPools())
+				if tc.expectedError != nil {
+					s.Require().Error(err)
+					s.Require().ErrorContains(err, tc.expectedError.Error())
 
-			if tc.expectedError != nil {
-				s.Require().Error(err)
-				s.Require().ErrorContains(err, tc.expectedError.Error())
+					// Validate that the block processing strategy is set to push all data
+					// due to error or panic
+					s.Require().True(blockProcessStrategyManager.ShouldPushAllData())
+				} else {
+					s.Require().NoError(err)
 
-				// Validate that the block processing strategy is set to push all data
-				// due to error or panic
-				s.Require().True(blockProcessStrategyManager.ShouldPushAllData())
-			} else {
-				s.Require().NoError(err)
+					// Validate that the block processing strategy is now set to only process updates
+					s.Require().False(blockProcessStrategyManager.ShouldPushAllData())
+				}
 
-				// Validate that the block processing strategy is now set to only process updates
-				s.Require().False(blockProcessStrategyManager.ShouldPushAllData())
 			}
 		})
 	}
