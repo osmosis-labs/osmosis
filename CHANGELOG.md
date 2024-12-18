@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* [#8858](https://github.com/osmosis-labs/osmosis/pull/8858) chore: fix event emission for smart account module
+
+## v27.0.1
+
 ### State Compatible
 * [#8831](https://github.com/osmosis-labs/osmosis/pull/8831) chore: bump cometbft
 * [#8876](https://github.com/osmosis-labs/osmosis/pull/8876) (xcs) fix: XCS incorrect channel
