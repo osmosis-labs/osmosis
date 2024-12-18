@@ -177,7 +177,7 @@ Pools have the following parameters:
     - Allow a given address to govern it. This is done by setting the future governor as a bech32 address.
     - Lockups to a token. This is the full DAO scenario. The future governor specifies a token denomination `denom`, and a lockup duration `duration`. This says that "all tokens of denomination `denom` that are locked up for `duration` or longer, have equal say in governance of this pool".
 4. **Weights** -
-    This defines the weights of the pool - [https://balancer.fi/whitepaper.pdf](https://balancer.fi/whitepaper.pdf)
+    This defines the weights of the pool - [https://balancer.gitbook.io/balancer-v2/v1](https://balancer.gitbook.io/balancer-v2/v1)
 5. **SmoothWeightChangeParams** -
     This allows pool governance to smoothly change the weights of the assets it holds in the pool. So it can slowly move from a 2:1 ratio, to a 1:1 ratio.
     Currently, smooth weight changes are implemented as a linear change in weight ratios over a given duration of time. So weights changed from 4:1 to 2:2 over 2 days, then at day 1 of the change, the weights would be 3:1.5, and at day 2 its 2:2, and will remain at these weight ratios.
