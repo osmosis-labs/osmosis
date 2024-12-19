@@ -10,8 +10,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/sqs/sqsdomain"
-	sqscosmwasmpool "github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
+	"github.com/osmosis-labs/osmosis/v28/ingest/types"
+	sqscosmwasmpool "github.com/osmosis-labs/osmosis/v28/ingest/types/cosmwasmpool"
 
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/types"
 
@@ -120,18 +120,18 @@ func NewPoolTransformer(keepers commondomain.PoolExtractorKeepers, defaultUSDCUO
 }
 
 // processPoolState processes the pool state. an
-func (pi *poolTransformer) Transform(ctx sdk.Context, blockPools commondomain.BlockPools) ([]sqsdomain.PoolI, sqsdomain.TakerFeeMap, error) {
+func (pi *poolTransformer) Transform(ctx sdk.Context, blockPools commondomain.BlockPools) ([]types.PoolI, types.TakerFeeMap, error) {
 	// Create a map from denom to its price.
 	priceInfoMap := make(map[string]osmomath.BigDec)
 
-	denomPairToTakerFeeMap := make(map[sqsdomain.DenomPair]osmomath.Dec, 0)
+	denomPairToTakerFeeMap := make(map[types.DenomPair]osmomath.Dec, 0)
 
 	// Get all pools
 	cfmmPools := blockPools.CFMMPools
 	concentratedPools := blockPools.ConcentratedPools
 	cosmWasmPools := blockPools.CosmWasmPools
 
-	allPoolsParsed := make([]sqsdomain.PoolI, 0, len(cfmmPools)+len(concentratedPools)+len(cosmWasmPools))
+	allPoolsParsed := make([]types.PoolI, 0, len(cfmmPools)+len(concentratedPools)+len(cosmWasmPools))
 
 	// Parse CFMM pool to the standard SQS types.
 	for _, pool := range cfmmPools {
@@ -184,8 +184,8 @@ func (pi *poolTransformer) convertPool(
 	ctx sdk.Context,
 	pool poolmanagertypes.PoolI,
 	denomPriceInfoMap map[string]osmomath.BigDec,
-	denomPairToTakerFeeMap sqsdomain.TakerFeeMap,
-) (sqsPool sqsdomain.PoolI, err error) {
+	denomPairToTakerFeeMap types.TakerFeeMap,
+) (sqsPool types.PoolI, err error) {
 	defer func() {
 		r := recover()
 		if r != nil {
@@ -275,20 +275,20 @@ func (pi *poolTransformer) convertPool(
 	}
 
 	// Get the tick model for concentrated pools
-	var tickModel *sqsdomain.TickModel
+	var tickModel *types.TickModel
 
 	// For CL pools, get the tick data
 	if pool.GetType() == poolmanagertypes.Concentrated {
 		tickData, currentTickIndex, err := pi.concentratedKeeper.GetTickLiquidityForFullRange(ctx, pool.GetId())
 		// If there is no error, we set the tick model
 		if err == nil {
-			tickModel = &sqsdomain.TickModel{
+			tickModel = &types.TickModel{
 				Ticks:            tickData,
 				CurrentTickIndex: currentTickIndex,
 			}
 			// If there is no liquidity, we set the tick model to nil and update no liquidity flag
 		} else if errors.Is(err, concentratedtypes.RanOutOfTicksForPoolError{PoolId: pool.GetId()}) {
-			tickModel = &sqsdomain.TickModel{
+			tickModel = &types.TickModel{
 				Ticks:            []queryproto.LiquidityDepthWithRange{},
 				CurrentTickIndex: -1,
 				HasNoLiquidity:   true,
@@ -300,9 +300,9 @@ func (pi *poolTransformer) convertPool(
 		}
 	}
 
-	return &sqsdomain.PoolWrapper{
+	return &types.PoolWrapper{
 		ChainModel: pool,
-		SQSModel: sqsdomain.SQSPool{
+		SQSModel: types.SQSPool{
 			PoolLiquidityCap:      poolLiquidityCapUSDC,
 			PoolLiquidityCapError: poolLiquidityCapErrorStr,
 			Balances:              filteredBalances,
