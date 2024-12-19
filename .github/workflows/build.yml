@@ -67,10 +67,11 @@ jobs:
       - name: Build osmosisd
         if: env.GIT_DIFF
         run: |
-          GOWRK=off go build cmd/osmosisd/main.go
+          GOWRK=off go build -o cmd/osmosisd/osmosisd cmd/osmosisd/main.go
       - name: Upload osmosisd artifact
         if: env.GIT_DIFF
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: osmosisd-${{ matrix.targetos }}-${{ matrix.arch }}
+          overwrite: true
           path: cmd/osmosisd/osmosisd
