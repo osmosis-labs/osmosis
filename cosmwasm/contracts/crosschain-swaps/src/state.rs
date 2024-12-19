@@ -18,6 +18,7 @@ pub struct ForwardTo {
     pub chain: String,
     pub receiver: Addr,
     pub next_memo: Option<SerializableJson>,
+    pub final_memo: Option<SerializableJson>,
     pub on_failed_delivery: FailedDeliveryAction,
 }
 

@@ -82,6 +82,7 @@ pub fn execute(
             receiver,
             into_chain,
             with_memo,
+            final_memo,
         } => {
             let registries = Registry::new(deps.as_ref(), env.contract.address.to_string())?;
             let coin = cw_utils::one_coin(&info)?;
@@ -92,6 +93,7 @@ pub fn execute(
                 env.contract.address.to_string(),
                 env.block.time,
                 with_memo,
+                final_memo,
                 None,
                 false,
             )?;

@@ -1,8 +1,12 @@
+use std::collections::BTreeMap;
+
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Addr;
 use schemars::JsonSchema;
 use serde_json_wasm::from_str;
 
+use crate::registry::Memo;
+use crate::utils::stringify;
 use crate::RegistryError;
 
 #[cw_serde]
@@ -107,14 +111,68 @@ impl JsonSchema for SerializableJson {
 }
 
 impl SerializableJson {
+    pub const fn empty() -> Self {
+        SerializableJson(serde_cw_value::Value::Map(BTreeMap::new()))
+    }
+
+    pub fn is_empty(&self) -> bool {
+        match &self.0 {
+            serde_cw_value::Value::Map(m) => m.is_empty(),
+            _ => true,
+        }
+    }
+
     pub fn as_value(&self) -> &serde_cw_value::Value {
         &self.0
+    }
+
+    /// Merge two [`SerializableJson`] instances together. Fail in case
+    /// the same top-level key is found twice, or in case any of the two
+    /// JSON structs are not objects.
+    pub fn merge(self, other: SerializableJson) -> Result<Self, RegistryError> {
+        let mut first_map = match self.0 {
+            serde_cw_value::Value::Map(m) => m,
+            serde_cw_value::Value::Unit => BTreeMap::new(),
+            json => {
+                return Err(RegistryError::InvalidJson {
+                    error: "invalid json: expected an object".to_string(),
+                    json: stringify(&json)?,
+                })
+            }
+        };
+        let second_map = match other.0 {
+            serde_cw_value::Value::Map(m) => m,
+            serde_cw_value::Value::Unit => BTreeMap::new(),
+            json => {
+                return Err(RegistryError::InvalidJson {
+                    error: "invalid json: expected an object".to_string(),
+                    json: stringify(&json)?,
+                })
+            }
+        };
+
+        for (key, value) in second_map {
+            if first_map.insert(key, value).is_some() {
+                return Err(RegistryError::DuplicateKeyError);
+            }
+        }
+
+        return Ok(SerializableJson(serde_cw_value::Value::Map(first_map)));
     }
 }
 
 impl From<serde_cw_value::Value> for SerializableJson {
     fn from(value: serde_cw_value::Value) -> Self {
         Self(value)
+    }
+}
+
+impl TryFrom<Memo> for SerializableJson {
+    type Error = RegistryError;
+
+    fn try_from(memo: Memo) -> Result<Self, RegistryError> {
+        let value = serde_cw_value::to_value(&memo)?;
+        Ok(Self(value))
     }
 }
 

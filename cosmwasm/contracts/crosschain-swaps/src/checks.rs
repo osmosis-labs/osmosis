@@ -39,7 +39,9 @@ fn validate_explicit_receiver(deps: Deps, receiver: &str) -> Result<(String, Add
     }
 
     let Ok(_) = bech32::decode(&address) else {
-        return Err(ContractError::InvalidReceiver { receiver: receiver.to_string() })
+        return Err(ContractError::InvalidReceiver {
+            receiver: receiver.to_string(),
+        });
     };
 
     let registry = get_registry(deps)?;
@@ -54,7 +56,9 @@ fn validate_explicit_receiver(deps: Deps, receiver: &str) -> Result<(String, Add
 /// transfers from failing after forwarding
 fn validate_bech32_receiver(deps: Deps, receiver: &str) -> Result<(String, Addr), ContractError> {
     let Ok((prefix, _, _)) = bech32::decode(receiver) else {
-        return Err(ContractError::InvalidReceiver { receiver: receiver.to_string() })
+        return Err(ContractError::InvalidReceiver {
+            receiver: receiver.to_string(),
+        });
     };
 
     let registry = get_registry(deps)?;
@@ -65,14 +69,18 @@ fn validate_bech32_receiver(deps: Deps, receiver: &str) -> Result<(String, Addr)
 
 fn validate_chain_receiver(deps: Deps, receiver: &str) -> Result<(String, Addr), ContractError> {
     let Some((chain, addr)) = receiver.split('/').collect_tuple() else {
-        return Err(ContractError::InvalidReceiver { receiver: receiver.to_string() })
+        return Err(ContractError::InvalidReceiver {
+            receiver: receiver.to_string(),
+        });
     };
 
     // TODO: validate that the prefix of the receiver matches the chain
     let _registry = get_registry(deps)?;
 
     let Ok(_) = bech32::decode(addr) else {
-        return Err(ContractError::InvalidReceiver { receiver: receiver.to_string() })
+        return Err(ContractError::InvalidReceiver {
+            receiver: receiver.to_string(),
+        });
     };
 
     Ok((chain.to_string(), Addr::unchecked(addr)))

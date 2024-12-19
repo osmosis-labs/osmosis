@@ -53,6 +53,8 @@ pub enum ExecuteMsg {
         into_chain: Option<String>,
         #[serde(default = "String::new")]
         with_memo: String,
+        #[serde(default = "String::new")]
+        final_memo: String,
     },
 }
 

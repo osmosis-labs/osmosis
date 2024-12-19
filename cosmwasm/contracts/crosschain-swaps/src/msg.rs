@@ -54,6 +54,10 @@ pub enum ExecuteMsg {
         /// packet to include a memo, this is the field where they can specify
         /// it. If provided, the memo is expected to be a valid JSON object
         next_memo: Option<SerializableJson>,
+        /// IBC packets can contain an optional memo. If a sender wants the last
+        /// hop's packet to include a memo, this is the field where they can specify
+        /// it. If provided, the memo is expected to be a valid JSON object
+        final_memo: Option<SerializableJson>,
         /// If for any reason the swap were to fail, users can specify a
         /// "recovery address" that can clain the funds on osmosis after a
         /// confirmed failure.

@@ -4,9 +4,8 @@ use itertools::Itertools;
 use sha2::Digest;
 use sha2::Sha256;
 
-use crate::msg::Callback;
+use crate::msg::{Callback, SerializableJson};
 use crate::proto;
-use crate::utils::merge_json;
 use crate::{error::RegistryError, msg::QueryMsg};
 use std::convert::AsRef;
 
@@ -117,7 +116,7 @@ pub struct ForwardingMemo {
     pub port: String,
     pub channel: ChannelId,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub next: Option<Box<Memo>>,
+    pub next: Option<Box<SerializableJson>>,
 }
 
 #[cw_serde]
@@ -422,6 +421,7 @@ impl<'a> Registry<'a> {
         own_addr: String,
         block_time: Timestamp,
         first_transfer_memo: String,
+        last_transfer_memo: String,
         receiver_callback: Option<Callback>,
         skip_forwarding_check: bool,
     ) -> Result<proto::MsgTransfer, RegistryError> {
@@ -516,7 +516,7 @@ impl<'a> Registry<'a> {
         let path_iter = path.iter().skip(1);
 
         // initialize mutable variables for the iteration
-        let mut next: Option<Box<Memo>> = None;
+        let mut next: Option<Box<SerializableJson>> = None;
         let mut prev_chain: &str = receiver_chain;
         let mut callback = receiver_callback; // The last call should have the receiver callback
 
@@ -552,25 +552,39 @@ impl<'a> Registry<'a> {
             }
 
             // The next memo wraps the previous one
-            next = Some(Box::new(Memo {
-                forward: Some(ForwardingMemo {
-                    receiver: self.encode_addr_for_chain(&receiver_addr, prev_chain)?,
-                    port: TRANSFER_PORT.to_string(),
-                    channel,
-                    next: if next.is_none() && callback.is_some() {
-                        // If there is no next, this means we are on the last
-                        // forward. We can then default to a memo with only the
-                        // receiver callback.
-                        Some(Box::new(Memo {
-                            forward: None,
-                            callback, // The callback may be None
-                        }))
-                    } else {
-                        next
-                    },
-                }),
-                callback: None,
-            }));
+            next = Some(Box::new(
+                Memo {
+                    forward: Some(ForwardingMemo {
+                        receiver: self.encode_addr_for_chain(&receiver_addr, prev_chain)?,
+                        port: TRANSFER_PORT.to_string(),
+                        channel,
+                        next: if next.is_none() {
+                            // If there is no next, this means we are on the last
+                            // forward. We can then default to a memo with only the
+                            // receiver callback and any user provided last memo.
+                            let last_transfer_memo = if last_transfer_memo.is_empty() {
+                                SerializableJson::empty()
+                            } else {
+                                serde_json_wasm::from_str(&last_transfer_memo)?
+                            };
+
+                            let next_memo = last_transfer_memo.merge(
+                                Memo {
+                                    forward: None,
+                                    callback, // The callback may be None
+                                }
+                                .try_into()?,
+                            )?;
+
+                            (!next_memo.is_empty()).then(|| Box::new(next_memo))
+                        } else {
+                            next
+                        },
+                    }),
+                    callback: None,
+                }
+                .try_into()?,
+            ));
             prev_chain = hop.on.as_ref();
             callback = None;
         }
@@ -579,19 +593,41 @@ impl<'a> Registry<'a> {
         // callback. This is not necessary if next.is_some() because the
         // callback would already have been included.
         if next.is_none() {
-            next = Some(Box::new(Memo {
+            let last_transfer_memo = if last_transfer_memo.is_empty() {
+                SerializableJson::empty()
+            } else {
+                serde_json_wasm::from_str(&last_transfer_memo)?
+            };
+
+            let callback_memo: SerializableJson = Memo {
                 forward: None,
                 callback, // The callback may also be None
-            }));
+            }
+            .try_into()?;
+
+            let next_memo = last_transfer_memo.merge(callback_memo)?;
+
+            if !next_memo.is_empty() {
+                next = Some(Box::new(next_memo));
+            }
+        }
+
+        // Merge the first transfer memo
+        if !first_transfer_memo.is_empty() {
+            let first_transfer_memo: SerializableJson =
+                serde_json_wasm::from_str(&first_transfer_memo)?;
+
+            if let Some(box_next) = next.as_mut() {
+                use std::ops::DerefMut;
+                let next_memo = std::mem::replace(box_next.deref_mut(), SerializableJson::empty());
+                *box_next.deref_mut() = next_memo.merge(first_transfer_memo)?;
+            } else {
+                next = Some(Box::new(first_transfer_memo));
+            }
         }
 
         // Serialize the memo
-        let forward = serde_json_wasm::to_string(&next)?;
-
-        // If the user provided a memo to be included in the transfer, we merge
-        // it with the calculated one. By using the provided memo as a base,
-        // only its forward key would be overwritten if it existed
-        let memo = merge_json(&first_transfer_memo, &forward)?;
+        let memo = serde_json_wasm::to_string(&next)?;
         let ts = block_time.plus_seconds(PACKET_LIFETIME);
 
         // Cosmwasm's IBCMsg::Transfer  does not support memo.
