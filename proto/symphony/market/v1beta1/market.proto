@@ -15,4 +15,10 @@ message Params {
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
+
+  bytes min_stability_spread = 2 [
+    (gogoproto.moretags) = "yaml:\"min_stability_spread\"",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
 }

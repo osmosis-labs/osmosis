@@ -22,7 +22,7 @@ var (
 // Default parameter values
 var (
 	DefaultBasePool           = osmomath.NewDec(1000000 * params.MicroUnit) // 1000,000sdr = 1000,000,000,000usdr
-	DefaultMinStabilitySpread = osmomath.NewDecWithPrec(2, 2)               // 2%
+	DefaultMinStabilitySpread = osmomath.NewDecWithPrec(25, 4)              // 0.25%
 )
 
 var _ paramstypes.ParamSet = &Params{}
@@ -30,7 +30,7 @@ var _ paramstypes.ParamSet = &Params{}
 // DefaultParams creates default market module parameters
 func DefaultParams() Params {
 	return Params{
-		//ExchangePool: DefaultBasePool,
+		MinStabilitySpread: DefaultMinStabilitySpread,
 	}
 }
 
@@ -48,7 +48,9 @@ func (p Params) String() string {
 // ParamSetPairs implements the ParamSet interface and returns all the key/value pairs
 // pairs of market module's parameters.
 func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
-	return paramstypes.ParamSetPairs{}
+	return paramstypes.ParamSetPairs{
+		paramstypes.NewParamSetPair(KeyMinStabilitySpread, &p.MinStabilitySpread, validateMinStabilitySpread),
+	}
 }
 
 // Validate a set of params

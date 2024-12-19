@@ -108,7 +108,7 @@ func (k Keeper) ApplyWhitelist(ctx sdk.Context, whitelist types.DenomList, voteT
 					},
 					Base:    base,
 					Display: display,
-					Name:    fmt.Sprintf("%s TERRA", strings.ToUpper(display)),
+					Name:    fmt.Sprintf("%s SYMPHONY", strings.ToUpper(display)),
 					Symbol:  fmt.Sprintf("%sT", strings.ToUpper(display[:len(display)-1])),
 				})
 			}
