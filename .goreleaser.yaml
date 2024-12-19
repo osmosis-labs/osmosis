@@ -92,6 +92,16 @@ checksum:
 changelog:
   disable: true
 
+blobs:
+  - provider: s3
+    bucket: osmosis
+    directory: "binaries/v{{.Version}}"
+    endpoint: '{{ .Env.S3_ENDPOINT }}' 
+    region: '{{ .Env.S3_REGION }}' 
+    ids:
+      - zipped
+      - binaries
+
 # Docs: https://goreleaser.com/customization/release/
 release:
   github:
