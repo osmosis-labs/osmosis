@@ -3,7 +3,7 @@
 ## Context
 
 These scripts exist to estimate the results of the swap
-concentrated liqudity test cases.
+concentrated liquidity test cases.
 
 Each existing test case is estimated by calling the
 respective function in `scripts/cl/main.py` main function.
