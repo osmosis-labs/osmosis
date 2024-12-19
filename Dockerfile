@@ -17,10 +17,11 @@ ARG GIT_COMMIT
 ARG BUILD_TAGS
 
 RUN apk add --no-cache \
-    ca-certificates \
+    binutils-gold \
     build-base \
-    linux-headers \
-    binutils-gold
+    ca-certificates \
+    linux-headers
+
 
 # Download go dependencies
 WORKDIR /osmosis
