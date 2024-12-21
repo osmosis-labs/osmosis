@@ -29,6 +29,5 @@ lint:
     - COMMENT_ENUM_VALUE
     - COMMENT_ENUM
     - ENUM_ZERO_VALUE_SUFFIX
-    - ENUM_ZERO_VALUE
   ignore:
     - tendermint

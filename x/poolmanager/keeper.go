@@ -53,7 +53,7 @@ type Keeper struct {
 	cachedRegisteredAlloyPoolByAlloyDenomMap map[string]types.AlloyContractTakerFeeShareState
 }
 
-func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI, stakingKeeper types.StakingKeeper, protorevKeeper types.ProtorevKeeper,wasmKeeper types.WasmKeeper tradingTiersKeeper types.TradingTiersKeeper) *Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.ConcentratedI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI, stakingKeeper types.StakingKeeper, protorevKeeper types.ProtorevKeeper, wasmKeeper types.WasmKeeper, tradingTiersKeeper types.TradingTiersKeeper) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -75,19 +75,19 @@ func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gam
 	cachedRegisteredAlloyPoolMap := make(map[string]types.AlloyContractTakerFeeShareState)
 
 	return &Keeper{
-		storeKey:            storeKey,
-		paramSpace:          paramSpace,
-		gammKeeper:          gammKeeper,
-		concentratedKeeper:  concentratedKeeper,
-		cosmwasmpoolKeeper:  cosmwasmpoolKeeper,
-		bankKeeper:          bankKeeper,
-		accountKeeper:       accountKeeper,
-		communityPoolKeeper: communityPoolKeeper,
-		routes:              routesMap,
-		poolModules:         routesList,
-		stakingKeeper:       stakingKeeper,
-		protorevKeeper:      protorevKeeper,
-		tradingTiersKeeper:  tradingTiersKeeper,
+		storeKey:                                 storeKey,
+		paramSpace:                               paramSpace,
+		gammKeeper:                               gammKeeper,
+		concentratedKeeper:                       concentratedKeeper,
+		cosmwasmpoolKeeper:                       cosmwasmpoolKeeper,
+		bankKeeper:                               bankKeeper,
+		accountKeeper:                            accountKeeper,
+		communityPoolKeeper:                      communityPoolKeeper,
+		routes:                                   routesMap,
+		poolModules:                              routesList,
+		stakingKeeper:                            stakingKeeper,
+		protorevKeeper:                           protorevKeeper,
+		tradingTiersKeeper:                       tradingTiersKeeper,
 		wasmKeeper:                               wasmKeeper,
 		cachedPoolModules:                        cachedPoolModules,
 		cachedTakerFeeShareAgreementMap:          cachedTakerFeeShareAgreementMap,
