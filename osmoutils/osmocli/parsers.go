@@ -25,6 +25,11 @@ const (
 	FlagAuthority   = "authority"
 )
 
+func isFieldDeprecated(field reflect.StructField) bool {
+	tag := string(field.Tag)
+	return strings.Contains(tag, "deprecated:\"true\"")
+}
+
 // Parses arguments 1-1 from args
 // makes an exception, where it allows Pagination to come from flags.
 func ParseFieldsFromFlagsAndArgs[reqP any](flagAdvice FlagAdvice, flags *pflag.FlagSet, args []string) (reqP, error) {
@@ -35,6 +40,12 @@ func ParseFieldsFromFlagsAndArgs[reqP any](flagAdvice FlagAdvice, flags *pflag.F
 	argIndexOffset := 0
 	// Iterate over the fields in the struct
 	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		if isFieldDeprecated(field) {
+			argIndexOffset -= 1
+			continue
+		}
+
 		arg := ""
 		if len(args) > i+argIndexOffset {
 			arg = args[i+argIndexOffset]

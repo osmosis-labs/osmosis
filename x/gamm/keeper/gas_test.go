@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
+	"github.com/osmosis-labs/osmosis/v28/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v28/x/gamm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -74,8 +74,6 @@ func (s *KeeperTestSuite) TestJoinPoolGas() {
 	))
 
 	firstJoinGas := s.measureJoinPoolGas(defaultAddr, poolId, minShareOutAmount, defaultCoins)
-	// UNFORKINGNOTE: This used to be capped at LessOrEqual to 100000, but unforking increased this value.
-	// UNFORKING v2 TODO: This increased again... why?
 	s.Assert().LessOrEqual(int(firstJoinGas), 150000)
 
 	for i := 1; i < startAveragingAt; i++ {

@@ -3,7 +3,7 @@ package osmoutils
 import (
 	"fmt"
 
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -104,8 +104,8 @@ func MergeCoinMaps[T comparable](currentEpochExpectedDistributionsOne map[T]sdk.
 }
 
 // Convert sdk.Coins to wasmvmtypes.Coins
-func CWCoinsFromSDKCoins(in sdk.Coins) wasmvmtypes.Coins {
-	var cwCoins wasmvmtypes.Coins
+func CWCoinsFromSDKCoins(in sdk.Coins) []wasmvmtypes.Coin {
+	var cwCoins []wasmvmtypes.Coin
 	for _, coin := range in {
 		cwCoins = append(cwCoins, CWCoinFromSDKCoin(coin))
 	}

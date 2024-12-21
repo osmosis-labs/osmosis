@@ -34,10 +34,10 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/app"
+	"github.com/osmosis-labs/osmosis/v28/app"
 
-	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v28/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v28/x/gamm/types"
 
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
@@ -47,10 +47,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	lockupkeeper "github.com/osmosis-labs/osmosis/v25/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v25/x/mint/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v28/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v28/x/mint/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
 )
 
 type KeeperTestHelper struct {
@@ -81,6 +81,7 @@ type SupportedPoolAndGaugeInfo struct {
 	BalancerPoolID     uint64
 	StableSwapPoolID   uint64
 	CosmWasmPoolID     uint64
+	AlloyedPoolID      uint64
 
 	ConcentratedGaugeID uint64
 	BalancerGaugeID     uint64
@@ -184,12 +185,16 @@ func (s *KeeperTestHelper) PrepareAllSupportedPoolsCustomProject(projectName, tr
 		stableswapPoolID   = s.PrepareBasicStableswapPool()
 		cosmWasmPool       = s.PrepareCustomTransmuterPoolCustomProject(s.TestAccs[0], []string{DefaultTransmuterDenomA, DefaultTransmuterDenomB}, projectName, transmuterPath)
 		cosmWasmPoolID     = cosmWasmPool.GetId()
+		alloyedPool        = s.PrepareCustomTransmuterPoolV3CustomProject(s.TestAccs[0], []string{DefaultTransmuterDenomA, DefaultTransmuterDenomB}, []uint16{1, 1}, projectName, transmuterPath)
+		alloyedPoolID      = alloyedPool.GetId()
 	)
+
 	return SupportedPoolAndGaugeInfo{
 		ConcentratedPoolID: concentratedPoolID,
 		BalancerPoolID:     balancerPoolID,
 		StableSwapPoolID:   stableswapPoolID,
 		CosmWasmPoolID:     cosmWasmPoolID,
+		AlloyedPoolID:      alloyedPoolID,
 
 		// Define expected gauge IDs:
 
@@ -299,15 +304,6 @@ func (s *KeeperTestHelper) CreateTestContextWithMultiStore() (sdk.Context, store
 
 // CreateTestContext creates a test context.
 func (s *KeeperTestHelper) Commit() {
-	// UNFORKING v2 TODO: Validate that the new way of calling commit is correct, I believe it is.
-	// oldHeight := s.Ctx.BlockHeight()
-	// oldHeader := s.Ctx.BlockHeader()
-	// s.App.Commit()
-	// newHeader := cmtproto.Header{Height: oldHeight + 1, ChainID: oldHeader.ChainID, Time: oldHeader.Time.Add(time.Second)}
-	// _, err := s.App.BeginBlocker(s.Ctx)
-	// s.Require().NoError(err)
-	// s.Ctx = s.App.GetBaseApp().NewContextLegacy(false, newHeader)
-	// s.hasUsedAbci = true
 	_, err := s.App.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.Ctx.BlockHeight(), Time: s.Ctx.BlockTime()})
 	if err != nil {
 		panic(err)
@@ -424,7 +420,6 @@ func (s *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 
 // BeginNewBlockWithProposer begins a new block with a proposer.
 func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, proposer sdk.ValAddress) {
-	// UNFORKING v2 TODO: Validate that this is forcing proposer as we want it to be. I believe it is correct by setting WithVoteInfos.
 	validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, proposer)
 	s.Assert().NoError(err)
 
@@ -459,10 +454,6 @@ func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, prop
 
 // EndBlock ends the block, and runs commit
 func (s *KeeperTestHelper) EndBlock() {
-	// UNFORKING v2 TODO: Validate that this is the correct way to run EndBlock
-	// reqEndBlock := abci.RequestEndBlock{Height: s.Ctx.BlockHeight()}
-	// s.App.EndBlocker(s.Ctx, reqEndBlock)
-	// s.hasUsedAbci = true
 	_, err := s.App.EndBlocker(s.Ctx)
 	s.Require().NoError(err)
 	s.hasUsedAbci = true
@@ -624,11 +615,6 @@ func (s *KeeperTestHelper) BuildTx(
 // StateNotAltered validates that app state is not altered. Fails if it is.
 func (s *KeeperTestHelper) StateNotAltered() {
 	oldState := s.App.ExportState(s.Ctx)
-	// UNFORKING v2 TODO: I used the commit method directly on the CMS, otherwise we need to call the full
-	// commit flow, which specifically changes the block header height and time.
-	// In other words, calling s.Commit() would be change the header height and time, which will always cause state to be altered.
-	// Just need to verify that this still checks for state alteration.
-	// s.Commit()
 	s.App.CommitMultiStore().Commit()
 	newState := s.App.ExportState(s.Ctx)
 	s.Require().Equal(oldState, newState)

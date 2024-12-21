@@ -4,8 +4,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/types"
 )
 
 // NewQueryCmd returns the cli query commands for this module.

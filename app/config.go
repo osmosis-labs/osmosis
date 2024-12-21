@@ -17,8 +17,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	keepers "github.com/osmosis-labs/osmosis/v25/app/keepers"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v28/app/keepers"
 )
+
+type OTELConfig struct {
+	Enabled     bool   `mapstructure:"enabled"`
+	ServiceName string `mapstructure:"service-name"`
+}
 
 // DefaultConfig returns a default configuration suitable for nearly all
 // testing requirements.
@@ -61,5 +67,23 @@ func NewAppConstructor(chainId string) network.AppConstructor {
 			baseapp.SetMinGasPrices(appConfig.MinGasPrices),
 			baseapp.SetChainID(chainId),
 		)
+	}
+}
+
+// NewOTELConfigFromOptions returns a new DataDog config from the given options.
+func NewOTELConfigFromOptions(opts servertypes.AppOptions) OTELConfig {
+	isEnabled := osmoutils.ParseBool(opts, "otel", "enabled", false)
+
+	if !isEnabled {
+		return OTELConfig{
+			Enabled: false,
+		}
+	}
+
+	serviceName := osmoutils.ParseString(opts, "otel", "service-name")
+
+	return OTELConfig{
+		Enabled:     isEnabled,
+		ServiceName: serviceName,
 	}
 }

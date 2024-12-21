@@ -8,8 +8,8 @@ import (
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v25/app"
-	"github.com/osmosis-labs/osmosis/v25/x/mint/client/cli"
+	"github.com/osmosis-labs/osmosis/v28/app"
+	"github.com/osmosis-labs/osmosis/v28/x/mint/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"

@@ -10,14 +10,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/x/incentives"
-	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v25/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v28/x/incentives"
+	"github.com/osmosis-labs/osmosis/v28/x/incentives/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v28/x/incentives/types"
 
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
 
-	appParams "github.com/osmosis-labs/osmosis/v25/app/params"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	appParams "github.com/osmosis-labs/osmosis/v28/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
 )
 
 // TestMsgCreateGauge tests if valid/invalid create gauge messages are properly validated/invalidated

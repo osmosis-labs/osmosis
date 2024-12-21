@@ -13,11 +13,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	v10 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v10"
-	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v25/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
+	v10 "github.com/osmosis-labs/osmosis/v28/app/upgrades/v10"
+	"github.com/osmosis-labs/osmosis/v28/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v28/x/gamm/types"
 )
 
 const (

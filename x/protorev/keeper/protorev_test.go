@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v25/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v28/x/protorev/types"
 )
 
 // TestGetTokenPairArbRoutes tests the GetTokenPairArbRoutes function.
@@ -357,7 +357,7 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
 	// Store cache context prior to swap so we can use it to calculate how much outToken we should expect after the epoch hook is called and taker fees are swapped.
 	cacheCtx, _ := s.Ctx.CacheContext()
 
-	_, err = s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], atomCommPoolID, swapInCoin, communityPoolDenom, osmomath.ZeroInt())
+	_, _, err = s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], atomCommPoolID, swapInCoin, communityPoolDenom, osmomath.ZeroInt())
 	s.Require().NoError(err)
 	expectedTakerFeeFromInput := swapInCoin.Amount.ToLegacyDec().Mul(poolManagerParams.TakerFeeParams.DefaultTakerFee)
 	expectedTakerFeeToCommunityPoolAmt := expectedTakerFeeFromInput.Mul(poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.CommunityPool).TruncateInt()
@@ -400,7 +400,7 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
 	// A second round of the same thing
 	// Swap on a pool to charge taker fee
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(atom, osmomath.NewInt(10000))))
-	_, err = s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], atomCommPoolID, swapInCoin, communityPoolDenom, osmomath.ZeroInt())
+	_, _, err = s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], atomCommPoolID, swapInCoin, communityPoolDenom, osmomath.ZeroInt())
 	s.Require().NoError(err)
 
 	// Charge txfee of 1000 uion

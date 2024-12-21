@@ -11,13 +11,12 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 
-	"github.com/osmosis-labs/osmosis/v25/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v28/x/ibc-rate-limit/types"
 )
 
 type IBCModule struct {
@@ -110,12 +109,17 @@ func (im *IBCModule) OnChanCloseConfirm(
 	return im.app.OnChanCloseConfirm(ctx, portID, channelID)
 }
 
+type receiverParser struct {
+	Receiver string `protobuf:"bytes,4,opt,name=receiver,proto3" json:"receiver,omitempty"`
+}
+
 func ValidateReceiverAddress(packet exported.PacketI) error {
-	var packetData transfertypes.FungibleTokenPacketData
-	if err := json.Unmarshal(packet.GetData(), &packetData); err != nil {
+	var receiverObj receiverParser
+
+	if err := json.Unmarshal(packet.GetData(), &receiverObj); err != nil {
 		return err
 	}
-	if len(packetData.Receiver) >= 4096 {
+	if len(receiverObj.Receiver) >= 4096 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "IBC Receiver address too long. Max supported length is %d", 4096)
 	}
 	return nil
@@ -158,7 +162,8 @@ func (im *IBCModule) OnAcknowledgementPacket(
 	relayer sdk.AccAddress,
 ) error {
 	if ctx.IsCheckTx() || ctx.IsReCheckTx() {
-		return im.app.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
+		return nil
+		// return im.app.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
 	}
 	var ack channeltypes.Acknowledgement
 	if err := json.Unmarshal(acknowledgement, &ack); err != nil {

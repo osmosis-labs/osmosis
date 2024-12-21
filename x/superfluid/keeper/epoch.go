@@ -3,21 +3,20 @@ package keeper
 import (
 	"errors"
 	"fmt"
-	"time"
-
-	sdkerrors "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	cl "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v25/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
+	cl "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v28/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v28/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/types"
 )
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) error {
@@ -79,6 +78,11 @@ func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context, accs []t
 		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 			_, err := k.ck.WithdrawDelegationRewards(cacheCtx, addr, valAddr)
 			if errors.Is(err, distributiontypes.ErrEmptyDelegationDistInfo) {
+				ctx.Logger().Debug("no delegations for this (pool, validator) pair, skipping...")
+				// TODO: Remove this account from IntermediaryAccounts that we iterate over
+				return nil
+			} else if errors.Is(err, stakingtypes.ErrNoDelegation) {
+				// NOTE: in v0.50.x the function changed to return a different error
 				ctx.Logger().Debug("no delegations for this (pool, validator) pair, skipping...")
 				// TODO: Remove this account from IntermediaryAccounts that we iterate over
 				return nil
@@ -151,23 +155,10 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 			return k.updateConcentratedOsmoEquivalentMultiplier(cacheCtx, asset, newEpochNumber)
 		})
 	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
-		bondDenom, err := k.sk.BondDenom(ctx)
-		if err != nil {
-			return err
-		}
-		if asset.Denom == bondDenom {
-			// The bond denom should be locked via x/lockup and not superfluid
-			return errors.New("osmo should not be a superfluid asset. It can be staked natively")
-		}
-		// Twap price is calculated from the last 5 minutes
-		startTime := ctx.BlockTime().Add(-5 * time.Minute) // TODO: make this configurable
-		price, err := k.twapk.UnsafeGetMultiPoolArithmeticTwapToNow(ctx, asset.PriceRoute, asset.Denom, bondDenom, startTime)
-		if err != nil {
-			return sdkerrors.Wrap(err, "failed to get twap price")
-		}
-		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, price)
+		// TODO: Consider deleting superfluid asset type native
+		k.Logger(ctx).Error("unsupported superfluid asset type")
+		return errors.New("SuperfluidAssetTypeNative is unsupported")
 	}
-
 	return nil
 }
 

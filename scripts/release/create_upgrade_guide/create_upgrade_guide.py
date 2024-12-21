@@ -24,13 +24,13 @@ import sys
 
 
 def validate_tag(tag):
-    pattern = '^v[0-9]+.[0-9]+.[0-9]+$'
+    pattern = r'^v[0-9]+.[0-9]+.[0-9]+$'
     return bool(re.match(pattern, tag))
 
 
 def validate_version(version):
     # Regex to match 'v' followed by a number
-    pattern = '^v\d+$'
+    pattern = r'^v\d+$'
     return bool(re.match(pattern, version))
 
 

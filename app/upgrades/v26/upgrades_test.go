@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/appmodule"
@@ -11,15 +12,15 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	v26 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v26"
+	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
+	v26 "github.com/osmosis-labs/osmosis/v28/app/upgrades/v26"
 
 	"cosmossdk.io/x/upgrade"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
 )
 
 const (
@@ -48,6 +49,9 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
 
 	s.PrepareTradingPairTakerFeeTest()
+	s.PrepareIncreaseUnauthenticatedGasTest()
+	s.PrepareChangeBlockParamsTest()
+	s.PrepareCostPerByteTest()
 
 	// Run the upgrade
 	dummyUpgrade(s)
@@ -57,6 +61,9 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	})
 
 	s.ExecuteTradingPairTakerFeeTest()
+	s.ExecuteIncreaseUnauthenticatedGasTest()
+	s.ExecuteChangeBlockParamsTest()
+	s.ExecuteCostPerByteTest()
 }
 
 func dummyUpgrade(s *UpgradeTestSuite) {
@@ -100,4 +107,41 @@ func (s *UpgradeTestSuite) ExecuteTradingPairTakerFeeTest() {
 	s.Require().NoError(err)
 	s.Require().Len(allTradingPairTakerFees, 4)
 	s.Require().Equal(expectedTradingPairTakerFees, allTradingPairTakerFees)
+}
+
+func (s *UpgradeTestSuite) PrepareIncreaseUnauthenticatedGasTest() {
+	// Set the unauthenticator gas parameter to 1
+	authenticatorParams := s.App.SmartAccountKeeper.GetParams(s.Ctx)
+	authenticatorParams.MaximumUnauthenticatedGas = 1
+	s.App.SmartAccountKeeper.SetParams(s.Ctx, authenticatorParams)
+}
+
+func (s *UpgradeTestSuite) ExecuteIncreaseUnauthenticatedGasTest() {
+	authenticatorParams := s.App.SmartAccountKeeper.GetParams(s.Ctx)
+	s.Require().Equal(authenticatorParams.MaximumUnauthenticatedGas, v26.MaximumUnauthenticatedGas)
+}
+
+func (s *UpgradeTestSuite) PrepareChangeBlockParamsTest() {
+	defaultConsensusParams := cmttypes.DefaultConsensusParams().ToProto()
+	defaultConsensusParams.Block.MaxBytes = 1
+	defaultConsensusParams.Block.MaxGas = 1
+	s.App.ConsensusParamsKeeper.ParamsStore.Set(s.Ctx, defaultConsensusParams)
+}
+
+func (s *UpgradeTestSuite) ExecuteChangeBlockParamsTest() {
+	consParams, err := s.App.ConsensusParamsKeeper.ParamsStore.Get(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(consParams.Block.MaxBytes, v26.BlockMaxBytes)
+	s.Require().Equal(consParams.Block.MaxGas, v26.BlockMaxGas)
+}
+
+func (s *UpgradeTestSuite) PrepareCostPerByteTest() {
+	accountParams := s.App.AccountKeeper.GetParams(s.Ctx)
+	accountParams.TxSizeCostPerByte = 0
+	s.App.AccountKeeper.Params.Set(s.Ctx, accountParams)
+}
+
+func (s *UpgradeTestSuite) ExecuteCostPerByteTest() {
+	accountParams := s.App.AccountKeeper.GetParams(s.Ctx)
+	s.Require().Equal(accountParams.TxSizeCostPerByte, v26.CostPerByte)
 }

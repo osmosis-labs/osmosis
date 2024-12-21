@@ -10,7 +10,7 @@ ARG COSMOVISOR_VERSION="v1.5.0"
 # Builder
 # --------------------------------------------------------
 
-FROM golang:${GO_VERSION}-alpine3.18 as builder
+FROM golang:${GO_VERSION}-alpine3.20 as builder
 
 ARG GIT_VERSION
 ARG GIT_COMMIT
@@ -21,7 +21,7 @@ RUN apk add --no-cache \
     ca-certificates \
     build-base \
     linux-headers \
-    git
+    binutils-gold
 
 # Download go dependencies
 WORKDIR /osmosis
@@ -31,12 +31,12 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     go mod download
 
 # Cosmwasm - Download correct libwasmvm version
-RUN ARCH=$(uname -m) && WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm | sed 's/.* //') && \
+RUN ARCH=$(uname -m) && WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm/v2 | sed 's/.* //') && \
     wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/libwasmvm_muslc.$ARCH.a \
-    -O /lib/libwasmvm_muslc.a && \
+    -O /lib/libwasmvm_muslc.$ARCH.a && \
     # verify checksum
     wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/checksums.txt -O /tmp/checksums.txt && \
-    sha256sum /lib/libwasmvm_muslc.a | grep $(cat /tmp/checksums.txt | grep libwasmvm_muslc.$ARCH | cut -d ' ' -f 1)
+    sha256sum /lib/libwasmvm_muslc.$ARCH.a | grep $(cat /tmp/checksums.txt | grep libwasmvm_muslc.$ARCH | cut -d ' ' -f 1) 
 
 # Copy the remaining files
 COPY . .
@@ -70,14 +70,14 @@ FROM ${RUNNER_IMAGE}
 COPY --from=builder /osmosis/build/osmosisd /bin/osmosisd
 COPY --from=builder /go/bin/cosmovisor /bin/cosmovisor
 
-ENV HOME /osmosis
+ENV HOME=/osmosis
 
-ENV DAEMON_NAME osmosisd
-ENV DAEMON_HOME ${HOME}/.osmosisd
-ENV DAEMON_ALLOW_DOWNLOAD_BINARIES true
-ENV DAEMON_RESTART_AFTER_UPGRADE true 
-ENV DAEMON_LOG_BUFFER_SIZE 512
-ENV UNSAFE_SKIP_BACKUP true
+ENV DAEMON_NAME=osmosisd
+ENV DAEMON_HOME=${HOME}/.osmosisd
+ENV DAEMON_ALLOW_DOWNLOAD_BINARIES=true
+ENV DAEMON_RESTART_AFTER_UPGRADE=true 
+ENV DAEMON_LOG_BUFFER_SIZE=512
+ENV UNSAFE_SKIP_BACKUP=true
 
 WORKDIR $HOME
 

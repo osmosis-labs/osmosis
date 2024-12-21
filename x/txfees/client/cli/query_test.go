@@ -8,9 +8,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	"github.com/osmosis-labs/osmosis/v25/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
+	"github.com/osmosis-labs/osmosis/v28/x/txfees/types"
 )
 
 type QueryTestSuite struct {

@@ -12,7 +12,7 @@ import (
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
 )
 
 type UpgradeTestSuite struct {

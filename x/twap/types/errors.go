@@ -1,14 +1,8 @@
 package types
 
 import (
-	"errors"
 	"fmt"
 	time "time"
-)
-
-var (
-	ErrEmptyRoute           = errors.New("route cannot be empty")
-	ErrMismatchedQuoteAsset = errors.New("last pool's quote asset must match the quote asset provided")
 )
 
 type EndTimeInFutureError struct {

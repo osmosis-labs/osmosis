@@ -2,7 +2,7 @@ package types
 
 import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v25/x/gamm/types/migration"
+	gammmigration "github.com/osmosis-labs/osmosis/v28/x/gamm/types/migration"
 )
 
 // DefaultGenesis creates a default GenesisState object.

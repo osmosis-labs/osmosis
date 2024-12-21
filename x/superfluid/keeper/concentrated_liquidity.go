@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/types"
 )
 
 // addToConcentratedLiquiditySuperfluidPosition adds the specified amounts of tokens to an existing superfluid staked
@@ -129,6 +129,7 @@ func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, se
 		sdk.NewEvent(
 			types.TypeEvtAddToConcentratedLiquiditySuperfluidPosition,
 			sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(position.PoolId, 10)),
 			sdk.NewAttribute(types.AttributePositionId, strconv.FormatUint(positionId, 10)),
 			sdk.NewAttribute(types.AttributeNewPositionId, strconv.FormatUint(positionData.ID, 10)),
 			sdk.NewAttribute(types.AttributeAmount0, positionData.Amount0.String()),

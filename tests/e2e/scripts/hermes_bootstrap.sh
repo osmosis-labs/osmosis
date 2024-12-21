@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+#set -ex
 
 # initialize Hermes relayer configuration
 mkdir -p /root/.hermes/
@@ -37,14 +37,14 @@ port = 3001
 id = '$OSMO_A_E2E_CHAIN_ID'
 rpc_addr = 'http://$OSMO_A_E2E_VAL_HOST:26657'
 grpc_addr = 'http://$OSMO_A_E2E_VAL_HOST:9090'
-websocket_addr = 'ws://$OSMO_A_E2E_VAL_HOST:26657/websocket'
+event_source = { mode = 'push', url = 'ws://$OSMO_A_E2E_VAL_HOST:26657/websocket', batch_delay = '500ms' }
 rpc_timeout = '30s'
 account_prefix = 'osmo'
 key_name = 'val01-osmosis-a'
 store_prefix = 'ibc'
-max_gas = 9000000
-gas_multiplier = 1.5
-default_gas = 400000
+max_gas = 10000000
+gas_multiplier = 2
+default_gas = 800000
 gas_price = { price = 0.0025, denom = 'e2e-default-feetoken' }
 clock_drift = '1m' # to accommodate docker containers
 trusting_period = '239seconds'
@@ -53,14 +53,14 @@ trust_threshold = { numerator = '1', denominator = '3' }
 id = '$OSMO_B_E2E_CHAIN_ID'
 rpc_addr = 'http://$OSMO_B_E2E_VAL_HOST:26657'
 grpc_addr = 'http://$OSMO_B_E2E_VAL_HOST:9090'
-websocket_addr = 'ws://$OSMO_B_E2E_VAL_HOST:26657/websocket'
+event_source = { mode = 'push', url = 'ws://$OSMO_B_E2E_VAL_HOST:26657/websocket', batch_delay = '500ms' }
 rpc_timeout = '30s'
 account_prefix = 'osmo'
 key_name = 'val01-osmosis-b'
 store_prefix = 'ibc'
-max_gas = 9000000
-gas_multiplier = 1.5
-default_gas = 400000
+max_gas = 10000000
+gas_multiplier = 2
+default_gas = 800000
 gas_price = { price = 0.0025, denom = 'e2e-default-feetoken' }
 clock_drift = '1m' # to accommodate docker containers
 trusting_period = '239seconds'

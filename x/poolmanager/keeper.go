@@ -1,6 +1,7 @@
 package poolmanager
 
 import (
+	"fmt"
 	"sync"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -8,7 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
 
 	storetypes "cosmossdk.io/store/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -18,7 +19,7 @@ type Keeper struct {
 	storeKey storetypes.StoreKey
 
 	gammKeeper           types.PoolModuleI
-	concentratedKeeper   types.PoolModuleI
+	concentratedKeeper   types.ConcentratedI
 	cosmwasmpoolKeeper   types.PoolModuleI
 	poolIncentivesKeeper types.PoolIncentivesKeeperI
 	bankKeeper           types.BankI
@@ -27,6 +28,7 @@ type Keeper struct {
 	stakingKeeper        types.StakingKeeper
 	protorevKeeper       types.ProtorevKeeper
 	tradingTiersKeeper   types.TradingTiersKeeper
+	wasmKeeper           types.WasmKeeper
 
 	// routes is a map to get the pool module by id.
 	routes map[types.PoolType]types.PoolModuleI
@@ -46,9 +48,12 @@ type Keeper struct {
 
 	defaultTakerFeeBz  []byte
 	defaultTakerFeeVal osmomath.Dec
+
+	cachedTakerFeeShareAgreementMap          map[string]types.TakerFeeShareAgreement
+	cachedRegisteredAlloyPoolByAlloyDenomMap map[string]types.AlloyContractTakerFeeShareState
 }
 
-func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI, stakingKeeper types.StakingKeeper, protorevKeeper types.ProtorevKeeper, tradingTiersKeeper types.TradingTiersKeeper) *Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI, stakingKeeper types.StakingKeeper, protorevKeeper types.ProtorevKeeper,wasmKeeper types.WasmKeeper tradingTiersKeeper types.TradingTiersKeeper) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -66,6 +71,8 @@ func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gam
 	}
 
 	cachedPoolModules := &sync.Map{}
+	cachedTakerFeeShareAgreementMap := make(map[string]types.TakerFeeShareAgreement)
+	cachedRegisteredAlloyPoolMap := make(map[string]types.AlloyContractTakerFeeShareState)
 
 	return &Keeper{
 		storeKey:            storeKey,
@@ -81,7 +88,10 @@ func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gam
 		stakingKeeper:       stakingKeeper,
 		protorevKeeper:      protorevKeeper,
 		tradingTiersKeeper:  tradingTiersKeeper,
-		cachedPoolModules:   cachedPoolModules,
+		wasmKeeper:                               wasmKeeper,
+		cachedPoolModules:                        cachedPoolModules,
+		cachedTakerFeeShareAgreementMap:          cachedTakerFeeShareAgreementMap,
+		cachedRegisteredAlloyPoolByAlloyDenomMap: cachedRegisteredAlloyPoolMap,
 	}
 }
 
@@ -209,4 +219,49 @@ func (k *Keeper) SetStakingKeeper(stakingKeeper types.StakingKeeper) {
 // SetProtorevKeeper sets protorev keeper
 func (k *Keeper) SetProtorevKeeper(protorevKeeper types.ProtorevKeeper) {
 	k.protorevKeeper = protorevKeeper
+}
+
+// SetWasmKeeper sets wasm keeper
+func (k *Keeper) SetWasmKeeper(wasmKeeper types.WasmKeeper) {
+	k.wasmKeeper = wasmKeeper
+}
+
+// BeginBlock sets the poolmanager caches if they are empty
+func (k *Keeper) BeginBlock(ctx sdk.Context) {
+	// Here, the only time in which these caches are empty is during the start up of the node.
+	// Once the node has started up and runs the first BeginBlock of the poolmanager module,
+	// it will populate the caches. Every single subsequent BeginBlock, this logic will be a no-op.
+	if len(k.cachedTakerFeeShareAgreementMap) == 0 || len(k.cachedRegisteredAlloyPoolByAlloyDenomMap) == 0 {
+		err := k.setTakerFeeShareAgreementsMapCached(ctx)
+		if err != nil {
+			ctx.Logger().Error(fmt.Errorf("%w", types.ErrSetTakerFeeShareAgreementsMapCached).Error())
+		}
+		err = k.setAllRegisteredAlloyedPoolsByDenomCached(ctx)
+		if err != nil {
+			ctx.Logger().Error(fmt.Errorf("%w", types.ErrSetAllRegisteredAlloyedPoolsByDenomCached).Error())
+		}
+	}
+}
+
+// AlloyedAssetCompositionUpdateRate is the rate in blocks at which the taker fee share alloy composition is updated in the end block.
+var AlloyedAssetCompositionUpdateRate = int64(700)
+
+// EndBlock updates the taker fee share alloy composition for all registered alloyed pools
+// if the current block height is a multiple of the alloyedAssetCompositionUpdateRate.
+func (k *Keeper) EndBlock(ctx sdk.Context) {
+	if ctx.BlockHeight()%AlloyedAssetCompositionUpdateRate == 0 {
+		registeredAlloyPoolIds, err := k.getAllRegisteredAlloyedPoolsIdArray(ctx)
+		if err != nil {
+			ctx.Logger().Error(fmt.Errorf("unable to get all registered alloyed pools: %w", err).Error())
+			return
+		}
+		for _, id := range registeredAlloyPoolIds {
+			err := k.recalculateAndSetTakerFeeShareAlloyComposition(ctx, id)
+			if err != nil {
+				ctx.Logger().Error(fmt.Errorf(
+					"%s for pool id %d: %v", types.ErrSetRegisteredAlloyedPool, id, err,
+				).Error())
+			}
+		}
+	}
 }

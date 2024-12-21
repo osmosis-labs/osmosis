@@ -96,6 +96,9 @@ edit_config () {
 
     # Expose the rpc
     dasel put -t string -f $CONFIG_FOLDER/config.toml '.rpc.laddr' -v "tcp://0.0.0.0:26657"
+
+    # Expose the grpc
+    dasel put -t string -f $CONFIG_FOLDER/app.toml -v "0.0.0.0:9090" '.grpc.address'
 }
 
 if [[ ! -d $CONFIG_FOLDER ]]

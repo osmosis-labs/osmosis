@@ -242,7 +242,6 @@ func InitTestnet(
 			WithKeybase(kb).
 			WithTxConfig(clientCtx.TxConfig)
 
-		// UNFORKING v2 TODO: Sign mode textual is the only one that uses context. Since we aren't using that here, I think it is okay to pass an empty context.
 		if err := tx.Sign(context.Background(), txFactory, nodeDirName, txBuilder, true); err != nil {
 			return err
 		}

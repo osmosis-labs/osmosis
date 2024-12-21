@@ -1,0 +1,63 @@
+syntax = "proto3";
+package osmosis.poolmanager.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types";
+
+// TakerFeeShareAgreement represents the agreement between the Osmosis protocol
+// and a specific denom to share a certain percent of taker fees generated in
+// any route that contains said denom. For example, if the agreement specifies a
+// 10% skim_percent, this means 10% of the taker fees generated in a swap route
+// containing the specified denom will be sent to the address specified
+// in the skim_address field at the end of each epoch. These skim_percents are
+// additive, so if three taker fee agreements have skim percents of 10%, 20%,
+// and 30%, the total skim percent for the route will be 60%.
+message TakerFeeShareAgreement {
+  // denom is the denom that has the taker fee share agreement.
+  string denom = 1 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+  // skim_percent is the percentage of taker fees that will be skimmed for the
+  // denom, in the event that the denom is included in the swap route.
+  string skim_percent = 2 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.moretags) = "yaml:\"skim_percent\"",
+    (gogoproto.nullable) = false
+  ];
+  // skim_address is the address belonging to the respective denom
+  // that the skimmed taker fees will be sent to at the end of each epoch.
+  string skim_address = 3 [ (gogoproto.moretags) = "yaml:\"skim_address\"" ];
+}
+
+// TakerFeeSkimAccumulator accumulates the total skimmed taker fees for each
+// denom that has a taker fee share agreement.
+message TakerFeeSkimAccumulator {
+  // denom is the denom that has the taker fee share agreement.
+  string denom = 1 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+  // skimmed_taker_fees is the total skimmed taker fees for the denom.
+  repeated cosmos.base.v1beta1.Coin skimmed_taker_fees = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags) = "yaml:\"skimmed_taker_fees\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// AlloyContractTakerFeeShareState contains the contract address of the alloyed
+// asset pool, along with the adjusted taker fee share agreements for any asset
+// within the alloyed asset pool that has a taker fee share agreement. If for
+// instance there are two denoms, and denomA makes up 50 percent and denomB
+// makes up 50 percent, and denom A has a taker fee share agreement with a skim
+// percent of 10%, then the adjusted taker fee share agreement for denomA will
+// be 5%.
+message AlloyContractTakerFeeShareState {
+  // contract_address is the address of the alloyed asset pool contract.
+  string contract_address = 1
+      [ (gogoproto.moretags) = "yaml:\"contract_address\"" ];
+  // taker_fee_share_agreements is the adjusted taker fee share agreements for
+  // any asset within the alloyed asset pool that has a taker fee share
+  // agreement.
+  repeated TakerFeeShareAgreement taker_fee_share_agreements = 2 [
+    (gogoproto.moretags) = "yaml:\"taker_fee_share_agreements\"",
+    (gogoproto.nullable) = false
+  ];
+}

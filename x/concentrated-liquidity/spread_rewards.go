@@ -8,7 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
 )
 
 var emptyCoins = sdk.DecCoins(nil)

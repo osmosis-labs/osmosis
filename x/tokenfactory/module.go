@@ -23,12 +23,12 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/simulation/simtypes"
-	simulation "github.com/osmosis-labs/osmosis/v25/x/tokenfactory/simulation"
+	"github.com/osmosis-labs/osmosis/v28/simulation/simtypes"
+	simulation "github.com/osmosis-labs/osmosis/v28/x/tokenfactory/simulation"
 
-	"github.com/osmosis-labs/osmosis/v25/x/tokenfactory/client/cli"
-	"github.com/osmosis-labs/osmosis/v25/x/tokenfactory/keeper"
-	"github.com/osmosis-labs/osmosis/v25/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v28/x/tokenfactory/client/cli"
+	"github.com/osmosis-labs/osmosis/v28/x/tokenfactory/keeper"
+	"github.com/osmosis-labs/osmosis/v28/x/tokenfactory/types"
 )
 
 var (

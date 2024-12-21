@@ -12,7 +12,7 @@ release-help:
 	@echo "  snapshot                  Create a snapshot release"
 
 GORELEASER_IMAGE := ghcr.io/goreleaser/goreleaser-cross:v$(GO_VERSION)
-COSMWASM_VERSION := $(shell go list -m github.com/CosmWasm/wasmvm | sed 's/.* //')
+COSMWASM_VERSION := $(shell go list -m github.com/CosmWasm/wasmvm/v2 | sed 's/.* //')
 
 release-dry-run:
 	docker run \
@@ -24,7 +24,7 @@ release-dry-run:
 		$(GORELEASER_IMAGE) \
 		release \
 		--clean \
-		--skip-publish
+		--skip=publish
 
 release-snapshot:
 	docker run \
@@ -37,5 +37,4 @@ release-snapshot:
 		release \
 		--clean \
 		--snapshot \
-		--skip-validate \
-		--skip-publish
+		--skip=publish,validate

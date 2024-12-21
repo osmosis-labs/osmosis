@@ -2,14 +2,15 @@ package wasmbinding
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v25/wasmbinding"
-	"github.com/osmosis-labs/osmosis/v25/wasmbinding/bindings"
+	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v28/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v28/wasmbinding/bindings"
 
 	"github.com/stretchr/testify/require"
 )
@@ -17,7 +18,8 @@ import (
 func TestCreateDenom(t *testing.T) {
 	apptesting.SkipIfWSL(t)
 	actor := RandomAccountAddress()
-	osmosis, ctx := SetupCustomApp(t, actor)
+	osmosis, ctx, homeDir := SetupCustomApp(t, actor)
+	defer os.RemoveAll(homeDir)
 
 	specs := map[string]struct {
 		createDenom *bindings.CreateDenom
@@ -142,7 +144,8 @@ func TestChangeAdmin(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			osmosis, ctx := SetupCustomApp(t, tokenCreator)
+			osmosis, ctx, homeDir := SetupCustomApp(t, tokenCreator)
+			defer os.RemoveAll(homeDir)
 
 			err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, tokenCreator, &bindings.CreateDenom{
 				Subdenom: validDenom,
@@ -164,7 +167,8 @@ func TestChangeAdmin(t *testing.T) {
 func TestMint(t *testing.T) {
 	apptesting.SkipIfWSL(t)
 	creator := RandomAccountAddress()
-	osmosis, ctx := SetupCustomApp(t, creator)
+	osmosis, ctx, homeDir := SetupCustomApp(t, creator)
+	defer os.RemoveAll(homeDir)
 
 	// Create denoms for valid mint tests
 	validDenom := bindings.CreateDenom{
@@ -283,7 +287,8 @@ func TestMint(t *testing.T) {
 func TestBurn(t *testing.T) {
 	apptesting.SkipIfWSL(t)
 	creator := RandomAccountAddress()
-	osmosis, ctx := SetupCustomApp(t, creator)
+	osmosis, ctx, homeDir := SetupCustomApp(t, creator)
+	defer os.RemoveAll(homeDir)
 
 	// Create denoms for valid burn tests
 	validDenom := bindings.CreateDenom{

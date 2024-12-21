@@ -2,8 +2,8 @@ package keeper_test
 
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -75,7 +75,7 @@ func (s *KeeperTestSuite) TestGetSuperfluidOSMOTokens() {
 	s.Require().Equal(multiplier, osmomath.NewDec(2))
 
 	// Should get error since asset is not superfluid enabled
-	osmoTokens, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokensIfNonNative(s.Ctx, gammShareDenom, testAmount)
+	osmoTokens, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(s.Ctx, gammShareDenom, testAmount)
 	s.Require().Error(err)
 	s.Require().ErrorIs(err, types.ErrNonSuperfluidAsset)
 	s.Require().Equal(osmoTokens, osmomath.NewInt(0))
@@ -92,11 +92,11 @@ func (s *KeeperTestSuite) TestGetSuperfluidOSMOTokens() {
 	s.App.SuperfluidKeeper.SetOsmoEquivalentMultiplier(s.Ctx, epoch, gammShareDenom, multiplier)
 
 	// Get superfluid OSMO tokens
-	osmoTokens, err = s.App.SuperfluidKeeper.GetSuperfluidOSMOTokensIfNonNative(s.Ctx, gammShareDenom, testAmount)
+	osmoTokens, err = s.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(s.Ctx, gammShareDenom, testAmount)
 	s.Require().NoError(err)
 
 	// Adjust result with risk factor
-	osmoTokensRiskAdjusted := s.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(s.Ctx, osmoTokens, "any")
+	osmoTokensRiskAdjusted := s.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(s.Ctx, osmoTokens)
 
 	// Check result
 	s.Require().Equal(testAmount.ToLegacyDec().Mul(minRiskFactor).TruncateInt().String(), osmoTokensRiskAdjusted.String())
@@ -113,11 +113,11 @@ func (s *KeeperTestSuite) TestGetSuperfluidOSMOTokens() {
 	s.App.SuperfluidKeeper.SetOsmoEquivalentMultiplier(s.Ctx, epoch, clShareDenom, multiplier)
 
 	// Get superfluid OSMO tokens
-	osmoTokens, err = s.App.SuperfluidKeeper.GetSuperfluidOSMOTokensIfNonNative(s.Ctx, clShareDenom, testAmount)
+	osmoTokens, err = s.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(s.Ctx, clShareDenom, testAmount)
 	s.Require().NoError(err)
 
 	// Adjust result with risk factor
-	osmoTokensRiskAdjusted = s.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(s.Ctx, osmoTokens, "any")
+	osmoTokensRiskAdjusted = s.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(s.Ctx, osmoTokens)
 
 	// Check result
 	s.Require().Equal(testAmount.ToLegacyDec().Mul(minRiskFactor).TruncateInt().String(), osmoTokensRiskAdjusted.String())

@@ -11,14 +11,14 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
-	incentivetypes "github.com/osmosis-labs/osmosis/v25/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v25/x/mint/types"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v28/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v28/x/gamm/types"
+	incentivetypes "github.com/osmosis-labs/osmosis/v28/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v28/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 

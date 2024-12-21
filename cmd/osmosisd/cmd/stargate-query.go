@@ -14,7 +14,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v25/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v28/wasmbinding"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -24,17 +24,17 @@ import (
 
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/client/queryproto"
-	downtimequerytypes "github.com/osmosis-labs/osmosis/v25/x/downtime-detector/client/queryproto"
-	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v25/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v25/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
-	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v25/x/poolmanager/client/queryproto"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
-	twapquerytypes "github.com/osmosis-labs/osmosis/v25/x/twap/client/queryproto"
-	txfeestypes "github.com/osmosis-labs/osmosis/v25/x/txfees/types"
+	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/client/queryproto"
+	downtimequerytypes "github.com/osmosis-labs/osmosis/v28/x/downtime-detector/client/queryproto"
+	gammtypes "github.com/osmosis-labs/osmosis/v28/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v28/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v28/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v28/x/pool-incentives/types"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v28/x/poolmanager/client/queryproto"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v28/x/superfluid/types"
+	twapquerytypes "github.com/osmosis-labs/osmosis/v28/x/twap/client/queryproto"
+	txfeestypes "github.com/osmosis-labs/osmosis/v28/x/txfees/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 

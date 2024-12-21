@@ -44,13 +44,141 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
-* [#8169](https://github.com/osmosis-labs/osmosis/pull/8169) [#8250](https://github.com/osmosis-labs/osmosis/pull/8250) [#8276](https://github.com/osmosis-labs/osmosis/pull/8276) [#8320](https://github.com/osmosis-labs/osmosis/pull/8320) Support non-pool assets in superfluid staking.
-* [#8274](https://github.com/osmosis-labs/osmosis/pull/8274) SDK v50 and Comet v0.38 upgrade
-* [#8358](https://github.com/osmosis-labs/osmosis/pull/8358) Set MinDepositRatio gov param to 1 percent for sdk v50 upgrade
-* [#8344](https://github.com/osmosis-labs/osmosis/pull/8344) Uni-directional trading pair taker fee overrides
-* [#8355](https://github.com/osmosis-labs/osmosis/pull/8355) [smartaccount] fix: fee payer charged on every message
+* [#8880](https://github.com/osmosis-labs/osmosis/pull/8880) chore: bump wasmd from 0.53.0 to 0.53.2
 
 ### State Compatible
+* [#8858](https://github.com/osmosis-labs/osmosis/pull/8858) chore: fix event emission for smart account module
+
+## v27.0.1
+
+### State Compatible
+* [#8831](https://github.com/osmosis-labs/osmosis/pull/8831) chore: bump cometbft
+* [#8876](https://github.com/osmosis-labs/osmosis/pull/8876) (xcs) fix: XCS incorrect channel
+
+## v27.0.0
+
+### State Breaking
+
+* [#8682](https://github.com/osmosis-labs/osmosis/pull/8682) chore: bump cosmwasm-optimizer
+* [#8734](https://github.com/osmosis-labs/osmosis/pull/8734) chore: update cosmwasm vm
+* [#8777](https://github.com/osmosis-labs/osmosis/pull/8777) fix: state export for gov module constitution
+* [#8751](https://github.com/osmosis-labs/osmosis/pull/8751) fix: supply offsets for osmo token
+* [#8764](https://github.com/osmosis-labs/osmosis/pull/8764) chore: add cosmwasm 1_3 feature
+* [#8779](https://github.com/osmosis-labs/osmosis/pull/8779) chore: bump cometbft/cosmos-sdk versions
+* [#8801](https://github.com/osmosis-labs/osmosis/pull/8801) chore: update tagged submodules for v27
+* [#8807](https://github.com/osmosis-labs/osmosis/pull/8807) chore: bump cometbft version
+* [#8818](https://github.com/osmosis-labs/osmosis/pull/8818) chore: bump sqsdomain to v0.27.0
+
+### Config
+
+
+### State Compatible
+
+* [#8754](https://github.com/osmosis-labs/osmosis/pull/8754) Add missing proto files for indexing
+* [#8563](https://github.com/osmosis-labs/osmosis/pull/8563) Add additional queries in x/gauges
+* [#8726](https://github.com/osmosis-labs/osmosis/pull/8726) fix: multiple temp directories on command executions
+* [#8731](https://github.com/osmosis-labs/osmosis/pull/8731) fix: in place testnet logs
+* [#8728](https://github.com/osmosis-labs/osmosis/pull/8728) fix unsupported sign-mode issue
+* [#8743](https://github.com/osmosis-labs/osmosis/pull/8743) chore: bump sdk and cometbft
+* [#8765, 8768](https://github.com/osmosis-labs/osmosis/pull/8765) fix concurrency issue in go test(x/lockup)
+* [#8563](https://github.com/osmosis-labs/osmosis/pull/8755) [x/concentratedliquidity]: Fix Incorrect Event Emission
+* [#8765](https://github.com/osmosis-labs/osmosis/pull/8765) fix concurrency issue in go test(x/lockup)
+* [#8791](https://github.com/osmosis-labs/osmosis/pull/8791) fix: superfluid log for error that should be ignored
+
+### State Machine Breaking
+
+* [#8732](https://github.com/osmosis-labs/osmosis/pull/8732) fix: iterate delegations continue instead of erroring
+
+## v26.0.1
+
+### State Machine Breaking
+
+* [#8732](https://github.com/osmosis-labs/osmosis/pull/8732) fix: iterate delegations continue instead of erroring
+
+## v26.0.0
+
+### State Breaking
+
+* [#8274](https://github.com/osmosis-labs/osmosis/pull/8274) SDK v50 and Comet v0.38 upgrade
+* [#8375](https://github.com/osmosis-labs/osmosis/pull/8375) Enforce sub-authenticator to be greater than 1
+* [#8509](https://github.com/osmosis-labs/osmosis/pull/8509) Change LiquidityNetInDirection return type to sdk math
+* [#8535](https://github.com/osmosis-labs/osmosis/pull/8535) Prevent Setting Invalid Before Send Hook
+* [#8310](https://github.com/osmosis-labs/osmosis/pull/8310) Taker fee share
+* [#8494](https://github.com/osmosis-labs/osmosis/pull/8494) Add additional events in x/lockup, x/superfluid, x/concentratedliquidity
+* [#8581](https://github.com/osmosis-labs/osmosis/pull/8581) feat: add ledger signing to smart account module 
+* [#8573](https://github.com/osmosis-labs/osmosis/pull/8573) fix: increase unauthenticated gas to fix fee token issue
+* [#8598](https://github.com/osmosis-labs/osmosis/pull/8598) feat: param changes for block and cost per byte 
+* [#8609](https://github.com/osmosis-labs/osmosis/pull/8609) Exempt `UnrestrictedPoolCreatorWhitelist` addresses from pool creation fee
+* [#8615](https://github.com/osmosis-labs/osmosis/pull/8615) chore: add tagged cosmos-sdk version: v0.50.6-v26-osmo-1
+* [#8616](https://github.com/osmosis-labs/osmosis/pull/8616) chore: upgrade wasmd to v0.53.0 and wasmvm to v2.1.2
+* [#8628](https://github.com/osmosis-labs/osmosis/pull/8628) chore: add tagged cometbft version: v0.38.11-v26-osmo-1
+* [#8649](https://github.com/osmosis-labs/osmosis/pull/8649) chore: update to tagged submodules
+* [#8663](https://github.com/osmosis-labs/osmosis/pull/8663) fix: protorev throws a nil pointer
+* [#8676](https://github.com/osmosis-labs/osmosis/pull/8676) fix: update enforce sub-authenticator to be greater than 1 error message
+* [#8682](https://github.com/osmosis-labs/osmosis/pull/8682) chore: bump cosmwasm-optimizer
+
+### Config
+
+* [#8548](https://github.com/osmosis-labs/osmosis/pull/8548) chore: disable sqs by default in app.toml
+
+
+### State Compatible
+
+* [#8494](https://github.com/osmosis-labs/osmosis/pull/8494) Add additional events in x/lockup, x/superfluid, x/concentratedliquidity
+* [#8543](https://github.com/osmosis-labs/osmosis/pull/8543) Add OTEL wiring and new configs in app.toml
+* [#8566](https://github.com/osmosis-labs/osmosis/pull/8566) Minor speedup to CalcExitCFMM shares
+* [#8665](https://github.com/osmosis-labs/osmosis/pull/8665) fix: smart account signing checktx error
+
+## v25.2.1
+* [#8546](https://github.com/osmosis-labs/osmosis/pull/8546) feat: reduce commit timeout to 500ms to enable faster blocks, and timeout propose to 1.8s
+
+### CosmosSDK 1f1e8bb04f062250af732b6df98e8581e0e0b77b
+
+* [#612](https://github.com/osmosis-labs/cosmos-sdk/pull/612) OTEL wiring in grpcserver interceptor (DataDog POC) (#612)
+
+### CometBFT v0.37.4-v25-osmo-12
+
+* [#128](https://github.com/osmosis-labs/cometbft/pull/128) feat(p2p): render HasChannel(chID) is a public p2p.Peer method (#3510)
+* [#126]() Remove p2p allocations for wrapping outbound packets
+* [#125]() Fix marshalling and concurrency overhead within broadcast routines
+* perf(p2p): Only update send monitor once per batch packet msg send (#3382)
+* [#124]() Secret connection read buffer
+* [#123](https://github.com/osmosis-labs/cometbft/pull/123) perf(p2p/conn): Remove unneeded global pool buffers in secret connection #3403
+* perf(p2p): Delete expensive debug log already slated for deletion #3412
+* perf(p2p): Reduce the p2p metrics overhead. #3411
+* commit f663bd35153b0b366c1e1e6b41e7f2dcff7963fd : one more debug log deletion
+* [#120](https://github.com/osmosis-labs/cometbft/pull/120) perf(consensus): Use TrySend for hasVote/HasBlockPart messages #3407
+
+* [#8504](https://github.com/osmosis-labs/osmosis/pull/8504) Add missing module params query to CLI
+
+## v25.2.0
+
+* [#8455](https://github.com/osmosis-labs/osmosis/pull/8455) Further comet mempool improvements
+
+## v25.1.3
+
+* [#8420](https://github.com/osmosis-labs/osmosis/pull/8420) Remove further unneeded IBC acknowledgements time from CheckTx/RecheckTx
+* [#8421](https://github.com/osmosis-labs/osmosis/pull/8421) Block sdk perf improvements by replacing checkTx with cached tx decoder
+
+### Config
+
+* [#8431](https://github.com/osmosis-labs/osmosis/pull/8431) Fix osmosis-indexer config bug that read osmosis-sqs value
+* [#8436](https://github.com/osmosis-labs/osmosis/pull/8436) Added default indexer config on `osmosisd init`
+
+## v25.1.2
+
+* [#8415](https://github.com/osmosis-labs/osmosis/pull/8415) Reset cache on pool creation
+* [#8417](https://github.com/osmosis-labs/osmosis/pull/8417) Comet bump to fix edge case with block part selection introduced in v25.1.1
+
+## v25.1.1
+
+* [#8394](https://github.com/osmosis-labs/osmosis/pull/8394) Lower timeout commit from 1s to 600ms
+* [#8409](https://github.com/osmosis-labs/osmosis/pull/8409) Add mempool filter to combat IBC spam
+* [#8408](https://github.com/osmosis-labs/osmosis/pull/8408) Bump block sdk to lower recheck times by 25%
+
+## v25.1.0
+
+* [#8398](https://github.com/osmosis-labs/osmosis/pull/8398) Lower JSON unmarshalling overhead in IBC packet logic
 
 ## v25.0.3
 

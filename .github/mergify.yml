@@ -6,22 +6,18 @@ defaults:
 
 queue_rules:
   - name: default
-    conditions:
-      - "#approved-reviews-by>=1"
-
-pull_request_rules:
-  - name: automerge to the base branch with label automerge and branch protection passing
-    conditions:
+    queue_conditions:
       - "#approved-reviews-by>=2"
       - base=main
       - label=A:automerge
-    actions:
-      queue:
-        name: default
-        method: squash
-        commit_message_template: |
-          {{ title }} (#{{ number }})
-          {{ body }}
+    merge_conditions:
+      - "#approved-reviews-by>=1"
+    commit_message_template: |
+      {{ title }} (#{{ number }})
+      {{ body }}
+    merge_method: squash
+
+pull_request_rules:
   - name: backport patches to v3.x branch
     conditions:
       - base=main
@@ -183,3 +179,32 @@ pull_request_rules:
       backport:
         branches:
           - v25.x
+  - name: backport patches to v26.x branch
+    conditions:
+      - base=main
+      - label=A:backport/v26.x
+    actions:
+      backport:
+        branches:
+          - v26.x
+  - name: backport patches to v27.x branch
+    conditions:
+      - base=main
+      - label=A:backport/v27.x
+    actions:
+      backport:
+        branches:
+          - v27.x
+  - name: backport patches to v28.x branch
+    conditions:
+      - base=main
+      - label=A:backport/v28.x
+    actions:
+      backport:
+        branches:
+          - v28.x
+  - name: automerge to the base branch with label automerge and branch protection
+      passing
+    conditions: []
+    actions:
+      queue:

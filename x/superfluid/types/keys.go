@@ -27,7 +27,4 @@ var (
 
 	// KeyUnpoolAllowedPools defines key to unpool allowed pools.
 	KeyUnpoolAllowedPools = []byte{0x06}
-
-	// KeyPrefixDenomRiskFactor defines prefix key for denom risk factor.
-	KeyPrefixDenomRiskFactor = []byte{0x07}
 )

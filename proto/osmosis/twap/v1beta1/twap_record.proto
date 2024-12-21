@@ -4,7 +4,7 @@ package osmosis.twap.v1beta1;
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v25/x/twap/types";
+option go_package = "github.com/osmosis-labs/osmosis/v28/x/twap/types";
 
 // A TWAP record should be indexed in state by pool_id, (asset pair), timestamp
 // The asset pair assets should be lexicographically sorted.
@@ -88,7 +88,8 @@ message PruningState {
     (gogoproto.moretags) = "yaml:\"last_kept_time\""
   ];
   // Deprecated: This field is deprecated.
-  bytes last_key_seen = 3 [ deprecated = true ];
+  bytes last_key_seen = 3
+      [ deprecated = true, (gogoproto.moretags) = "deprecated:\"true\"" ];
   // last_seen_pool_id is the pool_id that we will begin pruning in the next
   // block. This value starts at the highest pool_id at time of epoch, and
   // decreases until it reaches 1. When it reaches 1, the pruning

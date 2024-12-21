@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	"fmt"
+	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -9,9 +12,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	simapp "github.com/osmosis-labs/osmosis/v25/app"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
+	simapp "github.com/osmosis-labs/osmosis/v28/app"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/types"
 )
 
 var now = time.Now().UTC()
@@ -49,7 +52,9 @@ var testGenesis = types.GenesisState{
 }
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
-	app := simapp.Setup(false)
+	dirName := fmt.Sprintf("%d", rand.Int())
+	app := simapp.SetupWithCustomHome(false, dirName)
+
 	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 
@@ -60,6 +65,8 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	app.SuperfluidKeeper.InitGenesis(ctx, genesis)
 
 	genesisExported := am.ExportGenesis(ctx, appCodec)
+	os.RemoveAll(dirName)
+
 	assert.NotPanics(t, func() {
 		app := simapp.Setup(false)
 		ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
@@ -70,7 +77,9 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 }
 
 func TestInitGenesis(t *testing.T) {
-	app := simapp.Setup(false)
+	dirName := fmt.Sprintf("%d", rand.Int())
+	app := simapp.SetupWithCustomHome(false, dirName)
+
 	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
@@ -90,10 +99,13 @@ func TestInitGenesis(t *testing.T) {
 
 	connections := app.SuperfluidKeeper.GetAllLockIdIntermediaryAccountConnections(ctx)
 	require.Equal(t, connections, genesis.IntemediaryAccountConnections)
+	os.RemoveAll(dirName)
 }
 
 func TestExportGenesis(t *testing.T) {
-	app := simapp.Setup(false)
+	dirName := fmt.Sprintf("%d", rand.Int())
+	app := simapp.SetupWithCustomHome(false, dirName)
+
 	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
@@ -114,4 +126,6 @@ func TestExportGenesis(t *testing.T) {
 	require.Equal(t, genesis.OsmoEquivalentMultipliers, genesis.OsmoEquivalentMultipliers)
 	require.Equal(t, genesis.IntermediaryAccounts, genesis.IntermediaryAccounts)
 	require.Equal(t, genesis.IntemediaryAccountConnections, genesis.IntemediaryAccountConnections)
+
+	os.RemoveAll(dirName)
 }

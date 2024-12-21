@@ -5,14 +5,14 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 
-	"github.com/osmosis-labs/osmosis/v25/wasmbinding/bindings"
+	"github.com/osmosis-labs/osmosis/v28/wasmbinding/bindings"
 )
 
 // StargateQuerier dispatches whitelisted stargate queries
@@ -119,23 +119,4 @@ func ConvertProtoToJSONMarshal(protoResponseType proto.Message, bz []byte, cdc c
 	protoResponseType.Reset()
 
 	return bz, nil
-}
-
-// ConvertSdkCoinsToWasmCoins converts sdk type coins to wasm vm type coins
-func ConvertSdkCoinsToWasmCoins(coins []sdk.Coin) wasmvmtypes.Coins {
-	var toSend wasmvmtypes.Coins
-	for _, coin := range coins {
-		c := ConvertSdkCoinToWasmCoin(coin)
-		toSend = append(toSend, c)
-	}
-	return toSend
-}
-
-// ConvertSdkCoinToWasmCoin converts a sdk type coin to a wasm vm type coin
-func ConvertSdkCoinToWasmCoin(coin sdk.Coin) wasmvmtypes.Coin {
-	return wasmvmtypes.Coin{
-		Denom: coin.Denom,
-		// Note: gamm tokens have 18 decimal places, so 10^22 is common, no longer in u64 range
-		Amount: coin.Amount.String(),
-	}
 }

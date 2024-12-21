@@ -7,7 +7,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v25/x/trading-tiers/types"
+	"github.com/osmosis-labs/osmosis/v28/x/trading-tiers/types"
 )
 
 func (k Keeper) TrackTradingTierVolume(ctx sdk.Context, addr sdk.AccAddress, volumeGeneratedInt osmomath.Int, initialDenom string) error {

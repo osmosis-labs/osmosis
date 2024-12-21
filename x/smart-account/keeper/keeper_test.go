@@ -9,9 +9,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
-	"github.com/osmosis-labs/osmosis/v25/x/smart-account/testutils"
+	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v28/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v28/x/smart-account/testutils"
 )
 
 type KeeperTestSuite struct {

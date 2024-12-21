@@ -10,10 +10,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	incentivetypes "github.com/osmosis-labs/osmosis/v25/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	incentivetypes "github.com/osmosis-labs/osmosis/v28/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v28/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
 )
 
 var _ types.QueryServer = Querier{}

@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1
 
+ARG GO_VERSION="1.22"
 ## Build Image
-FROM golang:1.22.3-alpine3.18 as build
+FROM golang:${GO_VERSION}-alpine3.20 AS builder
 
 ARG E2E_SCRIPT_NAME
 
@@ -15,14 +16,14 @@ RUN apk add linux-headers
 WORKDIR /osmosis
 COPY . /osmosis
 
-# CosmWasm: see https://github.com/CosmWasm/wasmvm/releases
-ADD https://github.com/CosmWasm/wasmvm/releases/download/v1.2.1/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.aarch64.a
-ADD https://github.com/CosmWasm/wasmvm/releases/download/v1.2.1/libwasmvm_muslc.x86_64.a /lib/libwasmvm_muslc.x86_64.a
-RUN sha256sum /lib/libwasmvm_muslc.aarch64.a | grep 86bc5fdc0f01201481c36e17cd3dfed6e9650d22e1c5c8983a5b78c231789ee0
-RUN sha256sum /lib/libwasmvm_muslc.x86_64.a | grep a00700aa19f5bfe0f46290ddf69bf51eb03a6dfcd88b905e1081af2e42dbbafc
+# Cosmwasm - Download correct libwasmvm version
+RUN ARCH=$(uname -m) && WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm/v2 | sed 's/.* //') && \
+    wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/libwasmvm_muslc.$ARCH.a \
+    -O /lib/libwasmvm_muslc.$ARCH.a && \
+    # verify checksum
+    wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/checksums.txt -O /tmp/checksums.txt && \
+    sha256sum /lib/libwasmvm_muslc.$ARCH.a | grep $(cat /tmp/checksums.txt | grep libwasmvm_muslc.$ARCH | cut -d ' ' -f 1) 
 
-# CosmWasm: copy the right library according to architecture. The final location will be found by the linker flag `-lwasmvm_muslc`
-RUN cp /lib/libwasmvm_muslc.$(uname -m).a /lib/libwasmvm_muslc.a
 
 RUN BUILD_TAGS=muslc LINK_STATICALLY=true E2E_SCRIPT_NAME=${E2E_SCRIPT_NAME} make e2e-build-script
 
@@ -32,9 +33,9 @@ FROM ubuntu
 # Args only last for a single build stage - renew
 ARG E2E_SCRIPT_NAME
 
-COPY --from=build /osmosis/build/${E2E_SCRIPT_NAME} /bin/${E2E_SCRIPT_NAME}
+COPY --from=builder /osmosis/build/${E2E_SCRIPT_NAME} /bin/${E2E_SCRIPT_NAME}
 
-ENV HOME /osmosis
+ENV HOME=/osmosis
 WORKDIR $HOME
 
 # Docker ARGs are not expanded in ENTRYPOINT in the exec mode. At the same time,

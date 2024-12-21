@@ -3,7 +3,7 @@ package cli
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -11,7 +11,7 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v28/x/protorev/types"
 )
 
 // ------------ types/functions to handle a SetHotRoutes CLI TX ------------ //
@@ -98,7 +98,7 @@ func (release *createArbRoutesInput) extractTokenPairArbRoutes() []types.TokenPa
 // BuildSetHotRoutesMsg builds a MsgSetHotRoutes from the provided json file
 func BuildSetHotRoutesMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
 	if len(args) == 0 {
-		return nil, fmt.Errorf("must provide a json file")
+		return nil, errors.New("must provide a json file")
 	}
 
 	// Read the json file
@@ -188,7 +188,7 @@ func (release *createInfoByPoolTypeInput) convertToInfoByPoolType() types.InfoBy
 // BuildSetInfoByPoolTypeMsg builds a MsgSetInfoByPoolType from the provided json file
 func BuildSetInfoByPoolTypeMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
 	if len(args) == 0 {
-		return nil, fmt.Errorf("must provide a json file")
+		return nil, errors.New("must provide a json file")
 	}
 
 	// Read the json file
@@ -250,7 +250,7 @@ func (release *createBaseDenomsInput) UnmarshalJSON(data []byte) error {
 // BuildSetBaseDenomsMsg builds a MsgSetBaseDenoms from the provided json file
 func BuildSetBaseDenomsMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
 	if len(args) == 0 {
-		return nil, fmt.Errorf("must provide a json file")
+		return nil, errors.New("must provide a json file")
 	}
 
 	// Read the json file

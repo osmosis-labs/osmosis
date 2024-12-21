@@ -13,9 +13,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v28/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v28/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
 )
 
 var (
@@ -62,6 +62,9 @@ func (k Keeper) RouteExactAmountIn(
 		return osmomath.Int{}, err
 	}
 
+	totalTakerFeesCharged := sdk.Coins{}
+	denomsInvolvedInRoute := []string{tokenIn.Denom}
+
 	// Iterate through the route and execute a series of swaps through each pool.
 	for i, routeStep := range route {
 		// To prevent the multihop swap from being interrupted prematurely, we keep
@@ -71,14 +74,30 @@ func (k Keeper) RouteExactAmountIn(
 			_outMinAmount = tokenOutMinAmount
 		}
 
-		tokenOutAmount, err = k.SwapExactAmountIn(ctx, sender, routeStep.PoolId, tokenIn, routeStep.TokenOutDenom, _outMinAmount)
+		var takerFeeCharged sdk.Coin
+		tokenOutAmount, takerFeeCharged, err = k.SwapExactAmountIn(ctx, sender, routeStep.PoolId, tokenIn, routeStep.TokenOutDenom, _outMinAmount)
 		if err != nil {
 			return osmomath.Int{}, err
 		}
 
 		// Chain output of current pool as the input for the next routed pool
 		tokenIn = sdk.NewCoin(routeStep.TokenOutDenom, tokenOutAmount)
+
+		// Track taker fees charged
+		totalTakerFeesCharged = totalTakerFeesCharged.Add(takerFeeCharged)
+
+		// Add the token out denom to the denoms involved in the route, IFF it is not already in the slice
+		if !osmoutils.Contains(denomsInvolvedInRoute, routeStep.TokenOutDenom) {
+			denomsInvolvedInRoute = append(denomsInvolvedInRoute, routeStep.TokenOutDenom)
+		}
 	}
+
+	// Run taker fee skim logic
+	err = k.TakerFeeSkim(ctx, denomsInvolvedInRoute, totalTakerFeesCharged)
+	if err != nil {
+		return osmomath.Int{}, err
+	}
+
 	return tokenOutAmount, nil
 }
 
@@ -162,32 +181,32 @@ func (k Keeper) SwapExactAmountIn(
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	tokenOutMinAmount osmomath.Int,
-) (tokenOutAmount osmomath.Int, err error) {
+) (tokenOutAmount osmomath.Int, takerFeeCharged sdk.Coin, err error) {
 	swapModule, pool, err := k.GetPoolModuleAndPool(ctx, poolId)
 	if err != nil {
-		return osmomath.Int{}, err
+		return osmomath.Int{}, sdk.Coin{}, err
 	}
 
 	// Check if pool has swaps enabled.
 	if !pool.IsActive(ctx) {
-		return osmomath.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
+		return osmomath.Int{}, sdk.Coin{}, fmt.Errorf("pool %d is not active", pool.GetId())
 	}
 
-	tokenInAfterSubTakerFee, err := k.chargeTakerFee(ctx, tokenIn, tokenOutDenom, sender, true)
+	tokenInAfterSubTakerFee, takerFeeCharged, err := k.chargeTakerFee(ctx, tokenIn, tokenOutDenom, sender, true)
 	if err != nil {
-		return osmomath.Int{}, err
+		return osmomath.Int{}, sdk.Coin{}, err
 	}
 
 	// routeStep to the pool-specific SwapExactAmountIn implementation.
 	tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenInAfterSubTakerFee, tokenOutDenom, tokenOutMinAmount, pool.GetSpreadFactor(ctx))
 	if err != nil {
-		return osmomath.Int{}, err
+		return osmomath.Int{}, sdk.Coin{}, err
 	}
 
 	// Track volume for volume-splitting incentives
 	k.trackVolume(ctx, pool.GetId(), tokenIn, sender)
 
-	return tokenOutAmount, nil
+	return tokenOutAmount, takerFeeCharged, nil
 }
 
 // SwapExactAmountInNoTakerFee is an API for swapping an exact amount of tokens
@@ -340,6 +359,9 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	}
 	insExpected[0] = tokenInMaxAmount
 
+	totalTakerFeesCharged := sdk.Coins{}
+	denomsInvolvedInRoute := []string{tokenOut.Denom}
+
 	// Iterates through each routed pool and executes their respective swaps. Note that all of the work to get the return
 	// value of this method is done when we calculate insExpected – this for loop primarily serves to execute the actual
 	// swaps on each pool.
@@ -375,7 +397,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		}
 
 		tokenIn := sdk.NewCoin(routeStep.TokenInDenom, curTokenInAmount)
-		tokenInAfterAddTakerFee, err := k.chargeTakerFee(ctx, tokenIn, _tokenOut.Denom, sender, false)
+		tokenInAfterAddTakerFee, takerFeeCharged, err := k.chargeTakerFee(ctx, tokenIn, _tokenOut.Denom, sender, false)
 		if err != nil {
 			return osmomath.Int{}, err
 		}
@@ -389,6 +411,20 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		if i == 0 {
 			tokenInAmount = tokenInAfterAddTakerFee.Amount
 		}
+
+		// Track taker fees charged
+		totalTakerFeesCharged = totalTakerFeesCharged.Add(takerFeeCharged)
+
+		// Add the token in denom to the denoms involved in the route, IFF it is not already in the slice
+		if !osmoutils.Contains(denomsInvolvedInRoute, routeStep.TokenInDenom) {
+			denomsInvolvedInRoute = append(denomsInvolvedInRoute, routeStep.TokenInDenom)
+		}
+	}
+
+	// Run taker fee skim logic
+	err = k.TakerFeeSkim(ctx, denomsInvolvedInRoute, totalTakerFeesCharged)
+	if err != nil {
+		return osmomath.Int{}, err
 	}
 
 	return tokenInAmount, nil
@@ -791,7 +827,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactBalancerPool(
 	swapModule types.PoolModuleI,
 	poolI types.PoolI,
 ) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
-	tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, osmomath.ZeroDec())
+	tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, types.ZeroDec)
 	if err != nil {
 		if errors.Is(err, gammtypes.ErrInvalidMathApprox) {
 			return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
@@ -856,7 +892,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactBalancerPool(
 		currFromCoin = sdk.NewCoin(req.FromCoin.Denom, midAmount)
 
 		tokenOut, err := swapModule.CalcOutAmtGivenIn(
-			ctx, poolI, currFromCoin, req.ToCoinDenom, osmomath.ZeroDec(),
+			ctx, poolI, currFromCoin, req.ToCoinDenom, types.ZeroDec,
 		)
 		if err != nil {
 			if errors.Is(err, gammtypes.ErrInvalidMathApprox) {
@@ -918,7 +954,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactStableSwapPool(
 	var tokenOut sdk.Coin
 	var err error
 	err = osmoutils.ApplyFuncIfNoError(ctx, func(ctx sdk.Context) error {
-		tokenOut, err = swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, osmomath.ZeroDec())
+		tokenOut, err = swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, types.ZeroDec)
 		return err
 	})
 
@@ -975,7 +1011,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactStableSwapPool(
 		currFromCoin = sdk.NewCoin(req.FromCoin.Denom, midAmount)
 
 		err = osmoutils.ApplyFuncIfNoError(ctx, func(ctx sdk.Context) error {
-			tokenOut, err = swapModule.CalcOutAmtGivenIn(ctx, poolI, currFromCoin, req.ToCoinDenom, osmomath.ZeroDec())
+			tokenOut, err = swapModule.CalcOutAmtGivenIn(ctx, poolI, currFromCoin, req.ToCoinDenom, types.ZeroDec)
 			return err
 		})
 
@@ -1035,7 +1071,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactConcentratedLiquidity(
 	swapModule types.PoolModuleI,
 	poolI types.PoolI,
 ) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
-	tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, osmomath.ZeroDec())
+	tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, types.ZeroDec)
 	// If there was no error we attempt to validate if the output is below the adjustedMaxPriceImpact.
 	if err == nil {
 		// If the tokenOut was returned to be zero it means the amount being traded is too small. We ignore the
@@ -1087,7 +1123,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactConcentratedLiquidity(
 		midAmount := lowAmount.Add(highAmount).Quo(osmomath.NewInt(2))
 		currFromCoin = sdk.NewCoin(req.FromCoin.Denom, midAmount)
 
-		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, currFromCoin, req.ToCoinDenom, osmomath.ZeroDec())
+		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, currFromCoin, req.ToCoinDenom, types.ZeroDec)
 		if err == nil {
 			// If the tokenOut was returned to be zero it means the amount being traded is too small. We ignore the
 			// error output here as it could mean that the input is too large.

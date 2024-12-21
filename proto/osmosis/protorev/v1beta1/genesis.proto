@@ -8,7 +8,7 @@ import "cosmos_proto/cosmos.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v25/x/protorev/types";
+option go_package = "github.com/osmosis-labs/osmosis/v28/x/protorev/types";
 
 // GenesisState defines the protorev module's genesis state.
 message GenesisState {
@@ -28,7 +28,11 @@ message GenesisState {
   // DEPRECATED: pool_weights are weights that are being used to calculate the
   // compute cost of each route. This field is deprecated.
   // It is replaced by the `info_by_pool_type` field.
-  reserved 4;
+  PoolWeights pool_weights = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"pool_weights\",deprecated:\"true\"",
+    deprecated = true
+  ];
   // The number of days since module genesis.
   uint64 days_since_module_genesis = 5
       [ (gogoproto.moretags) = "yaml:\"days_since_module_genesis\"" ];

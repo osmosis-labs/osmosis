@@ -16,10 +16,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v25/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v25/x/gamm/v2types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v28/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v28/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v28/x/gamm/v2types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -42,6 +42,17 @@ type QuerierV2 struct {
 
 func NewV2Querier(k Keeper) QuerierV2 {
 	return QuerierV2{Keeper: k}
+}
+
+func (q Querier) Params(ctx context.Context, req *types.ParamsRequest) (*types.ParamsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	params := q.Keeper.GetParams(sdkCtx)
+	return &types.ParamsResponse{
+		Params: params,
+	}, nil
 }
 
 // Pool checks if a pool exists and their respective poolWeights.

@@ -10,7 +10,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v25/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v28/x/twap/types"
 )
 
 // NumRecordsToPrunePerBlock is the number of twap records indexed by pool ID to prune per block.

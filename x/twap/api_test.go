@@ -9,11 +9,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	sdkrand "github.com/osmosis-labs/osmosis/v25/simulation/simtypes/random"
-	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v25/x/twap"
-	"github.com/osmosis-labs/osmosis/v25/x/twap/types"
+	sdkrand "github.com/osmosis-labs/osmosis/v28/simulation/simtypes/random"
+	"github.com/osmosis-labs/osmosis/v28/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v28/x/twap"
+	"github.com/osmosis-labs/osmosis/v28/x/twap/types"
 )
 
 var (
@@ -28,19 +27,6 @@ var (
 
 	// base record is a record with t=baseTime, sp0=10(sp1=0.1) accumulators set to 0
 	baseRecord types.TwapRecord = newTwoAssetPoolTwapRecordWithDefaults(baseTime, osmomath.NewDec(10), osmomath.ZeroDec(), osmomath.ZeroDec(), osmomath.ZeroDec())
-
-	poolTwoRecord types.TwapRecord = types.TwapRecord{
-		PoolId:      2,
-		Time:        baseTime,
-		Asset0Denom: denom1,
-		Asset1Denom: denom2,
-
-		P0LastSpotPrice:             osmomath.NewDec(5),
-		P1LastSpotPrice:             osmomath.OneDec().Quo(osmomath.NewDec(5)),
-		P0ArithmeticTwapAccumulator: osmomath.ZeroDec(),
-		P1ArithmeticTwapAccumulator: osmomath.ZeroDec(),
-		GeometricTwapAccumulator:    osmomath.ZeroDec(),
-	}
 
 	threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC types.TwapRecord = newThreeAssetPoolTwapRecordWithDefaults(
 		baseTime,
@@ -920,110 +906,6 @@ func (s *TestSuite) TestGeometricTwapToNow_BalancerPool_Randomized() {
 				spotPrice,
 				osmomath.BigDecFromDec(twap),
 			)
-		})
-	}
-}
-
-func (s *TestSuite) TestUnsafeGetMultiPoolArithmeticTwapToNow() {
-	tests := map[string]struct {
-		recordsToSet    []types.TwapRecord
-		ctxTime         time.Time
-		route           []*poolmanagertypes.SwapAmountInRoute
-		baseAssetDenom  string
-		quoteAssetDenom string
-		startTime       time.Time
-		expTwap         osmomath.Dec
-		expectedError   error
-	}{
-		"single pool route: baseQuote BA, route tokenOut is quote": {
-			recordsToSet:    []types.TwapRecord{baseRecord},
-			ctxTime:         tPlusOneMin,
-			route:           []*poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: denom0}},
-			baseAssetDenom:  denom1,
-			quoteAssetDenom: denom0,
-			startTime:       baseTime,
-			expTwap:         osmomath.NewDec(10),
-		},
-		"single pool route: baseQuote AB, route tokenOut is quote": {
-			recordsToSet:    []types.TwapRecord{baseRecord},
-			ctxTime:         tPlusOneMin,
-			route:           []*poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: denom1}},
-			baseAssetDenom:  denom0,
-			quoteAssetDenom: denom1,
-			startTime:       baseTime,
-			expTwap:         osmomath.MustNewDecFromStr("0.1"),
-		},
-		"single pool route: baseQuote BC, route tokenOut is quote": {
-			recordsToSet:    []types.TwapRecord{poolTwoRecord},
-			ctxTime:         tPlusOneMin,
-			route:           []*poolmanagertypes.SwapAmountInRoute{{PoolId: 2, TokenOutDenom: denom2}},
-			baseAssetDenom:  denom1,
-			quoteAssetDenom: denom2,
-			startTime:       baseTime,
-			expTwap:         osmomath.MustNewDecFromStr("0.2"),
-		},
-		"multi pool route": {
-			recordsToSet: []types.TwapRecord{
-				baseRecord,
-				poolTwoRecord,
-			},
-			ctxTime: tPlusOneMin,
-			route: []*poolmanagertypes.SwapAmountInRoute{
-				{PoolId: 1, TokenOutDenom: denom1},
-				{PoolId: 2, TokenOutDenom: denom2},
-			},
-			baseAssetDenom:  denom0,
-			quoteAssetDenom: denom2,
-			startTime:       baseTime,
-			expTwap:         osmomath.MustNewDecFromStr("0.02"), // .1 from AB * .2 from BC
-		},
-		"route with error in TWAP calculation": {
-			recordsToSet:    []types.TwapRecord{withLastErrTime(baseRecord, baseTime)},
-			ctxTime:         tPlusOneMin,
-			route:           []*poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: denom1}},
-			baseAssetDenom:  denom0,
-			quoteAssetDenom: denom1,
-			startTime:       baseTime,
-			expectedError:   errSpotPrice,
-		},
-		"empty route": {
-			recordsToSet:    []types.TwapRecord{},
-			ctxTime:         tPlusOneMin,
-			route:           []*poolmanagertypes.SwapAmountInRoute{},
-			baseAssetDenom:  denom0,
-			quoteAssetDenom: denom1,
-			startTime:       baseTime,
-			expectedError:   types.ErrEmptyRoute,
-		},
-		"route tokenOut is base": {
-			recordsToSet:    []types.TwapRecord{baseRecord},
-			ctxTime:         tPlusOneMin,
-			route:           []*poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: denom1}},
-			baseAssetDenom:  denom0,
-			quoteAssetDenom: denom2,
-			startTime:       baseTime,
-			expectedError:   types.ErrMismatchedQuoteAsset,
-		},
-	}
-
-	for name, test := range tests {
-		s.Run(name, func() {
-			for _, record := range test.recordsToSet {
-				s.preSetRecordsWithPoolId(record.PoolId, []types.TwapRecord{record})
-			}
-			s.Ctx = s.Ctx.WithBlockTime(test.ctxTime)
-
-			twap, err := s.twapkeeper.UnsafeGetMultiPoolArithmeticTwapToNow(
-				s.Ctx, test.route, test.baseAssetDenom, test.quoteAssetDenom, test.startTime,
-			)
-
-			if test.expectedError != nil {
-				s.Require().Error(err)
-				s.Require().Equal(test.expectedError, err)
-				return
-			}
-			s.Require().NoError(err)
-			s.Require().Equal(test.expTwap, twap)
 		})
 	}
 }

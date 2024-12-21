@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	"fmt"
+	"math/rand"
+	"os"
 	"testing"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -8,9 +11,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	osmoapp "github.com/osmosis-labs/osmosis/v25/app"
-	"github.com/osmosis-labs/osmosis/v25/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v25/x/mint/types"
+	osmoapp "github.com/osmosis-labs/osmosis/v28/app"
+	"github.com/osmosis-labs/osmosis/v28/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v28/x/mint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -365,7 +368,10 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 				MintingRewardsDistributionStartEpoch: tc.mintStartEpoch,
 			}
 
-			app := osmoapp.Setup(false)
+			dirName := fmt.Sprintf("%d", rand.Int())
+			app := osmoapp.SetupWithCustomHome(false, dirName)
+			defer os.RemoveAll(dirName)
+
 			ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 
 			mintKeeper := app.MintKeeper

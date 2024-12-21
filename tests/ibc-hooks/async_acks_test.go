@@ -13,7 +13,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v25/app"
+	"github.com/osmosis-labs/osmosis/v28/app"
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 )
 

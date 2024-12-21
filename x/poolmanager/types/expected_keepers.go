@@ -26,6 +26,7 @@ type BankI interface {
 	SetDenomMetaData(ctx context.Context, denomMetaData banktypes.Metadata)
 	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 }
 
 // CommunityPoolI defines the contract needed to be fulfilled for distribution keeper.
@@ -96,6 +97,11 @@ type PoolModuleI interface {
 	GetTotalLiquidity(ctx sdk.Context) (sdk.Coins, error)
 }
 
+type ConcentratedI interface {
+	PoolModuleI
+	GetWhitelistedAddresses(ctx sdk.Context) []string
+}
+
 type PoolIncentivesKeeperI interface {
 	IsPoolIncentivized(ctx sdk.Context, poolId uint64) (bool, error)
 }
@@ -116,4 +122,8 @@ type ProtorevKeeper interface {
 
 type TradingTiersKeeper interface {
 	TrackTradingTierVolume(ctx sdk.Context, addr sdk.AccAddress, volumeGeneratedInt osmomath.Int, initialDenom string) error
+}
+
+type WasmKeeper interface {
+	QuerySmart(ctx context.Context, contractAddress sdk.AccAddress, queryMsg []byte) ([]byte, error)
 }

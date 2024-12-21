@@ -8,10 +8,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	incentivestypes "github.com/osmosis-labs/osmosis/v25/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
+	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
+	incentivestypes "github.com/osmosis-labs/osmosis/v28/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v28/x/pool-incentives/types"
 )
 
 var (

@@ -15,16 +15,16 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 
-	"github.com/osmosis-labs/osmosis/v25/simulation/simtypes"
-	gammsimulation "github.com/osmosis-labs/osmosis/v25/x/gamm/simulation"
-	"github.com/osmosis-labs/osmosis/v25/x/poolmanager"
-	pmclient "github.com/osmosis-labs/osmosis/v25/x/poolmanager/client"
-	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/client/cli"
-	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/client/grpc"
-	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/client/grpcv2"
-	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/client/queryprotov2"
-	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v28/simulation/simtypes"
+	gammsimulation "github.com/osmosis-labs/osmosis/v28/x/gamm/simulation"
+	"github.com/osmosis-labs/osmosis/v28/x/poolmanager"
+	pmclient "github.com/osmosis-labs/osmosis/v28/x/poolmanager/client"
+	"github.com/osmosis-labs/osmosis/v28/x/poolmanager/client/cli"
+	"github.com/osmosis-labs/osmosis/v28/x/poolmanager/client/grpc"
+	"github.com/osmosis-labs/osmosis/v28/x/poolmanager/client/grpcv2"
+	"github.com/osmosis-labs/osmosis/v28/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v28/x/poolmanager/client/queryprotov2"
+	"github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
 )
 
 var (
@@ -85,20 +85,20 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 type AppModule struct {
 	AppModuleBasic
 
-	k          poolmanager.Keeper
+	k          *poolmanager.Keeper
 	gammKeeper types.PoolModuleI
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), poolmanager.NewMsgServerImpl(&am.k))
+	types.RegisterMsgServer(cfg.MsgServer(), poolmanager.NewMsgServerImpl(am.k))
 	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: pmclient.NewQuerier(am.k)})
-	queryprotov2.RegisterQueryServer(cfg.QueryServer(), grpcv2.Querier{Q: pmclient.NewV2Querier(am.k)})
+	queryprotov2.RegisterQueryServer(cfg.QueryServer(), grpcv2.Querier{Q: pmclient.NewV2Querier(*am.k)})
 }
 
 func NewAppModule(poolmanagerKeeper poolmanager.Keeper, gammKeeper types.PoolModuleI) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
-		k:              poolmanagerKeeper,
+		k:              &poolmanagerKeeper,
 		gammKeeper:     gammKeeper,
 	}
 }
@@ -130,6 +130,20 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	genState := am.k.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(genState)
+}
+
+// BeginBlock performs cache initialization for the poolmanager module.
+func (am AppModule) BeginBlock(context context.Context) error {
+	ctx := sdk.UnwrapSDKContext(context)
+	am.k.BeginBlock(ctx)
+	return nil
+}
+
+// EndBlock performs alloy pool state updates for the poolmanager module.
+func (am AppModule) EndBlock(context context.Context) error {
+	ctx := sdk.UnwrapSDKContext(context)
+	am.k.EndBlock(ctx)
+	return nil
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.

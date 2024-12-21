@@ -74,13 +74,6 @@ func (m msgBasedAction) Execute(sim *SimCtx, ctx sdk.Context) (
 		return simulation.NoOpMsg(m.name, m.name, fmt.Sprintf("unable to build msg due to: %v", err)), nil, nil, nil
 	}
 
-	// UNFORKING v2 TODO: Verify that type casting to this and then calling validateBasic is correct.
-	// Note we now should be calling validate basic logic in the message server itself for future messages.
-
-	// err = msg.ValidateBasic()
-	// if err != nil {
-	// 	return simulation.NoOpMsg(m.name, m.name, fmt.Sprintf("msg did not pass ValidateBasic: %v", err)), nil, nil, nil
-	// }
 	msgWithValBasic, ok := msg.(sdk.HasValidateBasic)
 	if ok {
 		err = msgWithValBasic.ValidateBasic()

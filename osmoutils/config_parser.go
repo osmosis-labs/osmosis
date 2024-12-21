@@ -12,13 +12,13 @@ import (
 
 // ParseBool parses a boolean value from a server type option.
 func ParseBool(opts servertypes.AppOptions, groupOptName, optName string, defaultValue bool) bool {
-	fullOptName := "osmosis-sqs." + optName
+	fullOptName := groupOptName + "." + optName
 	valueInterface := opts.Get(fullOptName)
 	value := defaultValue
 	if valueInterface != nil {
 		valueStr, ok := valueInterface.(string)
 		if !ok {
-			panic("invalidly configured osmosis-sqs." + optName)
+			panic("invalidly configured " + fullOptName)
 		}
 		valueStr = strings.TrimSpace(valueStr)
 		v, err := strconv.ParseBool(valueStr)
@@ -34,9 +34,10 @@ func ParseBool(opts servertypes.AppOptions, groupOptName, optName string, defaul
 
 // ParseInt parses an integer value from a server type option.
 func ParseInt(opts servertypes.AppOptions, groupOptName, optName string) int {
-	valueInterface := opts.Get(groupOptName + "." + optName)
+	fullOptName := groupOptName + "." + optName
+	valueInterface := opts.Get(fullOptName)
 	if valueInterface == nil {
-		panic("missing config for osmosis-sqs." + optName)
+		panic("missing config for " + fullOptName)
 	}
 	value := cast.ToInt(valueInterface)
 	return value
@@ -86,9 +87,10 @@ func ParseStringToUint64Slice(input string) ([]uint64, error) {
 
 // ParseString parses a string value from a server type option.
 func ParseString(opts servertypes.AppOptions, groupOptName, optName string) string {
-	valueInterface := opts.Get(groupOptName + "." + optName)
+	fullOptName := groupOptName + "." + optName
+	valueInterface := opts.Get(fullOptName)
 	if valueInterface == nil {
-		panic("missing config for osmosis-sqs." + optName)
+		panic("missing config for " + fullOptName)
 	}
 	value := cast.ToString(valueInterface)
 	return value

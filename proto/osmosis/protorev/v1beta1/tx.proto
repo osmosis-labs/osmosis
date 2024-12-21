@@ -8,7 +8,7 @@ import "osmosis/protorev/v1beta1/protorev.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v25/x/protorev/types";
+option go_package = "github.com/osmosis-labs/osmosis/v28/x/protorev/types";
 
 service Msg {
   // SetHotRoutes sets the hot routes that will be explored when creating
@@ -173,5 +173,13 @@ message MsgSetBaseDenoms {
   ];
 }
 
-// MsgSetBaseDenomsResponse defines the Msg/SetBaseDenoms response type.
+// Deprecated, but must be retained in the file to allow indexers
+// to index blocks since genesis
 message MsgSetBaseDenomsResponse {}
+// MsgSetPoolWeights defines the Msg/SetPoolWeights request type.
+message MsgSetPoolWeights {
+  // admin is the account that is authorized to set the pool weights.
+  string admin = 1;
+  // pool_weights is the list of pool weights to set.
+  PoolWeights pool_weights = 2;
+}

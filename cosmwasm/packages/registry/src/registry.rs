@@ -351,7 +351,10 @@ impl<'a> Registry<'a> {
 
         for chunk in &parts.chunks(2) {
             let Some((port, channel)) = chunk.take(2).collect_tuple() else {
-                return Err(RegistryError::InvalidDenomTracePath{ path: path.clone(), denom: denom.into() });
+                return Err(RegistryError::InvalidDenomTracePath {
+                    path: path.clone(),
+                    denom: denom.into(),
+                });
             };
 
             // Check that the port is "transfer"
@@ -502,7 +505,7 @@ impl<'a> Registry<'a> {
                 // True), we get the channel from the registry
                 assert!(coin_type.is_native());
                 assert!(first_transfer_chain == receiver_chain);
-                let channel = self.get_channel(current_chain.as_ref(), first_transfer_chain)?;
+                let channel = self.get_channel(first_transfer_chain, current_chain.as_ref())?;
                 Ok(channel)
             }
         }?;

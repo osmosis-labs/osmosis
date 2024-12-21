@@ -9,9 +9,10 @@ import (
 	query "github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
-	pooltypes "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
+	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
+	"github.com/osmosis-labs/osmosis/v28/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
+	pooltypes "github.com/osmosis-labs/osmosis/v28/x/pool-incentives/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -47,6 +48,121 @@ func (s *KeeperTestSuite) TestGRPCGaugeByID() {
 		StartTime:         startTime,
 	}
 	s.Require().Equal(res.Gauge.String(), expectedGauge.String())
+}
+
+func (s *KeeperTestSuite) TestGRPCSpecificGauges() {
+	s.SetupTest()
+
+	// ensure initially querying gauges returns no gauges
+	res, err := s.querier.Gauges(s.Ctx, &types.GaugesRequest{})
+	s.Require().NoError(err)
+	s.Require().Len(res.Data, 0)
+
+	for _, coin := range defaultGaugeCreationCoins {
+		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
+	}
+	s.PrepareBalancerPool()
+	s.PrepareConcentratedPool()
+	s.FundAcc(s.TestAccs[0], defaultGaugeCreationCoins)
+
+	gaugeCreationCoins := sdk.NewCoins(
+		sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(200)),
+		sdk.NewCoin("atom", osmomath.NewInt(200)),
+	)
+
+	gaugesToCreate := []struct {
+		distrTo lockuptypes.QueryCondition
+		poolId  uint64
+	}{
+		{
+			poolId: concentratedPoolId,
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+				Denom:         "",
+				Duration:      time.Nanosecond,
+			},
+		},
+		{
+			poolId: concentratedPoolId,
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+				Denom:         "",
+				Duration:      time.Nanosecond,
+			},
+		},
+		{
+			poolId: concentratedPoolId,
+			distrTo: lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.NoLock,
+				Denom:         types.NoLockInternalGaugeDenom(concentratedPoolId),
+				Duration:      s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration,
+			},
+		},
+	}
+
+	for _, gaugeToCreate := range gaugesToCreate {
+		gaugeId, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, defaultIsPerpetualParam, s.TestAccs[0], gaugeCreationCoins, gaugeToCreate.distrTo, defaultTime, defaultNumEpochPaidOver, gaugeToCreate.poolId)
+		s.Require().NoError(err)
+		_ = gaugeId
+	}
+
+	// ensure initially querying gauges returns 7 gauges
+	res, err = s.querier.Gauges(s.Ctx, &types.GaugesRequest{})
+	s.Require().NoError(err)
+	s.Require().Len(res.Data, 7)
+
+	// checkContainsGauges check each id has its equivalent gauge
+	// it returns ids not having their equivalent gauge
+	checkContainsGauges := func(gauges []types.Gauge, ids []uint64) []uint64 {
+		missing := []uint64{}
+		for _, id := range ids {
+			found := false
+			for _, gauge := range gauges {
+				if gauge.Id == id {
+					found = true
+					break
+				}
+			}
+			if !found {
+				missing = append(missing, id)
+			}
+		}
+		return missing
+	}
+
+	s.Run("ExternalGauges", func() {
+		res, err := s.querier.ExternalGauges(s.Ctx, &types.QueryExternalGaugesRequest{})
+		s.Require().NoError(err)
+		s.Require().Len(res.GetGauges(), 2)
+		missingGauges := checkContainsGauges(res.GetGauges(), []uint64{5, 6})
+		s.Require().Empty(missingGauges, "missing gauges %v", missingGauges)
+	})
+	s.Run("InternalGauges", func() {
+		res, err := s.querier.InternalGauges(s.Ctx, &types.QueryInternalGaugesRequest{})
+		s.Require().NoError(err)
+		s.Require().Len(res.GetGauges(), 5)
+		missingGauges := checkContainsGauges(res.GetGauges(), []uint64{1, 2, 3, 4, 7})
+		s.Require().Empty(missingGauges, "missing gauges %v", missingGauges)
+	})
+	s.Run("ByPoolID", func() {
+		res, err := s.querier.GaugesByPoolID(s.Ctx, &types.QueryGaugesByPoolIDRequest{
+			Id: concentratedPoolId,
+			Pagination: &query.PageRequest{
+				Limit: 10,
+			},
+		})
+		s.Require().NoError(err)
+		s.Require().Len(res.Gauges, 4)
+		missingGauges := checkContainsGauges(res.GetGauges(), []uint64{4, 5, 6, 7})
+		s.Require().Empty(missingGauges, "missing gauges %v", missingGauges)
+		res, err = s.querier.GaugesByPoolID(s.Ctx, &types.QueryGaugesByPoolIDRequest{
+			Id: balancerPoolId,
+		})
+		s.Require().NoError(err)
+		s.Require().Len(res.Gauges, 3)
+		missingGauges = checkContainsGauges(res.GetGauges(), []uint64{1, 2, 3})
+		s.Require().Empty(missingGauges, "missing gauges %v", missingGauges)
+	})
 }
 
 // TestGRPCGauges tests querying upcoming and active gauges via gRPC returns the correct response.
@@ -213,6 +329,16 @@ func (s *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 	res, err = s.querier.ActiveGaugesPerDenom(s.Ctx, &types.ActiveGaugesPerDenomRequest{Denom: "pool", Pagination: &query.PageRequest{Limit: 15}})
 	s.Require().Len(res.Data, 10)
 	s.Require().NoError(err)
+}
+
+// TestGRPCParams tests querying params via gRPC returns the correct response.
+func (s *KeeperTestSuite) TestGRPCParams() {
+	s.SetupTest()
+
+	expectedParams := s.App.IncentivesKeeper.GetParams(s.Ctx)
+	res, err := s.querier.Params(s.Ctx, &types.ParamsRequest{})
+	s.Require().NoError(err)
+	s.Require().Equal(expectedParams, res.Params)
 }
 
 // TestGRPCUpcomingGauges tests querying upcoming gauges via gRPC returns the correct response.

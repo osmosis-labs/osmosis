@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v28/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

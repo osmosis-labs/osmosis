@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/model"
-	cwpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/model"
+	cwpooltypes "github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/types"
 
 	"github.com/stretchr/testify/suite"
 
@@ -19,18 +19,18 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	v24 "github.com/osmosis-labs/osmosis/v25/app/upgrades/v24"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v25/x/incentives/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v25/x/protorev/types"
-	twap "github.com/osmosis-labs/osmosis/v25/x/twap"
-	"github.com/osmosis-labs/osmosis/v25/x/twap/types"
-	twaptypes "github.com/osmosis-labs/osmosis/v25/x/twap/types"
+	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
+	v24 "github.com/osmosis-labs/osmosis/v28/app/upgrades/v24"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v28/x/incentives/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v28/x/protorev/types"
+	twap "github.com/osmosis-labs/osmosis/v28/x/twap"
+	"github.com/osmosis-labs/osmosis/v28/x/twap/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v28/x/twap/types"
 )
 
 const (
@@ -225,9 +225,9 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// TWAP records indexed by pool ID should be untouched.
 	twapRecords, err = s.App.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(s.Ctx, twapRecord1.PoolId)
 	s.Require().NoError(err)
-	s.Require().Len(twapRecords, 6)
-	s.Require().Equal(twapRecord1, twapRecords[4])
-	s.Require().Equal(twapRecord2, twapRecords[5])
+	s.Require().Len(twapRecords, 8)
+	s.Require().Equal(twapRecord1, twapRecords[6])
+	s.Require().Equal(twapRecord2, twapRecords[7])
 
 	// PROTOREV Tests
 	//

@@ -5,7 +5,7 @@ package osmosis.cosmwasmpool.v1beta1;
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/model";
+option go_package = "github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/model";
 
 // CosmWasmPool represents the data serialized into state for each CW pool.
 //

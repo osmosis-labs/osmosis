@@ -2,18 +2,20 @@ package authenticator_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/app"
-	"github.com/osmosis-labs/osmosis/v25/app/params"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v28/app"
+	"github.com/osmosis-labs/osmosis/v28/app/params"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
 
-	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v28/x/smart-account/authenticator"
 
 	"github.com/stretchr/testify/suite"
 )
@@ -33,6 +35,10 @@ func (s *MessageFilterTest) SetupTest() {
 	s.SetupKeys()
 	s.EncodingConfig = app.MakeEncodingConfig()
 	s.MessageFilter = authenticator.NewMessageFilter(s.EncodingConfig)
+}
+
+func (s *MessageFilterTest) TearDownTest() {
+	os.RemoveAll(s.HomeDir)
 }
 
 // TestBankSend tests the MessageFilter with multiple bank send messages
@@ -266,6 +272,102 @@ func (s *MessageFilterTest) TestPoolManagerSwapExactAmountIn() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
+			filter, err := s.MessageFilter.Initialize([]byte(tt.pattern))
+			s.Require().NoError(err)
+
+			ak := s.OsmosisApp.AccountKeeper
+			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
+			tx, err := s.GenSimpleTx([]sdk.Msg{tt.msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
+			s.Require().NoError(err)
+			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, s.OsmosisApp.AppCodec(), ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), tt.msg, tx, 0, false, authenticator.SequenceMatch)
+			s.Require().NoError(err)
+
+			err = filter.Authenticate(s.Ctx, request)
+			if tt.match {
+				s.Require().True(err == nil)
+			} else {
+				s.Require().True(err != nil)
+			}
+		})
+	}
+}
+
+func (s *MessageFilterTest) TestLimitOrder() {
+	fromAddr := s.TestAccAddress[0].String()
+	tests := []struct {
+		name           string // name
+		pattern        string
+		msg            sdk.Msg
+		passvalidation bool
+		match          bool
+	}{
+		{"place limit order, simple message filter, no contract address",
+			fmt.Sprintf(`{"@type":"/cosmwasm.wasm.v1.MsgExecuteContract", "msg": {"place_limit": {}}}`),
+			&types.MsgExecuteContract{
+				Contract: "osmo16xcfxjd8263srfqhl5stru49y2w3u7dllugn9dkdrlrhfaeu523s85htxv",
+				Msg:      []byte(fmt.Sprintf(`{"place_limit": { "claim_bounty": "%s", "order_direction": "%s", "quantity": "%s", "tick_id": %d}}`, "0.0001", "bid", "47612515", -5257343)),
+				Sender:   fromAddr,
+				Funds:    sdk.NewCoins(sdk.NewCoin("inputDenom", osmomath.NewInt(100))),
+			},
+			true,
+			true,
+		},
+		{"place limit order, complex message filter, no contract address",
+			fmt.Sprintf(`{"@type":"/cosmwasm.wasm.v1.MsgExecuteContract", "sender":"%s", "msg": {"place_limit": {}}, "contract": ""}`, fromAddr),
+			&types.MsgExecuteContract{
+				Contract: "",
+				Msg:      []byte(fmt.Sprintf(`{"place_limit": { "claim_bounty": "%s", "order_direction": "%s", "quantity": "%s", "tick_id": %d}}`, "0.0001", "bid", "47612515", -5257343)),
+				Sender:   fromAddr, Funds: sdk.NewCoins(sdk.NewCoin("inputDenom", osmomath.NewInt(100)))},
+			true,
+			true,
+		},
+		{"place limit order, only bid, no contract address",
+			fmt.Sprintf(`{"@type":"/cosmwasm.wasm.v1.MsgExecuteContract", "sender":"%s", "msg": {"place_limit": { "order_direction": "bid"}}, "contract": ""}`, fromAddr),
+			&types.MsgExecuteContract{
+				Contract: "",
+				Msg:      []byte(fmt.Sprintf(`{"place_limit": { "claim_bounty": "%s", "order_direction": "%s", "quantity": "%s", "tick_id": %d}}`, "0.0001", "bid", "47612515", -5257343)),
+				Sender:   fromAddr, Funds: sdk.NewCoins(sdk.NewCoin("inputDenom", osmomath.NewInt(100)))},
+			true,
+			true,
+		},
+		{"place limit order, only ask, with contract address",
+			fmt.Sprintf(`{"@type":"/cosmwasm.wasm.v1.MsgExecuteContract", "sender":"%s", "msg": {"place_limit": { "order_direction": "bid"}}, "contract": "osmo1aufrskevnmtvafnvflea9ypllkqqz333tzfcs3cwsg9mfk7946yqprspug"}`, fromAddr),
+			&types.MsgExecuteContract{
+				Contract: "osmo1aufrskevnmtvafnvflea9ypllkqqz333tzfcs3cwsg9mfk7946yqprspug",
+				Msg:      []byte(fmt.Sprintf(`{"place_limit": { "claim_bounty": "%s", "order_direction": "%s", "quantity": "%s", "tick_id": %d}}`, "0.0001", "bid", "47612515", -5257343)),
+				Sender:   fromAddr, Funds: sdk.NewCoins(sdk.NewCoin("inputDenom", osmomath.NewInt(100)))},
+			true,
+			true,
+		},
+		{"place limit order error, no contract address",
+			fmt.Sprintf(`{"@type":"/cosmwasm.wasm.v1.MsgExecuteContract", "sender":"%s", "msg": {"place_limit": { "claim_bounty": "", "order_direction": ""}}, "contract": ""}`, fromAddr),
+			&types.MsgExecuteContract{
+				Contract: "",
+				Msg:      []byte(fmt.Sprintf(`{"place_limit": { "claim_bounty": "%s", "order_direction": "%s", "quantity": "%s", "tick_id": %d}}`, "0.0001", "bid", "47612515", -5257343)),
+				Sender:   fromAddr, Funds: sdk.NewCoins(sdk.NewCoin("inputDenom", osmomath.NewInt(100)))},
+			true,
+			false,
+		},
+		{"place limit order error, restricted message",
+			fmt.Sprintf(`{"@type":"/cosmwasm.wasm.v1.MsgExecuteContract", "msg": {"place_limit": { "claim_bounty": "", "order_direction": "", "quantity": "", "tick_id": "0"}}}`),
+			&types.MsgExecuteContract{
+				Contract: "",
+				Msg:      []byte(fmt.Sprintf(`{"place_limit": { "claim_bounty": "%s", "order_direction": "%s", "quantity": "%s", "tick_id": %d}}`, "0.0001", "bid", "47612515", -5257343)),
+				Sender:   fromAddr, Funds: sdk.NewCoins(sdk.NewCoin("inputDenom", osmomath.NewInt(100)))},
+			true,
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			err := s.MessageFilter.OnAuthenticatorAdded(s.Ctx, sdk.AccAddress{}, []byte(tt.pattern), "1")
+			if tt.passvalidation {
+				s.Require().NoError(err)
+			} else {
+				s.Require().Error(err)
+				return
+			}
 			filter, err := s.MessageFilter.Initialize([]byte(tt.pattern))
 			s.Require().NoError(err)
 

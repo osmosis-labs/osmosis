@@ -7,13 +7,12 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v28/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
 
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/keeper/internal/events"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/types"
 )
 
 type msgServer struct {
@@ -47,7 +46,11 @@ func (server msgServer) SuperfluidDelegate(goCtx context.Context, msg *types.Msg
 
 	err := server.keeper.SuperfluidDelegate(ctx, msg.Sender, msg.LockId, msg.ValAddr)
 	if err == nil {
-		events.EmitSuperfluidDelegateEvent(ctx, msg.LockId, msg.ValAddr)
+		lock, err := server.keeper.lk.GetLockByID(ctx, msg.LockId)
+		if err != nil {
+			return &types.MsgSuperfluidDelegateResponse{}, err
+		}
+		events.EmitSuperfluidDelegateEvent(ctx, msg.LockId, msg.ValAddr, lock.Coins)
 	}
 	return &types.MsgSuperfluidDelegateResponse{}, err
 }
@@ -62,7 +65,11 @@ func (server msgServer) SuperfluidUndelegate(goCtx context.Context, msg *types.M
 
 	err := server.keeper.SuperfluidUndelegate(ctx, msg.Sender, msg.LockId)
 	if err == nil {
-		events.EmitSuperfluidUndelegateEvent(ctx, msg.LockId)
+		lock, err := server.keeper.lk.GetLockByID(ctx, msg.LockId)
+		if err != nil {
+			return &types.MsgSuperfluidUndelegateResponse{}, err
+		}
+		events.EmitSuperfluidUndelegateEvent(ctx, msg.LockId, lock.Coins)
 	}
 	return &types.MsgSuperfluidUndelegateResponse{}, err
 }
@@ -261,32 +268,4 @@ func (server msgServer) UnbondConvertAndStake(goCtx context.Context, msg *types.
 	}
 
 	return &types.MsgUnbondConvertAndStakeResponse{TotalAmtStaked: totalAmtConverted}, nil
-}
-
-func (server msgServer) SetDenomRiskFactor(goCtx context.Context, msg *types.MsgSetDenomRiskFactor) (*types.MsgSetDenomRiskFactorResponse, error) {
-	govAddr := server.keeper.ak.GetModuleAddress(govtypes.ModuleName)
-	if msg.Sender != govAddr.String() {
-		return nil, types.ErrUnauthorizedGov
-	}
-
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	err := server.keeper.SetDenomRiskFactor(ctx, msg.Denom, msg.RiskFactor)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.MsgSetDenomRiskFactorResponse{}, nil
-}
-
-func (server msgServer) UnsetDenomRiskFactor(goCtx context.Context, msg *types.MsgUnsetDenomRiskFactor) (*types.MsgUnsetDenomRiskFactorResponse, error) {
-	govAddr := server.keeper.ak.GetModuleAddress(govtypes.ModuleName)
-	if msg.Sender != govAddr.String() {
-		return nil, types.ErrUnauthorizedGov
-	}
-
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	server.keeper.DeleteDenomRiskFactor(ctx, msg.Denom)
-
-	return &types.MsgUnsetDenomRiskFactorResponse{}, nil
 }

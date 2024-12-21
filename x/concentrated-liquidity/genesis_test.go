@@ -1,6 +1,9 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
+	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -12,13 +15,13 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	osmoapp "github.com/osmosis-labs/osmosis/v25/app"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	cl "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity"
-	clmodule "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/clmodule"
-	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types/genesis"
+	osmoapp "github.com/osmosis-labs/osmosis/v28/app"
+	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
+	cl "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity"
+	clmodule "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/clmodule"
+	"github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types/genesis"
 )
 
 type singlePoolGenesisEntry struct {
@@ -840,7 +843,8 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 // It checks that the exported genesis can be marshaled and unmarshaled without panicking.
 func TestMarshalUnmarshalGenesis(t *testing.T) {
 	// Set up the app and context
-	app := osmoapp.Setup(false)
+	dirName := fmt.Sprintf("%d", rand.Int())
+	app := osmoapp.SetupWithCustomHome(false, dirName)
 	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	now := ctx.BlockTime()
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
@@ -852,6 +856,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 	// Export the genesis state
 	genesisExported := appModule.ExportGenesis(ctx, appCodec)
+	os.RemoveAll(dirName)
 
 	// Test that the exported genesis can be marshaled and unmarshaled without panicking
 	assert.NotPanics(t, func() {

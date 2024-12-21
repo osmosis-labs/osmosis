@@ -1,8 +1,8 @@
 package balancer
 
 import (
-	types "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	types "github.com/osmosis-labs/osmosis/v28/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

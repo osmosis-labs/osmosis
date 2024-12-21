@@ -11,16 +11,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/sqs/sqsdomain"
+	sqscosmwasmpool "github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
 
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/ingest/sqs/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"
+	"github.com/osmosis-labs/osmosis/v28/ingest/sqs/domain"
 
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/client/queryproto"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
+	"github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/client/queryproto"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
 )
 
 // poolTransformer is a transformer for pools.
@@ -31,13 +33,13 @@ import (
 // - If error in TVL calculation, TVL is set to the value that could be computed and the pool struct
 // has a flag to indicate that there was an error in TVL calculation.
 type poolTransformer struct {
-	gammKeeper         domain.PoolKeeper
-	concentratedKeeper domain.ConcentratedKeeper
-	cosmWasmKeeper     domain.CosmWasmPoolKeeper
-	wasmKeeper         domain.WasmKeeper
-	bankKeeper         domain.BankKeeper
-	protorevKeeper     domain.ProtorevKeeper
-	poolManagerKeeper  domain.PoolManagerKeeper
+	gammKeeper         commondomain.PoolKeeper
+	concentratedKeeper commondomain.ConcentratedKeeper
+	cosmWasmKeeper     commondomain.CosmWasmPoolKeeper
+	wasmKeeper         commondomain.WasmKeeper
+	bankKeeper         commondomain.BankKeeper
+	protorevKeeper     commondomain.ProtorevKeeper
+	poolManagerKeeper  commondomain.PoolManagerKeeper
 
 	// Pool ID that is used for converting between USDC and UOSMO.
 	defaultUSDCUOSMOPoolID uint64
@@ -103,7 +105,7 @@ var stablesOverwrite map[string]struct{} = map[string]struct{}{
 var _ domain.PoolsTransformer = &poolTransformer{}
 
 // NewPoolTransformer returns a new pool ingester.
-func NewPoolTransformer(keepers domain.SQSIngestKeepers, defaultUSDCUOSMOPoolID uint64) domain.PoolsTransformer {
+func NewPoolTransformer(keepers commondomain.PoolExtractorKeepers, defaultUSDCUOSMOPoolID uint64) domain.PoolsTransformer {
 	return &poolTransformer{
 		gammKeeper:         keepers.GammKeeper,
 		concentratedKeeper: keepers.ConcentratedKeeper,
@@ -118,7 +120,7 @@ func NewPoolTransformer(keepers domain.SQSIngestKeepers, defaultUSDCUOSMOPoolID 
 }
 
 // processPoolState processes the pool state. an
-func (pi *poolTransformer) Transform(ctx sdk.Context, blockPools domain.BlockPools) ([]sqsdomain.PoolI, sqsdomain.TakerFeeMap, error) {
+func (pi *poolTransformer) Transform(ctx sdk.Context, blockPools commondomain.BlockPools) ([]sqsdomain.PoolI, sqsdomain.TakerFeeMap, error) {
 	// Create a map from denom to its price.
 	priceInfoMap := make(map[string]osmomath.BigDec)
 
@@ -208,11 +210,14 @@ func (pi *poolTransformer) convertPool(
 		return nil, err
 	}
 
-	var cosmWasmPoolModel *sqsdomain.CosmWasmPoolModel
+	var cosmWasmPoolModel *sqscosmwasmpool.CosmWasmPoolModel
 	if pool.GetType() == poolmanagertypes.CosmWasm {
+		poolId := pool.GetId()
+		poolAddress := pool.GetAddress()
+
 		cwPool, ok := pool.(cosmwasmpooltypes.CosmWasmExtension)
 		if !ok {
-			return nil, fmt.Errorf("pool (%d) with type (%d) is not a CosmWasmExtension", pool.GetId(), pool.GetType())
+			return nil, fmt.Errorf("pool (%d) with type (%d) is not a CosmWasmExtension", poolId, pool.GetType())
 		}
 
 		balances = cwPool.GetTotalPoolLiquidity(ctx)
@@ -224,7 +229,7 @@ func (pi *poolTransformer) convertPool(
 		// This must never happen, but if it does, and there is no checks, the query will fail silently.
 		// We make sure to return an error here.
 		if pi.wasmKeeper == nil {
-			return nil, fmt.Errorf("pool (%d) with type (%d) requires `poolTransformer` to have `wasmKeeper` but got `nil`", pool.GetId(), pool.GetType())
+			return nil, fmt.Errorf("pool (%d) with type (%d) requires `poolTransformer` to have `wasmKeeper` but got `nil`", poolId, pool.GetType())
 		}
 
 		initedCosmWasmPoolModel := pi.initCosmWasmPoolModel(ctx, pool)
@@ -232,7 +237,12 @@ func (pi *poolTransformer) convertPool(
 
 		// special transformation based on different cw pool
 		if cosmWasmPoolModel.IsAlloyTransmuter() {
-			err = pi.updateAlloyTransmuterInfo(ctx, pool.GetId(), pool.GetAddress(), cosmWasmPoolModel, &denoms)
+			err = pi.updateAlloyTransmuterInfo(ctx, poolId, poolAddress, cosmWasmPoolModel, &denoms)
+			if err != nil {
+				return nil, err
+			}
+		} else if cosmWasmPoolModel.IsOrderbook() {
+			err = pi.updateOrderbookInfo(ctx, poolId, poolAddress, cosmWasmPoolModel)
 			if err != nil {
 				return nil, err
 			}
@@ -460,14 +470,14 @@ func (pi *poolTransformer) computeUSDCPoolLiquidityCapFromUOSMO(ctx sdk.Context,
 }
 
 // queryContractInfo queries the cw2 contract info from the given contract address.
-func (pi *poolTransformer) queryContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) (sqsdomain.ContractInfo, error) {
+func (pi *poolTransformer) queryContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) (sqscosmwasmpool.ContractInfo, error) {
 	bz := pi.wasmKeeper.QueryRaw(ctx, contractAddress, []byte(contractInfoKey))
 	if len(bz) == 0 {
-		return sqsdomain.ContractInfo{}, fmt.Errorf("contract info not found: %s", contractAddress)
+		return sqscosmwasmpool.ContractInfo{}, fmt.Errorf("contract info not found: %s", contractAddress)
 	} else {
-		var contractInfo sqsdomain.ContractInfo
+		var contractInfo sqscosmwasmpool.ContractInfo
 		if err := json.Unmarshal(bz, &contractInfo); err != nil {
-			return sqsdomain.ContractInfo{}, fmt.Errorf("error unmarshalling contract info: %w", err)
+			return sqscosmwasmpool.ContractInfo{}, fmt.Errorf("error unmarshalling contract info: %w", err)
 		} else {
 			return contractInfo, nil
 		}
@@ -479,7 +489,7 @@ func (pi *poolTransformer) queryContractInfo(ctx sdk.Context, contractAddress sd
 func (pi *poolTransformer) initCosmWasmPoolModel(
 	ctx sdk.Context,
 	pool poolmanagertypes.PoolI,
-) sqsdomain.CosmWasmPoolModel {
+) sqscosmwasmpool.CosmWasmPoolModel {
 	contractInfo, err := pi.queryContractInfo(ctx, pool.GetAddress())
 	if err != nil {
 		// only log since cw pool contracts are not required to conform cw2
@@ -490,10 +500,10 @@ func (pi *poolTransformer) initCosmWasmPoolModel(
 			"err", err.Error(),
 		)
 
-		return sqsdomain.CosmWasmPoolModel{}
+		return sqscosmwasmpool.CosmWasmPoolModel{}
 	} else {
 		// initialize the CosmWasmPoolModel with the contract info
-		return sqsdomain.CosmWasmPoolModel{
+		return sqscosmwasmpool.CosmWasmPoolModel{
 			ContractInfo: contractInfo,
 		}
 	}

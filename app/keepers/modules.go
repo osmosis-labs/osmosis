@@ -35,35 +35,35 @@ import (
 
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
-	smartaccount "github.com/osmosis-labs/osmosis/v25/x/smart-account"
+	smartaccount "github.com/osmosis-labs/osmosis/v28/x/smart-account"
 
 	"github.com/skip-mev/block-sdk/v2/x/auction"
 
-	_ "github.com/osmosis-labs/osmosis/v25/client/docs/statik"
-	clclient "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/client"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/clmodule"
-	cwpoolclient "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/client"
-	cosmwasmpoolmodule "github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/module"
-	downtimemodule "github.com/osmosis-labs/osmosis/v25/x/downtime-detector/module"
-	"github.com/osmosis-labs/osmosis/v25/x/gamm"
-	gammclient "github.com/osmosis-labs/osmosis/v25/x/gamm/client"
-	"github.com/osmosis-labs/osmosis/v25/x/ibc-rate-limit/ibcratelimitmodule"
-	"github.com/osmosis-labs/osmosis/v25/x/incentives"
-	incentivesclient "github.com/osmosis-labs/osmosis/v25/x/incentives/client"
-	"github.com/osmosis-labs/osmosis/v25/x/lockup"
-	"github.com/osmosis-labs/osmosis/v25/x/mint"
-	poolincentives "github.com/osmosis-labs/osmosis/v25/x/pool-incentives"
-	poolincentivesclient "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/client"
-	poolmanagerclient "github.com/osmosis-labs/osmosis/v25/x/poolmanager/client"
-	poolmanager "github.com/osmosis-labs/osmosis/v25/x/poolmanager/module"
-	"github.com/osmosis-labs/osmosis/v25/x/protorev"
-	superfluid "github.com/osmosis-labs/osmosis/v25/x/superfluid"
-	superfluidclient "github.com/osmosis-labs/osmosis/v25/x/superfluid/client"
-	"github.com/osmosis-labs/osmosis/v25/x/tokenfactory"
-	"github.com/osmosis-labs/osmosis/v25/x/twap/twapmodule"
-	"github.com/osmosis-labs/osmosis/v25/x/txfees"
-	txfeesclient "github.com/osmosis-labs/osmosis/v25/x/txfees/client"
-	valsetprefmodule "github.com/osmosis-labs/osmosis/v25/x/valset-pref/valpref-module"
+	_ "github.com/osmosis-labs/osmosis/v28/client/docs/statik"
+	clclient "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/client"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/clmodule"
+	cwpoolclient "github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/client"
+	cosmwasmpoolmodule "github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/module"
+	downtimemodule "github.com/osmosis-labs/osmosis/v28/x/downtime-detector/module"
+	"github.com/osmosis-labs/osmosis/v28/x/gamm"
+	gammclient "github.com/osmosis-labs/osmosis/v28/x/gamm/client"
+	"github.com/osmosis-labs/osmosis/v28/x/ibc-rate-limit/ibcratelimitmodule"
+	"github.com/osmosis-labs/osmosis/v28/x/incentives"
+	incentivesclient "github.com/osmosis-labs/osmosis/v28/x/incentives/client"
+	"github.com/osmosis-labs/osmosis/v28/x/lockup"
+	"github.com/osmosis-labs/osmosis/v28/x/mint"
+	poolincentives "github.com/osmosis-labs/osmosis/v28/x/pool-incentives"
+	poolincentivesclient "github.com/osmosis-labs/osmosis/v28/x/pool-incentives/client"
+	poolmanagerclient "github.com/osmosis-labs/osmosis/v28/x/poolmanager/client"
+	poolmanager "github.com/osmosis-labs/osmosis/v28/x/poolmanager/module"
+	"github.com/osmosis-labs/osmosis/v28/x/protorev"
+	superfluid "github.com/osmosis-labs/osmosis/v28/x/superfluid"
+	superfluidclient "github.com/osmosis-labs/osmosis/v28/x/superfluid/client"
+	"github.com/osmosis-labs/osmosis/v28/x/tokenfactory"
+	"github.com/osmosis-labs/osmosis/v28/x/twap/twapmodule"
+	"github.com/osmosis-labs/osmosis/v28/x/txfees"
+	txfeesclient "github.com/osmosis-labs/osmosis/v28/x/txfees/client"
+	valsetprefmodule "github.com/osmosis-labs/osmosis/v28/x/valset-pref/valpref-module"
 	"github.com/osmosis-labs/osmosis/x/epochs"
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 )
@@ -81,14 +81,8 @@ var AppModuleBasics = module.NewBasicManager(
 	gov.NewAppModuleBasic(
 		[]govclient.ProposalHandler{
 			paramsclient.ProposalHandler,
-			// UNFORKING v2 TODO: Verify it is okay to remove these
-			// upgradeclient.LegacyProposalHandler,
-			// upgradeclient.LegacyCancelProposalHandler,
 			poolincentivesclient.UpdatePoolIncentivesHandler,
 			poolincentivesclient.ReplacePoolIncentivesHandler,
-			// UNFORKING v2 TODO: Verify it is okay to remove these
-			// ibcclientclient.UpdateClientProposalHandler,
-			// ibcclientclient.UpgradeProposalHandler,
 			superfluidclient.SetSuperfluidAssetsProposalHandler,
 			superfluidclient.RemoveSuperfluidAssetsProposalHandler,
 			superfluidclient.UpdateUnpoolWhitelistProposalHandler,

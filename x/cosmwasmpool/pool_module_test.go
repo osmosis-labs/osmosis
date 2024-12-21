@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	clmodel "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v25/x/cosmwasmpool/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
+	clmodel "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
@@ -45,7 +45,7 @@ func TestPoolModuleSuite(t *testing.T) {
 }
 
 func (s *PoolModuleSuite) TestInitializePool() {
-	validInstantitateMsg := s.GetTransmuterInstantiateMsgBytes(defaultDenoms)
+	validInstantitateMsg := s.GetTransmuterInstantiateMsgBytes(defaultDenoms, nil, sdk.AccAddress{})
 
 	tests := map[string]struct {
 		codeid            uint64

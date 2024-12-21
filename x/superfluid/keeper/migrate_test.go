@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -14,14 +15,14 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v25/x/gamm/types/migration"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
+	cltypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v28/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v28/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v28/x/gamm/types/migration"
+	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/types"
 )
 
 var (
@@ -273,7 +274,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 		"error: invalid validator address": {
 			overwriteValidatorAddress: true,
 			percentOfSharesToMigrate:  osmomath.MustNewDecFromStr("1"),
-			expectedError:             fmt.Errorf("decoding bech32 failed: invalid checksum"),
+			expectedError:             errors.New("decoding bech32 failed: invalid checksum"),
 		},
 		"error: non-existent lock ID": {
 			overwriteLockId:          true,
@@ -432,7 +433,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrated()
 		"error: invalid validator address": {
 			overwriteValidatorAddress: true,
 			percentOfSharesToMigrate:  osmomath.MustNewDecFromStr("1"),
-			expectedError:             fmt.Errorf("decoding bech32 failed: invalid checksum"),
+			expectedError:             errors.New("decoding bech32 failed: invalid checksum"),
 		},
 		"error: lock that is superfluid undelegating, not unlocking (full shares), token out mins is more than exit coins": {
 			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
@@ -628,7 +629,7 @@ func (s *KeeperTestSuite) TestMigrateUnlockedPositionFromBalancerToConcentrated(
 		},
 		"no lock (more shares than own)": {
 			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1.1"),
-			expectedError:            fmt.Errorf("insufficient funds"),
+			expectedError:            errors.New("insufficient funds"),
 		},
 		"no lock (no shares)": {
 			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("0"),

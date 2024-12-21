@@ -8,8 +8,8 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v28/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
 )
 
 var customRouterFlagOverride = map[string]string{
@@ -33,6 +33,13 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdTradingPairTakerFee)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdEstimateTradeBasedOnPriceImpact)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdListPoolsByDenom)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetAllTakerFeeShareAgreements)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetTakerFeeShareAgreementFromDenom)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetTakerFeeShareDenomsToAccruedValue)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetAllTakerFeeShareAccumulators)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetRegisteredAlloyedPoolFromDenom)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetRegisteredAlloyedPoolFromPoolId)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetAllRegisteredAlloyedPools)
 	cmd.AddCommand(
 		osmocli.GetParams[*queryproto.ParamsRequest](
 			types.ModuleName, queryproto.NewQueryClient),
@@ -211,4 +218,64 @@ func GetCmdEstimateTradeBasedOnPriceImpact() (
 		{{.CommandPrefix}} estimate-trade-based-on-price-impact 100uosmo stosmo  833 0.001 1.00`,
 		QueryFnName: "EstimateTradeBasedOnPriceImpact",
 	}, &queryproto.EstimateTradeBasedOnPriceImpactRequest{}
+}
+
+func GetAllTakerFeeShareAgreements() (*osmocli.QueryDescriptor, *queryproto.AllTakerFeeShareAgreementsRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "all-taker-fee-share-agreements",
+		Short: "Query all taker fee share agreements",
+		Long:  "{{.Short}}",
+	}, &queryproto.AllTakerFeeShareAgreementsRequest{}
+}
+
+func GetTakerFeeShareAgreementFromDenom() (*osmocli.QueryDescriptor, *queryproto.TakerFeeShareAgreementFromDenomRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "taker-fee-share-agreement-from-denom",
+		Short: "Query taker fee share agreement from denom",
+		Long: `{{.Short}}
+		{{.CommandPrefix}} taker-fee-share-agreement-from-denom uosmo`,
+	}, &queryproto.TakerFeeShareAgreementFromDenomRequest{}
+}
+
+func GetTakerFeeShareDenomsToAccruedValue() (*osmocli.QueryDescriptor, *queryproto.TakerFeeShareDenomsToAccruedValueRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "taker-fee-share-denoms-to-accrued-value",
+		Short: "Query taker fee share denoms to accrued value",
+		Long: `{{.Short}}
+		{{.CommandPrefix}} taker-fee-share-denoms-to-accrued-value uosmo`,
+	}, &queryproto.TakerFeeShareDenomsToAccruedValueRequest{}
+}
+
+func GetAllTakerFeeShareAccumulators() (*osmocli.QueryDescriptor, *queryproto.AllTakerFeeShareAccumulatorsRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "all-taker-fee-share-accumulators",
+		Short: "Query all taker fee share accumulators",
+		Long:  "{{.Short}}",
+	}, &queryproto.AllTakerFeeShareAccumulatorsRequest{}
+}
+
+func GetRegisteredAlloyedPoolFromDenom() (*osmocli.QueryDescriptor, *queryproto.RegisteredAlloyedPoolFromDenomRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "registered-alloyed-pool-from-denom",
+		Short: "Query registered alloyed pool from the alloyed pool denom",
+		Long: `{{.Short}}
+		{{.CommandPrefix}} registered-alloyed-pool-from-denom factory/osmo1z6r6qdknhgsc0zeracktgpcxf43j6sekq07nw8sxduc9lg0qjjlqfu25e3/alloyed/allBTC`,
+	}, &queryproto.RegisteredAlloyedPoolFromDenomRequest{}
+}
+
+func GetRegisteredAlloyedPoolFromPoolId() (*osmocli.QueryDescriptor, *queryproto.RegisteredAlloyedPoolFromPoolIdRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "registered-alloyed-pool-from-pool-id",
+		Short: "Query registered alloyed pool from pool id",
+		Long: `{{.Short}}
+		{{.CommandPrefix}} registered-alloyed-pool-from-pool-id 1868`,
+	}, &queryproto.RegisteredAlloyedPoolFromPoolIdRequest{}
+}
+
+func GetAllRegisteredAlloyedPools() (*osmocli.QueryDescriptor, *queryproto.AllRegisteredAlloyedPoolsRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "all-registered-alloyed-pools",
+		Short: "Query all registered alloyed pools",
+		Long:  "{{.Short}}",
+	}, &queryproto.AllRegisteredAlloyedPoolsRequest{}
 }

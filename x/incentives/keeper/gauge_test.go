@@ -9,10 +9,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	incentiveskeeper "github.com/osmosis-labs/osmosis/v25/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
+	incentiveskeeper "github.com/osmosis-labs/osmosis/v28/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v28/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -382,7 +382,6 @@ func (s *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
 }
 
 func (s *KeeperTestSuite) TestAddToGaugeRewards() {
-
 	defaultCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 12))
 
 	// since most of the same functionality and edge cases are tested by a higher level

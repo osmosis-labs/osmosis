@@ -15,8 +15,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v28/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v28/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -236,6 +237,17 @@ func (q Querier) CurrentWeightByGroupGaugeID(goCtx context.Context, req *types.Q
 	return &types.QueryCurrentWeightByGroupGaugeIDResponse{GaugeWeight: gaugeWeights}, nil
 }
 
+func (q Querier) Params(goCtx context.Context, req *types.ParamsRequest) (*types.ParamsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	params := q.Keeper.GetParams(ctx)
+	return &types.ParamsResponse{
+		Params: params,
+	}, nil
+}
+
 // getGaugeFromIDJsonBytes returns gauges from the json bytes of gaugeIDs.
 func (q Querier) getGaugeFromIDJsonBytes(ctx sdk.Context, refValue []byte) ([]types.Gauge, error) {
 	gauges := []types.Gauge{}
@@ -256,6 +268,91 @@ func (q Querier) getGaugeFromIDJsonBytes(ctx sdk.Context, refValue []byte) ([]ty
 	}
 
 	return gauges, nil
+}
+
+// GaugesFilterFn is used to apply a filter on gauges
+// It must be used in query.FilterPaginate as a condition to add the gauge to the response data
+type GaugesFilterFn func(gauge *types.Gauge) bool
+
+func (q Querier) GaugesByPoolID(goCtx context.Context, req *types.QueryGaugesByPoolIDRequest) (*types.QueryGaugesByPoolIDResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	pageRes, gauges, err := q.getGaugesWithFilter(ctx, types.KeyPrefixGauges, req.GetPagination(), func(gauge *types.Gauge) bool {
+		return gauge.IsLinkedToPool(req.GetId())
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &types.QueryGaugesByPoolIDResponse{
+		Gauges:     gauges,
+		Pagination: pageRes,
+	}, nil
+}
+
+func (q Querier) InternalGauges(goCtx context.Context, req *types.QueryInternalGaugesRequest) (*types.QueryInternalGaugesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	pageRes, gauges, err := q.getGaugesWithFilter(ctx, types.KeyPrefixGauges, req.GetPagination(), func(gauge *types.Gauge) bool {
+		return gauge.IsInternalGauge([]string{gammtypes.GAMMTokenPrefix})
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &types.QueryInternalGaugesResponse{
+		Gauges:     gauges,
+		Pagination: pageRes,
+	}, nil
+}
+
+func (q Querier) ExternalGauges(goCtx context.Context, req *types.QueryExternalGaugesRequest) (*types.QueryExternalGaugesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	pageRes, gauges, err := q.getGaugesWithFilter(ctx, types.KeyPrefixGauges, req.GetPagination(), func(gauge *types.Gauge) bool {
+		return gauge.IsExternalGauge()
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &types.QueryExternalGaugesResponse{
+		Gauges:     gauges,
+		Pagination: pageRes,
+	}, nil
+}
+
+func (q Querier) getGaugesWithFilter(ctx sdk.Context, keyPrefix []byte, pageReq *query.PageRequest, filter GaugesFilterFn) (*query.PageResponse, []types.Gauge, error) {
+	gauges := []types.Gauge{}
+	store := ctx.KVStore(q.Keeper.storeKey)
+	valStore := prefix.NewStore(store, keyPrefix)
+
+	pageRes, err := query.FilteredPaginate(valStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		// this may return multiple gauges at once if two gauges start at the same time.
+		// for now this is treated as an edge case that is not of importance
+		newGauges, err := q.getGaugeFromIDJsonBytes(ctx, value)
+		if err != nil {
+			return false, err
+		}
+		var hit bool
+		if accumulate {
+			for _, gauge := range newGauges {
+				if !filter(&gauge) {
+					continue
+				}
+				gauges = append(gauges, gauge)
+				hit = true
+			}
+		}
+		return hit, nil
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return pageRes, gauges, nil
 }
 
 // filterByPrefixAndDenom filters gauges based on a given key prefix and denom

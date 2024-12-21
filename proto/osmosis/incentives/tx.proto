@@ -9,7 +9,7 @@ import "osmosis/incentives/gauge.proto";
 import "osmosis/lockup/lock.proto";
 import "cosmos/msg/v1/msg.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v25/x/incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v28/x/incentives/types";
 
 service Msg {
   rpc CreateGauge(MsgCreateGauge) returns (MsgCreateGaugeResponse);

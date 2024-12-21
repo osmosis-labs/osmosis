@@ -4,12 +4,12 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	cl "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity"
-	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
+	cl "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -46,7 +46,7 @@ func (s *KeeperTestSuite) TestBeforeValidatorSlashed() {
 			1,
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			[]int64{},
-			[]int64{}, // UNFORKING v2 TODO: We no longer can slash unbonded validators, verify that this is correct
+			[]int64{},
 		},
 	}
 

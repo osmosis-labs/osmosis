@@ -21,4 +21,5 @@ var (
 	ErrDenomDoesNotExist        = errorsmod.Register(ModuleName, 10, "denom does not exist")
 	ErrBurnFromModuleAccount    = errorsmod.Register(ModuleName, 11, "burning from Module Account is not allowed")
 	ErrBeforeSendHookOutOfGas   = errorsmod.Register(ModuleName, 12, "gas meter hit maximum limit")
+	ErrMintToModuleAccount      = errorsmod.Register(ModuleName, 13, "minting to Module Account is not allowed")
 )

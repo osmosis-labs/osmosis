@@ -3,17 +3,15 @@ package keeper_test
 import (
 	"time"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v25/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
+	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
+	cltypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v28/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v28/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -160,9 +158,6 @@ func (s *KeeperTestSuite) TestSuperfluidDelegate() {
 
 func (s *KeeperTestSuite) TestValidateLockForSFDelegate() {
 	lockOwner := s.TestAccs[0]
-	params, err := s.App.StakingKeeper.GetParams(s.Ctx)
-	s.Require().NoError(err)
-	bondDenom := params.BondDenom
 
 	tests := []struct {
 		name                             string
@@ -242,39 +237,6 @@ func (s *KeeperTestSuite) TestValidateLockForSFDelegate() {
 			superfluidAssetToSet:             types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
 			lockIdAlreadySuperfluidDelegated: true,
 			expectedErr:                      errorsmod.Wrapf(types.ErrAlreadyUsedSuperfluidLockup, "lock id : %d", uint64(1)),
-		},
-		{
-			name: "valid native lock",
-			lock: &lockuptypes.PeriodLock{
-				Owner:    lockOwner.String(),
-				Coins:    sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(100))),
-				Duration: time.Hour * 24 * 21,
-				ID:       1,
-			},
-			superfluidAssetToSet: types.SuperfluidAsset{Denom: "foo", AssetType: types.SuperfluidAssetTypeNative, PriceRoute: []*poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: bondDenom}}},
-			expectedErr:          nil,
-		},
-		{
-			name: "invalid native lock - asset not set",
-			lock: &lockuptypes.PeriodLock{
-				Owner:    lockOwner.String(),
-				Coins:    sdk.NewCoins(sdk.NewCoin("bar", osmomath.NewInt(100))),
-				Duration: time.Hour * 24 * 21,
-				ID:       1,
-			},
-			superfluidAssetToSet: types.SuperfluidAsset{Denom: "foo", AssetType: types.SuperfluidAssetTypeNative, PriceRoute: []*poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: bondDenom}}},
-			expectedErr:          errorsmod.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", "bar"),
-		},
-		{
-			name: "invalid native lock - asset not properly configured",
-			lock: &lockuptypes.PeriodLock{
-				Owner:    lockOwner.String(),
-				Coins:    sdk.NewCoins(sdk.NewCoin("bar", osmomath.NewInt(100))),
-				Duration: time.Hour * 24 * 21,
-				ID:       1,
-			},
-			superfluidAssetToSet: types.SuperfluidAsset{Denom: "foo", AssetType: types.SuperfluidAssetTypeNative},
-			expectedErr:          errorsmod.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", "bar"),
 		},
 	}
 
@@ -851,7 +813,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 				bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
 				s.Require().NoError(err)
 				supplyBefore := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
-				osmoAmount, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokensIfNonNative(s.Ctx, intermediaryAcc.Denom, tc.unlockAmount)
+				osmoAmount, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(s.Ctx, intermediaryAcc.Denom, tc.unlockAmount)
 				s.Require().NoError(err)
 
 				unbondLockStartTime := startTime.Add(time.Hour)
@@ -1038,7 +1000,7 @@ func (s *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 				denom := intermediaryAcc.Denom
 				_, err := s.App.SuperfluidKeeper.GetSuperfluidAsset(s.Ctx, denom)
 				s.Require().NoError(err)
-				expAmount := s.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(s.Ctx, decAmt.RoundInt(), denom)
+				expAmount := s.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(s.Ctx, decAmt.RoundInt())
 
 				// check delegation changes
 				valAddr, err := sdk.ValAddressFromBech32(intermediaryAcc.ValAddr)
@@ -1477,7 +1439,7 @@ func (s *KeeperTestSuite) TestConvertGammSharesToOsmoAndStake() {
 			stakeDenomCoin := exitCoins.AmountOf(bondDenom)
 			// use cache context to get expected amount after swap without changing test state
 			cc, _ := s.Ctx.CacheContext()
-			tokenOutAmt, err := s.App.PoolManagerKeeper.SwapExactAmountIn(cc, sender, poolId, nonStakeDenomCoin, bondDenom, osmomath.ZeroInt())
+			tokenOutAmt, _, err := s.App.PoolManagerKeeper.SwapExactAmountIn(cc, sender, poolId, nonStakeDenomCoin, bondDenom, osmomath.ZeroInt())
 			s.Require().NoError(err)
 			expectedTotalAmtStaked := tokenOutAmt.Add(stakeDenomCoin)
 
@@ -1791,7 +1753,7 @@ func (s *KeeperTestSuite) getExpectedBondDenomPoolAmtAfterConvert(sender sdk.Acc
 			nonOsmoCoin = exitCoin
 		}
 	}
-	_, err = s.App.PoolManagerKeeper.SwapExactAmountIn(cc, sender, poolId, nonOsmoCoin, bondDenom, osmomath.ZeroInt())
+	_, _, err = s.App.PoolManagerKeeper.SwapExactAmountIn(cc, sender, poolId, nonOsmoCoin, bondDenom, osmomath.ZeroInt())
 	s.Require().NoError(err)
 	expectedLiquidity, err := s.App.GAMMKeeper.GetTotalPoolLiquidity(cc, poolId)
 	s.Require().NoError(err)

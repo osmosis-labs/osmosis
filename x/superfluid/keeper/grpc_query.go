@@ -16,17 +16,17 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
 
 	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -234,10 +234,9 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 	}
 
 	res := types.SuperfluidDelegationsByDelegatorResponse{
-		SuperfluidDelegationRecords:        []types.SuperfluidDelegationRecord{},
-		TotalDelegatedCoins:                sdk.NewCoins(),
-		TotalEquivalentStakedAmount:        sdk.NewCoin(appparams.BaseCoinUnit, osmomath.ZeroInt()),
-		TotalEquivalentNonOsmoStakedAmount: sdk.NewCoin(appparams.BaseCoinUnit, osmomath.ZeroInt()),
+		SuperfluidDelegationRecords: []types.SuperfluidDelegationRecord{},
+		TotalDelegatedCoins:         sdk.NewCoins(),
+		TotalEquivalentStakedAmount: sdk.NewCoin(appparams.BaseCoinUnit, osmomath.ZeroInt()),
 	}
 
 	syntheticLocks := q.Keeper.lk.GetAllSyntheticLockupsByAddr(ctx, delAddr)
@@ -279,10 +278,6 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 		)
 		res.TotalDelegatedCoins = res.TotalDelegatedCoins.Add(lockedCoins)
 		res.TotalEquivalentStakedAmount = res.TotalEquivalentStakedAmount.Add(coin)
-		if !IsNonNative(baseDenom) {
-			res.TotalEquivalentNonOsmoStakedAmount = res.TotalEquivalentNonOsmoStakedAmount.Add(
-				sdk.NewCoin(appparams.BaseCoinUnit, coin.Amount))
-		}
 	}
 
 	return &res, nil
@@ -499,7 +494,7 @@ func (q Querier) EstimateSuperfluidDelegatedAmountByValidatorDenom(goCtx context
 	}
 
 	syntheticOsmoAmt := delegation.Shares.Quo(val.DelegatorShares).MulInt(val.Tokens)
-	baseAmount := q.Keeper.UnriskAdjustOsmoValue(ctx, syntheticOsmoAmt, req.Denom).Quo(q.Keeper.GetOsmoEquivalentMultiplier(ctx, req.Denom)).RoundInt()
+	baseAmount := q.Keeper.UnriskAdjustOsmoValue(ctx, syntheticOsmoAmt).Quo(q.Keeper.GetOsmoEquivalentMultiplier(ctx, req.Denom)).RoundInt()
 
 	return &types.EstimateSuperfluidDelegatedAmountByValidatorDenomResponse{
 		TotalDelegatedCoins: sdk.NewCoins(sdk.NewCoin(req.Denom, baseAmount)),
@@ -604,11 +599,10 @@ func (q Querier) TotalDelegationByDelegator(goCtx context.Context, req *types.Qu
 	}
 
 	res := types.QueryTotalDelegationByDelegatorResponse{
-		SuperfluidDelegationRecords:        superfluidDelegationResp.SuperfluidDelegationRecords,
-		DelegationResponse:                 []stakingtypes.DelegationResponse{},
-		TotalDelegatedCoins:                superfluidDelegationResp.TotalDelegatedCoins,
-		TotalEquivalentStakedAmount:        superfluidDelegationResp.TotalEquivalentStakedAmount,
-		TotalEquivalentNonOsmoStakedAmount: superfluidDelegationResp.TotalEquivalentNonOsmoStakedAmount,
+		SuperfluidDelegationRecords: superfluidDelegationResp.SuperfluidDelegationRecords,
+		DelegationResponse:          []stakingtypes.DelegationResponse{},
+		TotalDelegatedCoins:         superfluidDelegationResp.TotalDelegatedCoins,
+		TotalEquivalentStakedAmount: superfluidDelegationResp.TotalEquivalentStakedAmount,
 	}
 
 	// this is for getting normal staking
@@ -637,7 +631,6 @@ func (q Querier) TotalDelegationByDelegator(goCtx context.Context, req *types.Qu
 
 		res.TotalDelegatedCoins = res.TotalDelegatedCoins.Add(lockedCoins)
 		res.TotalEquivalentStakedAmount = res.TotalEquivalentStakedAmount.Add(lockedCoins)
-		res.TotalEquivalentNonOsmoStakedAmount = res.TotalEquivalentNonOsmoStakedAmount.Add(lockedCoins)
 
 		return false
 	})
@@ -711,7 +704,7 @@ func (q Querier) filterConcentratedPositionLocks(ctx sdk.Context, positions []mo
 
 		baseDenom := lock.Coins.GetDenomByIndex(0)
 		lockedCoins := sdk.NewCoin(baseDenom, lock.GetCoins().AmountOf(baseDenom))
-		equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokensIfNonNative(ctx, baseDenom, lockedCoins.Amount)
+		equivalentAmount, err := q.Keeper.GetSuperfluidOSMOTokens(ctx, baseDenom, lockedCoins.Amount)
 		if err != nil {
 			return nil, err
 		}

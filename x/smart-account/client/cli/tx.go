@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v28/x/smart-account/types"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -61,8 +61,8 @@ func BuildAddAuthenticatorMsg(
 	}
 
 	return &types.MsgAddAuthenticator{
-		Type:   authenticatorType,
-		Data:   pubKeyBytes,
-		Sender: clientCtx.GetFromAddress().String(),
+		AuthenticatorType: authenticatorType,
+		Data:              pubKeyBytes,
+		Sender:            clientCtx.GetFromAddress().String(),
 	}, nil
 }

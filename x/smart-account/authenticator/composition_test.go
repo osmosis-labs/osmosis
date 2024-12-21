@@ -3,6 +3,7 @@ package authenticator_test
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -15,9 +16,9 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/osmosis-labs/osmosis/v25/x/smart-account/authenticator"
-	"github.com/osmosis-labs/osmosis/v25/x/smart-account/testutils"
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v25/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v28/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v28/x/smart-account/testutils"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v28/x/smart-account/types"
 )
 
 type AggregatedAuthenticatorsTest struct {
@@ -76,6 +77,10 @@ func (s *AggregatedAuthenticatorsTest) SetupTest() {
 	am.RegisterAuthenticator(s.spyAuth)
 }
 
+func (s *AggregatedAuthenticatorsTest) TearDownTest() {
+	os.RemoveAll(s.HomeDir)
+}
+
 func (s *AggregatedAuthenticatorsTest) TestAnyOf() {
 	// Define data
 	testData := []byte{}
@@ -84,6 +89,7 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOf() {
 	type testCase struct {
 		name             string
 		authenticators   []authenticator.Authenticator
+		expectInit       bool
 		expectSuccessful bool
 		expectConfirm    bool
 	}
@@ -92,72 +98,84 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOf() {
 		{
 			name:             "alwaysApprove + neverApprove",
 			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.neverApprove},
+			expectInit:       true,
 			expectSuccessful: true,
 			expectConfirm:    true,
 		},
 		{
 			name:             "neverApprove + neverApprove",
 			authenticators:   []authenticator.Authenticator{s.neverApprove, s.neverApprove},
+			expectInit:       true,
 			expectSuccessful: false,
 			expectConfirm:    false,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove",
 			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.alwaysApprove},
+			expectInit:       true,
 			expectSuccessful: true,
 			expectConfirm:    true,
 		},
 		{
 			name:             "neverApprove + alwaysApprove",
 			authenticators:   []authenticator.Authenticator{s.neverApprove, s.alwaysApprove},
+			expectInit:       true,
 			expectSuccessful: true,
 			expectConfirm:    true,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove + alwaysApprove",
 			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.alwaysApprove, s.alwaysApprove},
+			expectInit:       true,
 			expectSuccessful: true,
 			expectConfirm:    true,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove + neverApprove",
 			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.alwaysApprove, s.neverApprove},
+			expectInit:       true,
 			expectSuccessful: true,
 			expectConfirm:    true,
 		},
 		{
 			name:             "alwaysApprove + neverApprove + alwaysApprove",
 			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.neverApprove, s.alwaysApprove},
+			expectInit:       true,
 			expectSuccessful: true,
 			expectConfirm:    true,
 		},
 		{
 			name:             "neverApprove + neverApprove + alwaysApprove",
 			authenticators:   []authenticator.Authenticator{s.neverApprove, s.neverApprove, s.alwaysApprove},
+			expectInit:       true,
 			expectSuccessful: true,
 			expectConfirm:    true,
 		},
 		{
 			name:             "neverApprove + neverApprove + neverApprove",
 			authenticators:   []authenticator.Authenticator{s.neverApprove, s.neverApprove, s.neverApprove},
+			expectInit:       true,
 			expectSuccessful: false,
 			expectConfirm:    false,
 		},
 		{
 			name:             "approveAndBlock",
 			authenticators:   []authenticator.Authenticator{s.approveAndBlock},
+			expectInit:       false,
 			expectSuccessful: true,
 			expectConfirm:    false,
 		},
 		{
 			name:             "rejectAndConfirm",
 			authenticators:   []authenticator.Authenticator{s.rejectAndConfirm},
+			expectInit:       false,
 			expectSuccessful: false,
 			expectConfirm:    true,
 		},
 		{
 			name:             "approveAndBlock + rejectAndConfirm",
 			authenticators:   []authenticator.Authenticator{s.approveAndBlock, s.rejectAndConfirm},
+			expectInit:       true,
 			expectSuccessful: true,
 			expectConfirm:    true,
 		},
@@ -177,25 +195,30 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOf() {
 
 			data, _ := json.Marshal(initData)
 			initializedAuth, err := s.AnyOfAuth.Initialize(data)
-			s.Require().NoError(err)
+			if !tc.expectInit {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
 
-			// Generate authentication request
-			ak := s.OsmosisApp.AccountKeeper
-			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
-			// sample msg
-			msg := &bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 1))}
-			// sample tx
-			tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
-			s.Require().NoError(err)
-			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, s.OsmosisApp.AppCodec(), ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), msg, tx, 0, false, authenticator.SequenceMatch)
-			s.Require().NoError(err)
+				// Generate authentication request
+				ak := s.OsmosisApp.AccountKeeper
+				sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
+				// sample msg
+				msg := &bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 1))}
+				// sample tx
+				tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
+				s.Require().NoError(err)
+				request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, s.OsmosisApp.AppCodec(), ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), msg, tx, 0, false, authenticator.SequenceMatch)
+				s.Require().NoError(err)
 
-			// Attempt to authenticate using initialized authenticator
-			err = initializedAuth.Authenticate(s.Ctx, request)
-			s.Require().Equal(tc.expectSuccessful, err == nil)
+				// Attempt to authenticate using initialized authenticator
+				err = initializedAuth.Authenticate(s.Ctx, request)
+				s.Require().Equal(tc.expectSuccessful, err == nil)
 
-			err = initializedAuth.ConfirmExecution(s.Ctx, request)
-			s.Require().Equal(tc.expectConfirm, err == nil)
+				err = initializedAuth.ConfirmExecution(s.Ctx, request)
+				s.Require().Equal(tc.expectConfirm, err == nil)
+
+			}
 		})
 	}
 }
@@ -208,6 +231,7 @@ func (s *AggregatedAuthenticatorsTest) TestAllOf() {
 	type testCase struct {
 		name             string
 		authenticators   []authenticator.Authenticator
+		expectInit       bool
 		expectSuccessful bool
 		expectConfirm    bool
 	}
@@ -216,72 +240,84 @@ func (s *AggregatedAuthenticatorsTest) TestAllOf() {
 		{
 			name:             "alwaysApprove + neverApprove",
 			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.neverApprove},
+			expectInit:       true,
 			expectSuccessful: false,
 			expectConfirm:    false,
 		},
 		{
 			name:             "neverApprove + neverApprove",
 			authenticators:   []authenticator.Authenticator{s.neverApprove, s.neverApprove},
+			expectInit:       true,
 			expectSuccessful: false,
 			expectConfirm:    false,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove",
 			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.alwaysApprove},
+			expectInit:       true,
 			expectSuccessful: true,
 			expectConfirm:    true,
 		},
 		{
 			name:             "neverApprove + alwaysApprove",
 			authenticators:   []authenticator.Authenticator{s.neverApprove, s.alwaysApprove},
+			expectInit:       true,
 			expectSuccessful: false,
 			expectConfirm:    false,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove + alwaysApprove",
 			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.alwaysApprove, s.alwaysApprove},
+			expectInit:       true,
 			expectSuccessful: true,
 			expectConfirm:    true,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove + neverApprove",
 			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.alwaysApprove, s.neverApprove},
+			expectInit:       true,
 			expectSuccessful: false,
 			expectConfirm:    false,
 		},
 		{
 			name:             "alwaysApprove + neverApprove + alwaysApprove",
 			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.neverApprove, s.alwaysApprove},
+			expectInit:       true,
 			expectSuccessful: false,
 			expectConfirm:    false,
 		},
 		{
 			name:             "neverApprove + neverApprove + alwaysApprove",
 			authenticators:   []authenticator.Authenticator{s.neverApprove, s.neverApprove, s.alwaysApprove},
+			expectInit:       true,
 			expectSuccessful: false,
 			expectConfirm:    false,
 		},
 		{
 			name:             "neverApprove + neverApprove + neverApprove",
 			authenticators:   []authenticator.Authenticator{s.neverApprove, s.neverApprove, s.neverApprove},
+			expectInit:       true,
 			expectSuccessful: false,
 			expectConfirm:    false,
 		},
 		{
 			name:             "approveAndBlock",
 			authenticators:   []authenticator.Authenticator{s.approveAndBlock},
+			expectInit:       false,
 			expectSuccessful: true,
 			expectConfirm:    false,
 		},
 		{
 			name:             "rejectAndConfirm",
 			authenticators:   []authenticator.Authenticator{s.rejectAndConfirm},
+			expectInit:       false,
 			expectSuccessful: false,
 			expectConfirm:    true,
 		},
 		{
 			name:             "approveAndBlock + rejectAndConfirm",
 			authenticators:   []authenticator.Authenticator{s.approveAndBlock, s.rejectAndConfirm},
+			expectInit:       true,
 			expectSuccessful: false,
 			expectConfirm:    false,
 		},
@@ -300,27 +336,33 @@ func (s *AggregatedAuthenticatorsTest) TestAllOf() {
 
 			data, _ := json.Marshal(initData)
 			initializedAuth, err := s.AllOfAuth.Initialize(data)
-			s.Require().NoError(err)
+			if !tc.expectInit {
+				s.Require().Error(err)
 
-			// Generate authentication request
-			ak := s.OsmosisApp.AccountKeeper
-			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
+			} else {
+				s.Require().NoError(err)
 
-			// sample msg
-			msg := &bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 1))}
-			// sample tx
-			tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
-			s.Require().NoError(err)
-			cdc := s.OsmosisApp.AppCodec()
-			request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, cdc, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), msg, tx, 0, false, authenticator.SequenceMatch)
-			s.Require().NoError(err)
+				// Generate authentication request
+				ak := s.OsmosisApp.AccountKeeper
+				sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
 
-			// Attempt to authenticate using initialized authenticator
-			err = initializedAuth.Authenticate(s.Ctx, request)
-			s.Require().Equal(tc.expectSuccessful, err == nil)
+				// sample msg
+				msg := &bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 1))}
+				// sample tx
+				tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
+				s.Require().NoError(err)
+				cdc := s.OsmosisApp.AppCodec()
+				request, err := authenticator.GenerateAuthenticationRequest(s.Ctx, cdc, ak, sigModeHandler, s.TestAccAddress[0], s.TestAccAddress[0], nil, sdk.NewCoins(), msg, tx, 0, false, authenticator.SequenceMatch)
+				s.Require().NoError(err)
 
-			err = initializedAuth.ConfirmExecution(s.Ctx, request)
-			s.Require().Equal(tc.expectConfirm, err == nil)
+				// Attempt to authenticate using initialized authenticator
+				err = initializedAuth.Authenticate(s.Ctx, request)
+				s.Require().Equal(tc.expectSuccessful, err == nil)
+
+				err = initializedAuth.ConfirmExecution(s.Ctx, request)
+				s.Require().Equal(tc.expectConfirm, err == nil)
+
+			}
 		})
 	}
 }
@@ -385,7 +427,7 @@ func (s *AggregatedAuthenticatorsTest) TestComposedAuthenticator() {
 			success: false,
 		},
 		{
-			auth:    AnyOf(AnyOf(never, never, never), AnyOf(never, never, never), AllOf(always)),
+			auth:    AnyOf(AnyOf(never, never, never), AnyOf(never, never, never), AllOf(always, always)),
 			success: true,
 		},
 	}
@@ -521,13 +563,6 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 	}
 
 	testCases := []testCase{
-		{
-			name:          "AllOf(a)",
-			compositeAuth: *allOf(spy("a")),
-			id:            "1",
-			names:         []string{"a"},
-			expectedIds:   []string{"1.0"},
-		},
 		{
 			name:          "AllOf(a, b)",
 			compositeAuth: *allOf(spy("a"), spy("b")),

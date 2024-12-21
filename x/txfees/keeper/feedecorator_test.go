@@ -3,12 +3,27 @@ package keeper_test
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+
+	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
+
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	"github.com/osmosis-labs/osmosis/v25/x/txfees/types"
+	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
+	"github.com/osmosis-labs/osmosis/v28/x/txfees/keeper"
+	"github.com/osmosis-labs/osmosis/v28/x/txfees/types"
 )
 
 func (s *KeeperTestSuite) TestFeeDecorator() {
@@ -168,4 +183,188 @@ func (s *KeeperTestSuite) TestFeeDecorator() {
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestMempoolFeeDecorator_AnteHandle_MsgTransfer() {
+	s.SetupTest(false)
+	mfd := keeper.NewMempoolFeeDecorator(*s.App.TxFeesKeeper, types.NewDefaultMempoolFeeOptions())
+
+	// Test cases
+	testCases := []struct {
+		name        string
+		msg         sdk.Msg
+		isCheckTx   bool
+		expectedErr error
+	}{
+		{
+			name: "MsgTransfer with valid size",
+			msg: &ibctransfertypes.MsgTransfer{
+				SourcePort:       "transfer",
+				SourceChannel:    "channel-0",
+				Token:            sdk.NewCoin("uosmo", osmomath.NewInt(1000)),
+				Sender:           "osmo1sender",
+				Receiver:         "osmo1receiver",
+				TimeoutHeight:    clienttypes.Height{},
+				TimeoutTimestamp: 0,
+				Memo:             "valid memo",
+			},
+			isCheckTx: true,
+		},
+		{
+			name: "MsgTransfer in total too large",
+			msg: &ibctransfertypes.MsgTransfer{
+				SourcePort:       "transfer",
+				SourceChannel:    "channel-0",
+				Token:            sdk.NewCoin("uosmo", osmomath.NewInt(1000)),
+				Sender:           string(make([]byte, 35001)),
+				Receiver:         string(make([]byte, 65000)),
+				TimeoutHeight:    clienttypes.Height{},
+				TimeoutTimestamp: 0,
+				Memo:             string(make([]byte, 400000)),
+			},
+			isCheckTx:   true,
+			expectedErr: errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "msg size is too large"),
+		},
+		{
+			name: "MsgTransfer with memo too large",
+			msg: &ibctransfertypes.MsgTransfer{
+				SourcePort:       "transfer",
+				SourceChannel:    "channel-0",
+				Token:            sdk.NewCoin("uosmo", osmomath.NewInt(1000)),
+				Sender:           "osmo1sender",
+				Receiver:         "osmo1receiver",
+				TimeoutHeight:    clienttypes.Height{},
+				TimeoutTimestamp: 0,
+				Memo:             string(make([]byte, 400001)), // 400KB + 1
+			},
+			isCheckTx:   true,
+			expectedErr: errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "memo is too large"),
+		},
+		{
+			name: "MsgTransfer with receiver too large",
+			msg: &ibctransfertypes.MsgTransfer{
+				SourcePort:       "transfer",
+				SourceChannel:    "channel-0",
+				Token:            sdk.NewCoin("uosmo", osmomath.NewInt(1000)),
+				Sender:           "osmo1sender",
+				Receiver:         string(make([]byte, 65001)), // 65KB + 1
+				TimeoutHeight:    clienttypes.Height{},
+				TimeoutTimestamp: 0,
+				Memo:             "valid memo",
+			},
+			isCheckTx:   true,
+			expectedErr: errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "receiver address is too large"),
+		},
+		{
+			name: "MsgSendTx with valid packet data size",
+			msg: &icacontrollertypes.MsgSendTx{
+				Owner:        "osmo1owner",
+				ConnectionId: "connection-0",
+				PacketData: icatypes.InterchainAccountPacketData{
+					Type: icatypes.EXECUTE_TX,
+					Data: make([]byte, 400000),
+					Memo: "valid memo",
+				},
+			},
+			isCheckTx: true,
+		},
+		{
+			name: "MsgSendTx with packet data size too large",
+			msg: &icacontrollertypes.MsgSendTx{
+				Owner:        "osmo1owner",
+				ConnectionId: "connection-0",
+				PacketData: icatypes.InterchainAccountPacketData{
+					Type: icatypes.EXECUTE_TX,
+					Data: make([]byte, 400000),         // 400KB
+					Memo: string(make([]byte, 100000)), // 100KB
+				},
+			},
+			isCheckTx:   true,
+			expectedErr: errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "packet data is too large"),
+		},
+		{
+			name: "MsgSendTx with owner address too large",
+			msg: &icacontrollertypes.MsgSendTx{
+				Owner:        string(make([]byte, 65001)), // 65KB + 1,
+				ConnectionId: "connection-0",
+				PacketData: icatypes.InterchainAccountPacketData{
+					Type: icatypes.EXECUTE_TX,
+					Data: make([]byte, 400000),
+					Memo: "valid memo",
+				},
+			},
+			isCheckTx:   true,
+			expectedErr: errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "owner address is too large"),
+		},
+		{
+			name: "MsgSendTx with owner address too large, no error though due to not being checkTx",
+			msg: &icacontrollertypes.MsgSendTx{
+				Owner:        string(make([]byte, 65001)), // 65KB + 1,
+				ConnectionId: "connection-0",
+				PacketData: icatypes.InterchainAccountPacketData{
+					Type: icatypes.EXECUTE_TX,
+					Data: make([]byte, 400000),
+					Memo: "valid memo",
+				},
+			},
+			isCheckTx: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			s.Ctx = s.Ctx.WithBlockHeight(1_000_000_000).WithIsCheckTx(tc.isCheckTx)
+			baseDenom, _ := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
+			txFee := sdk.NewCoins(sdk.NewCoin(baseDenom, osmomath.NewInt(250000)))
+			tx, err := s.prepareTx(tc.msg, txFee)
+			s.Require().NoError(err)
+
+			_, err = mfd.AnteHandle(s.Ctx, tx, false, nextAnteHandler)
+
+			if tc.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().Equal(tc.expectedErr.Error(), err.Error())
+			} else {
+				s.Require().NoError(err)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) prepareTx(msg sdk.Msg, txFee sdk.Coins) (sdk.Tx, error) {
+	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
+	priv0, _, addr0 := testdata.KeyTestPubAddr()
+	acc1 := s.App.AccountKeeper.NewAccountWithAddress(s.Ctx, addr0)
+	s.App.AccountKeeper.SetAccount(s.Ctx, acc1)
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0}, []uint64{0}, []uint64{0}
+	signerData := authsigning.SignerData{
+		ChainID:       s.Ctx.ChainID(),
+		AccountNumber: accNums[0],
+		Sequence:      accSeqs[0],
+	}
+
+	sigV2, err := clienttx.SignWithPrivKey(
+		s.Ctx,
+		1,
+		signerData,
+		txBuilder,
+		privs[0],
+		s.clientCtx.TxConfig,
+		accSeqs[0],
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = testutil.FundAccount(s.Ctx, s.App.BankKeeper, addr0, txFee)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := s.BuildTx(txBuilder, []sdk.Msg{msg}, sigV2, "", txFee, 30000000)
+	return tx, nil
+}
+
+func nextAnteHandler(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+	return ctx, nil
 }

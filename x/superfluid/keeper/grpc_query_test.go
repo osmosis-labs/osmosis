@@ -8,9 +8,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	appparams "github.com/osmosis-labs/osmosis/v25/app/params"
-	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
+	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
+	cltypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestGRPCParams() {
@@ -70,7 +70,7 @@ func (s *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
 		for _, result := range res.Assets {
 			// check osmo equivalent is correct
 			actual_response_osmo := result.OsmoEquivalent
-			needed_response_osmo, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokensIfNonNative(ctx, denom, osmomath.NewInt(delegation_amount))
+			needed_response_osmo, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(ctx, denom, osmomath.NewInt(delegation_amount))
 			s.Require().NoError(err)
 
 			s.Require().Equal(actual_response_osmo, needed_response_osmo)

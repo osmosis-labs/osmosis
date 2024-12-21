@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -78,29 +79,29 @@ func (protoRevDec ProtoRevDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simu
 func (k Keeper) AnteHandleCheck(ctx sdk.Context) error {
 	// Only execute the posthandler if the module is enabled
 	if !k.GetProtoRevEnabled(ctx) {
-		return fmt.Errorf("protorev is not enabled")
+		return errors.New("protorev is not enabled")
 	}
 
 	latestBlockHeight, err := k.GetLatestBlockHeight(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get latest block height")
+		return errors.New("failed to get latest block height")
 	}
 
 	currentRouteCount, err := k.GetPointCountForBlock(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get current pool point count")
+		return errors.New("failed to get current pool point count")
 	}
 
 	maxRouteCount, err := k.GetMaxPointsPerBlock(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get max pool points per block")
+		return errors.New("failed to get max pool points per block")
 	}
 
 	// Only execute the posthandler if the number of routes to be processed per block has not been reached
 	blockHeight := uint64(ctx.BlockHeight())
 	if blockHeight == latestBlockHeight {
 		if currentRouteCount >= maxRouteCount {
-			return fmt.Errorf("max pool points for the current block has been reached")
+			return errors.New("max pool points for the current block has been reached")
 		}
 	} else {
 		// Reset the current pool point count

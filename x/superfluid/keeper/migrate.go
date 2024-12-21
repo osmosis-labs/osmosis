@@ -1,16 +1,17 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v25/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v28/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/types"
 )
 
 type MigrationType int
@@ -66,7 +67,7 @@ func (k Keeper) RouteLockedBalancerToConcentratedMigration(ctx sdk.Context, send
 		positionData, migratedPoolIDs, err = k.gk.MigrateUnlockedPositionFromBalancerToConcentrated(ctx, sender, sharesToMigrate, tokenOutMins)
 		concentratedLockId = 0
 	default:
-		return cltypes.CreateFullRangePositionData{}, types.MigrationPoolIDs{}, 0, fmt.Errorf("unsupported migration type")
+		return cltypes.CreateFullRangePositionData{}, types.MigrationPoolIDs{}, 0, errors.New("unsupported migration type")
 	}
 
 	return positionData, migratedPoolIDs, concentratedLockId, err

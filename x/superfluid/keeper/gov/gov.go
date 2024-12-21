@@ -6,10 +6,10 @@ import (
 	"sort"
 	"strings"
 
-	cltypes "github.com/osmosis-labs/osmosis/v25/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/keeper/internal/events"
-	"github.com/osmosis-labs/osmosis/v25/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/v28/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -21,9 +21,6 @@ func HandleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, ek type
 			if asset.AssetType != types.SuperfluidAssetTypeConcentratedShare {
 				return fmt.Errorf("concentrated LP share denom (%s) must have asset type %s", asset.Denom, types.SuperfluidAssetTypeConcentratedShare)
 			}
-		}
-		if err := k.ValidateNativeAsset(asset); err != nil {
-			return fmt.Errorf("native asset (%s) must have a price route", asset.Denom)
 		}
 		if err := k.AddNewSuperfluidAsset(ctx, asset); err != nil {
 			return err

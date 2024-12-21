@@ -7,12 +7,12 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v25/app/apptesting"
-	gammtypes "github.com/osmosis-labs/osmosis/v25/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v25/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v25/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v25/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
+	gammtypes "github.com/osmosis-labs/osmosis/v28/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v28/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v28/x/pool-incentives/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v28/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
 )
 
 type KeeperTestSuite struct {
@@ -418,8 +418,8 @@ func (suite *KeeperTestSuite) TestGetInternalGaugeIDForPool() {
 			expectError: types.UnsupportedPoolTypeError{PoolID: poolInfo.CosmWasmPoolID, PoolType: poolmanagertypes.CosmWasm},
 		},
 		"pool with given ID does not exist": {
-			poolID:      poolInfo.CosmWasmPoolID + 1,
-			expectError: poolmanagertypes.FailedToFindRouteError{PoolId: poolInfo.CosmWasmPoolID + 1},
+			poolID:      poolInfo.AlloyedPoolID + 1,
+			expectError: poolmanagertypes.FailedToFindRouteError{PoolId: poolInfo.AlloyedPoolID + 1},
 		},
 	}
 

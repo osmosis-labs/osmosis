@@ -11,8 +11,9 @@ import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
 import "cosmos_proto/cosmos.proto";
 import "osmosis/gamm/v1beta1/shared.proto";
+import "osmosis/gamm/v1beta1/params.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v25/x/gamm/types";
+option go_package = "github.com/osmosis-labs/osmosis/v28/x/gamm/types";
 
 service Query {
   rpc Pools(QueryPoolsRequest) returns (QueryPoolsResponse) {
@@ -124,7 +125,16 @@ service Query {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/cfmm_concentrated_pool_links";
   }
+
+  // Params returns gamm module params.
+  rpc Params(ParamsRequest) returns (ParamsResponse) {
+    option (google.api.http).get = "/osmosis/gamm/v1beta1/params";
+  }
 }
+
+//=============================== Params
+message ParamsRequest {}
+message ParamsResponse { Params params = 1 [ (gogoproto.nullable) = false ]; }
 
 //=============================== Pool
 // Deprecated: please use the alternative in x/poolmanager
@@ -265,8 +275,11 @@ message QuerySpotPriceRequest {
       [ (gogoproto.moretags) = "yaml:\"base_asset_denom\"" ];
   string quote_asset_denom = 3
       [ (gogoproto.moretags) = "yaml:\"quote_asset_denom\"" ];
-  reserved 4;
-  reserved "withSwapFee";
+  // DEPRECATED
+  bool withSwapFee = 4 [
+    (gogoproto.moretags) = "yaml:\"with_swap_fee\",deprecated:\"true\"",
+    deprecated = true
+  ];
 }
 
 //=============================== PoolsWithFilter

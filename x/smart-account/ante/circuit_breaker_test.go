@@ -2,6 +2,9 @@ package ante_test
 
 import (
 	"encoding/hex"
+	"fmt"
+	"math/rand"
+	"os"
 	"testing"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -13,9 +16,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v25/app"
-	"github.com/osmosis-labs/osmosis/v25/app/params"
-	"github.com/osmosis-labs/osmosis/v25/x/smart-account/ante"
+	"github.com/osmosis-labs/osmosis/v28/app"
+	"github.com/osmosis-labs/osmosis/v28/app/params"
+	"github.com/osmosis-labs/osmosis/v28/x/smart-account/ante"
 )
 
 // AuthenticatorCircuitBreakerAnteSuite is a test suite for the authenticator and CircuitBreaker AnteDecorator.
@@ -28,6 +31,7 @@ type AuthenticatorCircuitBreakerAnteSuite struct {
 	TestKeys               []string
 	TestAccAddress         []sdk.AccAddress
 	TestPrivKeys           []*secp256k1.PrivKey
+	HomeDir                string
 }
 
 // TestAuthenticatorCircuitBreakerAnteSuite runs the test suite for the authenticator and CircuitBreaker AnteDecorator.
@@ -48,7 +52,8 @@ func (s *AuthenticatorCircuitBreakerAnteSuite) SetupTest() {
 	s.EncodingConfig = app.MakeEncodingConfig()
 
 	// Initialize the Osmosis application
-	s.OsmosisApp = app.Setup(false)
+	s.HomeDir = fmt.Sprintf("%d", rand.Int())
+	s.OsmosisApp = app.SetupWithCustomHome(false, s.HomeDir)
 
 	s.Ctx = s.OsmosisApp.NewContextLegacy(false, tmproto.Header{})
 
@@ -69,6 +74,10 @@ func (s *AuthenticatorCircuitBreakerAnteSuite) SetupTest() {
 		// Add the test accounts' addresses to an array for later use
 		s.TestAccAddress = append(s.TestAccAddress, accAddress)
 	}
+}
+
+func (s *AuthenticatorCircuitBreakerAnteSuite) TearDownTest() {
+	os.RemoveAll(s.HomeDir)
 }
 
 // MockAnteDecorator used to test the CircuitBreaker flow
