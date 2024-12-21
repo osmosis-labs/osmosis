@@ -130,6 +130,22 @@ func (k Keeper) GetFeeToken(ctx sdk.Context, denom string) (types.FeeToken, erro
 	return feeToken, nil
 }
 
+func (k Keeper) IsFeeToken(ctx sdk.Context, denom string) (bool, error) {
+	prefixStore := k.GetFeeTokensStore(ctx)
+	if !prefixStore.Has([]byte(denom)) {
+		return false, nil
+	}
+	bz := prefixStore.Get([]byte(denom))
+
+	feeToken := types.FeeToken{}
+	err := proto.Unmarshal(bz, &feeToken)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 // setFeeToken sets a new fee token record for a specific denom.
 // PoolID is just the pool to swap rate between alt fee token and native fee token.
 // If the feeToken pool ID is 0, deletes the fee Token entry.
