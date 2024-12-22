@@ -27,25 +27,29 @@ def main():
         main_branch = "main"
 
     # Fetch the latest branches
-    subprocess.call(['git', 'fetch'], stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE)
+    subprocess.call(['git', 'fetch'])
 
     main_commits = get_commits(main_branch)
     release_commits = get_commits(release_branch)
 
+    if not main_commits:
+        print(f"No commits found for the {main_branch} branch.")
+        return
+    if not release_commits:
+        print(f"No commits found for the {release_branch} branch.")
+        return
+
     main_pr_numbers = {get_pr_number(commit) for commit in main_commits}
     release_pr_numbers = {get_pr_number(commit) for commit in release_commits}
 
-    # Find commits in main branch that are not backported to release branch
+    # Find commits in the main branch that are not backported to the release branch
     missing_commits = [commit for commit in main_commits if get_pr_number(
         commit) not in release_pr_numbers]
 
     if not missing_commits:
-        print(
-            f"All commits from {main_branch} are present in {release_branch}.")
+        print(f"All commits from {main_branch} are present in {release_branch}.")
     else:
-        print(
-            f"\nCommits present in {main_branch} but missing in {release_branch}:")
+        print(f"\nCommits present in {main_branch} but missing in {release_branch}:")
         for commit in missing_commits:
             print(commit)
 
