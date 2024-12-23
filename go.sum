@@ -400,8 +400,8 @@ github.com/cosmos/ics23/go v0.11.0 h1:jk5skjT0TqX5e5QJbEnwXIS2yI2vnmLOgpQPeM5Rtn
 github.com/cosmos/ics23/go v0.11.0/go.mod h1:A8OjxPE67hHST4Icw94hOxxFEJMBG031xIGF/JHNIY0=
 github.com/cosmos/ledger-cosmos-go v0.13.3 h1:7ehuBGuyIytsXbd4MP43mLeoN2LTOEnk5nvue4rK+yM=
 github.com/cosmos/ledger-cosmos-go v0.13.3/go.mod h1:HENcEP+VtahZFw38HZ3+LS3Iv5XV6svsnkk9vdJtLr8=
-github.com/cosmos/rosetta v0.50.10 h1:JML9H+TYnpiUn1TucVmV5XVH9YF/Nd/GJqesaIpXq0c=
-github.com/cosmos/rosetta v0.50.10/go.mod h1:x7LfYPXzDkS3/8idE+ASifOokJacOiJGdrlj6/r8Bz0=
+github.com/cosmos/rosetta v0.50.11 h1:FAM+D1JUvTrxKpbnLRimdPnEoNIcl2MGZ08+o0huYE0=
+github.com/cosmos/rosetta v0.50.11/go.mod h1:293MJ7op8JNcBS8s33r8cBqUqld2Hc6Hiw3pso2m8pM=
 github.com/cosmos/rosetta-sdk-go v0.10.0 h1:E5RhTruuoA7KTIXUcMicL76cffyeoyvNybzUGSKFTcM=
 github.com/cosmos/rosetta-sdk-go v0.10.0/go.mod h1:SImAZkb96YbwvoRkzSMQB6noNJXFgWl/ENIznEoYQI4=
 github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d/go.mod h1:maD7wRr/U5Z6m/iR4s+kqSMx2CaBsrgA7czyZG/E6dU=
