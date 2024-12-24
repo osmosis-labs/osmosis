@@ -1294,10 +1294,7 @@ func RegisterSwaggerAPI(ctx client.Context, rtr *mux.Router) {
 
 // GetMaccPerms returns a copy of the module account permissions.
 func GetMaccPerms() map[string][]string {
-	dupMaccPerms := make(map[string][]string)
-	for k, v := range maccPerms {
-		dupMaccPerms[k] = v
-	}
+	dupMaccPerms := maps.Clone(maccPerms)
 
 	return dupMaccPerms
 }
