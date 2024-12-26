@@ -35,7 +35,7 @@ func randInstancesEqual(rands []*rand.Rand) bool {
 func TestRandManagerGetRandIndependence(t *testing.T) {
 	rms := getKDefaultRandManager(3)
 	expectedEqualRands := []*rand.Rand{}
-	// We want to test that in each of the the following three scenarios, r2 is equal:
+	// We want to test that in each of the following three scenarios, r2 is equal:
 	// 1) r1 := rm.GetRand(); r2 := rm.GetRand();
 	// 2) r1 := rm.GetRand(); r2 := rm.GetRand(); _ = r1.Int()
 	// 3) r1 := rm.GetRand(); r1.Int(); r2 := rm.GetRand();
@@ -62,7 +62,7 @@ func TestRandManagerGetRandIndependence(t *testing.T) {
 func TestRandManagerSameSeedGetSeededRand(t *testing.T) {
 	rms := getKDefaultRandManager(3)
 	seed := "test seed"
-	// We want to test that in each of the the following three scenarios, we generated the same 'trace' of values.
+	// We want to test that in each of the following three scenarios, we generated the same 'trace' of values.
 	// 1) r1 := rm.GetSeededRand(seed); r1.Int(); r2 := rm.GetSeededRand(seed); r2.Int();
 	// 2) r1 := rm.GetSeededRand(seed); r2 := rm.GetSeededRand(seed); r1.Int(); r2.Int();
 	// 3) r1 := rm.GetSeededRand(seed); r2 := rm.GetSeededRand(seed); r2.Int(); r1.Int();
