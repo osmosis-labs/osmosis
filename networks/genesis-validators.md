@@ -275,7 +275,7 @@ osmosisd gentx <key_name> 1000000uosmo \
   --chain-id="osmosis-1" \
   --moniker=osmosiswhale \
   --website="https://osmosis.zone" \
-  --details="We love Osmossis" \
+  --details="We love Osmosis" \
   --commission-rate="0.1" \
   --commission-max-rate="0.20" \
   --commission-max-change-rate="0.01" \
@@ -586,7 +586,7 @@ Guide"](https://github.com/osmosis-labs/networks/blob/main/genesis-validators.md
 is a derivative of ["Agoric Validator
 Guide"](https://github.com/Agoric/agoric-sdk/wiki/Validator-Guide) used
 under [CC BY](http://creativecommons.org/licenses/by/4.0/). The Agoric
-validator gudie is itself is a derivative of ["Validating Kava
+validator guide is itself is a derivative of ["Validating Kava
 Mainnet"](https://medium.com/kava-labs/validating-kava-mainnet-72fa1b6ea579)
 by [Kevin Davis](https://medium.com/@kevin_35106), used under [CC
 BY](http://creativecommons.org/licenses/by/4.0/). "Osmosis Validator
