@@ -51,7 +51,7 @@ As the usage of the blockchain grows, the server requirements may
 increase as well, so you should have a plan for updating your server as
 well.
 
-`<sup>`{=html}\[1\]`</sup>`{=html}: You'll often see 4 distincy physical
+`<sup>`{=html}\[1\]`</sup>`{=html}: You'll often see 4 distinct physical
 cores as a machine with 8 logical cores due to hyperthreading. The
 distinct logical cores are helpful for things that are I/O bound, but
 threshold decryption will have validators running significant, non-I/O
@@ -168,7 +168,7 @@ curl https://raw.githubusercontent.com/osmosis-labs/networks/main/osmosis-1/preg
 
 ### Import Validator Key
 
-The create a gentx, you will need the private key to an address that
+To create a gentx, you will need the private key to an address that
 received an allocation in the airdrop.
 
 There are a couple options for how to import a key into `osmosisd`.
@@ -275,7 +275,7 @@ osmosisd gentx <key_name> 1000000uosmo \
   --chain-id="osmosis-1" \
   --moniker=osmosiswhale \
   --website="https://osmosis.zone" \
-  --details="We love Osmossis" \
+  --details="We love Osmosis" \
   --commission-rate="0.1" \
   --commission-max-rate="0.20" \
   --commission-max-change-rate="0.01" \
@@ -586,7 +586,7 @@ Guide"](https://github.com/osmosis-labs/networks/blob/main/genesis-validators.md
 is a derivative of ["Agoric Validator
 Guide"](https://github.com/Agoric/agoric-sdk/wiki/Validator-Guide) used
 under [CC BY](http://creativecommons.org/licenses/by/4.0/). The Agoric
-validator gudie is itself is a derivative of ["Validating Kava
+validator guide is itself is a derivative of ["Validating Kava
 Mainnet"](https://medium.com/kava-labs/validating-kava-mainnet-72fa1b6ea579)
 by [Kevin Davis](https://medium.com/@kevin_35106), used under [CC
 BY](http://creativecommons.org/licenses/by/4.0/). "Osmosis Validator
