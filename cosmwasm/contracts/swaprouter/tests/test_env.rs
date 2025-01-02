@@ -10,6 +10,13 @@ pub struct TestEnv {
     pub contract_address: String,
     pub owner: SigningAccount,
 }
+
+impl Default for TestEnv {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TestEnv {
     pub fn new() -> Self {
         let app = OsmosisTestApp::new();

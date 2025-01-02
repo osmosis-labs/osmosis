@@ -230,7 +230,7 @@ fn assert_input_decreased_and_output_increased(
 }
 
 fn get_amount(
-    balances: &Vec<osmosis_test_tube::osmosis_std::types::cosmos::base::v1beta1::Coin>,
+    balances: &[osmosis_test_tube::osmosis_std::types::cosmos::base::v1beta1::Coin],
     denom: &str,
 ) -> u128 {
     balances
