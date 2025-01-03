@@ -37,7 +37,7 @@ pub fn build_memo(
 ) -> Result<String, ContractError> {
     // If the memo is provided we want to include it in the IBC message. If not,
     // we default to an empty object
-    let memo = next_memo.unwrap_or_else(|| serde_json_wasm::from_str("{}").unwrap());
+    let memo = next_memo.unwrap_or_else(SerializableJson::empty);
 
     // Include the callback key in the memo without modifying the rest of the
     // provided memo

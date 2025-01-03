@@ -118,9 +118,16 @@ impl SerializableJson {
         self.0
     }
 
-    pub fn new(mut value: serde_cw_value::Value) -> Self {
+    pub fn new(mut value: serde_cw_value::Value) -> Result<Self, RegistryError> {
         flatten_cw_value(&mut value);
-        Self(value)
+        match &value {
+            serde_cw_value::Value::Map(_) => Ok(Self(value)),
+            serde_cw_value::Value::Unit | serde_cw_value::Value::Option(None) => Ok(Self::empty()),
+            json => Err(RegistryError::InvalidJson {
+                error: "invalid json: expected an object".to_string(),
+                json: stringify(json)?,
+            }),
+        }
     }
 
     pub fn empty() -> Self {
@@ -144,7 +151,7 @@ impl SerializableJson {
     pub fn merge(self, other: SerializableJson) -> Result<Self, RegistryError> {
         let mut first_map = match self.0 {
             serde_cw_value::Value::Map(m) => m,
-            serde_cw_value::Value::Unit => BTreeMap::new(),
+            serde_cw_value::Value::Unit | serde_cw_value::Value::Option(None) => BTreeMap::new(),
             json => {
                 return Err(RegistryError::InvalidJson {
                     error: "invalid json: expected an object".to_string(),
@@ -154,7 +161,7 @@ impl SerializableJson {
         };
         let second_map = match other.0 {
             serde_cw_value::Value::Map(m) => m,
-            serde_cw_value::Value::Unit => BTreeMap::new(),
+            serde_cw_value::Value::Unit | serde_cw_value::Value::Option(None) => BTreeMap::new(),
             json => {
                 return Err(RegistryError::InvalidJson {
                     error: "invalid json: expected an object".to_string(),
@@ -179,8 +186,10 @@ impl From<SerializableJson> for serde_cw_value::Value {
     }
 }
 
-impl From<serde_cw_value::Value> for SerializableJson {
-    fn from(value: serde_cw_value::Value) -> Self {
+impl TryFrom<serde_cw_value::Value> for SerializableJson {
+    type Error = RegistryError;
+
+    fn try_from(value: serde_cw_value::Value) -> Result<Self, RegistryError> {
         Self::new(value)
     }
 }
@@ -190,7 +199,7 @@ impl TryFrom<Memo> for SerializableJson {
 
     fn try_from(memo: Memo) -> Result<Self, RegistryError> {
         let value = serde_cw_value::to_value(&memo)?;
-        Ok(Self::new(value))
+        Self::new(value)
     }
 }
 
@@ -198,7 +207,7 @@ impl TryFrom<String> for SerializableJson {
     type Error = RegistryError;
 
     fn try_from(value: String) -> Result<Self, RegistryError> {
-        Ok(Self::new(from_str(&value)?))
+        Self::new(from_str(&value)?)
     }
 }
 
@@ -215,9 +224,7 @@ impl Callback {
     }
 
     pub fn to_json(&self) -> Result<SerializableJson, RegistryError> {
-        Ok(SerializableJson::new(serde_json_wasm::from_str(
-            &self.try_string()?,
-        )?))
+        SerializableJson::new(serde_json_wasm::from_str(&self.try_string()?)?)
     }
 }
 
@@ -262,9 +269,10 @@ where
     D: ::cosmwasm_schema::serde::Deserializer<'de>,
 {
     use ::cosmwasm_schema::serde::Deserialize;
-    let mut value = serde_cw_value::Value::deserialize(deserializer)?;
-    flatten_cw_value(&mut value);
-    Ok(value)
+    let value = serde_cw_value::Value::deserialize(deserializer)?;
+    let object =
+        SerializableJson::new(value).map_err(::cosmwasm_schema::serde::de::Error::custom)?;
+    Ok(object.into_value())
 }
 
 #[cfg(test)]
@@ -273,6 +281,16 @@ mod registry_msg_tests {
 
     use super::*;
     use crate::registry::{ChannelId, ForwardingMemo, Memo};
+
+    #[test]
+    fn test_deserialize_empty() {
+        let memo: SerializableJson = serde_json_wasm::from_str("{}").unwrap();
+        assert!(matches!(memo.into_value(), serde_cw_value::Value::Map(m) if m.is_empty()));
+
+        let memo: SerializableJson = serde_json_wasm::from_str("null").unwrap();
+        println!("{memo:#?}");
+        assert!(matches!(memo.into_value(), serde_cw_value::Value::Map(m) if m.is_empty()));
+    }
 
     #[test]
     fn test_from_memo() {
@@ -353,24 +371,29 @@ mod registry_msg_tests {
     #[test]
     fn test_deserialize_json() {
         let input = r#"
-        [
-            1,
-            5,
-            1234,
-            {"a": 5, "b": 2}
-        ]
+        {
+            "test": [
+                1,
+                5,
+                1234,
+                {"a": 5, "b": 2}
+            ]
+        }
         "#;
-        let expected = SerializableJson(Value::Seq(vec![
-            Value::U64(1),
-            Value::U64(5),
-            Value::U64(1234),
-            Value::Map({
-                let mut m = BTreeMap::new();
-                m.insert(Value::String("a".to_owned()), Value::U64(5));
-                m.insert(Value::String("b".to_owned()), Value::U64(2));
-                m
-            }),
-        ]));
+        let expected = map([(
+            "test",
+            Value::Seq(vec![
+                Value::U64(1),
+                Value::U64(5),
+                Value::U64(1234),
+                Value::Map({
+                    let mut m = BTreeMap::new();
+                    m.insert(Value::String("a".to_owned()), Value::U64(5));
+                    m.insert(Value::String("b".to_owned()), Value::U64(2));
+                    m
+                }),
+            ]),
+        )]);
 
         let parsed_input: SerializableJson = from_str(input).unwrap();
         assert_eq!(parsed_input, expected);
@@ -378,36 +401,46 @@ mod registry_msg_tests {
 
     #[test]
     fn test_flatten_cw_value() {
-        let input = Value::Newtype(Box::new(Value::Seq(vec![
-            Value::Newtype(Box::new(Value::U8(1))),
-            Value::Newtype(Box::new(Value::U32(5))),
-            Value::U64(1234),
-            Value::Map({
-                let mut m = BTreeMap::new();
-                m.insert(
-                    Value::Newtype(Box::new(Value::String("a".to_owned()))),
+        let input = Value::Newtype(Box::new(
+            map([(
+                "test",
+                Value::Newtype(Box::new(Value::Newtype(Box::new(Value::Seq(vec![
+                    Value::Newtype(Box::new(Value::U8(1))),
                     Value::Newtype(Box::new(Value::U32(5))),
-                );
-                m.insert(
-                    Value::String("b".to_owned()),
-                    Value::Newtype(Box::new(Value::U8(2))),
-                );
-                m
-            }),
-        ])));
-        let expected = Value::Seq(vec![
-            Value::U8(1),
-            Value::U32(5),
-            Value::U64(1234),
-            Value::Map({
-                let mut m = BTreeMap::new();
-                m.insert(Value::String("a".to_owned()), Value::U32(5));
-                m.insert(Value::String("b".to_owned()), Value::U8(2));
-                m
-            }),
-        ]);
+                    Value::U64(1234),
+                    Value::Map({
+                        let mut m = BTreeMap::new();
+                        m.insert(
+                            Value::Newtype(Box::new(Value::String("a".to_owned()))),
+                            Value::Newtype(Box::new(Value::U32(5))),
+                        );
+                        m.insert(
+                            Value::String("b".to_owned()),
+                            Value::Newtype(Box::new(Value::U8(2))),
+                        );
+                        m
+                    }),
+                ]))))),
+            )])
+            .into_value(),
+        ));
+        let expected = map([(
+            "test",
+            Value::Seq(vec![
+                Value::U8(1),
+                Value::U32(5),
+                Value::U64(1234),
+                Value::Map({
+                    let mut m = BTreeMap::new();
+                    m.insert(Value::String("a".to_owned()), Value::U32(5));
+                    m.insert(Value::String("b".to_owned()), Value::U8(2));
+                    m
+                }),
+            ]),
+        )])
+        .into_value();
 
-        let input = SerializableJson::new(input);
+        let input = SerializableJson::new(input).unwrap();
         assert_eq!(input.into_value(), expected);
     }
 
@@ -457,13 +490,13 @@ mod registry_msg_tests {
         // non-empty + empty
         assert_eq!(
             map([("a", Value::U64(1))])
-                .merge(SerializableJson::new(Value::Unit))
+                .merge(SerializableJson::new(Value::Unit).unwrap())
                 .unwrap(),
             map([("a", Value::U64(1))])
         );
         assert_eq!(
             map([("a", Value::U64(1))])
-                .merge(SerializableJson::new(Value::Option(None)))
+                .merge(SerializableJson::new(Value::Option(None)).unwrap())
                 .unwrap(),
             map([("a", Value::U64(1))])
         );
@@ -477,12 +510,14 @@ mod registry_msg_tests {
         // empty + non-empty
         assert_eq!(
             SerializableJson::new(Value::Unit)
+                .unwrap()
                 .merge(map([("a", Value::U64(1))]))
                 .unwrap(),
             map([("a", Value::U64(1))])
         );
         assert_eq!(
             SerializableJson::new(Value::Option(None))
+                .unwrap()
                 .merge(map([("a", Value::U64(1))]))
                 .unwrap(),
             map([("a", Value::U64(1))])
@@ -506,6 +541,7 @@ mod registry_msg_tests {
                 .into_iter()
                 .map(|(k, v)| (Value::String(k.into()), v.into())),
         )))
+        .unwrap()
     }
 
     fn seq<V, I>(vals: I) -> Value

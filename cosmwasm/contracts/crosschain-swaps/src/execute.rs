@@ -87,7 +87,7 @@ pub fn unwrap_or_swap_and_forward(
                     on_failed_delivery: failed_delivery_action.clone(),
                     route,
                 })?
-                .into(),
+                .try_into()?,
             }),
             false,
         )?;
