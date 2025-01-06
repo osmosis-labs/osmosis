@@ -37,13 +37,8 @@ require (
 	cosmossdk.io/math v1.4.0 // indirect
 	cosmossdk.io/x/evidence v0.1.1 // indirect
 	cosmossdk.io/x/feegrant v0.1.1 // indirect
-<<<<<<< HEAD
-	cosmossdk.io/x/tx v0.13.5 // indirect
-	cosmossdk.io/x/upgrade v0.1.3 // indirect
-=======
 	cosmossdk.io/x/tx v0.13.7 // indirect
 	cosmossdk.io/x/upgrade v0.1.4 // indirect
->>>>>>> 334a8cd1 (chore: bump cosmos-sdk v0.50.11 (#8906))
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
