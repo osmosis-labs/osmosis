@@ -42,8 +42,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-<<<<<<< HEAD
-=======
 ### State Breaking
 
 * [#8880](https://github.com/osmosis-labs/osmosis/pull/8880) chore: bump wasmd from 0.53.0 to 0.53.2
@@ -56,7 +54,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
->>>>>>> 334a8cd1 (chore: bump cosmos-sdk v0.50.11 (#8906))
 * [#8858](https://github.com/osmosis-labs/osmosis/pull/8858) chore: fix event emission for smart account module
 * [#8906](https://github.com/osmosis-labs/osmosis/pull/8906) chore: bump cosmos-sdk v0.50.11
 
