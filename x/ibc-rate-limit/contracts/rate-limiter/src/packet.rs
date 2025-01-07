@@ -156,12 +156,9 @@ impl Packet {
                 .strip_prefix(&format!("transfer/{}/", self.source_channel))
                 .unwrap_or_default();
             let split: Vec<&str> = unprefixed.split('/').collect();
-            if split[0] == unprefixed {
-                // This is a native token. Return the unprefixed token
+            if split[0] == unprefixed || split[0] == "factory" {
+                // This is a native token or a tokenfactory token. Return the unprefixed token
                 unprefixed.to_string()
-            } else if split[0] == "factory" {
-                // This is a tokenfactory token
-                split.join("/")
             } else {
                 // This is a non-native that was sent to the counterparty.
                 // We need to hash it.
