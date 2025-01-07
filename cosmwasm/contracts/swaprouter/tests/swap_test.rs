@@ -74,7 +74,7 @@ test_swap!(
 
 test_swap!(
     non_existant_route should failed_with
-    "alloc::vec::Vec<osmosis_std::types::osmosis::poolmanager::v1beta1::SwapAmountInRoute> not found: execute wasm contract failed",
+    "type: alloc::vec::Vec<osmosis_std::types::osmosis::poolmanager::v1beta1::SwapAmountInRoute>; key: [00, 0D, 72, 6F, 75, 74, 69, 6E, 67, 5F, 74, 61, 62, 6C, 65, 00, 04, 75, 69, 6F, 6E, 75, 6F, 73, 6D, 6F] not found: execute wasm contract failed",
 
     msg = ExecuteMsg::Swap {
         input_coin: Coin::new(1000, "uion"),
