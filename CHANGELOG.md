@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 * [#8831](https://github.com/osmosis-labs/osmosis/pull/8831) chore: bump cometbft
+* [#8922](https://github.com/osmosis-labs/osmosis/pull/8922) fix: untracked tokenfactory ibc-rate-limit inflow
 
 ## v27.0.0
 
