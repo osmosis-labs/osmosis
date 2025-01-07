@@ -1,7 +1,8 @@
 syntax = "proto3";
 
-package sqs.ingest.v1beta1;
-option go_package = "sqsdomain/proto/types";
+package osmosis.ingest.v1beta1;
+
+option go_package = "github.com/osmosis-labs/osmosis/v28/ingest/types/proto/types";
 
 // SQSIngester is a a data ingester from an Osmosis node to
 // the sidecar query server.
