@@ -81,7 +81,7 @@ jobs:
   check_state_compatibility:
     runs-on: buildjet-4vcpu-ubuntu-2204
     needs: compare_versions
-    timeout-minutes: 20
+    timeout-minutes: 30
     if: ${{ needs.compare_versions.outputs.should_i_run == 'true'}}
     steps:
       - name: Get chain major version
