@@ -20,7 +20,7 @@ require (
 	github.com/CosmWasm/wasmvm/v2 v2.1.4
 	github.com/cometbft/cometbft v0.38.13
 	github.com/cometbft/cometbft-db v0.14.1
-	github.com/cosmos/cosmos-db v1.1.0
+	github.com/cosmos/cosmos-db v1.1.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.50.11
 	github.com/cosmos/go-bip39 v1.0.0
