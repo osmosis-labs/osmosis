@@ -156,8 +156,8 @@ impl Packet {
                 .strip_prefix(&format!("transfer/{}/", self.source_channel))
                 .unwrap_or_default();
             let split: Vec<&str> = unprefixed.split('/').collect();
-            if split[0] == unprefixed {
-                // This is a native token. Return the unprefixed token
+            if split[0] == unprefixed || split[0] == "factory" {
+                // This is a native token or a tokenfactory token. Return the unprefixed token
                 unprefixed.to_string()
             } else {
                 // This is a non-native that was sent to the counterparty.
@@ -275,6 +275,18 @@ pub mod tests {
             0_u128.into(),
         );
         assert_eq!(packet.local_denom(&FlowType::In), "uosmo");
+    }
+
+    #[test]
+    fn receive_tokenfactory_token() {
+        // The counterparty chain sends us back our native token that they had wrapped
+        let packet = Packet::mock(
+            "channel-42-counterparty".to_string(), // The counterparty's channel is the source here
+            "channel-17-local".to_string(),        // Our channel is the dest channel
+            "transfer/channel-42-counterparty/factory/osmo1em6xs47hd82806f5cxgyufguxrrc7l0aqx7nzzptjuqgswczk8csavdxek/alloyed/allUSDT".to_string(),
+            0_u128.into(),
+        );
+        assert_eq!(packet.local_denom(&FlowType::In), "factory/osmo1em6xs47hd82806f5cxgyufguxrrc7l0aqx7nzzptjuqgswczk8csavdxek/alloyed/allUSDT");
     }
 
     // Let's assume we have two chains A and B (local and counterparty) connected in the following way:
