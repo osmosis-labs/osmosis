@@ -56,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#8858](https://github.com/osmosis-labs/osmosis/pull/8858) chore: fix event emission for smart account module
 * [#8906](https://github.com/osmosis-labs/osmosis/pull/8906) chore: bump cosmos-sdk v0.50.11
+* [#8923](https://github.com/osmosis-labs/osmosis/pull/8923) fix: tag osmosis-labs/cosmos-sdk store v1.1.1 to enable async pruning
 
 ## v28.0.0
 
@@ -71,6 +72,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#8831](https://github.com/osmosis-labs/osmosis/pull/8831) chore: bump cometbft
 * [#8876](https://github.com/osmosis-labs/osmosis/pull/8876) (xcs) fix: XCS incorrect channel
+* [#8922](https://github.com/osmosis-labs/osmosis/pull/8922) fix: untracked tokenfactory ibc-rate-limit inflow
+
 
 ## v27.0.0
 
