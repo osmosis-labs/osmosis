@@ -13,8 +13,6 @@ type ContractInfo struct {
 const (
 	AlloyTranmuterName        = "crates.io:transmuter"
 	AlloyTransmuterMinVersion = "3.0.0"
-
-	alloyTransmuterMinVersionStr = ">= " + AlloyTransmuterMinVersion
 )
 
 // Check if the contract info matches the given contract and version constrains

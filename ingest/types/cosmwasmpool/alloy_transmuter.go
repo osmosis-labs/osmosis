@@ -36,7 +36,7 @@ type PrecomputedData struct {
 
 	// NormalizationScalingFactors is the scaling factor for each asset in the pool.
 	// Each index corresponds to the asset at the same index in the AssetConfigs.
-	// This is used for computing asset weights for checking rate limitin.
+	// This is used for computing asset weights for checking rate limiting.
 	NormalizationScalingFactors map[string]osmomath.Int `json:"normalization_scaling_factors"`
 }
 

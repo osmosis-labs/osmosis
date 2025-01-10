@@ -56,7 +56,6 @@ func (tfm TakerFeeMap) UnmarshalJSON(data []byte) error {
 // Has returns true if the taker fee for the given denoms is found.
 // Sorting is no longer performed since bi-directional taker fees are stored.
 func (tfm TakerFeeMap) Has(denom0, denom1 string) bool {
-
 	_, found := tfm[DenomPair{Denom0: denom0, Denom1: denom1}]
 	return found
 }
@@ -65,7 +64,6 @@ func (tfm TakerFeeMap) Has(denom0, denom1 string) bool {
 // Sorting is no longer performed since bi-directional taker fees are stored.
 // Returns error if the taker fee is not found.
 func (tfm TakerFeeMap) GetTakerFee(denom0, denom1 string) osmomath.Dec {
-
 	takerFee, found := tfm[DenomPair{Denom0: denom0, Denom1: denom1}]
 
 	if !found {
@@ -78,7 +76,6 @@ func (tfm TakerFeeMap) GetTakerFee(denom0, denom1 string) osmomath.Dec {
 // SetTakerFee sets the taker fee for the given denoms.
 // Sorting is no longer performed since bi-directional taker fee is supported.
 func (tfm TakerFeeMap) SetTakerFee(denom0, denom1 string, takerFee osmomath.Dec) {
-
 	tfm[DenomPair{Denom0: denom0, Denom1: denom1}] = takerFee
 }
 
