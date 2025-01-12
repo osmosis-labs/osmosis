@@ -56,12 +56,12 @@ which would keep blockchain and state data of last 188000 blocks (approximately 
 			conf := cmtcfg.DefaultConfig()
 			dbPath := clientCtx.HomeDir + "/" + conf.DBPath
 
+			// Ensure the chain is stopped before proceeding
 			cmdr := exec.Command("osmosisd", "status")
 			err = cmdr.Run()
-
 			if err == nil {
-				// continue only if throws error
-				return nil
+				// Stop execution if the chain is running
+				return fmt.Errorf("osmosisd is running, stop the chain before pruning")
 			}
 
 			fullHeight, err := strconv.ParseInt(fullHeightFlag, 10, 64)
@@ -129,7 +129,6 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 		DiscardABCIResponses: defaultConfig.Storage.DiscardABCIResponses,
 	})
 
-	// Can use blank string for genesis file since state will not be empty if we are pruning, and therefore is not used.
 	state, err := stateStore.LoadFromDBOrGenesisFile("")
 	if err != nil {
 		return 0, 0, err
@@ -141,14 +140,6 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 		return 0, 0, err
 	}
 	fmt.Println("Pruned Block Store ...", prunedBlocks)
-
-	// N.B: We duplicate the call to db_bs.Close() on top of
-	// the call in defer statement above to make sure that the resources
-	// are properly released and any potential error from Close()
-	// is handled. Close() should be idempotent so this is acceptable.
-	if err := db_bs.Close(); err != nil {
-		return 0, 0, err
-	}
 
 	return startHeight, currentHeight, nil
 }
@@ -162,12 +153,12 @@ func compactBlockStore(dbPath string) (err error) {
 	fmt.Println("Compacting Block Store ...")
 
 	db, err := leveldb.OpenFile(dbPath+"/blockstore.db", &compactOpts)
-	defer func() {
-		err = db.Close()
-	}()
 	if err != nil {
 		return err
 	}
+
+	defer db.Close()
+
 	if err = db.CompactRange(*util.BytesPrefix([]byte{})); err != nil {
 		return err
 	}
@@ -191,29 +182,28 @@ func forcepruneStateStore(dbPath string, startHeight, currentHeight, minHeight, 
 	for i, s := range stateDBKeys {
 		fmt.Println(i, s)
 
-		retain_height := int64(0)
+		retainHeight := int64(0)
 		if s == kABCIResponses {
-			retain_height = currentHeight - minHeight
+			retainHeight = currentHeight - minHeight
 		} else {
-			retain_height = currentHeight - fullHeight
+			retainHeight = currentHeight - fullHeight
 		}
 
 		batch := new(leveldb.Batch)
 		curBatchSize := uint64(0)
 
-		fmt.Println(startHeight, currentHeight, retain_height)
+		fmt.Println(startHeight, currentHeight, retainHeight)
 
-		for c := startHeight; c < retain_height; c++ {
+		for c := startHeight; c < retainHeight; c++ {
 			batch.Delete([]byte(s + strconv.FormatInt(c, 10)))
 			curBatchSize++
 
-			if curBatchSize%batchMaxSize == 0 && curBatchSize > 0 {
+			if curBatchSize%batchMaxSize == 0 {
 				err := db.Write(batch, nil)
 				if err != nil {
 					return err
 				}
 				batch.Reset()
-				batch = new(leveldb.Batch)
 			}
 		}
 
