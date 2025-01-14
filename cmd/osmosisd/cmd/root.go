@@ -60,7 +60,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
@@ -77,6 +76,7 @@ import (
 
 	"github.com/joho/godotenv"
 
+	sdktypes "github.com/osmosis-labs/osmosis/v28/sdktypes"
 	osmosis "github.com/osmosis-labs/osmosis/v28/app"
 )
 
@@ -797,14 +797,14 @@ service-name = "{{ .OTELConfig.ServiceName }}"
 
 // initRootCmd initializes root commands when creating a new root command for simd.
 func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, tempApp *osmosis.OsmosisApp) {
-	cfg := sdk.GetConfig()
+	cfg := sdktypes.DefaultSDKConfig()
 	cfg.Seal()
 
 	debugCmd := debug.Cmd()
 	debugCmd.AddCommand(ConvertBech32Cmd())
 	debugCmd.AddCommand(DebugProtoMarshalledBytes())
 
-	valOperAddressCodec := address.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix())
+	valOperAddressCodec := address.NewBech32Codec(sdktypes.DefaultSDKConfig().GetBech32ValidatorAddrPrefix())
 	rootCmd.AddCommand(
 		// genutilcli.InitCmd(tempApp.ModuleBasics, osmosis.DefaultNodeHome),
 		forceprune(),
@@ -1325,8 +1325,8 @@ func autoCliOpts(initClientCtx client.Context, tempApp *osmosis.OsmosisApp) auto
 	return autocli.AppOptions{
 		Modules:               modules,
 		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(tempApp.ModuleManager().Modules),
-		AddressCodec:          authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
-		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
-		ConsensusAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
+		AddressCodec:          authcodec.NewBech32Codec(sdktypes.DefaultSDKConfig().GetBech32AccountAddrPrefix()),
+		ValidatorAddressCodec: authcodec.NewBech32Codec(sdktypes.DefaultSDKConfig().GetBech32ValidatorAddrPrefix()),
+		ConsensusAddressCodec: authcodec.NewBech32Codec(sdktypes.DefaultSDKConfig().GetBech32ConsensusAddrPrefix()),
 		ClientCtx:             initClientCtx}
 }

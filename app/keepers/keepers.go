@@ -119,6 +119,8 @@ import (
 	auctiontypes "github.com/skip-mev/block-sdk/v2/x/auction/types"
 
 	storetypes "cosmossdk.io/store/types"
+
+	"github.com/osmosis-labs/osmosis/v28/sdktypes"
 )
 
 const (
@@ -217,7 +219,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		runtime.NewKVStoreService(appKeepers.keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
-		addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
+		addresscodec.NewBech32Codec(sdktypes.DefaultSDKConfig().GetBech32AccountAddrPrefix()),
 		AccountAddressPrefix,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
@@ -267,8 +269,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
-		addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
+		addresscodec.NewBech32Codec(sdktypes.DefaultSDKConfig().GetBech32ValidatorAddrPrefix()),
+		addresscodec.NewBech32Codec(sdktypes.DefaultSDKConfig().GetBech32ConsensusAddrPrefix()),
 	)
 	appKeepers.StakingKeeper = stakingKeeper
 
@@ -669,7 +671,7 @@ func (appKeepers *AppKeepers) WireICS20PreWasmKeeper(
 	hooksKeeper *ibchookskeeper.Keeper,
 ) {
 	// Setup the ICS4Wrapper used by the hooks middleware
-	osmoPrefix := sdk.GetConfig().GetBech32AccountAddrPrefix()
+	osmoPrefix := sdktypes.DefaultSDKConfig().GetBech32AccountAddrPrefix()
 	wasmHooks := ibchooks.NewWasmHooks(hooksKeeper, nil, osmoPrefix) // The contract keeper needs to be set later
 	appKeepers.Ics20WasmHooks = &wasmHooks
 	appKeepers.HooksICS4Wrapper = ibchooks.NewICS4Middleware(
@@ -767,7 +769,7 @@ func (appKeepers *AppKeepers) InitSpecialKeepers(
 	// TODO: Make a SetInvCheckPeriod fn on CrisisKeeper.
 	// IMO, its bad design atm that it requires this in state machine initialization
 	crisisKeeper := crisiskeeper.NewKeeper(
-		appCodec, runtime.NewKVStoreService(appKeepers.keys[crisistypes.StoreKey]), invCheckPeriod, appKeepers.BankKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String(), addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()))
+		appCodec, runtime.NewKVStoreService(appKeepers.keys[crisistypes.StoreKey]), invCheckPeriod, appKeepers.BankKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String(), addresscodec.NewBech32Codec(sdktypes.DefaultSDKConfig().GetBech32AccountAddrPrefix()))
 	appKeepers.CrisisKeeper = crisisKeeper
 
 	upgradeKeeper := upgradekeeper.NewKeeper(

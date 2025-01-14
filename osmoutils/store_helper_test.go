@@ -67,7 +67,7 @@ func (suite *TestSuite) SetupTest() {
 		runtime.NewKVStoreService(authStoreKey),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
-		addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
+		addresscodec.NewBech32Codec(sdktypes.DefaultSDKConfig().GetBech32AccountAddrPrefix()),
 		"osmo",
 		authtypes.NewModuleAddress(authtypes.ModuleName).String())
 }

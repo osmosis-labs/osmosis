@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/spf13/cobra"
 
+	"github.com/osmosis-labs/osmosis/v28/sdktypes"
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
@@ -61,7 +61,7 @@ $ %s query ibc-hooks wasm-hooks-sender channel-42 juno12smx2wdlyttvyzvzg54y2vnqw
 			channelID := args[0]
 			originalSender := args[1]
 			// ToDo: Make this flexible as an arg
-			prefix := sdk.GetConfig().GetBech32AccountAddrPrefix()
+			prefix := sdktypes.DefaultSDKConfig()onfig().GetBech32AccountAddrPrefix()
 			senderBech32, err := keeper.DeriveIntermediateSender(channelID, originalSender, prefix)
 			if err != nil {
 				return err
