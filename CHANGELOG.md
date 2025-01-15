@@ -48,8 +48,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
-* [#8886](https://github.com/osmosis-labs/osmosis/pull/8886) chore: decouple Node releases from SQS
-
 ## v28.0.2
 
 ### State Breaking
