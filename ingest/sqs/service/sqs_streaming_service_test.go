@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/sqs/sqsdomain"
+	ingesttypes "github.com/osmosis-labs/osmosis/v28/ingest/types"
 
 	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v28/ingest/sqs/domain"
@@ -103,10 +103,10 @@ func (s *SQSServiceTestSuite) TestProcessBlockRecoverError() {
 				CosmWasmPools:     cosmWasmPools,
 			}
 
-			transformedPools := []sqsdomain.PoolI{}
+			transformedPools := []ingesttypes.PoolI{}
 			for _, pool := range blockPools.GetAll() {
 				// Note: balances are irrelevant for the test so we supply empty balances
-				transformedPool := sqsdomain.NewPool(pool, pool.GetSpreadFactor(s.Ctx), sdk.Coins{})
+				transformedPool := ingesttypes.NewPool(pool, pool.GetSpreadFactor(s.Ctx), sdk.Coins{})
 				transformedPools = append(transformedPools, transformedPool)
 			}
 

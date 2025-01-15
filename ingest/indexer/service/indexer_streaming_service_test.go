@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"golang.org/x/exp/rand"
 
-	"github.com/osmosis-labs/sqs/sqsdomain"
+	ingesttypes "github.com/osmosis-labs/osmosis/v28/ingest/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
@@ -134,10 +134,10 @@ func (s *IndexerServiceTestSuite) TestAdjustTokenInAmountBySpreadFactor() {
 				CosmWasmPools:     cosmWasmPools,
 			}
 
-			transformedPools := []sqsdomain.PoolI{}
+			transformedPools := []ingesttypes.PoolI{}
 			for _, pool := range blockPools.GetAll() {
 				// Note: balances are irrelevant for the test so we supply empty balances
-				transformedPool := sqsdomain.NewPool(pool, pool.GetSpreadFactor(s.Ctx), sdk.Coins{})
+				transformedPool := ingesttypes.NewPool(pool, pool.GetSpreadFactor(s.Ctx), sdk.Coins{})
 				transformedPools = append(transformedPools, transformedPool)
 			}
 
@@ -325,10 +325,10 @@ func (s *IndexerServiceTestSuite) TestAddTokenLiquidity() {
 				CosmWasmPools:     cosmWasmPools,
 			}
 
-			transformedPools := []sqsdomain.PoolI{}
+			transformedPools := []ingesttypes.PoolI{}
 			for _, pool := range blockPools.GetAll() {
 				// Note: balances are irrelevant for the test so we supply empty balances
-				transformedPool := sqsdomain.NewPool(pool, pool.GetSpreadFactor(s.Ctx), sdk.Coins{})
+				transformedPool := ingesttypes.NewPool(pool, pool.GetSpreadFactor(s.Ctx), sdk.Coins{})
 				transformedPools = append(transformedPools, transformedPool)
 			}
 
@@ -682,10 +682,10 @@ func (s *IndexerServiceTestSuite) TestTrackCreatedPoolID() {
 				CosmWasmPools:     cosmWasmPools,
 			}
 
-			transformedPools := []sqsdomain.PoolI{}
+			transformedPools := []ingesttypes.PoolI{}
 			for _, pool := range blockPools.GetAll() {
 				// Note: balances are irrelevant for the test so we supply empty balances
-				transformedPool := sqsdomain.NewPool(pool, pool.GetSpreadFactor(s.Ctx), sdk.Coins{})
+				transformedPool := ingesttypes.NewPool(pool, pool.GetSpreadFactor(s.Ctx), sdk.Coins{})
 				transformedPools = append(transformedPools, transformedPool)
 			}
 

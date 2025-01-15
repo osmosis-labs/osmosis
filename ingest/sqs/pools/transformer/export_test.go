@@ -3,8 +3,8 @@ package poolstransformer
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/sqs/sqsdomain"
-	sqscosmwasmpool "github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
+	ingesttypes "github.com/osmosis-labs/osmosis/v28/ingest/types"
+	sqscosmwasmpool "github.com/osmosis-labs/osmosis/v28/ingest/types/cosmwasmpool"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"
@@ -26,11 +26,11 @@ type (
 	PoolTransformer = poolTransformer
 )
 
-func (pi *poolTransformer) ConvertPool(ctx sdk.Context, pool poolmanagertypes.PoolI, priceInfoMap map[string]osmomath.BigDec, denomPairToTakerFeeMap sqsdomain.TakerFeeMap) (sqsdomain.PoolI, error) {
+func (pi *poolTransformer) ConvertPool(ctx sdk.Context, pool poolmanagertypes.PoolI, priceInfoMap map[string]osmomath.BigDec, denomPairToTakerFeeMap ingesttypes.TakerFeeMap) (ingesttypes.PoolI, error) {
 	return pi.convertPool(ctx, pool, priceInfoMap, denomPairToTakerFeeMap)
 }
 
-func RetrieveTakerFeeToMapIfNotExists(ctx sdk.Context, denoms []string, denomPairToTakerFeeMap sqsdomain.TakerFeeMap, poolManagerKeeper commondomain.PoolManagerKeeper) error {
+func RetrieveTakerFeeToMapIfNotExists(ctx sdk.Context, denoms []string, denomPairToTakerFeeMap ingesttypes.TakerFeeMap, poolManagerKeeper commondomain.PoolManagerKeeper) error {
 	return retrieveTakerFeeToMapIfNotExists(ctx, denoms, denomPairToTakerFeeMap, poolManagerKeeper)
 }
 
