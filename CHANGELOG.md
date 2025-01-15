@@ -48,7 +48,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
+## v28.0.2
+
+### State Breaking
+
+### State Compatible
+
+* [#8940](https://github.com/osmosis-labs/osmosis/pull/8940) chore: Bump store dependency version to v1.1.1-v0.50.11-v28-osmo-2
 * [#8886](https://github.com/osmosis-labs/osmosis/pull/8886) chore: decouple Node releases from SQS
+
+### store v1.1.1-v0.50.11-v28-osmo-2
+
+* [#1026](https://github.com/cosmos/iavl/pull/1026) perf: remove duplicated rootkey fetch inpruning (9% pruning speedup on osmosis)
 
 ## v28.0.1
 
