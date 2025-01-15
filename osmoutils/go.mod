@@ -13,7 +13,7 @@ require (
 	github.com/cosmos/cosmos-db v1.1.0
 	github.com/cosmos/cosmos-sdk v0.50.7
 	github.com/cosmos/gogoproto v1.7.0
-	github.com/cosmos/iavl v1.2.2
+	github.com/cosmos/iavl v1.2.4
 	github.com/cosmos/ibc-go/v8 v8.3.2
 	github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240517165907-1625703bc16d
 	github.com/spf13/cast v1.7.0
@@ -186,8 +186,8 @@ replace (
 	// Also, we need an osmosis version of the store to enable aysnc pruning.
 	// Direct cosmos-sdk branch link: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v28/0.50.11/store, current branch: osmo-v28/0.50.11
 	// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/eb1a8e88a4ddf77bc2fe235fc07c57016b7386f0
-	// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/store/v1.1.1-v0.50.11-v28-osmo
-	cosmossdk.io/store => github.com/osmosis-labs/cosmos-sdk/store v1.1.1-v0.50.11-v28-osmo
+	// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/store/v1.1.1-v0.50.11-v28-osmo-2
+	cosmossdk.io/store => github.com/osmosis-labs/cosmos-sdk/store v1.1.1-v0.50.11-v28-osmo-2
 
 	// Direct cometbft branch link: https://github.com/osmosis-labs/cometbft/tree/osmo-v27/0.38.15, current branch: osmo-v27/v0.38.15
 	// Direct commit link: https://github.com/osmosis-labs/cometbft/commit/fcd17cea479fcb1cf6eb5c0541cc9585b97004f1
