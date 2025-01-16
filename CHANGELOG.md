@@ -48,6 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
+* [#8895](https://github.com/osmosis-labs/osmosis/pull/8895) (xcs) feat: support XCS final hop memos
+
 ## v28.0.2
 
 ### State Breaking
