@@ -8,7 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 
-	"github.com/osmosis-labs/osmosis/v28/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v29/x/protorev/types"
 )
 
 // NewCmdQuery returns the cli query commands for this module

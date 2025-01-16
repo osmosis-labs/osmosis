@@ -3,9 +3,9 @@ package blockprocessor
 import (
 	"github.com/cosmos/cosmos-sdk/types"
 
-	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"
-	"github.com/osmosis-labs/osmosis/v28/ingest/indexer/domain"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
+	commondomain "github.com/osmosis-labs/osmosis/v29/ingest/common/domain"
+	"github.com/osmosis-labs/osmosis/v29/ingest/indexer/domain"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
 )
 
 type blockUpdatesIndexerBlockProcessStrategy struct {

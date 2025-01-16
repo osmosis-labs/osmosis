@@ -3,12 +3,12 @@ package poolstransformer
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	ingesttypes "github.com/osmosis-labs/osmosis/v28/ingest/types"
-	sqscosmwasmpool "github.com/osmosis-labs/osmosis/v28/ingest/types/cosmwasmpool"
+	ingesttypes "github.com/osmosis-labs/osmosis/v29/ingest/types"
+	sqscosmwasmpool "github.com/osmosis-labs/osmosis/v29/ingest/types/cosmwasmpool"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
+	commondomain "github.com/osmosis-labs/osmosis/v29/ingest/common/domain"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
 )
 
 const (

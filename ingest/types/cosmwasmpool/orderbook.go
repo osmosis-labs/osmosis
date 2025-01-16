@@ -2,7 +2,7 @@ package cosmwasmpool
 
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
-	clmath "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/math"
+	clmath "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/math"
 )
 
 const (

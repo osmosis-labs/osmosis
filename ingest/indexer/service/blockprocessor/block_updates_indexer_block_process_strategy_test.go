@@ -5,12 +5,12 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
-	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"
-	commonmocks "github.com/osmosis-labs/osmosis/v28/ingest/common/domain/mocks"
-	indexermocks "github.com/osmosis-labs/osmosis/v28/ingest/indexer/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v28/ingest/indexer/service/blockprocessor"
-	sqsmocks "github.com/osmosis-labs/osmosis/v28/ingest/sqs/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v29/app/apptesting"
+	commondomain "github.com/osmosis-labs/osmosis/v29/ingest/common/domain"
+	commonmocks "github.com/osmosis-labs/osmosis/v29/ingest/common/domain/mocks"
+	indexermocks "github.com/osmosis-labs/osmosis/v29/ingest/indexer/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v29/ingest/indexer/service/blockprocessor"
+	sqsmocks "github.com/osmosis-labs/osmosis/v29/ingest/sqs/domain/mocks"
 )
 
 type BlockUpdateIndexerBlockProcessStrategyTestSuite struct {

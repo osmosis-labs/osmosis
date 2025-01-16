@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v28/x/superfluid"
-	"github.com/osmosis-labs/osmosis/v28/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v29/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v29/x/superfluid"
+	"github.com/osmosis-labs/osmosis/v29/x/superfluid/types"
 
 	"github.com/cometbft/cometbft/crypto/ed25519"
 )

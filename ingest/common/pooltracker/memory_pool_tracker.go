@@ -1,9 +1,9 @@
 package pooltracker
 
 import (
-	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"
-	"github.com/osmosis-labs/osmosis/v28/ingest/sqs/domain"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
+	commondomain "github.com/osmosis-labs/osmosis/v29/ingest/common/domain"
+	"github.com/osmosis-labs/osmosis/v29/ingest/sqs/domain"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
 )
 
 // poolBlockUpdateTracker is a struct that tracks the pools that were updated in a block.

@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cltypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
+	cltypes "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v29/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 

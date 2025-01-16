@@ -7,7 +7,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cltypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
 )
 
 // x/superfluid module errors.

@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/model"
-	cwpooltypes "github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v29/x/cosmwasmpool/model"
+	cwpooltypes "github.com/osmosis-labs/osmosis/v29/x/cosmwasmpool/types"
 
 	"github.com/stretchr/testify/suite"
 
@@ -19,18 +19,18 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v29/app/apptesting"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 
-	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
-	v24 "github.com/osmosis-labs/osmosis/v28/app/upgrades/v24"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v28/x/incentives/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v28/x/protorev/types"
-	twap "github.com/osmosis-labs/osmosis/v28/x/twap"
-	"github.com/osmosis-labs/osmosis/v28/x/twap/types"
-	twaptypes "github.com/osmosis-labs/osmosis/v28/x/twap/types"
+	appparams "github.com/osmosis-labs/osmosis/v29/app/params"
+	v24 "github.com/osmosis-labs/osmosis/v29/app/upgrades/v24"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v29/x/incentives/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v29/x/protorev/types"
+	twap "github.com/osmosis-labs/osmosis/v29/x/twap"
+	"github.com/osmosis-labs/osmosis/v29/x/twap/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v29/x/twap/types"
 )
 
 const (

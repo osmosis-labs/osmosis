@@ -7,10 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v28/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v29/x/gamm/types"
 
-	"github.com/osmosis-labs/osmosis/v28/app/keepers"
-	"github.com/osmosis-labs/osmosis/v28/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v29/app/keepers"
+	"github.com/osmosis-labs/osmosis/v29/app/upgrades"
 )
 
 // OSMO / DAI CL pool ID

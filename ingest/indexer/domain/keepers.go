@@ -5,7 +5,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
 )
 
 type PoolManagerKeeperI interface {

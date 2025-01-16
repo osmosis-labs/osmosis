@@ -3,8 +3,8 @@ package domain
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
+	commondomain "github.com/osmosis-labs/osmosis/v29/ingest/common/domain"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
 )
 
 // BlockPoolUpdateTracker is an interface for tracking

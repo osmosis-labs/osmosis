@@ -9,8 +9,8 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v28/app/keepers"
-	"github.com/osmosis-labs/osmosis/v28/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v29/app/keepers"
+	"github.com/osmosis-labs/osmosis/v29/app/upgrades"
 )
 
 const (

@@ -3,7 +3,7 @@ package mocks
 import (
 	"github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v28/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v29/ingest/sqs/domain"
 )
 
 // NodeStatusCheckerMock is a mock implementation of domain.NodeStatusChecker.
