@@ -1,6 +1,8 @@
 module github.com/osmosis-labs/osmosis/v28
 
-go 1.22.7
+go 1.23.1
+
+toolchain go1.23.4
 
 require (
 	cloud.google.com/go/pubsub v1.44.0
@@ -17,9 +19,9 @@ require (
 	cosmossdk.io/x/tx v0.13.7
 	cosmossdk.io/x/upgrade v0.1.4
 	github.com/CosmWasm/wasmd v0.53.2
-	github.com/CosmWasm/wasmvm/v2 v2.1.4
+	github.com/CosmWasm/wasmvm/v2 v2.2.1
 	github.com/Masterminds/semver v1.5.0
-	github.com/cometbft/cometbft v0.38.13
+	github.com/cometbft/cometbft v0.38.15
 	github.com/cometbft/cometbft-db v0.14.1
 	github.com/cosmos/cosmos-db v1.1.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -104,7 +106,7 @@ require (
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/iavl v1.2.2 // indirect
+	github.com/cosmos/iavl v1.2.4 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect
 	github.com/creachadair/atomicfile v0.3.1 // indirect
@@ -301,7 +303,7 @@ replace (
 	// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/eb1a8e88a4ddf77bc2fe235fc07c57016b7386f0
 	// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.50.11-v28-osmo-1
 	// github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.50.11-v28-osmo-1
-	github.com/cosmos/cosmos-sdk => github.com/prasincs/osmosis-flavor-cosmos-sdk v0.0.0-20250114231257-ac483880e91b
+	github.com/cosmos/cosmos-sdk => github.com/prasincs/cosmos-sdk v0.0.0-20250115205759-99c565c0c2ee
 
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
@@ -317,3 +319,5 @@ replace (
 exclude github.com/coinbase/rosetta-sdk-go v0.7.9
 
 exclude github.com/gogo/protobuf v1.3.3
+
+replace github.com/CosmWasm/wasmd => github.com/prasincs/wasmd v0.0.0-20250116000657-d60f7645fc2f

@@ -827,8 +827,6 @@ github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
 github.com/osmosis-labs/cometbft v0.38.15-v27-osmo-2 h1:o4iWUScjoLwx+gbd1bYek8xBuV53P3vmWdXorpmKeRg=
 github.com/osmosis-labs/cometbft v0.38.15-v27-osmo-2/go.mod h1:+wh6ap6xctVG+JOHwbl8pPKZ0GeqdPYqISu7F4b43cQ=
-github.com/osmosis-labs/cosmos-sdk v0.50.11-v28-osmo-1 h1:MQEf1JrWsiwVmJbM7o8tXaDixEvXkLCzR6oyfdPJhzg=
-github.com/osmosis-labs/cosmos-sdk v0.50.11-v28-osmo-1/go.mod h1:KO0mBgNmkMA+yVkq13GeHWzR2F2iwjkfevywmPUhCVY=
 github.com/osmosis-labs/cosmos-sdk/store v1.1.1-v0.50.11-v28-osmo h1:zcZvakaykkCcZBc4ZK9meFazoMKKsbHWCtKwpoUARTk=
 github.com/osmosis-labs/cosmos-sdk/store v1.1.1-v0.50.11-v28-osmo/go.mod h1:8DwVTz83/2PSI366FERGbWSH7hL6sB7HbYp8bqksNwM=
 github.com/osmosis-labs/osmosis/osmomath v0.0.16 h1:OPUKl8jLWqMkQvMTwnLJSXDIZvOBSGtRi7mX9A3dJwQ=
@@ -857,6 +855,8 @@ github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZN
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRIccs7FGNTlIRMkT8wgtp5eCXdBlqhYGL6U=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/posener/complete v1.1.1/go.mod h1:em0nMJCgc9GFtwrmVmEMR/ZL6WyhyjMBndrE9hABlRI=
+github.com/prasincs/cosmos-sdk v0.0.0-20250115205759-99c565c0c2ee h1:MgzyZ8+X5nupacp8yPne5gedyfomQqd+VmhW0CDmyZo=
+github.com/prasincs/cosmos-sdk v0.0.0-20250115205759-99c565c0c2ee/go.mod h1:KO0mBgNmkMA+yVkq13GeHWzR2F2iwjkfevywmPUhCVY=
 github.com/prometheus/client_golang v0.9.1/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
 github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829/go.mod h1:p2iRAGwDERtqlqzRXnrOVns+ignqQo//hLXqYxZYVNs=
 github.com/prometheus/client_golang v1.0.0/go.mod h1:db9x61etRT2tGnBNRi70OPL5FsnadC4Ky3P0J6CfImo=

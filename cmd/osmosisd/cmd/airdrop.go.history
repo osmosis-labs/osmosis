@@ -56,7 +56,7 @@ type SnapshotAccount struct {
 // setCosmosBech32Prefixes set config for cosmos address system
 func setCosmosBech32Prefixes() {
 	defaultConfig := sdk.NewConfig()
-	config := sdk.GetConfig()
+	config := sdk.NewConfig()
 	config.SetBech32PrefixForAccount(defaultConfig.GetBech32AccountAddrPrefix(), defaultConfig.GetBech32AccountPubPrefix())
 	config.SetBech32PrefixForValidator(defaultConfig.GetBech32ValidatorAddrPrefix(), defaultConfig.GetBech32ValidatorPubPrefix())
 	config.SetBech32PrefixForConsensusNode(defaultConfig.GetBech32ConsensusAddrPrefix(), defaultConfig.GetBech32ConsensusPubPrefix())

@@ -12,4 +12,6 @@ use ./x/epochs
 
 replace github.com/onsi/ginkgo => github.com/onsi/ginkgo v1.16.5
 
-replace github.com/cosmos/cosmos-sdk => github.com/prasincs/osmosis-flavor-cosmos-sdk ac483880e91b0ed268ac9553d19058b64d9fdf8a
+replace github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.0.0-20250115205759-99c565c0c2ee
+
+replace github.com/CosmWasm/wasmd => github.com/prasincs/wasmd v0.0.0-20250116000657-d60f7645fc2f 
