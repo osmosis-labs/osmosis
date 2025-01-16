@@ -34,12 +34,14 @@ fn ibc_message_event<T: Debug>(context: &str, message: T) -> cosmwasm_std::Event
 /// valid channel), it will just proceed to swap and forward. If it's not, then
 /// it will send an IBC message to unwrap it first and provide a callback to
 /// ensure the right swap_and_forward gets called after the unwrap succeeds
+#[allow(clippy::too_many_arguments)]
 pub fn unwrap_or_swap_and_forward(
     ctx: (DepsMut, Env, MessageInfo),
     output_denom: String,
     slippage: swaprouter::Slippage,
     receiver: &str,
     next_memo: Option<SerializableJson>,
+    final_memo: Option<SerializableJson>,
     failed_delivery_action: FailedDeliveryAction,
     route: Option<Vec<SwapAmountInRoute>>,
 ) -> Result<Response, ContractError> {
@@ -73,6 +75,7 @@ pub fn unwrap_or_swap_and_forward(
             env.contract.address.to_string(),
             env.block.time,
             build_memo(None, env.contract.address.as_str())?,
+            String::new(),
             Some(Callback {
                 contract: env.contract.address.clone(),
                 msg: serde_cw_value::to_value(&ExecuteMsg::OsmosisSwap {
@@ -80,10 +83,11 @@ pub fn unwrap_or_swap_and_forward(
                     receiver: receiver.to_string(),
                     slippage,
                     next_memo,
+                    final_memo,
                     on_failed_delivery: failed_delivery_action.clone(),
                     route,
                 })?
-                .into(),
+                .try_into()?,
             }),
             false,
         )?;
@@ -125,6 +129,7 @@ pub fn unwrap_or_swap_and_forward(
         slippage,
         receiver,
         next_memo,
+        final_memo,
         failed_delivery_action,
         route,
     )
@@ -142,6 +147,7 @@ pub fn swap_and_forward(
     slippage: swaprouter::Slippage,
     receiver: &str,
     next_memo: Option<SerializableJson>,
+    final_memo: Option<SerializableJson>,
     failed_delivery_action: FailedDeliveryAction,
     route: Option<Vec<SwapAmountInRoute>>,
 ) -> Result<Response, ContractError> {
@@ -152,16 +158,11 @@ pub fn swap_and_forward(
 
     // Check that the received is valid and retrieve its channel
     let (valid_chain, valid_receiver) = validate_receiver(deps.as_ref(), receiver)?;
-    // If there is a memo, check that it is valid (i.e. a valud json object that
+
+    // If there are memos, check that they are valid (i.e. a valid json object that
     // doesn't contain the key that we will insert later)
-    let memo = if let Some(memo) = &next_memo {
-        // Ensure the json is an object ({...}) and that it does not contain the CALLBACK_KEY
-        deps.api.debug(&format!("checking memo: {memo:?}"));
-        ensure_key_missing(memo.as_value(), CALLBACK_KEY)?;
-        serde_json_wasm::to_string(&memo)?
-    } else {
-        String::new()
-    };
+    let s_next_memo = validate_user_provided_memo(&deps, next_memo.as_ref())?;
+    let s_final_memo = validate_user_provided_memo(&deps, final_memo.as_ref())?;
 
     // Validate that the swapped token can be unwrapped. If it can't, abort
     // early to avoid swapping unnecessarily
@@ -172,7 +173,8 @@ pub fn swap_and_forward(
         Some(&valid_chain),
         env.contract.address.to_string(),
         env.block.time,
-        memo,
+        s_next_memo,
+        s_final_memo,
         None,
         false,
     )?;
@@ -208,6 +210,7 @@ pub fn swap_and_forward(
                 chain: valid_chain,
                 receiver: valid_receiver,
                 next_memo,
+                final_memo,
                 on_failed_delivery: failed_delivery_action,
             },
         },
@@ -256,7 +259,13 @@ pub fn handle_swap_reply(
     // If the memo is provided we want to include it in the IBC message. If not,
     // we default to an empty object. The resulting memo will always include the
     // callback so this contract can track the IBC send
-    let memo = build_memo(swap_msg_state.forward_to.next_memo, contract_addr.as_str())?;
+    let next_memo = build_memo(swap_msg_state.forward_to.next_memo, contract_addr.as_str())?;
+    let final_memo = swap_msg_state
+        .forward_to
+        .final_memo
+        .map(|final_memo| serde_json_wasm::to_string(&final_memo))
+        .transpose()?
+        .unwrap_or_default();
 
     let registry = get_registry(deps.as_ref())?;
     let ibc_transfer = registry.unwrap_coin_into(
@@ -268,7 +277,8 @@ pub fn handle_swap_reply(
         Some(&swap_msg_state.forward_to.chain),
         env.contract.address.to_string(),
         env.block.time,
-        memo,
+        next_memo,
+        final_memo,
         None,
         false,
     )?;
@@ -314,7 +324,9 @@ pub fn handle_forward_reply(
     deps.api.debug(&format!("handle_forward_reply"));
     // Parse the result from the underlying chain call (IBC send)
     let SubMsgResult::Ok(SubMsgResponse { data: Some(b), .. }) = msg.result else {
-        return Err(ContractError::FailedIBCTransfer { msg: format!("failed reply: {:?}", msg.result) })
+        return Err(ContractError::FailedIBCTransfer {
+            msg: format!("failed reply: {:?}", msg.result),
+        });
     };
 
     // The response contains the packet sequence. This is needed to be able to
@@ -440,6 +452,20 @@ pub fn set_swap_contract(
     )?;
 
     Ok(Response::new().add_attribute("action", "set_swaps_contract"))
+}
+
+fn validate_user_provided_memo(
+    deps: &DepsMut,
+    user_memo: Option<&SerializableJson>,
+) -> Result<String, ContractError> {
+    Ok(if let Some(memo) = user_memo {
+        // Ensure the json is an object ({...}) and that it does not contain the CALLBACK_KEY
+        deps.api.debug(&format!("checking memo: {memo:?}"));
+        ensure_key_missing(memo.as_value(), CALLBACK_KEY)?;
+        serde_json_wasm::to_string(&memo)?
+    } else {
+        String::new()
+    })
 }
 
 #[cfg(test)]
