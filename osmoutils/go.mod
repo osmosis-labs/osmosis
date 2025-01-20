@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/store v1.1.1
-	github.com/CosmWasm/wasmvm/v2 v2.1.2
+	github.com/CosmWasm/wasmvm/v2 v2.1.3
 	github.com/cometbft/cometbft v0.38.12
 	github.com/cosmos/cosmos-db v1.1.0
 	github.com/cosmos/cosmos-sdk v0.50.7
