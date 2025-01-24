@@ -145,7 +145,7 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_Group_General() {
 	// Non-perpetual is pruned at the end.
 
 	// Note that, compared to previous epochs, even and uneven are switched
-	// As a result, volumes and weights are different so we need to recalculate the expected distriution values per-epoch
+	// As a result, volumes and weights are different so we need to recalculate the expected distribution values per-epoch
 	// and then merge with the previous epoch distribution values.
 	currentEpochPerpetualPoolVolumeMap := map[uint64]osmomath.Int{}
 	s.SetupVolumeForPools(perpetualGroupPoolIDs, equalPoolVolumes, currentEpochPerpetualPoolVolumeMap)
