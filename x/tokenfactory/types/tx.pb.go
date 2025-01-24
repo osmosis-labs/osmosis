@@ -35,7 +35,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // MsgCreateDenom defines the message structure for the CreateDenom gRPC service
 // method. It allows an account to create a new denom. It requires a sender
 // address and a sub denomination. The (sender_address, sub_denomination) tuple
-// must be unique and cannot be reused.
+// must be unique and cannot be re-used.
 //
 // The resulting denom created is defined as
 // <factory/{creatorAddress}/{subdenom}>. The resulting denom's admin is
