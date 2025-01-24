@@ -94,7 +94,7 @@ type Pool struct {
 	TotalShares types.Coin `protobuf:"bytes,5,opt,name=total_shares,json=totalShares,proto3" json:"total_shares" yaml:"total_shares"`
 	// assets in the pool
 	PoolLiquidity github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,6,rep,name=pool_liquidity,json=poolLiquidity,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"pool_liquidity"`
-	// for calculation amognst assets with different precisions
+	// for calculation amongst assets with different precisions
 	ScalingFactors []uint64 `protobuf:"varint,7,rep,packed,name=scaling_factors,json=scalingFactors,proto3" json:"scaling_factors,omitempty" yaml:"stableswap_scaling_factors"`
 	// scaling_factor_controller is the address can adjust pool scaling factors
 	ScalingFactorController string `protobuf:"bytes,8,opt,name=scaling_factor_controller,json=scalingFactorController,proto3" json:"scaling_factor_controller,omitempty" yaml:"scaling_factor_controller"`

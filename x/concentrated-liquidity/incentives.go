@@ -381,7 +381,7 @@ func computeTotalIncentivesToEmit(timeElapsedSeconds osmomath.Dec, emissionRate 
 	// 100 years in seconds is roughly
 	// 3.15576e9 * 100 = 3.15576e11
 	// 60 * 60 * 24 * 365 * 100 = 3153600000 seconds
-	// The bit decimal bit length is 2^256 which is arond 10^77
+	// The bit decimal bit length is 2^256 which is around 10^77
 	// However, it is possible for an attacker to try and create incentives with a very high emission rate
 	// consisting of cheap token in the USD denomination. This is why we have the panic recovery above.
 	return timeElapsedSeconds.MulTruncate(emissionRate), nil
