@@ -54,6 +54,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v28/x/poolmanager"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v28/x/protorev"
+	tradingtiers "github.com/osmosis-labs/osmosis/v28/x/trading-tiers"
+	tradingtierstypes "github.com/osmosis-labs/osmosis/v28/x/trading-tiers/types"
 	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
@@ -178,6 +180,7 @@ type AppKeepers struct {
 	CosmwasmPoolKeeper           *cosmwasmpool.Keeper
 	SmartAccountKeeper           *smartaccountkeeper.Keeper
 	AuthenticatorManager         *authenticator.AuthenticatorManager
+	TradingTierKeeper            *tradingtiers.Keeper
 
 	// IBC modules
 	// transfer module
@@ -434,6 +437,16 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	appKeepers.CosmwasmPoolKeeper = cosmwasmpool.NewKeeper(appCodec, appKeepers.keys[cosmwasmpooltypes.StoreKey], appKeepers.GetSubspace(cosmwasmpooltypes.ModuleName), appKeepers.AccountKeeper, appKeepers.BankKeeper)
 
+	tradingTiersKeeper := tradingtiers.NewKeeper(
+		appKeepers.keys[tradingtierstypes.StoreKey],
+		appKeepers.GetSubspace(tradingtierstypes.ModuleName),
+		appKeepers.StakingKeeper,
+		appKeepers.TxFeesKeeper,
+		appKeepers.TwapKeeper,
+		appKeepers.EpochsKeeper,
+	)
+	appKeepers.TradingTierKeeper = tradingTiersKeeper
+
 	appKeepers.PoolManagerKeeper = poolmanager.NewKeeper(
 		appKeepers.keys[poolmanagertypes.StoreKey],
 		appKeepers.GetSubspace(poolmanagertypes.ModuleName),
@@ -446,6 +459,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.StakingKeeper,
 		appKeepers.ProtoRevKeeper,
 		appKeepers.WasmKeeper,
+		appKeepers.TradingTierKeeper,
 	)
 	appKeepers.PoolManagerKeeper.SetStakingKeeper(appKeepers.StakingKeeper)
 	appKeepers.GAMMKeeper.SetPoolManager(appKeepers.PoolManagerKeeper)
@@ -457,8 +471,10 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.tkeys[twaptypes.TransientStoreKey],
 		appKeepers.GetSubspace(twaptypes.ModuleName),
 		appKeepers.PoolManagerKeeper)
+	appKeepers.TradingTierKeeper.SetTwapKeeper(appKeepers.TwapKeeper)
 
 	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appKeepers.keys[epochstypes.StoreKey])
+	// TODO set trading tiers keeper
 
 	protorevKeeper := protorevkeeper.NewKeeper(
 		appCodec, appKeepers.keys[protorevtypes.StoreKey],
@@ -487,6 +503,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GetSubspace(txfeestypes.ModuleName),
 	)
 	appKeepers.TxFeesKeeper = &txFeesKeeper
+	appKeepers.TradingTierKeeper.SetTxFeesKeeper(appKeepers.TxFeesKeeper)
 
 	appKeepers.IncentivesKeeper = incentiveskeeper.NewKeeper(
 		appKeepers.keys[incentivestypes.StoreKey],
@@ -891,6 +908,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 			appKeepers.IncentivesKeeper.Hooks(),
 			appKeepers.MintKeeper.Hooks(),
 			appKeepers.ProtoRevKeeper.EpochHooks(),
+			appKeepers.TradingTierKeeper.Hooks(),
 		),
 	)
 

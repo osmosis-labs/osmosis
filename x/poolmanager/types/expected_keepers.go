@@ -120,6 +120,10 @@ type ProtorevKeeper interface {
 	GetPoolForDenomPair(ctx sdk.Context, baseDenom, denomToMatch string) (uint64, error)
 }
 
+type TradingTiersKeeper interface {
+	TrackTradingTierVolume(ctx sdk.Context, addr sdk.AccAddress, volumeGeneratedInt osmomath.Int, initialDenom string) error
+}
+
 type WasmKeeper interface {
 	QuerySmart(ctx context.Context, contractAddress sdk.AccAddress, queryMsg []byte) ([]byte, error)
 }

@@ -27,6 +27,7 @@ type Keeper struct {
 	communityPoolKeeper  types.CommunityPoolI
 	stakingKeeper        types.StakingKeeper
 	protorevKeeper       types.ProtorevKeeper
+	tradingTiersKeeper   types.TradingTiersKeeper
 	wasmKeeper           types.WasmKeeper
 
 	// routes is a map to get the pool module by id.
@@ -52,7 +53,7 @@ type Keeper struct {
 	cachedRegisteredAlloyPoolByAlloyDenomMap map[string]types.AlloyContractTakerFeeShareState
 }
 
-func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.ConcentratedI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI, stakingKeeper types.StakingKeeper, protorevKeeper types.ProtorevKeeper, wasmKeeper types.WasmKeeper) *Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.ConcentratedI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI, stakingKeeper types.StakingKeeper, protorevKeeper types.ProtorevKeeper, wasmKeeper types.WasmKeeper, tradingTiersKeeper types.TradingTiersKeeper) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -86,6 +87,7 @@ func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, gam
 		poolModules:                              routesList,
 		stakingKeeper:                            stakingKeeper,
 		protorevKeeper:                           protorevKeeper,
+		tradingTiersKeeper:                       tradingTiersKeeper,
 		wasmKeeper:                               wasmKeeper,
 		cachedPoolModules:                        cachedPoolModules,
 		cachedTakerFeeShareAgreementMap:          cachedTakerFeeShareAgreementMap,
