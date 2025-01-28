@@ -31,10 +31,10 @@ func NewLockTokensCmd() (*osmocli.TxCliDesc, *types.MsgLockTokens) {
 	}, &types.MsgLockTokens{}
 }
 
-// TODO: We should change the Use string to be unlock-all
+// NewBeginUnlockingAllCmd unlocks all tokens from lockup pool for sender.
 func NewBeginUnlockingAllCmd() (*osmocli.TxCliDesc, *types.MsgBeginUnlockingAll) {
 	return &osmocli.TxCliDesc{
-		Use:   "begin-unlock-tokens",
+		Use:   "unlock-all",
 		Short: "begin unlock not unlocking tokens from lockup pool for sender",
 	}, &types.MsgBeginUnlockingAll{}
 }
