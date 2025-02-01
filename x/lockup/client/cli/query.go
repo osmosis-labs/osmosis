@@ -32,7 +32,6 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdAccountLockedPastTimeNotUnlockingOnly)
 	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdTotalLockedByDenom)
 	cmd.AddCommand(
-		GetCmdAccountUnlockableCoins(),
 		GetCmdAccountLockedCoins(),
 		GetCmdAccountUnlockedBeforeTime(),
 		GetCmdAccountLockedPastTimeDenom(),
@@ -42,7 +41,6 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdAccountLockedLongerDurationNotUnlockingOnly(),
 		GetCmdAccountLockedLongerDurationDenom(),
 		GetCmdOutputLocksJson(),
-		GetCmdSyntheticLockupsByLockupID(),
 		GetCmdSyntheticLockupByLockupID(),
 		GetCmdAccountLockedDuration(),
 		GetCmdNextLockID(),
@@ -72,44 +70,6 @@ func GetCmdModuleLockedAmount() (*osmocli.QueryDescriptor, *types.ModuleLockedAm
 		Short: "Query locked amount",
 		Long:  `{{.Short}}`,
 	}, &types.ModuleLockedAmountRequest{}
-}
-
-// GetCmdAccountUnlockableCoins returns unlockable coins which has finished unlocking.
-// TODO: DELETE THIS + Actual query in subsequent PR
-func GetCmdAccountUnlockableCoins() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "account-unlockable-coins <address>",
-		Short: "Query account's unlockable coins",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query account's unlockable coins.
-
-Example:
-$ %s query lockup account-unlockable-coins <address>
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.AccountUnlockableCoins(cmd.Context(), &types.AccountUnlockableCoinsRequest{Owner: args[0]})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
 }
 
 // GetCmdAccountUnlockingCoins returns unlocking coins of a specific account.
@@ -213,23 +173,6 @@ func GetCmdNextLockID() *cobra.Command {
 		`{{.Short}}`, types.ModuleName, types.NewQueryClient)
 }
 
-// GetCmdSyntheticLockupsByLockupID returns synthetic lockups by lockup id.
-// nolint: staticcheck
-func GetCmdSyntheticLockupsByLockupID() *cobra.Command {
-	return osmocli.SimpleQueryCmd[*types.SyntheticLockupsByLockupIDRequest](
-		"synthetic-lockups-by-lock-id",
-		"Query synthetic lockups by lockup id (is deprecated for synthetic-lockup-by-lock-id)",
-		`{{.Short}}`, types.ModuleName, types.NewQueryClient)
-}
-
-// GetCmdSyntheticLockupByLockupID returns synthetic lockup by lockup id.
-func GetCmdSyntheticLockupByLockupID() *cobra.Command {
-	return osmocli.SimpleQueryCmd[*types.SyntheticLockupByLockupIDRequest](
-		"synthetic-lockup-by-lock-id",
-		"Query synthetic lock by underlying lockup id",
-		`{{.Short}}`, types.ModuleName, types.NewQueryClient)
-}
-
 // GetCmdAccountLockedLongerDuration returns account locked records with longer duration.
 func GetCmdAccountLockedLongerDuration() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.AccountLockedLongerDurationRequest](
@@ -238,7 +181,7 @@ func GetCmdAccountLockedLongerDuration() *cobra.Command {
 		`{{.Short}}`, types.ModuleName, types.NewQueryClient)
 }
 
-// GetCmdAccountLockedLongerDuration returns account locked records with longer duration.
+// GetCmdAccountLockedDuration returns account locked records with a specific duration.
 func GetCmdAccountLockedDuration() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.AccountLockedDurationRequest](
 		"account-locked-duration",
@@ -358,4 +301,12 @@ $ %s query lockup output-all-locks <max lock ID>
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
+}
+
+// GetCmdSyntheticLockupByLockupID returns synthetic lockup by lockup id.
+func GetCmdSyntheticLockupByLockupID() *cobra.Command {
+	return osmocli.SimpleQueryCmd[*types.SyntheticLockupByLockupIDRequest](
+		"synthetic-lockup-by-lock-id",
+		"Query synthetic lock by underlying lockup id",
+		`{{.Short}}`, types.ModuleName, types.NewQueryClient)
 }
