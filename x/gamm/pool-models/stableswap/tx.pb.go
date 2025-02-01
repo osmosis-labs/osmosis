@@ -1398,7 +1398,7 @@ func skipTx(dAtA []byte) (n int, err error) {
 }
 
 var (
-	ErrInvalidLengthTx        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrInvalidLengthTx        = fmt.Errorf("proto: negative length found during unmarshalling")
 	ErrIntOverflowTx          = fmt.Errorf("proto: integer overflow")
 	ErrUnexpectedEndOfGroupTx = fmt.Errorf("proto: unexpected end of group")
 )
