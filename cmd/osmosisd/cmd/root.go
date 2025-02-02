@@ -31,6 +31,7 @@ import (
 	v23 "github.com/osmosis-labs/osmosis/v28/app/upgrades/v23" // should be automated to be updated to current version every upgrade
 	"github.com/osmosis-labs/osmosis/v28/ingest/indexer"
 	"github.com/osmosis-labs/osmosis/v28/ingest/sqs"
+	gammtypes "github.com/osmosis-labs/osmosis/v28/x/gamm/types"
 
 	"cosmossdk.io/log"
 	tmcfg "github.com/cometbft/cometbft/config"
@@ -930,18 +931,20 @@ func queryCommand() *cobra.Command {
 		Use:                        "query",
 		Aliases:                    []string{"q"},
 		Short:                      "Querying subcommands",
-		DisableFlagParsing:         true,
+		DisableFlagParsing:         false,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
 
 	cmd.AddCommand(
 		rpc.ValidatorCommand(),
-		server.QueryBlockCmd(),
+		rpc.BlockCommand(),
 		authcmd.QueryTxsByEventsCmd(),
 		authcmd.QueryTxCmd(),
-		CmdModuleNameToAddress(),
+		GetPoolsCmd(),
 	)
+
+	osmosis.ModuleBasics.AddQueryCommands(cmd)
 
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
@@ -1329,4 +1332,24 @@ func autoCliOpts(initClientCtx client.Context, tempApp *osmosis.OsmosisApp) auto
 		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
 		ConsensusAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
 		ClientCtx:             initClientCtx}
+}
+
+func GetPoolsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pools",
+		Short: "Get pools",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			queryClient := osmosis.NewQueryClient(clientCtx)
+
+			pools, err := queryClient.Pools(context.Background(), &osmosis.QueryPoolsRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(pools)
+		},
+	}
+
+	return cmd
 }
