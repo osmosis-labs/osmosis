@@ -48,8 +48,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
-<<<<<<< HEAD
-=======
 * [#8978](https://github.com/osmosis-labs/osmosis/pull/8895) fix: forceprune logic
 
 ## v28.0.3
@@ -61,7 +59,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8968](https://github.com/osmosis-labs/osmosis/pull/8968) fix: use forked block-sdk patch
 * [#8895](https://github.com/osmosis-labs/osmosis/pull/8895) (xcs) feat: support XCS final hop memos
 
->>>>>>> 455d378d (fix: forceprune logic (#8978))
 ## v28.0.2
 
 ### State Breaking
