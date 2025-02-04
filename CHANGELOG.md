@@ -48,7 +48,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
-* [#8978](https://github.com/osmosis-labs/osmosis/pull/8895) fix: forceprune logic
+## v28.0.4
+
+### State Breaking
+
+### State Compatible
+
+* [#8978](https://github.com/osmosis-labs/osmosis/pull/8978) fix: bump comebft to v0.38.17
+* [#8983](https://github.com/osmosis-labs/osmosis/pull/8983) fix: forceprune logic
 
 ## v28.0.3
 
