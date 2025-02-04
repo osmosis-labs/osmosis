@@ -49,6 +49,7 @@ E2E_UPGRADE_VERSION := "v29"
 
 # Go version to be used in docker images
 GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
+GO_MAJOR_MINOR := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2 | cut -d '.' -f 1-2)
 # currently installed Go version
 GO_MODULE := $(shell cat go.mod | grep "module " | cut -d ' ' -f 2)
 GO_MAJOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1)
@@ -211,7 +212,7 @@ go-mock-update:
 ###############################################################################
 ###                                Release                                  ###
 ###############################################################################
-GORELEASER_IMAGE := ghcr.io/goreleaser/goreleaser-cross:v$(GO_VERSION)
+GORELEASER_IMAGE := ghcr.io/goreleaser/goreleaser-cross:v$(GO_MAJOR_MINOR)
 COSMWASM_VERSION := $(shell go list -m github.com/CosmWasm/wasmvm/v2 | sed 's/.* //')
 
 ifdef GITHUB_TOKEN
