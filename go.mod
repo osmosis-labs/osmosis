@@ -1,6 +1,8 @@
 module github.com/osmosis-labs/osmosis/v28
 
-go 1.22.7
+go 1.22.11
+
+toolchain go1.23.2
 
 require (
 	cloud.google.com/go/pubsub v1.44.0
@@ -61,10 +63,17 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.32.0
 	go.opentelemetry.io/otel/sdk v1.32.0
 	go.uber.org/multierr v1.11.0
+<<<<<<< HEAD
 	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8
 	google.golang.org/genproto/googleapis/api v0.0.0-20241104194629-dd2ea8efbc28
 	google.golang.org/grpc v1.68.0
 	google.golang.org/protobuf v1.35.2
+=======
+	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
+	google.golang.org/genproto/googleapis/api v0.0.0-20250115164207-1a7da9e5054f
+	google.golang.org/grpc v1.70.0
+	google.golang.org/protobuf v1.36.4
+>>>>>>> 351b03ab (fix: bump comebft to v0.38.17 (#8983))
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	gotest.tools v2.2.0+incompatible
@@ -244,7 +253,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.60.1 // indirect
+	github.com/prometheus/common v0.62.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rs/cors v1.11.1 // indirect
@@ -263,6 +272,7 @@ require (
 	github.com/zondax/hid v0.9.2 // indirect
 	go.etcd.io/bbolt v1.4.0-alpha.0.0.20240404170359-43604f3112c5 // indirect
 	go.opencensus.io v0.24.0 // indirect
+<<<<<<< HEAD
 	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/mod v0.18.0 // indirect
 	golang.org/x/net v0.30.0 // indirect
@@ -271,6 +281,16 @@ require (
 	golang.org/x/term v0.25.0 // indirect
 	golang.org/x/text v0.20.0 // indirect
 	golang.org/x/tools v0.22.0 // indirect
+=======
+	golang.org/x/crypto v0.32.0 // indirect
+	golang.org/x/mod v0.19.0 // indirect
+	golang.org/x/net v0.34.0 // indirect
+	golang.org/x/sync v0.10.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
+	golang.org/x/term v0.28.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/tools v0.23.0 // indirect
+>>>>>>> 351b03ab (fix: bump comebft to v0.38.17 (#8983))
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	nhooyr.io/websocket v1.8.10 // indirect
 )
@@ -290,10 +310,10 @@ replace (
 	// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/store/v1.1.1-v0.50.11-v28-osmo-2
 	cosmossdk.io/store => github.com/osmosis-labs/cosmos-sdk/store v1.1.1-v0.50.11-v28-osmo-2
 
-	// Direct cometbft branch link: https://github.com/osmosis-labs/cometbft/tree/osmo-v27/0.38.15, current branch: osmo-v27/v0.38.15
-	// Direct commit link: https://github.com/osmosis-labs/cometbft/commit/fcd17cea479fcb1cf6eb5c0541cc9585b97004f1
-	// Direct tag link: https://github.com/osmosis-labs/cometbft/releases/tag/v0.38.15-v27-osmo-2
-	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.38.15-v27-osmo-2
+	// Direct cometbft branch link: https://github.com/osmosis-labs/cometbft/tree/osmo-v28/0.38.17, current branch: osmo-v28/v0.38.17
+	// Direct commit link: https://github.com/osmosis-labs/cometbft/commit/58bfcdcb2fdd81655586678c2062cdc51adbdf0d
+	// Direct tag link: https://github.com/osmosis-labs/cometbft/releases/tag/v0.38.17-v28-osmo-1
+	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.38.17-v28-osmo-1
 
 	// Direct cosmos-sdk branch link: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v28/0.50.11, current branch: osmo-v28/0.50.11
 	// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/eb1a8e88a4ddf77bc2fe235fc07c57016b7386f0
