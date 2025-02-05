@@ -305,7 +305,7 @@ replace (
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.50.11-v28-osmo-1
 
 	// The block-sdk is no longer maintained by Skip, instead we use the osmosis-labs fork.
-	// Direct cosmos-sdk branch link: https://github.com/osmosis-labs/block-sdk/tree/release/v2.x.x, current branch: release/v2.x.x
+	// Direct block-sdk branch link: https://github.com/osmosis-labs/block-sdk/tree/release/v2.x.x, current branch: release/v2.x.x
 	// Direct commit link: https://github.com/osmosis-labs/block-sdk/commit/a86e729f843d36392393a8ff6a14c9fbc15f2fcc
 	// Direct tag link: https://github.com/osmosis-labs/block-sdk/releases/tag/v2.1.5-patch-1
 	github.com/skip-mev/block-sdk/v2 => github.com/osmosis-labs/block-sdk/v2 v2.1.5-patch-1
