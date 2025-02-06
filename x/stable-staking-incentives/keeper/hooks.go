@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	
+
 	minttypes "github.com/osmosis-labs/osmosis/v26/x/mint/types"
 )
 
@@ -14,10 +14,10 @@ var (
 	_ minttypes.MintHooks = Hooks{}
 )
 
-// Create new pool incentives hooks.
+// Hooks creates new pool incentives hooks.
 func (k Keeper) Hooks() Hooks { return Hooks{k} }
 
-// Distribute coins after minter module allocate assets to pool-incentives module.
+// AfterDistributeMintedCoin coins after minter module allocate assets to incentives module.
 func (h Hooks) AfterDistributeMintedCoin(ctx sdk.Context) {
 	// @Sunny, @Tony, @Dev, what comments should we keep after modifying own BeginBlocker to hooks?
 

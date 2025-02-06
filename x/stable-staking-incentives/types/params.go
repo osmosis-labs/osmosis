@@ -1,10 +1,9 @@
 package types
 
 import (
-	"errors"
+	errorsmod "cosmossdk.io/errors"
 	"fmt"
-	"strings"
-
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,25 +11,20 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-var KeyMintedDenom = []byte("MintedDenom")
+var KeyDistributionContractAddress = []byte("DistributionContractAddress")
 
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(mintedDenom string) Params {
+func NewParams(contractAddress string) Params {
 	return Params{
-		MintedDenom: mintedDenom,
+		DistributionContractAddress: contractAddress,
 	}
 }
 
-// DefaultParams is the default parameter configuration for the pool-incentives module.
-func DefaultParams() Params {
-	return NewParams(sdk.DefaultBondDenom)
-}
-
 func (p Params) Validate() error {
-	if err := validateMintedDenom(p.MintedDenom); err != nil {
+	if err := validateContractAddress(p.DistributionContractAddress); err != nil {
 		return err
 	}
 	return nil
@@ -42,17 +36,18 @@ func (p Params) String() string {
 	return string(out)
 }
 
-func validateMintedDenom(i interface{}) error {
+func validateContractAddress(i interface{}) error {
 	v, ok := i.(string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if strings.TrimSpace(v) == "" {
-		return errors.New("mint denom cannot be blank")
+	if len(v) == 0 {
+		return nil
 	}
-	if err := sdk.ValidateDenom(v); err != nil {
-		return err
+	_, err := sdk.AccAddressFromBech32(v)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid contract address (%s)", err)
 	}
 
 	return nil
@@ -60,6 +55,6 @@ func validateMintedDenom(i interface{}) error {
 
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeyMintedDenom, &p.MintedDenom, validateMintedDenom),
+		paramtypes.NewParamSetPair(KeyDistributionContractAddress, &p.DistributionContractAddress, validateContractAddress),
 	}
 }

@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/log"
 
+	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
 	"github.com/osmosis-labs/osmosis/v26/x/stable-staking-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -59,15 +60,30 @@ func (k Keeper) ExecuteWasmContract(ctx sdk.Context, contractAddr sdk.AccAddress
 
 // AllocateAsset allocates and distributes coin according a gauge’s proportional weight that is recorded in the record.
 func (k Keeper) AllocateAsset(ctx sdk.Context) error {
-	params := k.GetParams(ctx)
 	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	asset := k.bankKeeper.GetBalance(ctx, moduleAddr, params.MintedDenom)
+	asset := k.bankKeeper.GetBalance(ctx, moduleAddr, appparams.BaseCoinUnit)
 	if asset.Amount.IsZero() {
 		// when allocating asset is zero, skip execution
 		return nil
 	}
 
-	ctx.Logger().Info("AllocateAsset minted amount", "module", types.ModuleName, "totalMintedAmount", asset.Amount, "height", ctx.BlockHeight())
+	cosmwasmContractAddress, err := sdk.AccAddressFromBech32(k.GetParams(ctx).DistributionContractAddress)
+	if err != nil {
+		ctx.Logger().Error("AllocateAsset failed to parse contract address",
+			"module", types.ModuleName,
+			"height", ctx.BlockHeight(),
+			"raw_address", k.GetParams(ctx).DistributionContractAddress,
+			"error", err.Error())
+		return nil
+	}
+
+	ctx.Logger().Info(
+		"AllocateAsset minted amount",
+		"module", types.ModuleName,
+		"totalMintedAmount", asset.Amount,
+		"height", ctx.BlockHeight(),
+		"destination", cosmwasmContractAddress.String(),
+	)
 
 	coins := sdk.NewCoins(asset)
 	distributeMsg := map[string]interface{}{"distribute": struct{}{}}
