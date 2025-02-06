@@ -2,8 +2,6 @@ package stable_staking_incentives
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -18,18 +16,16 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 
-	"github.com/osmosis-labs/osmosis/v26/x/pool-incentives/client/cli"
-	"github.com/osmosis-labs/osmosis/v26/x/pool-incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v26/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v26/x/stable-staking-incentives/client/cli"
+	"github.com/osmosis-labs/osmosis/v26/x/stable-staking-incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v26/x/stable-staking-incentives/types"
 )
 
 var (
-	_ module.AppModuleBasic   = AppModuleBasic{}
-	_ module.HasGenesisBasics = AppModuleBasic{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 
 	_ appmodule.AppModule        = AppModule{}
 	_ module.HasConsensusVersion = AppModule{}
-	_ module.HasGenesis          = AppModule{}
 	_ module.HasServices         = AppModule{}
 )
 
@@ -40,23 +36,6 @@ func (AppModuleBasic) Name() string { return types.ModuleName }
 
 // RegisterLegacyAminoCodec registers the pool-incentives module's types on the LegacyAmino codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterLegacyAminoCodec(cdc)
-}
-
-// DefaultGenesis returns default genesis state as raw bytes for the pool-incentives
-// module.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
-}
-
-// ValidateGenesis performs genesis state validation for the pool-incentives module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
-	var data types.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
-	}
-
-	return types.ValidateGenesis(&data)
 }
 
 // ---------------------------------------
@@ -77,7 +56,7 @@ func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
 
 // RegisterInterfaces registers interfaces and implementations of the pool-incentives module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-	types.RegisterInterfaces(registry)
+
 }
 
 type AppModule struct {
@@ -109,22 +88,6 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 
 // QuerierRoute returns the pool-incentives module's querier route name.
 func (AppModule) QuerierRoute() string { return types.RouterKey }
-
-// InitGenesis performs genesis initialization for the pool-incentives module.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
-	var genesisState types.GenesisState
-
-	cdc.MustUnmarshalJSON(data, &genesisState)
-
-	am.keeper.InitGenesis(ctx, &genesisState)
-}
-
-// ExportGenesis returns the exported genesis state as raw bytes for the mint
-// module.
-func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs := am.keeper.ExportGenesis(ctx)
-	return cdc.MustMarshalJSON(gs)
-}
 
 // ___________________________________________________________________________
 
