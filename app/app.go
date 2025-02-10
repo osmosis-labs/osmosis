@@ -303,7 +303,8 @@ func NewOsmosisApp(
 	if err != nil {
 		panic(err)
 	}
-	defer profiler.Stop()
+
+	// defer profiler.Stop()
 
 
 	initReusablePackageInjections() // This should run before anything else to make sure the variables are properly initialized
