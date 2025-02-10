@@ -14,6 +14,8 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
 
+	"gopkg.in/DataDog/dd-trace-go.v1/profiler"
+
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
@@ -281,6 +283,28 @@ func NewOsmosisApp(
 			panic(err)
 		}
 	}
+
+	err := profiler.Start(
+		profiler.WithService(OTELConfig.ServiceName),
+		// profiler.WithEnv("<ENVIRONMENT>"),
+		// profiler.WithVersion("<APPLICATION_VERSION>"),
+		// profiler.WithTags("<KEY1>:<VALUE1>", "<KEY2>:<VALUE2>"),
+		profiler.WithProfileTypes(
+		  profiler.CPUProfile,
+		  profiler.HeapProfile,
+		  // The profiles below are disabled by default to keep overhead
+		  // low, but can be enabled as needed.
+	
+		  // profiler.BlockProfile,
+		  // profiler.MutexProfile,
+		  // profiler.GoroutineProfile,
+		),
+	)
+	if err != nil {
+		panic(err)
+	}
+	defer profiler.Stop()
+
 
 	initReusablePackageInjections() // This should run before anything else to make sure the variables are properly initialized
 	overrideWasmVariables()
