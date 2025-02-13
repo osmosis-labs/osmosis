@@ -712,7 +712,6 @@ func (appKeepers *AppKeepers) WireICS20PreWasmKeeper(
 		appKeepers.keys[packetforwardtypes.StoreKey],
 		appKeepers.TransferKeeper,
 		appKeepers.IBCKeeper.ChannelKeeper,
-		appKeepers.DistrKeeper,
 		appKeepers.BankKeeper,
 		// The ICS4Wrapper is replaced by the HooksICS4Wrapper instead of the channel so that sending can be overridden by the middleware
 		appKeepers.HooksICS4Wrapper,
@@ -723,7 +722,6 @@ func (appKeepers *AppKeepers) WireICS20PreWasmKeeper(
 		appKeepers.PacketForwardKeeper,
 		0,
 		packetforwardkeeper.DefaultForwardTransferPacketTimeoutTimestamp,
-		packetforwardkeeper.DefaultRefundTransferPacketTimeoutTimestamp,
 	)
 
 	// RateLimiting IBC Middleware
@@ -814,7 +812,6 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
 	paramsKeeper.Subspace(concentratedliquiditytypes.ModuleName)
 	paramsKeeper.Subspace(icqtypes.ModuleName)
-	paramsKeeper.Subspace(packetforwardtypes.ModuleName).WithKeyTable(packetforwardtypes.ParamKeyTable())
 	paramsKeeper.Subspace(cosmwasmpooltypes.ModuleName)
 	paramsKeeper.Subspace(ibchookstypes.ModuleName)
 	paramsKeeper.Subspace(smartaccounttypes.ModuleName).WithKeyTable(smartaccounttypes.ParamKeyTable())

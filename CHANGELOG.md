@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
+* [#8996](https://github.com/osmosis-labs/osmosis/pull/8996) chore: upgrade pfm to v8.1.1 
 * [#8880](https://github.com/osmosis-labs/osmosis/pull/8880) chore: bump wasmd from 0.53.0 to 0.53.2
 
 ### State Compatible
