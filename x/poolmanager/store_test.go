@@ -7,11 +7,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
-	v3 "github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/cosmwasm/msg/v3"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/types"
-	"github.com/osmosis-labs/osmosis/v28/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v29/app/apptesting"
+	v3 "github.com/osmosis-labs/osmosis/v29/x/cosmwasmpool/cosmwasm/msg/v3"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v29/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v29/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
 )
 
 var (

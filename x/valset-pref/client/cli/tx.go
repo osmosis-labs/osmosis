@@ -12,7 +12,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v28/x/valset-pref/types"
+	"github.com/osmosis-labs/osmosis/v29/x/valset-pref/types"
 )
 
 func GetTxCmd() *cobra.Command {

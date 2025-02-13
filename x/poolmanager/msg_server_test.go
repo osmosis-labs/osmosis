@@ -5,9 +5,9 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
-	poolmanagerKeeper "github.com/osmosis-labs/osmosis/v28/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
+	appparams "github.com/osmosis-labs/osmosis/v29/app/params"
+	poolmanagerKeeper "github.com/osmosis-labs/osmosis/v29/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
 )
 
 var (

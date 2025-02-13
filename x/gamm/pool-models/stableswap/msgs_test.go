@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appParams "github.com/osmosis-labs/osmosis/v28/app/params"
-	stableswap "github.com/osmosis-labs/osmosis/v28/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v28/x/gamm/types"
+	appParams "github.com/osmosis-labs/osmosis/v29/app/params"
+	stableswap "github.com/osmosis-labs/osmosis/v29/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v29/x/gamm/types"
 )
 
 func baseCreatePoolMsgGen(sender sdk.AccAddress) *stableswap.MsgCreateStableswapPool {

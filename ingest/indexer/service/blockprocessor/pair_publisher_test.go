@@ -6,10 +6,10 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
-	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"
-	indexermocks "github.com/osmosis-labs/osmosis/v28/ingest/indexer/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v28/ingest/indexer/service/blockprocessor"
+	"github.com/osmosis-labs/osmosis/v29/app/apptesting"
+	commondomain "github.com/osmosis-labs/osmosis/v29/ingest/common/domain"
+	indexermocks "github.com/osmosis-labs/osmosis/v29/ingest/indexer/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v29/ingest/indexer/service/blockprocessor"
 )
 
 type PairPublisherTestSuite struct {

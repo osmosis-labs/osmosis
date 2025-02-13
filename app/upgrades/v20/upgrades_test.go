@@ -6,10 +6,10 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
-	v20 "github.com/osmosis-labs/osmosis/v28/app/upgrades/v20"
-	gammmigration "github.com/osmosis-labs/osmosis/v28/x/gamm/types/migration"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v28/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v29/app/apptesting"
+	v20 "github.com/osmosis-labs/osmosis/v29/app/upgrades/v20"
+	gammmigration "github.com/osmosis-labs/osmosis/v29/x/gamm/types/migration"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v29/x/pool-incentives/types"
 )
 
 type UpgradeTestSuite struct {

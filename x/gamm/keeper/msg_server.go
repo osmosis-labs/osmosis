@@ -5,10 +5,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v28/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v28/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v28/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v29/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v29/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v29/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
 )
 
 type msgServer struct {

@@ -4,8 +4,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	gammtypes "github.com/osmosis-labs/osmosis/v28/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v28/x/superfluid/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v29/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v29/x/superfluid/types"
 
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"

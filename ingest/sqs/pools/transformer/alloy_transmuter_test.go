@@ -7,13 +7,13 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sqscosmwasmpool "github.com/osmosis-labs/osmosis/v28/ingest/types/cosmwasmpool"
+	sqscosmwasmpool "github.com/osmosis-labs/osmosis/v29/ingest/types/cosmwasmpool"
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
-	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"
-	poolstransformer "github.com/osmosis-labs/osmosis/v28/ingest/sqs/pools/transformer"
+	"github.com/osmosis-labs/osmosis/v29/app/apptesting"
+	commondomain "github.com/osmosis-labs/osmosis/v29/ingest/common/domain"
+	poolstransformer "github.com/osmosis-labs/osmosis/v29/ingest/sqs/pools/transformer"
 )
 
 type mockWasmKeeper struct {

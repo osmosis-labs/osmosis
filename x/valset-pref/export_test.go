@@ -5,8 +5,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v28/x/valset-pref/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v29/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v29/x/valset-pref/types"
 )
 
 type (

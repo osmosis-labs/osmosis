@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v28/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v29/x/txfees/types"
 )
 
 type msgServer struct {

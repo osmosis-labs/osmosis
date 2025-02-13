@@ -7,8 +7,8 @@ import (
 
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	"github.com/osmosis-labs/osmosis/v28/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v28/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v29/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v29/x/gamm/types"
 )
 
 // NewGammProposalHandler is a handler for governance proposals for the GAMM module.

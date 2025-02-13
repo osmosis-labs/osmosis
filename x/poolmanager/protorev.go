@@ -6,7 +6,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
 )
 
 // GetTakerFeeTrackerForStakers returns the taker fee for stakers tracker for all denoms that has been

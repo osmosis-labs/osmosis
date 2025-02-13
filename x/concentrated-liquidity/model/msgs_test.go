@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appParams "github.com/osmosis-labs/osmosis/v28/app/params"
-	clmodel "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
+	appParams "github.com/osmosis-labs/osmosis/v29/app/params"
+	clmodel "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
 )
 
 func TestMsgCreateConcentratedPool(t *testing.T) {

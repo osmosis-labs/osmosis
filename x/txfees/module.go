@@ -27,10 +27,10 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v28/x/txfees/client/cli"
-	"github.com/osmosis-labs/osmosis/v28/x/txfees/keeper"
-	mempool1559 "github.com/osmosis-labs/osmosis/v28/x/txfees/keeper/mempool-1559"
-	"github.com/osmosis-labs/osmosis/v28/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v29/x/txfees/client/cli"
+	"github.com/osmosis-labs/osmosis/v29/x/txfees/keeper"
+	mempool1559 "github.com/osmosis-labs/osmosis/v29/x/txfees/keeper/mempool-1559"
+	"github.com/osmosis-labs/osmosis/v29/x/txfees/types"
 )
 
 var (

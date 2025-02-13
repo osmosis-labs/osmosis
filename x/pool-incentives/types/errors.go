@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
 
 	errorsmod "cosmossdk.io/errors"
 )
