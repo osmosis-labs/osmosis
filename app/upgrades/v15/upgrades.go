@@ -3,8 +3,6 @@ package v15
 import (
 	"context"
 
-	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward/types"
-
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -45,7 +43,9 @@ func CreateUpgradeHandler(
 
 		keepers.PoolManagerKeeper.SetParams(ctx, poolmanagerParams)
 		//nolint:errcheck
-		keepers.PacketForwardKeeper.SetParams(ctx, packetforwardtypes.DefaultParams())
+		// NOTE: This function has been removed in packet-forward-middleware v8.1.1
+		// leaving this here commented out for legacy purposes
+		// keepers.PacketForwardKeeper.SetParams(ctx, packetforwardtypes.DefaultParams())
 		setICQParams(ctx, keepers.ICQKeeper)
 
 		// N.B: pool id in gamm is to be deprecated in the future
