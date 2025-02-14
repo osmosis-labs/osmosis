@@ -1192,10 +1192,10 @@ func (suite *AccumTestSuite) TestGetPositionSize() {
 	}
 }
 
-// TestMarhsalUnmarshalRecord displays that we may use Records without options
+// TestMarshalUnmarshalRecord displays that we may use Records without options
 // For records with nil options, adding new fields to `Options`, should not
 // require future migrations.
-func (suite *AccumTestSuite) TestMarhsalUnmarshalRecord() {
+func (suite *AccumTestSuite) TestMarshalUnmarshalRecord() {
 	suite.SetupTest()
 
 	recordNoOptions := accumPackage.Record{
