@@ -8,7 +8,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/valsetpref/v1beta1/state.proto";
 import "cosmos/msg/v1/msg.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v28/x/valset-pref/types";
+option go_package = "github.com/osmosis-labs/osmosis/v29/x/valset-pref/types";
 
 // Msg defines the valset-pref module's gRPC message service.
 service Msg {

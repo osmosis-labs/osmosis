@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/go-metrics"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	types "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
+	types "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
 )
 
 // emitAccumulatorUpdateTelemetry emits telemetry for accumulator updates

@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v28/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v28/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v28/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v29/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v29/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v29/tests/e2e/initialization"
 )
 
 type CurrentBranchConfigurer struct {

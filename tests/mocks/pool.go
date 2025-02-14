@@ -10,7 +10,7 @@ import (
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
 	osmomath "github.com/osmosis-labs/osmosis/osmomath"
-	types0 "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
+	types0 "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
 )
 
 // MockPoolI is a mock of PoolI interface.

@@ -16,8 +16,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
-	cltypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v28/x/lockup/types"
+	cltypes "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v29/x/lockup/types"
 )
 
 // WithdrawAllMaturedLocks withdraws every lock that's in the process of unlocking, and has finished unlocking by

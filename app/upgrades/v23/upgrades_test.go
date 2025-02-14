@@ -14,10 +14,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
+	"github.com/osmosis-labs/osmosis/v29/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v29/app/params"
 
-	concentratedtypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
 )
 
 const (

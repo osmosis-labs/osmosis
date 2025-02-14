@@ -13,8 +13,8 @@ import (
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
-	v27 "github.com/osmosis-labs/osmosis/v28/app/upgrades/v27"
+	"github.com/osmosis-labs/osmosis/v29/app/apptesting"
+	v27 "github.com/osmosis-labs/osmosis/v29/app/upgrades/v27"
 )
 
 const (

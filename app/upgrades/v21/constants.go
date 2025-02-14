@@ -1,7 +1,7 @@
 package v21
 
 import (
-	"github.com/osmosis-labs/osmosis/v28/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v29/app/upgrades"
 
 	store "cosmossdk.io/store/types"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"

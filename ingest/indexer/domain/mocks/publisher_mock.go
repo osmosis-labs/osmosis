@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	indexerdomain "github.com/osmosis-labs/osmosis/v28/ingest/indexer/domain"
+	indexerdomain "github.com/osmosis-labs/osmosis/v29/ingest/indexer/domain"
 )
 
 // PublisherMock is a mock for Publisher.

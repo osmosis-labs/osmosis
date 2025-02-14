@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v28/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v29/x/gamm/types"
 )
 
 func TestGetPoolShareDenom(t *testing.T) {

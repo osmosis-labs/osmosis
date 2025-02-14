@@ -15,13 +15,13 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	osmoapp "github.com/osmosis-labs/osmosis/v28/app"
-	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
-	cl "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity"
-	clmodule "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/clmodule"
-	"github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types/genesis"
+	osmoapp "github.com/osmosis-labs/osmosis/v29/app"
+	appparams "github.com/osmosis-labs/osmosis/v29/app/params"
+	cl "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity"
+	clmodule "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/clmodule"
+	"github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types/genesis"
 )
 
 type singlePoolGenesisEntry struct {

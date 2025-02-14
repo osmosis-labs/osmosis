@@ -8,9 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v29/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
 )
 
 type RangeTestParams struct {

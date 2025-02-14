@@ -10,11 +10,11 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
-	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"
-	"github.com/osmosis-labs/osmosis/v28/ingest/sqs/domain"
-	cosmwasmpoolmodel "github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/model"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
+	commondomain "github.com/osmosis-labs/osmosis/v29/ingest/common/domain"
+	"github.com/osmosis-labs/osmosis/v29/ingest/sqs/domain"
+	cosmwasmpoolmodel "github.com/osmosis-labs/osmosis/v29/x/cosmwasmpool/model"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v29/x/cosmwasmpool/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
 )
 
 var _ commondomain.WriteListener = (*cosmwasmPoolWriteListener)(nil)

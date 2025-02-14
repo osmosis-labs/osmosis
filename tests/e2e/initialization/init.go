@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v28/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v29/tests/e2e/util"
 )
 
 func InitChain(id, dataDir string, nodeConfigs []*NodeConfig, votingPeriod, expeditedVotingPeriod time.Duration, forkHeight int) (*Chain, error) {

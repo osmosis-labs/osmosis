@@ -3,8 +3,8 @@ package indexer
 import (
 	"context"
 
-	"github.com/osmosis-labs/osmosis/v28/ingest/indexer/domain"
-	service "github.com/osmosis-labs/osmosis/v28/ingest/indexer/service/client"
+	"github.com/osmosis-labs/osmosis/v29/ingest/indexer/domain"
+	service "github.com/osmosis-labs/osmosis/v29/ingest/indexer/service/client"
 )
 
 // indexerIngester is an implementation of domain.Publisher.

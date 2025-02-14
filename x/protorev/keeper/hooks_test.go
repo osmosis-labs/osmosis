@@ -4,11 +4,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
-	"github.com/osmosis-labs/osmosis/v28/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v28/x/gamm/pool-models/stableswap"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v28/x/protorev/types"
+	appparams "github.com/osmosis-labs/osmosis/v29/app/params"
+	"github.com/osmosis-labs/osmosis/v29/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v29/x/gamm/pool-models/stableswap"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v29/x/protorev/types"
 )
 
 // Tests the hook implementation that is called after swapping
