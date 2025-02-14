@@ -545,7 +545,7 @@ func (s *KeeperTestSuite) TestSetLockRewardReceiverAddress() {
 		isnotOwner            bool
 		lockID                uint64
 		useNewReceiverAddress bool
-		exepctedErrorType     error
+		expectedErrorType     error
 	}{
 		{
 			name:                  "happy case",
@@ -558,21 +558,21 @@ func (s *KeeperTestSuite) TestSetLockRewardReceiverAddress() {
 			isnotOwner:            true,
 			lockID:                1,
 			useNewReceiverAddress: true,
-			exepctedErrorType:     types.ErrNotLockOwner,
+			expectedErrorType:     types.ErrNotLockOwner,
 		},
 		{
 			name:                  "error: lock id is invalid",
 			isnotOwner:            false,
 			lockID:                5,
 			useNewReceiverAddress: true,
-			exepctedErrorType:     errorsmod.Wrap(types.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", 5)),
+			expectedErrorType:     errorsmod.Wrap(types.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", 5)),
 		},
 		{
 			name:                  "error: new receiver address is same as old",
 			isnotOwner:            false,
 			lockID:                1,
 			useNewReceiverAddress: false,
-			exepctedErrorType:     types.ErrRewardReceiverIsSame,
+			expectedErrorType:     types.ErrRewardReceiverIsSame,
 		},
 	}
 
@@ -605,9 +605,9 @@ func (s *KeeperTestSuite) TestSetLockRewardReceiverAddress() {
 			// System under test
 			// now change the reward receiver state
 			err = s.App.LockupKeeper.SetLockRewardReceiverAddress(s.Ctx, tc.lockID, owner, newReceiver.String())
-			if tc.exepctedErrorType != nil {
+			if tc.expectedErrorType != nil {
 				s.Require().Error(err)
-				s.Require().ErrorContains(tc.exepctedErrorType, err.Error())
+				s.Require().ErrorContains(tc.expectedErrorType, err.Error())
 			} else {
 				s.Require().NoError(err)
 				lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
