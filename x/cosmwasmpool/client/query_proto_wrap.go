@@ -44,3 +44,13 @@ func (q Querier) ContractInfoByPoolId(ctx sdk.Context,
 
 	return &queryproto.ContractInfoByPoolIdResponse{ContractAddress: pool.GetContractAddress(), CodeId: pool.GetCodeId()}, nil
 }
+
+func (q Querier) OrderbookOrdersRaw(ctx sdk.Context,
+	req queryproto.OrderbookOrdersRawRequest,
+) (*queryproto.OrderbookOrdersRawResponse, error) {
+	orders, err := q.K.GetOrderbookOrdersRaw(ctx, req.PoolId)
+	if err != nil {
+		return nil, err
+	}
+	return &queryproto.OrderbookOrdersRawResponse{Orders: orders}, nil
+}

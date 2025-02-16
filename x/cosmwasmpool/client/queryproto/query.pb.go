@@ -314,6 +314,97 @@ func (m *ContractInfoByPoolIdResponse) GetCodeId() uint64 {
 	return 0
 }
 
+// =============================== Orderbook
+type OrderbookOrdersRawRequest struct {
+	// pool_id is the pool id of the requested pool.
+	PoolId uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
+}
+
+func (m *OrderbookOrdersRawRequest) Reset()         { *m = OrderbookOrdersRawRequest{} }
+func (m *OrderbookOrdersRawRequest) String() string { return proto.CompactTextString(m) }
+func (*OrderbookOrdersRawRequest) ProtoMessage()    {}
+func (*OrderbookOrdersRawRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_733c758985c393b2, []int{6}
+}
+func (m *OrderbookOrdersRawRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *OrderbookOrdersRawRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_OrderbookOrdersRawRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *OrderbookOrdersRawRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OrderbookOrdersRawRequest.Merge(m, src)
+}
+func (m *OrderbookOrdersRawRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *OrderbookOrdersRawRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_OrderbookOrdersRawRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OrderbookOrdersRawRequest proto.InternalMessageInfo
+
+func (m *OrderbookOrdersRawRequest) GetPoolId() uint64 {
+	if m != nil {
+		return m.PoolId
+	}
+	return 0
+}
+
+type OrderbookOrdersRawResponse struct {
+	// orders represents the list of orders in the orderbook
+	Orders [][]byte `protobuf:"bytes,1,rep,name=orders,proto3" json:"orders,omitempty" yaml:"orders"`
+}
+
+func (m *OrderbookOrdersRawResponse) Reset()         { *m = OrderbookOrdersRawResponse{} }
+func (m *OrderbookOrdersRawResponse) String() string { return proto.CompactTextString(m) }
+func (*OrderbookOrdersRawResponse) ProtoMessage()    {}
+func (*OrderbookOrdersRawResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_733c758985c393b2, []int{7}
+}
+func (m *OrderbookOrdersRawResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *OrderbookOrdersRawResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_OrderbookOrdersRawResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *OrderbookOrdersRawResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OrderbookOrdersRawResponse.Merge(m, src)
+}
+func (m *OrderbookOrdersRawResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *OrderbookOrdersRawResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_OrderbookOrdersRawResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OrderbookOrdersRawResponse proto.InternalMessageInfo
+
+func (m *OrderbookOrdersRawResponse) GetOrders() [][]byte {
+	if m != nil {
+		return m.Orders
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*ParamsRequest)(nil), "osmosis.cosmwasmpool.v1beta1.ParamsRequest")
 	proto.RegisterType((*ParamsResponse)(nil), "osmosis.cosmwasmpool.v1beta1.ParamsResponse")
@@ -321,6 +412,8 @@ func init() {
 	proto.RegisterType((*PoolsResponse)(nil), "osmosis.cosmwasmpool.v1beta1.PoolsResponse")
 	proto.RegisterType((*ContractInfoByPoolIdRequest)(nil), "osmosis.cosmwasmpool.v1beta1.ContractInfoByPoolIdRequest")
 	proto.RegisterType((*ContractInfoByPoolIdResponse)(nil), "osmosis.cosmwasmpool.v1beta1.ContractInfoByPoolIdResponse")
+	proto.RegisterType((*OrderbookOrdersRawRequest)(nil), "osmosis.cosmwasmpool.v1beta1.OrderbookOrdersRawRequest")
+	proto.RegisterType((*OrderbookOrdersRawResponse)(nil), "osmosis.cosmwasmpool.v1beta1.OrderbookOrdersRawResponse")
 }
 
 func init() {
@@ -386,6 +479,7 @@ type QueryClient interface {
 	// Params returns the parameters of the x/cosmwasmpool module.
 	Params(ctx context.Context, in *ParamsRequest, opts ...grpc.CallOption) (*ParamsResponse, error)
 	ContractInfoByPoolId(ctx context.Context, in *ContractInfoByPoolIdRequest, opts ...grpc.CallOption) (*ContractInfoByPoolIdResponse, error)
+	OrderbookOrdersRaw(ctx context.Context, in *OrderbookOrdersRawRequest, opts ...grpc.CallOption) (*OrderbookOrdersRawResponse, error)
 }
 
 type queryClient struct {
@@ -423,6 +517,15 @@ func (c *queryClient) ContractInfoByPoolId(ctx context.Context, in *ContractInfo
 	return out, nil
 }
 
+func (c *queryClient) OrderbookOrdersRaw(ctx context.Context, in *OrderbookOrdersRawRequest, opts ...grpc.CallOption) (*OrderbookOrdersRawResponse, error) {
+	out := new(OrderbookOrdersRawResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.cosmwasmpool.v1beta1.Query/OrderbookOrdersRaw", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Pools returns all cosmwasm pools
@@ -430,6 +533,7 @@ type QueryServer interface {
 	// Params returns the parameters of the x/cosmwasmpool module.
 	Params(context.Context, *ParamsRequest) (*ParamsResponse, error)
 	ContractInfoByPoolId(context.Context, *ContractInfoByPoolIdRequest) (*ContractInfoByPoolIdResponse, error)
+	OrderbookOrdersRaw(context.Context, *OrderbookOrdersRawRequest) (*OrderbookOrdersRawResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -444,6 +548,9 @@ func (*UnimplementedQueryServer) Params(ctx context.Context, req *ParamsRequest)
 }
 func (*UnimplementedQueryServer) ContractInfoByPoolId(ctx context.Context, req *ContractInfoByPoolIdRequest) (*ContractInfoByPoolIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ContractInfoByPoolId not implemented")
+}
+func (*UnimplementedQueryServer) OrderbookOrdersRaw(ctx context.Context, req *OrderbookOrdersRawRequest) (*OrderbookOrdersRawResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OrderbookOrdersRaw not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -504,6 +611,24 @@ func _Query_ContractInfoByPoolId_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_OrderbookOrdersRaw_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OrderbookOrdersRawRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).OrderbookOrdersRaw(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.cosmwasmpool.v1beta1.Query/OrderbookOrdersRaw",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).OrderbookOrdersRaw(ctx, req.(*OrderbookOrdersRawRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.cosmwasmpool.v1beta1.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -519,6 +644,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ContractInfoByPoolId",
 			Handler:    _Query_ContractInfoByPoolId_Handler,
+		},
+		{
+			MethodName: "OrderbookOrdersRaw",
+			Handler:    _Query_OrderbookOrdersRaw_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -728,6 +857,66 @@ func (m *ContractInfoByPoolIdResponse) MarshalToSizedBuffer(dAtA []byte) (int, e
 	return len(dAtA) - i, nil
 }
 
+func (m *OrderbookOrdersRawRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *OrderbookOrdersRawRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *OrderbookOrdersRawRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.PoolId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.PoolId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *OrderbookOrdersRawResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *OrderbookOrdersRawResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *OrderbookOrdersRawResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Orders) > 0 {
+		for iNdEx := len(m.Orders) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Orders[iNdEx])
+			copy(dAtA[i:], m.Orders[iNdEx])
+			i = encodeVarintQuery(dAtA, i, uint64(len(m.Orders[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -815,6 +1004,33 @@ func (m *ContractInfoByPoolIdResponse) Size() (n int) {
 	}
 	if m.CodeId != 0 {
 		n += 1 + sovQuery(uint64(m.CodeId))
+	}
+	return n
+}
+
+func (m *OrderbookOrdersRawRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.PoolId != 0 {
+		n += 1 + sovQuery(uint64(m.PoolId))
+	}
+	return n
+}
+
+func (m *OrderbookOrdersRawResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Orders) > 0 {
+		for _, b := range m.Orders {
+			l = len(b)
+			n += 1 + l + sovQuery(uint64(l))
+		}
 	}
 	return n
 }
@@ -1313,6 +1529,157 @@ func (m *ContractInfoByPoolIdResponse) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *OrderbookOrdersRawRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: OrderbookOrdersRawRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: OrderbookOrdersRawRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
+			}
+			m.PoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *OrderbookOrdersRawResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: OrderbookOrdersRawResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: OrderbookOrdersRawResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Orders", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Orders = append(m.Orders, make([]byte, postIndex-iNdEx))
+			copy(m.Orders[len(m.Orders)-1], dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])

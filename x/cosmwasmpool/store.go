@@ -1,6 +1,8 @@
 package cosmwasmpool
 
 import (
+	"bytes"
+
 	"cosmossdk.io/store/prefix"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -68,4 +70,31 @@ func (k Keeper) GetSerializedPools(ctx sdk.Context, pagination *query.PageReques
 		return nil, nil, err
 	}
 	return anys, pageRes, err
+}
+
+var orderKeyBytes = []byte{0, 6, 111}
+var orderIdBytes = []byte{123, 34, 116}
+
+func (k Keeper) GetOrderbookOrdersRaw(ctx sdk.Context, poolId uint64) ([][]byte, error) {
+	pool, err := k.GetPoolById(ctx, poolId)
+	if err != nil {
+		return nil, err
+	}
+	// TODO: Verify the provided address is a cosmwasm pool
+
+	contractAddress := sdk.MustAccAddressFromBech32(pool.GetContractAddress())
+
+	orders := [][]byte{}
+	k.wasmKeeper.IterateContractState(ctx, contractAddress, func(key, value []byte) bool {
+		if !bytes.HasPrefix(key, orderKeyBytes) {
+			return false
+		}
+		if bytes.HasPrefix(value, orderIdBytes) {
+			orders = append(orders, value)
+			return false
+		}
+		return false
+	})
+
+	return orders, nil
 }
