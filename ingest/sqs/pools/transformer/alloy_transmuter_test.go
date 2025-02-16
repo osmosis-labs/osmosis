@@ -7,8 +7,9 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sqscosmwasmpool "github.com/osmosis-labs/osmosis/v28/ingest/types/cosmwasmpool"
 	"github.com/stretchr/testify/require"
+
+	sqscosmwasmpool "github.com/osmosis-labs/osmosis/v28/ingest/types/cosmwasmpool"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
@@ -17,8 +18,9 @@ import (
 )
 
 type mockWasmKeeper struct {
-	QueryRawFn   func(ctx context.Context, contractAddress sdk.AccAddress, key []byte) []byte
-	QuerySmartFn func(ctx context.Context, contractAddress sdk.AccAddress, req []byte) ([]byte, error)
+	QueryRawFn             func(ctx context.Context, contractAddress sdk.AccAddress, key []byte) []byte
+	QuerySmartFn           func(ctx context.Context, contractAddress sdk.AccAddress, req []byte) ([]byte, error)
+	IterateContractStateFn func(ctx context.Context, contractAddress sdk.AccAddress, cb func(key []byte, value []byte) bool)
 }
 
 // QueryRaw implements commondomain.WasmKeeper.
@@ -33,6 +35,14 @@ func (m *mockWasmKeeper) QueryRaw(ctx context.Context, contractAddress sdk.AccAd
 func (m *mockWasmKeeper) QuerySmart(ctx context.Context, contractAddress sdk.AccAddress, req []byte) ([]byte, error) {
 	if m.QuerySmartFn != nil {
 		return m.QuerySmartFn(ctx, contractAddress, req)
+	}
+	panic("unimplemented")
+}
+
+// IterateContractState implements commondomain.WasmKeeper.
+func (m *mockWasmKeeper) IterateContractState(ctx context.Context, contractAddress sdk.AccAddress, cb func(key []byte, value []byte) bool) {
+	if m.IterateContractStateFn != nil {
+		m.IterateContractStateFn(ctx, contractAddress, cb)
 	}
 	panic("unimplemented")
 }

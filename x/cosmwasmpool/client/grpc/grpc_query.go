@@ -51,3 +51,12 @@ func (q Querier) ContractInfoByPoolId(grpcCtx context.Context,
 	return q.Q.ContractInfoByPoolId(ctx, *req)
 }
 
+func (q Querier) OrderbookOrdersRaw(grpcCtx context.Context,
+	req *queryproto.OrderbookOrdersRawRequest,
+) (*queryproto.OrderbookOrdersRawResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.OrderbookOrdersRaw(ctx, *req)
+}

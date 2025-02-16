@@ -58,4 +58,5 @@ type WasmKeeper interface {
 	QueryGasLimit() storetypes.Gas
 
 	GetContractInfo(ctx context.Context, contractAddress sdk.AccAddress) *wasmtypes.ContractInfo
+	IterateContractState(ctx context.Context, contractAddress sdk.AccAddress, cb func(key, value []byte) bool)
 }
