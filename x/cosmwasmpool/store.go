@@ -80,8 +80,7 @@ func (k Keeper) GetOrderbookOrdersRaw(ctx sdk.Context, poolId uint64) ([][]byte,
 	if err != nil {
 		return nil, err
 	}
-	// TODO: Verify the provided address is a cosmwasm pool
-
+	// TODO: Verify the provided pool is an orderbook pool
 	contractAddress := sdk.MustAccAddressFromBech32(pool.GetContractAddress())
 
 	orders := [][]byte{}
