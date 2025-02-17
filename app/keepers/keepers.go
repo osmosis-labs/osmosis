@@ -582,6 +582,39 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		*appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.StakingKeeper, appKeepers.DistrKeeper, appKeepers.EpochsKeeper, appKeepers.LockupKeeper, appKeepers.GAMMKeeper, appKeepers.IncentivesKeeper,
 		lockupkeeper.NewMsgServerImpl(appKeepers.LockupKeeper), appKeepers.ConcentratedLiquidityKeeper, appKeepers.PoolManagerKeeper, appKeepers.ValidatorSetPreferenceKeeper)
 
+	oracleKeeper := oraclekeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[oracletypes.StoreKey],
+		appKeepers.GetSubspace(oracletypes.ModuleName),
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.DistrKeeper,
+		appKeepers.StakingKeeper,
+		appKeepers.EpochsKeeper,
+		distrtypes.ModuleName,
+	)
+	appKeepers.OracleKeeper = &oracleKeeper
+
+	marketKeeper := marketkeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[markettypes.StoreKey],
+		appKeepers.GetSubspace(markettypes.ModuleName),
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.OracleKeeper,
+	)
+	appKeepers.MarketKeeper = &marketKeeper
+
+	treasuryKeeper := treasurykeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[treasurytypes.StoreKey],
+		appKeepers.GetSubspace(treasurytypes.ModuleName),
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.MarketKeeper,
+		appKeepers.OracleKeeper)
+	appKeepers.TreasuryKeeper = &treasuryKeeper
+
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
 	// The last arguments can contain custom message handlers, and custom query handlers,
@@ -638,39 +671,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.WasmKeeper = &wasmKeeper
 	appKeepers.CosmwasmPoolKeeper.SetWasmKeeper(appKeepers.WasmKeeper)
 	appKeepers.PoolManagerKeeper.SetWasmKeeper(appKeepers.WasmKeeper)
-
-	oracleKeeper := oraclekeeper.NewKeeper(
-		appCodec,
-		appKeepers.keys[oracletypes.StoreKey],
-		appKeepers.GetSubspace(oracletypes.ModuleName),
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.DistrKeeper,
-		appKeepers.StakingKeeper,
-		appKeepers.EpochsKeeper,
-		distrtypes.ModuleName,
-	)
-	appKeepers.OracleKeeper = &oracleKeeper
-
-	marketKeeper := marketkeeper.NewKeeper(
-		appCodec,
-		appKeepers.keys[markettypes.StoreKey],
-		appKeepers.GetSubspace(markettypes.ModuleName),
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.OracleKeeper,
-	)
-	appKeepers.MarketKeeper = &marketKeeper
-
-	treasuryKeeper := treasurykeeper.NewKeeper(
-		appCodec,
-		appKeepers.keys[treasurytypes.StoreKey],
-		appKeepers.GetSubspace(treasurytypes.ModuleName),
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.MarketKeeper,
-		appKeepers.OracleKeeper)
-	appKeepers.TreasuryKeeper = &treasuryKeeper
 
 	// Pass the contract keeper to all the structs (generally ICS4Wrappers for ibc middlewares) that need it
 	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
@@ -942,7 +942,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 
 	appKeepers.IncentivesKeeper.SetHooks(
 		incentivestypes.NewMultiIncentiveHooks(
-		// insert incentive hooks receivers here
+			// insert incentive hooks receivers here
 		),
 	)
 
@@ -969,7 +969,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 
 	appKeepers.GovKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// insert governance hooks receivers here
+			// insert governance hooks receivers here
 		),
 	)
 }
