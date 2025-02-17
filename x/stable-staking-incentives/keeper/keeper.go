@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
 
 	"cosmossdk.io/log"
 
@@ -22,10 +22,11 @@ type Keeper struct {
 
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
-	wasmKeeper    types.ContractKeeper
+	wasmKeeper    cosmwasm.ContractKeeper
 }
 
-func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper,
+	bankKeeper types.BankKeeper, wasmKeeper cosmwasm.ContractKeeper) Keeper {
 	// ensure pool-incentives module account is set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -46,16 +47,6 @@ func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, acc
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
-}
-
-func (k Keeper) ExecuteWasmContract(ctx sdk.Context, contractAddr sdk.AccAddress, msg interface{}, funds sdk.Coins) error {
-	msgBz, err := json.Marshal(msg)
-	if err != nil {
-		return err
-	}
-
-	_, err = k.wasmKeeper.Execute(ctx, contractAddr, k.accountKeeper.GetModuleAddress(types.ModuleName), msgBz, funds)
-	return err
 }
 
 // AllocateAsset allocates and distributes coin according a gauge’s proportional weight that is recorded in the record.
@@ -86,6 +77,7 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 	)
 
 	coins := sdk.NewCoins(asset)
-	distributeMsg := map[string]interface{}{"distribute": struct{}{}}
-	return k.ExecuteWasmContract(ctx, moduleAddr, distributeMsg, coins)
+	distributeMsg := map[string]interface{}{"distribute_rewards": struct{}{}}
+	_, err = cosmwasm.Execute[any, any](ctx, k.wasmKeeper, cosmwasmContractAddress.String(), moduleAddr, coins, distributeMsg)
+	return err
 }
