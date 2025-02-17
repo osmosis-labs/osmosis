@@ -60,6 +60,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v26/x/poolmanager"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v26/x/protorev"
+	stablestakingincentviceskeeper "github.com/osmosis-labs/osmosis/v26/x/stable-staking-incentives/keeper"
+	stablestakingincentvicestypes "github.com/osmosis-labs/osmosis/v26/x/stable-staking-incentives/types"
 	treasurykeeper "github.com/osmosis-labs/osmosis/v26/x/treasury/keeper"
 	treasurytypes "github.com/osmosis-labs/osmosis/v26/x/treasury/types"
 	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
@@ -152,43 +154,44 @@ type AppKeepers struct {
 	ScopedICQKeeper           capabilitykeeper.ScopedKeeper
 
 	// "Normal" keepers
-	AccountKeeper                *authkeeper.AccountKeeper
-	AuthzKeeper                  *authzkeeper.Keeper
-	StakingKeeper                *stakingkeeper.Keeper
-	DistrKeeper                  *distrkeeper.Keeper
-	DowntimeKeeper               *downtimedetector.Keeper
-	SlashingKeeper               *slashingkeeper.Keeper
-	IBCKeeper                    *ibckeeper.Keeper
-	IBCHooksKeeper               *ibchookskeeper.Keeper
-	ICAHostKeeper                *icahostkeeper.Keeper
-	ICAControllerKeeper          *icacontrollerkeeper.Keeper
-	ICQKeeper                    *icqkeeper.Keeper
-	TransferKeeper               *ibctransferkeeper.Keeper
-	IBCWasmClientKeeper          *ibcwasmkeeper.Keeper
-	EvidenceKeeper               *evidencekeeper.Keeper
-	GAMMKeeper                   *gammkeeper.Keeper
-	TwapKeeper                   *twap.Keeper
-	LockupKeeper                 *lockupkeeper.Keeper
-	EpochsKeeper                 *epochskeeper.Keeper
-	IncentivesKeeper             *incentiveskeeper.Keeper
-	ProtoRevKeeper               *protorevkeeper.Keeper
-	MintKeeper                   *mintkeeper.Keeper
-	PoolIncentivesKeeper         *poolincentiveskeeper.Keeper
-	TxFeesKeeper                 *txfeeskeeper.Keeper
-	SuperfluidKeeper             *superfluidkeeper.Keeper
-	GovKeeper                    *govkeeper.Keeper
-	WasmKeeper                   *wasmkeeper.Keeper
-	ContractKeeper               *wasmkeeper.PermissionedKeeper
-	TokenFactoryKeeper           *tokenfactorykeeper.Keeper
-	PoolManagerKeeper            *poolmanager.Keeper
-	OracleKeeper                 *oraclekeeper.Keeper
-	MarketKeeper                 *marketkeeper.Keeper
-	TreasuryKeeper               *treasurykeeper.Keeper
-	ValidatorSetPreferenceKeeper *valsetpref.Keeper
-	ConcentratedLiquidityKeeper  *concentratedliquidity.Keeper
-	CosmwasmPoolKeeper           *cosmwasmpool.Keeper
-	SmartAccountKeeper           *smartaccountkeeper.Keeper
-	AuthenticatorManager         *authenticator.AuthenticatorManager
+	AccountKeeper                 *authkeeper.AccountKeeper
+	AuthzKeeper                   *authzkeeper.Keeper
+	StakingKeeper                 *stakingkeeper.Keeper
+	DistrKeeper                   *distrkeeper.Keeper
+	DowntimeKeeper                *downtimedetector.Keeper
+	SlashingKeeper                *slashingkeeper.Keeper
+	IBCKeeper                     *ibckeeper.Keeper
+	IBCHooksKeeper                *ibchookskeeper.Keeper
+	ICAHostKeeper                 *icahostkeeper.Keeper
+	ICAControllerKeeper           *icacontrollerkeeper.Keeper
+	ICQKeeper                     *icqkeeper.Keeper
+	TransferKeeper                *ibctransferkeeper.Keeper
+	IBCWasmClientKeeper           *ibcwasmkeeper.Keeper
+	EvidenceKeeper                *evidencekeeper.Keeper
+	GAMMKeeper                    *gammkeeper.Keeper
+	TwapKeeper                    *twap.Keeper
+	LockupKeeper                  *lockupkeeper.Keeper
+	EpochsKeeper                  *epochskeeper.Keeper
+	IncentivesKeeper              *incentiveskeeper.Keeper
+	ProtoRevKeeper                *protorevkeeper.Keeper
+	MintKeeper                    *mintkeeper.Keeper
+	PoolIncentivesKeeper          *poolincentiveskeeper.Keeper
+	TxFeesKeeper                  *txfeeskeeper.Keeper
+	SuperfluidKeeper              *superfluidkeeper.Keeper
+	GovKeeper                     *govkeeper.Keeper
+	WasmKeeper                    *wasmkeeper.Keeper
+	ContractKeeper                *wasmkeeper.PermissionedKeeper
+	TokenFactoryKeeper            *tokenfactorykeeper.Keeper
+	PoolManagerKeeper             *poolmanager.Keeper
+	OracleKeeper                  *oraclekeeper.Keeper
+	MarketKeeper                  *marketkeeper.Keeper
+	TreasuryKeeper                *treasurykeeper.Keeper
+	StableStakingIncentivesKeeper *stablestakingincentviceskeeper.Keeper
+	ValidatorSetPreferenceKeeper  *valsetpref.Keeper
+	ConcentratedLiquidityKeeper   *concentratedliquidity.Keeper
+	CosmwasmPoolKeeper            *cosmwasmpool.Keeper
+	SmartAccountKeeper            *smartaccountkeeper.Keeper
+	AuthenticatorManager          *authenticator.AuthenticatorManager
 
 	// IBC modules
 	// transfer module
@@ -615,6 +618,13 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.OracleKeeper)
 	appKeepers.TreasuryKeeper = &treasuryKeeper
 
+	stableStakingIncetivesKeeper := stablestakingincentviceskeeper.NewKeeper(
+		appKeepers.keys[stablestakingincentvicestypes.StoreKey],
+		appKeepers.GetSubspace(stablestakingincentvicestypes.ModuleName),
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper)
+	appKeepers.StableStakingIncentivesKeeper = &stableStakingIncetivesKeeper
+
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
 	// The last arguments can contain custom message handlers, and custom query handlers,
@@ -679,6 +689,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.CosmwasmPoolKeeper.SetContractKeeper(appKeepers.ContractKeeper)
 	appKeepers.IBCHooksKeeper.ContractKeeper = appKeepers.ContractKeeper
 	appKeepers.ConcentratedLiquidityKeeper.SetContractKeeper(appKeepers.ContractKeeper)
+	appKeepers.StableStakingIncentivesKeeper.SetContractKeeper(appKeepers.ContractKeeper)
 
 	// register CosmWasm authenticator
 	appKeepers.AuthenticatorManager.RegisterAuthenticator(

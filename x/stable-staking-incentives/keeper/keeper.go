@@ -20,13 +20,12 @@ type Keeper struct {
 
 	paramSpace paramtypes.Subspace
 
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
-	wasmKeeper    cosmwasm.ContractKeeper
+	accountKeeper  types.AccountKeeper
+	bankKeeper     types.BankKeeper
+	contractKeeper cosmwasm.ContractKeeper
 }
 
-func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper, wasmKeeper cosmwasm.ContractKeeper) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper) Keeper {
 	// ensure pool-incentives module account is set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -41,7 +40,12 @@ func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, acc
 		storeKey:      storeKey,
 		paramSpace:    paramSpace,
 		accountKeeper: accountKeeper,
+		bankKeeper:    bankKeeper,
 	}
+}
+
+func (k *Keeper) SetContractKeeper(contractKeeper cosmwasm.ContractKeeper) {
+	k.contractKeeper = contractKeeper
 }
 
 // Logger returns a module-specific logger.
@@ -78,6 +82,6 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 
 	coins := sdk.NewCoins(asset)
 	distributeMsg := map[string]interface{}{"distribute_rewards": struct{}{}}
-	_, err = cosmwasm.Execute[any, any](ctx, k.wasmKeeper, cosmwasmContractAddress.String(), moduleAddr, coins, distributeMsg)
+	_, err = cosmwasm.Execute[any, any](ctx, k.contractKeeper, cosmwasmContractAddress.String(), moduleAddr, coins, distributeMsg)
 	return err
 }
