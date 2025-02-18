@@ -45,12 +45,12 @@ func (q Querier) ContractInfoByPoolId(ctx sdk.Context,
 	return &queryproto.ContractInfoByPoolIdResponse{ContractAddress: pool.GetContractAddress(), CodeId: pool.GetCodeId()}, nil
 }
 
-func (q Querier) OrderbookOrdersRaw(ctx sdk.Context,
-	req queryproto.OrderbookOrdersRawRequest,
-) (*queryproto.OrderbookOrdersRawResponse, error) {
-	orders, err := q.K.GetOrderbookOrdersRaw(ctx, req.PoolId)
+func (q Querier) PoolRawFilteredState(ctx sdk.Context,
+	req queryproto.PoolRawFilteredStateRequest,
+) (*queryproto.PoolRawFilteredStateResponse, error) {
+	values, err := q.K.GetPoolRawFilteredState(ctx, req.PoolId, req.KeyFilter, req.ValueFilter)
 	if err != nil {
 		return nil, err
 	}
-	return &queryproto.OrderbookOrdersRawResponse{Orders: orders}, nil
+	return &queryproto.PoolRawFilteredStateResponse{Values: values}, nil
 }
