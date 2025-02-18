@@ -72,28 +72,34 @@ func (k Keeper) GetSerializedPools(ctx sdk.Context, pagination *query.PageReques
 	return anys, pageRes, err
 }
 
-var orderKeyBytes = []byte{0, 6, 111}
-var orderIdBytes = []byte{123, 34, 116}
-
-func (k Keeper) GetOrderbookOrdersRaw(ctx sdk.Context, poolId uint64) ([][]byte, error) {
+// GetPoolRawFilteredState returns the state of the pool as a slice of []byte, filtered by the provided key and value filters.
+// The filters are applied using bytes.Contains on the byte representations of the key and value.
+func (k Keeper) GetPoolRawFilteredState(ctx sdk.Context, poolId uint64, keyFilter, valueFilter string) ([][]byte, error) {
 	pool, err := k.GetPoolById(ctx, poolId)
 	if err != nil {
 		return nil, err
 	}
-	// TODO: Verify the provided pool is an orderbook pool
 	contractAddress := sdk.MustAccAddressFromBech32(pool.GetContractAddress())
 
-	orders := [][]byte{}
+	values := [][]byte{}
+
+	keyFilterBz := []byte(keyFilter)
+	valueFilterBz := []byte(valueFilter)
+
+	shouldFilterKey := keyFilter != ""
+	shouldFilterValue := valueFilter != ""
+
+	// TODO: what do we do if no filter is passed? do we need to paginate the response? (ideally not)
 	k.wasmKeeper.IterateContractState(ctx, contractAddress, func(key, value []byte) bool {
-		if !bytes.HasPrefix(key, orderKeyBytes) {
+		if shouldFilterKey && !bytes.Contains(key, keyFilterBz) {
 			return false
 		}
-		if bytes.HasPrefix(value, orderIdBytes) {
-			orders = append(orders, value)
+		if shouldFilterValue && !bytes.Contains(value, valueFilterBz) {
 			return false
 		}
+		values = append(values, value)
 		return false
 	})
 
-	return orders, nil
+	return values, nil
 }
