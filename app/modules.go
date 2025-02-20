@@ -104,6 +104,8 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v26/x/protorev"
 	protorevtypes "github.com/osmosis-labs/osmosis/v26/x/protorev/types"
+	stablestakingincentives "github.com/osmosis-labs/osmosis/v26/x/stable-staking-incentives"
+	stablestakingincentivestypes "github.com/osmosis-labs/osmosis/v26/x/stable-staking-incentives/types"
 	superfluid "github.com/osmosis-labs/osmosis/v26/x/superfluid"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
 	"github.com/osmosis-labs/osmosis/v26/x/tokenfactory"
@@ -135,6 +137,7 @@ var moduleAccountPermissions = map[string][]string{
 	protorevtypes.ModuleName:                 {authtypes.Minter, authtypes.Burner},
 	lockuptypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
 	poolincentivestypes.ModuleName:           nil,
+	stablestakingincentivestypes.ModuleName:  nil,
 	superfluidtypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 	txfeestypes.ModuleName:                   nil,
 	txfeestypes.NonNativeTxFeeCollectorName:  nil,
@@ -200,6 +203,7 @@ func appModules(
 		incentives.NewAppModule(*app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
 		lockup.NewAppModule(*app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(*app.PoolIncentivesKeeper),
+		stablestakingincentives.NewAppModule(*app.StableStakingIncentivesKeeper),
 		epochs.NewAppModule(*app.EpochsKeeper),
 		superfluid.NewAppModule(
 			*app.SuperfluidKeeper,
@@ -300,6 +304,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		ibctransfertypes.ModuleName,
 		consensusparamtypes.ModuleName,
 		poolincentivestypes.ModuleName,
+		stablestakingincentivestypes.ModuleName,
 		superfluidtypes.ModuleName,
 		tokenfactorytypes.ModuleName,
 		valsetpreftypes.ModuleName,
