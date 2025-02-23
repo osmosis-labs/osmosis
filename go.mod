@@ -300,7 +300,7 @@ replace (
 	// Direct cosmos-sdk branch link: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v28/0.50.11, current branch: osmo-v28/0.50.11
 	// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/eb1a8e88a4ddf77bc2fe235fc07c57016b7386f0
 	// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.50.11-v28-osmo-1
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.50.11-v28-osmo-1
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.50.11-v28-osmo-1.0.20250223233847-0e0b7f81e020
 
 	github.com/skip-mev/block-sdk/v2 => github.com/osmosis-labs/block-sdk/v2 v2.1.5-patch-1
 
