@@ -13,7 +13,7 @@ require (
 	github.com/cosmos/cosmos-db v1.1.0
 	github.com/cosmos/cosmos-sdk v0.50.7
 	github.com/cosmos/gogoproto v1.7.0
-	github.com/cosmos/iavl v1.2.4
+	github.com/cosmos/iavl v1.2.5-0.20250224053109-a896fc3bf0e1
 	github.com/cosmos/ibc-go/v8 v8.3.2
 	github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240517165907-1625703bc16d
 	github.com/spf13/cast v1.7.0
