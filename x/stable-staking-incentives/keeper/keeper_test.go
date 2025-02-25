@@ -2,11 +2,9 @@ package keeper_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v26/x/stable-staking-incentives/types"
 )
