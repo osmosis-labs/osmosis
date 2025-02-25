@@ -183,7 +183,7 @@ replace (
 	// Disabling fast nodes makes nodes sync faster.
 	// All nodes need to have the lockup fast nodes enabled though or else we process epoch slowly.
 	// Also, snapshot nodes need to have all fast nodes enabled in order to prune quickly.
-	// Also, we need an osmosis version of the store to enable aysnc pruning.
+	// Also, we need an osmosis version of the store to enable async pruning.
 	// Direct cosmos-sdk branch link: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v28/0.50.11/store, current branch: osmo-v28/0.50.11
 	// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/eb1a8e88a4ddf77bc2fe235fc07c57016b7386f0
 	// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/store/v1.1.1-v0.50.11-v28-osmo-2
