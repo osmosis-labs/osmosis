@@ -7,15 +7,14 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v26/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v26/x/pool-incentives/types"
-
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v26/x/mint/types"
+	stablestakingincentivestypes "github.com/osmosis-labs/osmosis/v26/x/stable-staking-incentives/types"
 )
 
 // Keeper of the mint store.
@@ -131,8 +130,8 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 		return err
 	}
 
-	// allocate pool allocation ratio to pool-incentives module account.
-	poolIncentivesAmount, err := k.distributeToModule(ctx, poolincentivestypes.ModuleName, mintedCoin, proportions.PoolIncentives)
+	// allocate pool allocation ratio to stable-staking-incentives module account.
+	poolIncentivesAmount, err := k.distributeToModule(ctx, stablestakingincentivestypes.ModuleName, mintedCoin, proportions.PoolIncentives)
 	if err != nil {
 		return err
 	}

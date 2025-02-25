@@ -320,8 +320,8 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.MintParams.ReductionFactor = osmomath.NewDecWithPrec(5, 1) // 0.5
 	genParams.MintParams.ReductionPeriodInEpochs = 208                   // 4 years
 	genParams.MintParams.DistributionProportions = minttypes.DistributionProportions{
-		Staking:          osmomath.NewDecWithPrec(7, 1),  // 0.7
-		PoolIncentives:   osmomath.NewDec(0),             // 0.0
+		Staking:          osmomath.NewDecWithPrec(45, 2), // 0.45
+		PoolIncentives:   osmomath.NewDecWithPrec(25, 2), // 0.25
 		DeveloperRewards: osmomath.NewDecWithPrec(25, 2), // 0.25
 		CommunityPool:    osmomath.NewDecWithPrec(5, 2),  // 0.05
 	}
