@@ -29,9 +29,8 @@ UPGRADES_FILE=$new_file/upgrades.go
 touch $CONSTANTS_FILE
 touch $UPGRADES_FILE
 
-module=$(go mod edit -json | jq ".Module.Path")
-module=${module%?}
-path=${module%???}
+module=$(go mod edit -json | jq -r ".Module.Path")
+path=$module
 
 bracks='"'
 # set packages
