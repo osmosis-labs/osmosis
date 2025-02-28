@@ -8,7 +8,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	cltypes "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v29/x/lockup/types"
-	types "github.com/osmosis-labs/osmosis/v29/x/superfluid/types"
 )
 
 var (
@@ -30,10 +29,6 @@ func (k Keeper) ForceUnlockAndExitBalancerPool(ctx sdk.Context, sender sdk.AccAd
 
 func (k Keeper) GetMigrationType(ctx sdk.Context, lockId int64) (synthLockBeforeMigration lockuptypes.SyntheticLock, migrationType MigrationType, err error) {
 	return k.getMigrationType(ctx, lockId)
-}
-
-func (k Keeper) ValidateMigration(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin) (types.MigrationPoolIDs, *lockuptypes.PeriodLock, time.Duration, error) {
-	return k.validateMigration(ctx, sender, lockId, sharesToMigrate)
 }
 
 func (k Keeper) AddToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0Added, amount1Added osmomath.Int) (cltypes.CreateFullRangePositionData, uint64, error) {
