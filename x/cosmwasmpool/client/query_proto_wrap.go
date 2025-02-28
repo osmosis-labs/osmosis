@@ -44,3 +44,13 @@ func (q Querier) ContractInfoByPoolId(ctx sdk.Context,
 
 	return &queryproto.ContractInfoByPoolIdResponse{ContractAddress: pool.GetContractAddress(), CodeId: pool.GetCodeId()}, nil
 }
+
+func (q Querier) PoolRawFilteredState(ctx sdk.Context,
+	req queryproto.PoolRawFilteredStateRequest,
+) (*queryproto.PoolRawFilteredStateResponse, error) {
+	values, err := q.K.GetPoolRawFilteredState(ctx, req.PoolId, req.KeyFilter, req.ValueFilter)
+	if err != nil {
+		return nil, err
+	}
+	return &queryproto.PoolRawFilteredStateResponse{Values: values}, nil
+}
