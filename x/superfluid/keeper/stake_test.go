@@ -1056,7 +1056,6 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 		superfluidUndelegating bool
 		unlocking              bool
 		unlocked               bool
-		testCLLock             bool
 		expectedError          error
 	}
 	testCases := map[string]tc{
@@ -1075,13 +1074,6 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 			notSuperfluidDelegated: true,
 			unlocked:               true,
 		},
-		"error: concentrated lock should fail": {
-			testCLLock: true,
-			expectedError: types.SharesToMigrateDenomPrefixError{
-				Denom:               "cl/pool/2",
-				ExpectedDenomPrefix: "gamm/pool/",
-			},
-		},
 	}
 
 	for name, tc := range testCases {
@@ -1096,18 +1088,9 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 				originalValAddr  sdk.ValAddress
 				balancerShareOut sdk.Coin
 			)
-			// we use migration setup for testing with cl lock
-			if tc.testCLLock {
-				_, _, lock, _, joinPoolAcc, _, _, balancerShareOut, originalValAddr = s.SetupMigrationTest(s.Ctx, !tc.notSuperfluidDelegated, tc.superfluidUndelegating, tc.unlocking, tc.unlocked, osmomath.MustNewDecFromStr("1"))
-				synthLockBeforeMigration, _, err := s.App.SuperfluidKeeper.GetMigrationType(s.Ctx, int64(lock.ID))
-				s.Require().NoError(err)
-				_, lockId, _, err = s.App.SuperfluidKeeper.MigrateSuperfluidBondedBalancerToConcentrated(s.Ctx, joinPoolAcc, lock.ID, lock.Coins[0], synthLockBeforeMigration.SynthDenom, sdk.NewCoins())
-				s.Require().NoError(err)
-			} else {
-				// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
-				_, _, lock, _, joinPoolAcc, _, balancerShareOut, originalValAddr = s.SetupUnbondConvertAndStakeTest(s.Ctx, !tc.notSuperfluidDelegated, tc.superfluidUndelegating, tc.unlocking, tc.unlocked)
-				lockId = lock.ID
-			}
+			// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
+			_, _, lock, _, joinPoolAcc, _, balancerShareOut, originalValAddr = s.SetupUnbondConvertAndStakeTest(s.Ctx, !tc.notSuperfluidDelegated, tc.superfluidUndelegating, tc.unlocking, tc.unlocked)
+			lockId = lock.ID
 
 			sender := sdk.MustAccAddressFromBech32(joinPoolAcc.String())
 			valAddr := s.SetupValidator(stakingtypes.Bonded)

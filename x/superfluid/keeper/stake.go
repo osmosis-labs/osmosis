@@ -680,6 +680,53 @@ func (k Keeper) UnbondConvertAndStake(ctx sdk.Context, lockID uint64, sender, va
 	return totalAmtConverted, nil
 }
 
+// forceUnlockAndExitBalancerPool validates the unlocking and exiting of gamm LP tokens from the Balancer pool. It performs the following steps:
+//
+// 1. Completes the unlocking process / deletes synthetic locks for the provided lock.
+// 2. If shares to migrate are not specified, all shares in the lock are migrated.
+// 3. Ensures that the number of shares to migrate is less than or equal to the number of shares in the lock.
+// 4. Exits the position in the Balancer pool.
+// 5. Ensures that exactly two coins are returned.
+// 6. Any remaining shares that were not migrated are re-locked as a new lock for the remaining time on the lock.
+func (k Keeper) forceUnlockAndExitBalancerPool(ctx sdk.Context, sender sdk.AccAddress, poolIdLeaving uint64, lock *lockuptypes.PeriodLock, sharesToMigrate sdk.Coin, tokenOutMins sdk.Coins, exitCoinsLengthIsTwo bool) (exitCoins sdk.Coins, err error) {
+	// validateMigration ensures that the preMigrationLock contains coins of length 1.
+	gammSharesInLock := lock.Coins[0]
+
+	// If shares to migrate is not specified, we migrate all shares.
+	if sharesToMigrate.IsZero() {
+		sharesToMigrate = gammSharesInLock
+	}
+
+	// Otherwise, we must ensure that the shares to migrate is less than or equal to the shares in the lock.
+	if sharesToMigrate.Amount.GT(gammSharesInLock.Amount) {
+		return sdk.Coins{}, types.MigrateMoreSharesThanLockHasError{SharesToMigrate: sharesToMigrate.Amount.String(), SharesInLock: gammSharesInLock.Amount.String()}
+	}
+
+	// Finish unlocking directly for locked or unlocking locks
+	if !sharesToMigrate.Equal(gammSharesInLock) {
+		return sdk.Coins{}, types.MigratePartialSharesError{SharesToMigrate: sharesToMigrate.Amount.String(), SharesInLock: gammSharesInLock.Amount.String()}
+	}
+
+	// Force migrate, which breaks and deletes associated synthetic locks (if exists).
+	err = k.lk.ForceUnlock(ctx, *lock)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	// Exit the balancer pool position.
+	exitCoins, err = k.gk.ExitPool(ctx, sender, poolIdLeaving, sharesToMigrate.Amount, tokenOutMins)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	// if exit coins length should be two, check exitCoins length
+	if exitCoinsLengthIsTwo && len(exitCoins) != 2 {
+		return sdk.Coins{}, types.TwoTokenBalancerPoolError{NumberOfTokens: len(exitCoins)}
+	}
+
+	return exitCoins, nil
+}
+
 // convertLockToStake handles locks that are superfluid bonded, superfluid unbonding, vanilla locked(unlocking) locks.
 // Deletes all associated state, converts the lock itself to staking delegation by going through exit pool and swap.
 func (k Keeper) convertLockToStake(ctx sdk.Context, sender sdk.AccAddress, valAddr string, lockId uint64,
