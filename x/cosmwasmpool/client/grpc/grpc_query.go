@@ -31,6 +31,16 @@ func (q Querier) Pools(grpcCtx context.Context,
 	return q.Q.Pools(ctx, *req)
 }
 
+func (q Querier) PoolRawFilteredState(grpcCtx context.Context,
+	req *queryproto.PoolRawFilteredStateRequest,
+) (*queryproto.PoolRawFilteredStateResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.PoolRawFilteredState(ctx, *req)
+}
+
 func (q Querier) Params(grpcCtx context.Context,
 	req *queryproto.ParamsRequest,
 ) (*queryproto.ParamsResponse, error) {

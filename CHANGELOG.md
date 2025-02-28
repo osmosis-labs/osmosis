@@ -48,6 +48,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
+* [#8985](https://github.com/osmosis-labs/osmosis/pull/8985) build: block-sdk import now uses forked version
+* [#9006](https://github.com/osmosis-labs/osmosis/pull/9006) feat: CosmWasm Pool raw state query
+
 ## v28.0.4
 
 ### State Breaking
