@@ -1145,14 +1145,14 @@ func (s *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 	setupInitLocks()
 
 	// try withdrawing before mature
-	s.App.LockupKeeper.WithdrawAllMaturedLocks(s.Ctx)
+	s.App.LockupKeeper.WithdrawMaturedLocks(s.Ctx, 0)
 	locks, err := s.App.LockupKeeper.GetPeriodLocks(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().Len(locks, 3)
 
 	// withdraw at 1 sec, 3 sec, and 5 sec intervals, check automatically withdrawn
 	for i := 0; i < len(times); i++ {
-		s.App.LockupKeeper.WithdrawAllMaturedLocks(s.Ctx.WithBlockTime(unbondBlockTimes[i]))
+		s.App.LockupKeeper.WithdrawMaturedLocks(s.Ctx.WithBlockTime(unbondBlockTimes[i]), 0)
 		locks, err = s.App.LockupKeeper.GetPeriodLocks(s.Ctx)
 		s.Require().NoError(err)
 		s.Require().Len(locks, len(times)-i-1)
@@ -1170,7 +1170,7 @@ func (s *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 	s.SetupTest()
 	setupInitLocks()
 	// now withdraw all locks and ensure all got withdrawn
-	s.App.LockupKeeper.WithdrawAllMaturedLocks(s.Ctx.WithBlockTime(unbondBlockTimes[len(times)-1]))
+	s.App.LockupKeeper.WithdrawMaturedLocks(s.Ctx.WithBlockTime(unbondBlockTimes[len(times)-1]), 0)
 	s.Require().Len(locks, 0)
 }
 

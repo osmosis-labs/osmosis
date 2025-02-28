@@ -21,7 +21,7 @@ func (s *KeeperTestSuite) BeginUnlocking(addr sdk.AccAddress) {
 }
 
 func (s *KeeperTestSuite) WithdrawAllMaturedLocks() {
-	s.querier.WithdrawAllMaturedLocks(s.Ctx)
+	s.querier.WithdrawMaturedLocks(s.Ctx, 0)
 }
 
 func (s *KeeperTestSuite) TestModuleBalance() {
