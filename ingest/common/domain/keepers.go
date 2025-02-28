@@ -43,7 +43,6 @@ type CosmWasmPoolKeeper interface {
 type WasmKeeper interface {
 	QueryRaw(ctx context.Context, contractAddress sdk.AccAddress, key []byte) []byte
 	QuerySmart(ctx context.Context, contractAddress sdk.AccAddress, req []byte) ([]byte, error)
-	IterateContractState(ctx context.Context, contractAddress sdk.AccAddress, cb func(key, value []byte) bool)
 }
 
 // BankKeeper is an interface for getting bank balances.
