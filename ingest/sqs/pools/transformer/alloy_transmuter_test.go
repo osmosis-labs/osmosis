@@ -43,6 +43,7 @@ func (m *mockWasmKeeper) QuerySmart(ctx context.Context, contractAddress sdk.Acc
 func (m *mockWasmKeeper) IterateContractState(ctx context.Context, contractAddress sdk.AccAddress, cb func(key []byte, value []byte) bool) {
 	if m.IterateContractStateFn != nil {
 		m.IterateContractStateFn(ctx, contractAddress, cb)
+		return
 	}
 	panic("unimplemented")
 }
