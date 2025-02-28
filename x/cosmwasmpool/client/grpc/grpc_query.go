@@ -51,12 +51,3 @@ func (q Querier) ContractInfoByPoolId(grpcCtx context.Context,
 	return q.Q.ContractInfoByPoolId(ctx, *req)
 }
 
-func (q Querier) PoolRawFilteredState(grpcCtx context.Context,
-	req *queryproto.PoolRawFilteredStateRequest,
-) (*queryproto.PoolRawFilteredStateResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	return q.Q.PoolRawFilteredState(ctx, *req)
-}
