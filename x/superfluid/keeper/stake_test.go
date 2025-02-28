@@ -653,7 +653,7 @@ func (s *KeeperTestSuite) TestSuperfluidUnbondLock() {
 
 		// check that SuperfluidUnbondLock makes underlying lock start unlocking
 		// we run WithdrawAllMaturedLocks to ensure that lock isn't getting finished immediately
-		s.App.LockupKeeper.WithdrawAllMaturedLocks(s.Ctx)
+		s.App.LockupKeeper.WithdrawMaturedLocks(s.Ctx, 0)
 		updatedLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
 		s.Require().NoError(err)
 		s.Require().True(updatedLock.IsUnlocking())
@@ -665,7 +665,7 @@ func (s *KeeperTestSuite) TestSuperfluidUnbondLock() {
 		// test that synth lock finish does not mean underlying lock is finished
 		s.Ctx = s.Ctx.WithBlockTime((startTime.Add(unbondingDuration)))
 		s.App.LockupKeeper.DeleteAllMaturedSyntheticLocks(s.Ctx)
-		s.App.LockupKeeper.WithdrawAllMaturedLocks(s.Ctx)
+		s.App.LockupKeeper.WithdrawMaturedLocks(s.Ctx, 0)
 		_, err = s.App.LockupKeeper.GetSyntheticLockup(s.Ctx, lock.ID, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 		s.Require().Error(err)
 		updatedLock, err = s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
@@ -674,7 +674,7 @@ func (s *KeeperTestSuite) TestSuperfluidUnbondLock() {
 
 		// test after SuperfluidUnbondLock + lockup unbonding duration, lock is finished and does not exist
 		s.Ctx = s.Ctx.WithBlockTime(unbondLockStartTime.Add(unbondingDuration))
-		s.App.LockupKeeper.WithdrawAllMaturedLocks(s.Ctx)
+		s.App.LockupKeeper.WithdrawMaturedLocks(s.Ctx, 0)
 		_, err = s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
 		s.Require().Error(err)
 
