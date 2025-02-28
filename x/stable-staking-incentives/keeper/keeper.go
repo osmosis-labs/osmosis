@@ -83,5 +83,11 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 	coins := sdk.NewCoins(asset)
 	distributeMsg := map[string]interface{}{"distribute_rewards": struct{}{}}
 	_, err = cosmwasm.Execute[any, any](ctx, k.contractKeeper, cosmwasmContractAddress.String(), moduleAddr, coins, distributeMsg)
-	return err
+	if err != nil {
+		ctx.Logger().Error("AllocateAsset failed to distribute rewards",
+			"module", types.ModuleName,
+			"height", ctx.BlockHeight(),
+			"error", err.Error())
+	}
+	return nil
 }
