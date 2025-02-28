@@ -46,16 +46,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#8996](https://github.com/osmosis-labs/osmosis/pull/8996) chore: upgrade pfm to v8.1.1 
 * [#8880](https://github.com/osmosis-labs/osmosis/pull/8880) chore: bump wasmd from 0.53.0 to 0.53.2
+* [#9005](https://github.com/osmosis-labs/osmosis/pull/9005) fix: bump ibc-go to v8.6.1
 
 ### State Compatible
-
-## v28.0.5
-
-### State Breaking
-
-### State Compatible
-
-* [#9005](https://github.com/osmosis-labs/osmosis/pull/9005) fix: bump ibc-go to v8.6.0
 
 ## v28.0.4
 
