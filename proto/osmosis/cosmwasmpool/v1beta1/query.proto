@@ -27,6 +27,12 @@ service Query {
     option (google.api.http).get =
         "/osmosis/cosmwasmpool/v1beta1/contract_info";
   }
+
+  rpc PoolRawFilteredState(PoolRawFilteredStateRequest)
+      returns (PoolRawFilteredStateResponse) {
+    option (google.api.http).get =
+        "/osmosis/cosmwasmpool/v1beta1/pool_raw_filtered_state";
+  }
 }
 
 //=============================== ContractInfoByPoolId
@@ -59,4 +65,21 @@ message ContractInfoByPoolIdResponse {
 
   // code_id is the code id of the requested pool id.
   uint64 code_id = 2 [ (gogoproto.moretags) = "yaml:\"code_id\"" ];
+}
+
+//=============================== PoolRawFilteredState
+message PoolRawFilteredStateRequest {
+  // pool_id is the pool id of the requested pool.
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+
+  // key_filter is the key filter of the requested pool.
+  string key_filter = 2 [ (gogoproto.moretags) = "yaml:\"key_filter\"" ];
+
+  // value_filter is the value filter of the requested pool.
+  string value_filter = 3 [ (gogoproto.moretags) = "yaml:\"value_filter\"" ];
+}
+
+message PoolRawFilteredStateResponse {
+  // values represents the list of values in the pool.
+  repeated bytes values = 1 [ (gogoproto.moretags) = "yaml:\"values\"" ];
 }
