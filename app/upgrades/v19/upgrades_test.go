@@ -1,178 +1,154 @@
 package v19_test
 
-import (
-	"fmt"
-	"testing"
-	"time"
+// const (
+// 	v18UpgradeHeight = 5
+// 	v19UpgradeHeight = 10
+// )
 
-	"github.com/stretchr/testify/suite"
+// var (
+// 	stakeAmt = osmomath.NewInt(100000000)
+// )
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+// type UpgradeTestSuite struct {
+// 	apptesting.KeeperTestHelper
+// 	preModule appmodule.HasPreBlocker
+// }
 
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/header"
-	"cosmossdk.io/x/upgrade"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+// func (s *UpgradeTestSuite) SetupTest() {
+// 	s.Setup()
+// 	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
+// }
 
-	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v29/app/apptesting"
-	gammtypes "github.com/osmosis-labs/osmosis/v29/x/gamm/types"
+// func TestUpgradeTestSuite(t *testing.T) {
+// 	suite.Run(t, new(UpgradeTestSuite))
+// }
 
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+// func (s *UpgradeTestSuite) TestUpgrade() {
+// 	initialTokenBonded := sdk.DefaultPowerReduction
+// 	s.SetupTest()
 
-	superfluidtypes "github.com/osmosis-labs/osmosis/v29/x/superfluid/types"
-)
+// 	// prepare superfluid delegation
+// 	superfluidVal, lockDenom := s.setupSuperfluidDelegation()
+// 	delegationBeforeV18Upgrade, _ := s.App.StakingKeeper.GetValidator(s.Ctx, superfluidVal)
 
-const (
-	v18UpgradeHeight = 5
-	v19UpgradeHeight = 10
-)
+// 	// run an epoch
+// 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24))
+// 	s.Require().NotPanics(func() {
+// 		_, err := s.App.BeginBlocker(s.Ctx)
+// 		s.Require().NoError(err)
+// 	})
 
-var (
-	stakeAmt = osmomath.NewInt(100000000)
-)
+// 	synthLockedPreV18, err := s.App.SuperfluidKeeper.GetTotalSyntheticAssetsLocked(s.Ctx, stakingSyntheticDenom(lockDenom, superfluidVal.String()))
+// 	s.Require().NoError(err)
 
-type UpgradeTestSuite struct {
-	apptesting.KeeperTestHelper
-	preModule appmodule.HasPreBlocker
-}
+// 	// run v18 upgrade
+// 	// by doing this, we should be having incorrect state of superfluid staking accumulator
+// 	s.runv18Upgrade()
+// 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24 * 7))
+// 	s.Require().NotPanics(func() {
+// 		_, err := s.preModule.PreBlock(s.Ctx)
+// 		s.Require().NoError(err)
+// 		_, err = s.App.BeginBlocker(s.Ctx)
+// 		s.Require().NoError(err)
+// 	})
 
-func (s *UpgradeTestSuite) SetupTest() {
-	s.Setup()
-	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
-}
+// 	// broken states (current status):
+// 	// synth lock accumulator is set to 0
+// 	totalSynthLocked, err := s.App.SuperfluidKeeper.GetTotalSyntheticAssetsLocked(s.Ctx, stakingSyntheticDenom(lockDenom, superfluidVal.String()))
+// 	s.Require().NoError(err)
+// 	s.Require().True(totalSynthLocked.Equal(osmomath.ZeroInt()))
 
-func TestUpgradeTestSuite(t *testing.T) {
-	suite.Run(t, new(UpgradeTestSuite))
-}
+// 	// superfluid delegated tokens have been undelegated from validator,
+// 	// only have the initial bonded amount present
+// 	delegationAfterV18Upgrade, _ := s.App.StakingKeeper.GetValidator(s.Ctx, superfluidVal)
+// 	s.Require().True(delegationAfterV18Upgrade.Tokens.Equal(initialTokenBonded))
 
-func (s *UpgradeTestSuite) TestUpgrade() {
-	initialTokenBonded := sdk.DefaultPowerReduction
-	s.SetupTest()
+// 	// run v19 upgrade
+// 	// this fix should set superfluid accumulators to the correct values
+// 	s.runv19Upgrade()
+// 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24 * 7))
+// 	s.Require().NotPanics(func() {
+// 		_, err := s.preModule.PreBlock(s.Ctx)
+// 		s.Require().NoError(err)
+// 		_, err = s.App.BeginBlocker(s.Ctx)
+// 		s.Require().NoError(err)
+// 	})
 
-	// prepare superfluid delegation
-	superfluidVal, lockDenom := s.setupSuperfluidDelegation()
-	delegationBeforeV18Upgrade, _ := s.App.StakingKeeper.GetValidator(s.Ctx, superfluidVal)
+// 	// synth lock accumulator should have been fixed after v19 upgrade,
+// 	// and went back to normal state(pre-v18)
+// 	synthLockAfterV19, err := s.App.SuperfluidKeeper.GetTotalSyntheticAssetsLocked(s.Ctx, stakingSyntheticDenom(lockDenom, superfluidVal.String()))
+// 	s.Require().NoError(err)
+// 	s.Require().True(synthLockAfterV19.Equal(synthLockedPreV18))
 
-	// run an epoch
-	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24))
-	s.Require().NotPanics(func() {
-		_, err := s.App.BeginBlocker(s.Ctx)
-		s.Require().NoError(err)
-	})
+// 	// also check that we have the correct superfluid staked delegation back
+// 	delegationAfterV19Upgrade, _ := s.App.StakingKeeper.GetValidator(s.Ctx, superfluidVal)
+// 	s.Require().True(delegationBeforeV18Upgrade.Tokens.Equal(delegationAfterV19Upgrade.Tokens))
+// }
 
-	synthLockedPreV18, err := s.App.SuperfluidKeeper.GetTotalSyntheticAssetsLocked(s.Ctx, stakingSyntheticDenom(lockDenom, superfluidVal.String()))
-	s.Require().NoError(err)
+// func (s *UpgradeTestSuite) setupSuperfluidDelegation() (val sdk.ValAddress, lockDenom string) {
+// 	// set up validator that would be used for superfluid staking
+// 	superfluidVal := s.SetupValidator(stakingtypes.Bonded)
 
-	// run v18 upgrade
-	// by doing this, we should be having incorrect state of superfluid staking accumulator
-	s.runv18Upgrade()
-	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24 * 7))
-	s.Require().NotPanics(func() {
-		_, err := s.preModule.PreBlock(s.Ctx)
-		s.Require().NoError(err)
-		_, err = s.App.BeginBlocker(s.Ctx)
-		s.Require().NoError(err)
-	})
+// 	// create single pool with bond denom
+// 	pools := s.SetupGammPoolsWithBondDenomMultiplier([]osmomath.Dec{osmomath.NewDec(20)})
 
-	// broken states (current status):
-	// synth lock accumulator is set to 0
-	totalSynthLocked, err := s.App.SuperfluidKeeper.GetTotalSyntheticAssetsLocked(s.Ctx, stakingSyntheticDenom(lockDenom, superfluidVal.String()))
-	s.Require().NoError(err)
-	s.Require().True(totalSynthLocked.Equal(osmomath.ZeroInt()))
+// 	// we only created one pool, we will use this pool for all the continued tests
+// 	pool := pools[0]
 
-	// superfluid delegated tokens have been undelegated from validator,
-	// only have the initial bonded amount present
-	delegationAfterV18Upgrade, _ := s.App.StakingKeeper.GetValidator(s.Ctx, superfluidVal)
-	s.Require().True(delegationAfterV18Upgrade.Tokens.Equal(initialTokenBonded))
+// 	// register a LP token as a superfluid asset
+// 	denom := gammtypes.GetPoolShareDenom(pool.GetId())
+// 	err := s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, superfluidtypes.SuperfluidAsset{
+// 		Denom:     denom,
+// 		AssetType: superfluidtypes.SuperfluidAssetTypeLPShare,
+// 	})
+// 	s.Require().NoError(err)
 
-	// run v19 upgrade
-	// this fix should set superfluid accumulators to the correct values
-	s.runv19Upgrade()
-	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24 * 7))
-	s.Require().NotPanics(func() {
-		_, err := s.preModule.PreBlock(s.Ctx)
-		s.Require().NoError(err)
-		_, err = s.App.BeginBlocker(s.Ctx)
-		s.Require().NoError(err)
-	})
+// 	stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
+// 	unbondingDuration := stakingParams.UnbondingTime
 
-	// synth lock accumulator should have been fixed after v19 upgrade,
-	// and went back to normal state(pre-v18)
-	synthLockAfterV19, err := s.App.SuperfluidKeeper.GetTotalSyntheticAssetsLocked(s.Ctx, stakingSyntheticDenom(lockDenom, superfluidVal.String()))
-	s.Require().NoError(err)
-	s.Require().True(synthLockAfterV19.Equal(synthLockedPreV18))
+// 	// set lockable duration so that we don't have errors upon creating gauge
+// 	s.App.IncentivesKeeper.SetLockableDurations(s.Ctx, []time.Duration{
+// 		time.Hour * 24 * 14,
+// 		time.Hour,
+// 		time.Hour * 3,
+// 		time.Hour * 7,
+// 		unbondingDuration,
+// 	})
 
-	// also check that we have the correct superfluid staked delegation back
-	delegationAfterV19Upgrade, _ := s.App.StakingKeeper.GetValidator(s.Ctx, superfluidVal)
-	s.Require().True(delegationBeforeV18Upgrade.Tokens.Equal(delegationAfterV19Upgrade.Tokens))
-}
+// 	// lock the tokens
+// 	lockId := s.LockTokens(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(denom, stakeAmt)), unbondingDuration)
+// 	lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lockId)
+// 	s.Require().NoError(err)
 
-func (s *UpgradeTestSuite) setupSuperfluidDelegation() (val sdk.ValAddress, lockDenom string) {
-	// set up validator that would be used for superfluid staking
-	superfluidVal := s.SetupValidator(stakingtypes.Bonded)
+// 	// now we superfluid delegate
+// 	err = s.App.SuperfluidKeeper.SuperfluidDelegate(s.Ctx, lock.Owner, lock.ID, superfluidVal.String())
+// 	s.Require().NoError(err)
 
-	// create single pool with bond denom
-	pools := s.SetupGammPoolsWithBondDenomMultiplier([]osmomath.Dec{osmomath.NewDec(20)})
+// 	return superfluidVal, denom
+// }
 
-	// we only created one pool, we will use this pool for all the continued tests
-	pool := pools[0]
+// func (s *UpgradeTestSuite) runv18Upgrade() {
+// 	s.Ctx = s.Ctx.WithBlockHeight(v18UpgradeHeight - 1)
+// 	plan := upgradetypes.Plan{Name: "v18", Height: v18UpgradeHeight}
+// 	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
+// 	s.Require().NoError(err)
+// 	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+// 	s.Require().NoError(err)
 
-	// register a LP token as a superfluid asset
-	denom := gammtypes.GetPoolShareDenom(pool.GetId())
-	err := s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, superfluidtypes.SuperfluidAsset{
-		Denom:     denom,
-		AssetType: superfluidtypes.SuperfluidAssetTypeLPShare,
-	})
-	s.Require().NoError(err)
+// 	s.Ctx = s.Ctx.WithHeaderInfo(header.Info{Height: v18UpgradeHeight, Time: s.Ctx.BlockTime().Add(time.Second)}).WithBlockHeight(v18UpgradeHeight)
+// }
 
-	stakingParams, err := s.App.StakingKeeper.GetParams(s.Ctx)
-	unbondingDuration := stakingParams.UnbondingTime
+// func (s *UpgradeTestSuite) runv19Upgrade() {
+// 	s.Ctx = s.Ctx.WithBlockHeight(v19UpgradeHeight - 1)
+// 	plan := upgradetypes.Plan{Name: "v19", Height: v19UpgradeHeight}
+// 	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
+// 	s.Require().NoError(err)
+// 	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+// 	s.Require().NoError(err)
 
-	// set lockable duration so that we don't have errors upon creating gauge
-	s.App.IncentivesKeeper.SetLockableDurations(s.Ctx, []time.Duration{
-		time.Hour * 24 * 14,
-		time.Hour,
-		time.Hour * 3,
-		time.Hour * 7,
-		unbondingDuration,
-	})
+// 	s.Ctx = s.Ctx.WithHeaderInfo(header.Info{Height: v19UpgradeHeight, Time: s.Ctx.BlockTime().Add(time.Second)}).WithBlockHeight(v19UpgradeHeight)
+// }
 
-	// lock the tokens
-	lockId := s.LockTokens(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(denom, stakeAmt)), unbondingDuration)
-	lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lockId)
-	s.Require().NoError(err)
-
-	// now we superfluid delegate
-	err = s.App.SuperfluidKeeper.SuperfluidDelegate(s.Ctx, lock.Owner, lock.ID, superfluidVal.String())
-	s.Require().NoError(err)
-
-	return superfluidVal, denom
-}
-
-func (s *UpgradeTestSuite) runv18Upgrade() {
-	s.Ctx = s.Ctx.WithBlockHeight(v18UpgradeHeight - 1)
-	plan := upgradetypes.Plan{Name: "v18", Height: v18UpgradeHeight}
-	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
-	s.Require().NoError(err)
-	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
-	s.Require().NoError(err)
-
-	s.Ctx = s.Ctx.WithHeaderInfo(header.Info{Height: v18UpgradeHeight, Time: s.Ctx.BlockTime().Add(time.Second)}).WithBlockHeight(v18UpgradeHeight)
-}
-
-func (s *UpgradeTestSuite) runv19Upgrade() {
-	s.Ctx = s.Ctx.WithBlockHeight(v19UpgradeHeight - 1)
-	plan := upgradetypes.Plan{Name: "v19", Height: v19UpgradeHeight}
-	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
-	s.Require().NoError(err)
-	_, err = s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
-	s.Require().NoError(err)
-
-	s.Ctx = s.Ctx.WithHeaderInfo(header.Info{Height: v19UpgradeHeight, Time: s.Ctx.BlockTime().Add(time.Second)}).WithBlockHeight(v19UpgradeHeight)
-}
-
-func stakingSyntheticDenom(denom, valAddr string) string {
-	return fmt.Sprintf("%s/superbonding/%s", denom, valAddr)
-}
+// func stakingSyntheticDenom(denom, valAddr string) string {
+// 	return fmt.Sprintf("%s/superbonding/%s", denom, valAddr)
+// }

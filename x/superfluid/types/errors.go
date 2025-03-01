@@ -27,6 +27,8 @@ var (
 	ErrPoolNotWhitelisted   = errorsmod.Register(ModuleName, 41, "pool not whitelisted to unpool")
 	ErrLockUnpoolNotAllowed = errorsmod.Register(ModuleName, 42, "lock not eligible for unpooling")
 	ErrLockLengthMismatch   = errorsmod.Register(ModuleName, 43, "lock has more than one asset")
+
+	ErrInsufficientOsmoEquivalent = errorsmod.Register(ModuleName, 50, "insufficient amount of OSMO for superfluid staking")
 )
 
 type PositionNotSuperfluidStakedError struct {
