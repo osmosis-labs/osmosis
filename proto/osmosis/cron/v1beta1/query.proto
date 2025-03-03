@@ -1,0 +1,62 @@
+syntax = "proto3";
+package osmosis.cron.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "osmosis/cron/v1beta1/params.proto";
+import "osmosis/cron/v1beta1/cron.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v29/x/cron/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Parameters queries the parameters of the module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/osmosis/cron/v1beta1/params";
+  }
+  // Cron queries a cron by id.
+  rpc Cron(QueryCronRequest) returns (QueryCronResponse) {
+    option (google.api.http).get = "/osmosis/cron/v1beta1/crons/{id}";
+  }
+  // Crons queries all the crons.
+  rpc Crons(QueryCronsRequest) returns (QueryCronsResponse) {
+    option (google.api.http).get = "/osmosis/cron/v1beta1/crons";
+  }
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params holds all the parameters of this module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryCronRequest is request type for the Query/Cron RPC method.
+message QueryCronRequest {
+  // id defines the id of the cron to query.
+  uint64 id = 1;
+}
+
+// QueryCronResponse is response type for the Query/Cron RPC method.
+message QueryCronResponse {
+  // cron defines the cron of the requested id.
+  CronJob cron_job = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryCronsRequest is request type for the Query/Crons RPC method.
+message QueryCronsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryCronsResponse is response type for the Query/Crons RPC method.
+message QueryCronsResponse {
+  // crons defines all the crons.
+  repeated CronJob cron_jobs = 1 [(gogoproto.nullable) = false];
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
