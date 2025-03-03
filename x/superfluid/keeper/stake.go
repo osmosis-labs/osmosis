@@ -209,6 +209,9 @@ func (k Keeper) validateValAddrForDelegate(ctx sdk.Context, valAddr string) (sta
 	return validator, nil
 }
 
+// For spam resistance, we require every superfluid delegation to be at least 2 OSMO.
+var minOsmoEquivalentForSuperfluidDelegation = osmomath.NewInt(2_000_000)
+
 // SuperfluidDelegate superfluid delegates osmo equivalent amount the given lock holds.
 // The actual delegation is done by using/creating an intermediary account for the (denom, validator) pair
 // and having the intermediary account delegate to the designated validator, not by the sender themselves.
@@ -255,6 +258,9 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	}
 	if amount.IsZero() {
 		return types.ErrOsmoEquivalentZeroNotAllowed
+	}
+	if amount.LT(minOsmoEquivalentForSuperfluidDelegation) {
+		return errorsmod.Wrapf(types.ErrInsufficientOsmoEquivalent, "superfluid delegation amount must be greater than %s", minOsmoEquivalentForSuperfluidDelegation)
 	}
 
 	return k.mintOsmoTokensAndDelegate(ctx, amount, acc)
