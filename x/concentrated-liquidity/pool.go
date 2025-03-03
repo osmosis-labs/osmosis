@@ -133,7 +133,8 @@ func (k Keeper) getPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedP
 	store := ctx.KVStore(k.storeKey)
 	pool := model.Pool{}
 	key := types.KeyPool(poolId)
-	found, err := osmoutils.Get(store, key, &pool)
+	cache := k.getPoolLruCache(ctx, poolId)
+	found, err := osmoutils.GetWithCache(store, key, cache, &pool)
 	if err != nil {
 		panic(err)
 	}
@@ -165,7 +166,8 @@ func (k Keeper) setPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) e
 	}
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyPool(pool.GetId())
-	osmoutils.MustSet(store, key, poolModel)
+	cache := k.getPoolLruCache(ctx, pool.GetId())
+	osmoutils.SetWithCache(store, key, cache, poolModel)
 	return nil
 }
 

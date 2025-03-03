@@ -153,13 +153,13 @@ func noStopFn([]byte) bool {
 
 // MustSet runs store.Set(key, proto.Marshal(value))
 // but panics on any error.
-func MustSet(storeObj storetypes.KVStore, key []byte, value proto.Message) {
+func MustSet(store storetypes.KVStore, key []byte, value proto.Message) {
 	bz, err := proto.Marshal(value)
 	if err != nil {
 		panic(err)
 	}
 
-	storeObj.Set(key, bz)
+	store.Set(key, bz)
 }
 
 // MustGet gets key from store by mutating result
@@ -252,6 +252,17 @@ func GetWithCache(store storetypes.KVStore, key []byte, cache *lru.Cache, result
 	cache.Add(cacheKey, clone)
 
 	return true, nil
+}
+func SetWithCache(store storetypes.KVStore, key []byte, cache *lru.Cache, value proto.Message) {
+	bz, err := proto.Marshal(value)
+	if err != nil {
+		panic(err)
+	}
+
+	// TODO: Use unsafe string conversion to avoid allocation
+	cache.Add(string(bz), proto.Clone(value))
+
+	store.Set(key, bz)
 }
 
 // DeleteAllKeysFromPrefix deletes all store records that contains the given prefixKey.
