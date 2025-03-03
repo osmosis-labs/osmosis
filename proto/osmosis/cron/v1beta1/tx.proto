@@ -1,0 +1,69 @@
+syntax = "proto3";
+package osmosis.cron.v1beta1;
+
+option go_package = "github.com/osmosis-labs/osmosis/v29/x/cron/types";
+
+// Msg defines the Msg service.
+service Msg {
+    rpc RegisterCron(MsgRegisterCron) returns(MsgRegisterCronResponse);
+    rpc UpdateCronJob(MsgUpdateCronJob) returns(MsgUpdateCronJobResponse);
+    rpc DeleteCronJob(MsgDeleteCronJob) returns(MsgDeleteCronJobResponse);
+    rpc ToggleCronJob(MsgToggleCronJob) returns(MsgToggleCronJobResponse);
+}
+
+// MsgRegisterCron defines the Msg/RegisterCron request type.
+message MsgRegisterCron {
+    // security_address is the address authorised to register the cron job
+    string security_address = 1;
+    // name is the name of the cron job
+    string name = 2;
+    // description is the description of the cron job
+    string description = 3;
+    // contract_address is the address of the contract
+    string contract_address = 4;
+    // Msg is json encoded message to be passed to the contract
+    string json_msg = 5;
+}
+  
+// MsgRegisterCronResponse defines the Msg/RegisterCron response type.
+message MsgRegisterCronResponse {}
+
+// MsgUpdateCronJob defines the Msg/UpdateCronJob request type.
+message MsgUpdateCronJob {
+  // security_address is the address authorised to update the cron job
+  string security_address = 1;
+  // id is the unique identifier for the cron job
+  uint64 id = 2;
+  // contract_address is the address of the contract
+  string contract_address = 3;
+  // Msg is json encoded message to be passed to the contract
+  string json_msg = 4;
+}
+
+// MsgUpdateCronJobResponse defines the Msg/UpdateCron response type.
+message MsgUpdateCronJobResponse {}
+
+// MsgDeleteCronJob defines the Msg/DeleteCronJob request type.
+message MsgDeleteCronJob {
+  // security_address is the address authorised to delete the cron job
+  string security_address = 1;
+  // id is the unique identifier for the cron job
+  uint64 id = 2;
+  // contract_address is the address of the contract
+  string contract_address = 3;
+  
+}
+
+// MsgDeleteCronJobResponse defines the Msg/DeleteCronJob response type.
+message MsgDeleteCronJobResponse {}
+
+// MsgToggleCronJob defines the Msg/ToggleCronJob request type.
+message MsgToggleCronJob {
+  // security_address is the address authorised to toggle the cron job
+  string security_address = 1;
+  // id is the unique identifier for the cron job
+  uint64 id = 2;
+}
+
+// MsgToggleCronJobResponse defines the Msg/ToggleCronJob response type.
+message MsgToggleCronJobResponse {}
