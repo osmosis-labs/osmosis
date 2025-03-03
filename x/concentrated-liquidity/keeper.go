@@ -10,6 +10,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
+
+	lru "github.com/hashicorp/golang-lru"
 )
 
 type Keeper struct {
@@ -29,6 +31,8 @@ type Keeper struct {
 	lockupKeeper         types.LockupKeeper
 	communityPoolKeeper  types.CommunityPoolKeeper
 	contractKeeper       types.ContractKeeper
+
+	poolCache map[uint64]*lru.Cache
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, gammKeeper types.GAMMKeeper, poolIncentivesKeeper types.PoolIncentivesKeeper, incentivesKeeper types.IncentivesKeeper, lockupKeeper types.LockupKeeper, communityPoolKeeper types.CommunityPoolKeeper, contractKeeper types.ContractKeeper, paramSpace paramtypes.Subspace) *Keeper {
@@ -48,6 +52,8 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, accountKeepe
 		lockupKeeper:         lockupKeeper,
 		communityPoolKeeper:  communityPoolKeeper,
 		contractKeeper:       contractKeeper,
+
+		poolCache: make(map[uint64]*lru.Cache),
 	}
 }
 

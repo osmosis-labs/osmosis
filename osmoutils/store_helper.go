@@ -15,6 +15,8 @@ import (
 
 	"cosmossdk.io/store"
 	"github.com/cosmos/gogoproto/proto"
+
+	lru "github.com/hashicorp/golang-lru"
 )
 
 var (
@@ -212,6 +214,43 @@ func Get(store storetypes.KVStore, key []byte, result proto.Message) (found bool
 	if err := proto.Unmarshal(b, result); err != nil {
 		return true, err
 	}
+	return true, nil
+}
+
+// GetWithCache returns a value at key by mutating the result parameter, leveraging hashicorp's LRU cache to avoid
+// repeated proto unmarshalling. Returns true if the value was found and the result mutated correctly.
+// If the value is not in the store, returns false.
+// Returns error only when database or serialization errors occur. (And when an error occurs, returns false)
+//
+// The cache parameter should be a *lru.Cache from github.com/hashicorp/golang-lru.
+// When a value is retrieved from the cache, a copy is made to avoid mutation of the cached value.
+func GetWithCache(store storetypes.KVStore, key []byte, cache *lru.Cache, result proto.Message) (found bool, err error) {
+	// Get from store
+	b := store.Get(key)
+	if b == nil {
+		return false, nil
+	}
+
+	// Try to get from cache first
+	// TODO: Use unsafe string conversion to avoid allocation
+	cacheKey := string(b)
+	if cachedValue, hit := cache.Get(cacheKey); hit {
+		if cachedProto, ok := cachedValue.(proto.Message); ok {
+			// Make a copy to avoid mutating the cached value
+			proto.Merge(result, cachedProto)
+			return true, nil
+		}
+	}
+
+	// Not in cache, unmarshal and add to cache
+	if err := proto.Unmarshal(b, result); err != nil {
+		return true, err
+	}
+
+	// Add to cache
+	clone := proto.Clone(result)
+	cache.Add(cacheKey, clone)
+
 	return true, nil
 }
 

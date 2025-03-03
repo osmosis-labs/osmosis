@@ -18,6 +18,8 @@ import (
 	types "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v29/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
+
+	lru "github.com/hashicorp/golang-lru"
 )
 
 // InitializePool initializes a new concentrated liquidity pool with the given PoolI interface and creator address.
@@ -112,6 +114,18 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI,
 		return nil, err
 	}
 	return poolI, nil
+}
+
+func (k Keeper) getPoolLruCache(ctx sdk.Context, poolId uint64) *lru.Cache {
+	cache, ok := k.poolCache[poolId]
+	if !ok {
+		cache, err := lru.New(5)
+		if err != nil {
+			panic(err)
+		}
+		k.poolCache[poolId] = cache
+	}
+	return cache
 }
 
 // getPoolById returns a concentratedPoolExtension that corresponds to the requested pool id. Returns error if pool id is not found.
