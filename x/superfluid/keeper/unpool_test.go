@@ -24,19 +24,19 @@ var (
 	// pool assets
 	defaultFooAsset balancer.PoolAsset = balancer.PoolAsset{
 		Weight: osmomath.NewInt(100),
-		Token:  sdk.NewCoin("foo", osmomath.NewInt(10000)),
+		Token:  sdk.NewCoin("foo", osmomath.NewInt(10000000)),
 	}
 	defaultBondDenomAsset balancer.PoolAsset = balancer.PoolAsset{
 		Weight: osmomath.NewInt(100),
-		Token:  sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000)),
+		Token:  sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000)),
 	}
 	defaultPoolAssets []balancer.PoolAsset = []balancer.PoolAsset{defaultFooAsset, defaultBondDenomAsset}
 	defaultAcctFunds  sdk.Coins            = sdk.NewCoins(
 		sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000000)),
 		sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000000000)),
-		sdk.NewCoin("foo", osmomath.NewInt(10000000)),
-		sdk.NewCoin("bar", osmomath.NewInt(10000000)),
-		sdk.NewCoin("baz", osmomath.NewInt(10000000)),
+		sdk.NewCoin("foo", osmomath.NewInt(10000000000)),
+		sdk.NewCoin("bar", osmomath.NewInt(10000000000)),
+		sdk.NewCoin("baz", osmomath.NewInt(10000000000)),
 	)
 )
 

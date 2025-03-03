@@ -29,19 +29,19 @@ var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
 var DefaultPoolAssets = []balancer.PoolAsset{
 	{
 		Weight: osmomath.NewInt(100),
-		Token:  sdk.NewCoin(FOO, osmomath.NewInt(5000000)),
+		Token:  sdk.NewCoin(FOO, osmomath.NewInt(5000000000)),
 	},
 	{
 		Weight: osmomath.NewInt(200),
-		Token:  sdk.NewCoin(BAR, osmomath.NewInt(5000000)),
+		Token:  sdk.NewCoin(BAR, osmomath.NewInt(5000000000)),
 	},
 	{
 		Weight: osmomath.NewInt(300),
-		Token:  sdk.NewCoin(BAZ, osmomath.NewInt(5000000)),
+		Token:  sdk.NewCoin(BAZ, osmomath.NewInt(5000000000)),
 	},
 	{
 		Weight: osmomath.NewInt(400),
-		Token:  sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(5000000)),
+		Token:  sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(5000000000)),
 	},
 }
 
