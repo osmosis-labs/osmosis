@@ -106,10 +106,12 @@ func (s *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	coins := s.App.GAMMKeeper.GetParams(s.Ctx).PoolCreationFee
 	poolAssets := []balancer.PoolAsset{}
 	for _, denom := range denoms {
-		coins = coins.Add(sdk.NewInt64Coin(denom, 1000000000000000000))
+		// Using MustNewDecFromStr().TruncateInt() for large numbers that exceed int64
+		largeAmt := osmomath.MustNewDecFromStr("10000000000000000000").TruncateInt()
+		coins = coins.Add(sdk.NewCoin(denom, largeAmt))
 		poolAssets = append(poolAssets, balancer.PoolAsset{
 			Weight: osmomath.NewInt(100),
-			Token:  sdk.NewCoin(denom, osmomath.NewInt(1000000000000000000)),
+			Token:  sdk.NewCoin(denom, largeAmt),
 		})
 	}
 
