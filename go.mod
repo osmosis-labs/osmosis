@@ -28,11 +28,11 @@ require (
 	github.com/cosmos/cosmos-sdk v0.50.11
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogoproto v1.7.0
-	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8 v8.1.1
+	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8 v8.2.0
 	github.com/cosmos/ibc-apps/modules/async-icq/v8 v8.0.0
 	github.com/cosmos/ibc-go/modules/capability v1.0.1
 	github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.4.2-0.20240730185033-ccd4dc278e72
-	github.com/cosmos/ibc-go/v8 v8.5.2
+	github.com/cosmos/ibc-go/v8 v8.6.1
 	github.com/cosmos/rosetta v0.50.11
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
@@ -47,7 +47,7 @@ require (
 	github.com/osmosis-labs/osmosis/osmomath v0.0.16
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.16
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.12
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.18
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20250228081103-2f53ec4d5671
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/skip-mev/block-sdk/v2 v2.1.6

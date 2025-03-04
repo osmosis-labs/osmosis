@@ -387,8 +387,8 @@ github.com/cosmos/gogoproto v1.7.0 h1:79USr0oyXAbxg3rspGh/m4SWNyoz/GLaAh0QlCe2fr
 github.com/cosmos/gogoproto v1.7.0/go.mod h1:yWChEv5IUEYURQasfyBW5ffkMHR/90hiHgbNgrtp4j0=
 github.com/cosmos/iavl v1.2.4 h1:IHUrG8dkyueKEY72y92jajrizbkZKPZbMmG14QzsEkw=
 github.com/cosmos/iavl v1.2.4/go.mod h1:GiM43q0pB+uG53mLxLDzimxM9l/5N9UuSY3/D0huuVw=
-github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8 v8.1.1 h1:+EGYrTsQ2hu8pBwCWAgqc0g/zSklvBFehda9URLfvOU=
-github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8 v8.1.1/go.mod h1:8sbOclBgOCgBPesufd3ZlLRHvJ3dOeN9+dXhn3KbKOc=
+github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8 v8.2.0 h1:rM+S14DFiqmu6Rc3PuhvWqwywPsnt/CbIslSnBftPFs=
+github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8 v8.2.0/go.mod h1:O5H9Ic3Pe6cmJn1eqlj5N48sLb8WQ1VWmDP4/11g/4E=
 github.com/cosmos/ibc-apps/modules/async-icq/v8 v8.0.0 h1:nKP2+Rzlz2iyvTosY5mvP+aEBPe06oaDl3G7xLGBpNI=
 github.com/cosmos/ibc-apps/modules/async-icq/v8 v8.0.0/go.mod h1:D3Q380FpWRFtmUQWLosPxachi6w24Og2t5u/Tww5wtY=
 github.com/cosmos/ibc-go/modules/apps/callbacks v0.2.1-0.20231113120333-342c00b0f8bd h1:Lx+/5dZ/nN6qPXP2Ofog6u1fmlkCFA1ElcOconnofEM=
@@ -397,8 +397,8 @@ github.com/cosmos/ibc-go/modules/capability v1.0.1 h1:ibwhrpJ3SftEEZRxCRkH0fQZ9s
 github.com/cosmos/ibc-go/modules/capability v1.0.1/go.mod h1:rquyOV262nGJplkumH+/LeYs04P3eV8oB7ZM4Ygqk4E=
 github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.4.2-0.20240730185033-ccd4dc278e72 h1:QjCi4bJoy9AXLL1e4jqi+4rHYN0gGZAQxf937cdWhw4=
 github.com/cosmos/ibc-go/modules/light-clients/08-wasm v0.4.2-0.20240730185033-ccd4dc278e72/go.mod h1:yiulzyQAZ+Ci802z/kVQqTA3lGiSJOmDpTq7kZxOUNE=
-github.com/cosmos/ibc-go/v8 v8.5.2 h1:27s9oeD2AxLQF3e9BQsYt9doONyZ7FwZi/qkBv6Sdks=
-github.com/cosmos/ibc-go/v8 v8.5.2/go.mod h1:P5hkAvq0Qbg0h18uLxDVA9q1kOJ0l36htMsskiNwXbo=
+github.com/cosmos/ibc-go/v8 v8.6.1 h1:35JQ9HttSDNLjy4J/ZxmmFbzw0cRVjoCRKkc3ngDZms=
+github.com/cosmos/ibc-go/v8 v8.6.1/go.mod h1:Hd3kDFNOhQ/EnYt8qb84/r78tA/lOYC3IkLMbpurs3I=
 github.com/cosmos/ics23/go v0.11.0 h1:jk5skjT0TqX5e5QJbEnwXIS2yI2vnmLOgpQPeM5RtnU=
 github.com/cosmos/ics23/go v0.11.0/go.mod h1:A8OjxPE67hHST4Icw94hOxxFEJMBG031xIGF/JHNIY0=
 github.com/cosmos/ledger-cosmos-go v0.13.3 h1:7ehuBGuyIytsXbd4MP43mLeoN2LTOEnk5nvue4rK+yM=
@@ -940,8 +940,8 @@ github.com/osmosis-labs/osmosis/osmoutils v0.0.16 h1:hOhPIhwoCacWUHaiAbZJ9IG2Nk7
 github.com/osmosis-labs/osmosis/osmoutils v0.0.16/go.mod h1:w0Td1ly9qH6jxxyK+kh4ZNGxQMzTivQOxFfqH98wkso=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.12 h1:3N0DxQGV58YyOpKUAwXyAIb1NKTgb2Z2XJEd8nQmEDc=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.12/go.mod h1:GkanGue8zfmxxZSS0tOSf6otrKFG2DFMba3KOTyCtqk=
-github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.18 h1:gfkoaDtmCDyYBuGfc/Eg0jXPl1cHwuSrnK3vxXXzoho=
-github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.18/go.mod h1:YCtiKeZH0e5LTOyJQaay3oH4Rlwc2n1JnjXCWaMel0s=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20250228081103-2f53ec4d5671 h1:l8E5+DxYMbhrs+64+S2TYBm3HLvdYrwcoY87Vt9aIZo=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.14-0.20250228081103-2f53ec4d5671/go.mod h1:wkVHaersqB6rMv1Y3FkChFjfFZx+Vo0qOIURz+oIZQI=
 github.com/pact-foundation/pact-go v1.0.4/go.mod h1:uExwJY4kCzNPcHRj+hCR/HBbOOIwwtUjcrb0b5/5kLM=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pascaldekloe/goe v0.1.0 h1:cBOtyMzM9HTpWjXfbbunk26uA6nG3a8n06Wieeh0MwY=
