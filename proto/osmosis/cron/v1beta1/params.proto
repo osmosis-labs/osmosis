@@ -1,0 +1,15 @@
+syntax = "proto3";
+package osmosis.cron.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v29/x/cron/types";
+
+// Params defines the set of module parameters.
+message Params {
+  // Security address that can whitelist/delist contract
+  repeated string security_address = 1 [    
+    (gogoproto.jsontag) = "security_address,omitempty",
+    (gogoproto.moretags) = "yaml:\"security_address\""
+  ];
+}

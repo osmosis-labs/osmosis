@@ -1,0 +1,20 @@
+syntax = "proto3";
+package osmosis.cron.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "osmosis/cron/v1beta1/params.proto";
+import "osmosis/cron/v1beta1/cron.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v29/x/cron/types";
+
+// GenesisState defines the cron module's genesis state.
+message GenesisState {
+  Params params = 1 [
+    (gogoproto.moretags) = "yaml:\"params\"",
+    (gogoproto.nullable) = false
+  ];
+  repeated CronJob cron_jobs  = 2  [
+    (gogoproto.moretags) = "yaml:\"cron_jobs\"",
+    (gogoproto.nullable) = false
+  ];
+}
