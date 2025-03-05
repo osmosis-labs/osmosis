@@ -75,7 +75,7 @@ func computeTax(ctx sdk.Context, tk TreasuryKeeper, principal sdk.Coins) sdk.Coi
 			continue
 		}
 
-		taxDue := osmomath.NewDecFromInt(coin.Amount).Mul(taxRate).TruncateInt()
+		taxDue := osmomath.NewDecFromInt(coin.Amount).Mul(taxRate).QuoInt64(100).TruncateInt()
 
 		// If tax due is greater than the tax cap, cap!
 		//taxCap := tk.GetTaxCap(ctx, coin.Denom)
