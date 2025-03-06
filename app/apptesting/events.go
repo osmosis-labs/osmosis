@@ -3,7 +3,7 @@ package apptesting
 import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"golang.org/x/exp/slices"
+	"slices"
 )
 
 // AssertEventEmitted asserts that ctx's event manager has emitted the given number of events
