@@ -123,12 +123,20 @@ message TakerFeeDistributionPercentage {
     (gogoproto.moretags) = "yaml:\"community_pool\"",
     (gogoproto.nullable) = false
   ];
+  string burn = 3 [
+
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.moretags) = "yaml:\"burn\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message TakerFeesTracker {
   repeated cosmos.base.v1beta1.Coin taker_fees_to_stakers = 1
       [ (gogoproto.nullable) = false ];
   repeated cosmos.base.v1beta1.Coin taker_fees_to_community_pool = 2
+      [ (gogoproto.nullable) = false ];
+  repeated cosmos.base.v1beta1.Coin taker_fees_burned = 4
       [ (gogoproto.nullable) = false ];
   int64 height_accounting_starts_from = 3
       [ (gogoproto.moretags) = "yaml:\"height_accounting_starts_from\"" ];

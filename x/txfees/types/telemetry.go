@@ -35,6 +35,13 @@ var (
 	// * match_denom - the match denom to swap to.
 	// * err - the error occurred
 	TakerFeeNoSkipRouteMetricName = formatTxFeesMetricName("takerfee_no_skip_route")
+	// txfees_takerfee_failed_burn_update
+	//
+	// counter that is increased if taker fee burn distribution fails
+	// Has the following labels:
+	// * coins - the coins that fail to be sent.
+	// * err - the error occurred
+	TakerFeeFailedBurnUpdateMetricName = formatTxFeesMetricName("takerfee_failed_burn_update")
 )
 
 // formatTxFeesMetricName formats the tx fees module metric name.
