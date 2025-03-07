@@ -25,6 +25,11 @@ const (
 	// This is done so that, in the event of a failed swap, the funds slated for stakers are not grouped back with the rest of the taker fees in the next epoch.
 	TakerFeeStakersName = "non_native_fee_collector_stakers"
 
+	// TakerFeeBurnName is the name of the module account that collects non-native taker fees, swaps, and sends them to the burn address.
+	// Note, all taker fees initially get sent to the TakerFeeCollectorName, and then prior to the taker fees slated for burning being swapped and sent to burn address, they are sent to this account.
+	// This is done so that, in the event of a failed swap, the funds slated for burning are not grouped back with the rest of the taker fees in the next epoch.
+	TakerFeeBurnName = "non_native_fee_collector_burn"
+
 	// TakerFeeCollectorName is the module account name for the taker fee collector account address. It collects both native and non-native taker fees.
 	TakerFeeCollectorName = "taker_fee_collector"
 
