@@ -302,6 +302,7 @@ func (m *TakerFeeParams) GetReducedFeeWhitelist() []string {
 type TakerFeeDistributionPercentage struct {
 	StakingRewards cosmossdk_io_math.LegacyDec `protobuf:"bytes,1,opt,name=staking_rewards,json=stakingRewards,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"staking_rewards" yaml:"staking_rewards"`
 	CommunityPool  cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=community_pool,json=communityPool,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"community_pool" yaml:"community_pool"`
+	Burn           cosmossdk_io_math.LegacyDec `protobuf:"bytes,3,opt,name=burn,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"burn" yaml:"burn"`
 }
 
 func (m *TakerFeeDistributionPercentage) Reset()         { *m = TakerFeeDistributionPercentage{} }
