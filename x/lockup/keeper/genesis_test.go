@@ -145,11 +145,7 @@ func TestExportGenesis(t *testing.T) {
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
 	// Create a unique temporary directory for each test
-	dirName, err := os.MkdirTemp("", "osmoapp_test")
-	require.NoError(t, err)
-
-	// Ensure the directory is cleaned up after the test completes
-	defer os.RemoveAll(dirName)
+	dirName := t.TempDir()
 
 	// Setup the app with the custom directory
 	app := osmoapp.SetupWithCustomHome(false, dirName)
@@ -171,8 +167,6 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	// Export genesis state
 	genesisExported := am.ExportGenesis(ctx, appCodec)
 
-	// After removing the temp directory, the app should no longer have access to it
-	os.RemoveAll(dirName)
 
 	// Ensure no panic occurs when initializing genesis in a fresh app
 	assert.NotPanics(t, func() {
