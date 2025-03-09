@@ -21,19 +21,19 @@ import (
 
 var (
 	// Cube root of 2: 2^(1/3) ≈ 1.259921049894873
-	cubeRootTwo, _ = osmomath.NewBigDec(2).ApproxRoot(3)
+	cubeRootTwo, _ = osmomath.NewBigDecFromStr("1.259921049894873164767210607278228351")
 	// Square root of 3: 3^(1/2) ≈ 1.732050807568877
-	threeRootTwo, _ = osmomath.NewBigDec(3).ApproxRoot(2)
+	threeRootTwo, _ = osmomath.NewBigDecFromStr("1.732050807568877293527446341505872367")
 	// Cube root of 3: 3^(1/3) ≈ 1.442249570307408
-	cubeRootThree, _ = osmomath.NewBigDec(3).ApproxRoot(3)
+	cubeRootThree, _ = osmomath.NewBigDecFromStr("1.442249570307408382321638310780109589")
 	// 3 * cubeRootTwo ≈ 3.779763149684619
-	threeCubeRootTwo = cubeRootTwo.MulInt64(3)
+	threeCubeRootTwo, _ = osmomath.NewBigDecFromStr("3.779763149684619494301631821834685053")
 	// Cube root of 36: (6*6)^(1/3) ≈ 3.3019272
-	cubeRootSixSquared, _ = (osmomath.NewBigDec(6).MulInt64(6)).ApproxRoot(3)
+	cubeRootSixSquared, _ = osmomath.NewBigDecFromStr("3.301927248894626683874609952409084957")
 	// 2 * cubeRootThree ≈ 2.884499140614817
-	twoCubeRootThree = cubeRootThree.MulInt64(2)
+	twoCubeRootThree, _ = osmomath.NewBigDecFromStr("2.884499140614816764643276621560219178")
 	// Square root of 27: 27^(1/2) ≈ 5.196152422706632
-	twentySevenRootTwo, _ = osmomath.NewBigDec(27).ApproxRoot(2)
+	twentySevenRootTwo, _ = osmomath.NewBigDecFromStr("5.196152422706631880582339024517617101")
 )
 
 // For reference, the string representation of these values from the test run are:
