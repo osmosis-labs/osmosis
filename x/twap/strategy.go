@@ -24,11 +24,14 @@ type arithmetic struct {
 	TwapKeeper Keeper
 }
 
-func (s *arithmetic) updateAccumulators(record types.TwapRecord, newTime time.Time) types.TwapRecord {
-	// return the given record: no need to calculate and update the accumulator if record time matches.
+// updateArithmeticAccumulators updates only the arithmetic accumulators of a record
+// and returns the updated record along with the time delta
+func updateArithmeticAccumulators(record types.TwapRecord, newTime time.Time) (types.TwapRecord, int64) {
+	// Return early if time hasn't changed
 	if record.Time.Equal(newTime) {
-		return record
+		return record, 0
 	}
+	
 	newRecord := record
 	timeDelta := types.CanonicalTimeMs(newTime) - types.CanonicalTimeMs(record.Time)
 	newRecord.Time = newTime
@@ -42,6 +45,11 @@ func (s *arithmetic) updateAccumulators(record types.TwapRecord, newTime time.Ti
 	p1NewAccum := types.SpotPriceMulDuration(record.P1LastSpotPrice, timeDelta)
 	newRecord.P1ArithmeticTwapAccumulator = p1NewAccum.AddMut(newRecord.P1ArithmeticTwapAccumulator)
 
+	return newRecord, timeDelta
+}
+
+func (s *arithmetic) updateAccumulators(record types.TwapRecord, newTime time.Time) types.TwapRecord {
+	newRecord, _ := updateArithmeticAccumulators(record, newTime)
 	return newRecord
 }
 
@@ -50,20 +58,13 @@ type geometric struct {
 }
 
 func (s *geometric) updateAccumulators(record types.TwapRecord, newTime time.Time) types.TwapRecord {
-	// return the given record: no need to calculate and update the accumulator if record time matches.
-	if record.Time.Equal(newTime) {
-		return record
+	// First update the arithmetic accumulators
+	newRecord, timeDelta := updateArithmeticAccumulators(record, newTime)
+	
+	// Return early if time hasn't changed
+	if timeDelta == 0 {
+		return newRecord
 	}
-	newRecord := record
-	timeDelta := types.CanonicalTimeMs(newTime) - types.CanonicalTimeMs(record.Time)
-	newRecord.Time = newTime
-
-	// Geometric strategy still needs to update arithmetic accumulators for backward compatibility
-	p0NewAccum := types.SpotPriceMulDuration(record.P0LastSpotPrice, timeDelta)
-	newRecord.P0ArithmeticTwapAccumulator = p0NewAccum.AddMut(newRecord.P0ArithmeticTwapAccumulator)
-
-	p1NewAccum := types.SpotPriceMulDuration(record.P1LastSpotPrice, timeDelta)
-	newRecord.P1ArithmeticTwapAccumulator = p1NewAccum.AddMut(newRecord.P1ArithmeticTwapAccumulator)
 
 	// If the last spot price is zero, then the logarithm is undefined.
 	// As a result, we cannot update the geometric accumulator.
