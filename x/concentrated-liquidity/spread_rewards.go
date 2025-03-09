@@ -374,6 +374,7 @@ func (k Keeper) getSpreadFactorScalingFactorForPool(ctx sdk.Context, poolID uint
 }
 
 // SetSpreadFactorPoolIDMigrationThreshold sets the pool ID migration threshold to the last pool ID for spread factor accumulators.
+// TODO: Delete this key
 func (k Keeper) SetSpreadFactorPoolIDMigrationThreshold(ctx sdk.Context, poolIDThreshold uint64) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.KeySpreadRewardAccumulatorMigrationThreshold, sdk.Uint64ToBigEndian(poolIDThreshold))

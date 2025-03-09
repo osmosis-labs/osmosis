@@ -1,3 +1,4 @@
+//nolint:unused,unparam
 package v25
 
 import (
@@ -125,11 +126,11 @@ func migrateMainnetPoolsSpreadFactor(ctx sdk.Context, concentratedKeeper concent
 	})
 
 	// Migrate concentrated pools
-	for _, poolId := range poolIDsToMigrate {
-		if err := concentratedKeeper.MigrateSpreadFactorAccumulatorToScalingFactor(ctx, poolId); err != nil {
-			return err
-		}
-	}
+	// for _, poolId := range poolIDsToMigrate {
+	// 	if err := concentratedKeeper.MigrateSpreadFactorAccumulatorToScalingFactor(ctx, poolId); err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	return nil
 }
@@ -138,17 +139,17 @@ func migrateMainnetPoolsSpreadFactor(ctx sdk.Context, concentratedKeeper concent
 // CONTRACT: called after setting the pool ID migration threshold since this overwrites the threshold to zero.
 func migrateAllTestnetPoolsSpreadFactor(ctx sdk.Context, concentratedKeeper concentratedliquidity.Keeper) error {
 	// Get all pools
-	pools, err := concentratedKeeper.GetPools(ctx)
-	if err != nil {
-		return err
-	}
+	// pools, err := concentratedKeeper.GetPools(ctx)
+	// if err != nil {
+	// 	return err
+	// }
 
 	// Migrate each pool
-	for _, pool := range pools {
-		if err := concentratedKeeper.MigrateSpreadFactorAccumulatorToScalingFactor(ctx, pool.GetId()); err != nil {
-			return err
-		}
-	}
+	// for _, pool := range pools {
+	// 	if err := concentratedKeeper.MigrateSpreadFactorAccumulatorToScalingFactor(ctx, pool.GetId()); err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	// Set to pool ID zero because all pools are migrated.
 	concentratedKeeper.SetSpreadFactorPoolIDMigrationThreshold(ctx, 0)

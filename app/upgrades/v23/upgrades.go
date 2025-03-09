@@ -1,9 +1,9 @@
+//nolint:unused,unparam
 package v23
 
 import (
 	"context"
 	"errors"
-	"sort"
 	"time"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -90,16 +90,16 @@ func migrateMainnetPools(ctx sdk.Context, concentratedKeeper concentratedliquidi
 	}
 
 	// Sort for determinism
-	sort.Slice(poolIDsToMigrate, func(i, j int) bool {
-		return poolIDsToMigrate[i] < poolIDsToMigrate[j]
-	})
+	// sort.Slice(poolIDsToMigrate, func(i, j int) bool {
+	// 	return poolIDsToMigrate[i] < poolIDsToMigrate[j]
+	// })
 
-	// Migrate concentrated pools
-	for _, poolId := range poolIDsToMigrate {
-		if err := concentratedKeeper.MigrateIncentivesAccumulatorToScalingFactor(ctx, poolId); err != nil {
-			return err
-		}
-	}
+	// // Migrate concentrated pools
+	// for _, poolId := range poolIDsToMigrate {
+	// 	if err := concentratedKeeper.MigrateIncentivesAccumulatorToScalingFactor(ctx, poolId); err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	return nil
 }
@@ -108,20 +108,20 @@ func migrateMainnetPools(ctx sdk.Context, concentratedKeeper concentratedliquidi
 // CONTRACT: called after setting the pool ID migration threshold since this overwrites the threshold to zero.
 func migrateAllTestnetPools(ctx sdk.Context, concentratedKeeper concentratedliquidity.Keeper) error {
 	// Get all pools
-	pools, err := concentratedKeeper.GetPools(ctx)
-	if err != nil {
-		return err
-	}
+	// pools, err := concentratedKeeper.GetPools(ctx)
+	// if err != nil {
+	// 	return err
+	// }
 
 	// Migrate each pool
-	for _, pool := range pools {
-		if err := concentratedKeeper.MigrateIncentivesAccumulatorToScalingFactor(ctx, pool.GetId()); err != nil {
-			return err
-		}
-	}
+	// for _, pool := range pools {
+	// 	if err := concentratedKeeper.MigrateIncentivesAccumulatorToScalingFactor(ctx, pool.GetId()); err != nil {
+	// 		return err
+	// 	}
+	// }
 
-	// Set to pool ID zero because all pools are migrated.
-	concentratedKeeper.SetIncentivePoolIDMigrationThreshold(ctx, 0)
+	// // Set to pool ID zero because all pools are migrated.
+	// concentratedKeeper.SetIncentivePoolIDMigrationThreshold(ctx, 0)
 
 	return nil
 }
