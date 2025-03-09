@@ -19,6 +19,59 @@ import (
 	types "github.com/osmosis-labs/osmosis/v29/x/gamm/types"
 )
 
+import (
+	"errors"
+)
+
+// ApproxRoot returns an approximate estimation of a Dec's positive real nth root
+// using Newton's method (where n is positive). The algorithm starts with some guess and
+// computes the sequence of improved guesses until an answer converges to an
+// approximate answer.  It returns `|d|.ApproxRoot() * -1` if input is negative.
+// A maximum number of 100 iterations is used a backup boundary condition for
+// cases where the answer never converges enough to satisfy the main condition.
+func ApproxRoot(d osmomath.BigDec, root uint64) (guess osmomath.BigDec, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			var ok bool
+			err, ok = r.(error)
+			if !ok {
+				err = errors.New("out of bounds")
+			}
+		}
+	}()
+
+	if d.IsNegative() {
+		absRoot, err := ApproxRoot(d.MulInt64(-1), root)
+		return absRoot.MulInt64(-1), err
+	}
+
+	if root == 1 || d.IsZero() || d.Equal(osmomath.OneBigDec()) {
+		return d, nil
+	}
+
+	if root == 0 {
+		return osmomath.OneBigDec(), nil
+	}
+
+	rootInt := osmomath.NewBigIntFromUint64(root)
+	guess, delta := osmomath.OneBigDec(), osmomath.OneBigDec()
+
+	maxApproxRootIterations := 100
+	for iter := 0; delta.Abs().GT(osmomath.SmallestBigDec()) && iter < maxApproxRootIterations; iter++ {
+		prev := guess.PowerInteger(root - 1)
+		if prev.IsZero() {
+			prev = osmomath.SmallestBigDec()
+		}
+		delta = d.Quo(prev)
+		delta.SubMut(guess)
+		delta = delta.QuoInt(rootInt)
+
+		guess = guess.Add(delta)
+	}
+
+	return guess, nil
+}
+
 var (
 	// Cube root of 2: 2^(1/3) ≈ 1.259921049894873
 	cubeRootTwo, _ = osmomath.NewBigDecFromStr("1.259921049894873164767210607278228351")
@@ -35,15 +88,6 @@ var (
 	// Square root of 27: 27^(1/2) ≈ 5.196152422706632
 	twentySevenRootTwo, _ = osmomath.NewBigDecFromStr("5.196152422706631880582339024517617101")
 )
-
-// For reference, the string representation of these values from the test run are:
-// cubeRootTwo: 1.259921049894873164767210607278228351
-// threeRootTwo: 1.732050807568877293527446341505872367
-// cubeRootThree: 1.442249570307408382321638310780109589
-// threeCubeRootTwo: 3.779763149684619494301631821834685053
-// cubeRootSixSquared: 3.301927248894626683874609952409084957
-// twoCubeRootThree: 2.884499140614816764643276621560219178
-// twentySevenRootTwo: 5.196152422706631880582339024517617101
 
 // CFMMTestCase defines a testcase for stableswap pools
 type CFMMTestCase struct {
