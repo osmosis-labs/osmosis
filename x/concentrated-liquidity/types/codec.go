@@ -20,7 +20,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgFungifyChargedPositions{}, "osmosis/cl-fungify-charged-positions", nil)
 
 	// gov proposals
-	// TODO: Keeping this first one here for now, until clarity on removing messages from codec.
+	// TODO: Keeping CreateConcentratedLiquidityPoolsProposal here for now, until clarity on removing messages from codec. We already removed the functionality in a previous PR.
 	cdc.RegisterConcrete(&CreateConcentratedLiquidityPoolsProposal{}, "osmosis/create-cl-pools-proposal", nil)
 	cdc.RegisterConcrete(&TickSpacingDecreaseProposal{}, "osmosis/cl-tick-spacing-dec-prop", nil)
 }
