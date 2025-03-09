@@ -20,14 +20,30 @@ import (
 )
 
 var (
-	cubeRootTwo, _        = osmomath.NewBigDec(2).ApproxRoot(3)
-	threeRootTwo, _       = osmomath.NewBigDec(3).ApproxRoot(2)
-	cubeRootThree, _      = osmomath.NewBigDec(3).ApproxRoot(3)
-	threeCubeRootTwo      = cubeRootTwo.MulInt64(3)
+	// Cube root of 2: 2^(1/3) ≈ 1.259921049894873
+	cubeRootTwo, _ = osmomath.NewBigDec(2).ApproxRoot(3)
+	// Square root of 3: 3^(1/2) ≈ 1.732050807568877
+	threeRootTwo, _ = osmomath.NewBigDec(3).ApproxRoot(2)
+	// Cube root of 3: 3^(1/3) ≈ 1.442249570307408
+	cubeRootThree, _ = osmomath.NewBigDec(3).ApproxRoot(3)
+	// 3 * cubeRootTwo ≈ 3.779763149684619
+	threeCubeRootTwo = cubeRootTwo.MulInt64(3)
+	// Cube root of 36: (6*6)^(1/3) ≈ 3.3019272
 	cubeRootSixSquared, _ = (osmomath.NewBigDec(6).MulInt64(6)).ApproxRoot(3)
-	twoCubeRootThree      = cubeRootThree.MulInt64(2)
+	// 2 * cubeRootThree ≈ 2.884499140614817
+	twoCubeRootThree = cubeRootThree.MulInt64(2)
+	// Square root of 27: 27^(1/2) ≈ 5.196152422706632
 	twentySevenRootTwo, _ = osmomath.NewBigDec(27).ApproxRoot(2)
 )
+
+// For reference, the string representation of these values from the test run are:
+// cubeRootTwo: 1.259921049894873164767210607278228351
+// threeRootTwo: 1.732050807568877293527446341505872367
+// cubeRootThree: 1.442249570307408382321638310780109589
+// threeCubeRootTwo: 3.779763149684619494301631821834685053
+// cubeRootSixSquared: 3.301927248894626683874609952409084957
+// twoCubeRootThree: 2.884499140614816764643276621560219178
+// twentySevenRootTwo: 5.196152422706631880582339024517617101
 
 // CFMMTestCase defines a testcase for stableswap pools
 type CFMMTestCase struct {
