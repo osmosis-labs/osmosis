@@ -98,11 +98,11 @@ func (k Keeper) getTwap(
 	} else if endTime.After(ctx.BlockTime()) {
 		return osmomath.Dec{}, types.EndTimeInFutureError{EndTime: endTime, BlockTime: ctx.BlockTime()}
 	}
-	startRecord, err := k.getInterpolatedRecord(ctx, poolId, startTime, baseAssetDenom, quoteAssetDenom)
+	startRecord, err := k.getInterpolatedRecord(ctx, poolId, startTime, baseAssetDenom, quoteAssetDenom, strategy)
 	if err != nil {
 		return osmomath.Dec{}, err
 	}
-	endRecord, err := k.getInterpolatedRecord(ctx, poolId, endTime, baseAssetDenom, quoteAssetDenom)
+	endRecord, err := k.getInterpolatedRecord(ctx, poolId, endTime, baseAssetDenom, quoteAssetDenom, strategy)
 	if err != nil {
 		return osmomath.Dec{}, err
 	}
@@ -124,7 +124,7 @@ func (k Keeper) getTwapToNow(
 		return osmomath.Dec{}, types.StartTimeAfterEndTimeError{StartTime: startTime, EndTime: ctx.BlockTime()}
 	}
 
-	startRecord, err := k.getInterpolatedRecord(ctx, poolId, startTime, baseAssetDenom, quoteAssetDenom)
+	startRecord, err := k.getInterpolatedRecord(ctx, poolId, startTime, baseAssetDenom, quoteAssetDenom, strategy)
 	if err != nil {
 		return osmomath.Dec{}, err
 	}

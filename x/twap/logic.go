@@ -189,7 +189,9 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) (types.Tw
 		}
 	}
 
-	newRecord := recordWithUpdatedAccumulators(record, ctx.BlockTime())
+	// Use geometric strategy for backward compatibility
+	strategy := &geometric{}
+	newRecord := strategy.updateAccumulators(record, ctx.BlockTime())
 	newRecord.Height = ctx.BlockHeight()
 
 	newSp0, newSp1, lastErrorTime := getSpotPrices(
@@ -209,52 +211,16 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) (types.Tw
 //
 // pre-condition: newTime >= record.Time
 func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) types.TwapRecord {
-	// return the given record: no need to calculate and update the accumulator if record time matches.
-	if record.Time.Equal(newTime) {
-		return record
-	}
-	newRecord := record
-	timeDelta := types.CanonicalTimeMs(newTime) - types.CanonicalTimeMs(record.Time)
-	newRecord.Time = newTime
-
-	// record.LastSpotPrice is the last spot price from the block the record was created in,
-	// thus it is treated as the effective spot price until the new time.
-	// (As there was no change until at or after this time)
-	p0NewAccum := types.SpotPriceMulDuration(record.P0LastSpotPrice, timeDelta)
-	newRecord.P0ArithmeticTwapAccumulator = p0NewAccum.AddMut(newRecord.P0ArithmeticTwapAccumulator)
-
-	p1NewAccum := types.SpotPriceMulDuration(record.P1LastSpotPrice, timeDelta)
-	newRecord.P1ArithmeticTwapAccumulator = p1NewAccum.AddMut(newRecord.P1ArithmeticTwapAccumulator)
-
-	// If the last spot price is zero, then the logarithm is undefined.
-	// As a result, we cannot update the geometric accumulator.
-	// We set the last error time to be the new time, and return the record.
-	if record.P0LastSpotPrice.IsZero() {
-		newRecord.LastErrorTime = newTime
-		return newRecord
-	}
-
-	// NOTE: An edge case exists here. If a pool is drained of all it's liquidity, and then the pool's
-	// spot price is set to exactly one and the GeometricTWAP is queried, the the result will be zero.
-	// This is because the P0LastSpotPrice is one, which makes log_{2}{P_0} = 0, and thus the geometric
-	// accumulator is the same as the time of pool drain.
-
-	// This is a edge case almost certainly to never be hit in prod, but its good to be aware of.
-
-	// logP0SpotPrice = log_{2}{P_0}
-	logP0SpotPrice := twapLog(record.P0LastSpotPrice)
-	// p0NewGeomAccum = log_{2}{P_0} * timeDelta
-	p0NewGeomAccum := types.SpotPriceMulDuration(logP0SpotPrice, timeDelta)
-	newRecord.GeometricTwapAccumulator = p0NewGeomAccum.AddMut(newRecord.GeometricTwapAccumulator)
-
-	return newRecord
+	// Use geometric strategy as it updates both arithmetic and geometric accumulators
+	strategy := &geometric{} 
+	return strategy.updateAccumulators(record, newTime)
 }
 
 // getInterpolatedRecord returns a record for this pool, representing its accumulator state at time `t`.
 // This is achieved by getting the record `r` that is at, or immediately preceding in state time `t`.
 // To be clear: the record r s.t. `t - r.Time` is minimized AND `t >= r.Time`
 // If for the record obtained, r.Time == r.LastErrorTime, this will also hold for the interpolated record.
-func (k Keeper) getInterpolatedRecord(ctx sdk.Context, poolId uint64, t time.Time, assetA, assetB string) (types.TwapRecord, error) {
+func (k Keeper) getInterpolatedRecord(ctx sdk.Context, poolId uint64, t time.Time, assetA, assetB string, strategy twapStrategy) (types.TwapRecord, error) {
 	record, err := k.getRecordAtOrBeforeTime(ctx, poolId, t, assetA, assetB)
 	if err != nil {
 		return types.TwapRecord{}, err
@@ -263,7 +229,7 @@ func (k Keeper) getInterpolatedRecord(ctx sdk.Context, poolId uint64, t time.Tim
 	if record.Time.Equal(record.LastErrorTime) {
 		record.LastErrorTime = t
 	}
-	record = recordWithUpdatedAccumulators(record, t)
+	record = strategy.updateAccumulators(record, t)
 	return record, nil
 }
 
@@ -272,7 +238,9 @@ func (k Keeper) getMostRecentRecord(ctx sdk.Context, poolId uint64, assetA, asse
 	if err != nil {
 		return types.TwapRecord{}, err
 	}
-	record = recordWithUpdatedAccumulators(record, ctx.BlockTime())
+	// Use geometric strategy for backward compatibility
+	strategy := &geometric{}
+	record = strategy.updateAccumulators(record, ctx.BlockTime())
 	return record, nil
 }
 
