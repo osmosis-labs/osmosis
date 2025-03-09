@@ -103,49 +103,6 @@ func NewTransferPositionsCmd() (*osmocli.TxCliDesc, *types.MsgTransferPositions)
 	}, &types.MsgTransferPositions{}
 }
 
-// NewCmdCreateConcentratedLiquidityPoolsProposal implements a command handler for create concentrated liquidity pool proposal
-func NewCmdCreateConcentratedLiquidityPoolsProposal() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "create-concentratedliquidity-pool-proposal [flags]",
-		Args:  cobra.ExactArgs(0),
-		Short: "Submit a create concentrated liquidity pool proposal",
-		Long: strings.TrimSpace(`Submit a create concentrated liquidity pool proposal.
-
-Passing in FlagPoolRecords separated by commas would be parsed automatically to pairs of pool records.
-Ex) --pool-records=uion,uosmo,100,0.003,stake,uosmo,1000,0.005 ->
-[uion<>uosmo, tickSpacing 100, spreadFactor 0.3%]
-[stake<>uosmo, tickSpacing 1000, spreadFactor 0.5%]
-
-		`),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, proposalTitle, summary, deposit, isExpedited, authority, err := osmocli.GetProposalInfo(cmd)
-			if err != nil {
-				return err
-			}
-
-			content, err := parseCreateConcentratedLiquidityPoolArgsToContent(cmd)
-			if err != nil {
-				return err
-			}
-
-			msg, err := v1.NewLegacyContent(content, authority.String())
-			if err != nil {
-				return err
-			}
-			proposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{msg}, deposit, clientCtx.GetFromAddress().String(), "", proposalTitle, summary, isExpedited)
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposalMsg)
-		},
-	}
-	osmocli.AddCommonProposalFlags(cmd)
-	cmd.Flags().String(FlagPoolRecords, "", "The pool records array")
-
-	return cmd
-}
-
 func NewTickSpacingDecreaseProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tick-spacing-decrease-proposal [flags]",
@@ -188,31 +145,6 @@ Note: The new tick spacing value must be less than the current tick spacing valu
 	cmd.Flags().String(FlagPoolIdToTickSpacingRecords, "", "The pool ID to new tick spacing records array")
 
 	return cmd
-}
-
-func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command) (govtypesv1beta1.Content, error) {
-	title, err := cmd.Flags().GetString(govcli.FlagTitle)
-	if err != nil {
-		return nil, err
-	}
-
-	description, err := cmd.Flags().GetString(govcli.FlagSummary)
-	if err != nil {
-		return nil, err
-	}
-
-	poolRecords, err := parsePoolRecords(cmd)
-	if err != nil {
-		return nil, err
-	}
-
-	content := &types.CreateConcentratedLiquidityPoolsProposal{
-		Title:       title,
-		Description: description,
-		PoolRecords: poolRecords,
-	}
-
-	return content, nil
 }
 
 func parsePoolIdToTickSpacingRecordsArgsToContent(cmd *cobra.Command) (govtypesv1beta1.Content, error) {
