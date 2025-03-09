@@ -1,6 +1,7 @@
 package stableswap
 
 import (
+	"errors"
 	"fmt"
 	"math/big"
 	"math/rand"
@@ -20,13 +21,20 @@ import (
 )
 
 var (
-	cubeRootTwo, _        = osmomath.NewBigDec(2).ApproxRoot(3)
-	threeRootTwo, _       = osmomath.NewBigDec(3).ApproxRoot(2)
-	cubeRootThree, _      = osmomath.NewBigDec(3).ApproxRoot(3)
-	threeCubeRootTwo      = cubeRootTwo.MulInt64(3)
-	cubeRootSixSquared, _ = (osmomath.NewBigDec(6).MulInt64(6)).ApproxRoot(3)
-	twoCubeRootThree      = cubeRootThree.MulInt64(2)
-	twentySevenRootTwo, _ = osmomath.NewBigDec(27).ApproxRoot(2)
+	// Cube root of 2: 2^(1/3) ≈ 1.259921049894873
+	cubeRootTwo, _ = osmomath.NewBigDecFromStr("1.259921049894873164767210607278228351")
+	// Square root of 3: 3^(1/2) ≈ 1.732050807568877
+	threeRootTwo, _ = osmomath.NewBigDecFromStr("1.732050807568877293527446341505872367")
+	// Cube root of 3: 3^(1/3) ≈ 1.442249570307408
+	cubeRootThree, _ = osmomath.NewBigDecFromStr("1.442249570307408382321638310780109589")
+	// 3 * cubeRootTwo ≈ 3.779763149684619
+	threeCubeRootTwo, _ = osmomath.NewBigDecFromStr("3.779763149684619494301631821834685053")
+	// Cube root of 36: (6*6)^(1/3) ≈ 3.3019272
+	cubeRootSixSquared, _ = osmomath.NewBigDecFromStr("3.301927248894626683874609952409084957")
+	// 2 * cubeRootThree ≈ 2.884499140614817
+	twoCubeRootThree, _ = osmomath.NewBigDecFromStr("2.884499140614816764643276621560219178")
+	// Square root of 27: 27^(1/2) ≈ 5.196152422706632
+	twentySevenRootTwo, _ = osmomath.NewBigDecFromStr("5.196152422706631880582339024517617101")
 )
 
 // CFMMTestCase defines a testcase for stableswap pools
@@ -513,13 +521,13 @@ func solveCfmmDirect(xReserve, yReserve, yIn osmomath.BigDec) osmomath.BigDec {
 	scaled_y4_quo_k2 := scaled_y4_quo_k.Mul(scaled_y4_quo_k)
 
 	// let sqrt_term = sqrt(1 + scaled_y4_quo_k2)
-	sqrt_term, err := (osmomath.OneBigDec().Add(scaled_y4_quo_k2)).ApproxRoot(2)
+	sqrt_term, err := ApproxRoot(osmomath.OneBigDec().Add(scaled_y4_quo_k2), 2)
 	if err != nil {
 		panic(err)
 	}
 
 	// let common_factor = [y^2 * 9k) * (sqrt_term + 1)]^(1/3)
-	common_factor, err := (y2.MulInt64(9).Mul(k).Mul((sqrt_term.Add(osmomath.OneBigDec())))).ApproxRoot(3)
+	common_factor, err := ApproxRoot(y2.MulInt64(9).Mul(k).Mul((sqrt_term.Add(osmomath.OneBigDec()))), 3)
 	if err != nil {
 		panic(err)
 	}
@@ -659,13 +667,13 @@ func solveCFMMMultiDirect(xReserve, yReserve, wSumSquares, yIn osmomath.BigDec) 
 	wypy3 := (wSumSquares.Mul(y_new)).Add(y3)
 	wypy3pow3 := wypy3.Mul(wypy3).Mul(wypy3)
 
-	sqrt_term, err := ((k2.Mul(y4).MulInt64(729)).Add(y3.MulInt64(108).Mul(wypy3pow3))).ApproxRoot(2)
+	sqrt_term, err := ApproxRoot((k2.Mul(y4).MulInt64(729)).Add(y3.MulInt64(108).Mul(wypy3pow3)), 2)
 	if err != nil {
 		panic(err)
 	}
 
 	// let cube_root_term = (sqrt_term + 27 k y^2)^(1/3)
-	cube_root_term, err := (sqrt_term.Add(k.Mul(y2).MulInt64(27))).ApproxRoot(3)
+	cube_root_term, err := ApproxRoot(sqrt_term.Add(k.Mul(y2).MulInt64(27)), 3)
 	if err != nil {
 		panic(err)
 	}
@@ -1246,4 +1254,53 @@ func TestSingleAssetJoinSpreadFactorRatio(t *testing.T) {
 			require.Equal(t, tc.expectedRatio, ratio)
 		})
 	}
+}
+
+// ApproxRoot returns an approximate estimation of a Dec's positive real nth root
+// using Newton's method (where n is positive). The algorithm starts with some guess and
+// computes the sequence of improved guesses until an answer converges to an
+// approximate answer.  It returns `|d|.ApproxRoot() * -1` if input is negative.
+// A maximum number of 100 iterations is used a backup boundary condition for
+// cases where the answer never converges enough to satisfy the main condition.
+func ApproxRoot(d osmomath.BigDec, root uint64) (guess osmomath.BigDec, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			var ok bool
+			err, ok = r.(error)
+			if !ok {
+				err = errors.New("out of bounds")
+			}
+		}
+	}()
+
+	if d.IsNegative() {
+		absRoot, err := ApproxRoot(d.MulInt64(-1), root)
+		return absRoot.MulInt64(-1), err
+	}
+
+	if root == 1 || d.IsZero() || d.Equal(osmomath.OneBigDec()) {
+		return d, nil
+	}
+
+	if root == 0 {
+		return osmomath.OneBigDec(), nil
+	}
+
+	rootInt := osmomath.NewBigIntFromUint64(root)
+	guess, delta := osmomath.OneBigDec(), osmomath.OneBigDec()
+
+	maxApproxRootIterations := 100
+	for iter := 0; delta.Abs().GT(osmomath.SmallestBigDec()) && iter < maxApproxRootIterations; iter++ {
+		prev := guess.PowerInteger(root - 1)
+		if prev.IsZero() {
+			prev = osmomath.SmallestBigDec()
+		}
+		delta = d.Quo(prev)
+		delta.SubMut(guess)
+		delta = delta.QuoInt(rootInt)
+
+		guess = guess.Add(delta)
+	}
+
+	return guess, nil
 }
