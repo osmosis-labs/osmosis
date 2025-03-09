@@ -534,65 +534,10 @@ func (d BigDec) QuoInt64(i int64) BigDec {
 	return BigDec{mul}
 }
 
-// ApproxRoot returns an approximate estimation of a Dec's positive real nth root
-// using Newton's method (where n is positive). The algorithm starts with some guess and
-// computes the sequence of improved guesses until an answer converges to an
-// approximate answer.  It returns `|d|.ApproxRoot() * -1` if input is negative.
-// A maximum number of 100 iterations is used a backup boundary condition for
-// cases where the answer never converges enough to satisfy the main condition.
-func (d BigDec) ApproxRoot(root uint64) (guess BigDec, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			var ok bool
-			err, ok = r.(error)
-			if !ok {
-				err = errors.New("out of bounds")
-			}
-		}
-	}()
-
-	if d.IsNegative() {
-		absRoot, err := d.MulInt64(-1).ApproxRoot(root)
-		return absRoot.MulInt64(-1), err
-	}
-
-	if root == 1 || d.IsZero() || d.Equal(oneBigDec) {
-		return d, nil
-	}
-
-	if root == 0 {
-		return OneBigDec(), nil
-	}
-
-	rootInt := NewBigIntFromUint64(root)
-	guess, delta := OneBigDec(), OneBigDec()
-
-	for iter := 0; delta.Abs().GT(SmallestBigDec()) && iter < maxApproxRootIterations; iter++ {
-		prev := guess.PowerInteger(root - 1)
-		if prev.IsZero() {
-			prev = SmallestBigDec()
-		}
-		delta = d.Quo(prev)
-		delta.SubMut(guess)
-		delta = delta.QuoInt(rootInt)
-
-		guess = guess.Add(delta)
-	}
-
-	return guess, nil
-}
-
 func assertMaxBitLen(i *big.Int) {
 	if i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
-}
-
-// ApproxSqrt is a wrapper around ApproxRoot for the common special case
-// of finding the square root of a number. It returns -(sqrt(abs(d)) if input is negative.
-// TODO: Optimize this to be faster just using native big int sqrt.
-func (d BigDec) ApproxSqrt() (BigDec, error) {
-	return d.ApproxRoot(2)
 }
 
 // is integer, e.g. decimals are zero

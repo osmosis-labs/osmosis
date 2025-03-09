@@ -665,55 +665,6 @@ func (s *decimalTestSuite) TestDecCeil() {
 	}
 }
 
-func (s *decimalTestSuite) TestApproxRoot() {
-	testCases := []struct {
-		input    osmomath.BigDec
-		root     uint64
-		expected osmomath.BigDec
-	}{
-		{osmomath.OneBigDec(), 10, osmomath.OneBigDec()},                                                                               // 1.0 ^ (0.1) => 1.0
-		{osmomath.NewBigDecWithPrec(25, 2), 2, osmomath.NewBigDecWithPrec(5, 1)},                                                       // 0.25 ^ (0.5) => 0.5
-		{osmomath.NewBigDecWithPrec(4, 2), 2, osmomath.NewBigDecWithPrec(2, 1)},                                                        // 0.04 ^ (0.5) => 0.2
-		{osmomath.NewBigDecFromInt(osmomath.NewBigInt(27)), 3, osmomath.NewBigDecFromInt(osmomath.NewBigInt(3))},                       // 27 ^ (1/3) => 3
-		{osmomath.NewBigDecFromInt(osmomath.NewBigInt(-81)), 4, osmomath.NewBigDecFromInt(osmomath.NewBigInt(-3))},                     // -81 ^ (0.25) => -3
-		{osmomath.NewBigDecFromInt(osmomath.NewBigInt(2)), 2, osmomath.MustNewBigDecFromStr("1.414213562373095048801688724209698079")}, // 2 ^ (0.5) => 1.414213562373095048801688724209698079
-		{osmomath.NewBigDecWithPrec(1005, 3), 31536000, osmomath.MustNewBigDecFromStr("1.000000000158153903837946258002096839")},       // 1.005 ^ (1/31536000) ≈ 1.000000000158153903837946258002096839
-		{osmomath.SmallestBigDec(), 2, osmomath.NewBigDecWithPrec(1, 18)},                                                              // 1e-36 ^ (0.5) => 1e-18
-		{osmomath.SmallestBigDec(), 3, osmomath.MustNewBigDecFromStr("0.000000000001000000000000000002431786")},                        // 1e-36 ^ (1/3) => 1e-12
-		{osmomath.NewBigDecWithPrec(1, 8), 3, osmomath.MustNewBigDecFromStr("0.002154434690031883721759293566519280")},                 // 1e-8 ^ (1/3) ≈ 0.002154434690031883721759293566519
-	}
-
-	// In the case of 1e-8 ^ (1/3), the result repeats every 5 iterations starting from iteration 24
-	// (i.e. 24, 29, 34, ... give the same result) and never converges enough. The maximum number of
-	// iterations (100) causes the result at iteration 100 to be returned, regardless of convergence.
-
-	for i, tc := range testCases {
-		res, err := tc.input.ApproxRoot(tc.root)
-		s.Require().NoError(err)
-		s.Require().True(tc.expected.Sub(res).AbsMut().LTE(osmomath.SmallestBigDec()), "unexpected result for test case %d, input: %v", i, tc.input)
-	}
-}
-
-func (s *decimalTestSuite) TestApproxSqrt() {
-	testCases := []struct {
-		input    osmomath.BigDec
-		expected osmomath.BigDec
-	}{
-		{osmomath.OneBigDec(), osmomath.OneBigDec()},                                                                                // 1.0 => 1.0
-		{osmomath.NewBigDecWithPrec(25, 2), osmomath.NewBigDecWithPrec(5, 1)},                                                       // 0.25 => 0.5
-		{osmomath.NewBigDecWithPrec(4, 2), osmomath.NewBigDecWithPrec(2, 1)},                                                        // 0.09 => 0.3
-		{osmomath.NewBigDecFromInt(osmomath.NewBigInt(9)), osmomath.NewBigDecFromInt(osmomath.NewBigInt(3))},                        // 9 => 3
-		{osmomath.NewBigDecFromInt(osmomath.NewBigInt(-9)), osmomath.NewBigDecFromInt(osmomath.NewBigInt(-3))},                      // -9 => -3
-		{osmomath.NewBigDecFromInt(osmomath.NewBigInt(2)), osmomath.MustNewBigDecFromStr("1.414213562373095048801688724209698079")}, // 2 => 1.414213562373095048801688724209698079
-	}
-
-	for i, tc := range testCases {
-		res, err := tc.input.ApproxSqrt()
-		s.Require().NoError(err)
-		s.Require().Equal(tc.expected, res, "unexpected result for test case %d, input: %v", i, tc.input)
-	}
-}
-
 func (s *decimalTestSuite) TestDecEncoding() {
 	testCases := []struct {
 		input   osmomath.BigDec
