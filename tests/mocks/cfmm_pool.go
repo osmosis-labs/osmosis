@@ -114,7 +114,7 @@ func (mr *MockCFMMPoolIMockRecorder) CalcJoinPoolShares(ctx, tokensIn, spreadFac
 }
 
 // CalcOutAmtGivenIn mocks base method.
-func (m *MockCFMMPoolI) CalcOutAmtGivenIn(ctx types.Context, tokenIn types.Coins, tokenOutDenom string, spreadFactor osmomath.Dec) (types.Coin, error) {
+func (m *MockCFMMPoolI) CalcOutAmtGivenIn(ctx types.Context, tokenIn types.Coin, tokenOutDenom string, spreadFactor osmomath.Dec) (types.Coin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CalcOutAmtGivenIn", ctx, tokenIn, tokenOutDenom, spreadFactor)
 	ret0, _ := ret[0].(types.Coin)
@@ -482,7 +482,7 @@ func (mr *MockPoolAmountOutExtensionMockRecorder) CalcJoinPoolShares(ctx, tokens
 }
 
 // CalcOutAmtGivenIn mocks base method.
-func (m *MockPoolAmountOutExtension) CalcOutAmtGivenIn(ctx types.Context, tokenIn types.Coins, tokenOutDenom string, spreadFactor osmomath.Dec) (types.Coin, error) {
+func (m *MockPoolAmountOutExtension) CalcOutAmtGivenIn(ctx types.Context, tokenIn types.Coin, tokenOutDenom string, spreadFactor osmomath.Dec) (types.Coin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CalcOutAmtGivenIn", ctx, tokenIn, tokenOutDenom, spreadFactor)
 	ret0, _ := ret[0].(types.Coin)
@@ -907,7 +907,7 @@ func (mr *MockWeightedPoolExtensionMockRecorder) CalcJoinPoolShares(ctx, tokensI
 }
 
 // CalcOutAmtGivenIn mocks base method.
-func (m *MockWeightedPoolExtension) CalcOutAmtGivenIn(ctx types.Context, tokenIn types.Coins, tokenOutDenom string, spreadFactor osmomath.Dec) (types.Coin, error) {
+func (m *MockWeightedPoolExtension) CalcOutAmtGivenIn(ctx types.Context, tokenIn types.Coin, tokenOutDenom string, spreadFactor osmomath.Dec) (types.Coin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CalcOutAmtGivenIn", ctx, tokenIn, tokenOutDenom, spreadFactor)
 	ret0, _ := ret[0].(types.Coin)

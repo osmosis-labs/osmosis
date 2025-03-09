@@ -159,7 +159,7 @@ func RandomSwapExactAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Cont
 	amountInAfterSubTakerFee := randomCoinSubset[0].Amount.ToLegacyDec().Mul(osmomath.OneDec().Sub(takerFee))
 	tokenInAfterSubTakerFee := sdk.NewCoin(randomCoinSubset[0].Denom, amountInAfterSubTakerFee.TruncateInt())
 
-	tokenOutMin, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(tokenInAfterSubTakerFee), coinOut.Denom, pool.GetSpreadFactor(ctx))
+	tokenOutMin, err := pool.CalcOutAmtGivenIn(ctx, tokenInAfterSubTakerFee, coinOut.Denom, pool.GetSpreadFactor(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +197,7 @@ func RandomSwapExactAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Con
 	randomCoinInSubset := sdk.NewCoins(coinIn).Min(sdk.NewCoins(accCoin))
 
 	// utilize CalcOutAmtGivenIn to calculate tokenOut and use tokenOut to calculate tokenInMax
-	tokenOut, err := pool.CalcOutAmtGivenIn(ctx, randomCoinInSubset, coinOut.Denom, pool.GetSpreadFactor(ctx))
+	tokenOut, err := pool.CalcOutAmtGivenIn(ctx, randomCoinInSubset[0], coinOut.Denom, pool.GetSpreadFactor(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -333,7 +333,7 @@ func RandomExitSwapExternAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sd
 
 	// get amount of coinIn from exitedCoins and calculate how much of tokenOut you should get from that
 	exitedCoinsIn := exitedCoins.AmountOf(coinIn.Denom)
-	tokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(sdk.NewCoin(coinIn.Denom, exitedCoinsIn)), coinOut.Denom, pool.GetSpreadFactor(ctx))
+	tokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoin(coinIn.Denom, exitedCoinsIn), coinOut.Denom, pool.GetSpreadFactor(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -377,7 +377,7 @@ func RandomExitSwapShareAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.
 
 	// get amount of coinIn from exitedCoins and calculate how much of tokenOut you should get from that
 	exitedCoinsIn := exitedCoins.AmountOf(coinIn.Denom)
-	tokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(sdk.NewCoin(coinIn.Denom, exitedCoinsIn)), coinOut.Denom, pool.GetSpreadFactor(ctx))
+	tokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoin(coinIn.Denom, exitedCoinsIn), coinOut.Denom, pool.GetSpreadFactor(ctx))
 	if err != nil {
 		return nil, err
 	}

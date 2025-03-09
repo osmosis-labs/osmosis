@@ -158,7 +158,7 @@ func (k Keeper) CalcOutAmtGivenIn(
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	return cfmmPool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(tokenIn), tokenOutDenom, spreadFactor)
+	return cfmmPool.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, spreadFactor)
 }
 
 // CalcInAmtGivenOut calculates the amount of tokenIn given tokenOut and the pool's current state.
