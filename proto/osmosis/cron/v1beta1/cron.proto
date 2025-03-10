@@ -1,0 +1,26 @@
+syntax = "proto3";
+package osmosis.cron.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v29/x/cron/types";
+
+message CronJob {
+    // id is the unique identifier for the cron job
+    uint64 id = 1;
+    // name is the name of the cron job
+    string name = 2;
+    // description is the description of the cron job
+    string description = 3;
+    // Msgs that will be executed every period amount of time
+    repeated MsgContractCron msg_contract_cron = 4 [(gogoproto.nullable) = false];
+    // set cron enabled or not
+    bool enable_cron = 5;
+  }
+  
+  message MsgContractCron {
+    // Contract is the address of the smart contract
+    string contract_address = 1;
+    // Msg is json encoded message to be passed to the contract
+    string json_msg = 2;
+  }
