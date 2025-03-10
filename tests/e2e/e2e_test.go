@@ -64,9 +64,9 @@ func (s *IntegrationTestSuite) TestPrepE2E() {
 // TODO: Find more scalable way to do this
 func (s *IntegrationTestSuite) TestStartE2E() {
 	// Zero Dependent Tests
-	s.T().Run("CreateConcentratedLiquidityPoolVoting_And_TWAP", func(t *testing.T) {
+	s.T().Run("ConcentratedLiquidityPoolTWAP", func(t *testing.T) {
 		t.Parallel()
-		s.CreateConcentratedLiquidityPoolVoting_And_TWAP()
+		s.ConcentratedLiquidityPoolTWAP()
 	})
 
 	s.T().Run("ProtoRev", func(t *testing.T) {
