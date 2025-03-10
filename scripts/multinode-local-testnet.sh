@@ -68,7 +68,7 @@ update_genesis '.app_state["incentives"]["params"]["distr_epoch_identifier"]="da
 
 # update mint genesis
 update_genesis '.app_state["mint"]["params"]["mint_denom"]="note"'
-update_genesis '.app_state["mint"]["params"]["epoch_identifier"]="day"'
+update_genesis '.app_state["mint"]["params"]["epoch_identifier"]="minute"'
 
 # update gamm genesis
 #update_genesis '.app_state["gamm"]["params"]["pool_creation_fee"][0]["denom"]="note"'
@@ -94,6 +94,9 @@ update_genesis '.app_state["oracle"]["exchange_rates"][0]["exchange_rate"]="1.7"
 
 update_genesis '.app_state["oracle"]["exchange_rates"][1]["denom"]="usdr"'
 update_genesis '.app_state["oracle"]["exchange_rates"][1]["exchange_rate"]="2.0"'
+
+
+update_genesis '.app_state["stablestakingincentives"]["params"]["distribution_contract_address"] = "symphony14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s748pj4"'
 
 # copy validator1 genesis file to validator2-4
 cp $HOME/.symphonyd/validator1/config/genesis.json $HOME/.symphonyd/validator2/config/genesis.json

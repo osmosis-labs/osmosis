@@ -1,0 +1,22 @@
+syntax = "proto3";
+package symphony.stablestakingincentives.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "symphony/stablestakingincentives/v1beta1/incentives.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v26/x/stable-staking-incentives/types";
+
+service Query {
+  // Params returns pool incentives params.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/symphony/stable-staking-incentives/v1beta1/params";
+  }
+}
+
+
+message QueryParamsRequest {}
+message QueryParamsResponse {
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}
+

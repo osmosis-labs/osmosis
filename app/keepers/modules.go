@@ -9,6 +9,7 @@ import (
 	transfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
 	tendermint "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
+	stablestakingincentives "github.com/osmosis-labs/osmosis/v26/x/stable-staking-incentives"
 
 	"cosmossdk.io/x/evidence"
 	"cosmossdk.io/x/upgrade"
@@ -124,6 +125,7 @@ var AppModuleBasics = module.NewBasicManager(
 	incentives.AppModuleBasic{},
 	lockup.AppModuleBasic{},
 	poolincentives.AppModuleBasic{},
+	stablestakingincentives.AppModuleBasic{},
 	epochs.AppModuleBasic{},
 	superfluid.AppModuleBasic{},
 	tokenfactory.AppModuleBasic{},
