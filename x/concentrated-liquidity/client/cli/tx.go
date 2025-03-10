@@ -15,7 +15,6 @@ import (
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	clmodel "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
@@ -33,6 +32,7 @@ func NewTxCmd() *cobra.Command {
 	osmocli.AddTxCmd(txCmd, NewTransferPositionsCmd)
 	return txCmd
 }
+
 
 var poolIdFlagOverride = map[string]string{
 	"poolid": FlagPoolId,
@@ -207,45 +207,3 @@ func parsePoolIdToTickSpacingRecords(cmd *cobra.Command) ([]types.PoolIdToTickSp
 	return poolIdToTickSpacingRecords, nil
 }
 
-func parsePoolRecords(cmd *cobra.Command) ([]types.PoolRecord, error) {
-	poolRecordsStr, err := cmd.Flags().GetString(FlagPoolRecords)
-	if err != nil {
-		return nil, err
-	}
-
-	poolRecords := strings.Split(poolRecordsStr, ",")
-
-	if len(poolRecords)%4 != 0 {
-		return nil, fmt.Errorf("poolRecords must be a list of denom0, denom1, tickSpacing, and spreadFactor")
-	}
-
-	finalPoolRecords := []types.PoolRecord{}
-	i := 0
-	for i < len(poolRecords) {
-		denom0 := poolRecords[i]
-		denom1 := poolRecords[i+1]
-
-		tickSpacing, err := strconv.Atoi(poolRecords[i+2])
-		if err != nil {
-			return nil, err
-		}
-
-		spreadFactorStr := poolRecords[i+3]
-		spreadFactor, err := osmomath.NewDecFromStr(spreadFactorStr)
-		if err != nil {
-			return nil, err
-		}
-
-		finalPoolRecords = append(finalPoolRecords, types.PoolRecord{
-			Denom0:       denom0,
-			Denom1:       denom1,
-			TickSpacing:  uint64(tickSpacing),
-			SpreadFactor: spreadFactor,
-		})
-
-		// increase counter by the next 4
-		i = i + 4
-	}
-
-	return finalPoolRecords, nil
-}
