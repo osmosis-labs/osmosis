@@ -37,6 +37,8 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 		expectedTickspacing  = uint64(100)
 		expectedSpreadFactor = "0.001000000000000000"
 	)
+
+	s.enablePermissionlessCL(chainA, chainANode)
 	poolId := chainANode.CreateConcentratedPool(initialization.ValidatorWalletName, expectedDenom0, expectedDenom1, expectedTickspacing, expectedSpreadFactor)
 	fmt.Println("poolId", poolId)
 
@@ -118,6 +120,22 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	s.Require().Equal(osmomath.NewDec(2), secondTwapBOverA)
 }
 
+func (s *IntegrationTestSuite) enablePermissionlessCL(chain *chain.Config, chainNode *chain.NodeConfig) {
+	// Get the permisionless pool creation parameter.
+	isPermisionlessCreationEnabledStr := chainNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled), false)
+	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
+		// Change the parameter to enable permisionless pool creation.
+		err := chainNode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chain, true)
+		s.Require().NoError(err)
+	}
+
+	// Confirm that the parameter has been changed.
+	isPermisionlessCreationEnabledStr = chainNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled), false)
+	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
+		s.T().Fatal("concentrated liquidity pool creation is not enabled")
+	}
+}
+
 // Note: this test depends on taker fee being set.
 // As a result, we use chain B. Chain A has zero taker fee.
 // TODO: Move this test and its components to its own file, Its way too big and needs to be split up significantly.
@@ -136,20 +154,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	var adminWalletAddr string
 
 	enablePermissionlessCl := func() {
-		// Get the permisionless pool creation parameter.
-		isPermisionlessCreationEnabledStr := chainBNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled), false)
-		if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
-			// Change the parameter to enable permisionless pool creation.
-			err := chainBNode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chainB, true)
-			s.Require().NoError(err)
-		}
-
-		// Confirm that the parameter has been changed.
-		isPermisionlessCreationEnabledStr = chainBNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled), false)
-		if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
-			s.T().Fatal("concentrated liquidity pool creation is not enabled")
-		}
-
+		s.enablePermissionlessCL(chainB, chainBNode)
 		go func() {
 			s.T().Run("test update pool tick spacing", func(t *testing.T) {
 				s.TickSpacingUpdateProp()
