@@ -45,7 +45,11 @@ func (k Keeper) PruneRecordsBeforeTimeButNewest(ctx sdk.Context, state types.Pru
 }
 
 func (k Keeper) GetInterpolatedRecord(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string, t time.Time) (types.TwapRecord, error) {
-	return k.getInterpolatedRecord(ctx, poolId, t, asset0Denom, asset1Denom)
+	return k.getInterpolatedRecord(ctx, poolId, t, asset0Denom, asset1Denom, k.GetArithmeticStrategy())
+}
+
+func (k Keeper) GetInterpolatedRecordWithStrategy(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string, t time.Time, strategy TwapStrategy) (types.TwapRecord, error) {
+	return k.getInterpolatedRecord(ctx, poolId, t, asset0Denom, asset1Denom, strategy)
 }
 
 func ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string, strategy twapStrategy) (osmomath.Dec, error) {
@@ -62,6 +66,10 @@ func (s geometric) ComputeTwap(startRecord types.TwapRecord, endRecord types.Twa
 
 func RecordWithUpdatedAccumulators(record types.TwapRecord, t time.Time) types.TwapRecord {
 	return recordWithUpdatedAccumulators(record, t)
+}
+
+func UpdateAccumulatorsWithStrategy(record types.TwapRecord, t time.Time, strategy TwapStrategy) types.TwapRecord {
+	return strategy.updateAccumulators(record, t)
 }
 
 func NewTwapRecord(k types.PoolManagerInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
