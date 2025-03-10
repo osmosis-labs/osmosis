@@ -152,7 +152,7 @@ var (
 		{
 			Section: "consensus",
 			Key:     "timeout_propose",
-			Value:   "1.9s",
+			Value:   "1.6s",
 		},
 		{
 			Section: "consensus",
