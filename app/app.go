@@ -525,7 +525,6 @@ func NewOsmosisApp(
 					gammclient.UpdateMigrationRecordsProposalHandler,
 					gammclient.CreateCLPoolAndLinkToCFMMProposalHandler,
 					gammclient.SetScalingFactorControllerProposalHandler,
-					clclient.CreateConcentratedLiquidityPoolProposalHandler,
 					clclient.TickSpacingDecreaseProposalHandler,
 					cwpoolclient.UploadCodeIdAndWhitelistProposalHandler,
 					cwpoolclient.MigratePoolContractsProposalHandler,

@@ -43,7 +43,6 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 
 	registry.RegisterImplementations(
 		(*govtypesv1.Content)(nil),
-		&CreateConcentratedLiquidityPoolsProposal{},
 		&TickSpacingDecreaseProposal{},
 	)
 
