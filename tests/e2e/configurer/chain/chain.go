@@ -277,19 +277,3 @@ func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 	}
 	return c.NodeConfigs[nodeIndex], nil
 }
-
-func (c *Config) SubmitCreateConcentratedPoolProposal(chainANode *NodeConfig, isLegacy bool) (uint64, error) {
-	propNumber := chainANode.SubmitCreateConcentratedPoolProposal(false, isLegacy)
-
-	AllValsVoteOnProposal(c, propNumber)
-
-	require.Eventually(c.t, func() bool {
-		status, err := chainANode.QueryPropStatus(propNumber)
-		if err != nil {
-			return false
-		}
-		return status == proposalStatusPassed
-	}, time.Second*30, 10*time.Millisecond)
-	poolId := chainANode.QueryNumPools()
-	return poolId, nil
-}

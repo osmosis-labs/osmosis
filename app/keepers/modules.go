@@ -90,7 +90,6 @@ var AppModuleBasics = module.NewBasicManager(
 			gammclient.UpdateMigrationRecordsProposalHandler,
 			gammclient.CreateCLPoolAndLinkToCFMMProposalHandler,
 			gammclient.SetScalingFactorControllerProposalHandler,
-			clclient.CreateConcentratedLiquidityPoolProposalHandler,
 			clclient.TickSpacingDecreaseProposalHandler,
 			cwpoolclient.UploadCodeIdAndWhitelistProposalHandler,
 			cwpoolclient.MigratePoolContractsProposalHandler,
