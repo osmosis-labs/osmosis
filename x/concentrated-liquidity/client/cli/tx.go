@@ -33,7 +33,6 @@ func NewTxCmd() *cobra.Command {
 	return txCmd
 }
 
-
 var poolIdFlagOverride = map[string]string{
 	"poolid": FlagPoolId,
 }
@@ -206,4 +205,3 @@ func parsePoolIdToTickSpacingRecords(cmd *cobra.Command) ([]types.PoolIdToTickSp
 
 	return poolIdToTickSpacingRecords, nil
 }
-
