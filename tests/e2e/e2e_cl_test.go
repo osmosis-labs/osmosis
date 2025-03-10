@@ -31,33 +31,21 @@ import (
 func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() {
 	chainA, chainANode := s.getChainACfgs()
 
-	poolId, err := chainA.SubmitCreateConcentratedPoolProposal(chainANode, true)
-	s.NoError(err)
-	fmt.Println("poolId", poolId)
-
 	var (
 		expectedDenom0       = "stake"
 		expectedDenom1       = appparams.BaseCoinUnit
 		expectedTickspacing  = uint64(100)
 		expectedSpreadFactor = "0.001000000000000000"
 	)
+	poolId := chainANode.CreateConcentratedPool(initialization.ValidatorWalletName, expectedDenom0, expectedDenom1, expectedTickspacing, expectedSpreadFactor)
+	fmt.Println("poolId", poolId)
 
-	var concentratedPool cltypes.ConcentratedPoolExtension
-	s.Eventually(
-		func() bool {
-			concentratedPool = s.updatedConcentratedPool(chainANode, poolId)
-			s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
-			s.Require().Equal(expectedDenom0, concentratedPool.GetToken0())
-			s.Require().Equal(expectedDenom1, concentratedPool.GetToken1())
-			s.Require().Equal(expectedTickspacing, concentratedPool.GetTickSpacing())
-			s.Require().Equal(expectedSpreadFactor, concentratedPool.GetSpreadFactor(sdk.Context{}).String())
-
-			return true
-		},
-		1*time.Minute,
-		10*time.Millisecond,
-		"create concentrated liquidity pool was not successful.",
-	)
+	concentratedPool := s.updatedConcentratedPool(chainANode, poolId)
+	s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
+	s.Require().Equal(expectedDenom0, concentratedPool.GetToken0())
+	s.Require().Equal(expectedDenom1, concentratedPool.GetToken1())
+	s.Require().Equal(expectedTickspacing, concentratedPool.GetTickSpacing())
+	s.Require().Equal(expectedSpreadFactor, concentratedPool.GetSpreadFactor(sdk.Context{}).String())
 
 	fundTokens := []string{"100000000stake", "100000000uosmo"}
 
