@@ -49,6 +49,9 @@ var (
 	// KeyTakerFeeCommunityPoolProtoRevArray defines key to store the taker fee for community pool tracker coin array.
 	KeyTakerFeeCommunityPoolProtoRevArray = []byte{0x09}
 
+	// KeyTakerFeeBurnProtoRevArray defines key to store the taker fee for burn tracker coin array.
+	KeyTakerFeeBurnProtoRevArray = []byte{0x0B}
+
 	// TakerFeeSkimAccrualPrefix defines the prefix to store taker fee skim accrual data.
 	TakerFeeSkimAccrualPrefix = []byte{0x0A}
 
