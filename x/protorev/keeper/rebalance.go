@@ -218,7 +218,7 @@ func (k Keeper) CalculateUpperBoundForSearch(
 	// respecting the max ticks moved.
 	for index := route.Route.Length() - 1; index >= 0; index-- {
 		hop := route.Route[index]
-		pool, err := k.poolmanagerKeeper.GetPool(ctx, hop.PoolId)
+		poolType, err := k.poolmanagerKeeper.GetPoolType(ctx, hop.PoolId)
 		if err != nil {
 			return osmomath.ZeroInt(), err
 		}
@@ -229,13 +229,13 @@ func (k Keeper) CalculateUpperBoundForSearch(
 		}
 
 		switch {
-		case pool.GetType() == poolmanagertypes.Concentrated:
+		case poolType == poolmanagertypes.Concentrated:
 			// If the pool is a concentrated liquidity pool, then check the maximum amount in that can be used
 			// and determine what this amount is as an input at the previous pool (working all the way up to the
 			// beginning of the route).
 			maxTokenIn, maxTokenOut, err := k.concentratedLiquidityKeeper.ComputeMaxInAmtGivenMaxTicksCrossed(
 				ctx,
-				pool.GetId(),
+				hop.PoolId,
 				tokenInDenom,
 				poolInfo.Concentrated.MaxTicksCrossed,
 			)
@@ -254,14 +254,14 @@ func (k Keeper) CalculateUpperBoundForSearch(
 
 			// In the scenario where there are multiple CL pools in a route, we select the one that inputs
 			// the smaller amount to ensure we do not overstep the max ticks moved.
-			intermidiateCoin, err = k.executeSafeSwap(ctx, pool.GetId(), intermidiateCoin, tokenInDenom)
+			intermidiateCoin, err = k.executeSafeSwap(ctx, hop.PoolId, intermidiateCoin, tokenInDenom)
 			if err != nil {
 				return osmomath.ZeroInt(), err
 			}
 		case !intermidiateCoin.IsNil():
 			// If we have already seen a CL pool in the route, then simply propagate the intermediate coin up
 			// the route.
-			intermidiateCoin, err = k.executeSafeSwap(ctx, pool.GetId(), intermidiateCoin, tokenInDenom)
+			intermidiateCoin, err = k.executeSafeSwap(ctx, hop.PoolId, intermidiateCoin, tokenInDenom)
 			if err != nil {
 				return osmomath.ZeroInt(), err
 			}
