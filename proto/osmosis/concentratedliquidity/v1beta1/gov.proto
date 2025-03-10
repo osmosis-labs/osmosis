@@ -52,12 +52,7 @@ message PoolRecord {
   string denom1 = 2 [ (gogoproto.moretags) = "yaml:\"denom1\"" ];
   uint64 tick_spacing = 3 [ (gogoproto.moretags) = "yaml:\"tick_spacing\"" ];
   // DEPRECATED
-  string exponent_at_price_one = 4 [
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.moretags) = "yaml:\"exponent_at_price_one\",deprecated:\"true\"",
-    (gogoproto.nullable) = false,
-    deprecated = true
-  ];
+  reserved 4;
   string spread_factor = 5 [
 
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
