@@ -119,7 +119,7 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 				s.Require().True(ok)
 
 				expectedOutput, err := pool.CalcOutAmtGivenIn(s.Ctx,
-					sdk.Coins{sdk.Coin{Denom: tc.denoms[i], Amount: coin.Amount}},
+					sdk.Coin{Denom: tc.denoms[i], Amount: coin.Amount},
 					tc.baseDenom,
 					tc.spreadFactor)
 				s.NoError(err)

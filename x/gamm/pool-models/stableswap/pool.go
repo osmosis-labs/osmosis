@@ -239,11 +239,8 @@ func (p *Pool) updatePoolForJoin(tokensIn sdk.Coins, newShares osmomath.Int) {
 
 // TODO: These should all get moved to amm.go
 // CalcOutAmtGivenIn calculates expected output amount given input token
-func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, spreadFactor osmomath.Dec) (tokenOut sdk.Coin, err error) {
-	if tokenIn.Len() != 1 {
-		return sdk.Coin{}, errors.New("stableswap CalcOutAmtGivenIn: tokenIn is of wrong length")
-	}
-	outAmtDec, err := p.calcOutAmtGivenIn(tokenIn[0], tokenOutDenom, spreadFactor)
+func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, spreadFactor osmomath.Dec) (tokenOut sdk.Coin, err error) {
+	outAmtDec, err := p.calcOutAmtGivenIn(tokenIn, tokenOutDenom, spreadFactor)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -259,11 +256,15 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDeno
 
 // SwapOutAmtGivenIn executes a swap given a desired input amount
 func (p *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, spreadFactor osmomath.Dec) (tokenOut sdk.Coin, err error) {
+	if tokenIn.Len() != 1 {
+		return sdk.Coin{}, errors.New("stableswap SwapOutAmtGivenIn: tokenIn is of wrong length")
+	}
+	
 	if err = validatePoolLiquidity(p.PoolLiquidity.Add(tokenIn...), p.ScalingFactors); err != nil {
 		return sdk.Coin{}, err
 	}
 
-	tokenOut, err = p.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, spreadFactor)
+	tokenOut, err = p.CalcOutAmtGivenIn(ctx, tokenIn[0], tokenOutDenom, spreadFactor)
 	if err != nil {
 		return sdk.Coin{}, err
 	}

@@ -50,7 +50,7 @@ func TestCalculateAmountOutAndIn_InverseRelationship(
 	// we expect that any output less than 1 will always be rounded up
 	require.True(t, actualTokenIn.Amount.GTE(osmomath.OneInt()))
 
-	inverseTokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(actualTokenIn), assetOutDenom, spreadFactor)
+	inverseTokenOut, err := pool.CalcOutAmtGivenIn(ctx, actualTokenIn, assetOutDenom, spreadFactor)
 	require.NoError(t, err)
 
 	require.Equal(t, initialOut.Denom, inverseTokenOut.Denom)
@@ -100,14 +100,14 @@ func TestSlippageRelationOutGivenIn(
 	fee := curPool.GetSpreadFactor(ctx)
 
 	curLiquidity := initLiquidity
-	curOutAmount, err := curPool.CalcOutAmtGivenIn(ctx, swapInAmt, swapOutDenom, fee)
+	curOutAmount, err := curPool.CalcOutAmtGivenIn(ctx, swapInAmt[0], swapOutDenom, fee)
 	require.NoError(t, err)
 	for i := 0; i < 50; i++ {
 		newLiquidity := curLiquidity.Add(curLiquidity...)
 		curPool = createPoolWithLiquidity(ctx, newLiquidity)
 
 		// ensure out amount goes down as liquidity increases
-		newOutAmount, err := curPool.CalcOutAmtGivenIn(ctx, swapInAmt, swapOutDenom, fee)
+		newOutAmount, err := curPool.CalcOutAmtGivenIn(ctx, swapInAmt[0], swapOutDenom, fee)
 		require.NoError(t, err)
 		require.True(t, newOutAmount.Amount.GTE(curOutAmount.Amount),
 			"%s: swap with new liquidity %s yielded less than swap with old liquidity %s."+

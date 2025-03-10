@@ -275,6 +275,16 @@ func (p Pool) parsePoolAssets(tokensA sdk.Coins, tokenBDenom string) (
 	return tokensA[0], Aasset, Basset, nil
 }
 
+func (p Pool) parsePoolAssetsForSwap(tokenA sdk.Coin, tokenBDenom string) (
+	Aasset PoolAsset, Basset PoolAsset, err error,
+) {
+	Aasset, Basset, err = p.parsePoolAssetsByDenoms(tokenA.Denom, tokenBDenom)
+	if err != nil {
+		return PoolAsset{}, PoolAsset{}, err
+	}
+	return Aasset, Basset, nil
+}
+
 func (p Pool) parsePoolAssetsCoins(tokensA sdk.Coins, tokensB sdk.Coins) (
 	Aasset PoolAsset, Basset PoolAsset, err error,
 ) {
@@ -491,11 +501,11 @@ func (p Pool) GetType() poolmanagertypes.PoolType {
 // amount and fee deducted, using solveConstantFunctionInvariant.
 func (p Pool) CalcOutAmtGivenIn(
 	ctx sdk.Context,
-	tokensIn sdk.Coins,
+	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	spreadFactor osmomath.Dec,
 ) (sdk.Coin, error) {
-	tokenIn, poolAssetIn, poolAssetOut, err := p.parsePoolAssets(tokensIn, tokenOutDenom)
+	poolAssetIn, poolAssetOut, err := p.parsePoolAssetsForSwap(tokenIn, tokenOutDenom)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -532,7 +542,11 @@ func (p *Pool) SwapOutAmtGivenIn(
 ) (
 	tokenOut sdk.Coin, err error,
 ) {
-	tokenOutCoin, err := p.CalcOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, spreadFactor)
+	if tokensIn.Len() != 1 {
+		return sdk.Coin{}, errors.New("balancer SwapOutAmtGivenIn: tokensIn is of wrong length")
+	}
+	
+	tokenOutCoin, err := p.CalcOutAmtGivenIn(ctx, tokensIn[0], tokenOutDenom, spreadFactor)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
