@@ -64,7 +64,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// GetTaxRate loads the tax rate
+// GetTaxRate loads the tax rate. Returned value is in percents.
 func (k Keeper) GetTaxRate(ctx sdk.Context) osmomath.Dec {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(types.TaxRateKey)
@@ -112,7 +112,7 @@ func (k Keeper) RefillExchangePool(ctx sdk.Context) osmomath.Dec {
 // UpdateReserveFee updates the ReserveFeeMultiplier based on the current reserve balance and requirement.
 // If reserve is insufficient, the fee multiplier is increased based on the percentage difference.
 func (k Keeper) UpdateReserveFee(ctx sdk.Context) osmomath.Dec {
-	currentTaxRate := k.GetTaxRate(ctx)
+	baseFeeRate := types.DefaultTaxRate
 	newTaxRate := osmomath.ZeroDec()
 	reserveAmount := k.GetReservePoolBalance(ctx).Amount.ToLegacyDec()
 	exchangeRequirement := k.marketKeeper.GetExchangeRequirement(ctx)
@@ -122,11 +122,13 @@ func (k Keeper) UpdateReserveFee(ctx sdk.Context) osmomath.Dec {
 		if osmomath.NewDec(percentMissing).GT(params.ReserveAllowableOffset) {
 			// Determine the power of 2 that the percentMissing falls beneath
 			powerOf2 := uint64(math.Log2(float64(percentMissing)))
-			newTaxRate = osmomath.MinDec(params.MaxFeeMultiplier, currentTaxRate.Mul(osmomath.NewDec(2).Power(powerOf2+1)))
+			newTaxRate = osmomath.MinDec(params.MaxFeeMultiplier, baseFeeRate.Mul(osmomath.NewDec(2).Power(powerOf2+1)))
 		} else {
 			// Double the base fee to fill the remaining difference
-			newTaxRate = currentTaxRate.Mul(osmomath.NewDec(2))
+			newTaxRate = baseFeeRate.Mul(osmomath.NewDec(2))
 		}
+	} else {
+		newTaxRate = osmomath.ZeroDec()
 	}
 	k.SetTaxRate(ctx, newTaxRate)
 	return newTaxRate

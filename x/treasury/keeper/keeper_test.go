@@ -43,6 +43,42 @@ func TestKeeper_UpdateReserveFee(t *testing.T) {
 		require.True(t, newTaxRate.GT(osmomath.ZeroDec()), "reserve is empty so we should apply the tax rate")
 		require.True(t, newTaxRate.LTE(input.TreasuryKeeper.GetParams(input.Ctx).MaxFeeMultiplier))
 	})
+	t.Run("reserve is variable", func(t *testing.T) {
+		testCases := []struct {
+			currentReserveMelody int64
+			expectedReserveFee   float64
+		}{
+			{0, 0.99},
+			{37, 0.64},
+			{69, 0.32},
+			{85, 0.16},
+			{93, 0.08},
+			{97, 0.02},
+		}
+
+		input := CreateTestInput(t)
+
+		exchangeRequirement := input.MarketKeeper.GetExchangeRequirement(input.Ctx)
+		t.Logf("exchangeRequirement: %s", exchangeRequirement)
+
+		treasuryModuleAddress := input.AccountKeeper.GetModuleAddress(types.ModuleName)
+		for _, testCase := range testCases {
+			currentBalance := input.BankKeeper.GetBalance(input.Ctx, treasuryModuleAddress, appparams.BaseCoinUnit)
+			reservePercentage := testCase.currentReserveMelody
+			mult := osmomath.NewDecWithPrec(reservePercentage, 2)
+			expectedReserveValue := exchangeRequirement.Mul(mult).TruncateInt()
+			diff := expectedReserveValue.Sub(currentBalance.Amount)
+			t.Logf("current balance: %s, expected balance: %s, mult: %s, diff: %s", currentBalance, expectedReserveValue, mult, diff)
+
+			err := input.BankKeeper.SendCoinsFromModuleToModule(input.Ctx, faucetAccountName, types.ModuleName, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, diff)))
+			require.NoError(t, err)
+
+			newTaxRate := input.TreasuryKeeper.UpdateReserveFee(input.Ctx)
+			t.Logf("newTaxRate: %s", newTaxRate)
+
+			require.InEpsilon(t, testCase.expectedReserveFee, newTaxRate.MustFloat64(), 0.1)
+		}
+	})
 	t.Run("reserve is full", func(t *testing.T) {
 		input := CreateTestInput(t)
 

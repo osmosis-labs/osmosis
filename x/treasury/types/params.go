@@ -25,7 +25,7 @@ var (
 	DefaultWindowShort                   = uint64(4)                     // a month
 	DefaultWindowLong                    = uint64(52)                    // a year
 	DefaultWindowProbation               = uint64(12)                    // 3 month
-	DefaultTaxRate                       = osmomath.NewDecWithPrec(1, 3) // 0.1%
+	DefaultTaxRate                       = osmomath.NewDecWithPrec(1, 2) // 0.01%
 	DefaultMaxFeeMultiplier              = osmomath.NewDecWithPrec(1, 0) // 1%
 	DefaultReserveAllowableOffset        = osmomath.NewDecWithPrec(5, 0) // 5%
 	DefaultUpdateTreasuryEpochIdentifier = "minute"
