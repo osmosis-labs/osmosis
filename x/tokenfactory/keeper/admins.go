@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v29/x/tokenfactory/types"
 )
 
@@ -27,14 +28,7 @@ func (k Keeper) setAuthorityMetadata(ctx sdk.Context, denom string, metadata typ
 	}
 
 	store := k.GetDenomPrefixStore(ctx, denom)
-
-	bz, err := proto.Marshal(&metadata)
-	if err != nil {
-		return err
-	}
-
-	store.Set([]byte(types.DenomAuthorityMetadataKey), bz)
-	return nil
+	return osmoutils.Set(store, []byte(types.DenomAuthorityMetadataKey), &metadata)
 }
 
 func (k Keeper) setAdmin(ctx sdk.Context, denom string, admin string) error {

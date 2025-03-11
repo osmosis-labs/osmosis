@@ -12,9 +12,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/cosmos/gogoproto/proto"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
 	cltypes "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v29/x/lockup/types"
@@ -839,12 +838,7 @@ func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, co
 // setLock is a utility to store lock object into the store.
 func (k Keeper) setLock(ctx sdk.Context, lock types.PeriodLock) error {
 	store := ctx.KVStore(k.storeKey)
-	bz, err := proto.Marshal(&lock)
-	if err != nil {
-		return err
-	}
-	store.Set(lockStoreKey(lock.ID), bz)
-	return nil
+	return osmoutils.Set(store, lockStoreKey(lock.ID), &lock)
 }
 
 // setLockAndAddLockRefs sets the lock, and resets all of its lock references

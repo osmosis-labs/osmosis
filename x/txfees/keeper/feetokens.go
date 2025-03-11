@@ -148,13 +148,7 @@ func (k Keeper) setFeeToken(ctx sdk.Context, feeToken types.FeeToken) error {
 		return err
 	}
 
-	bz, err := proto.Marshal(&feeToken)
-	if err != nil {
-		return err
-	}
-
-	prefixStore.Set([]byte(feeToken.Denom), bz)
-	return nil
+	return osmoutils.Set(prefixStore, []byte(feeToken.Denom), &feeToken)
 }
 
 func (k Keeper) GetFeeTokens(ctx sdk.Context) (feetokens []types.FeeToken) {

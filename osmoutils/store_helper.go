@@ -152,12 +152,21 @@ func noStopFn([]byte) bool {
 // MustSet runs store.Set(key, proto.Marshal(value))
 // but panics on any error.
 func MustSet(storeObj storetypes.KVStore, key []byte, value proto.Message) {
-	bz, err := proto.Marshal(value)
+	err := Set(storeObj, key, value)
 	if err != nil {
 		panic(err)
 	}
+}
+
+// Set runs store.Set(key, proto.Marshal(value))
+func Set(storeObj storetypes.KVStore, key []byte, value proto.Message) error {
+	bz, err := proto.Marshal(value)
+	if err != nil {
+		return err
+	}
 
 	storeObj.Set(key, bz)
+	return nil
 }
 
 // MustGet gets key from store by mutating result

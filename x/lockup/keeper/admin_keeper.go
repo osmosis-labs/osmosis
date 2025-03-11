@@ -1,8 +1,7 @@
 package keeper
 
 import (
-	"github.com/cosmos/gogoproto/proto"
-
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v29/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,12 +34,7 @@ func (ak AdminKeeper) Relock(ctx sdk.Context, lockID uint64, newCoins sdk.Coins)
 
 	// reset lock record inside store
 	store := ctx.KVStore(ak.storeKey)
-	bz, err := proto.Marshal(lock)
-	if err != nil {
-		return err
-	}
-	store.Set(lockStoreKey(lockID), bz)
-	return nil
+	return osmoutils.Set(store, lockStoreKey(lockID), lock)
 }
 
 // BreakLock unlock a lockID without considering time with admin privilege.
