@@ -9,7 +9,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v29/x/lockup/types"
 )
 
@@ -228,14 +227,15 @@ func (k Keeper) GetUnderlyingLock(ctx sdk.Context, synthlock types.SyntheticLock
 
 func (k Keeper) setSyntheticLockupObject(ctx sdk.Context, synthLock *types.SyntheticLock) error {
 	store := ctx.KVStore(k.storeKey)
-	err := osmoutils.Set(store, syntheticLockStoreKey(synthLock.UnderlyingLockId, synthLock.SynthDenom), synthLock)
+	bz, err := proto.Marshal(synthLock)
 	if err != nil {
 		return err
 	}
+	store.Set(syntheticLockStoreKey(synthLock.UnderlyingLockId, synthLock.SynthDenom), bz)
 	if !synthLock.EndTime.Equal(time.Time{}) {
-		err = osmoutils.Set(store, syntheticLockTimeStoreKey(synthLock.UnderlyingLockId, synthLock.SynthDenom, synthLock.EndTime), synthLock)
+		store.Set(syntheticLockTimeStoreKey(synthLock.UnderlyingLockId, synthLock.SynthDenom, synthLock.EndTime), bz)
 	}
-	return err
+	return nil
 }
 
 func (k Keeper) deleteSyntheticLockupObject(ctx sdk.Context, lockID uint64, synthdenom string) {
