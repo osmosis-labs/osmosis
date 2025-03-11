@@ -1191,35 +1191,35 @@ func (d BigDec) PowerIntegerMut(power uint64) BigDec {
 // WARNING: This function is broken for base < 1. The reason is that logarithm function is
 // negative between zero and 1, and the Exp2(k) is undefined for negative k.
 // As a result, this function panics if called for d < 1.
-func (d BigDec) Power(power BigDec) BigDec {
-	if d.IsNegative() {
-		panic(fmt.Sprintf("negative base is not supported for Power(), base was (%s)", d))
-	}
-	if power.IsNegative() {
-		panic(fmt.Sprintf("negative power is not supported for Power(), power was (%s)", power))
-	}
-	if power.Abs().GT(maxSupportedExponent) {
-		panic(fmt.Sprintf("integer exponent %s is too large, max (%s)", power, maxSupportedExponent))
-	}
-	// TODO: Potentially expensive??
-	if power.IsInteger() {
-		return d.PowerInteger(power.TruncateInt().Uint64())
-	}
-	if power.IsZero() {
-		return OneBigDec()
-	}
-	if d.IsZero() {
-		return ZeroBigDec()
-	}
-	if d.LT(oneBigDec) {
-		panic(fmt.Sprintf("Power() is not supported for base < 1, base was (%s)", d))
-	}
-	if d.Equal(twoBigDec) {
-		return Exp2(power)
-	}
+// func (d BigDec) Power(power BigDec) BigDec {
+// 	if d.IsNegative() {
+// 		panic(fmt.Sprintf("negative base is not supported for Power(), base was (%s)", d))
+// 	}
+// 	if power.IsNegative() {
+// 		panic(fmt.Sprintf("negative power is not supported for Power(), power was (%s)", power))
+// 	}
+// 	if power.Abs().GT(maxSupportedExponent) {
+// 		panic(fmt.Sprintf("integer exponent %s is too large, max (%s)", power, maxSupportedExponent))
+// 	}
+// 	// TODO: Potentially expensive??
+// 	if power.IsInteger() {
+// 		return d.PowerInteger(power.TruncateInt().Uint64())
+// 	}
+// 	if power.IsZero() {
+// 		return OneBigDec()
+// 	}
+// 	if d.IsZero() {
+// 		return ZeroBigDec()
+// 	}
+// 	if d.LT(oneBigDec) {
+// 		panic(fmt.Sprintf("Power() is not supported for base < 1, base was (%s)", d))
+// 	}
+// 	if d.Equal(twoBigDec) {
+// 		return Exp2(power)
+// 	}
 
-	// d^power = exp2(power * log_2{base})
-	result := Exp2(d.LogBase2().Mul(power))
+// 	// d^power = exp2(power * log_2{base})
+// 	result := Exp2(d.LogBase2().Mul(power))
 
-	return result
-}
+// 	return result
+// }
