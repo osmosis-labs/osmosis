@@ -43,7 +43,7 @@ type CFMMPoolI interface {
 	SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, spreadFactor osmomath.Dec) (tokenOut sdk.Coin, err error)
 	// CalcOutAmtGivenIn returns how many coins SwapOutAmtGivenIn would return on these arguments.
 	// This does not mutate the pool, or state.
-	CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, spreadFactor osmomath.Dec) (tokenOut sdk.Coin, err error)
+	CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, spreadFactor osmomath.Dec) (tokenOut sdk.Coin, err error)
 
 	// SwapInAmtGivenOut swaps exactly enough tokensIn against the pool, to get the provided tokenOut amount out of the pool.
 	// Balance transfers are done in the keeper, but this method updates the internal pool state.
