@@ -1,6 +1,8 @@
 package twap
 
 import (
+	"time"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v29/x/twap/types"
 
@@ -13,14 +15,72 @@ import (
 type twapStrategy interface {
 	// computeTwap calculates the TWAP with specific startRecord and endRecord.
 	computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) osmomath.Dec
+	
+	// updateAccumulators updates the accumulators in a record based on the strategy.
+	updateAccumulators(record types.TwapRecord, newTime time.Time) types.TwapRecord
 }
 
 type arithmetic struct {
 	TwapKeeper Keeper
 }
 
+// updateArithmeticAccumulators updates only the arithmetic accumulators of a record
+// and returns the updated record along with the time delta
+func updateArithmeticAccumulators(record types.TwapRecord, newTime time.Time) (types.TwapRecord, int64) {
+	// Return early if time hasn't changed
+	if record.Time.Equal(newTime) {
+		return record, 0
+	}
+	
+	newRecord := record
+	timeDelta := types.CanonicalTimeMs(newTime) - types.CanonicalTimeMs(record.Time)
+	newRecord.Time = newTime
+
+	// record.LastSpotPrice is the last spot price from the block the record was created in,
+	// thus it is treated as the effective spot price until the new time.
+	// (As there was no change until at or after this time)
+	p0NewAccum := types.SpotPriceMulDuration(record.P0LastSpotPrice, timeDelta)
+	newRecord.P0ArithmeticTwapAccumulator = p0NewAccum.AddMut(newRecord.P0ArithmeticTwapAccumulator)
+
+	p1NewAccum := types.SpotPriceMulDuration(record.P1LastSpotPrice, timeDelta)
+	newRecord.P1ArithmeticTwapAccumulator = p1NewAccum.AddMut(newRecord.P1ArithmeticTwapAccumulator)
+
+	return newRecord, timeDelta
+}
+
+func (s *arithmetic) updateAccumulators(record types.TwapRecord, newTime time.Time) types.TwapRecord {
+	newRecord, _ := updateArithmeticAccumulators(record, newTime)
+	return newRecord
+}
+
 type geometric struct {
 	TwapKeeper Keeper
+}
+
+func (s *geometric) updateAccumulators(record types.TwapRecord, newTime time.Time) types.TwapRecord {
+	// First update the arithmetic accumulators
+	newRecord, timeDelta := updateArithmeticAccumulators(record, newTime)
+	
+	// Return early if time hasn't changed
+	if timeDelta == 0 {
+		return newRecord
+	}
+
+	// If the last spot price is zero, then the logarithm is undefined.
+	// As a result, we cannot update the geometric accumulator.
+	// We set the last error time to be the new time, and return the record.
+	if record.P0LastSpotPrice.IsZero() {
+		newRecord.LastErrorTime = newTime
+		return newRecord
+	}
+
+	// logP0SpotPrice = log_{2}{P_0}
+	logP0SpotPrice := twapLog(record.P0LastSpotPrice)
+	// p0NewGeomAccum = log_{2}{P_0} * timeDelta
+	p0NewGeomAccum := types.SpotPriceMulDuration(logP0SpotPrice, timeDelta)
+	newRecord.GeometricTwapAccumulator = p0NewGeomAccum.AddMut(newRecord.GeometricTwapAccumulator)
+
+	return newRecord
 }
 
 // computeTwap computes and returns an arithmetic TWAP between
