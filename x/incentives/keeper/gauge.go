@@ -12,6 +12,8 @@ import (
 
 	db "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
+	
+	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -49,13 +51,7 @@ func (k Keeper) getGaugesFromIterator(ctx sdk.Context, iterator db.Iterator) []t
 // setGauge set the gauge inside store.
 func (k Keeper) setGauge(ctx sdk.Context, gauge *types.Gauge) error {
 	store := ctx.KVStore(k.storeKey)
-	bz, err := proto.Marshal(gauge)
-	if err != nil {
-		return err
-	}
-
-	store.Set(gaugeStoreKey(gauge.Id), bz)
-	return nil
+	return osmoutils.Set(store, gaugeStoreKey(gauge.Id), gauge)
 }
 
 // CreateGaugeRefKeys takes combinedKey (the keyPrefix for upcoming, active, or finished gauges combined with gauge start time) and adds a reference to the respective gauge ID.

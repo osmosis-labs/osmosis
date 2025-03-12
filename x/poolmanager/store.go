@@ -102,12 +102,11 @@ func (k Keeper) GetTakerFeeShareAgreementFromDenomNoCache(ctx sdk.Context, taker
 func (k *Keeper) SetTakerFeeShareAgreementForDenom(ctx sdk.Context, takerFeeShare types.TakerFeeShareAgreement) error {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FormatTakerFeeShareAgreementKey(takerFeeShare.Denom)
-	bz, err := proto.Marshal(&takerFeeShare)
+	
+	err := osmoutils.Set(store, key, &takerFeeShare)
 	if err != nil {
 		return err
 	}
-
-	store.Set(key, bz)
 
 	// Set cache value
 	k.cachedTakerFeeShareAgreementMap[takerFeeShare.Denom] = takerFeeShare
@@ -163,13 +162,8 @@ func (k Keeper) SetTakerFeeShareDenomsToAccruedValue(ctx sdk.Context, takerFeeSh
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyTakerFeeShareDenomAccrualForTakerFeeChargedDenom(takerFeeShareDenom, takerFeeChargedDenom)
 	accruedValueProto := sdk.IntProto{Int: accruedValue}
-	bz, err := proto.Marshal(&accruedValueProto)
-	if err != nil {
-		return err
-	}
-
-	store.Set(key, bz)
-	return nil
+	
+	return osmoutils.Set(store, key, &accruedValueProto)
 }
 
 // increaseTakerFeeShareDenomsToAccruedValue increases (adds to, not replace) the accrued value for a specific taker fee share denomination and taker fee charged denomination in the store.
@@ -592,18 +586,16 @@ func (k *Keeper) recalculateAndSetTakerFeeShareAlloyComposition(ctx sdk.Context,
 		TakerFeeShareAgreements: takerFeeShareAlloyDenoms,
 	}
 
-	bz, err := proto.Marshal(&registeredAlloyedPool)
-	if err != nil {
-		return err
-	}
-
 	alloyedDenom, err := k.getAlloyedDenomFromPoolId(ctx, poolId)
 	if err != nil {
 		return err
 	}
 	store := ctx.KVStore(k.storeKey)
 	key := types.FormatRegisteredAlloyPoolKey(poolId, alloyedDenom)
-	store.Set(key, bz)
+	err = osmoutils.Set(store, key, &registeredAlloyedPool)
+	if err != nil {
+		return err
+	}
 
 	// Set cache value
 	k.cachedRegisteredAlloyPoolByAlloyDenomMap[alloyedDenom] = registeredAlloyedPool
