@@ -31,10 +31,3 @@ const (
 	// QuerierRoute defines the module's query routing key
 	QuerierRoute = ModuleName
 )
-
-var (
-	BaseDenomKey                       = []byte("base_denom")
-	FeeTokensStorePrefix               = []byte("fee_tokens")
-	KeyTxFeeProtorevTracker            = []byte("txfee_protorev_tracker")
-	KeyTxFeeProtorevTrackerStartHeight = []byte("txfee_protorev_tracker_start_height")
-)
