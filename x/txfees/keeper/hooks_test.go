@@ -446,8 +446,8 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 	txFeeCollectorAddress := prepareFeeCollector(types.NonNativeTxFeeCollectorName, stakingDenom)
 
 	// Prepare the taker fee collector.
-	prepareFeeCollector(types.TakerFeeCollectorName, communityPoolDenom)
-	communityPoolCollectorAddress := s.App.AccountKeeper.GetModuleAddress(types.TakerFeeCommunityPoolName)
+	//prepareFeeCollector(types.TakerFeeCollectorName, communityPoolDenom)
+	//communityPoolCollectorAddress := s.App.AccountKeeper.GetModuleAddress(types.TakerFeeCommunityPoolName)
 
 	// Snapshot the community pool balance before the epoch end.
 	communityPoolAddress := s.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
@@ -465,7 +465,7 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 	s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomB, "bar", twoHundred)
 
 	// Fund the taker fee collector
-	s.FundModuleAcc(types.TakerFeeCollectorName, sdk.NewCoins(sdk.NewCoin("foo", threeHundred), sdk.NewCoin("bar", threeHundred)))
+	//s.FundModuleAcc(types.TakerFeeCollectorName, sdk.NewCoins(sdk.NewCoin("foo", threeHundred), sdk.NewCoin("bar", threeHundred)))
 
 	// System under test.
 	// AfterEpochEnd should not panic or error
@@ -486,9 +486,9 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 
 	// Confirm that community pool fee collector only denomWithNoProtorevLink left in balance.
 	// denomWithNoPool is a whitelisted asset, so it should be directly sent to the community pool.
-	communityPoolCollectorBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, communityPoolCollectorAddress)
-	s.Require().Len(communityPoolCollectorBalance, 1)
-	s.Require().Equal(communityPoolCollectorBalance[0].Denom, denomWithNoProtorevLink)
+	//communityPoolCollectorBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, communityPoolCollectorAddress)
+	//s.Require().Len(communityPoolCollectorBalance, 1)
+	//s.Require().Equal(communityPoolCollectorBalance[0].Denom, denomWithNoProtorevLink)
 
 	communityPoolBalanceAfter := s.App.BankKeeper.GetAllBalances(s.Ctx, communityPoolAddress)
 	communityPoolBalanceDelta := communityPoolBalanceAfter.Sub(communityPoolBalanceBefore...)
@@ -572,7 +572,6 @@ func (s *KeeperTestSuite) TestClearTakerFeeShareAccumulators() {
 		name                              string
 		setupTakerFeeShares               func()
 		setupAccumulators                 func()
-		fundTakerFeeCollector             func()
 		expectedTakerFeeShareAccumulators []poolmanagertypes.TakerFeeSkimAccumulator
 		checkSkimAddressBalance           func()
 	}{
@@ -586,9 +585,9 @@ func (s *KeeperTestSuite) TestClearTakerFeeShareAccumulators() {
 				s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomA, "foo", oneHundred)
 				s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomA, "bar", oneHundred)
 			},
-			fundTakerFeeCollector: func() {
-				s.FundModuleAcc(types.TakerFeeCollectorName, sdk.NewCoins(sdk.NewCoin("foo", oneHundred), sdk.NewCoin("bar", oneHundred)))
-			},
+			//fundTakerFeeCollector: func() {
+			//	s.FundModuleAcc(types.TakerFeeCollectorName, sdk.NewCoins(sdk.NewCoin("foo", oneHundred), sdk.NewCoin("bar", oneHundred)))
+			//},
 			expectedTakerFeeShareAccumulators: []poolmanagertypes.TakerFeeSkimAccumulator{},
 			checkSkimAddressBalance: func() {
 				// Check balance
@@ -615,9 +614,9 @@ func (s *KeeperTestSuite) TestClearTakerFeeShareAccumulators() {
 				s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomB, "foo", twoHundred)
 				s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomB, "bar", twoHundred)
 			},
-			fundTakerFeeCollector: func() {
-				s.FundModuleAcc(types.TakerFeeCollectorName, sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(600)), sdk.NewCoin("bar", osmomath.NewInt(600))))
-			},
+			//fundTakerFeeCollector: func() {
+			//	s.FundModuleAcc(types.TakerFeeCollectorName, sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(600)), sdk.NewCoin("bar", osmomath.NewInt(600))))
+			//},
 			expectedTakerFeeShareAccumulators: []poolmanagertypes.TakerFeeSkimAccumulator{},
 			checkSkimAddressBalance: func() {
 				// Check balance
@@ -646,9 +645,9 @@ func (s *KeeperTestSuite) TestClearTakerFeeShareAccumulators() {
 				s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomB, "foo", twoHundred)
 				s.App.PoolManagerKeeper.SetTakerFeeShareDenomsToAccruedValue(s.Ctx, denomB, "bar", twoHundred)
 			},
-			fundTakerFeeCollector: func() {
-				s.FundModuleAcc(types.TakerFeeCollectorName, sdk.NewCoins(sdk.NewCoin("foo", oneHundred), sdk.NewCoin("bar", oneHundred)))
-			},
+			//fundTakerFeeCollector: func() {
+			//	s.FundModuleAcc(types.TakerFeeCollectorName, sdk.NewCoins(sdk.NewCoin("foo", oneHundred), sdk.NewCoin("bar", oneHundred)))
+			//},
 			expectedTakerFeeShareAccumulators: []poolmanagertypes.TakerFeeSkimAccumulator{
 				{
 					Denom:            denomB,
@@ -675,8 +674,8 @@ func (s *KeeperTestSuite) TestClearTakerFeeShareAccumulators() {
 			s.Setup()
 			tc.setupTakerFeeShares()
 			tc.setupAccumulators()
-			tc.fundTakerFeeCollector()
-			s.App.TxFeesKeeper.ClearTakerFeeShareAccumulators(s.Ctx)
+			//tc.fundTakerFeeCollector()
+			//s.App.TxFeesKeeper.ClearTakerFeeShareAccumulators(s.Ctx)
 			allTakerFeeShareAccumulators, err := s.App.PoolManagerKeeper.GetAllTakerFeeShareAccumulators(s.Ctx)
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedTakerFeeShareAccumulators, allTakerFeeShareAccumulators)

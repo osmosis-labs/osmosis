@@ -102,7 +102,7 @@ func TestBeginBlock(t *testing.T) {
 	os.RemoveAll(dirName)
 }
 
-func RunFinalizeBlock(ctx sdk.Context, app *simapp.OsmosisApp) sdk.Context {
+func RunFinalizeBlock(ctx sdk.Context, app *simapp.SymphonyApp) sdk.Context {
 	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: ctx.BlockHeight(), Time: ctx.BlockTime()})
 	if err != nil {
 		panic(err)

@@ -55,25 +55,25 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 	}{
 		{
 			"Query base denom",
-			"/osmosis.txfees.v1beta1.Query/BaseDenom",
+			"/symphony.txfees.v1beta1.Query/BaseDenom",
 			&types.QueryBaseDenomRequest{},
 			&types.QueryBaseDenomResponse{},
 		},
 		{
 			"Query poolID by denom",
-			"/osmosis.txfees.v1beta1.Query/DenomPoolId",
+			"/symphony.txfees.v1beta1.Query/DenomPoolId",
 			&types.QueryDenomPoolIdRequest{Denom: appparams.BaseCoinUnit},
 			&types.QueryDenomPoolIdResponse{},
 		},
 		{
 			"Query spot price by denom",
-			"/osmosis.txfees.v1beta1.Query/DenomSpotPrice",
+			"/symphony.txfees.v1beta1.Query/DenomSpotPrice",
 			&types.QueryDenomSpotPriceRequest{Denom: appparams.BaseCoinUnit},
 			&types.QueryDenomSpotPriceResponse{},
 		},
 		{
 			"Query fee tokens",
-			"/osmosis.txfees.v1beta1.Query/FeeTokens",
+			"/symphony.txfees.v1beta1.Query/FeeTokens",
 			&types.QueryFeeTokensRequest{},
 			&types.QueryFeeTokensResponse{},
 		},
