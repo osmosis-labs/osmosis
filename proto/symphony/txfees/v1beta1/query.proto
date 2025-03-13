@@ -21,6 +21,10 @@ service Query {
     option (google.api.http).get =
         "/symphony/txfees/v1beta1/spot_price_by_denom";
   }
+
+  rpc GetEipBaseFee(QueryEipBaseFeeRequest) returns (QueryEipBaseFeeResponse) {
+    option (google.api.http).get = "/osmosis/txfees/v1beta1/cur_eip_base_fee";
+  }
 }
 
 message QueryFeeTokensRequest {}
@@ -40,9 +44,18 @@ message QueryDenomSpotPriceRequest {
 // QueryDenomSpotPriceRequest defines grpc response structure for querying spot
 // price for the specified tx fee denom
 message QueryDenomSpotPriceResponse {
-  uint64 poolID = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  string spot_price = 2 [
+  string spot_price = 1 [
     (gogoproto.moretags) = "yaml:\"spot_price\"",
+
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message QueryEipBaseFeeRequest {}
+message QueryEipBaseFeeResponse {
+  string base_fee = 1 [
+    (gogoproto.moretags) = "yaml:\"base_fee\"",
 
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false

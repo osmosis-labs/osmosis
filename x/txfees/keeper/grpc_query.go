@@ -43,47 +43,13 @@ func (q Querier) DenomSpotPrice(ctx context.Context, req *types.QueryDenomSpotPr
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	spotPrice, err := q.CalcFeeSpotPrice(sdkCtx, req.Denom)
-	if err != nil {
-		return nil, err
-	}
-
-	feeToken, err := q.GetFeeToken(sdkCtx, req.GetDenom())
+	spotPrice, err := q.oracleKeeper.GetMelodyExchangeRate(sdkCtx, req.Denom)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO: remove truncation before https://github.com/osmosis-labs/osmosis/issues/6064 is fully complete.
-	return &types.QueryDenomSpotPriceResponse{PoolID: feeToken.PoolID, SpotPrice: spotPrice.Dec()}, nil
-}
-
-func (q Querier) DenomPoolId(ctx context.Context, req *types.QueryDenomPoolIdRequest) (*types.QueryDenomPoolIdResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-	if len(req.Denom) == 0 {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
-	}
-
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	feeToken, err := q.Keeper.GetFeeToken(sdkCtx, req.GetDenom())
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.QueryDenomPoolIdResponse{PoolID: feeToken.GetPoolID()}, nil
-}
-
-func (q Querier) BaseDenom(ctx context.Context, _ *types.QueryBaseDenomRequest) (*types.QueryBaseDenomResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	baseDenom, err := q.Keeper.GetBaseDenom(sdkCtx)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.QueryBaseDenomResponse{BaseDenom: baseDenom}, nil
+	return &types.QueryDenomSpotPriceResponse{SpotPrice: spotPrice}, nil
 }
 
 func (q Querier) GetEipBaseFee(_ context.Context, _ *types.QueryEipBaseFeeRequest) (*types.QueryEipBaseFeeResponse, error) {

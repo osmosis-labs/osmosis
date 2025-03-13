@@ -15,8 +15,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 // ExportGenesis returns the txfees module's exported genesis.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	genesis := types.DefaultGenesis()
-	genesis.Basedenom, _ = k.GetBaseDenom(ctx)
-	genesis.Feetokens = k.GetFeeTokens(ctx)
 	genesis.Params = k.GetParams(ctx)
 	return genesis
 }

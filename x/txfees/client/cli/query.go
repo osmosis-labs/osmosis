@@ -14,8 +14,6 @@ func GetQueryCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		GetCmdFeeTokens(),
-		GetCmdDenomPoolID(),
-		GetCmdBaseDenom(),
 		osmocli.GetParams[*queryproto.ParamsRequest](
 			types.ModuleName, queryproto.NewQueryClient),
 	)
@@ -34,36 +32,4 @@ func GetCmdFeeTokens() *cobra.Command {
 `,
 		types.ModuleName, types.NewQueryClient,
 	)
-}
-
-func GetCmdDenomPoolID() *cobra.Command {
-	return osmocli.SimpleQueryCmd[*types.QueryDenomPoolIdRequest](
-		"denom-pool-id",
-		"Query the pool id associated with a specific whitelisted fee token",
-		`{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} denom-pool-id [denom]
-`,
-		types.ModuleName, types.NewQueryClient,
-	)
-}
-
-func GetCmdBaseDenom() *cobra.Command {
-	return osmocli.SimpleQueryCmd[*types.QueryBaseDenomRequest](
-		"base-denom",
-		"Query the base fee denom",
-		`{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} base-denom
-`,
-		types.ModuleName, types.NewQueryClient,
-	)
-}
-
-func GetCmdQueryBaseFee() (*osmocli.QueryDescriptor, *types.QueryEipBaseFeeRequest) {
-	return &osmocli.QueryDescriptor{
-		Use:   "base-fee",
-		Short: "Query the eip base fee.",
-		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} base-fee`,
-		QueryFnName: "GetEipBaseFee",
-	}, &types.QueryEipBaseFeeRequest{}
 }
