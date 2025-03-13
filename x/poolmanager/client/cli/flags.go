@@ -62,12 +62,12 @@ type RoutesOut struct {
 
 type SwapAmountInSplitRoute struct {
 	Pools         []types.SwapAmountInRoute `json:"swap_amount_in_route"`
-	TokenInAmount int64                     `json:"token_in_amount"`
+	TokenInAmount string                    `json:"token_in_amount"`
 }
 
 type SwapAmountOutSplitRoute struct {
 	Pools          []types.SwapAmountOutRoute `json:"swap_amount_out_route"`
-	TokenOutAmount int64                      `json:"token_out_amount"`
+	TokenOutAmount string                     `json:"token_out_amount"`
 }
 
 func FlagSetMultihopSwapRoutes() *flag.FlagSet {

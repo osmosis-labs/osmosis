@@ -89,7 +89,7 @@ func NewSplitRouteSwapExactAmountIn() (*osmocli.TxCliDesc, *types.MsgSplitRouteS
 				"token_out_denom": "uosmo"
 				}
 			  ],
-			  "token_in_amount": 1000
+			  "token_in_amount": "1000"
 			  },
 			  {
 			  "swap_amount_in_route": [
@@ -102,7 +102,7 @@ func NewSplitRouteSwapExactAmountIn() (*osmocli.TxCliDesc, *types.MsgSplitRouteS
 				"token_out_denom": "uosmo"
 				}
 			  ],
-			  "token_in_amount": 999
+			  "token_in_amount": "999"
 			  }
 			]
 		}
@@ -135,7 +135,7 @@ func NewSplitRouteSwapExactAmountOut() (*osmocli.TxCliDesc, *types.MsgSplitRoute
 					"token_in_denom": "uosmo"
 					}
 				],
-				"token_out_amount": 1000
+				"token_out_amount": "1000"
 				},
 				{
 				"swap_amount_out_route": [
@@ -148,7 +148,7 @@ func NewSplitRouteSwapExactAmountOut() (*osmocli.TxCliDesc, *types.MsgSplitRoute
 					"token_in_denom": "uosmo"
 					}
 				],
-				"token_out_amount": 999
+				"token_out_amount": "999"
 				}
 			]
 			}
@@ -181,8 +181,12 @@ func NewMsgNewSplitRouteSwapExactAmountOut(fs *flag.FlagSet) ([]types.SwapAmount
 
 	var splitRouteProto []types.SwapAmountOutSplitRoute
 	for _, route := range splitRouteJSONdata.Route {
+		tokenOutAmount, ok := osmomath.NewIntFromString(route.TokenOutAmount)
+		if !ok {
+			return nil, fmt.Errorf("cannot convert token_out_amount %s to osmomath.Int", route.TokenOutAmount)
+		}
 		protoRoute := types.SwapAmountOutSplitRoute{
-			TokenOutAmount: osmomath.NewInt(route.TokenOutAmount),
+			TokenOutAmount: tokenOutAmount,
 		}
 		protoRoute.Pools = append(protoRoute.Pools, route.Pools...)
 		splitRouteProto = append(splitRouteProto, protoRoute)
@@ -210,8 +214,12 @@ func NewMsgNewSplitRouteSwapExactAmountIn(fs *flag.FlagSet) ([]types.SwapAmountI
 
 	var splitRouteProto []types.SwapAmountInSplitRoute
 	for _, route := range splitRouteJSONdata.Route {
+		tokenInAmount, ok := osmomath.NewIntFromString(route.TokenInAmount)
+		if !ok {
+			return nil, fmt.Errorf("cannot convert token_in_amount %s to osmomath.Int", route.TokenInAmount)
+		}
 		protoRoute := types.SwapAmountInSplitRoute{
-			TokenInAmount: osmomath.NewInt(route.TokenInAmount),
+			TokenInAmount: tokenInAmount,
 		}
 		protoRoute.Pools = append(protoRoute.Pools, route.Pools...)
 		splitRouteProto = append(splitRouteProto, protoRoute)
