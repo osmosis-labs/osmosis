@@ -7,8 +7,4 @@ option go_package = "github.com/osmosis-labs/osmosis/v26/x/txfees/types";
 
 // Params holds parameters for the txfees module
 message Params {
-  repeated string whitelisted_fee_token_setters = 1 [
-    (gogoproto.moretags) = "yaml:\"whitelisted_fee_token_setters\"",
-    (gogoproto.nullable) = false
-  ];
 }
