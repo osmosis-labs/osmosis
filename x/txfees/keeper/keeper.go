@@ -21,7 +21,6 @@ type Keeper struct {
 
 	accountKeeper      types.AccountKeeper
 	bankKeeper         types.BankKeeper
-	poolManager        types.PoolManager
 	protorevKeeper     types.ProtorevKeeper
 	distributionKeeper types.DistributionKeeper
 	consensusKeeper    types.ConsensusKeeper
@@ -36,7 +35,6 @@ func NewKeeper(
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	storeKey storetypes.StoreKey,
-	poolManager types.PoolManager,
 	protorevKeeper types.ProtorevKeeper,
 	distributionKeeper types.DistributionKeeper,
 	consensusKeeper types.ConsensusKeeper,
@@ -52,7 +50,6 @@ func NewKeeper(
 		accountKeeper:      accountKeeper,
 		bankKeeper:         bankKeeper,
 		storeKey:           storeKey,
-		poolManager:        poolManager,
 		protorevKeeper:     protorevKeeper,
 		distributionKeeper: distributionKeeper,
 		consensusKeeper:    consensusKeeper,
