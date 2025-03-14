@@ -14,7 +14,6 @@ import (
 	poolincentivesclient "github.com/osmosis-labs/osmosis/v26/x/pool-incentives/client"
 	poolmanagerclient "github.com/osmosis-labs/osmosis/v26/x/poolmanager/client"
 	superfluidclient "github.com/osmosis-labs/osmosis/v26/x/superfluid/client"
-	txfeesclient "github.com/osmosis-labs/osmosis/v26/x/txfees/client"
 	"io"
 	"net/http"
 	"os"
@@ -348,7 +347,6 @@ func NewSymphonyApp(
 					clclient.TickSpacingDecreaseProposalHandler,
 					cwpoolclient.UploadCodeIdAndWhitelistProposalHandler,
 					cwpoolclient.MigratePoolContractsProposalHandler,
-					txfeesclient.SubmitUpdateFeeTokenProposalHandler,
 					poolmanagerclient.DenomPairTakerFeeProposalHandler,
 					incentivesclient.HandleCreateGroupsProposal,
 				},

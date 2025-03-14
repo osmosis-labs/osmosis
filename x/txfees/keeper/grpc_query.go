@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"github.com/osmosis-labs/osmosis/osmomath"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,9 +29,13 @@ func NewQuerier(k Keeper) Querier {
 
 func (q Querier) FeeTokens(ctx context.Context, _ *types.QueryFeeTokensRequest) (*types.QueryFeeTokensResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	feeTokens := q.Keeper.GetFeeTokens(sdkCtx)
+	resp := &types.QueryFeeTokensResponse{}
+	q.Keeper.oracleKeeper.IterateNoteExchangeRates(sdkCtx, func(denom string, exchangeRate osmomath.Dec) (stop bool) {
+		resp.FeeTokens = append(resp.FeeTokens, denom)
+		return false
+	})
 
-	return &types.QueryFeeTokensResponse{FeeTokens: feeTokens}, nil
+	return resp, nil
 }
 
 func (q Querier) DenomSpotPrice(ctx context.Context, req *types.QueryDenomSpotPriceRequest) (*types.QueryDenomSpotPriceResponse, error) {

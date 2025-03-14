@@ -18,8 +18,6 @@ func GetQueryCmd() *cobra.Command {
 			types.ModuleName, queryproto.NewQueryClient),
 	)
 
-	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdQueryBaseFee)
-
 	return cmd
 }
 
