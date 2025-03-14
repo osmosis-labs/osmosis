@@ -48,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8880](https://github.com/osmosis-labs/osmosis/pull/8880) chore: bump wasmd from 0.53.0 to 0.53.2
 * [#9005](https://github.com/osmosis-labs/osmosis/pull/9005) fix: bump ibc-go to v8.6.1
 * [#9011](https://github.com/osmosis-labs/osmosis/pull/9011) feat: Delete superfluid balancer -> CL migration code. Makes the message now just return an error if called.
+* [#9059](https://github.com/osmosis-labs/osmosis/pull/9059) chore: bump submodules
 
 ### State Compatible
 
