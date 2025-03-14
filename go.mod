@@ -2,7 +2,7 @@ module github.com/osmosis-labs/osmosis/v29
 
 go 1.22.11
 
-toolchain go1.23.2
+toolchain go1.24.1
 
 require (
 	cloud.google.com/go/pubsub v1.44.0
@@ -19,7 +19,7 @@ require (
 	cosmossdk.io/x/tx v0.13.7
 	cosmossdk.io/x/upgrade v0.1.4
 	github.com/CosmWasm/wasmd v0.53.2
-	github.com/CosmWasm/wasmvm/v2 v2.1.5
+	github.com/CosmWasm/wasmvm/v2 v2.2.3
 	github.com/Masterminds/semver v1.5.0
 	github.com/cometbft/cometbft v0.38.13
 	github.com/cometbft/cometbft-db v0.14.1
