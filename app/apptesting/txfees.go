@@ -48,8 +48,7 @@ func (s *KeeperTestHelper) SetupTxFeeAnteHandlerAndChargeFee(clientCtx client.Co
 	}
 	s.Ctx = s.Ctx.WithIsCheckTx(isCheckTx).WithMinGasPrices(minGasPrices)
 
-	// TODO: Cleanup this code.
-	// TxBuilder components reset for every test case
+	// Prepare transaction components
 	txBuilder := clientCtx.TxConfig.NewTxBuilder()
 	priv0, _, addr0 := testdata.KeyTestPubAddr()
 	acc1 := s.App.AccountKeeper.NewAccountWithAddress(s.Ctx, addr0)
