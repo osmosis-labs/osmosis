@@ -21562,7 +21562,7 @@
                     docExpansion: "list",
                     maxDisplayedTags: null,
                     filter: null,
-                    validatorUrl: "https://online.swagger.io/validator",
+                    validatorUrl: "https://validator.swagger.io:443/validator",
                     configs: {},
                     custom: {},
                     displayOperationId: !1,
