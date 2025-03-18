@@ -289,7 +289,7 @@ var (
 
 	pattern_Query_DenomSpotPrice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"symphony", "txfees", "v1beta1", "spot_price_by_denom"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetEipBaseFee_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "txfees", "v1beta1", "cur_eip_base_fee"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetEipBaseFee_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"symphony", "txfees", "v1beta1", "cur_eip_base_fee"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

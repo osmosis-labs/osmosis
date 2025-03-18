@@ -129,7 +129,6 @@ func (k Keeper) GetAllTradingPairTakerFees(ctx sdk.Context) ([]types.DenomPairTa
 // TODO: Gas optimize this function, its expensive in both gas and CPU.
 func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, sender sdk.AccAddress, exactIn bool) (sdk.Coin, sdk.Coin, error) {
 	panic("not supported")
-	//takerFeeModuleAccountName := txfeestypes.TakerFeeCollectorName
 
 	reducedFeeWhitelist := []string{}
 	k.paramSpace.Get(ctx, types.KeyReducedTakerFeeByWhitelist, &reducedFeeWhitelist)
@@ -152,10 +151,6 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 		tokenInAfterTakerFee, takerFeeCoin = CalcTakerFeeExactOut(tokenIn, takerFee)
 	}
 
-	//err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, takerFeeModuleAccountName, sdk.NewCoins(takerFeeCoin))
-	//if err != nil {
-	//	return sdk.Coin{}, sdk.Coin{}, err
-	//}
 	return tokenInAfterTakerFee, takerFeeCoin, nil
 }
 

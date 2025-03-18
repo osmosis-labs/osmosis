@@ -23,7 +23,7 @@ service Query {
   }
 
   rpc GetEipBaseFee(QueryEipBaseFeeRequest) returns (QueryEipBaseFeeResponse) {
-    option (google.api.http).get = "/osmosis/txfees/v1beta1/cur_eip_base_fee";
+    option (google.api.http).get = "/symphony/txfees/v1beta1/cur_eip_base_fee";
   }
 }
 
