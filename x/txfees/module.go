@@ -145,6 +145,10 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 	// Initialize global index to index in genesis state
 	cdc.MustUnmarshalJSON(gs, &genState)
 
+	if genState.SwapFeesEpochIdentifier == "" {
+		panic("SwapFeesEpochIdentifier cannot be empty")
+	}
+
 	am.keeper.InitGenesis(ctx, genState)
 }
 

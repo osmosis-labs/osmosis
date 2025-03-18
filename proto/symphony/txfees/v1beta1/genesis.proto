@@ -11,6 +11,7 @@ option go_package = "github.com/osmosis-labs/osmosis/v26/x/txfees/types";
 message GenesisState {
   // params is the container of txfees parameters.
   Params params = 1 [ (gogoproto.nullable) = false ];
+  string swap_fees_epoch_identifier = 2 [ (gogoproto.moretags) = "yaml:\"swap_fees_epoch_identifier\"" ];
 }
 
 message TxFeesTracker {
