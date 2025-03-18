@@ -4,81 +4,20 @@ import (
 	"fmt"
 	"strings"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-
-	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 const (
-	ProposalTypeCreateConcentratedLiquidityPool = "CreateConcentratedLiquidityPool"
-	ProposalTypeTickSpacingDecrease             = "TickSpacingDecrease"
+	ProposalTypeTickSpacingDecrease = "TickSpacingDecrease"
 )
 
 func init() {
-	govtypesv1.RegisterProposalType(ProposalTypeCreateConcentratedLiquidityPool)
 	govtypesv1.RegisterProposalType(ProposalTypeTickSpacingDecrease)
 }
 
 var (
-	_ govtypesv1.Content = &CreateConcentratedLiquidityPoolsProposal{}
 	_ govtypesv1.Content = &TickSpacingDecreaseProposal{}
 )
-
-// NewCreateConcentratedLiquidityPoolsProposal returns a new instance of a create concentrated liquidity pool proposal struct.
-func NewCreateConcentratedLiquidityPoolsProposal(title, description string, records []PoolRecord) govtypesv1.Content {
-	return &CreateConcentratedLiquidityPoolsProposal{
-		Title:       title,
-		Description: description,
-		PoolRecords: records,
-	}
-}
-
-func (p *CreateConcentratedLiquidityPoolsProposal) GetTitle() string { return p.Title }
-
-// GetDescription gets the description of the proposal
-func (p *CreateConcentratedLiquidityPoolsProposal) GetDescription() string { return p.Description }
-
-// ProposalRoute returns the router key for the proposal
-func (p *CreateConcentratedLiquidityPoolsProposal) ProposalRoute() string { return RouterKey }
-
-// ProposalType returns the type of the proposal
-func (p *CreateConcentratedLiquidityPoolsProposal) ProposalType() string {
-	return ProposalTypeCreateConcentratedLiquidityPool
-}
-
-// ValidateBasic validates a governance proposal's abstract and basic contents
-func (p *CreateConcentratedLiquidityPoolsProposal) ValidateBasic() error {
-	err := govtypesv1.ValidateAbstract(p)
-	if err != nil {
-		return err
-	}
-
-	for _, record := range p.PoolRecords {
-		if record.TickSpacing <= 0 {
-			return fmt.Errorf("tick spacing must be positive")
-		}
-
-		if record.Denom0 == record.Denom1 {
-			return fmt.Errorf("denom0 and denom1 must be different")
-		}
-
-		if sdk.ValidateDenom(record.Denom0) != nil {
-			return fmt.Errorf("denom0 is invalid: %s", sdk.ValidateDenom(record.Denom0))
-		}
-
-		if sdk.ValidateDenom(record.Denom1) != nil {
-			return fmt.Errorf("denom1 is invalid: %s", sdk.ValidateDenom(record.Denom1))
-		}
-
-		spreadFactor := record.SpreadFactor
-		if spreadFactor.IsNegative() || spreadFactor.GTE(osmomath.OneDec()) {
-			return InvalidSpreadFactorError{ActualSpreadFactor: spreadFactor}
-		}
-	}
-	return nil
-}
 
 // String returns a string containing the pool incentives proposal.
 func (p CreateConcentratedLiquidityPoolsProposal) String() string {

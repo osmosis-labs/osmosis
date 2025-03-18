@@ -8,16 +8,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/hashicorp/go-metrics"
-	"github.com/osmosis-labs/sqs/sqsdomain"
-	prototypes "github.com/osmosis-labs/sqs/sqsdomain/proto/types"
+	ingesttypes "github.com/osmosis-labs/osmosis/v29/ingest/types"
+	prototypes "github.com/osmosis-labs/osmosis/v29/ingest/types/proto/types"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 
-	"github.com/osmosis-labs/osmosis/v28/ingest/sqs/domain"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v29/ingest/sqs/domain"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
 )
 
 type GRPCClient struct {
@@ -40,7 +40,7 @@ func NewGRPCCLient(grpcAddress string, grpxMaxCallSizeBytes int, appCodec codec.
 }
 
 // PushData implements domain.GracefulSQSGRPClient.
-func (g *GRPCClient) PushData(ctx context.Context, height uint64, pools []sqsdomain.PoolI, takerFeesMap sqsdomain.TakerFeeMap) (err error) {
+func (g *GRPCClient) PushData(ctx context.Context, height uint64, pools []ingesttypes.PoolI, takerFeesMap ingesttypes.TakerFeeMap) (err error) {
 	// If sqs service is unavailable, we should reset the connection
 	// and attempt to reconnect during the next block.
 	var shouldResetConnection bool
@@ -109,7 +109,7 @@ func (g *GRPCClient) PushData(ctx context.Context, height uint64, pools []sqsdom
 }
 
 // marshalPools marshals pools into a format that can be sent over gRPC.
-func (g *GRPCClient) marshalPools(pools []sqsdomain.PoolI) ([]*prototypes.PoolData, error) {
+func (g *GRPCClient) marshalPools(pools []ingesttypes.PoolI) ([]*prototypes.PoolData, error) {
 	// Marshal pools
 	poolData := make([]*prototypes.PoolData, 0, len(pools))
 	for _, pool := range pools {

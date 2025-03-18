@@ -1,10 +1,10 @@
 package poolstransformer_test
 
 import (
-	"github.com/osmosis-labs/sqs/sqsdomain"
+	ingesttypes "github.com/osmosis-labs/osmosis/v29/ingest/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolstransformer "github.com/osmosis-labs/osmosis/v28/ingest/sqs/pools/transformer"
+	poolstransformer "github.com/osmosis-labs/osmosis/v29/ingest/sqs/pools/transformer"
 )
 
 var (
@@ -22,7 +22,7 @@ var (
 // and the map is correctly mutated.
 func (s *PoolTransformerTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 	type denomPairTakerFee struct {
-		denomPair sqsdomain.DenomPair
+		denomPair ingesttypes.DenomPair
 		takerFee  osmomath.Dec
 	}
 
@@ -30,14 +30,14 @@ func (s *PoolTransformerTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 		preSetTakerFeePairs []denomPairTakerFee
 
 		denoms                         []string
-		denomPairToTakerFeeMap         sqsdomain.TakerFeeMap
+		denomPairToTakerFeeMap         ingesttypes.TakerFeeMap
 		expectError                    error
-		expectedDenomPairToTakerFeeMap sqsdomain.TakerFeeMap
+		expectedDenomPairToTakerFeeMap ingesttypes.TakerFeeMap
 	}{
 		"one denom pair, taker fee is not in the map, pre-set taker fee": {
 			preSetTakerFeePairs: []denomPairTakerFee{
 				{
-					denomPair: sqsdomain.DenomPair{
+					denomPair: ingesttypes.DenomPair{
 						Denom0: USDC,
 						Denom1: USDT,
 					},
@@ -47,9 +47,9 @@ func (s *PoolTransformerTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 
 			denoms: []string{USDC, USDT},
 
-			denomPairToTakerFeeMap: sqsdomain.TakerFeeMap{},
+			denomPairToTakerFeeMap: ingesttypes.TakerFeeMap{},
 
-			expectedDenomPairToTakerFeeMap: sqsdomain.TakerFeeMap{
+			expectedDenomPairToTakerFeeMap: ingesttypes.TakerFeeMap{
 				{
 					Denom0: USDC,
 					Denom1: USDT,
@@ -63,7 +63,7 @@ func (s *PoolTransformerTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 		"one denom pair, taker fee is in the map, pre-set taker fee": {
 			preSetTakerFeePairs: []denomPairTakerFee{
 				{
-					denomPair: sqsdomain.DenomPair{
+					denomPair: ingesttypes.DenomPair{
 						Denom0: USDC,
 						Denom1: USDT,
 					},
@@ -74,7 +74,7 @@ func (s *PoolTransformerTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 
 			denoms: []string{USDC, USDT},
 
-			denomPairToTakerFeeMap: sqsdomain.TakerFeeMap{
+			denomPairToTakerFeeMap: ingesttypes.TakerFeeMap{
 				{
 					Denom0: USDC,
 					Denom1: USDT,
@@ -82,7 +82,7 @@ func (s *PoolTransformerTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 				}: otherCustomTakerFee,
 			},
 
-			expectedDenomPairToTakerFeeMap: sqsdomain.TakerFeeMap{
+			expectedDenomPairToTakerFeeMap: ingesttypes.TakerFeeMap{
 				{
 					Denom0: USDC,
 					Denom1: USDT,
@@ -100,9 +100,9 @@ func (s *PoolTransformerTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 
 			denoms: []string{USDC, USDT},
 
-			denomPairToTakerFeeMap: sqsdomain.TakerFeeMap{},
+			denomPairToTakerFeeMap: ingesttypes.TakerFeeMap{},
 
-			expectedDenomPairToTakerFeeMap: sqsdomain.TakerFeeMap{
+			expectedDenomPairToTakerFeeMap: ingesttypes.TakerFeeMap{
 				{
 					Denom0: USDC,
 					Denom1: USDT,
@@ -116,7 +116,7 @@ func (s *PoolTransformerTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 		"three denom pairs, one taker fee is from pre-set, one from params and one is already in the map": {
 			preSetTakerFeePairs: []denomPairTakerFee{
 				{
-					denomPair: sqsdomain.DenomPair{
+					denomPair: ingesttypes.DenomPair{
 						Denom0: USDC,
 						Denom1: USDT,
 					},
@@ -126,14 +126,14 @@ func (s *PoolTransformerTestSuite) TestRetrieveTakerFeeToMapIfNotExists() {
 
 			denoms: []string{USDC, USDT, USDW},
 
-			denomPairToTakerFeeMap: sqsdomain.TakerFeeMap{
+			denomPairToTakerFeeMap: ingesttypes.TakerFeeMap{
 				{
 					Denom0: USDT,
 					Denom1: USDW,
 				}: otherCustomTakerFee,
 			},
 
-			expectedDenomPairToTakerFeeMap: sqsdomain.TakerFeeMap{
+			expectedDenomPairToTakerFeeMap: ingesttypes.TakerFeeMap{
 				{
 					Denom0: USDC,
 					Denom1: USDT,

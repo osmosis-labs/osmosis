@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	gammtypes "github.com/osmosis-labs/osmosis/v28/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v28/x/protorev/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v29/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v29/x/protorev/types"
 )
 
 type Hooks struct {

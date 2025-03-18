@@ -28,9 +28,9 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 
-	"github.com/osmosis-labs/osmosis/v28/x/pool-incentives/client/cli"
-	"github.com/osmosis-labs/osmosis/v28/x/pool-incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v28/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v29/x/pool-incentives/client/cli"
+	"github.com/osmosis-labs/osmosis/v29/x/pool-incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v29/x/pool-incentives/types"
 )
 
 var (

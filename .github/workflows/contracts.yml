@@ -77,14 +77,14 @@ jobs:
             cosmwasm/workspace-optimizer:0.12.10
 
       - name: "Upload optimized contract artifact"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.contract.name }}
           path: ${{ matrix.contract.workdir }}${{ matrix.contract.build }}
           retention-days: 1
 
       - name: "Upload Cargo.lock artifact"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Cargo.lock
           path: ${{ matrix.contract.workdir }}Cargo.lock

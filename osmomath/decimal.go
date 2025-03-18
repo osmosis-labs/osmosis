@@ -534,65 +534,10 @@ func (d BigDec) QuoInt64(i int64) BigDec {
 	return BigDec{mul}
 }
 
-// ApproxRoot returns an approximate estimation of a Dec's positive real nth root
-// using Newton's method (where n is positive). The algorithm starts with some guess and
-// computes the sequence of improved guesses until an answer converges to an
-// approximate answer.  It returns `|d|.ApproxRoot() * -1` if input is negative.
-// A maximum number of 100 iterations is used a backup boundary condition for
-// cases where the answer never converges enough to satisfy the main condition.
-func (d BigDec) ApproxRoot(root uint64) (guess BigDec, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			var ok bool
-			err, ok = r.(error)
-			if !ok {
-				err = errors.New("out of bounds")
-			}
-		}
-	}()
-
-	if d.IsNegative() {
-		absRoot, err := d.MulInt64(-1).ApproxRoot(root)
-		return absRoot.MulInt64(-1), err
-	}
-
-	if root == 1 || d.IsZero() || d.Equal(oneBigDec) {
-		return d, nil
-	}
-
-	if root == 0 {
-		return OneBigDec(), nil
-	}
-
-	rootInt := NewBigIntFromUint64(root)
-	guess, delta := OneBigDec(), OneBigDec()
-
-	for iter := 0; delta.Abs().GT(SmallestBigDec()) && iter < maxApproxRootIterations; iter++ {
-		prev := guess.PowerInteger(root - 1)
-		if prev.IsZero() {
-			prev = SmallestBigDec()
-		}
-		delta = d.Quo(prev)
-		delta.SubMut(guess)
-		delta = delta.QuoInt(rootInt)
-
-		guess = guess.Add(delta)
-	}
-
-	return guess, nil
-}
-
 func assertMaxBitLen(i *big.Int) {
 	if i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
-}
-
-// ApproxSqrt is a wrapper around ApproxRoot for the common special case
-// of finding the square root of a number. It returns -(sqrt(abs(d)) if input is negative.
-// TODO: Optimize this to be faster just using native big int sqrt.
-func (d BigDec) ApproxSqrt() (BigDec, error) {
-	return d.ApproxRoot(2)
 }
 
 // is integer, e.g. decimals are zero
@@ -1234,47 +1179,4 @@ func (d BigDec) PowerIntegerMut(power uint64) BigDec {
 	}
 
 	return d.MulMut(tmp)
-}
-
-// Power returns a result of raising the given big dec to
-// a positive decimal power. Panics if the power is negative.
-// Panics if the base is negative. Does not mutate the receiver.
-// The max supported exponent is defined by the global maxSupportedExponent.
-// If a greater exponent is given, the function panics.
-// The error is not bounded but expected to be around 10^-18, use with care.
-// See the underlying Exp2, LogBase2 and Mul for the details of their bounds.
-// WARNING: This function is broken for base < 1. The reason is that logarithm function is
-// negative between zero and 1, and the Exp2(k) is undefined for negative k.
-// As a result, this function panics if called for d < 1.
-func (d BigDec) Power(power BigDec) BigDec {
-	if d.IsNegative() {
-		panic(fmt.Sprintf("negative base is not supported for Power(), base was (%s)", d))
-	}
-	if power.IsNegative() {
-		panic(fmt.Sprintf("negative power is not supported for Power(), power was (%s)", power))
-	}
-	if power.Abs().GT(maxSupportedExponent) {
-		panic(fmt.Sprintf("integer exponent %s is too large, max (%s)", power, maxSupportedExponent))
-	}
-	// TODO: Potentially expensive??
-	if power.IsInteger() {
-		return d.PowerInteger(power.TruncateInt().Uint64())
-	}
-	if power.IsZero() {
-		return OneBigDec()
-	}
-	if d.IsZero() {
-		return ZeroBigDec()
-	}
-	if d.LT(oneBigDec) {
-		panic(fmt.Sprintf("Power() is not supported for base < 1, base was (%s)", d))
-	}
-	if d.Equal(twoBigDec) {
-		return Exp2(power)
-	}
-
-	// d^power = exp2(power * log_2{base})
-	result := Exp2(d.LogBase2().Mul(power))
-
-	return result
 }

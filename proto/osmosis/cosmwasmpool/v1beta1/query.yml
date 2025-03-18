@@ -1,7 +1,7 @@
 keeper:
-  path: "github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool"
+  path: "github.com/osmosis-labs/osmosis/v29/x/cosmwasmpool"
   struct: "Keeper"
-client_path: "github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/client"
+client_path: "github.com/osmosis-labs/osmosis/v29/x/cosmwasmpool/client"
 queries:
   Params:
     proto_wrapper:
@@ -18,3 +18,6 @@ queries:
       query_func: "k.ContractInfoByPoolId"
     cli:
       cmd: "ContractInfoByPoolId"
+  PoolRawFilteredState:
+    proto_wrapper:
+      query_func: "k.PoolRawFilteredState"

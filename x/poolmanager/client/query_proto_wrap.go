@@ -8,10 +8,10 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v28/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v28/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v28/x/poolmanager/client/queryprotov2"
-	"github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v29/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v29/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v29/x/poolmanager/client/queryprotov2"
+	"github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
 )
 
 // This file should evolve to being code gen'd, off of `proto/poolmanager/v1beta/query.yml`

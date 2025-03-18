@@ -59,6 +59,7 @@ pub fn execute(
             receiver,
             slippage,
             next_memo,
+            final_memo,
             on_failed_delivery,
             route,
         } => execute::unwrap_or_swap_and_forward(
@@ -67,6 +68,7 @@ pub fn execute(
             slippage,
             &receiver,
             next_memo,
+            final_memo,
             on_failed_delivery,
             route,
         ),

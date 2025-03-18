@@ -7,15 +7,12 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	v8constants "github.com/osmosis-labs/osmosis/v28/app/upgrades/v8/constants"
-	cltypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v28/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v28/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v28/x/gamm/types/migration"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v28/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v28/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v28/x/superfluid/types"
+	v8constants "github.com/osmosis-labs/osmosis/v29/app/upgrades/v8/constants"
+	cltypes "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v29/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v29/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v29/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v29/x/superfluid/types"
 )
 
 var defaultFunds = sdk.NewCoins(defaultPoolAssets[0].Token, sdk.NewCoin("stake", osmomath.NewInt(5000000000)))
@@ -470,67 +467,6 @@ func (s *KeeperTestSuite) TestMsgUnPoolWhitelistedPool_Event() {
 		s.Require().NoError(err)
 		s.AssertEventEmitted(s.Ctx, types.TypeEvtUnpoolId, 1)
 	}
-}
-
-func (s *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedPosition_Event() {
-	s.SetupTest()
-
-	msgServer := keeper.NewMsgServerImpl(s.App.SuperfluidKeeper)
-	s.FundAcc(s.TestAccs[0], defaultAcctFunds)
-	fullRangeCoins := sdk.NewCoins(defaultPoolAssets[0].Token, defaultPoolAssets[1].Token)
-
-	// Set validators
-	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
-
-	// Set balancer pool (foo and stake) and make its respective gamm share an authorized superfluid asset
-	msg := balancer.NewMsgCreateBalancerPool(s.TestAccs[0], balancer.PoolParams{
-		SwapFee: osmomath.NewDecWithPrec(1, 2),
-		ExitFee: osmomath.NewDec(0),
-	}, defaultPoolAssets, defaultFutureGovernor)
-	balancerPooId, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, msg)
-	s.Require().NoError(err)
-	balancerPool, err := s.App.GAMMKeeper.GetPool(s.Ctx, balancerPooId)
-	s.Require().NoError(err)
-	poolDenom := gammtypes.GetPoolShareDenom(balancerPool.GetId())
-	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{
-		Denom:     poolDenom,
-		AssetType: types.SuperfluidAssetTypeLPShare,
-	})
-	s.Require().NoError(err)
-
-	// Set concentrated pool with the same denoms as the balancer pool (foo and stake)
-	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], defaultPoolAssets[0].Token.Denom, defaultPoolAssets[1].Token.Denom, 1, osmomath.ZeroDec())
-
-	// Set migration link between the balancer and concentrated pool
-	migrationRecord := gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
-		{BalancerPoolId: balancerPool.GetId(), ClPoolId: clPool.GetId()},
-	}}
-	err = s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx, migrationRecord)
-	s.Require().NoError(err)
-
-	// Superfluid delegate the balancer pool shares
-	_, _, locks := s.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, 9000000000000000000}}, []string{poolDenom})
-
-	// Create full range concentrated position (needed to give the pool an initial spot price and liquidity value)
-	s.CreateFullRangePosition(clPool, fullRangeCoins)
-
-	// Add new superfluid asset
-	denom := cltypes.GetConcentratedLockupDenomFromPoolId(clPool.GetId())
-	err = s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, types.SuperfluidAsset{
-		Denom:     denom,
-		AssetType: types.SuperfluidAssetTypeConcentratedShare,
-	})
-	s.Require().NoError(err)
-
-	// Execute UnlockAndMigrateSharesToFullRangeConcentratedPosition message
-	sender, err := sdk.AccAddressFromBech32(locks[0].Owner)
-	s.Require().NoError(err)
-	_, err = msgServer.UnlockAndMigrateSharesToFullRangeConcentratedPosition(s.Ctx,
-		types.NewMsgUnlockAndMigrateSharesToFullRangeConcentratedPosition(sender, int64(locks[0].ID), locks[0].Coins[0]))
-	s.Require().NoError(err)
-
-	// Asset event emitted
-	s.AssertEventEmitted(s.Ctx, types.TypeEvtUnlockAndMigrateShares, 1)
 }
 
 // TestAddToConcentratedLiquiditySuperfluidPosition_Events tests that events are correctly emitted

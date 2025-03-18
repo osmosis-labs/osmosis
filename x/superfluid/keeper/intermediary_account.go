@@ -5,8 +5,8 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v28/x/superfluid/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v29/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v29/x/superfluid/types"
 
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"

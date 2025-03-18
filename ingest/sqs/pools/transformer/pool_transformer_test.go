@@ -7,18 +7,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/sqs/sqsdomain"
-	sqscosmwasmpool "github.com/osmosis-labs/sqs/sqsdomain/cosmwasmpool"
+	ingesttypes "github.com/osmosis-labs/osmosis/v29/ingest/types"
+	sqscosmwasmpool "github.com/osmosis-labs/osmosis/v29/ingest/types/cosmwasmpool"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
-	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"
-	poolstransformer "github.com/osmosis-labs/osmosis/v28/ingest/sqs/pools/transformer"
-	clqueryproto "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/client/queryproto"
-	cltypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v28/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v29/app/apptesting"
+	commondomain "github.com/osmosis-labs/osmosis/v29/ingest/common/domain"
+	poolstransformer "github.com/osmosis-labs/osmosis/v29/ingest/sqs/pools/transformer"
+	clqueryproto "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/client/queryproto"
+	cltypes "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v29/x/protorev/types"
 )
 
 type PoolTransformerTestSuite struct {
@@ -44,7 +44,7 @@ var (
 	doubleDefaultAmount = defaultAmount.MulRaw(2)
 
 	emptyDenomPriceInfoMap      = map[string]osmomath.BigDec{}
-	emptyDenomPairToTakerFeeMap = sqsdomain.TakerFeeMap{}
+	emptyDenomPairToTakerFeeMap = ingesttypes.TakerFeeMap{}
 
 	zeroInt = osmomath.ZeroInt()
 )
@@ -64,7 +64,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_EmptyPriceInfoMap_TakerFee() 
 
 	// Corresponds to the denoms of the pool being converted
 	// The taker fee is taken from params.
-	expectedDenomPairToTakerFeeMap := sqsdomain.TakerFeeMap{
+	expectedDenomPairToTakerFeeMap := ingesttypes.TakerFeeMap{
 		{
 			Denom0: USDC,
 			Denom1: USDT,
@@ -93,7 +93,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_EmptyPriceInfoMap_TakerFee() 
 	s.Require().NoError(err)
 
 	priceInfoMap := map[string]osmomath.BigDec{}
-	denomPairToTakerFeeMap := sqsdomain.TakerFeeMap{}
+	denomPairToTakerFeeMap := ingesttypes.TakerFeeMap{}
 
 	poolIngester := s.initializePoolIngester(usdcOsmoPoolID)
 
@@ -172,7 +172,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_OSMOPairedPool_WithRoutingInO
 	defaultQuoteUOSMOPoolID := s.CreateDefaultQuoteDenomUOSMOPool()
 
 	priceInfoMap := map[string]osmomath.BigDec{}
-	denomPairToTakerFeeMap := sqsdomain.TakerFeeMap{}
+	denomPairToTakerFeeMap := ingesttypes.TakerFeeMap{}
 
 	// Fetch the pool from state.
 	pool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, usdtOsmoPoolIDConverted)
@@ -205,7 +205,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_OSMOPairedPool_WithRoutingAsI
 	usdcOsmoPoolID := s.CreateDefaultQuoteDenomUOSMOPool()
 
 	denomPriceInfoMap := map[string]osmomath.BigDec{}
-	denomPairToTakerFeeMap := sqsdomain.TakerFeeMap{}
+	denomPairToTakerFeeMap := ingesttypes.TakerFeeMap{}
 
 	// Fetch the pool from state.
 	pool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, usdtOsmoPoolIDConverted)
@@ -239,7 +239,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_NoRouteSet() {
 	s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, UOSMO)
 
 	denomPriceInfoMap := map[string]osmomath.BigDec{}
-	denomPairToTakerFeeMap := sqsdomain.TakerFeeMap{}
+	denomPairToTakerFeeMap := ingesttypes.TakerFeeMap{}
 
 	// Fetch the pool from state.
 	pool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, usdtOsmoPoolIDConverted)
@@ -274,7 +274,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_InvalidPoolSetInRoutes_Silent
 	usdcUosmoPoolID := s.CreateDefaultQuoteDenomUOSMOPool()
 
 	denomPriceInfoMap := map[string]osmomath.BigDec{}
-	denomPairToTakerFeeMap := sqsdomain.TakerFeeMap{}
+	denomPairToTakerFeeMap := ingesttypes.TakerFeeMap{}
 
 	// Fetch the pool from state.
 	pool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, usdtOsmoPoolIDConverted)
@@ -317,7 +317,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_Concentrated() {
 	s.Require().NoError(err)
 
 	denomPriceInfoMap := map[string]osmomath.BigDec{}
-	denomPairToTakerFeeMap := sqsdomain.TakerFeeMap{}
+	denomPairToTakerFeeMap := ingesttypes.TakerFeeMap{}
 
 	poolIngester := s.initializePoolIngester(usdcUosmoPoolID)
 
@@ -375,7 +375,7 @@ func (s *PoolTransformerTestSuite) TestConvertPool_Concentrated_NoLiquidity() {
 	concentratedPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], USDT, UOSMO, 1, osmomath.ZeroDec())
 
 	denomPriceInfoMap := map[string]osmomath.BigDec{}
-	denomPairToTakerFeeMap := sqsdomain.TakerFeeMap{}
+	denomPairToTakerFeeMap := ingesttypes.TakerFeeMap{}
 
 	poolIngester := s.initializePoolIngester(usdcUosmoPoolID)
 
@@ -812,7 +812,7 @@ func (s *PoolTransformerTestSuite) TestInitCosmWasmPoolModel() {
 // - the pool type of the actual pool is equal to the expected pool type.
 // - the TVL of the actual pool is equal to the expected TVL.
 // - the balances of the actual pool is equal to the expected balances.
-func (s *PoolTransformerTestSuite) validatePoolConversion(expectedPool poolmanagertypes.PoolI, expectedPoolLiquidityCap osmomath.Int, expectPoolLiquidityCapError string, actualPool sqsdomain.PoolI, expectedBalances sdk.Coins) {
+func (s *PoolTransformerTestSuite) validatePoolConversion(expectedPool poolmanagertypes.PoolI, expectedPoolLiquidityCap osmomath.Int, expectPoolLiquidityCapError string, actualPool ingesttypes.PoolI, expectedBalances sdk.Coins) {
 	// Correct ID
 	s.Require().Equal(expectedPool.GetId(), actualPool.GetId())
 

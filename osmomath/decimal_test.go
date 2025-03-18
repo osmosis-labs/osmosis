@@ -665,55 +665,6 @@ func (s *decimalTestSuite) TestDecCeil() {
 	}
 }
 
-func (s *decimalTestSuite) TestApproxRoot() {
-	testCases := []struct {
-		input    osmomath.BigDec
-		root     uint64
-		expected osmomath.BigDec
-	}{
-		{osmomath.OneBigDec(), 10, osmomath.OneBigDec()},                                                                               // 1.0 ^ (0.1) => 1.0
-		{osmomath.NewBigDecWithPrec(25, 2), 2, osmomath.NewBigDecWithPrec(5, 1)},                                                       // 0.25 ^ (0.5) => 0.5
-		{osmomath.NewBigDecWithPrec(4, 2), 2, osmomath.NewBigDecWithPrec(2, 1)},                                                        // 0.04 ^ (0.5) => 0.2
-		{osmomath.NewBigDecFromInt(osmomath.NewBigInt(27)), 3, osmomath.NewBigDecFromInt(osmomath.NewBigInt(3))},                       // 27 ^ (1/3) => 3
-		{osmomath.NewBigDecFromInt(osmomath.NewBigInt(-81)), 4, osmomath.NewBigDecFromInt(osmomath.NewBigInt(-3))},                     // -81 ^ (0.25) => -3
-		{osmomath.NewBigDecFromInt(osmomath.NewBigInt(2)), 2, osmomath.MustNewBigDecFromStr("1.414213562373095048801688724209698079")}, // 2 ^ (0.5) => 1.414213562373095048801688724209698079
-		{osmomath.NewBigDecWithPrec(1005, 3), 31536000, osmomath.MustNewBigDecFromStr("1.000000000158153903837946258002096839")},       // 1.005 ^ (1/31536000) ≈ 1.000000000158153903837946258002096839
-		{osmomath.SmallestBigDec(), 2, osmomath.NewBigDecWithPrec(1, 18)},                                                              // 1e-36 ^ (0.5) => 1e-18
-		{osmomath.SmallestBigDec(), 3, osmomath.MustNewBigDecFromStr("0.000000000001000000000000000002431786")},                        // 1e-36 ^ (1/3) => 1e-12
-		{osmomath.NewBigDecWithPrec(1, 8), 3, osmomath.MustNewBigDecFromStr("0.002154434690031883721759293566519280")},                 // 1e-8 ^ (1/3) ≈ 0.002154434690031883721759293566519
-	}
-
-	// In the case of 1e-8 ^ (1/3), the result repeats every 5 iterations starting from iteration 24
-	// (i.e. 24, 29, 34, ... give the same result) and never converges enough. The maximum number of
-	// iterations (100) causes the result at iteration 100 to be returned, regardless of convergence.
-
-	for i, tc := range testCases {
-		res, err := tc.input.ApproxRoot(tc.root)
-		s.Require().NoError(err)
-		s.Require().True(tc.expected.Sub(res).AbsMut().LTE(osmomath.SmallestBigDec()), "unexpected result for test case %d, input: %v", i, tc.input)
-	}
-}
-
-func (s *decimalTestSuite) TestApproxSqrt() {
-	testCases := []struct {
-		input    osmomath.BigDec
-		expected osmomath.BigDec
-	}{
-		{osmomath.OneBigDec(), osmomath.OneBigDec()},                                                                                // 1.0 => 1.0
-		{osmomath.NewBigDecWithPrec(25, 2), osmomath.NewBigDecWithPrec(5, 1)},                                                       // 0.25 => 0.5
-		{osmomath.NewBigDecWithPrec(4, 2), osmomath.NewBigDecWithPrec(2, 1)},                                                        // 0.09 => 0.3
-		{osmomath.NewBigDecFromInt(osmomath.NewBigInt(9)), osmomath.NewBigDecFromInt(osmomath.NewBigInt(3))},                        // 9 => 3
-		{osmomath.NewBigDecFromInt(osmomath.NewBigInt(-9)), osmomath.NewBigDecFromInt(osmomath.NewBigInt(-3))},                      // -9 => -3
-		{osmomath.NewBigDecFromInt(osmomath.NewBigInt(2)), osmomath.MustNewBigDecFromStr("1.414213562373095048801688724209698079")}, // 2 => 1.414213562373095048801688724209698079
-	}
-
-	for i, tc := range testCases {
-		res, err := tc.input.ApproxSqrt()
-		s.Require().NoError(err)
-		s.Require().Equal(tc.expected, res, "unexpected result for test case %d, input: %v", i, tc.input)
-	}
-}
-
 func (s *decimalTestSuite) TestDecEncoding() {
 	testCases := []struct {
 		input   osmomath.BigDec
@@ -1317,7 +1268,7 @@ func (s *decimalTestSuite) TestPowerInteger() {
 			// positive integer, we also test Power().
 			// Negative exponent and base are not supported for Power()
 			if tc.exponent >= 0 && !tc.base.IsNegative() {
-				actualResult2 := tc.base.Power(osmomath.NewBigDecFromInt(osmomath.NewBigIntFromUint64(tc.exponent)))
+				actualResult2 := tc.base.PowerInteger(tc.exponent)
 				require.True(osmomath.DecApproxEq(s.T(), tc.expectedResult, actualResult2, tolerance))
 			}
 		})
@@ -1429,121 +1380,6 @@ func (s *decimalTestSuite) TestPowerInteger_Mutation() {
 			resultNonMut := startNonMut.PowerInteger(exponent)
 
 			s.assertMutResult(tc.expectedResult, tc.startValue, resultMut, resultNonMut, startMut, startNonMut)
-		})
-	}
-}
-
-func (s *decimalTestSuite) TestPower() {
-	tests := map[string]struct {
-		base           osmomath.BigDec
-		exponent       osmomath.BigDec
-		expectedResult osmomath.BigDec
-		expectPanic    bool
-		errTolerance   osmomath.ErrTolerance
-	}{
-		// N.B.: integer exponents are tested under TestPowerInteger.
-
-		"3 ^ 2 = 9 (integer base and integer exponent)": {
-			base:     osmomath.NewBigDec(3),
-			exponent: osmomath.NewBigDec(2),
-
-			expectedResult: osmomath.NewBigDec(9),
-
-			errTolerance: zeroAdditiveErrTolerance,
-		},
-		"2^0.5 (base of 2 and non-integer exponent)": {
-			base:     osmomath.MustNewBigDecFromStr("2"),
-			exponent: osmomath.MustNewBigDecFromStr("0.5"),
-
-			// https://www.wolframalpha.com/input?i=2%5E0.5+37+digits
-			expectedResult: osmomath.MustNewBigDecFromStr("1.414213562373095048801688724209698079"),
-
-			errTolerance: osmomath.ErrTolerance{
-				AdditiveTolerance: minDecTolerance,
-				RoundingDir:       osmomath.RoundDown,
-			},
-		},
-		"3^0.33 (integer base other than 2 and non-integer exponent)": {
-			base:     osmomath.MustNewBigDecFromStr("3"),
-			exponent: osmomath.MustNewBigDecFromStr("0.33"),
-
-			// https://www.wolframalpha.com/input?i=3%5E0.33+37+digits
-			expectedResult: osmomath.MustNewBigDecFromStr("1.436977652184851654252692986409357265"),
-
-			errTolerance: osmomath.ErrTolerance{
-				AdditiveTolerance: minDecTolerance,
-				RoundingDir:       osmomath.RoundDown,
-			},
-		},
-		"e^0.98999 (non-integer base and non-integer exponent)": {
-			base:     osmomath.EulersNumber,
-			exponent: osmomath.MustNewBigDecFromStr("0.9899"),
-
-			// https://www.wolframalpha.com/input?i=e%5E0.9899+37+digits
-			expectedResult: osmomath.MustNewBigDecFromStr("2.690965362357751196751808686902156603"),
-
-			errTolerance: osmomath.ErrTolerance{
-				AdditiveTolerance: minDecTolerance,
-				RoundingDir:       osmomath.RoundUnconstrained,
-			},
-		},
-		"10^0.001 (small non-integer exponent)": {
-			base:     osmomath.NewBigDec(10),
-			exponent: osmomath.MustNewBigDecFromStr("0.001"),
-
-			// https://www.wolframalpha.com/input?i=10%5E0.001+37+digits
-			expectedResult: osmomath.MustNewBigDecFromStr("1.002305238077899671915404889328110554"),
-
-			errTolerance: osmomath.ErrTolerance{
-				AdditiveTolerance: minDecTolerance,
-				RoundingDir:       osmomath.RoundUnconstrained,
-			},
-		},
-		"13^100.7777 (large non-integer exponent)": {
-			base:     osmomath.NewBigDec(13),
-			exponent: osmomath.MustNewBigDecFromStr("100.7777"),
-
-			// https://www.wolframalpha.com/input?i=13%5E100.7777+37+digits
-			expectedResult: osmomath.MustNewBigDecFromStr("1.822422110233759706998600329118969132").Mul(osmomath.NewBigDec(10).PowerInteger(112)),
-
-			errTolerance: osmomath.ErrTolerance{
-				MultiplicativeTolerance: minDecTolerance,
-				RoundingDir:             osmomath.RoundDown,
-			},
-		},
-		"large non-integer exponent with large non-integer base - panics": {
-			base:     osmomath.MustNewBigDecFromStr("169.137"),
-			exponent: osmomath.MustNewBigDecFromStr("100.7777"),
-
-			expectPanic: true,
-		},
-		"negative base - panic": {
-			base:     osmomath.NewBigDec(-3),
-			exponent: osmomath.MustNewBigDecFromStr("4"),
-
-			expectPanic: true,
-		},
-		"negative exponent - panic": {
-			base:     osmomath.NewBigDec(1),
-			exponent: osmomath.MustNewBigDecFromStr("-4"),
-
-			expectPanic: true,
-		},
-		"base < 1 - panic (see godoc)": {
-			base:     osmomath.NewBigDec(1).Sub(osmomath.SmallestBigDec()),
-			exponent: osmomath.OneBigDec(),
-
-			expectPanic: true,
-		},
-	}
-
-	for name, tc := range tests {
-		tc := tc
-		s.Run(name, func() {
-			osmomath.ConditionalPanic(s.T(), tc.expectPanic, func() {
-				actualResult := tc.base.Power(tc.exponent)
-				osmomath.Equal(s.T(), tc.errTolerance, tc.expectedResult, actualResult)
-			})
 		})
 	}
 }

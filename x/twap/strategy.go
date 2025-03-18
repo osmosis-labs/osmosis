@@ -2,9 +2,9 @@ package twap
 
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v28/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v29/x/twap/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v28/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v29/x/gamm/types"
 )
 
 // twapStrategy is an interface for computing TWAPs.

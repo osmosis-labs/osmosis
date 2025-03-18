@@ -34,10 +34,10 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v28/app"
+	"github.com/osmosis-labs/osmosis/v29/app"
 
-	"github.com/osmosis-labs/osmosis/v28/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v28/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v29/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v29/x/gamm/types"
 
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
@@ -47,10 +47,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	lockupkeeper "github.com/osmosis-labs/osmosis/v28/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v28/x/mint/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v29/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v29/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v29/x/mint/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
 )
 
 type KeeperTestHelper struct {
@@ -103,12 +103,17 @@ func init() {
 // Setup sets up basic environment for suite (App, Ctx, and test accounts)
 // preserves the caching enabled/disabled state.
 func (s *KeeperTestHelper) Setup() {
+	s.T().Log("Setting up KeeperTestHelper")
 	dir, err := os.MkdirTemp("", "osmosisd-test-home")
 	if err != nil {
 		panic(fmt.Sprintf("failed creating temporary directory: %v", err))
 	}
 	s.T().Cleanup(func() { os.RemoveAll(dir); s.withCaching = false })
-	s.App = app.SetupWithCustomHome(false, dir)
+	if app.IsDebugLogEnabled() {
+		s.App = app.SetupWithCustomHome(false, dir, s.T())
+	} else {
+		s.App = app.SetupWithCustomHome(false, dir)
+	}
 	s.setupGeneral()
 
 	// Manually set validator signing info, otherwise we panic

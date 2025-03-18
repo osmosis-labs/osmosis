@@ -10,11 +10,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v28/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v29/tests/e2e/configurer/config"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v28/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v28/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v29/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v29/tests/e2e/initialization"
 )
 
 type Config struct {
@@ -276,20 +276,4 @@ func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 		return nil, fmt.Errorf("node index (%d) is greater than the number of nodes available (%d)", nodeIndex, len(c.NodeConfigs))
 	}
 	return c.NodeConfigs[nodeIndex], nil
-}
-
-func (c *Config) SubmitCreateConcentratedPoolProposal(chainANode *NodeConfig, isLegacy bool) (uint64, error) {
-	propNumber := chainANode.SubmitCreateConcentratedPoolProposal(false, isLegacy)
-
-	AllValsVoteOnProposal(c, propNumber)
-
-	require.Eventually(c.t, func() bool {
-		status, err := chainANode.QueryPropStatus(propNumber)
-		if err != nil {
-			return false
-		}
-		return status == proposalStatusPassed
-	}, time.Second*30, 10*time.Millisecond)
-	poolId := chainANode.QueryNumPools()
-	return poolId, nil
 }

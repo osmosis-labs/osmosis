@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v28/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v29/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v29/x/lockup/types"
 )
 
 var ByGroupQueryCondition = byGroupQueryCondition

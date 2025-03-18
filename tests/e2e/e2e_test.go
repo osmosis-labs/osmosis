@@ -21,16 +21,16 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v28/x/ibc-rate-limit/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v29/x/ibc-rate-limit/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
-	"github.com/osmosis-labs/osmosis/v28/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v28/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v28/tests/e2e/initialization"
+	appparams "github.com/osmosis-labs/osmosis/v29/app/params"
+	"github.com/osmosis-labs/osmosis/v29/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v29/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v29/tests/e2e/initialization"
 )
 
 var (
@@ -64,9 +64,9 @@ func (s *IntegrationTestSuite) TestPrepE2E() {
 // TODO: Find more scalable way to do this
 func (s *IntegrationTestSuite) TestStartE2E() {
 	// Zero Dependent Tests
-	s.T().Run("CreateConcentratedLiquidityPoolVoting_And_TWAP", func(t *testing.T) {
+	s.T().Run("ConcentratedLiquidityPoolTWAP", func(t *testing.T) {
 		t.Parallel()
-		s.CreateConcentratedLiquidityPoolVoting_And_TWAP()
+		s.ConcentratedLiquidityPoolTWAP()
 	})
 
 	s.T().Run("ProtoRev", func(t *testing.T) {

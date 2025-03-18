@@ -6,7 +6,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v29/app/params"
 )
 
 var (

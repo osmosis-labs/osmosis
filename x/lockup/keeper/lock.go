@@ -16,14 +16,14 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
-	cltypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v28/x/lockup/types"
+	cltypes "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v29/x/lockup/types"
 )
 
-// WithdrawAllMaturedLocks withdraws every lock that's in the process of unlocking, and has finished unlocking by
+// WithdrawMaturedLocks withdraws `numToWithdraw` locks that are the process of unlocking, and has finished unlocking by
 // the current block time.
-func (k Keeper) WithdrawAllMaturedLocks(ctx sdk.Context) {
-	k.unlockFromIterator(ctx, k.LockIteratorBeforeTime(ctx, ctx.BlockTime()))
+func (k Keeper) WithdrawMaturedLocks(ctx sdk.Context, numToWithdraw int) {
+	k.unlockFromIterator(ctx, numToWithdraw, k.LockIteratorBeforeTime(ctx, ctx.BlockTime()))
 }
 
 // GetModuleBalance returns full balance of the module.

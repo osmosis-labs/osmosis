@@ -74,7 +74,7 @@ which would keep blockchain and state data of last 188000 blocks (approximately 
 				return err
 			}
 
-			startHeight, currentHeight, err := pruneBlockStoreAndGetHeights(dbPath, fullHeight)
+			startHeight, currentHeight, err := pruneBlockStoreAndGetHeights(clientCtx.HomeDir, dbPath, fullHeight)
 			if err != nil {
 				return err
 			}
@@ -100,7 +100,7 @@ which would keep blockchain and state data of last 188000 blocks (approximately 
 }
 
 // pruneBlockStoreAndGetHeights prunes blockstore and returns the startHeight and currentHeight.
-func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
+func pruneBlockStoreAndGetHeights(homeDir, dbPath string, fullHeight int64) (
 	startHeight int64, currentHeight int64, err error,
 ) {
 	opts := opt.Options{
@@ -119,6 +119,7 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 	currentHeight = bs.Height()
 
 	defaultConfig := cmtcfg.DefaultConfig()
+	defaultConfig.SetRoot(homeDir)
 
 	stateDB, err := cmtcfg.DefaultDBProvider(&cmtcfg.DBContext{ID: "state", Config: defaultConfig})
 	if err != nil {
@@ -128,6 +129,7 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 	stateStore := sm.NewStore(stateDB, sm.StoreOptions{
 		DiscardABCIResponses: defaultConfig.Storage.DiscardABCIResponses,
 	})
+	defer stateStore.Close()
 
 	// Can use blank string for genesis file since state will not be empty if we are pruning, and therefore is not used.
 	state, err := stateStore.LoadFromDBOrGenesisFile("")

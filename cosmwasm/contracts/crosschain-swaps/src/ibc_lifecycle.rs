@@ -21,7 +21,7 @@ fn create_recovery(
         // RECOVERY_STATES map.
         recovery.status = recovery_reason;
         let Some(mut recoveries) = recoveries else {
-            return Ok::<_, ContractError>(vec![recovery])
+            return Ok::<_, ContractError>(vec![recovery]);
         };
         recoveries.push(recovery);
         Ok(recoveries)
@@ -65,7 +65,7 @@ pub fn receive_ack(
     let sent_packet = INFLIGHT_PACKETS.may_load(deps.storage, (&source_channel, sequence))?;
     let Some(inflight_packet) = sent_packet else {
         // If there isn't, continue
-        return Ok(response.add_attribute("msg", "received unexpected ack"))
+        return Ok(response.add_attribute("msg", "received unexpected ack"));
     };
     // Remove the in-flight packet
     INFLIGHT_PACKETS.remove(deps.storage, (&source_channel, sequence));
@@ -102,7 +102,7 @@ pub fn receive_timeout(
     let sent_packet = INFLIGHT_PACKETS.may_load(deps.storage, (&source_channel, sequence))?;
     let Some(inflight_packet) = sent_packet else {
         // If there isn't, continue
-        return Ok(response.add_attribute("msg", "received unexpected timeout"))
+        return Ok(response.add_attribute("msg", "received unexpected timeout"));
     };
     // Remove the in-flight packet
     INFLIGHT_PACKETS.remove(deps.storage, (&source_channel, sequence));

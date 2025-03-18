@@ -5,7 +5,7 @@ import (
 
 	db "github.com/cosmos/cosmos-db"
 
-	"github.com/osmosis-labs/osmosis/v28/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v29/x/lockup/types"
 
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -194,13 +194,18 @@ func (k Keeper) getLocksFromIterator(ctx sdk.Context, iterator db.Iterator) []ty
 }
 
 // unlockFromIterator gets locks from the iterator, then unlocks all matured locks. Returns locks unlocked and sum of coins unlocked.
-func (k Keeper) unlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, sdk.Coins) {
+func (k Keeper) unlockFromIterator(ctx sdk.Context, numToUnlock int, iterator db.Iterator) ([]types.PeriodLock, sdk.Coins) {
 	// Note: this function is only used for an account
 	// and this has no conflicts with synthetic lockups
 
 	coins := sdk.Coins{}
 	locks := k.getLocksFromIterator(ctx, iterator)
+	count := 0
 	for _, lock := range locks {
+		if numToUnlock > 0 && count >= numToUnlock {
+			break
+		}
+		count++
 		err := k.UnlockMaturedLock(ctx, lock.ID)
 		if err != nil {
 			panic(err)

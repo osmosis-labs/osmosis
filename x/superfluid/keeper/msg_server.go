@@ -3,16 +3,16 @@ package keeper
 import (
 	"context"
 	"encoding/json"
-	"strconv"
+	"errors"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v28/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v28/x/lockup/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v29/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v29/x/lockup/types"
 
-	"github.com/osmosis-labs/osmosis/v28/x/superfluid/keeper/internal/events"
-	"github.com/osmosis-labs/osmosis/v28/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v29/x/superfluid/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/v29/x/superfluid/types"
 )
 
 type msgServer struct {
@@ -214,33 +214,7 @@ func (server msgServer) CreateFullRangePositionAndSuperfluidDelegate(goCtx conte
 }
 
 func (server msgServer) UnlockAndMigrateSharesToFullRangeConcentratedPosition(goCtx context.Context, msg *types.MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) (*types.MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return nil, err
-	}
-
-	positionData, migratedPoolIDs, clLockId, err := server.keeper.RouteLockedBalancerToConcentratedMigration(ctx, sender, msg.LockId, msg.SharesToMigrate, msg.TokenOutMins)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.TypeEvtUnlockAndMigrateShares,
-			sdk.NewAttribute(types.AttributeKeyPoolIdEntering, strconv.FormatUint(migratedPoolIDs.EnteringID, 10)),
-			sdk.NewAttribute(types.AttributeKeyPoolIdLeaving, strconv.FormatUint(migratedPoolIDs.LeavingID, 10)),
-			sdk.NewAttribute(types.AttributeConcentratedLockId, strconv.FormatUint(clLockId, 10)),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributePositionId, strconv.FormatUint(positionData.ID, 10)),
-			sdk.NewAttribute(types.AttributeAmount0, positionData.Amount0.String()),
-			sdk.NewAttribute(types.AttributeAmount1, positionData.Amount1.String()),
-			sdk.NewAttribute(types.AttributeLiquidity, positionData.Liquidity.String()),
-		),
-	})
-
-	return &types.MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse{Amount0: positionData.Amount0, Amount1: positionData.Amount1, LiquidityCreated: positionData.Liquidity}, err
+	return nil, errors.New("UnlockAndMigrateSharesToFullRangeConcentratedPosition is no longer supported")
 }
 
 func (server msgServer) AddToConcentratedLiquiditySuperfluidPosition(goCtx context.Context, msg *types.MsgAddToConcentratedLiquiditySuperfluidPosition) (*types.MsgAddToConcentratedLiquiditySuperfluidPositionResponse, error) {

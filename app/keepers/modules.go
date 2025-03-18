@@ -35,35 +35,35 @@ import (
 
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
-	smartaccount "github.com/osmosis-labs/osmosis/v28/x/smart-account"
+	smartaccount "github.com/osmosis-labs/osmosis/v29/x/smart-account"
 
 	"github.com/skip-mev/block-sdk/v2/x/auction"
 
-	_ "github.com/osmosis-labs/osmosis/v28/client/docs/statik"
-	clclient "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/client"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/clmodule"
-	cwpoolclient "github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/client"
-	cosmwasmpoolmodule "github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/module"
-	downtimemodule "github.com/osmosis-labs/osmosis/v28/x/downtime-detector/module"
-	"github.com/osmosis-labs/osmosis/v28/x/gamm"
-	gammclient "github.com/osmosis-labs/osmosis/v28/x/gamm/client"
-	"github.com/osmosis-labs/osmosis/v28/x/ibc-rate-limit/ibcratelimitmodule"
-	"github.com/osmosis-labs/osmosis/v28/x/incentives"
-	incentivesclient "github.com/osmosis-labs/osmosis/v28/x/incentives/client"
-	"github.com/osmosis-labs/osmosis/v28/x/lockup"
-	"github.com/osmosis-labs/osmosis/v28/x/mint"
-	poolincentives "github.com/osmosis-labs/osmosis/v28/x/pool-incentives"
-	poolincentivesclient "github.com/osmosis-labs/osmosis/v28/x/pool-incentives/client"
-	poolmanagerclient "github.com/osmosis-labs/osmosis/v28/x/poolmanager/client"
-	poolmanager "github.com/osmosis-labs/osmosis/v28/x/poolmanager/module"
-	"github.com/osmosis-labs/osmosis/v28/x/protorev"
-	superfluid "github.com/osmosis-labs/osmosis/v28/x/superfluid"
-	superfluidclient "github.com/osmosis-labs/osmosis/v28/x/superfluid/client"
-	"github.com/osmosis-labs/osmosis/v28/x/tokenfactory"
-	"github.com/osmosis-labs/osmosis/v28/x/twap/twapmodule"
-	"github.com/osmosis-labs/osmosis/v28/x/txfees"
-	txfeesclient "github.com/osmosis-labs/osmosis/v28/x/txfees/client"
-	valsetprefmodule "github.com/osmosis-labs/osmosis/v28/x/valset-pref/valpref-module"
+	_ "github.com/osmosis-labs/osmosis/v29/client/docs/statik"
+	clclient "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/client"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/clmodule"
+	cwpoolclient "github.com/osmosis-labs/osmosis/v29/x/cosmwasmpool/client"
+	cosmwasmpoolmodule "github.com/osmosis-labs/osmosis/v29/x/cosmwasmpool/module"
+	downtimemodule "github.com/osmosis-labs/osmosis/v29/x/downtime-detector/module"
+	"github.com/osmosis-labs/osmosis/v29/x/gamm"
+	gammclient "github.com/osmosis-labs/osmosis/v29/x/gamm/client"
+	"github.com/osmosis-labs/osmosis/v29/x/ibc-rate-limit/ibcratelimitmodule"
+	"github.com/osmosis-labs/osmosis/v29/x/incentives"
+	incentivesclient "github.com/osmosis-labs/osmosis/v29/x/incentives/client"
+	"github.com/osmosis-labs/osmosis/v29/x/lockup"
+	"github.com/osmosis-labs/osmosis/v29/x/mint"
+	poolincentives "github.com/osmosis-labs/osmosis/v29/x/pool-incentives"
+	poolincentivesclient "github.com/osmosis-labs/osmosis/v29/x/pool-incentives/client"
+	poolmanagerclient "github.com/osmosis-labs/osmosis/v29/x/poolmanager/client"
+	poolmanager "github.com/osmosis-labs/osmosis/v29/x/poolmanager/module"
+	"github.com/osmosis-labs/osmosis/v29/x/protorev"
+	superfluid "github.com/osmosis-labs/osmosis/v29/x/superfluid"
+	superfluidclient "github.com/osmosis-labs/osmosis/v29/x/superfluid/client"
+	"github.com/osmosis-labs/osmosis/v29/x/tokenfactory"
+	"github.com/osmosis-labs/osmosis/v29/x/twap/twapmodule"
+	"github.com/osmosis-labs/osmosis/v29/x/txfees"
+	txfeesclient "github.com/osmosis-labs/osmosis/v29/x/txfees/client"
+	valsetprefmodule "github.com/osmosis-labs/osmosis/v29/x/valset-pref/valpref-module"
 	"github.com/osmosis-labs/osmosis/x/epochs"
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 )
@@ -90,7 +90,6 @@ var AppModuleBasics = module.NewBasicManager(
 			gammclient.UpdateMigrationRecordsProposalHandler,
 			gammclient.CreateCLPoolAndLinkToCFMMProposalHandler,
 			gammclient.SetScalingFactorControllerProposalHandler,
-			clclient.CreateConcentratedLiquidityPoolProposalHandler,
 			clclient.TickSpacingDecreaseProposalHandler,
 			cwpoolclient.UploadCodeIdAndWhitelistProposalHandler,
 			cwpoolclient.MigratePoolContractsProposalHandler,

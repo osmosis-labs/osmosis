@@ -26,7 +26,7 @@ pub fn instantiate(
     let Ok((prefix, _, _)) = bech32::decode(msg.crosschain_swaps_contract.as_str()) else {
         return Err(ContractError::InvalidCrosschainSwapsContract {
             contract: msg.crosschain_swaps_contract,
-        })
+        });
     };
     if prefix != "osmo" {
         return Err(ContractError::InvalidCrosschainSwapsContract {

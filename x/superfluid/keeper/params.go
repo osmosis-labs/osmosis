@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/osmosis-labs/osmosis/v28/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v29/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

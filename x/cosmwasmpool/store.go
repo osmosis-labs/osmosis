@@ -1,14 +1,16 @@
 package cosmwasmpool
 
 import (
+	"bytes"
+
 	"cosmossdk.io/store/prefix"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v28/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v29/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v29/x/cosmwasmpool/types"
 )
 
 // SetPool stores the given pool in state.
@@ -68,4 +70,36 @@ func (k Keeper) GetSerializedPools(ctx sdk.Context, pagination *query.PageReques
 		return nil, nil, err
 	}
 	return anys, pageRes, err
+}
+
+// GetPoolRawFilteredState returns the state of the pool as a slice of []byte, filtered by the provided key and value filters.
+// The filters are applied using bytes.Contains on the byte representations of the key and value.
+func (k Keeper) GetPoolRawFilteredState(ctx sdk.Context, poolId uint64, keyFilter, valueFilter string) ([][]byte, error) {
+	pool, err := k.GetPoolById(ctx, poolId)
+	if err != nil {
+		return nil, err
+	}
+	contractAddress := sdk.MustAccAddressFromBech32(pool.GetContractAddress())
+
+	values := [][]byte{}
+
+	keyFilterBz := []byte(keyFilter)
+	valueFilterBz := []byte(valueFilter)
+
+	shouldFilterKey := keyFilter != ""
+	shouldFilterValue := valueFilter != ""
+
+	// TODO: what do we do if no filter is passed? do we need to paginate the response? (ideally not)
+	k.wasmKeeper.IterateContractState(ctx, contractAddress, func(key, value []byte) bool {
+		if shouldFilterKey && !bytes.Contains(key, keyFilterBz) {
+			return false
+		}
+		if shouldFilterValue && !bytes.Contains(value, valueFilterBz) {
+			return false
+		}
+		values = append(values, value)
+		return false
+	})
+
+	return values, nil
 }

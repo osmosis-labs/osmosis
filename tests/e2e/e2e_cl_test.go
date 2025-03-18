@@ -11,29 +11,25 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v28/app/params"
-	"github.com/osmosis-labs/osmosis/v28/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v28/tests/e2e/initialization"
-	clmath "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v28/x/concentrated-liquidity/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v28/x/protorev/types"
+	appparams "github.com/osmosis-labs/osmosis/v29/app/params"
+	"github.com/osmosis-labs/osmosis/v29/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v29/tests/e2e/initialization"
+	clmath "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v29/x/protorev/types"
 )
 
 // Note: do not use chain B in this test as it has taker fee set.
 // This TWAP test depends on specific values that might be affected
 // by the taker fee.
-func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() {
+func (s *IntegrationTestSuite) ConcentratedLiquidityPoolTWAP() {
 	chainA, chainANode := s.getChainACfgs()
-
-	poolId, err := chainA.SubmitCreateConcentratedPoolProposal(chainANode, true)
-	s.NoError(err)
-	fmt.Println("poolId", poolId)
 
 	var (
 		expectedDenom0       = "stake"
@@ -42,22 +38,16 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 		expectedSpreadFactor = "0.001000000000000000"
 	)
 
-	var concentratedPool cltypes.ConcentratedPoolExtension
-	s.Eventually(
-		func() bool {
-			concentratedPool = s.updatedConcentratedPool(chainANode, poolId)
-			s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
-			s.Require().Equal(expectedDenom0, concentratedPool.GetToken0())
-			s.Require().Equal(expectedDenom1, concentratedPool.GetToken1())
-			s.Require().Equal(expectedTickspacing, concentratedPool.GetTickSpacing())
-			s.Require().Equal(expectedSpreadFactor, concentratedPool.GetSpreadFactor(sdk.Context{}).String())
+	s.enablePermissionlessCL(chainA, chainANode)
+	poolId := chainANode.CreateConcentratedPool(initialization.ValidatorWalletName, expectedDenom0, expectedDenom1, expectedTickspacing, expectedSpreadFactor)
+	fmt.Println("poolId", poolId)
 
-			return true
-		},
-		1*time.Minute,
-		10*time.Millisecond,
-		"create concentrated liquidity pool was not successful.",
-	)
+	concentratedPool := s.updatedConcentratedPool(chainANode, poolId)
+	s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
+	s.Require().Equal(expectedDenom0, concentratedPool.GetToken0())
+	s.Require().Equal(expectedDenom1, concentratedPool.GetToken1())
+	s.Require().Equal(expectedTickspacing, concentratedPool.GetTickSpacing())
+	s.Require().Equal(expectedSpreadFactor, concentratedPool.GetSpreadFactor(sdk.Context{}).String())
 
 	fundTokens := []string{"100000000stake", "100000000uosmo"}
 
@@ -130,6 +120,22 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	s.Require().Equal(osmomath.NewDec(2), secondTwapBOverA)
 }
 
+func (s *IntegrationTestSuite) enablePermissionlessCL(chain *chain.Config, chainNode *chain.NodeConfig) {
+	// Get the permisionless pool creation parameter.
+	isPermisionlessCreationEnabledStr := chainNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled), false)
+	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
+		// Change the parameter to enable permisionless pool creation.
+		err := chainNode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chain, true)
+		s.Require().NoError(err)
+	}
+
+	// Confirm that the parameter has been changed.
+	isPermisionlessCreationEnabledStr = chainNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled), false)
+	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
+		s.T().Fatal("concentrated liquidity pool creation is not enabled")
+	}
+}
+
 // Note: this test depends on taker fee being set.
 // As a result, we use chain B. Chain A has zero taker fee.
 // TODO: Move this test and its components to its own file, Its way too big and needs to be split up significantly.
@@ -148,20 +154,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	var adminWalletAddr string
 
 	enablePermissionlessCl := func() {
-		// Get the permisionless pool creation parameter.
-		isPermisionlessCreationEnabledStr := chainBNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled), false)
-		if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
-			// Change the parameter to enable permisionless pool creation.
-			err := chainBNode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chainB, true)
-			s.Require().NoError(err)
-		}
-
-		// Confirm that the parameter has been changed.
-		isPermisionlessCreationEnabledStr = chainBNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled), false)
-		if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
-			s.T().Fatal("concentrated liquidity pool creation is not enabled")
-		}
-
+		s.enablePermissionlessCL(chainB, chainBNode)
 		go func() {
 			s.T().Run("test update pool tick spacing", func(t *testing.T) {
 				s.TickSpacingUpdateProp()

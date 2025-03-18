@@ -68,6 +68,9 @@ pub enum RegistryError {
     #[error("invalid json: {error}. Got: {json}")]
     InvalidJson { error: String, json: String },
 
+    #[error("duplicate key found in next memo json")]
+    DuplicateKeyError,
+
     // Registry loading errors
     #[error("contract alias does not exist: {alias:?}")]
     AliasDoesNotExist { alias: String },

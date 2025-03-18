@@ -42,9 +42,79 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### State Breaking
+
+* [#8996](https://github.com/osmosis-labs/osmosis/pull/8996) chore: upgrade pfm to v8.1.1 
+* [#8880](https://github.com/osmosis-labs/osmosis/pull/8880) chore: bump wasmd from 0.53.0 to 0.53.2
+* [#9005](https://github.com/osmosis-labs/osmosis/pull/9005) fix: bump ibc-go to v8.6.1
+* [#9011](https://github.com/osmosis-labs/osmosis/pull/9011) feat: Delete superfluid balancer -> CL migration code. Makes the message now just return an error if called.
+* [#9059](https://github.com/osmosis-labs/osmosis/pull/9059) chore: bump submodules
+
 ### State Compatible
+
+* [#8985](https://github.com/osmosis-labs/osmosis/pull/8985) build: block-sdk import now uses forked version
+* [#9006](https://github.com/osmosis-labs/osmosis/pull/9006) feat: CosmWasm Pool raw state query
+* [#9021](https://github.com/osmosis-labs/osmosis/pull/9021) chore: slightly increase blocktime 
+* [#9050](https://github.com/osmosis-labs/osmosis/pull/9050) chore: bump ibc-go to v8.7.0 
+
+## v28.0.4
+
+### State Breaking
+
+### State Compatible
+
+* [#8978](https://github.com/osmosis-labs/osmosis/pull/8978) fix: bump comebft to v0.38.17
+* [#8985](https://github.com/osmosis-labs/osmosis/pull/8985) build: block-sdk import now uses forked version
+* [#8983](https://github.com/osmosis-labs/osmosis/pull/8983) fix: forceprune logic
+
+## v28.0.3
+
+### State Breaking
+
+### State Compatible
+
+* [#8968](https://github.com/osmosis-labs/osmosis/pull/8968) fix: use forked block-sdk patch
+* [#8895](https://github.com/osmosis-labs/osmosis/pull/8895) (xcs) feat: support XCS final hop memos
+
+## v28.0.2
+
+### State Breaking
+
+### State Compatible
+
+* [#8940](https://github.com/osmosis-labs/osmosis/pull/8940) chore: Bump store dependency version to v1.1.1-v0.50.11-v28-osmo-2
+* [#8886](https://github.com/osmosis-labs/osmosis/pull/8886) chore: decouple Node releases from SQS
+
+### store v1.1.1-v0.50.11-v28-osmo-2
+
+* [#1026](https://github.com/cosmos/iavl/pull/1026) perf: remove duplicated rootkey fetch inpruning (9% pruning speedup on osmosis)
+
+## v28.0.1
+
+### State Breaking
+
+### State Compatible
+
+* [#8858](https://github.com/osmosis-labs/osmosis/pull/8858) chore: fix event emission for smart account module
+* [#8906](https://github.com/osmosis-labs/osmosis/pull/8906) chore: bump cosmos-sdk v0.50.11
+* [#8923](https://github.com/osmosis-labs/osmosis/pull/8923) fix: tag osmosis-labs/cosmos-sdk store v1.1.1 to enable async pruning
+
+## v28.0.0
+
+### State Breaking
+
+### State Compatible
+
+* [#8857](https://github.com/osmosis-labs/osmosis/pull/8857) chore: update math package
+
+## v27.0.1
+
+### State Compatible
+
 * [#8831](https://github.com/osmosis-labs/osmosis/pull/8831) chore: bump cometbft
 * [#8876](https://github.com/osmosis-labs/osmosis/pull/8876) (xcs) fix: XCS incorrect channel
+* [#8922](https://github.com/osmosis-labs/osmosis/pull/8922) fix: untracked tokenfactory ibc-rate-limit inflow
+
 
 ## v27.0.0
 

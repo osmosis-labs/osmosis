@@ -3,7 +3,7 @@ package lockup
 import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v28/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/v29/x/lockup/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -12,16 +12,21 @@ import (
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 }
 
+var (
+	numLocksToDelete = 1_000
+)
+
 // Called every block to automatically unlock matured locks.
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
-	if ctx.BlockHeight()%30 == 0 {
+	if ctx.BlockHeight()%120 == 0 {
 		// TODO: Change this logic to "know" when the next unbonding time is, and only unlock at that time.
 		// At each unbond, do an iterate to find the next unbonding time and wait until then.
 		// delete synthetic locks matured before lockup deletion
 		k.DeleteAllMaturedSyntheticLocks(ctx)
 
-		// withdraw and delete locks
-		k.WithdrawAllMaturedLocks(ctx)
+		// withdraw and delete locks. Requires the corresponding synthetic locks to be deleted.
+		// This is guaranteed, as we delete _ALL_ synthetic locks before withdrawing a bounded number of native locks.
+		k.WithdrawMaturedLocks(ctx, numLocksToDelete)
 	}
 	return []abci.ValidatorUpdate{}
 }

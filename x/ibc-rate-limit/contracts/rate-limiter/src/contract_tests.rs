@@ -5,6 +5,7 @@ use crate::state::rbac::Roles;
 use crate::{contract::*, test_msg_recv, test_msg_send, ContractError};
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 use cosmwasm_std::{from_binary, Addr, Attribute, MessageInfo, Uint256};
+use cw2::set_contract_version;
 
 use crate::helpers::tests::verify_query_response;
 use crate::msg::{InstantiateMsg, MigrateMsg, PathMsg, QueryMsg, QuotaMsg, SudoMsg};
@@ -407,7 +408,7 @@ fn test_tokenfactory_message() {
 }
 
 #[test] // Tests we ccan instantiate the contract and that the owners are set correctly
-fn proper_migrate() {
+fn proper_migrate_for_v0_1_0() {
     let mut deps = mock_dependencies();
     let env = mock_env();
 
@@ -426,6 +427,9 @@ fn proper_migrate() {
     )
     .unwrap();
 
+    // force set contract version to 0.1.0
+    set_contract_version(deps.as_mut().storage, "crates.io:rate-limiter", "0.1.0").unwrap();
+
     // test that instantiate set the correct gov module address and RBAC permissions
     let permissions = RBAC_PERMISSIONS
         .load(&mut deps.storage, GOV_ADDR.to_string())
@@ -435,7 +439,7 @@ fn proper_migrate() {
     }
     assert_eq!(GOVMODULE.load(deps.as_ref().storage).unwrap(), GOV_ADDR);
 
-    // revoke all roles from the gov contract, instantiation should re-asssign
+    // revoke all roles from the gov contract, migration from 0.1.0 should re-asssign
     crate::rbac::revoke_role(&mut deps.as_mut(), GOV_ADDR.to_string(), Roles::all_roles()).unwrap();
 
     migrate(deps.as_mut(), mock_env(), MigrateMsg {}).unwrap();

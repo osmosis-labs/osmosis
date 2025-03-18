@@ -8,16 +8,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/sqs/sqsdomain"
+	ingesttypes "github.com/osmosis-labs/osmosis/v29/ingest/types"
 
-	"github.com/osmosis-labs/osmosis/v28/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v28/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v28/ingest/sqs/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v28/ingest/sqs/service"
+	"github.com/osmosis-labs/osmosis/v29/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v29/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v29/ingest/sqs/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v29/ingest/sqs/service"
 
-	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"
-	commonmocks "github.com/osmosis-labs/osmosis/v28/ingest/common/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v28/ingest/common/pooltracker"
+	commondomain "github.com/osmosis-labs/osmosis/v29/ingest/common/domain"
+	commonmocks "github.com/osmosis-labs/osmosis/v29/ingest/common/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v29/ingest/common/pooltracker"
 )
 
 var (
@@ -103,10 +103,10 @@ func (s *SQSServiceTestSuite) TestProcessBlockRecoverError() {
 				CosmWasmPools:     cosmWasmPools,
 			}
 
-			transformedPools := []sqsdomain.PoolI{}
+			transformedPools := []ingesttypes.PoolI{}
 			for _, pool := range blockPools.GetAll() {
 				// Note: balances are irrelevant for the test so we supply empty balances
-				transformedPool := sqsdomain.NewPool(pool, pool.GetSpreadFactor(s.Ctx), sdk.Coins{})
+				transformedPool := ingesttypes.NewPool(pool, pool.GetSpreadFactor(s.Ctx), sdk.Coins{})
 				transformedPools = append(transformedPools, transformedPool)
 			}
 

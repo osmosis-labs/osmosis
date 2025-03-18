@@ -7,7 +7,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/bank/v1beta1/bank.proto";
 import "cosmos/msg/v1/msg.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v28/x/tokenfactory/types";
+option go_package = "github.com/osmosis-labs/osmosis/v29/x/tokenfactory/types";
 
 // Msg defines the tokefactory module's gRPC message service.
 service Msg {
@@ -25,7 +25,7 @@ service Msg {
 // MsgCreateDenom defines the message structure for the CreateDenom gRPC service
 // method. It allows an account to create a new denom. It requires a sender
 // address and a sub denomination. The (sender_address, sub_denomination) tuple
-// must be unique and cannot be re-used.
+// must be unique and cannot be reused.
 //
 // The resulting denom created is defined as
 // <factory/{creatorAddress}/{subdenom}>. The resulting denom's admin is
