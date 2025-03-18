@@ -77,7 +77,7 @@ update_genesis '.app_state["mint"]["params"]["epoch_identifier"]="minute"'
 #update_genesis '.app_state["concentratedliquidity"]["params"]["is_permissionless_pool_creation_enabled"]=true'
 
 # update txfees genesis
-update_genesis '.app_state["txfees"]["basedenom"]="note"'
+update_genesis '.app_state["txfees"]["params"]["swap_fees_epoch_identifier"]="minute"'
 
 # update oracle genesis by adding test tokens to whitelist
 #update_genesis '.app_state["oracle"]["params"]["whitelist"][0]["name"]="peppe"'
