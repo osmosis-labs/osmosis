@@ -2,6 +2,7 @@ package types
 
 import (
 	context "context"
+	markettypes "github.com/osmosis-labs/osmosis/v26/x/market/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -99,6 +100,16 @@ type DistributionKeeper interface {
 
 type ConsensusKeeper interface {
 	Params(ctx context.Context, _ *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error)
+}
+
+type MarketKeeper interface {
+	Swap(
+		ctx sdk.Context,
+		trader sdk.AccAddress,
+		receiver sdk.AccAddress,
+		offerCoin sdk.Coin,
+		askDenom string,
+	) (*markettypes.MsgSwapResponse, error)
 }
 
 type OracleKeeper interface {

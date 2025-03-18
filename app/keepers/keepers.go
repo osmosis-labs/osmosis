@@ -119,7 +119,6 @@ import (
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v26/x/tokenfactory/types"
 	"github.com/osmosis-labs/osmosis/v26/x/twap"
 	twaptypes "github.com/osmosis-labs/osmosis/v26/x/twap/types"
-	"github.com/osmosis-labs/osmosis/v26/x/txfees"
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v26/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v26/x/txfees/types"
 	valsetpref "github.com/osmosis-labs/osmosis/v26/x/valset-pref"
@@ -490,19 +489,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.ProtoRevKeeper = &protorevKeeper
 	appKeepers.PoolManagerKeeper.SetProtorevKeeper(appKeepers.ProtoRevKeeper)
 
-	txFeesKeeper := txfeeskeeper.NewKeeper(
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.keys[txfeestypes.StoreKey],
-		appKeepers.PoolManagerKeeper,
-		appKeepers.ProtoRevKeeper,
-		appKeepers.DistrKeeper,
-		appKeepers.ConsensusParamsKeeper,
-		dataDir,
-		appKeepers.GetSubspace(txfeestypes.ModuleName),
-	)
-	appKeepers.TxFeesKeeper = &txFeesKeeper
-
 	appKeepers.IncentivesKeeper = incentiveskeeper.NewKeeper(
 		appKeepers.keys[incentivestypes.StoreKey],
 		appKeepers.GetSubspace(incentivestypes.ModuleName),
@@ -625,6 +611,19 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper)
 	appKeepers.StableStakingIncentivesKeeper = &stableStakingIncetivesKeeper
 
+	txFeesKeeper := txfeeskeeper.NewKeeper(
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.keys[txfeestypes.StoreKey],
+		appKeepers.MarketKeeper,
+		appKeepers.OracleKeeper,
+		appKeepers.DistrKeeper,
+		appKeepers.ConsensusParamsKeeper,
+		dataDir,
+		appKeepers.GetSubspace(txfeestypes.ModuleName),
+	)
+	appKeepers.TxFeesKeeper = &txFeesKeeper
+
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
 	// The last arguments can contain custom message handlers, and custom query handlers,
@@ -709,7 +708,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	govRouter.AddRoute(govtypes.RouterKey, govtypesv1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(*appKeepers.ParamsKeeper)).
 		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(*appKeepers.PoolIncentivesKeeper)).
-		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*appKeepers.TxFeesKeeper)).
 		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(*appKeepers.SuperfluidKeeper, *appKeepers.EpochsKeeper, *appKeepers.GAMMKeeper)).
 		AddRoute(protorevtypes.RouterKey, protorev.NewProtoRevProposalHandler(*appKeepers.ProtoRevKeeper)).
 		AddRoute(gammtypes.RouterKey, gamm.NewGammProposalHandler(*appKeepers.GAMMKeeper)).

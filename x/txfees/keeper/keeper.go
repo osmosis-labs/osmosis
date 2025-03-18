@@ -21,6 +21,7 @@ type Keeper struct {
 	accountKeeper      types.AccountKeeper
 	bankKeeper         types.BankKeeper
 	oracleKeeper       types.OracleKeeper
+	marketKeeper       types.MarketKeeper
 	distributionKeeper types.DistributionKeeper
 	consensusKeeper    types.ConsensusKeeper
 	dataDir            string
@@ -34,6 +35,7 @@ func NewKeeper(
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	storeKey storetypes.StoreKey,
+	marketKeeper types.MarketKeeper,
 	oracleKeeper types.OracleKeeper,
 	distributionKeeper types.DistributionKeeper,
 	consensusKeeper types.ConsensusKeeper,
@@ -50,6 +52,7 @@ func NewKeeper(
 		bankKeeper:         bankKeeper,
 		storeKey:           storeKey,
 		distributionKeeper: distributionKeeper,
+		marketKeeper:       marketKeeper,
 		oracleKeeper:       oracleKeeper,
 		consensusKeeper:    consensusKeeper,
 		dataDir:            dataDir,
