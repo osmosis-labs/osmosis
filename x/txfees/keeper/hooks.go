@@ -28,6 +28,10 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 // - All resulting parameter denom tokens get sent to the community pool.
 // - Any non-native tokens that did not have associated pool stay in the balance of community pool fee collector.
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	if epochIdentifier != k.GetParams(ctx).SwapFeesEpochIdentifier {
+		return nil
+	}
+	
 	defaultFeesDenom, _ := k.GetBaseDenom(ctx)
 	nonNativefeeTokenCollectorAddress := k.accountKeeper.GetModuleAddress(txfeestypes.NonNativeTxFeeCollectorName)
 

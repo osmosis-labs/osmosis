@@ -1,12 +1,9 @@
 package types
 
-const DefaultSwapFeesEpochIdentifier = "day"
-
 // DefaultGenesis returns the default txfee genesis state.
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		Params:                  DefaultParams(),
-		SwapFeesEpochIdentifier: DefaultSwapFeesEpochIdentifier,
+		Params: DefaultParams(),
 	}
 }
 

@@ -7,4 +7,5 @@ option go_package = "github.com/osmosis-labs/osmosis/v26/x/txfees/types";
 
 // Params holds parameters for the txfees module
 message Params {
+  string swap_fees_epoch_identifier = 1 [ (gogoproto.moretags) = "yaml:\"swap_fees_epoch_identifier\"" ];
 }
