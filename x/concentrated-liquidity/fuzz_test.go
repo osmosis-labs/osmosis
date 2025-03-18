@@ -242,7 +242,7 @@ func (s *KeeperTestSuite) swapNearTickBoundary(r *rand.Rand, pool types.Concentr
 
 	// Decide if below, exactly, or above target tick
 
-	poolSpotPrice := pool.GetCurrentSqrtPrice().Power(osmomath.NewBigDec(2))
+	poolSpotPrice := pool.GetCurrentSqrtPrice().PowerInteger(2)
 	fmt.Printf("pool: tick %d, spot price: %s, liq %s \n", pool.GetCurrentTick(), poolSpotPrice, curLiquidity)
 
 	amountInRequired = tickAmtChange(r, amountInRequired)

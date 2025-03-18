@@ -1733,8 +1733,7 @@ var (
 			NewLowerPrice: osmomath.NewDec(5501),
 			NewUpperPrice: osmomath.NewDec(6250),
 		},
-		// Slippage protection doesn't cause a failure but interrupts early.
-		"single position within one tick, trade completes but slippage protection interrupts trade early: usdc (in) -> eth (out) | ofz": {
+		"single position within one tick, trade fails due to mismatched expected token out and actual token out: usdc (in) -> eth (out) | ofz": {
 			TokenOut:     sdk.NewCoin(ETH, osmomath.NewInt(1820545)),
 			TokenInDenom: USDC,
 			PriceLimit:   osmomath.NewBigDec(5002),
@@ -1753,11 +1752,7 @@ var (
 			// # Summary:
 			// print(sqrt_next_1)
 			// print(token_in_1)
-			ExpectedTokenOut: sdk.NewCoin(ETH, osmomath.NewInt(4291)),
-			ExpectedTokenIn:  sdk.NewCoin(USDC, osmomath.NewInt(21463952)),
-			ExpectedTick:     31002000,
-			// Since we know we're going up to the price limit, we can calculate the sqrt price exactly.
-			ExpectedSqrtPrice: osmomath.BigDecFromDec(osmomath.MustMonotonicSqrt(osmomath.NewDec(5002))),
+			ExpectErr: true,
 		},
 	}
 
@@ -2132,7 +2127,7 @@ var (
 			NewUpperPrice: osmomath.NewDec(6250),
 			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("2226857353494147354437463.405839285844866989"),
 		},
-		"spread factor 7: single position within one tick, trade completes but slippage protection interrupts trade early: usdc (in) -> eth (out) (1% spread factor) | ofz": {
+		"spread factor 7: single position within one tick, trade fails due to mismatched expected token out and actual token out: usdc (in) -> eth (out) (1% spread factor) | ofz": {
 			TokenOut:     sdk.NewCoin(ETH, osmomath.NewInt(1820545)),
 			TokenInDenom: USDC,
 			PriceLimit:   osmomath.NewBigDec(5002),
@@ -2170,11 +2165,12 @@ var (
 			// print(token_in)
 			// print(spread_rewards_growth)
 			// print(token_out_1)
-			ExpectedTokenOut:  sdk.NewCoin(ETH, osmomath.NewInt(4291)),
-			ExpectedTokenIn:   sdk.NewCoin(USDC, osmomath.NewInt(21680760)),
-			ExpectedTick:      31002000,
-			ExpectedSqrtPrice: osmomath.MustNewBigDecFromStr("70.724818840347693040"),
-			ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("142835574082604345119662.712639063715501632"),
+			// ExpectedTokenOut:  sdk.NewCoin(ETH, osmomath.NewInt(4291)),
+			// ExpectedTokenIn:   sdk.NewCoin(USDC, osmomath.NewInt(21680760)),
+			// ExpectedTick:      31002000,
+			// ExpectedSqrtPrice: osmomath.MustNewBigDecFromStr("70.724818840347693040"),
+			// ExpectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("142835574082604345119662.712639063715501632"),
+			ExpectErr: true,
 		},
 	}
 
@@ -2558,6 +2554,12 @@ func (s *KeeperTestSuite) TestSwapInAmtGivenOut_TickUpdates() {
 				s.Ctx, s.TestAccs[0], pool,
 				test.TokenOut, test.TokenInDenom,
 				test.SpreadFactor, test.PriceLimit)
+
+			if test.ExpectErr {
+				s.Require().Error(err)
+				return
+			}
+
 			s.Require().NoError(err)
 
 			// check lower tick and upper tick spread reward growth
@@ -3173,6 +3175,11 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapInAmtGivenOut() {
 				s.Ctx, s.TestAccs[0], poolBefore,
 				test.TokenOut, test.TokenInDenom,
 				DefaultZeroSpreadFactor, test.PriceLimit)
+
+			if test.ExpectErr {
+				s.Require().Error(err)
+				return
+			}
 			s.Require().NoError(err)
 
 			secondTokenIn, secondTokenOut, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
