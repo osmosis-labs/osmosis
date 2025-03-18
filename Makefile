@@ -216,20 +216,46 @@ GORELEASER_IMAGE := ghcr.io/goreleaser/goreleaser-cross:v$(GO_MAJOR_MINOR)
 COSMWASM_VERSION := $(shell go list -m github.com/CosmWasm/wasmvm/v2 | sed 's/.* //')
 
 ifdef GITHUB_TOKEN
+ifdef S3_ENDPOINT
+ifdef S3_REGION
+ifdef AWS_ACCESS_KEY_ID
+ifdef AWS_SECRET_ACCESS_KEY
+
 release:
 	docker run \
 		--rm \
 		-e GITHUB_TOKEN=$(GITHUB_TOKEN) \
 		-e COSMWASM_VERSION=$(COSMWASM_VERSION) \
+		-e S3_ENDPOINT=$(S3_ENDPOINT) \
+		-e S3_REGION=$(S3_REGION) \
+		-e AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
+		-e AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v `pwd`:/go/src/osmosisd \
 		-w /go/src/osmosisd \
 		$(GORELEASER_IMAGE) \
 		release \
 		--clean
+
 else
 release:
 	@echo "Error: GITHUB_TOKEN is not defined. Please define it before running 'make release'."
+endif
+else
+release:
+	@echo "Error: S3_ENDPOINT is not defined. Please define it before running 'make release'."
+endif
+else
+release:
+	@echo "Error: S3_REGION is not defined. Please define it before running 'make release'."
+endif
+else
+release:
+	@echo "Error: AWS_ACCESS_KEY_ID is not defined. Please define it before running 'make release'."
+endif
+else
+release:
+	@echo "Error: AWS_SECRET_ACCESS_KEY is not defined. Please define it before running 'make release'."
 endif
 
 release-test:
