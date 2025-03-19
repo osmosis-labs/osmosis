@@ -827,7 +827,7 @@ func (s *KeeperTestSuite) TestMigrateIncentivesAccumulatorToScalingFactor() {
 
 	// Cross next right tick to update the tick accumulator by swapping
 	amtIn, _, _ := s.computeSwapAmounts(poolID, concentratedPool.GetCurrentSqrtPrice(), currentTick+100, false, false)
-	s.swapOneForZeroRight(poolID, sdk.NewCoin(USDC, amtIn.Ceil().TruncateInt()))
+	s.swapOneForZeroRight(poolID, sdk.NewCoin(USDC, amtIn.Ceil().TruncateInt()), false)
 
 	// Sync acccumulator
 	err = s.App.ConcentratedLiquidityKeeper.UpdatePoolUptimeAccumulatorsToNow(s.Ctx, poolID)
@@ -895,7 +895,7 @@ func (s *KeeperTestSuite) TestMigrateIncentivesAccumulatorToScalingFactor() {
 
 	// Cross next right tick to update the tick accumulator by swapping
 	amtIn, _, _ = s.computeSwapAmounts(poolID, concentratedPool.GetCurrentSqrtPrice(), currentTick+100, false, false)
-	s.swapOneForZeroRight(poolID, sdk.NewCoin(USDC, amtIn.Ceil().TruncateInt()))
+	s.swapOneForZeroRight(poolID, sdk.NewCoin(USDC, amtIn.Ceil().TruncateInt()), false)
 
 	claimableIncentivesCompareOneAfterMigration, _, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, positionOneCompareID)
 

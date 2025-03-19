@@ -2086,7 +2086,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	// Update expected incentive rewards
 	expectedTotalIncentiveRewards = expectedTotalIncentiveRewards.Add(rewardsPerSecond)
 
-	s.swapZeroForOneLeftWithSpread(poolId, coinZeroIn, spreadFactor)
+	s.swapZeroForOneLeftWithSpread(poolId, coinZeroIn, spreadFactor, false)
 
 	// Refetch pool
 	pool, err = s.Clk.GetPoolById(s.Ctx, poolId)
@@ -2103,7 +2103,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	// Update expected incentive rewards
 	expectedTotalIncentiveRewards = expectedTotalIncentiveRewards.Add(rewardsPerSecond)
 
-	s.swapOneForZeroRightWithSpread(poolId, coinOneIn, spreadFactor)
+	s.swapOneForZeroRightWithSpread(poolId, coinOneIn, spreadFactor, false)
 
 	// Increase block time
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Second))
@@ -2151,7 +2151,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 		expectedTotalIncentiveRewards = expectedTotalIncentiveRewards.Add(rewardsPerSecond)
 
 		// Move current tick to be below the expected position
-		s.swapZeroForOneLeftWithSpread(poolId, coinZeroIn, spreadFactor)
+		s.swapZeroForOneLeftWithSpread(poolId, coinZeroIn, spreadFactor, false)
 
 		// Assert global invariants
 		s.assertGlobalInvariants(ExpectedGlobalRewardValues{
@@ -2180,7 +2180,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 		expectedTotalIncentiveRewards = expectedTotalIncentiveRewards.Add(rewardsPerSecond)
 
 		// Move current tick to be inside of the new position
-		s.swapZeroForOneLeftWithSpread(poolId, coinZeroIn, spreadFactor)
+		s.swapZeroForOneLeftWithSpread(poolId, coinZeroIn, spreadFactor, false)
 
 		// Assert global invariants
 		s.assertGlobalInvariants(ExpectedGlobalRewardValues{
@@ -2209,7 +2209,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 		expectedTotalIncentiveRewards = expectedTotalIncentiveRewards.Add(rewardsPerSecond)
 
 		// Swap inside the new position so that it accumulates rewards
-		s.swapZeroForOneLeftWithSpread(poolId, coinZeroIn, spreadFactor)
+		s.swapZeroForOneLeftWithSpread(poolId, coinZeroIn, spreadFactor, false)
 
 		// Estimate the next swap to be approximately until DefaultCurrTick + 150
 		coinOneIn := estimateCoinOneIn(DefaultCurrTick + 150)
@@ -2223,7 +2223,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 		expectedTotalIncentiveRewards = expectedTotalIncentiveRewards.Add(rewardsPerSecond)
 
 		// Swap back to take current tick be above the new position
-		s.swapOneForZeroRightWithSpread(poolId, coinOneIn, spreadFactor)
+		s.swapOneForZeroRightWithSpread(poolId, coinOneIn, spreadFactor, false)
 
 		// Assert global invariants
 		s.assertGlobalInvariants(ExpectedGlobalRewardValues{
