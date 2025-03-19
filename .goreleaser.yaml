@@ -170,6 +170,7 @@ blobs:
     directory: "binaries/v{{.Version}}"
     endpoint: '{{ .Env.S3_ENDPOINT }}' 
     region: '{{ .Env.S3_REGION }}' 
+    acl: public-read
     ids:
       - zipped
       - binaries
