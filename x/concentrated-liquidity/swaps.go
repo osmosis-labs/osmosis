@@ -674,7 +674,7 @@ func (k Keeper) computeInAmtGivenOut(
 	// if the amount specified remaining is greater than 0, this means the expected out amount is less than the amount specified
 	// return an error
 	if swapState.amountSpecifiedRemaining.GT(osmomath.ZeroDec()) {
-		return SwapResult{}, PoolUpdates{}, fmt.Errorf("remaining amount specified (%s) is greater than zero, indicating a mismatch between the amount specified and the amount calculated", swapState.amountSpecifiedRemaining)
+		return SwapResult{}, PoolUpdates{}, types.UnableToFulfillExactOutError{AmountSpecifiedRemaining: swapState.amountSpecifiedRemaining}
 	}
 
 	// Note, this should be impossible to reach but we leave it as a defense-in-depth measure.

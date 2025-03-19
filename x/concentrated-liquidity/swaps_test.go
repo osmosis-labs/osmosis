@@ -3073,6 +3073,11 @@ func (s *KeeperTestSuite) TestComputeInAmtGivenOut() {
 				s.Ctx,
 				test.TokenOut, test.TokenInDenom,
 				test.SpreadFactor, test.PriceLimit, poolBeforeCalc.GetId(), true)
+
+			if test.ExpectErr {
+				s.Require().Error(err)
+				return
+			}
 			s.Require().NoError(err)
 
 			// check that the pool has not been modified after performing calc

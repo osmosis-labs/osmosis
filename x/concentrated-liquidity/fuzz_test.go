@@ -45,7 +45,7 @@ func (s *KeeperTestSuite) TestFuzz_GivenSeed() {
 	r := rand.New(rand.NewSource(1688658883))
 	s.individualFuzz(r, 0, 30, 10)
 
-	s.validateNoErrors(s.collectedErrors)
+	s.validateContainsOnlyExpectedErrors(s.collectedErrors)
 }
 
 // pre-condition: poolId exists, and has at least one position
@@ -98,7 +98,7 @@ func (s *KeeperTestSuite) individualFuzz(r *rand.Rand, fuzzNum int, numSwaps int
 
 	s.fuzzTestWithSeed(r, pool.GetId(), numSwaps, numPositions)
 
-	s.validateNoErrors(s.collectedErrors)
+	s.validateContainsOnlyExpectedErrors(s.collectedErrors)
 }
 
 type fuzzState struct {
@@ -410,7 +410,7 @@ func zfoToDenoms(zfo bool, pool types.ConcentratedPoolExtension) (swapInDenom, s
 }
 
 // validate if any errrs
-func (s *KeeperTestSuite) validateNoErrors(possibleErrors []error) {
+func (s *KeeperTestSuite) validateContainsOnlyExpectedErrors(possibleErrors []error) {
 	fullMsg := ""
 	shouldFail := false
 	for _, err := range possibleErrors {
@@ -420,6 +420,11 @@ func (s *KeeperTestSuite) validateNoErrors(possibleErrors []error) {
 		// Should sanity check that our fuzzer isn't hitting this too often though, that could hit at
 		// ineffective fuzz range choice.
 		if errors.Is(err, types.SqrtPriceToTickError{OutOfBounds: true}) {
+			continue
+		}
+
+		// This is expected in case swap consume beyond tick that has min or max spot price.
+		if errors.As(err, &types.UnableToFulfillExactOutError{}) {
 			continue
 		}
 
