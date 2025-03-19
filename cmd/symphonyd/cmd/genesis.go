@@ -396,7 +396,6 @@ func MainnetGenesisParams() GenesisParams {
 	}
 
 	genParams.TxFees = *txfeestypes.DefaultGenesis()
-	genParams.TxFees.Basedenom = genParams.NativeCoinMetadatas[0].Base
 
 	// oracle
 	defaultTobixTax := osmomath.ZeroDec()

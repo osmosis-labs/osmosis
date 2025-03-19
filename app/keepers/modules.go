@@ -67,7 +67,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v26/x/treasury"
 	"github.com/osmosis-labs/osmosis/v26/x/twap/twapmodule"
 	"github.com/osmosis-labs/osmosis/v26/x/txfees"
-	txfeesclient "github.com/osmosis-labs/osmosis/v26/x/txfees/client"
 	valsetprefmodule "github.com/osmosis-labs/osmosis/v26/x/valset-pref/valpref-module"
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 )
@@ -98,7 +97,6 @@ var AppModuleBasics = module.NewBasicManager(
 			clclient.TickSpacingDecreaseProposalHandler,
 			cwpoolclient.UploadCodeIdAndWhitelistProposalHandler,
 			cwpoolclient.MigratePoolContractsProposalHandler,
-			txfeesclient.SubmitUpdateFeeTokenProposalHandler,
 			poolmanagerclient.DenomPairTakerFeeProposalHandler,
 			incentivesclient.HandleCreateGroupsProposal,
 		},

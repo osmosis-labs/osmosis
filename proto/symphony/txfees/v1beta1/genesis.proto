@@ -2,7 +2,6 @@ syntax = "proto3";
 package symphony.txfees.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "symphony/txfees/v1beta1/feetoken.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "symphony/txfees/v1beta1/params.proto";
 
@@ -10,15 +9,8 @@ option go_package = "github.com/osmosis-labs/osmosis/v26/x/txfees/types";
 
 // GenesisState defines the txfees module's genesis state.
 message GenesisState {
-  string basedenom = 1;
-  repeated FeeToken feetokens = 2 [ (gogoproto.nullable) = false ];
-
-  // DEPRECATED
-  TxFeesTracker txFeesTracker = 3
-      [ deprecated = true, (gogoproto.moretags) = "deprecated:\"true\"" ];
-
   // params is the container of txfees parameters.
-  Params params = 4 [ (gogoproto.nullable) = false ];
+  Params params = 1 [ (gogoproto.nullable) = false ];
 }
 
 message TxFeesTracker {
@@ -27,5 +19,5 @@ message TxFeesTracker {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
   int64 height_accounting_starts_from = 2
-      [ (gogoproto.moretags) = "yaml:\"height_accounting_starts_from\"" ];
+    [ (gogoproto.moretags) = "yaml:\"height_accounting_starts_from\"" ];
 }

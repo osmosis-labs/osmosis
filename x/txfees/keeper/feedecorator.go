@@ -125,9 +125,8 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	if len(feeCoins) == 1 {
 		feeDenom := feeCoins.GetDenomByIndex(0)
 		if feeDenom != baseDenom {
-			_, err := mfd.TxFeesKeeper.GetFeeToken(ctx, feeDenom)
-			if err != nil {
-				return ctx, err
+			if !mfd.TxFeesKeeper.IsFeeToken(ctx, feeDenom) {
+				return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "fee denom %s is not accepted by the chain", feeDenom)
 			}
 		}
 	}

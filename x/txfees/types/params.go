@@ -1,15 +1,16 @@
 package types
 
 import (
-	"github.com/osmosis-labs/osmosis/osmoutils"
+	"fmt"
 
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
 )
 
-// Parameter store keys.
-var (
-	KeyWhitelistedFeeTokenSetters = []byte("WhitelistedFeeTokenSetters")
-)
+const DefaultSwapFeesEpochIdentifier = "day"
+
+var KeySwapFeesEpochIdentifier = []byte("SwapFeesEpochIdentifier")
 
 // ParamTable for txfees module.
 func ParamKeyTable() paramtypes.KeyTable {
@@ -17,30 +18,27 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 func NewParams(whitelistedFeeTokenSetters []string) Params {
-	return Params{
-		WhitelistedFeeTokenSetters: whitelistedFeeTokenSetters,
-	}
+	return Params{}
 }
 
 // DefaultParams are the default txfees module parameters.
 func DefaultParams() Params {
 	return Params{
-		WhitelistedFeeTokenSetters: []string{},
+		SwapFeesEpochIdentifier: DefaultSwapFeesEpochIdentifier,
 	}
 }
 
 // validate params.
 func (p Params) Validate() error {
-	if err := osmoutils.ValidateAddressList(p.WhitelistedFeeTokenSetters); err != nil {
-		return err
+	if epochtypes.ValidateEpochIdentifierString(p.SwapFeesEpochIdentifier) != nil {
+		return fmt.Errorf("treasury parameter SwapFeesEpochIdentifier must be a valid epoch identifier: %s", p.SwapFeesEpochIdentifier)
 	}
-
 	return nil
 }
 
 // Implements params.ParamSet.
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeyWhitelistedFeeTokenSetters, &p.WhitelistedFeeTokenSetters, osmoutils.ValidateAddressList),
+		paramstypes.NewParamSetPair(KeySwapFeesEpochIdentifier, &p.SwapFeesEpochIdentifier, epochtypes.ValidateEpochIdentifierInterface),
 	}
 }

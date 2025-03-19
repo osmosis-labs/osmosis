@@ -2,6 +2,7 @@ package types
 
 import (
 	context "context"
+	markettypes "github.com/osmosis-labs/osmosis/v26/x/market/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -86,7 +87,7 @@ type BankKeeper interface {
 type TxFeesKeeper interface {
 	ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin, error)
 	GetBaseDenom(ctx sdk.Context) (denom string, err error)
-	GetFeeToken(ctx sdk.Context, denom string) (FeeToken, error)
+	IsFeeToken(ctx sdk.Context, denom string) bool
 }
 
 type ProtorevKeeper interface {
@@ -99,4 +100,19 @@ type DistributionKeeper interface {
 
 type ConsensusKeeper interface {
 	Params(ctx context.Context, _ *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error)
+}
+
+type MarketKeeper interface {
+	Swap(
+		ctx sdk.Context,
+		trader sdk.AccAddress,
+		receiver sdk.AccAddress,
+		offerCoin sdk.Coin,
+		askDenom string,
+	) (*markettypes.MsgSwapResponse, error)
+}
+
+type OracleKeeper interface {
+	GetMelodyExchangeRate(ctx sdk.Context, denom string) (osmomath.Dec, error)
+	IterateNoteExchangeRates(ctx sdk.Context, handler func(denom string, exchangeRate osmomath.Dec) (stop bool))
 }

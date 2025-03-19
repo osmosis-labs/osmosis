@@ -428,13 +428,6 @@ func GetStructAndFill(queryPath, module, structName string, structArguments ...s
 		case "QueryDenomSpotPriceRequest":
 			v := &txfeestypes.QueryDenomSpotPriceRequest{}
 			return v, nil
-		case "QueryDenomPoolIdRequest":
-			v := &txfeestypes.QueryDenomPoolIdRequest{}
-			v.Denom = structArguments[0]
-			return v, nil
-		case "QueryBaseDenomRequest":
-			v := &txfeestypes.QueryBaseDenomRequest{}
-			return v, nil
 		}
 	case "twap":
 		switch structName {

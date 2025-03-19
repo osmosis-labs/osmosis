@@ -2,6 +2,7 @@ package keeper
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/osmomath"
 	appParams "github.com/osmosis-labs/osmosis/v26/app/params"
@@ -119,4 +120,89 @@ func (k Keeper) simulateSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom strin
 
 	retCoin, _ := swapCoin.TruncateDecimal()
 	return retCoin, nil
+}
+
+func (k Keeper) Swap(
+	ctx sdk.Context,
+	trader sdk.AccAddress,
+	receiver sdk.AccAddress,
+	offerCoin sdk.Coin,
+	askDenom string,
+) (*types.MsgSwapResponse, error) {
+	// Compute exchange rates between the ask and offer
+	swapDecCoin, spread, err := k.ComputeSwap(ctx, offerCoin, askDenom)
+	if err != nil {
+		return nil, err
+	}
+
+	// Charge a spread if applicable; the spread is burned
+	var feeDecCoin sdk.DecCoin
+	if spread.IsPositive() {
+		feeDecCoin = sdk.NewDecCoinFromDec(swapDecCoin.Denom, spread.Mul(swapDecCoin.Amount))
+	} else {
+		feeDecCoin = sdk.NewDecCoin(swapDecCoin.Denom, osmomath.ZeroInt())
+	}
+
+	// Subtract fee from the swap coin
+	swapDecCoin.Amount = swapDecCoin.Amount.Sub(feeDecCoin.Amount)
+
+	// Send offer coins to module account
+	offerCoins := sdk.NewCoins(offerCoin)
+	err = k.BankKeeper.SendCoinsFromAccountToModule(ctx, trader, types.ModuleName, offerCoins)
+	if err != nil {
+		return nil, err
+	}
+
+	if offerCoin.Denom != appParams.BaseCoinUnit { // stable -> melody or stable -> stable
+		// Burn offered coins and subtract from the trader's account
+		err = k.BankKeeper.BurnCoins(ctx, types.ModuleName, offerCoins)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Mint asked coins and credit Trader's account
+	swapCoin, decimalCoin := swapDecCoin.TruncateDecimal()
+
+	// Ensure to fail the swap tx when zero swap coin
+	if !swapCoin.IsPositive() {
+		return nil, types.ErrZeroSwapCoin
+	}
+
+	feeDecCoin = feeDecCoin.Add(decimalCoin) // add truncated decimalCoin to swapFee
+	feeCoin, _ := feeDecCoin.TruncateDecimal()
+
+	mintCoins := sdk.NewCoins(swapCoin)
+
+	// mint only stable coin
+	if askDenom != appParams.BaseCoinUnit { // melody -> stable or stable -> stable
+		err = k.BankKeeper.MintCoins(ctx, types.ModuleName, mintCoins)
+		if err != nil {
+			return nil, err
+		}
+
+		// Send swap coin to the trader
+		swapCoins := sdk.NewCoins(swapCoin)
+		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiver, swapCoins)
+		if err != nil {
+			return nil, err
+		}
+	} else { // stable -> melody
+		// native coin transfer using exchange vault
+		marketVaultBalance := k.GetExchangePoolBalance(ctx)
+		if marketVaultBalance.Amount.LT(swapCoin.Amount) {
+			return nil, errorsmod.Wrapf(types.ErrNotEnoughBalanceOnMarketVaults, "Market vaults do not have enough coins to swap. Available amount: (main: %v), needed amount: %v",
+				marketVaultBalance.Amount, swapCoin.Amount)
+		}
+
+		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiver, sdk.NewCoins(swapCoin))
+		if err != nil {
+			return nil, fmt.Errorf("could not send from exchange vault to recipient: %w", err)
+		}
+	}
+
+	return &types.MsgSwapResponse{
+		SwapCoin: swapCoin,
+		SwapFee:  feeCoin,
+	}, nil
 }

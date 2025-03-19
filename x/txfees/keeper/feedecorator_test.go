@@ -164,7 +164,7 @@ func (s *KeeperTestSuite) TestFeeDecorator() {
 		s.SetupTest(false)
 		s.Run(tc.name, func() {
 			// See DeductFeeDecorator AnteHandler for how this is used
-			s.FundAcc(sdk.MustAccAddressFromBech32("osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030"), sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 1)))
+			s.FundAcc(sdk.MustAccAddressFromBech32("symphony1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqymqs4m"), sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 1)))
 
 			err := s.SetupTxFeeAnteHandlerAndChargeFee(s.clientCtx, tc.minGasPrices, tc.gasRequested, tc.isCheckTx, tc.isSimulate, tc.txFee)
 			if tc.expectPass {

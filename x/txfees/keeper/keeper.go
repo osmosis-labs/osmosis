@@ -5,7 +5,6 @@ import (
 
 	"cosmossdk.io/log"
 
-	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v26/x/txfees/types"
@@ -21,8 +20,8 @@ type Keeper struct {
 
 	accountKeeper      types.AccountKeeper
 	bankKeeper         types.BankKeeper
-	poolManager        types.PoolManager
-	protorevKeeper     types.ProtorevKeeper
+	oracleKeeper       types.OracleKeeper
+	marketKeeper       types.MarketKeeper
 	distributionKeeper types.DistributionKeeper
 	consensusKeeper    types.ConsensusKeeper
 	dataDir            string
@@ -36,8 +35,8 @@ func NewKeeper(
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	storeKey storetypes.StoreKey,
-	poolManager types.PoolManager,
-	protorevKeeper types.ProtorevKeeper,
+	marketKeeper types.MarketKeeper,
+	oracleKeeper types.OracleKeeper,
 	distributionKeeper types.DistributionKeeper,
 	consensusKeeper types.ConsensusKeeper,
 	dataDir string,
@@ -52,9 +51,9 @@ func NewKeeper(
 		accountKeeper:      accountKeeper,
 		bankKeeper:         bankKeeper,
 		storeKey:           storeKey,
-		poolManager:        poolManager,
-		protorevKeeper:     protorevKeeper,
 		distributionKeeper: distributionKeeper,
+		marketKeeper:       marketKeeper,
+		oracleKeeper:       oracleKeeper,
 		consensusKeeper:    consensusKeeper,
 		dataDir:            dataDir,
 		paramSpace:         paramSpace,
@@ -79,11 +78,6 @@ func (k Keeper) SetParam(ctx sdk.Context, key []byte, value interface{}) {
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
-}
-
-func (k Keeper) GetFeeTokensStore(ctx sdk.Context) storetypes.KVStore {
-	store := ctx.KVStore(k.storeKey)
-	return prefix.NewStore(store, types.FeeTokensStorePrefix)
 }
 
 // GetConsParams returns the current consensus parameters from the consensus params store.
