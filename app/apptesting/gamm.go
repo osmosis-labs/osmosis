@@ -204,7 +204,7 @@ func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice osmoma
 		quoteDenom = denoms[0]
 	}
 
-	amountTrade := s.CalcAmoutOfTokenToGetTargetPrice(s.Ctx, pool, targetSpotPrice, baseDenom, quoteDenom)
+	amountTrade := s.CalcAmountOfTokenToGetTargetPrice(s.Ctx, pool, targetSpotPrice, baseDenom, quoteDenom)
 	if amountTrade.IsPositive() {
 		swapIn := sdk.NewCoins(sdk.NewCoin(quoteDenom, osmomath.NewInt(amountTrade.RoundInt64())))
 		s.FundAcc(s.TestAccs[0], swapIn)
@@ -278,7 +278,7 @@ func (s *KeeperTestHelper) RunBasicJoin(poolId uint64) {
 	s.Require().NoError(err)
 }
 
-func (s *KeeperTestHelper) CalcAmoutOfTokenToGetTargetPrice(ctx sdk.Context, pool gammtypes.CFMMPoolI, targetSpotPrice osmomath.Dec, baseDenom, quoteDenom string) (amountTrade osmomath.Dec) {
+func (s *KeeperTestHelper) CalcAmountOfTokenToGetTargetPrice(ctx sdk.Context, pool gammtypes.CFMMPoolI, targetSpotPrice osmomath.Dec, baseDenom, quoteDenom string) (amountTrade osmomath.Dec) {
 	blPool, ok := pool.(*balancer.Pool)
 	s.Require().True(ok)
 	quoteAsset, _ := blPool.GetPoolAsset(quoteDenom)
@@ -292,7 +292,7 @@ func (s *KeeperTestHelper) CalcAmoutOfTokenToGetTargetPrice(ctx sdk.Context, poo
 	s.Require().NoError(err)
 
 	// Amount of quote token need to trade to get target spot price
-	// AmoutQuoteTokenNeedToTrade = AmoutQuoTokenNow * ((targetSpotPrice/spotPriceNow)^((weight_base/(weight_base + weight_quote))) -1 )
+	// AmountQuoteTokenNeedToTrade = AmountQuoteTokenNow * ((targetSpotPrice/spotPriceNow)^((weight_base/(weight_base + weight_quote))) -1 )
 
 	ratioPrice := targetSpotPrice.Quo(spotPriceNow.Dec())
 	ratioWeight := (baseAsset.Weight.ToLegacyDec()).Quo(baseAsset.Weight.ToLegacyDec().Add(quoteAsset.Weight.ToLegacyDec()))
