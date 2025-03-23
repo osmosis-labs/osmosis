@@ -52,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#9006](https://github.com/osmosis-labs/osmosis/pull/9006) feat: CosmWasm Pool raw state query
 * [#9021](https://github.com/osmosis-labs/osmosis/pull/9021) chore: slightly increase blocktime 
 * [#9050](https://github.com/osmosis-labs/osmosis/pull/9050) chore: bump ibc-go to v8.7.0 
+* [#9051](https://github.com/osmosis-labs/osmosis/pull/9051) [sqs] set custom backoff reconnection strategy for sqs
 
 ## v28.0.4
 
