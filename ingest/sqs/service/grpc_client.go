@@ -21,9 +21,6 @@ import (
 	ingesttypes "github.com/osmosis-labs/osmosis/v28/ingest/types"
 	prototypes "github.com/osmosis-labs/osmosis/v28/ingest/types/proto/types"
 
-	ingesttypes "github.com/osmosis-labs/osmosis/v28/ingest/types"
-	prototypes "github.com/osmosis-labs/osmosis/v28/ingest/types/proto/types"
-
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
 )
 
