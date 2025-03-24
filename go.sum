@@ -269,8 +269,8 @@ github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5/go.mod h1:lmUJ/7eu/Q8
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
 github.com/OpenPeeDeeP/depguard/v2 v2.2.0 h1:vDfG60vDtIuf0MEOhmLlLLSzqaRM8EMcgJPdp74zmpA=
 github.com/OpenPeeDeeP/depguard/v2 v2.2.0/go.mod h1:CIzddKRvLBC4Au5aYP/i3nyaWQ+ClszLIuVocRiCYFQ=
-github.com/Orchestra-Labs/symphony-cosmos-sdk v0.50.6-v26-osmo-2-symphony-2 h1:KgfMSMX5awSHKewXq8UVxqjzPz3w3UM3qYZxMhDSiRc=
-github.com/Orchestra-Labs/symphony-cosmos-sdk v0.50.6-v26-osmo-2-symphony-2/go.mod h1:xbI6+pKxoB9vokhcHfH6r9r/BZbVjlFM8/yPZqDDhQY=
+github.com/Orchestra-Labs/symphony-cosmos-sdk v0.50.6-v26-osmo-2-symphony-3 h1:01S5213DrAlxxVhi1eTOw92sALxWFgQy0mgnxjCK75s=
+github.com/Orchestra-Labs/symphony-cosmos-sdk v0.50.6-v26-osmo-2-symphony-3/go.mod h1:xbI6+pKxoB9vokhcHfH6r9r/BZbVjlFM8/yPZqDDhQY=
 github.com/PuerkitoBio/purell v1.1.1 h1:WEQqlqaGbrPkxLJWfBwQmfEAE1Z7ONdDLqrN38tNFfI=
 github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 h1:d+Bc7a5rLufV/sSk/8dngufqelfh6jnri85riMAaF/M=
