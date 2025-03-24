@@ -410,6 +410,12 @@ func MainnetGenesisParams() GenesisParams {
 		{Denom: appParams.MicroVNDDenom, ExchangeRate: osmomath.NewDecWithPrec(399, 6)},   // 1 VND = 0,000399 MLD
 	}
 
+	genParams.OracleState.Params.Whitelist = oracletypes.DenomList{
+		{Name: appParams.MicroUSDDenom, TobinTax: defaultTobixTax},
+		{Name: appParams.MicroHKDDenom, TobinTax: defaultTobixTax},
+		{Name: appParams.MicroVNDDenom, TobinTax: defaultTobixTax},
+	}
+
 	return genParams
 }
 
