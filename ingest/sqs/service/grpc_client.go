@@ -81,7 +81,7 @@ func (g *GRPCClient) PushData(ctx context.Context, height uint64, pools []ingest
 		// Instead, we will attempt to reconnect every `blocksBeforeRetryConnection` blocks.
 		if g.blocksBeforeRetryConnection > 0 {
 			g.blocksBeforeRetryConnection--
-			return nil
+			return fmt.Errorf("grpc connection is not ready")
 		}
 
 		// Note: we disable retries since we have a custom logic to repeat retries in the next block.
