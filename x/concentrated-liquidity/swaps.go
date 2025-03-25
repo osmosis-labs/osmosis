@@ -352,6 +352,12 @@ func (k Keeper) CalcInAmtGivenOut(
 ) (sdk.Coin, error) {
 	cacheCtx, _ := ctx.CacheContext()
 	swapResult, _, err := k.computeInAmtGivenOut(cacheCtx, tokenOut, tokenInDenom, spreadFactor, unboundedPriceLimit, poolI.GetId(), false)
+
+	// check if the swapResult tokenOut matched the tokenOut provided, if not return an error
+	if !swapResult.AmountOut.Equal(tokenOut.Amount) {
+		return sdk.Coin{}, types.ExactAmountOutMismatchError{ExpectedAmountOut: tokenOut.Amount, CalculatedAmountOut: swapResult.AmountOut}
+	}
+
 	if err != nil {
 		return sdk.Coin{}, err
 	}

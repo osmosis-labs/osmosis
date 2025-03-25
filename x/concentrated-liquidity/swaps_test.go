@@ -3787,3 +3787,49 @@ func (s *KeeperTestSuite) calculateExpectedTokens(tokenInDenom string, testMaxTi
 	}
 	return currentTotal
 }
+
+func (s *KeeperTestSuite) TestCalcInAmtGivenOut_ExactAmountOutMismatch() {
+	tests := map[string]struct {
+		TokenOut     sdk.Coin
+		TokenInDenom string
+		PriceLimit   osmomath.BigDec
+		SpreadFactor osmomath.Dec
+		ExpectedErr  error
+	}{
+		"error: amount out mismatch when tick consumption goes below min tick": {
+			TokenOut:     sdk.NewCoin(ETH, osmomath.NewInt(1820545)),
+			TokenInDenom: USDC,
+			PriceLimit:   osmomath.NewBigDec(5002),
+			SpreadFactor: osmomath.ZeroDec(),
+			ExpectedErr: &types.ExactAmountOutMismatchError{
+				ExpectedAmountOut:   osmomath.NewInt(1820545),
+				CalculatedAmountOut: osmomath.NewInt(4291),
+			},
+		},
+	}
+
+	for name, test := range tests {
+		s.Run(name, func() {
+			s.SetupAndFundSwapTest()
+			pool := s.PreparePoolWithCustSpread(test.SpreadFactor)
+			// add default position
+			s.SetupDefaultPosition(pool.GetId())
+			s.SetupSecondPosition(apptesting.ConcentratedSwapTest{
+				TokenOut:     test.TokenOut,
+				TokenInDenom: test.TokenInDenom,
+				PriceLimit:   test.PriceLimit,
+				SpreadFactor: test.SpreadFactor,
+			}, pool)
+
+			// Calculate in amount given out
+			_, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(s.Ctx, pool, test.TokenOut, test.TokenInDenom, test.SpreadFactor)
+
+			if test.ExpectedErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &test.ExpectedErr)
+			} else {
+				s.Require().NoError(err)
+			}
+		})
+	}
+}

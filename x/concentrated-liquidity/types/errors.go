@@ -501,6 +501,15 @@ func (e InvalidAmountCalculatedError) Error() string {
 	return fmt.Sprintf("invalid amount calculated, must be >= 1, was (%s)", e.Amount)
 }
 
+type ExactAmountOutMismatchError struct {
+	ExpectedAmountOut   osmomath.Int
+	CalculatedAmountOut osmomath.Int
+}
+
+func (e ExactAmountOutMismatchError) Error() string {
+	return fmt.Sprintf("exact amount out mismatch, expected (%s), calculated (%s)", e.ExpectedAmountOut, e.CalculatedAmountOut)
+}
+
 type InvalidNextPositionIdError struct {
 	NextPositionId uint64
 }
