@@ -350,17 +350,28 @@ func (k Keeper) CalcInAmtGivenOut(
 	tokenInDenom string,
 	spreadFactor osmomath.Dec,
 ) (sdk.Coin, error) {
+	pool, err := asConcentrated(poolI)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+
+	zeroForOne := getZeroForOne(tokenInDenom, pool.GetToken0())
+	// change priceLimit based on which direction we are swapping
+	// if zeroForOne == true, use MinSpotPrice else use MaxSpotPrice
+	priceLimit := swapstrategy.GetPriceLimit(zeroForOne)
+
 	cacheCtx, _ := ctx.CacheContext()
-	swapResult, _, err := k.computeInAmtGivenOut(cacheCtx, tokenOut, tokenInDenom, spreadFactor, unboundedPriceLimit, poolI.GetId(), false)
+	swapResult, _, err := k.computeInAmtGivenOut(cacheCtx, tokenOut, tokenInDenom, spreadFactor, priceLimit, poolI.GetId(), false)
+
+	if err != nil {
+		return sdk.Coin{}, err
+	}
 
 	// check if the swapResult tokenOut matched the tokenOut provided, if not return an error
 	if !swapResult.AmountOut.Equal(tokenOut.Amount) {
 		return sdk.Coin{}, types.ExactAmountOutMismatchError{ExpectedAmountOut: tokenOut.Amount, CalculatedAmountOut: swapResult.AmountOut}
 	}
 
-	if err != nil {
-		return sdk.Coin{}, err
-	}
 	return sdk.NewCoin(tokenInDenom, swapResult.AmountIn), nil
 }
 
