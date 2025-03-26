@@ -212,13 +212,15 @@ func (k *Keeper) GetPoolModule(ctx sdk.Context, poolId uint64) (types.PoolModule
 		return nil, types.UndefinedRouteError{PoolType: moduleRoute.PoolType, PoolId: poolId}
 	}
 
-	k.cachedPoolModules.Store(poolId, poolModuleCacheValue{
-		pooltype: moduleRoute.PoolType,
-		module:   swapModule,
-		gasFlat:  gasFlat,
-		gasKey:   gasKey,
-		gasValue: gasVal,
-	})
+	if ctx.ExecMode() == sdk.ExecModeFinalize {
+		k.cachedPoolModules.Store(poolId, poolModuleCacheValue{
+			pooltype: moduleRoute.PoolType,
+			module:   swapModule,
+			gasFlat:  gasFlat,
+			gasKey:   gasKey,
+			gasValue: gasVal,
+		})
+	}
 
 	return swapModule, nil
 }
