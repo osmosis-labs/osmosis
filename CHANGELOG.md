@@ -53,10 +53,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### State Compatible
 
 * [#8985](https://github.com/osmosis-labs/osmosis/pull/8985) build: block-sdk import now uses forked version
-* [#9006](https://github.com/osmosis-labs/osmosis/pull/9006) feat: CosmWasm Pool raw state query
 * [#9021](https://github.com/osmosis-labs/osmosis/pull/9021) chore: slightly increase blocktime 
-* [#9050](https://github.com/osmosis-labs/osmosis/pull/9050) chore: bump ibc-go to v8.7.0 
+
+## v28.0.6
+
+### State Compatible
+
+* [#9334](https://github.com/osmosis-labs/osmosis/pull/9334) fix: iavl pruning issue move onto next version if stuck 
 * [#9332](https://github.com/osmosis-labs/osmosis/pull/9332) fix(poolmanager): only write to cache in finalize execution mode
+
+## v28.0.5
+
+### State Compatible
+
+* [#9050](https://github.com/osmosis-labs/osmosis/pull/9050) chore: bump ibc-go to v8.7.0 
+* [#9006](https://github.com/osmosis-labs/osmosis/pull/9006) feat: CosmWasm Pool raw state query
 
 ## v28.0.4
 
