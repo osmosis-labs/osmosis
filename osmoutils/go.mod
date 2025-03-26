@@ -13,13 +13,8 @@ require (
 	github.com/cosmos/cosmos-db v1.1.0
 	github.com/cosmos/cosmos-sdk v0.50.7
 	github.com/cosmos/gogoproto v1.7.0
-<<<<<<< HEAD
-	github.com/cosmos/iavl v1.2.4
-	github.com/cosmos/ibc-go/v8 v8.3.2
-=======
 	github.com/cosmos/iavl v1.2.5
-	github.com/cosmos/ibc-go/v8 v8.7.0
->>>>>>> 45d3e299 (fix: iavl pruning issue move onto next version if stuck (#9334))
+	github.com/cosmos/ibc-go/v8 v8.3.2
 	github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240517165907-1625703bc16d
 	github.com/spf13/cast v1.7.0
 	github.com/spf13/cobra v1.8.1
