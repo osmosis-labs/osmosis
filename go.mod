@@ -313,6 +313,10 @@ replace (
 // github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
 )
 
+// This replace enables async pruning to continue on to the next version in the store if pruning is stuck
+// see: https://github.com/osmosis-labs/iavl/pull/49
+replace github.com/cosmos/iavl => github.com/osmosis-labs/iavl v0.17.3-osmo-v2.0.20250325133019-d15d15e59eeb
+
 // exclusion so we use v1.0.0
 exclude github.com/coinbase/rosetta-sdk-go v0.7.9
 
