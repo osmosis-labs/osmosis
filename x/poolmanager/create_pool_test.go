@@ -226,42 +226,50 @@ func (s *KeeperTestSuite) TestCreatePool() {
 		},
 	}
 
-	for i, tc := range tests {
-		s.Run(tc.name, func() {
-			if tc.isPermissionlessPoolCreationDisabled {
-				params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
-				params.IsPermissionlessPoolCreationEnabled = false
-				s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, params)
-			}
+	// setup cosmwasm pool
+	codeId := s.StoreCosmWasmPoolContractCode(apptesting.TransmuterContractName)
+	s.Require().Equal(validTransmuterCodeId, codeId)
+	s.App.CosmwasmPoolKeeper.WhitelistCodeId(s.Ctx, codeId)
 
-			if tc.expectedModuleType == cosmwasmKeeperType {
-				codeId := s.StoreCosmWasmPoolContractCode(apptesting.TransmuterContractName)
-				s.Require().Equal(validTransmuterCodeId, codeId)
-				s.App.CosmwasmPoolKeeper.WhitelistCodeId(s.Ctx, codeId)
-			}
+	execModes := map[string]sdk.ExecMode{
+		"check":    sdk.ExecModeCheck,
+		"finalize": sdk.ExecModeFinalize,
+	}
+	totalTestCount := 0
+	for _, tc := range tests {
+		for execModeName, execMode := range execModes {
+			totalTestCount++
+			s.Run(fmt.Sprintf("%s-%s", tc.name, execModeName), func() {
+				s.Ctx = s.Ctx.WithExecMode(execMode)
+				if tc.isPermissionlessPoolCreationDisabled {
+					params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+					params.IsPermissionlessPoolCreationEnabled = false
+					s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, params)
+				}
 
-			poolmanagerKeeper := s.App.PoolManagerKeeper
-			ctx := s.Ctx
+				poolmanagerKeeper := s.App.PoolManagerKeeper
+				ctx := s.Ctx
 
-			poolCreationFee := poolmanagerKeeper.GetParams(s.Ctx).PoolCreationFee
-			s.FundAcc(s.TestAccs[0], append(tc.creatorFundAmount, poolCreationFee...))
+				poolCreationFee := poolmanagerKeeper.GetParams(s.Ctx).PoolCreationFee
+				s.FundAcc(s.TestAccs[0], append(tc.creatorFundAmount, poolCreationFee...))
 
-			poolId, err := poolmanagerKeeper.CreatePool(ctx, tc.msg)
+				poolId, err := poolmanagerKeeper.CreatePool(ctx, tc.msg)
 
-			if tc.expectError {
-				s.Require().Error(err)
-				return
-			}
+				if tc.expectError {
+					s.Require().Error(err)
+					return
+				}
 
-			// Validate pool.
-			s.Require().NoError(err)
-			s.Require().Equal(uint64(i+1), poolId)
+				// Validate pool.
+				s.Require().NoError(err)
+				s.Require().Equal(uint64(totalTestCount), poolId)
 
-			// Validate that mapping pool id -> module type has been persisted.
-			swapModule, err := poolmanagerKeeper.GetPoolModule(ctx, poolId)
-			s.Require().NoError(err)
-			s.Require().Equal(tc.expectedModuleType, reflect.TypeOf(swapModule))
-		})
+				// Validate that mapping pool id -> module type has been persisted.
+				swapModule, err := poolmanagerKeeper.GetPoolModule(ctx, poolId)
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expectedModuleType, reflect.TypeOf(swapModule))
+			})
+		}
 	}
 }
 
