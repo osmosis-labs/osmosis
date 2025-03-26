@@ -13,8 +13,13 @@ require (
 	github.com/cosmos/cosmos-db v1.1.0
 	github.com/cosmos/cosmos-sdk v0.50.9
 	github.com/cosmos/gogoproto v1.7.0
+<<<<<<< HEAD
 	github.com/cosmos/iavl v1.2.4
 	github.com/cosmos/ibc-go/v8 v8.6.1
+=======
+	github.com/cosmos/iavl v1.2.5
+	github.com/cosmos/ibc-go/v8 v8.7.0
+>>>>>>> 45d3e299 (fix: iavl pruning issue move onto next version if stuck (#9334))
 	github.com/osmosis-labs/osmosis/osmomath v0.0.12-0.20240517165907-1625703bc16d
 	github.com/spf13/cast v1.7.0
 	github.com/spf13/cobra v1.8.1
@@ -181,9 +186,9 @@ replace (
 	// Also, snapshot nodes need to have all fast nodes enabled in order to prune quickly.
 	// Also, we need an osmosis version of the store to enable aysnc pruning.
 	// Direct cosmos-sdk branch link: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v28/0.50.11/store, current branch: osmo-v28/0.50.11
-	// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/eb1a8e88a4ddf77bc2fe235fc07c57016b7386f0
-	// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/store/v1.1.1-v0.50.11-v28-osmo-2
-	cosmossdk.io/store => github.com/osmosis-labs/cosmos-sdk/store v1.1.1-v0.50.11-v28-osmo-2
+	// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/9f22bfff307b4b7094acd0d9d46143c0b759364f
+	// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/store/v1.1.1-v0.50.11-v28-osmo-3
+	cosmossdk.io/store => github.com/osmosis-labs/cosmos-sdk/store v1.1.1-v0.50.11-v28-osmo-3
 
 	// Direct cometbft branch link: https://github.com/osmosis-labs/cometbft/tree/osmo-v28/0.38.17, current branch: osmo-v28/v0.38.17
 	// Direct commit link: https://github.com/osmosis-labs/cometbft/commit/58bfcdcb2fdd81655586678c2062cdc51adbdf0d
