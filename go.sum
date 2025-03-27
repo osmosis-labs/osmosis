@@ -382,10 +382,17 @@ github.com/cosmos/gogogateway v1.2.0/go.mod h1:iQpLkGWxYcnCdz5iAdLcRBSw3h7NXeOkZ
 github.com/cosmos/gogoproto v1.4.2/go.mod h1:cLxOsn1ljAHSV527CHOtaIP91kK6cCrZETRBrkzItWU=
 github.com/cosmos/gogoproto v1.7.0 h1:79USr0oyXAbxg3rspGh/m4SWNyoz/GLaAh0QlCe2fro=
 github.com/cosmos/gogoproto v1.7.0/go.mod h1:yWChEv5IUEYURQasfyBW5ffkMHR/90hiHgbNgrtp4j0=
+<<<<<<< HEAD
 github.com/cosmos/iavl v1.2.5 h1:GY6PphOF8tJbBlrb4TBqBx1SqUsW0OocFAZvV+s003A=
 github.com/cosmos/iavl v1.2.5/go.mod h1:GiM43q0pB+uG53mLxLDzimxM9l/5N9UuSY3/D0huuVw=
 github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8 v8.0.2 h1:dyLNlDElY6+5zW/BT/dO/3Ad9FpQblfh+9dQpYQodbA=
 github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8 v8.0.2/go.mod h1:82hPO/tRawbuFad2gPwChvpZ0JEIoNi91LwVneAYCeM=
+=======
+github.com/cosmos/iavl v1.2.6 h1:Hs3LndJbkIB+rEvToKJFXZvKo6Vy0Ex1SJ54hhtioIs=
+github.com/cosmos/iavl v1.2.6/go.mod h1:GiM43q0pB+uG53mLxLDzimxM9l/5N9UuSY3/D0huuVw=
+github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8 v8.2.0 h1:rM+S14DFiqmu6Rc3PuhvWqwywPsnt/CbIslSnBftPFs=
+github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8 v8.2.0/go.mod h1:O5H9Ic3Pe6cmJn1eqlj5N48sLb8WQ1VWmDP4/11g/4E=
+>>>>>>> 9600cc51 (chore: bump IAVL, ignore legacy state if it is broken (#9340))
 github.com/cosmos/ibc-apps/modules/async-icq/v8 v8.0.0 h1:nKP2+Rzlz2iyvTosY5mvP+aEBPe06oaDl3G7xLGBpNI=
 github.com/cosmos/ibc-apps/modules/async-icq/v8 v8.0.0/go.mod h1:D3Q380FpWRFtmUQWLosPxachi6w24Og2t5u/Tww5wtY=
 github.com/cosmos/ibc-go/modules/apps/callbacks v0.2.1-0.20231113120333-342c00b0f8bd h1:Lx+/5dZ/nN6qPXP2Ofog6u1fmlkCFA1ElcOconnofEM=
@@ -926,8 +933,8 @@ github.com/osmosis-labs/cometbft v0.38.17-v28-osmo-1 h1:0xPd6S6mCsVT0IKP0xIUmg6s
 github.com/osmosis-labs/cometbft v0.38.17-v28-osmo-1/go.mod h1:5l0SkgeLRXi6bBfQuevXjKqML1jjfJJlvI1Ulp02/o4=
 github.com/osmosis-labs/cosmos-sdk v0.50.11-v28-osmo-1 h1:MQEf1JrWsiwVmJbM7o8tXaDixEvXkLCzR6oyfdPJhzg=
 github.com/osmosis-labs/cosmos-sdk v0.50.11-v28-osmo-1/go.mod h1:KO0mBgNmkMA+yVkq13GeHWzR2F2iwjkfevywmPUhCVY=
-github.com/osmosis-labs/cosmos-sdk/store v1.1.1-v0.50.11-v28-osmo-3 h1:nx4Qy+2WocwJfFKmPgXRlKDJhvpE1b00rG0TLxM/2Kw=
-github.com/osmosis-labs/cosmos-sdk/store v1.1.1-v0.50.11-v28-osmo-3/go.mod h1:klRbvjlH4hFRQtXczflXsX2g8u03vB6F42fzjqXPAXg=
+github.com/osmosis-labs/cosmos-sdk/store v1.1.1-v0.50.11-v28-osmo-4 h1:wDHccNHpMbWcb9sUZgI2Scl0n9VAMJlKwvZ3ay2pZBM=
+github.com/osmosis-labs/cosmos-sdk/store v1.1.1-v0.50.11-v28-osmo-4/go.mod h1:i0k8N8V3O/yNuIX5KVg6m1z0foTggVFGXt25qIdZu+A=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
 github.com/osmosis-labs/osmosis/osmomath v0.0.16 h1:OPUKl8jLWqMkQvMTwnLJSXDIZvOBSGtRi7mX9A3dJwQ=
