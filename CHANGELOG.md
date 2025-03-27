@@ -57,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#9334](https://github.com/osmosis-labs/osmosis/pull/9334) fix: iavl pruning issue move onto next version if stuck 
 * [#9332](https://github.com/osmosis-labs/osmosis/pull/9332) fix(poolmanager): only write to cache in finalize execution mode
+* [#9340](https://github.com/osmosis-labs/osmosis/pull/9340) chore: bump IAVL, ignore legacy state if it is broken 
 
 ## v28.0.5
 
