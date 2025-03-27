@@ -150,6 +150,19 @@ func (k Keeper) getNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 	return nextPoolId
 }
 
+func (k *Keeper) getPoolRouteRaw(ctx sdk.Context, poolId uint64) (*types.ModuleRoute, error) {
+	store := ctx.KVStore(k.storeKey)
+	moduleRoute := &types.ModuleRoute{}
+	found, err := osmoutils.Get(store, types.FormatModuleRouteKey(poolId), moduleRoute)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, types.FailedToFindRouteError{PoolId: poolId}
+	}
+	return moduleRoute, nil
+}
+
 func (k *Keeper) SetPoolRoute(ctx sdk.Context, poolId uint64, poolType types.PoolType) {
 	store := ctx.KVStore(k.storeKey)
 	osmoutils.MustSet(store, types.FormatModuleRouteKey(poolId), &types.ModuleRoute{PoolType: poolType})
@@ -167,11 +180,11 @@ type poolModuleCacheValue struct {
 func (k *Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (types.PoolType, error) {
 	poolModuleCandidate, cacheHit := k.cachedPoolModules.Load(poolId)
 	if !cacheHit {
-		_, err := k.GetPoolModule(ctx, poolId)
+		moduleRoute, err := k.getPoolRouteRaw(ctx, poolId)
 		if err != nil {
 			return 0, err
 		}
-		poolModuleCandidate, _ = k.cachedPoolModules.Load(poolId)
+		return moduleRoute.PoolType, nil
 	}
 	v, _ := poolModuleCandidate.(poolModuleCacheValue)
 	if cacheHit {
@@ -212,13 +225,15 @@ func (k *Keeper) GetPoolModule(ctx sdk.Context, poolId uint64) (types.PoolModule
 		return nil, types.UndefinedRouteError{PoolType: moduleRoute.PoolType, PoolId: poolId}
 	}
 
-	k.cachedPoolModules.Store(poolId, poolModuleCacheValue{
-		pooltype: moduleRoute.PoolType,
-		module:   swapModule,
-		gasFlat:  gasFlat,
-		gasKey:   gasKey,
-		gasValue: gasVal,
-	})
+	if ctx.ExecMode() == sdk.ExecModeFinalize {
+		k.cachedPoolModules.Store(poolId, poolModuleCacheValue{
+			pooltype: moduleRoute.PoolType,
+			module:   swapModule,
+			gasFlat:  gasFlat,
+			gasKey:   gasKey,
+			gasValue: gasVal,
+		})
+	}
 
 	return swapModule, nil
 }
