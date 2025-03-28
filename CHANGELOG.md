@@ -42,6 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* [#9331](https://github.com/osmosis-labs/osmosis/pull/9331) fix: CL unmatched calc exact amount out should result in error
+
 ### State Breaking
 
 * [#8996](https://github.com/osmosis-labs/osmosis/pull/8996) chore: upgrade pfm to v8.1.1 
