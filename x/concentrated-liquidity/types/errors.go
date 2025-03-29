@@ -879,6 +879,14 @@ func (e OverChargeSwapOutGivenInError) Error() string {
 	return fmt.Sprintf("over charge problem swap out given in by (%s)", e.AmountSpecifiedRemaining)
 }
 
+type UnableToFulfillExactOutError struct {
+	AmountSpecifiedRemaining osmomath.Dec
+}
+
+func (e UnableToFulfillExactOutError) Error() string {
+	return fmt.Sprintf("unable to fulfill exact out swap, amount specified remaining: (%s)", e.AmountSpecifiedRemaining)
+}
+
 type ComputedSqrtPriceInequalityError struct {
 	IsZeroForOne                 bool
 	NextInitializedTickSqrtPrice osmomath.BigDec
