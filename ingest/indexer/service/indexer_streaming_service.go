@@ -151,7 +151,7 @@ func (s *indexerStreamingService) setSpotPrice(ctx context.Context, event *abci.
 	// Get the spot price from the pool manager keeper
 	spotPrice, err := s.keepers.PoolManagerKeeper.RouteCalculateSpotPrice(sdk.UnwrapSDKContext(ctx), poolIdUint, tokensIn.Denom, tokensOut.Denom)
 	if err != nil {
-		return fmt.Errorf("Error setting spot price for swap", "error", err, "pool_id", poolId, "token_in", tokensIn.Denom, "token_out", tokensOut.Denom)
+		return fmt.Errorf("error getting spot price %v", err)
 	}
 	// Set the spot price in the event's attributes map
 	event.Attributes = append(event.Attributes, abci.EventAttribute{
