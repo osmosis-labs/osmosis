@@ -375,7 +375,12 @@ func NewOsmosisApp(
 		// Create sqs grpc client
 		sqsGRPCClients := make([]domain.SQSGRPClient, len(sqsConfig.GRPCIngestAddress))
 		for i, grpcIngestAddress := range sqsConfig.GRPCIngestAddress {
-			sqsGRPCClients[i] = sqsservice.NewGRPCCLient(grpcIngestAddress, sqsConfig.GRPCIngestMaxCallSizeBytes, appCodec)
+			grpcClient := sqsservice.NewGRPCCLient(grpcIngestAddress, sqsConfig.GRPCIngestMaxCallSizeBytes, appCodec)
+
+			// Start the grpc client connection in a goroutine
+			grpcClient.StartConnectionAsync()
+
+			sqsGRPCClients[i] = grpcClient
 		}
 
 		for _, grpcClient := range sqsGRPCClients {
