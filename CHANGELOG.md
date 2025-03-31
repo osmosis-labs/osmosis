@@ -54,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#8985](https://github.com/osmosis-labs/osmosis/pull/8985) build: block-sdk import now uses forked version
 * [#9021](https://github.com/osmosis-labs/osmosis/pull/9021) chore: slightly increase blocktime 
+* [#9353](https://github.com/osmosis-labs/osmosis/pull/9353) sqs: prevent node falling behind by moving sqs GRPC reconnection to background
 
 ## v28.0.6
 
