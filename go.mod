@@ -290,9 +290,9 @@ replace (
 	// Also, snapshot nodes need to have all fast nodes enabled in order to prune quickly.
 	// Also, we need an osmosis version of the store to enable aysnc pruning.
 	// Direct cosmos-sdk branch link: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v28/0.50.11/store, current branch: osmo-v28/0.50.11
-	// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/4c4e1d6c8fa8261a8dcf70568ddd700236f3b824
-	// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/store/v1.1.1-v0.50.11-v28-osmo-4
-	cosmossdk.io/store => github.com/osmosis-labs/cosmos-sdk/store v1.1.1-v0.50.11-v28-osmo-4
+	// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/eb1a8e88a4ddf77bc2fe235fc07c57016b7386f0
+	// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/store/v1.1.1-v0.50.11-v28-osmo-2
+	cosmossdk.io/store => github.com/osmosis-labs/cosmos-sdk/store v1.1.1-v0.50.11-v28-osmo-2
 
 	// Direct cometbft branch link: https://github.com/osmosis-labs/cometbft/tree/osmo-v28/0.38.17, current branch: osmo-v28/v0.38.17
 	// Direct commit link: https://github.com/osmosis-labs/cometbft/commit/58bfcdcb2fdd81655586678c2062cdc51adbdf0d
