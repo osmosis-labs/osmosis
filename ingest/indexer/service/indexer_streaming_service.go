@@ -125,7 +125,7 @@ func (s *indexerStreamingService) setSpotPrice(ctx context.Context, event *abci.
 			var err error
 			tokensIn, err = sdk.ParseCoinNormalized(attribute.Value)
 			if err != nil {
-				s.logger.Error("Error parsing tokens in", "error", err)
+				s.logger.Error("Error parsing tokens in from attribute value", "error", err, "value", attribute.Value)
 				continue
 			}
 		}
@@ -133,7 +133,7 @@ func (s *indexerStreamingService) setSpotPrice(ctx context.Context, event *abci.
 			var err error
 			tokensOut, err = sdk.ParseCoinNormalized(attribute.Value)
 			if err != nil {
-				s.logger.Error("Error parsing tokens out", "error", err)
+				s.logger.Error("Error parsing tokens out from attribute value", "error", err, "value", attribute.Value)
 				continue
 			}
 		}
@@ -151,7 +151,7 @@ func (s *indexerStreamingService) setSpotPrice(ctx context.Context, event *abci.
 	// Get the spot price from the pool manager keeper
 	spotPrice, err := s.keepers.PoolManagerKeeper.RouteCalculateSpotPrice(sdk.UnwrapSDKContext(ctx), poolIdUint, tokensIn.Denom, tokensOut.Denom)
 	if err != nil {
-		return fmt.Errorf("error getting spot price %v", err)
+		return fmt.Errorf("Error setting spot price for swap", "error", err, "pool_id", poolId, "token_in", tokensIn.Denom, "token_out", tokensOut.Denom)
 	}
 	// Set the spot price in the event's attributes map
 	event.Attributes = append(event.Attributes, abci.EventAttribute{
@@ -209,7 +209,7 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 			// Add the token liquidity to the event
 			err := s.addTokenLiquidity(ctx, clonedEvent)
 			if err != nil {
-				s.logger.Error("Error adding token liquidity to event", "error", err)
+				s.logger.Error("Error adding token liquidity to event", "error", err, "event_type", clonedEvent.Type)
 				return err
 			}
 			err = s.adjustTokenInAmountBySpreadFactor(ctx, clonedEvent)
@@ -237,7 +237,7 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 			if eventType == poolmanagertypes.TypeEvtPoolCreated {
 				err := s.trackCreatedPoolID(event, sdkCtx.BlockHeight(), sdkCtx.BlockTime().UTC(), txHash)
 				if err != nil {
-					s.logger.Error("Error tracking newly created pool ID %v. event skipped.", err)
+					s.logger.Error("Error tracking newly created pool ID", "error", err, "tx_hash", txHash)
 					continue
 				}
 			}
@@ -373,13 +373,13 @@ func (s *indexerStreamingService) ListenFinalizeBlock(ctx context.Context, req a
 	var err error
 	err = s.publishBlock(ctx, req)
 	if err != nil {
-		s.logger.Error("Error publishing block data by indexer", err)
+		s.logger.Error("Error publishing block data by indexer", "error", err, "height", req.GetHeight(), "chain_id", sdk.UnwrapSDKContext(ctx).ChainID())
 		return err
 	}
 	// Iterate through the transactions in the block and publish them
 	err = s.publishTxn(ctx, req, res)
 	if err != nil {
-		s.logger.Error("Error publishing transaction data by indexer", err)
+		s.logger.Error("Error publishing transaction data by indexer", "error", err, "height", req.GetHeight())
 		return err
 	}
 	return nil
