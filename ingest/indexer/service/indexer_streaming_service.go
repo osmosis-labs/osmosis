@@ -237,7 +237,7 @@ func (s *indexerStreamingService) publishTxn(ctx context.Context, req abci.Reque
 			if eventType == poolmanagertypes.TypeEvtPoolCreated {
 				err := s.trackCreatedPoolID(event, sdkCtx.BlockHeight(), sdkCtx.BlockTime().UTC(), txHash)
 				if err != nil {
-					s.logger.Error("Error tracking newly created pool ID", "error", err, "tx_hash", txHash)
+					s.logger.Error("Error tracking newly created pool ID %v. event skipped.", err)
 					continue
 				}
 			}
