@@ -44,6 +44,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
+
+### State Compatible
+
+
+## v29.0.0
+
+### State Breaking
+
 * [#8996](https://github.com/osmosis-labs/osmosis/pull/8996) chore: upgrade pfm to v8.1.1 
 * [#8880](https://github.com/osmosis-labs/osmosis/pull/8880) chore: bump wasmd from 0.53.0 to 0.53.2
 * [#9005](https://github.com/osmosis-labs/osmosis/pull/9005) fix: bump ibc-go to v8.6.1
@@ -54,6 +62,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#8985](https://github.com/osmosis-labs/osmosis/pull/8985) build: block-sdk import now uses forked version
 * [#9021](https://github.com/osmosis-labs/osmosis/pull/9021) chore: slightly increase blocktime 
+
+### Removed
+
+* [#9340](https://github.com/osmosis-labs/osmosis/pull/9340) chore: bump IAVL, ignore legacy state if it is broken 
 
 ## v28.0.6
 
