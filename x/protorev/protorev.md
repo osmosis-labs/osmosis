@@ -14,7 +14,7 @@ ProtoRev is a module that:
 8. Burns the same amount of asset previously minted to execute the swap
 9. Redistributes the profit captured back to the Osmosis ecosystem based on Governance.
 
-For ecosystem context about the purpose of the module, please see the ProtoRev governance proposal discussion: [https://gov.osmosis.zone/discussion/7078-skip-x-osmosis-proposal-to-capture-mev-as-protocol-revenue-on-chain](https://gov.osmosis.zone/discussion/7078-skip-x-osmosis-proposal-to-capture-mev-as-protocol-revenue-on-chain)
+For ecosystem context about the purpose of the module, please see the ProtoRev governance proposal discussion: [Commonwealth Discussion](https://gov.osmosis.zone/discussion/7078-skip-x-osmosis-proposal-to-capture-mev-as-protocol-revenue-on-chain)
 
 # Concepts
 
