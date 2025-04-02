@@ -57,8 +57,8 @@ mkdir -p ~/.osmosisd/cosmovisor/genesis
 mkdir -p ~/.osmosisd/cosmovisor/genesis/bin
 mkdir -p ~/.osmosisd/cosmovisor/upgrades
 cp $GOPATH/bin/osmosisd ~/.osmosisd/cosmovisor/genesis/bin
-mkdir -p ~/.osmosisd/cosmovisor/upgrades/v27/bin
-cp $GOPATH/bin/osmosisd ~/.osmosisd/cosmovisor/upgrades/v27/bin
+mkdir -p ~/.osmosisd/cosmovisor/upgrades/v28/bin
+cp $GOPATH/bin/osmosisd ~/.osmosisd/cosmovisor/upgrades/v28/bin
 ```
 
 _Add these lines to your profile to set up environment variables_:
