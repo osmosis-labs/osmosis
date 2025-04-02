@@ -320,7 +320,7 @@ pub enum AuthenticatorSudoMsg {
 The last three messages corresponds to steps 3, 5 and 7 of the [transaction authentication process](#transaction-authentication-overview) and the first
 two messages are used to handle the addition and removal of the authenticator.
 
-Request types are defined [here](https://github.com/osmosis-labs/osmosis/tree/main/x/smart-account).
+Request types are defined in the [authenticator/requests.go](https://github.com/osmosis-labs/osmosis/blob/main/x/smart-account/authenticator/requests.go) file in this module.
 
 ## Queries
 
