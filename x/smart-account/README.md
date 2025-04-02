@@ -324,7 +324,61 @@ Request types are defined [here](https://github.com/osmosis-labs/osmosis/tree/ma
 
 ## Queries
 
-TODO: Add examples of queries and how to read them
+The `x/smart-account` module provides several queries to retrieve information about accounts and their authenticators:
+
+### GetAccountInfo
+
+Retrieves information about a specific account, including the authenticators associated with it.
+
+Example CLI:
+```bash
+osmosisd query smart-account account-info [address]
+```
+
+Example gRPC:
+```bash
+grpcurl -plaintext \
+    -d '{"address": "osmo1..."}' \
+    localhost:9090 \
+    osmosis.smartaccount.Query/GetAccountInfo
+```
+
+The response includes the list of authenticator IDs and their associated types.
+
+### GetAuthenticator
+
+Retrieves detailed information about a specific authenticator for an account.
+
+Example CLI:
+```bash
+osmosisd query smart-account authenticator [address] [authenticator_id]
+```
+
+Example gRPC:
+```bash
+grpcurl -plaintext \
+    -d '{"address": "osmo1...", "authenticator_id": "1"}' \
+    localhost:9090 \
+    osmosis.smartaccount.Query/GetAuthenticator
+```
+
+The response includes the authenticator's type and configuration data.
+
+### GetParams
+
+Retrieves the module parameters.
+
+Example CLI:
+```bash
+osmosisd query smart-account params
+```
+
+Example gRPC:
+```bash
+grpcurl -plaintext localhost:9090 osmosis.smartaccount.Query/GetParams
+```
+
+The response includes module parameters such as `is_smart_account_active` and `maximum_unauthenticated_gas`.
 
 --
 
