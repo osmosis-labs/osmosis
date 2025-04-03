@@ -97,16 +97,8 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			// P2P
 			seeds := []string{
-				"21d7539792ee2e0d650b199bf742c56ae0cf499e@162.55.132.230:2000",                             // Notional
-				"44ff091135ef2c69421eacfa136860472ac26e60@65.21.141.212:2000",                              // Notional
-				"ec4d3571bf709ab78df61716e47b5ac03d077a1a@65.108.43.26:2000",                               // Notional
-				"4cb8e1e089bdf44741b32638591944dc15b7cce3@65.108.73.18:2000",                               // Notional
-				"f515a8599b40f0e84dfad935ba414674ab11a668@osmosis.blockpane.com:26656",                     // [ block pane ]
-				"6bcdbcfd5d2c6ba58460f10dbcfde58278212833@osmosis.artifact-staking.io:26656",               // Artifact Staking
-				"77bb5fb9b6964d6e861e91c1d55cf82b67d838b5@bd-osmosis-seed-mainnet-us-01.bdnodes.net:26656", // Blockdaemon US
-				"3243426ab56b67f794fa60a79cc7f11bc7aa752d@bd-osmosis-seed-mainnet-eu-02.bdnodes.net:26656", // Blockdaemon EU
-				"ebc272824924ea1a27ea3183dd0b9ba713494f83@osmosis-mainnet-seed.autostake.com:26716",        // AutoStake.com
-				"7c66126b64cd66bafd9ccfc721f068df451d31a3@osmosis-seed.sunshinevalidation.io:9393",         // Sunshine Validation
+				"4557c0e0d90aa17b9c36b1e89fcb27cf23aa3e4c@seed.osmosis.zone:26656", // Osmosis seed
+				"ade4d8bc8cbe014af6ebdf3cb7b1e9ad36f412c0@seeds.polkachu.com:12556",
 			}
 			config.P2P.Seeds = strings.Join(seeds, ",")
 			config.P2P.MaxNumInboundPeers = 80
