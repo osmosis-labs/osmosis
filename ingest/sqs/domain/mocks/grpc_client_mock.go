@@ -17,3 +17,8 @@ var _ domain.SQSGRPClient = &GRPCClientMock{}
 func (g *GRPCClientMock) PushData(ctx context.Context, height uint64, pools []ingesttypes.PoolI, takerFeesMap ingesttypes.TakerFeeMap) error {
 	return g.Error
 }
+
+// IsConnected implements domain.SQSGRPClient.
+func (g *GRPCClientMock) IsConnected() bool {
+	return g.Error == nil
+}
