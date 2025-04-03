@@ -1,8 +1,6 @@
 module github.com/osmosis-labs/osmosis/v29
 
-go 1.22.11
-
-toolchain go1.23.2
+go 1.23.2
 
 require (
 	cloud.google.com/go/pubsub v1.44.0
