@@ -11,9 +11,9 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	mempool1559 "github.com/osmosis-labs/osmosis/v26/x/txfees/keeper/mempool-1559"
-	"github.com/osmosis-labs/osmosis/v26/x/txfees/keeper/txfee_filters"
-	"github.com/osmosis-labs/osmosis/v26/x/txfees/types"
+	mempool1559 "github.com/osmosis-labs/osmosis/v27/x/txfees/keeper/mempool-1559"
+	"github.com/osmosis-labs/osmosis/v27/x/txfees/keeper/txfee_filters"
+	"github.com/osmosis-labs/osmosis/v27/x/txfees/types"
 )
 
 // MempoolFeeDecorator will check if the transaction's fee is at least as large

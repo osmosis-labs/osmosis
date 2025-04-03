@@ -11,12 +11,12 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v26/x/txfees/keeper"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v27/x/txfees/keeper"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v26/x/smart-account/types"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v27/x/smart-account/types"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -31,10 +31,10 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v26/app"
-	"github.com/osmosis-labs/osmosis/v26/app/params"
-	"github.com/osmosis-labs/osmosis/v26/x/smart-account/ante"
-	"github.com/osmosis-labs/osmosis/v26/x/smart-account/testutils"
+	"github.com/osmosis-labs/osmosis/v27/app"
+	"github.com/osmosis-labs/osmosis/v27/app/params"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/ante"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/testutils"
 )
 
 type AuthenticatorAnteSuite struct {

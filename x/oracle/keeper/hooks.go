@@ -3,10 +3,10 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/v27/x/oracle/types"
 	"time"
 
-	epochstypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v27/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

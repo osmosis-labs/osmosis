@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v26/app/apptesting/assets"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting/assets"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
@@ -16,7 +16,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/v27/x/oracle/types"
 )
 
 func TestToMap(t *testing.T) {

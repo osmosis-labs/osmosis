@@ -23,11 +23,11 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/osmosis-labs/osmosis/v26/app"
-	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v26/app/params"
-	minttypes "github.com/osmosis-labs/osmosis/v26/x/mint/types"
-	"github.com/osmosis-labs/osmosis/v26/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v27/app"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v27/app/params"
+	minttypes "github.com/osmosis-labs/osmosis/v27/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/authenticator"
 )
 
 type CosmwasmAuthenticatorTest struct {

@@ -7,7 +7,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/osmosis-labs/osmosis/osmomath"
 
-	oracletypes "github.com/osmosis-labs/osmosis/v26/x/oracle/types"
+	oracletypes "github.com/osmosis-labs/osmosis/v27/x/oracle/types"
 )
 
 // AccountKeeper is expected keeper for auth module

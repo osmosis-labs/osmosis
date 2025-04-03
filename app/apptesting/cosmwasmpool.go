@@ -11,11 +11,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
-	"github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/cosmwasm/msg"
-	"github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/cosmwasm/msg/transmuter"
-	"github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool/cosmwasm/msg"
+	"github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool/cosmwasm/msg/transmuter"
+	"github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool/model"
 
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool/types"
 )
 
 const (

@@ -9,7 +9,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	"github.com/osmosis-labs/osmosis/v26/x/treasury/types"
+	"github.com/osmosis-labs/osmosis/v27/x/treasury/types"
 )
 
 // ParamChanges defines the parameters that can be modified by param change proposals

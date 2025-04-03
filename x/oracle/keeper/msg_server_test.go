@@ -6,10 +6,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/osmosis-labs/osmosis/v26/app/apptesting/assets"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting/assets"
 
-	"github.com/osmosis-labs/osmosis/v26/x/oracle/keeper"
-	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/v27/x/oracle/keeper"
+	"github.com/osmosis-labs/osmosis/v27/x/oracle/types"
 
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )

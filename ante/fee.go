@@ -8,8 +8,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	treasurytypes "github.com/osmosis-labs/osmosis/v26/x/treasury/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v26/x/txfees/types"
+	treasurytypes "github.com/osmosis-labs/osmosis/v27/x/treasury/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v27/x/txfees/types"
 )
 
 // DeductFeeDecorator deducts fees from the first signer of the tx.

@@ -7,7 +7,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/gogoproto/proto"
 
-	"github.com/osmosis-labs/osmosis/v26/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v27/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

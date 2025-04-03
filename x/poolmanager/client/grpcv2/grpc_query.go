@@ -1,4 +1,3 @@
-
 package grpcv2
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
@@ -11,8 +10,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/client"
-	"github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/queryprotov2"
+	"github.com/osmosis-labs/osmosis/v27/x/poolmanager/client"
+	"github.com/osmosis-labs/osmosis/v27/x/poolmanager/client/queryprotov2"
 )
 
 type Querier struct {
@@ -30,4 +29,3 @@ func (q Querier) SpotPriceV2(grpcCtx context.Context,
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.SpotPriceV2(ctx, *req)
 }
-

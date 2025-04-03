@@ -5,8 +5,8 @@ import (
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v26/app/apptesting/assets"
-	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting/assets"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
 )
 
 func (s *KeeperTestSuite) TestComputeSwap() {

@@ -1,4 +1,3 @@
-
 package grpc
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
@@ -11,8 +10,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/client"
-	"github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool/client"
+	"github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool/client/queryproto"
 )
 
 type Querier struct {
@@ -50,4 +49,3 @@ func (q Querier) ContractInfoByPoolId(grpcCtx context.Context,
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.ContractInfoByPoolId(ctx, *req)
 }
-

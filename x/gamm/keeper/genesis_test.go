@@ -6,10 +6,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
-	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v26/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v26/x/gamm/types/migration"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v27/x/gamm/types/migration"
 )
 
 var DefaultMigrationRecords = gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{

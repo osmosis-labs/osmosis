@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 
-	"github.com/osmosis-labs/osmosis/v26/x/treasury/types"
+	"github.com/osmosis-labs/osmosis/v27/x/treasury/types"
 )
 
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's

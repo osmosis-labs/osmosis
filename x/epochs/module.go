@@ -27,9 +27,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v26/x/epochs/client/cli"
-	"github.com/osmosis-labs/osmosis/v26/x/epochs/keeper"
-	"github.com/osmosis-labs/osmosis/v26/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v27/x/epochs/client/cli"
+	"github.com/osmosis-labs/osmosis/v27/x/epochs/keeper"
+	"github.com/osmosis-labs/osmosis/v27/x/epochs/types"
 )
 
 var (

@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	configurer "github.com/osmosis-labs/osmosis/v26/tests/e2e/configurer"
+	configurer "github.com/osmosis-labs/osmosis/v27/tests/e2e/configurer"
 )
 
 const (

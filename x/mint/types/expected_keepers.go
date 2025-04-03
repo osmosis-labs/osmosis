@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	epochstypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v27/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	oracletypes "github.com/osmosis-labs/osmosis/v26/x/oracle/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v26/x/txfees/types"
+	oracletypes "github.com/osmosis-labs/osmosis/v27/x/oracle/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v27/x/txfees/types"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -29,12 +29,12 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appParams "github.com/osmosis-labs/osmosis/v26/app/params"
+	appParams "github.com/osmosis-labs/osmosis/v27/app/params"
 
-	epochstypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v26/x/incentives/types"
-	minttypes "github.com/osmosis-labs/osmosis/v26/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v26/x/pool-incentives/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v27/x/epochs/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v27/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v27/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v27/x/pool-incentives/types"
 )
 
 // PrepareGenesisCmd returns prepare-genesis cobra Command.

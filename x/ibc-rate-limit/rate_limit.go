@@ -10,7 +10,7 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 
-	"github.com/osmosis-labs/osmosis/v26/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v27/x/ibc-rate-limit/types"
 )
 
 var (

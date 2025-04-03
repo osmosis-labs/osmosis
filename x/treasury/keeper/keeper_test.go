@@ -2,15 +2,15 @@ package keeper
 
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
-	markettypes "github.com/osmosis-labs/osmosis/v26/x/market/types"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
+	markettypes "github.com/osmosis-labs/osmosis/v27/x/market/types"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v26/x/treasury/types"
+	"github.com/osmosis-labs/osmosis/v27/x/treasury/types"
 )
 
 func TestTaxRate(t *testing.T) {

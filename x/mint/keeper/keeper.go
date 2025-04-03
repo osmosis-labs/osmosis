@@ -13,8 +13,8 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v26/x/mint/types"
-	stablestakingincentivestypes "github.com/osmosis-labs/osmosis/v26/x/stable-staking-incentives/types"
+	"github.com/osmosis-labs/osmosis/v27/x/mint/types"
+	stablestakingincentivestypes "github.com/osmosis-labs/osmosis/v27/x/stable-staking-incentives/types"
 )
 
 // Keeper of the mint store.

@@ -3,7 +3,7 @@ package keeper
 import (
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v26/x/treasury/types"
+	"github.com/osmosis-labs/osmosis/v27/x/treasury/types"
 
 	"github.com/stretchr/testify/require"
 

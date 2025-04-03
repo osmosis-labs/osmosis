@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v26/x/stable-staking-incentives/types"
+	"github.com/osmosis-labs/osmosis/v27/x/stable-staking-incentives/types"
 )
 
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {

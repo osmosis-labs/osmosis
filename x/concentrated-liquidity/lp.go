@@ -9,9 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/math"
-	types "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/math"
+	types "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v27/x/lockup/types"
 )
 
 const noUnderlyingLockId = uint64(0)

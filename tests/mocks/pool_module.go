@@ -12,7 +12,7 @@ import (
 	types1 "github.com/cosmos/cosmos-sdk/x/bank/types"
 	gomock "github.com/golang/mock/gomock"
 	osmomath "github.com/osmosis-labs/osmosis/osmomath"
-	types2 "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
+	types2 "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
 )
 
 // MockAccountI is a mock of AccountI interface.

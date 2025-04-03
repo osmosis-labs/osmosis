@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 	"github.com/osmosis-labs/osmosis/osmomath"
-	epochtypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v27/x/epochs/types"
 
 	"gopkg.in/yaml.v2"
 

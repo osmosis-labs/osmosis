@@ -3,8 +3,8 @@ package ante_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/osmosis-labs/osmosis/v26/ante"
-	"github.com/osmosis-labs/osmosis/v26/app/apptesting/assets"
+	"github.com/osmosis-labs/osmosis/v27/ante"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting/assets"
 	"os"
 	"time"
 
@@ -19,8 +19,8 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	markettypes "github.com/osmosis-labs/osmosis/v26/x/market/types"
-	oracletypes "github.com/osmosis-labs/osmosis/v26/x/oracle/types"
+	markettypes "github.com/osmosis-labs/osmosis/v27/x/market/types"
+	oracletypes "github.com/osmosis-labs/osmosis/v27/x/oracle/types"
 )
 
 func (s *AnteTestSuite) TestDeductFeeDecorator_ZeroGas() {

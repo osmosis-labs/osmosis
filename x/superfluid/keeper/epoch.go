@@ -9,13 +9,13 @@ import (
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	cl "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v26/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
+	cl "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v27/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v27/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v27/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v27/x/superfluid/types"
 )
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) error {

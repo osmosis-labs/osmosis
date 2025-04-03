@@ -2,12 +2,12 @@ package treasury
 
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v26/x/treasury/keeper"
+	"github.com/osmosis-labs/osmosis/v27/x/treasury/keeper"
 )
 
 func TestExportInitGenesis(t *testing.T) {
