@@ -3055,6 +3055,51 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut_NonMutative() {
 	}
 }
 
+func (s *KeeperTestSuite) TestCalcInAmtGivenOut_ExactAmountOutMismatch() {
+	tests := map[string]struct {
+		TokenOut     sdk.Coin
+		TokenInDenom string
+		LowerTick    int64
+		UpperTick    int64
+		ExpectedErr  error
+	}{
+		"error: amount out mismatch when price calculation hits max tick | ofz": {
+			TokenOut:     sdk.NewCoin(ETH, DefaultAmt0),
+			TokenInDenom: USDC,
+			LowerTick:    types.MaxTick - 100,
+			UpperTick:    types.MaxTick,
+			ExpectedErr:  &types.ExactAmountOutMismatchError{},
+		},
+		"error: amount out mismatch when price calculation hits min tick | zfo": {
+			TokenOut:     sdk.NewCoin(USDC, DefaultAmt1),
+			TokenInDenom: ETH,
+			LowerTick:    types.MinInitializedTick,
+			UpperTick:    types.MinInitializedTick + 100,
+			ExpectedErr:  &types.ExactAmountOutMismatchError{},
+		},
+	}
+
+	for name, test := range tests {
+		s.Run(name, func() {
+			s.SetupAndFundSwapTest()
+
+			spreadFactor := osmomath.ZeroDec()
+			pool := s.PreparePoolWithCustSpread(spreadFactor)
+			s.SetupPosition(pool.GetId(), s.TestAccs[0], DefaultCoins, test.LowerTick, test.UpperTick, false)
+
+			// Calculate in amount given out
+			_, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(s.Ctx, pool, test.TokenOut, test.TokenInDenom, spreadFactor)
+
+			if test.ExpectedErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &test.ExpectedErr)
+			} else {
+				s.Require().NoError(err)
+			}
+		})
+	}
+}
+
 // TestComputeInAmtGivenOut tests that ComputeInAmtGivenOut successfully performs state changes as expected.
 func (s *KeeperTestSuite) TestComputeInAmtGivenOut() {
 	// we only use spread reward cases here since write Ctx only takes effect in the spread reward accumulator
