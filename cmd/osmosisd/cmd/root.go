@@ -665,7 +665,6 @@ func initAppConfig() (string, interface{}) {
 		MaxGasWantedPerTx         string `mapstructure:"max-gas-wanted-per-tx"`
 		MinGasPriceForArbitrageTx string `mapstructure:"arbitrage-min-gas-fee"`
 		MinGasPriceForHighGasTx   string `mapstructure:"min-gas-price-for-high-gas-tx"`
-		Mempool1559Enabled        string `mapstructure:"adaptive-fee-enabled"`
 	}
 
 	type CustomAppConfig struct {
@@ -686,7 +685,6 @@ func initAppConfig() (string, interface{}) {
 		MaxGasWantedPerTx:         "60000000",
 		MinGasPriceForArbitrageTx: ".1",
 		MinGasPriceForHighGasTx:   ".0025",
-		Mempool1559Enabled:        "true",
 	}
 	// Optionally allow the chain developer to overwrite the SDK's default
 	// server config.
@@ -724,9 +722,6 @@ arbitrage-min-gas-fee = "{{ .OsmosisMempoolConfig.MinGasPriceForArbitrageTx }}"
 # This is the minimum gas fee any tx with high gas demand should have, denominated in uosmo per gas
 # Default value of ".0025" then means that a tx with 1 million gas costs (.0025 uosmo/gas) * 1_000_000 gas = .0025 osmo
 min-gas-price-for-high-gas-tx = "{{ .OsmosisMempoolConfig.MinGasPriceForHighGasTx }}"
-
-# This parameter enables EIP-1559 like fee market logic in the mempool
-adaptive-fee-enabled = "{{ .OsmosisMempoolConfig.Mempool1559Enabled }}"
 
 ###############################################################################
 ###              Osmosis Sidecar Query Server Configuration                 ###
