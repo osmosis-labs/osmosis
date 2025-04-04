@@ -358,6 +358,7 @@ func NewOsmosisApp(
 		nodeStatusChecker = commonservice.NewNodeStatusChecker(rpcAddress)
 	}
 
+	streamingCtx := context.Background()
 	streamingServices := []storetypes.ABCIListener{}
 
 	// Initialize the SQS ingester if it is enabled.
@@ -375,10 +376,10 @@ func NewOsmosisApp(
 		// Create sqs grpc client
 		sqsGRPCClients := make([]domain.SQSGRPClient, len(sqsConfig.GRPCIngestAddress))
 		for i, grpcIngestAddress := range sqsConfig.GRPCIngestAddress {
-			grpcClient := sqsservice.NewGRPCCLient(grpcIngestAddress, sqsConfig.GRPCIngestMaxCallSizeBytes, appCodec)
-
-			// Start the grpc client connection in a goroutine
-			grpcClient.StartConnectionAsync()
+			grpcClient, err := sqsservice.NewGRPCCLient(streamingCtx, grpcIngestAddress, sqsConfig.GRPCIngestMaxCallSizeBytes, appCodec)
+			if err != nil {
+				panic(fmt.Errorf("failed to create SQS grpc client: %w", err))
+			}
 
 			sqsGRPCClients[i] = grpcClient
 		}

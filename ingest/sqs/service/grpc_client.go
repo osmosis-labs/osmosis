@@ -4,8 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sync"
 	"time"
+
+	"github.com/osmosis-labs/osmosis/v28/ingest/sqs/domain"
+	ingesttypes "github.com/osmosis-labs/osmosis/v28/ingest/types"
+	prototypes "github.com/osmosis-labs/osmosis/v28/ingest/types/proto/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
@@ -13,41 +17,67 @@ import (
 	"google.golang.org/grpc/backoff"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
-
-	ingesttypes "github.com/osmosis-labs/osmosis/v28/ingest/types"
-	prototypes "github.com/osmosis-labs/osmosis/v28/ingest/types/proto/types"
-
-	"github.com/osmosis-labs/osmosis/v28/ingest/sqs/domain"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v28/x/poolmanager/types"
 )
+
+// timeAfterFunc is time.AfterFunc
+type timeAfterFunc func(time.Duration) <-chan time.Time
 
 type GRPCClient struct {
-	grpcAddress          string
-	grpcMaxCallSizeBytes int
-	grpcConn             *grpc.ClientConn
-	appCodec             codec.Codec
-
-	grpcConnMx sync.RWMutex
+	timeAfterFunc     timeAfterFunc
+	connCheckInterval time.Duration
+	grpcAddress       string
+	conn              domain.ClientConn
+	appCodec          codec.Codec
 }
 
-var (
-	_ domain.SQSGRPClient = &GRPCClient{}
-)
+var _ domain.SQSGRPClient = &GRPCClient{}
 
-func NewGRPCCLient(grpcAddress string, grpxMaxCallSizeBytes int, appCodec codec.Codec) *GRPCClient {
-	return &GRPCClient{
-		grpcAddress:          grpcAddress,
-		grpcMaxCallSizeBytes: grpxMaxCallSizeBytes,
-		appCodec:             appCodec,
-		grpcConnMx:           sync.RWMutex{},
+// NewGRPCCLient will create a new gRPC client connection to the SQS service and return a GRPCClient instance.
+// Underlying connection is being managed in a separate goroutine to handle reconnections.
+// Clients should call IsConnected() before using the client to ensure the connection is ready for use and cancel the context
+// for graceful shutdown.
+func NewGRPCCLient(ctx context.Context, grpcAddress string, grpcMaxCallSizeBytes int, appCodec codec.Codec) (*GRPCClient, error) {
+	conn, err := grpc.NewClient(
+		grpcAddress,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(grpcMaxCallSizeBytes)),
+		grpc.WithDisableRetry(),
+		grpc.WithStatsHandler(otelgrpc.NewClientHandler()),
+		grpc.WithConnectParams(grpc.ConnectParams{
+			// Arbitrary choices based on brute-force testing.
+			Backoff: backoff.Config{
+				BaseDelay:  50 * time.Millisecond,
+				Jitter:     0.2,
+				Multiplier: 2,
+				MaxDelay:   10 * time.Second,
+			},
+		}),
+	)
+	if err != nil {
+		return nil, err
 	}
+	client := &GRPCClient{
+		timeAfterFunc:     time.After,
+		grpcAddress:       grpcAddress,
+		conn:              conn,
+		appCodec:          appCodec,
+		connCheckInterval: time.Second,
+	}
+
+	go client.connect(ctx)
+
+	return client, nil
 }
 
 // PushData implements domain.GracefulSQSGRPClient.
 func (g *GRPCClient) PushData(ctx context.Context, height uint64, pools []ingesttypes.PoolI, takerFeesMap ingesttypes.TakerFeeMap) (err error) {
-	readyConn, err := g.returnReadyConnection()
-	if err != nil {
+	if err := g.IsConnected(); err != nil {
 		return err
+	}
+
+	readyConn, ok := g.conn.(*grpc.ClientConn)
+	if !ok {
+		return fmt.Errorf("failed to cast g.conn to grpc.ClientConn")
 	}
 
 	// Marshal pools
@@ -78,78 +108,40 @@ func (g *GRPCClient) PushData(ctx context.Context, height uint64, pools []ingest
 	return nil
 }
 
-// StartConnectionAsync starts a background goroutine that attempts to reconnect to the SQS service.
-// It sleeps for a minute if the connection is ready and revalidates it, and a second if the connection is not ready
-// attempting to regain connection.
-func (g *GRPCClient) StartConnectionAsync() {
-	go func() {
-		var err error
+// connect manages underlying gRPC connection by checking the connection state and attempting to reconnect when necessary.
+func (g *GRPCClient) connect(ctx context.Context) {
+	for {
+		// Check if the context is done
+		if ctx.Err() != nil {
+			return
+		}
 
-		for {
-			g.grpcConnMx.Lock()
-			if g.grpcConn == nil {
-				g.grpcConn, err = grpc.NewClient(
-					g.grpcAddress,
-					grpc.WithTransportCredentials(insecure.NewCredentials()),
-					grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(g.grpcMaxCallSizeBytes)),
-					grpc.WithDisableRetry(),
-					grpc.WithStatsHandler(otelgrpc.NewClientHandler()),
-					grpc.WithConnectParams(grpc.ConnectParams{
-						// Arbitrary choices based on brute-force testing.
-						Backoff: backoff.Config{
-							BaseDelay:  50 * time.Millisecond,
-							Jitter:     0.2,
-							Multiplier: 2,
-							MaxDelay:   10 * time.Second,
-						},
-					}),
-				)
-				if err != nil {
-					g.grpcConnMx.Unlock()
-					continue
-				}
+		state := g.conn.GetState()
+		if state != connectivity.Ready {
+			// Attempt to connect
+			g.conn.Connect()
+
+			// Wait for a state change or timeout/cancel
+			if !g.conn.WaitForStateChange(ctx, state) {
+				return // Context done
 			}
-
-			isConnected := g.grpcConn.GetState() == connectivity.Ready
-			if !isConnected {
-				g.grpcConn.Connect()
-			}
-			g.grpcConnMx.Unlock()
-
-			// If the connection is ready, we should sleep for a minute
-			// to avoid unhelpful retries.
-			// Otherwise, we should attempt to reconnect sooner, with a second-long wait.
-			if isConnected {
-				time.Sleep(time.Minute)
-			} else {
-				time.Sleep(time.Second)
+		} else {
+			select {
+			case <-ctx.Done():
+				return
+			case <-g.timeAfterFunc(g.connCheckInterval):
+				// Recheck the connection state after interval
 			}
 		}
-	}()
+	}
 }
 
 // IsConnected returns true if the gRPC connection is ready.
-func (g *GRPCClient) IsConnected() bool {
-	g.grpcConnMx.RLock()
-	defer g.grpcConnMx.RUnlock()
-
-	return g.grpcConn.GetState() == connectivity.Ready
-}
-
-// returnReadyConnection returns a ready gRPC connection.
-// If the connection is not ready, it returns an error.
-func (g *GRPCClient) returnReadyConnection() (*grpc.ClientConn, error) {
-	g.grpcConnMx.RLock()
-	defer g.grpcConnMx.RUnlock()
-	grpcConn := g.grpcConn
-
-	if grpcConn != nil {
-		if grpcConn.GetState() != connectivity.Ready {
-			return nil, fmt.Errorf("sqs grpc connection is not ready yet. Continuing to attempt connection in the background")
-		}
+func (g *GRPCClient) IsConnected() error {
+	if g.conn.GetState() != connectivity.Ready {
+		return fmt.Errorf("SQS gRPC connection to %s is not ready yet", g.grpcAddress)
 	}
-
-	return grpcConn, nil
+	return nil
 }
 
 // marshalPools marshals pools into a format that can be sent over gRPC.

@@ -8,6 +8,8 @@ import (
 	ingesttypes "github.com/osmosis-labs/osmosis/v28/ingest/types"
 
 	commondomain "github.com/osmosis-labs/osmosis/v28/ingest/common/domain"
+
+	"google.golang.org/grpc/connectivity"
 )
 
 // PoolsTransformer is an interface that defines the methods for the pool transformer
@@ -29,7 +31,22 @@ type SQSGRPClient interface {
 	// In our context, we would rather continue attempting to repush the data in the next block instead of blocking the system.
 	PushData(ctx context.Context, height uint64, pools []ingesttypes.PoolI, takerFeesMap ingesttypes.TakerFeeMap) error
 
-	// IsConnected returns true if the GRPC client is connected to the SQS service.
-	// Attempts to reconnect occur in the background.
-	IsConnected() bool
+	// IsConnected returns nil if the GRPC client is connected to the SQS service.
+	IsConnected() error
+}
+
+// A StateChanger reports state changes, e.g. a grpc.ClientConn.
+type StateChanger interface {
+	// Connect begins connecting the StateChanger.
+	Connect()
+	// GetState returns the current state of the StateChanger.
+	GetState() connectivity.State
+	// WaitForStateChange returns true when the state becomes s, or returns
+	// false if ctx is canceled first.
+	WaitForStateChange(ctx context.Context, s connectivity.State) bool
+}
+
+// ClientConn is a gRPC client connection interface.
+type ClientConn interface {
+	StateChanger
 }
