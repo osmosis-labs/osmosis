@@ -23,17 +23,13 @@ var (
 	DefaultMinGasPriceForHighGasTx = osmomath.ZeroDec()
 	DefaultMaxGasWantedPerTx       = uint64(30 * 1000 * 1000)
 	DefaultHighGasTxThreshold      = uint64(2.5 * 1000 * 1000)
-	DefaultMempool1559Enabled      = true
 )
-
-var GlobalMempool1559Enabled = false
 
 type MempoolFeeOptions struct {
 	MaxGasWantedPerTx         uint64
 	MinGasPriceForArbitrageTx osmomath.Dec
 	HighGasTxThreshold        uint64
 	MinGasPriceForHighGasTx   osmomath.Dec
-	Mempool1559Enabled        bool
 }
 
 func NewDefaultMempoolFeeOptions() MempoolFeeOptions {
@@ -42,7 +38,6 @@ func NewDefaultMempoolFeeOptions() MempoolFeeOptions {
 		MinGasPriceForArbitrageTx: DefaultMinGasPriceForArbitrageTx.Clone(),
 		HighGasTxThreshold:        DefaultHighGasTxThreshold,
 		MinGasPriceForHighGasTx:   DefaultMinGasPriceForHighGasTx.Clone(),
-		Mempool1559Enabled:        DefaultMempool1559Enabled,
 	}
 }
 
@@ -52,7 +47,6 @@ func NewMempoolFeeOptions(opts servertypes.AppOptions) MempoolFeeOptions {
 		MinGasPriceForArbitrageTx: parseMinGasPriceForArbitrageTx(opts),
 		HighGasTxThreshold:        DefaultHighGasTxThreshold,
 		MinGasPriceForHighGasTx:   parseMinGasPriceForHighGasTx(opts),
-		Mempool1559Enabled:        parseMempool1559(opts),
 	}
 }
 
@@ -74,11 +68,6 @@ func parseMinGasPriceForArbitrageTx(opts servertypes.AppOptions) osmomath.Dec {
 
 func parseMinGasPriceForHighGasTx(opts servertypes.AppOptions) osmomath.Dec {
 	return parseDecFromConfig(opts, "min-gas-price-for-high-gas-tx", DefaultMinGasPriceForHighGasTx.Clone())
-}
-
-func parseMempool1559(opts servertypes.AppOptions) bool {
-	GlobalMempool1559Enabled = parseBoolFromConfig(opts, "adaptive-fee-enabled", DefaultMempool1559Enabled)
-	return GlobalMempool1559Enabled
 }
 
 func parseDecFromConfig(opts servertypes.AppOptions, optName string, defaultValue osmomath.Dec) osmomath.Dec {
