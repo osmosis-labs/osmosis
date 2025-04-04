@@ -33,9 +33,7 @@ type MempoolFeeDecorator struct {
 }
 
 func NewMempoolFeeDecorator(txFeesKeeper Keeper, opts types.MempoolFeeOptions) MempoolFeeDecorator {
-	if opts.Mempool1559Enabled {
-		mempool1559.CurEipState.BackupFilePath = filepath.Join(txFeesKeeper.dataDir, mempool1559.BackupFilename)
-	}
+	mempool1559.CurEipState.BackupFilePath = filepath.Join(txFeesKeeper.dataDir, mempool1559.BackupFilename)
 
 	return MempoolFeeDecorator{
 		TxFeesKeeper: txFeesKeeper,
@@ -203,8 +201,6 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice osmomath.Dec, g
 }
 
 func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDenom string, tx sdk.FeeTx) osmomath.Dec {
-	var is1559enabled = mfd.Opts.Mempool1559Enabled
-
 	cfgMinGasPrice := ctx.MinGasPrices().AmountOf(baseDenom)
 	// the check below prevents tx gas from getting over HighGasTxThreshold which is default to 1_000_000
 	if tx.GetGas() >= mfd.Opts.HighGasTxThreshold {
@@ -214,11 +210,11 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 		cfgMinGasPrice = osmomath.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForArbitrageTx)
 	}
 	// Initial tx only, no recheck
-	if is1559enabled && ctx.IsCheckTx() && !ctx.IsReCheckTx() {
+	if ctx.IsCheckTx() && !ctx.IsReCheckTx() {
 		cfgMinGasPrice = osmomath.MaxDec(cfgMinGasPrice, mempool1559.CurEipState.GetCurBaseFee())
 	}
 	// RecheckTx only
-	if is1559enabled && ctx.IsReCheckTx() {
+	if ctx.IsReCheckTx() {
 		cfgMinGasPrice = osmomath.MaxDec(cfgMinGasPrice, mempool1559.CurEipState.GetCurRecheckBaseFee())
 	}
 	return cfgMinGasPrice
