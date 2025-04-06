@@ -7,7 +7,7 @@ import (
 	service "github.com/osmosis-labs/osmosis/v29/ingest/indexer/service/client"
 )
 
-// indexerIngester is an implementation of domain.Publisher.
+// indexerPublisher is an implementation of domain.Publisher.
 type indexerPublisher struct {
 	pubsubClient service.PubSubClient
 }
