@@ -57,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#9005](https://github.com/osmosis-labs/osmosis/pull/9005) fix: bump ibc-go to v8.6.1
 * [#9011](https://github.com/osmosis-labs/osmosis/pull/9011) feat: Delete superfluid balancer -> CL migration code. Makes the message now just return an error if called.
 * [#9059](https://github.com/osmosis-labs/osmosis/pull/9059) chore: bump submodules
+* [#9363](https://github.com/osmosis-labs/osmosis/pull/9363). fix: remove mempool 1559 as a configuration option, now it's always on
 
 ### State Compatible
 
