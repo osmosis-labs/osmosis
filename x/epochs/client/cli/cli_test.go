@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v26/x/epochs/client/cli"
-	"github.com/osmosis-labs/osmosis/v26/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v27/x/epochs/client/cli"
+	"github.com/osmosis-labs/osmosis/v27/x/epochs/types"
 )
 
 func TestGetCmdCurrentEpoch(t *testing.T) {

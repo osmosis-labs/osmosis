@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/v27/x/oracle/types"
 )
 
 func Test_DenomList(t *testing.T) {

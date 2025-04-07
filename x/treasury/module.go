@@ -8,8 +8,8 @@ import (
 	"math/rand"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/osmosis-labs/osmosis/v26/x/treasury/keeper"
-	"github.com/osmosis-labs/osmosis/v26/x/treasury/simulation"
+	"github.com/osmosis-labs/osmosis/v27/x/treasury/keeper"
+	"github.com/osmosis-labs/osmosis/v27/x/treasury/simulation"
 
 	"github.com/spf13/cobra"
 
@@ -20,8 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/v26/x/treasury/client/cli"
-	"github.com/osmosis-labs/osmosis/v26/x/treasury/types"
+	"github.com/osmosis-labs/osmosis/v27/x/treasury/client/cli"
+	"github.com/osmosis-labs/osmosis/v27/x/treasury/types"
 )
 
 var (

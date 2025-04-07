@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	epochstypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v26/x/superfluid/keeper/internal/events"
-	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v27/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v27/x/superfluid/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/v27/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

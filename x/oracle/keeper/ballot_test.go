@@ -5,8 +5,8 @@ import (
 	"sort"
 
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/osmosis-labs/osmosis/v26/app/apptesting/assets"
-	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting/assets"
+	"github.com/osmosis-labs/osmosis/v27/x/oracle/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"

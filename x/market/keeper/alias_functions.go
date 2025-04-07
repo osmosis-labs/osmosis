@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"context"
-	"github.com/osmosis-labs/osmosis/v26/x/market/types"
+	"github.com/osmosis-labs/osmosis/v27/x/market/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )

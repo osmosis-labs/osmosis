@@ -11,9 +11,9 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/osmosis-labs/osmosis/osmomath"
 
-	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
-	markettypes "github.com/osmosis-labs/osmosis/v26/x/market/types"
-	"github.com/osmosis-labs/osmosis/v26/x/treasury/types"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
+	markettypes "github.com/osmosis-labs/osmosis/v27/x/market/types"
+	"github.com/osmosis-labs/osmosis/v27/x/treasury/types"
 )
 
 // Keeper of the treasury store

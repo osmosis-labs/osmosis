@@ -10,7 +10,7 @@ import (
 type QueryYml struct {
 	// Keeper struct descriptor
 	Keeper Keeper `yaml:"keeper"`
-	// Path to client folder e.g. "github.com/osmosis-labs/osmosis/v26/x/twap/client"
+	// Path to client folder e.g. "github.com/osmosis-labs/osmosis/v27/x/twap/client"
 	ClientPath string `yaml:"client_path"`
 	// list of all queries, key is the query name, e.g. `GetArithmeticTwap`
 	Queries map[string]YmlQueryDescriptor `yaml:"queries"`
@@ -19,7 +19,7 @@ type QueryYml struct {
 }
 
 type Keeper struct {
-	// e.g. github.com/osmosis-labs/osmosis/v26/x/twap
+	// e.g. github.com/osmosis-labs/osmosis/v27/x/twap
 	Path string `yaml:"path"`
 	// e.g. Keeper
 	Struct string `yaml:"struct"`

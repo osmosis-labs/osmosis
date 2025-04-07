@@ -8,8 +8,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
-	treasurytypes "github.com/osmosis-labs/osmosis/v26/x/treasury/types"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
+	treasurytypes "github.com/osmosis-labs/osmosis/v27/x/treasury/types"
 	"golang.org/x/exp/slices"
 )
 

@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v26/app"
-	osmosim "github.com/osmosis-labs/osmosis/v26/simulation/executor"
-	osmosimtypes "github.com/osmosis-labs/osmosis/v26/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v27/app"
+	osmosim "github.com/osmosis-labs/osmosis/v27/simulation/executor"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v27/simulation/simtypes"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/codec"

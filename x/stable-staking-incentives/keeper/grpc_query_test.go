@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"context"
 
-	"github.com/osmosis-labs/osmosis/v26/x/stable-staking-incentives/types"
+	"github.com/osmosis-labs/osmosis/v27/x/stable-staking-incentives/types"
 )
 
 func (s *KeeperTestSuite) TestParams() {
@@ -15,5 +15,5 @@ func (s *KeeperTestSuite) TestParams() {
 	s.Require().NoError(err)
 
 	s.Require().Empty(res.Params.DistributionContractAddress)
-	
+
 }

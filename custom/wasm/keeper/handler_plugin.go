@@ -2,7 +2,7 @@ package keeper
 
 import (
 	errorsmod "cosmossdk.io/errors"
-	"github.com/osmosis-labs/osmosis/v26/ante"
+	"github.com/osmosis-labs/osmosis/v27/ante"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"

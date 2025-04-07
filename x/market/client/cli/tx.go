@@ -9,7 +9,7 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v26/x/market/types"
+	"github.com/osmosis-labs/osmosis/v27/x/market/types"
 )
 
 // GetTxCmd returns the transaction commands for this module

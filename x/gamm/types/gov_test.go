@@ -6,8 +6,8 @@ import (
 	proto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v26/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v26/x/gamm/types/migration"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v27/x/gamm/types/migration"
 )
 
 func TestUpdateMigrationRecordsProposalMarshalUnmarshal(t *testing.T) {

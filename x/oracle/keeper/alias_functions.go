@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/v27/x/oracle/types"
 )
 
 // GetOracleAccount returns oracle ModuleAccount

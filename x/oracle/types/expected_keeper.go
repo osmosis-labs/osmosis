@@ -8,7 +8,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/osmosis-labs/osmosis/osmomath"
-	epochstypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v27/x/epochs/types"
 )
 
 // StakingKeeper is expected keeper for staking module

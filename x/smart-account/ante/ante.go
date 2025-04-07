@@ -3,7 +3,7 @@ package ante
 import (
 	"bytes"
 	"fmt"
-	customante "github.com/osmosis-labs/osmosis/v26/ante"
+	customante "github.com/osmosis-labs/osmosis/v27/ante"
 	"strconv"
 	"time"
 
@@ -18,9 +18,9 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	txsigning "cosmossdk.io/x/tx/signing"
 
-	"github.com/osmosis-labs/osmosis/v26/x/smart-account/authenticator"
-	smartaccountkeeper "github.com/osmosis-labs/osmosis/v26/x/smart-account/keeper"
-	"github.com/osmosis-labs/osmosis/v26/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/authenticator"
+	smartaccountkeeper "github.com/osmosis-labs/osmosis/v27/x/smart-account/keeper"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/types"
 )
 
 // AuthenticatorDecorator is responsible for processing authentication logic

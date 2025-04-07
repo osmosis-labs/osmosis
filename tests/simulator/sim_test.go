@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmosim "github.com/osmosis-labs/osmosis/v26/simulation/executor"
-	txfeetypes "github.com/osmosis-labs/osmosis/v26/x/txfees/types"
+	osmosim "github.com/osmosis-labs/osmosis/v27/simulation/executor"
+	txfeetypes "github.com/osmosis-labs/osmosis/v27/x/txfees/types"
 )
 
 const SimAppChainID = "simulation-app"

@@ -2,14 +2,14 @@ package types
 
 import (
 	context "context"
-	markettypes "github.com/osmosis-labs/osmosis/v26/x/market/types"
+	markettypes "github.com/osmosis-labs/osmosis/v27/x/market/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
 )
 
 // SpotPriceCalculator defines the contract that must be fulfilled by a spot price calculator

@@ -6,15 +6,15 @@ import (
 	"os"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	txfeetypes "github.com/osmosis-labs/osmosis/v26/x/txfees/types"
+	txfeetypes "github.com/osmosis-labs/osmosis/v27/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/v26/x/smart-account/authenticator"
-	"github.com/osmosis-labs/osmosis/v26/x/smart-account/testutils"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v27/x/smart-account/testutils"
 
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v26/app"
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v26/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v27/app"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v27/x/smart-account/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -24,9 +24,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v26/app/params"
-	"github.com/osmosis-labs/osmosis/v26/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v27/app/params"
+	"github.com/osmosis-labs/osmosis/v27/tests/osmosisibctesting"
 )
 
 type AuthenticatorSuite struct {

@@ -3,8 +3,8 @@ package keeper
 import (
 	"context"
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
-	"github.com/osmosis-labs/osmosis/v26/x/market/types"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
+	"github.com/osmosis-labs/osmosis/v27/x/market/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 

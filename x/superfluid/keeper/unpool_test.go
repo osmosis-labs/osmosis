@@ -10,12 +10,12 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
-	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v26/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v27/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v27/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v27/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v27/x/superfluid/types"
 )
 
 var (

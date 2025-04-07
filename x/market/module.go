@@ -14,9 +14,9 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	"github.com/osmosis-labs/osmosis/v26/x/market/client/cli"
-	"github.com/osmosis-labs/osmosis/v26/x/market/keeper"
-	"github.com/osmosis-labs/osmosis/v26/x/market/types"
+	"github.com/osmosis-labs/osmosis/v27/x/market/client/cli"
+	"github.com/osmosis-labs/osmosis/v27/x/market/keeper"
+	"github.com/osmosis-labs/osmosis/v27/x/market/types"
 )
 
 var (

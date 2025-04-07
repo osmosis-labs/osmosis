@@ -5,8 +5,8 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v26/app/apptesting/assets"
-	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting/assets"
+	"github.com/osmosis-labs/osmosis/v27/x/oracle/types"
 
 	"github.com/stretchr/testify/require"
 

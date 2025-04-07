@@ -12,11 +12,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
-	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/internal/test_helpers"
-	"github.com/osmosis-labs/osmosis/v26/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/pool-models/internal/test_helpers"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
 )
 
 var (

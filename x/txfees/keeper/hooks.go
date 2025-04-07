@@ -10,8 +10,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	epochstypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v26/x/txfees/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v27/x/epochs/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v27/x/txfees/types"
 )
 
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
@@ -31,7 +31,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	if epochIdentifier != k.GetParams(ctx).SwapFeesEpochIdentifier {
 		return nil
 	}
-	
+
 	defaultFeesDenom, _ := k.GetBaseDenom(ctx)
 	nonNativefeeTokenCollectorAddress := k.accountKeeper.GetModuleAddress(txfeestypes.NonNativeTxFeeCollectorName)
 

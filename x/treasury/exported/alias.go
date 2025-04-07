@@ -2,7 +2,7 @@
 package exported
 
 import (
-	"github.com/osmosis-labs/osmosis/v26/x/treasury/types"
+	"github.com/osmosis-labs/osmosis/v27/x/treasury/types"
 )
 
 var NewQueryClient = types.NewQueryClient

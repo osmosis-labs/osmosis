@@ -11,17 +11,17 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v26/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v26/tests/e2e/initialization"
-	clmath "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v26/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v27/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v27/tests/e2e/initialization"
+	clmath "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v27/x/protorev/types"
 )
 
 // Note: do not use chain B in this test as it has taker fee set.

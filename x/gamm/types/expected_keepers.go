@@ -8,11 +8,11 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
-	epochtypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v26/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v26/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
+	cltypes "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v27/x/epochs/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v27/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v27/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
 )
 
 // AccountKeeper defines the account contract that must be fulfilled when

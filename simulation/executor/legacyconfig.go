@@ -10,8 +10,8 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
-	"github.com/osmosis-labs/osmosis/v26/simulation/executor/internal/stats"
-	"github.com/osmosis-labs/osmosis/v26/simulation/simtypes/simlogger"
+	"github.com/osmosis-labs/osmosis/v27/simulation/executor/internal/stats"
+	"github.com/osmosis-labs/osmosis/v27/simulation/simtypes/simlogger"
 )
 
 const SimAppChainID = "symphony-test"

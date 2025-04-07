@@ -18,9 +18,9 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 
-	"github.com/osmosis-labs/osmosis/v26/x/stable-staking-incentives/client/cli"
-	"github.com/osmosis-labs/osmosis/v26/x/stable-staking-incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v26/x/stable-staking-incentives/types"
+	"github.com/osmosis-labs/osmosis/v27/x/stable-staking-incentives/client/cli"
+	"github.com/osmosis-labs/osmosis/v27/x/stable-staking-incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v27/x/stable-staking-incentives/types"
 )
 
 var (

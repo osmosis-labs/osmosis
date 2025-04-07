@@ -10,8 +10,8 @@ import (
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	marketexported "github.com/osmosis-labs/osmosis/v26/x/market/exported"
-	oracleexported "github.com/osmosis-labs/osmosis/v26/x/oracle/exported"
+	marketexported "github.com/osmosis-labs/osmosis/v27/x/market/exported"
+	oracleexported "github.com/osmosis-labs/osmosis/v27/x/oracle/exported"
 )
 
 var IBCRegexp = regexp.MustCompile("^ibc/[a-fA-F0-9]{64}$")

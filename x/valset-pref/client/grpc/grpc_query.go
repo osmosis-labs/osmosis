@@ -1,4 +1,3 @@
-
 package grpc
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
@@ -11,8 +10,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v26/x/valset-pref/client"
-	"github.com/osmosis-labs/osmosis/v26/x/valset-pref/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v27/x/valset-pref/client"
+	"github.com/osmosis-labs/osmosis/v27/x/valset-pref/client/queryproto"
 )
 
 type Querier struct {
@@ -30,4 +29,3 @@ func (q Querier) UserValidatorPreferences(grpcCtx context.Context,
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.UserValidatorPreferences(ctx, *req)
 }
-

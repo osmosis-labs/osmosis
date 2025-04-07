@@ -14,25 +14,25 @@ import (
 
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	gammv2types "github.com/osmosis-labs/osmosis/v26/x/gamm/v2types"
+	gammv2types "github.com/osmosis-labs/osmosis/v27/x/gamm/v2types"
 
 	"github.com/cosmos/gogoproto/proto"
 
-	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/client/queryproto"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/client/queryproto"
-	downtimequerytypes "github.com/osmosis-labs/osmosis/v26/x/downtime-detector/client/queryproto"
-	epochtypes "github.com/osmosis-labs/osmosis/v26/x/epochs/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v26/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v26/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v26/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v26/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v26/x/pool-incentives/types"
-	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/queryproto"
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v26/x/smart-account/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v26/x/superfluid/types"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v26/x/tokenfactory/types"
-	twapquerytypes "github.com/osmosis-labs/osmosis/v26/x/twap/client/queryproto"
-	txfeestypes "github.com/osmosis-labs/osmosis/v26/x/txfees/types"
+	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/client/queryproto"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool/client/queryproto"
+	downtimequerytypes "github.com/osmosis-labs/osmosis/v27/x/downtime-detector/client/queryproto"
+	epochtypes "github.com/osmosis-labs/osmosis/v27/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v27/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v27/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v27/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v27/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v27/x/pool-incentives/types"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v27/x/poolmanager/client/queryproto"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v27/x/smart-account/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v27/x/superfluid/types"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v27/x/tokenfactory/types"
+	twapquerytypes "github.com/osmosis-labs/osmosis/v27/x/twap/client/queryproto"
+	txfeestypes "github.com/osmosis-labs/osmosis/v27/x/txfees/types"
 )
 
 // stargateResponsePools keeps whitelist and its deterministic

@@ -14,8 +14,8 @@ import (
 
 	cdcutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 
-	epochskeeper "github.com/osmosis-labs/osmosis/v26/x/epochs/keeper"
-	"github.com/osmosis-labs/osmosis/v26/x/epochs/types"
+	epochskeeper "github.com/osmosis-labs/osmosis/v27/x/epochs/keeper"
+	"github.com/osmosis-labs/osmosis/v27/x/epochs/types"
 )
 
 type KeeperTestSuite struct {

@@ -4,8 +4,8 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v26/app/apptesting/assets"
-	appParams "github.com/osmosis-labs/osmosis/v26/app/params"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting/assets"
+	appParams "github.com/osmosis-labs/osmosis/v27/app/params"
 
 	"github.com/stretchr/testify/require"
 

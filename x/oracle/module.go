@@ -16,12 +16,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/v26/x/oracle/client/cli"
-	"github.com/osmosis-labs/osmosis/v26/x/oracle/simulation"
+	"github.com/osmosis-labs/osmosis/v27/x/oracle/client/cli"
+	"github.com/osmosis-labs/osmosis/v27/x/oracle/simulation"
 
-	"github.com/osmosis-labs/osmosis/v26/x/oracle/keeper"
+	"github.com/osmosis-labs/osmosis/v27/x/oracle/keeper"
 
-	"github.com/osmosis-labs/osmosis/v26/x/oracle/types"
+	"github.com/osmosis-labs/osmosis/v27/x/oracle/types"
 )
 
 var (

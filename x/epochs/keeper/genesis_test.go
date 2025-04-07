@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v26/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v27/x/epochs/types"
 )
 
 func TestEpochsExportGenesis(t *testing.T) {

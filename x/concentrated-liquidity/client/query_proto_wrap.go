@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cl "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity"
-	clquery "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/model"
+	cl "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity"
+	clquery "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/model"
 )
 
 // Querier defines a wrapper around the x/concentrated-liquidity keeper providing gRPC method

@@ -9,16 +9,16 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v26/x/gamm/client/cli"
-	"github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v26/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/client/cli"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v27/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
 )
 
 var testAddresses = osmoutils.CreateRandomAccounts(3)

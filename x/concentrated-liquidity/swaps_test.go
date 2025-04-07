@@ -8,12 +8,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/math"
-	clmath "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/math"
+	clmath "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types"
 )
 
 var _ = suite.TestingSuite(nil)

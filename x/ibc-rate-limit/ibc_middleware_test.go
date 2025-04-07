@@ -21,11 +21,11 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	txfeetypes "github.com/osmosis-labs/osmosis/v26/x/txfees/types"
+	txfeetypes "github.com/osmosis-labs/osmosis/v27/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/v26/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v26/tests/osmosisibctesting"
-	"github.com/osmosis-labs/osmosis/v26/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v27/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v27/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v27/x/ibc-rate-limit/types"
 )
 
 type MiddlewareTestSuite struct {

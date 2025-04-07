@@ -8,9 +8,9 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	appparams "github.com/osmosis-labs/osmosis/v26/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v27/app/params"
 
-	"github.com/osmosis-labs/osmosis/v26/x/market/types"
+	"github.com/osmosis-labs/osmosis/v27/x/market/types"
 )
 
 // Keeper of the market store

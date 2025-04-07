@@ -9,13 +9,13 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appParams "github.com/osmosis-labs/osmosis/v26/app/params"
-	osmosimtypes "github.com/osmosis-labs/osmosis/v26/simulation/simtypes"
-	sdkrand "github.com/osmosis-labs/osmosis/v26/simulation/simtypes/random"
-	clkeeper "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity"
-	clmodeltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types"
-	minttypes "github.com/osmosis-labs/osmosis/v26/x/mint/types"
+	appParams "github.com/osmosis-labs/osmosis/v27/app/params"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v27/simulation/simtypes"
+	sdkrand "github.com/osmosis-labs/osmosis/v27/simulation/simtypes/random"
+	clkeeper "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity"
+	clmodeltypes "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types"
+	minttypes "github.com/osmosis-labs/osmosis/v27/x/mint/types"
 )
 
 // preparePoolConfig defines the parameters for creating a new pool

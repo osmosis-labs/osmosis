@@ -6,9 +6,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/osmosis-labs/osmosis/v26/ante"
+	"github.com/osmosis-labs/osmosis/v27/ante"
 
-	oracletypes "github.com/osmosis-labs/osmosis/v26/x/oracle/types"
+	oracletypes "github.com/osmosis-labs/osmosis/v27/x/oracle/types"
 )
 
 func (suite *AnteTestSuite) TestOracleSpamming() {

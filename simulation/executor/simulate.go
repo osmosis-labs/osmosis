@@ -21,9 +21,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/v26/simulation/executor/internal/executortypes"
-	"github.com/osmosis-labs/osmosis/v26/simulation/executor/internal/stats"
-	"github.com/osmosis-labs/osmosis/v26/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v27/simulation/executor/internal/executortypes"
+	"github.com/osmosis-labs/osmosis/v27/simulation/executor/internal/stats"
+	"github.com/osmosis-labs/osmosis/v27/simulation/simtypes"
 )
 
 const AverageBlockTime = 6 * time.Second
