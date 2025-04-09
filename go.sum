@@ -928,8 +928,8 @@ github.com/osmosis-labs/block-sdk/v2 v2.1.6 h1:zMZADGm5sUB45CJzf5Y24fY7jgGeQrwAj
 github.com/osmosis-labs/block-sdk/v2 v2.1.6/go.mod h1:E8SvITZUdxkes3gI3+kgESZL+NLffkcLKnowUgYTOf4=
 github.com/osmosis-labs/cometbft v0.38.17-v28-osmo-1 h1:0xPd6S6mCsVT0IKP0xIUmg6sgo12iHMu5H6vxwrrIo0=
 github.com/osmosis-labs/cometbft v0.38.17-v28-osmo-1/go.mod h1:5l0SkgeLRXi6bBfQuevXjKqML1jjfJJlvI1Ulp02/o4=
-github.com/osmosis-labs/cosmos-sdk v0.50.11-v28-osmo-1 h1:MQEf1JrWsiwVmJbM7o8tXaDixEvXkLCzR6oyfdPJhzg=
-github.com/osmosis-labs/cosmos-sdk v0.50.11-v28-osmo-1/go.mod h1:KO0mBgNmkMA+yVkq13GeHWzR2F2iwjkfevywmPUhCVY=
+github.com/osmosis-labs/cosmos-sdk v0.50.11-v28-osmo-2 h1:Js2/5cDHn1HFUMQGe3QAsCVhdLcErs/doFrtYVxTj4k=
+github.com/osmosis-labs/cosmos-sdk v0.50.11-v28-osmo-2/go.mod h1:KO0mBgNmkMA+yVkq13GeHWzR2F2iwjkfevywmPUhCVY=
 github.com/osmosis-labs/cosmos-sdk/store v1.1.1-v0.50.11-v28-osmo-2 h1:1DjjPo2kkmyOUp6CKLyqSZsdwa906UrQHYH9m9kjw00=
 github.com/osmosis-labs/cosmos-sdk/store v1.1.1-v0.50.11-v28-osmo-2/go.mod h1:zIkKq2jfwaJFRKOWfaHNjwBOHKZluSxJnGCfno1BmMw=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
