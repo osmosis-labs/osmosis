@@ -28,4 +28,8 @@ type SQSGRPClient interface {
 	// Note: while there are built-in mechanisms to handle retry such as exponential backoff, they are no suitable for our context.
 	// In our context, we would rather continue attempting to repush the data in the next block instead of blocking the system.
 	PushData(ctx context.Context, height uint64, pools []ingesttypes.PoolI, takerFeesMap ingesttypes.TakerFeeMap) error
+
+	// IsConnected returns true if the GRPC client is connected to the SQS service.
+	// Attempts to reconnect occur in the background.
+	IsConnected() bool
 }
