@@ -44,9 +44,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Breaking
 
+### State Compatible
+
+## v29.0.1
+
+### State Breaking
 
 ### State Compatible
 
+* [#9372](https://github.com/osmosis-labs/osmosis/pull/9372) fix: query all proposals codec issues 
 
 ## v29.0.0
 
