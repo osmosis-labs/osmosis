@@ -2,9 +2,9 @@
 
 ## Overview
 
-- **v29 Proposal**: [Proposal Page](https://www.mintscan.io/osmosis/proposals/T.B.D)
-- **v29 Upgrade Block Height**: TODO
-- **v29 Upgrade Countdown**: [Block Countdown](https://www.mintscan.io/osmosis/blocks/TODO)
+- **v29 Proposal**: [Proposal Page](https://www.mintscan.io/osmosis/proposals/920)
+- **v29 Upgrade Block Height**: 33187000
+- **v29 Upgrade Countdown**: [Block Countdown](https://www.mintscan.io/osmosis/blocks/33187000)
 
 ## Hardware Requirements
 
