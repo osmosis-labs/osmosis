@@ -42,7 +42,7 @@ require (
 	github.com/iancoleman/orderedmap v0.3.0
 	github.com/json-iterator/go v1.1.12
 	github.com/mattn/go-sqlite3 v1.14.17
-	github.com/ory/dockertest/v3 v3.11.0
+	github.com/ory/dockertest/v3 v3.12.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.17
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.17
@@ -119,6 +119,7 @@ require (
 	github.com/getsentry/sentry-go v0.27.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/go-viper/mapstructure/v2 v2.1.0 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/google/btree v1.1.3 // indirect
 	github.com/google/flatbuffers v23.5.26+incompatible // indirect
@@ -145,6 +146,7 @@ require (
 	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
+	github.com/moby/sys/user v0.3.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
@@ -189,14 +191,14 @@ require (
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/containerd/continuity v0.4.3 // indirect
+	github.com/containerd/continuity v0.4.5 // indirect
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/ledger-cosmos-go v0.14.0 // indirect
 	github.com/danieljoos/wincred v1.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
-	github.com/docker/cli v26.1.4+incompatible // indirect
+	github.com/docker/cli v27.4.1+incompatible // indirect
 	github.com/docker/docker v27.1.1+incompatible // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
@@ -242,7 +244,7 @@ require (
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
-	github.com/opencontainers/runc v1.1.14 // indirect
+	github.com/opencontainers/runc v1.2.3 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/petermattis/goid v0.0.0-20240813172612-4fcff4a6cae7 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
