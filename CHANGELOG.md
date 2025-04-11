@@ -42,6 +42,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## v29.0.2
+
+### State Breaking
+
+### State Compatible
+
+* [#9375](https://github.com/osmosis-labs/osmosis/pull/9375) chore: add fix for pagination of proposals 
+
 ### State Breaking
 
 ### State Compatible

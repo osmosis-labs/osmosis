@@ -106,6 +106,6 @@ require (
 )
 
 // Direct cosmos-sdk branch link: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v28/0.50.11, current branch: osmo-v28/0.50.11
-// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/ae97fc8d1aa00df13bc45497cc9402d6dc600172
-// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.50.11-v28-osmo-2
-replace github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.50.11-v28-osmo-2
+// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/5b4e03484cf88e7d1fce003ba75b4fdc5c81f15f
+// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.50.11-v28-osmo-3
+replace github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.50.11-v28-osmo-3
