@@ -124,19 +124,17 @@ func (p *UpdateMigrationRecordsProposal) ValidateBasic() error {
 
 // String returns a string containing the migration record's proposal.
 func (p UpdateMigrationRecordsProposal) String() string {
-	// TODO: Make this prettier
-	recordsStr := ""
-	for _, record := range p.Records {
-		recordsStr = recordsStr + fmt.Sprintf("(BalancerPoolID: %d, ClPoolID: %d) ", record.BalancerPoolId, record.ClPoolId)
-	}
-
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Update Migration Records Proposal:
+    var b strings.Builder
+    b.WriteString(fmt.Sprintf(`Update Migration Records Proposal:
   Title:       %s
   Description: %s
-  Records:     %s
-`, p.Title, p.Description, recordsStr))
-	return b.String()
+  Records:
+`, p.Title, p.Description))
+    for _, record := range p.Records {
+	b.WriteString(fmt.Sprintf("    - BalancerPoolID: %d, ClPoolID: %d\n", record.BalancerPoolId, record.ClPoolId))
+    }
+	
+    return b.String()
 }
 
 func NewCreateConcentratedLiquidityPoolsAndLinktoCFMMProposal(title, description string, records []PoolRecordWithCFMMLink) govtypesv1.Content {
