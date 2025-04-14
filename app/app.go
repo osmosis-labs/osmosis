@@ -138,6 +138,7 @@ import (
 	v27 "github.com/osmosis-labs/osmosis/v29/app/upgrades/v27"
 	v28 "github.com/osmosis-labs/osmosis/v29/app/upgrades/v28"
 	v29 "github.com/osmosis-labs/osmosis/v29/app/upgrades/v29"
+	v30 "github.com/osmosis-labs/osmosis/v29/app/upgrades/v30"
 	v3 "github.com/osmosis-labs/osmosis/v29/app/upgrades/v3"
 	v4 "github.com/osmosis-labs/osmosis/v29/app/upgrades/v4"
 	v5 "github.com/osmosis-labs/osmosis/v29/app/upgrades/v5"
@@ -195,7 +196,7 @@ var (
 
 	_ runtime.AppI = (*OsmosisApp)(nil)
 
-	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade, v21.Upgrade, v22.Upgrade, v23.Upgrade, v24.Upgrade, v25.Upgrade, v26.Upgrade, v27.Upgrade, v28.Upgrade, v29.Upgrade}
+	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade, v21.Upgrade, v22.Upgrade, v23.Upgrade, v24.Upgrade, v25.Upgrade, v26.Upgrade, v27.Upgrade, v28.Upgrade, v29.Upgrade, v30.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 
 	// rpcAddressConfigName is the name of the config key that holds the RPC address.
