@@ -1,0 +1,6 @@
+{
+    "binaries": {
+      "linux/amd64": "https://github.com/Orchestra-Labs/symphony/releases/download/v0.5.0/symphonyd",
+      "linux/arm64": "https://github.com/Orchestra-Labs/symphony/releases/download/v0.5.0/symphonyd"
+    }
+  }
