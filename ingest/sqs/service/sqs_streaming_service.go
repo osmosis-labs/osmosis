@@ -62,6 +62,7 @@ func (s *sqsStreamingService) ListenFinalizeBlock(goCtx context.Context, req typ
 }
 
 func (s *sqsStreamingService) ListenCommit(ctx context.Context, res types.ResponseCommit, changeSet []*storetypes.StoreKVPair) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockProcessStartTime := time.Now()
 	defer func() {
 		// Emit telemetry for the duration of processing the block.
@@ -70,10 +71,15 @@ func (s *sqsStreamingService) ListenCommit(ctx context.Context, res types.Respon
 		s.blockUpdatesProcessUtil.SetChangeSet(nil)
 	}()
 
+	// If the gRPC client is not connected, return early to avoid blocking processing the block data.
+	if err := s.grpcClient.IsConnected(); err != nil {
+		emitFailureTelemetry(sdkCtx, err, domain.SQSProcessBlockErrorMetricName)
+		return nil // avoid breaking consensus
+	}
+
 	// Set the change set on the block update process utils.
 	s.blockUpdatesProcessUtil.SetChangeSet(changeSet)
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Always return nil to avoid making this consensus breaking.
 	_ = s.processBlockRecoverError(sdkCtx)
 	return nil

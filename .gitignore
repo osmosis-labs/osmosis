@@ -44,6 +44,14 @@ go.work.sum
 .idea/**/dictionaries
 .idea/**/shelf
 
+# Vim backup, undo files
+*.orig
+*~
+
+# Vim swap files
+.*.swp
+.*.swo
+
 # Generated files
 .idea/**/contentModel.xml
 
