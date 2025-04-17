@@ -87,7 +87,7 @@ representative price of the GAMM token shares. The superfluid module has
 (`RefreshIntermediaryDelegationAmounts`) and to increase delegation on
 lockup (`IncreaseSuperfluidDelegation`). Then, we see whether or not the
 superfluid OSMO currently delegated is worth more or less than this
-expected delegation amount amount. If the OSMO is worth more, we do
+expected delegation amount. If the OSMO is worth more, we do
 instant undelegations and immediately burn the OSMO. If less, we mint
 OSMO and update the amount delegated. A simplified diagram of this whole
 process is found below:
@@ -196,7 +196,7 @@ Lots of questions to be answered here
 
 ### Dedicated Gauges
 
-Each intermediary account has has dedicated gauge where it sends the
+Each intermediary account has dedicated gauge where it sends the
 delegation rewards to. Gauges are distributing the rewards to end users
 at the end of the epoch.
 
@@ -332,7 +332,7 @@ This message does all the functionality of `MsgSuperfluidUndelegate` but
 also starts unbonding the underlying lock as well, allowing both the
 unstaking and unlocking to complete at the same time. Without using this
 function, a user will not be able to start unbonding their underlying
-lock until after the the unstaking has finished.
+lock until after the unstaking has finished.
 
 **State Modifications:**
 
@@ -668,7 +668,7 @@ currently contains:
 - `MinimumRiskFactor` which is an osmomath.Dec that represents the discount
   to apply to all superfluid staked modules when calculating their
   staking power. For example, if a specific denom has an OSMO
-  equivalent value of 100 OSMO, but the the `MinimumRiskFactor` param
+  equivalent value of 100 OSMO, but the `MinimumRiskFactor` param
   is 0.05, then the denom will only get 95 OSMO worth of staking power
   when staked.
 
