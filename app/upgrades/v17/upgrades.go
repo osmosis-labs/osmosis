@@ -42,7 +42,7 @@ const (
 	e2eChainB      = "osmo-test-b"
 )
 
-var notEnoughLiquidityForSwapErr = errorsmod.Wrapf(gammtypes.ErrInvalidMathApprox, "token amount must be positive")
+var notEnoughLiquidityForSwapErr = errorsmod.Wrapf(gammtypes.ErrInvalidMathApprox, "token amount must be positive") // nolint:errname
 
 func CreateUpgradeHandler(
 	mm *module.Manager,

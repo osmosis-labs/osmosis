@@ -48,7 +48,7 @@ func (tp *TokenPairArbRoutes) Validate() error {
 		return errors.New("token names cannot be empty")
 	}
 
-	if tp.ArbRoutes == nil || len(tp.ArbRoutes) == 0 {
+	if tp.ArbRoutes == nil || len(tp.ArbRoutes) == 0 { //nolint:gosimple
 		return errors.New("there must be at least one route")
 	}
 

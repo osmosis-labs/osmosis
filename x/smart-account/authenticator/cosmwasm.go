@@ -213,7 +213,7 @@ func parseInitData(data []byte) (sdk.AccAddress, []byte, error) {
 	}
 
 	// params are optional, early return if they are not present
-	if initData.Params == nil || len(initData.Params) == 0 {
+	if initData.Params == nil || len(initData.Params) == 0 { //nolint:gosimple
 		return contractAddr, nil, nil
 	}
 

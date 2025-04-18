@@ -12,7 +12,7 @@ linters:
     - durationcheck
     - errcheck
     - errname
-    - exportloopref
+    - usetesting
     - forcetypeassert
     - goconst
     - gofmt
@@ -31,7 +31,6 @@ linters:
     - promlinter
     - staticcheck
     - stylecheck
-    - tenv
     - thelper
     - tparallel
     - typecheck
