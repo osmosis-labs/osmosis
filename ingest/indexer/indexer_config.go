@@ -18,7 +18,7 @@ type Config struct {
 	PoolTopicId              string `mapstructure:"pool-topic-id"`
 	TokenSupplyTopicId       string `mapstructure:"token-supply-topic-id"`
 	TokenSupplyOffsetTopicId string `mapstructure:"token-supply-offset-topic-id"`
-	PairTopicId              string `mapstructure:"pair-offset-topic-id"`
+	PairTopicId              string `mapstructure:"pair-topic-id"`
 }
 
 // groupOptName is the name of the indexer options group.
