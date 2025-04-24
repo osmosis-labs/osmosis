@@ -259,6 +259,11 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDeno
 
 // SwapOutAmtGivenIn executes a swap given a desired input amount
 func (p *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, spreadFactor osmomath.Dec) (tokenOut sdk.Coin, err error) {
+	// Fixed gas consumption per swap to prevent spam
+	if ctx.GasMeter() != nil {
+		ctx.GasMeter().ConsumeGas(types.StableswapGasFeeForSwap, "stableswap pool swap computation")
+	}
+
 	if err = validatePoolLiquidity(p.PoolLiquidity.Add(tokenIn...), p.ScalingFactors); err != nil {
 		return sdk.Coin{}, err
 	}
@@ -296,6 +301,11 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDeno
 
 // SwapInAmtGivenOut executes a swap given a desired output amount
 func (p *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, spreadFactor osmomath.Dec) (tokenIn sdk.Coin, err error) {
+	// Fixed gas consumption per swap to prevent spam
+	if ctx.GasMeter() != nil {
+		ctx.GasMeter().ConsumeGas(types.StableswapGasFeeForSwap, "stableswap pool swap computation")
+	}
+
 	tokenIn, err = p.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, spreadFactor)
 	if err != nil {
 		return sdk.Coin{}, err
