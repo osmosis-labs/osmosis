@@ -523,7 +523,7 @@ func TestScaleCoin(t *testing.T) {
 
 func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 	tenPercentOfTwoPool := int64(1000000000 / 10)
-	tenPercentOfThreePool := int64(1000000 / 10)
+	tenPercentOfThreePool := int64(100000 / 10)
 	tests := map[string]struct {
 		tokensIn        sdk.Coins
 		poolAssets      sdk.Coins
