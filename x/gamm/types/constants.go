@@ -8,8 +8,9 @@ const (
 	OneShareExponent = 18
 	// Raise 10 to the power of SigFigsExponent to determine number of significant figures.
 	// i.e. SigFigExponent = 8 is 10^8 which is 100000000. This gives 8 significant figures.
-	SigFigsExponent       = 8
-	BalancerGasFeeForSwap = 10_000
+	SigFigsExponent         = 8
+	BalancerGasFeeForSwap   = 10_000
+	StableswapGasFeeForSwap = 30_000
 
 	StableswapMinScaledAmtPerAsset = 1
 	// We keep this multiplier at 1, but can increase if needed in the unlikely scenario where default scaling factors of 1 cannot accommodate enough assets
