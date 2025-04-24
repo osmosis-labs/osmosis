@@ -3,7 +3,7 @@ package symphony.cosmwasmpool.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/cosmwasm/msg/transmuter";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool/cosmwasm/msg/transmuter";
 
 // ===================== JoinPoolExecuteMsg
 message EmptyRequest {}

@@ -4,7 +4,7 @@ package symphony.oracle.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos/msg/v1/msg.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/oracle/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/oracle/types";
 
 // Msg defines the oracle Msg service.
 service Msg {

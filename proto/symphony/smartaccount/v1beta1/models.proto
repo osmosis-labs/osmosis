@@ -1,7 +1,7 @@
 syntax = "proto3";
 package symphony.smartaccount.v1beta1;
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/smart-account/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/smart-account/types";
 
 // AccountAuthenticator represents a foundational model for all authenticators.
 // It provides extensibility by allowing concrete types to interpret and

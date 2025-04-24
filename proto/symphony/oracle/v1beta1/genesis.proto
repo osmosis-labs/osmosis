@@ -4,7 +4,7 @@ package symphony.oracle.v1beta1;
 import "gogoproto/gogo.proto";
 import "symphony/oracle/v1beta1/oracle.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/oracle/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/oracle/types";
 
 // GenesisState defines the oracle module's genesis state.
 message GenesisState {

@@ -14,7 +14,7 @@ import "cosmos_proto/cosmos.proto";
 import "symphony/concentratedliquidity/v1beta1/position.proto";
 import "symphony/concentratedliquidity/v1beta1/incentive_record.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/client/queryproto";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/client/queryproto";
 
 service Query {
   // Pools returns all concentrated liquidity pools

@@ -1,11 +1,14 @@
-go 1.22.4
+go 1.22.11
 
-use .
+toolchain go1.24.1
 
-use ./osmomath
-
-use ./osmoutils
-
-use ./x/ibc-hooks
+use (
+	.
+	./osmomath
+	./osmoutils
+	./x/ibc-hooks
+)
 
 replace github.com/onsi/ginkgo => github.com/onsi/ginkgo v1.16.5
+
+replace cosmossdk.io/store => github.com/osmosis-labs/cosmos-sdk/store v1.1.1-v0.50.11-v28-osmo-2

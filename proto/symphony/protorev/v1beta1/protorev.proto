@@ -8,7 +8,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "symphony/poolmanager/v1beta1/genesis.proto";
 import "symphony/txfees/v1beta1/genesis.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/protorev/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/protorev/types";
 
 // TokenPairArbRoutes tracks all of the hot routes for a given pair of tokens
 message TokenPairArbRoutes {

@@ -5,6 +5,6 @@ import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "symphony/ibchooks/params.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/ibc-hooks/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/ibc-hooks/types";
 
 message GenesisState { Params params = 1 [ (gogoproto.nullable) = false ]; }

@@ -6,7 +6,7 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/any.proto";
 import "symphony/ibcratelimit/v1beta1/params.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/ibc-rate-limit/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/ibc-rate-limit/types";
 
 // GenesisState defines the ibc-rate-limit module's genesis state.
 message GenesisState {

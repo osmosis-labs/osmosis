@@ -13,7 +13,7 @@ import "cosmos_proto/cosmos.proto";
 import "symphony/gamm/v1beta1/shared.proto";
 import "symphony/gamm/v1beta1/params.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/gamm/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/gamm/types";
 
 service Query {
   rpc Pools(QueryPoolsRequest) returns (QueryPoolsResponse) {

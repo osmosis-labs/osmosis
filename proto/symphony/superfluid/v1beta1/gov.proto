@@ -6,7 +6,7 @@ import "amino/amino.proto";
 import "cosmos_proto/cosmos.proto";
 import "symphony/superfluid/superfluid.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/superfluid/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/superfluid/types";
 
 // SetSuperfluidAssetsProposal is a gov Content type to update the superfluid
 // assets

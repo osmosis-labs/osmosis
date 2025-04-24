@@ -5,7 +5,7 @@ import "cosmos/msg/v1/msg.proto";
 import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/model";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool/model";
 
 service MsgCreator {
   rpc CreateCosmWasmPool(MsgCreateCosmWasmPool)

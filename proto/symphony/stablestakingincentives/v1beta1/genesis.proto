@@ -4,7 +4,7 @@ package symphony.stablestakingincentives.v1beta1;
 import "gogoproto/gogo.proto";
 import "symphony/stablestakingincentives/v1beta1/incentives.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/stable-staking-incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/stable-staking-incentives/types";
 
 // GenesisState defines the market module's genesis state.
 message GenesisState {

@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "symphony/incentives/group.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/incentives/types";
 
 // CreateGroupsProposal is a type for creating one or more groups via
 // governance. This is useful for creating groups without having to pay

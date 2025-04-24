@@ -10,7 +10,7 @@ import "google/api/annotations.proto";
 
 import "symphony/treasury/v1beta1/treasury.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/treasury/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/treasury/types";
 
 // Query defines the gRPC querier service.
 service Query {

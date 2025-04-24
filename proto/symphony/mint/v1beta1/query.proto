@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "symphony/mint/v1beta1/mint.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/mint/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/mint/types";
 
 // Query provides defines the gRPC querier service.
 service Query {

@@ -11,7 +11,7 @@ import "symphony/lockup/lock.proto";
 import "symphony/incentives/group.proto";
 import "symphony/incentives/params.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/incentives/types";
 
 // Query defines the gRPC querier service
 service Query {

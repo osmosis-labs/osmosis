@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/duration.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/txfees/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/txfees/types";
 
 service Query {
   // FeeTokens returns a list of all the whitelisted fee tokens and their

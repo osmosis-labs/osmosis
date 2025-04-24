@@ -7,7 +7,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "symphony/smartaccount/v1beta1/params.proto";
 import "symphony/smartaccount/v1beta1/models.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/smart-account/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/smart-account/types";
 
 // Query defines the gRPC querier service.
 service Query {

@@ -3,7 +3,7 @@ package symphony.stablestakingincentives.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/stable-staking-incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/stable-staking-incentives/types";
 
 message Params {
   option (gogoproto.goproto_stringer) = false;

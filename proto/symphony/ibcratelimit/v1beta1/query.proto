@@ -6,7 +6,7 @@ import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "symphony/ibcratelimit/v1beta1/params.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/ibc-rate-limit/client/queryproto";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/ibc-rate-limit/client/queryproto";
 
 // Query defines the gRPC querier service.
 service Query {

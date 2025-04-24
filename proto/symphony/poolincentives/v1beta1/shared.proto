@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 import "symphony/poolincentives/v1beta1/incentives.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/pool-incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/pool-incentives/types";
 
 // MigrationRecords contains all the links between balancer and concentrated
 // pools.

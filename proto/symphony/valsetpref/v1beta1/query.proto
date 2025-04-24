@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "symphony/valsetpref/v1beta1/state.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/valset-pref/client/queryproto";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/valset-pref/client/queryproto";
 option (gogoproto.goproto_getters_all) = false;
 
 // Query defines the gRPC querier service.

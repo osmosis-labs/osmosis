@@ -64,7 +64,7 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/osmosis/tokenfactory/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/symphony/tokenfactory/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "TokenfactoryParams"

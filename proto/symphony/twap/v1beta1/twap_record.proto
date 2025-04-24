@@ -4,7 +4,7 @@ package symphony.twap.v1beta1;
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/twap/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/twap/types";
 
 // A TWAP record should be indexed in state by pool_id, (asset pair), timestamp
 // The asset pair assets should be lexicographically sorted.

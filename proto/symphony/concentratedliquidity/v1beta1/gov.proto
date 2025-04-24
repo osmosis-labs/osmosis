@@ -3,7 +3,7 @@ package symphony.concentratedliquidity.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/concentrated-liquidity/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/concentrated-liquidity/types";
 
 // CreateConcentratedLiquidityPoolsProposal is a gov Content type for creating
 // concentrated liquidity pools. If a CreateConcentratedLiquidityPoolsProposal

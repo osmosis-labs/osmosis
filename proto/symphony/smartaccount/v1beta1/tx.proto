@@ -4,7 +4,7 @@ package symphony.smartaccount.v1beta1;
 import "cosmos/msg/v1/msg.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/smart-account/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/smart-account/types";
 
 // Msg defines the Msg service.
 service Msg {

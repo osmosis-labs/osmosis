@@ -9,7 +9,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "symphony/poolmanager/v1beta1/module_route.proto";
 import "symphony/poolmanager/v1beta1/tx.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types";
 
 // Params holds parameters for the poolmanager module
 message Params {

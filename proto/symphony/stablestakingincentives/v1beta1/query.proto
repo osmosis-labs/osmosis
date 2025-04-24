@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "symphony/stablestakingincentives/v1beta1/incentives.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/stable-staking-incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/stable-staking-incentives/types";
 
 service Query {
   // Params returns pool incentives params.

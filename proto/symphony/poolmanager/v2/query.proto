@@ -8,7 +8,7 @@ import "google/protobuf/any.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/poolmanager/client/queryprotov2";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/poolmanager/client/queryprotov2";
 
 service Query {
   // SpotPriceV2 defines a gRPC query handler that returns the spot price given

@@ -10,7 +10,7 @@ import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
 import "cosmos_proto/cosmos.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/gamm/v2types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/gamm/v2types";
 
 service Query {
   // Deprecated: please use alternate in x/poolmanager

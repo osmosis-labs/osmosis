@@ -13,7 +13,7 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/downtime-detector/client/queryproto";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/downtime-detector/client/queryproto";
 
 service Query {
   rpc RecoveredSinceDowntimeOfLength(RecoveredSinceDowntimeOfLengthRequest)

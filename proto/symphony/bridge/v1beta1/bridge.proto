@@ -3,7 +3,7 @@ package symphony.bridge.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/bridge/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/bridge/types";
 
 // Params defines params for x/bridge module.
 message Params {

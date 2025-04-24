@@ -4,7 +4,7 @@ package symphony.valsetpref.v1beta1;
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/valset-pref/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/valset-pref/types";
 option (gogoproto.goproto_getters_all) = false;
 
 // ValidatorPreference defines the message structure for

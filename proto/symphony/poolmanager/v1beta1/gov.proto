@@ -4,7 +4,7 @@ package symphony.poolmanager.v1beta1;
 import "gogoproto/gogo.proto";
 import "symphony/poolmanager/v1beta1/tx.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types";
 
 // DenomPairTakerFeeProposal is a type for adding/removing a custom taker fee(s)
 // for one or more denom pairs.

@@ -5,7 +5,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/treasury/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/treasury/types";
 
 // Params defines the parameters for the oracle module.
 message Params {

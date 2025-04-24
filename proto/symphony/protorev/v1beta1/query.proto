@@ -9,7 +9,7 @@ import "symphony/protorev/v1beta1/protorev.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/protorev/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/protorev/types";
 
 // Query defines the gRPC querier service.
 service Query {

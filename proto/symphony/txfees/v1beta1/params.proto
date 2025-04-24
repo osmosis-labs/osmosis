@@ -3,7 +3,7 @@ package symphony.txfees.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/txfees/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/txfees/types";
 
 // Params holds parameters for the txfees module
 message Params {

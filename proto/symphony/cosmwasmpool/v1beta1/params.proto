@@ -3,7 +3,7 @@ package symphony.cosmwasmpool.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool/types";
 
 message Params {
   // code_ide_whitelist contains the list of code ids that are allowed to be

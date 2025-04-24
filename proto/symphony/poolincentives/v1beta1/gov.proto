@@ -6,7 +6,7 @@ import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "symphony/poolincentives/v1beta1/incentives.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/pool-incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/pool-incentives/types";
 
 // ReplacePoolIncentivesProposal is a gov Content type for updating the pool
 // incentives. If a ReplacePoolIncentivesProposal passes, the proposal’s records

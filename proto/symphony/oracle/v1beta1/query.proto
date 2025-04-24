@@ -6,7 +6,7 @@ import "google/api/annotations.proto";
 import "symphony/oracle/v1beta1/oracle.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/oracle/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/oracle/types";
 
 // Query defines the gRPC querier service.
 service Query {

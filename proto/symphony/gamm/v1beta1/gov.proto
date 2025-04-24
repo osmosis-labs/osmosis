@@ -7,7 +7,7 @@ import "symphony/gamm/v1beta1/shared.proto";
 import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/gamm/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/gamm/types";
 
 // ReplaceMigrationRecordsProposal is a gov Content type for updating the
 // migration records. If a ReplaceMigrationRecordsProposal passes, the

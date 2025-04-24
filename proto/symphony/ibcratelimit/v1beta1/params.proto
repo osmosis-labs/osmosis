@@ -3,7 +3,7 @@ package symphony.ibcratelimit.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/ibc-rate-limit/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/ibc-rate-limit/types";
 
 // Params defines the parameters for the ibc-rate-limit module.
 message Params {

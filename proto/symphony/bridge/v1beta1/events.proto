@@ -4,7 +4,7 @@ package symphony.bridge.v1beta1;
 import "gogoproto/gogo.proto";
 import "symphony/bridge/v1beta1/bridge.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/bridge/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/bridge/types";
 
 message EventInboundTransfer {
   // Sender is a sender's address

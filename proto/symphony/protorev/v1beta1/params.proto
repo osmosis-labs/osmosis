@@ -4,7 +4,7 @@ package symphony.protorev.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/protorev/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/protorev/types";
 
 // Params defines the parameters for the module.
 message Params {

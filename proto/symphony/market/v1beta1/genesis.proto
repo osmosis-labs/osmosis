@@ -4,7 +4,7 @@ package symphony.market.v1beta1;
 import "gogoproto/gogo.proto";
 import "symphony/market/v1beta1/market.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/market/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/market/types";
 
 // GenesisState defines the market module's genesis state.
 message GenesisState {

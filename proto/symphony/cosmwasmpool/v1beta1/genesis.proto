@@ -7,7 +7,7 @@ import "cosmos_proto/cosmos.proto";
 
 import "symphony/cosmwasmpool/v1beta1/params.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool/types";
 
 // GenesisState defines the cosmwasmpool module's genesis state.
 message GenesisState {

@@ -3,7 +3,7 @@ package symphony.cosmwasmpool.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool/types";
 
 // UploadCosmWasmPoolCodeAndWhiteListProposal is a gov Content type for
 // uploading coswasm pool code and adding it to internal whitelist. Only the

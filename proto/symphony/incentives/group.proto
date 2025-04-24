@@ -8,7 +8,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "symphony/lockup/lock.proto";
 import "symphony/incentives/gauge.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/incentives/types";
 
 // SplittingPolicy determines the way we want to split incentives in groupGauges
 enum SplittingPolicy {

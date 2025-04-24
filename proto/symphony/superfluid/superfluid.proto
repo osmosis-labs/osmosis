@@ -7,7 +7,7 @@ import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "symphony/lockup/lock.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/superfluid/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/superfluid/types";
 
 // SuperfluidAssetType indicates whether the superfluid asset is
 // a native token, lp share of a pool, or concentrated share of a pool

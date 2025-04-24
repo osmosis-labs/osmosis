@@ -1,6 +1,6 @@
 syntax = "proto3";
 package symphony.cosmwasmpool.v1beta1;
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/cosmwasmpool/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/cosmwasmpool/types";
 
 service Msg {}

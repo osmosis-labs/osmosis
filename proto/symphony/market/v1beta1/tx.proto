@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/market/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/market/types";
 
 // Msg defines the market Msg service.
 service Msg {

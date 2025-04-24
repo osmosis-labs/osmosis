@@ -15,7 +15,7 @@ modules=$(go list -tags e2e ./... | sed "s/g.*v${version_to_replace}\///")
 
 while IFS= read -r line; do
   modules_to_upgrade_manually+=("$line")
-done < <(find . -name go.mod -exec grep -l "github.com/osmosis-labs/osmosis/v26" {} \; | grep -v  "^./go.mod$" | sed 's|/go.mod||' | sed 's|^./||')
+done < <(find . -name go.mod -exec grep -l "github.com/osmosis-labs/osmosis/v27" {} \; | grep -v  "^./go.mod$" | sed 's|/go.mod||' | sed 's|^./||')
 
 replace_paths() {
     file="${1}"

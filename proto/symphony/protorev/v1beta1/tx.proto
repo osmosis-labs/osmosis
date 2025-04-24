@@ -8,7 +8,7 @@ import "symphony/protorev/v1beta1/protorev.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/protorev/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/protorev/types";
 
 service Msg {
   // SetHotRoutes sets the hot routes that will be explored when creating

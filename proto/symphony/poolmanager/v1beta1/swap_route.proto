@@ -3,7 +3,7 @@ package symphony.poolmanager.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/poolmanager/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/poolmanager/types";
 
 message SwapAmountInRoute {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];

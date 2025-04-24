@@ -3,7 +3,7 @@ package symphony.lockup;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v26/x/lockup/types";
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/lockup/types";
 
 message Params {
   repeated string force_unlock_allowed_addresses = 1
