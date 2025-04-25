@@ -51,7 +51,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	marketGenesis := types.NewGenesisState(
 		types.Params{
-			PoolRecoveryPeriod: poolRecoveryPeriod,
 			MinStabilitySpread: minStabilitySpread,
 		},
 	)

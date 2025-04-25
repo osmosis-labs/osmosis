@@ -25,6 +25,8 @@ symphonyd keys add validator1 --keyring-backend=test --home=$HOME/.symphonyd/val
 symphonyd keys add validator2 --keyring-backend=test --home=$HOME/.symphonyd/validator2
 symphonyd keys add validator3 --keyring-backend=test --home=$HOME/.symphonyd/validator3
 symphonyd keys add validator4 --keyring-backend=test --home=$HOME/.symphonyd/validator4
+# create key for first node
+symphonyd keys add tax_receiver_addr --keyring-backend=test --home=$HOME/.symphonyd/validator1
 
 update_genesis () {    
     cat $HOME/.symphonyd/validator1/config/genesis.json | jq "$1" > $HOME/.symphonyd/validator1/config/tmp_genesis.json && mv $HOME/.symphonyd/validator1/config/tmp_genesis.json $HOME/.symphonyd/validator1/config/genesis.json
@@ -97,6 +99,8 @@ update_genesis '.app_state["oracle"]["exchange_rates"][1]["exchange_rate"]="2.0"
 
 
 update_genesis '.app_state["stablestakingincentives"]["params"]["distribution_contract_address"] = "symphony14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s748pj4"'
+
+update_genesis '.app_state["market"]["params"]["tax_receiver"]="'$(symphonyd keys show tax_receiver_addr -a --keyring-backend=test --home=$HOME/.symphonyd/validator1)'"'
 
 # copy validator1 genesis file to validator2-4
 cp $HOME/.symphonyd/validator1/config/genesis.json $HOME/.symphonyd/validator2/config/genesis.json

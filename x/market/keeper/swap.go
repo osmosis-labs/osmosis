@@ -143,9 +143,6 @@ func (k Keeper) Swap(
 		feeDecCoin = sdk.NewDecCoin(swapDecCoin.Denom, osmomath.ZeroInt())
 	}
 
-	// Subtract fee from the swap coin
-	swapDecCoin.Amount = swapDecCoin.Amount.Sub(feeDecCoin.Amount)
-
 	// Send offer coins to module account
 	offerCoins := sdk.NewCoins(offerCoin)
 	err = k.BankKeeper.SendCoinsFromAccountToModule(ctx, trader, types.ModuleName, offerCoins)
@@ -161,6 +158,9 @@ func (k Keeper) Swap(
 		}
 	}
 
+	// Subtract fee from the swap coin
+	swapDecCoin.Amount = swapDecCoin.Amount.Sub(feeDecCoin.Amount)
+
 	// Mint asked coins and credit Trader's account
 	swapCoin, decimalCoin := swapDecCoin.TruncateDecimal()
 
@@ -172,7 +172,12 @@ func (k Keeper) Swap(
 	feeDecCoin = feeDecCoin.Add(decimalCoin) // add truncated decimalCoin to swapFee
 	feeCoin, _ := feeDecCoin.TruncateDecimal()
 
-	mintCoins := sdk.NewCoins(swapCoin)
+	mintCoins := sdk.NewCoins(swapCoin, feeCoin)
+
+	taxReceiverAddr, err := sdk.AccAddressFromBech32(k.GetParams(ctx).TaxReceiver)
+	if err != nil {
+		return nil, err
+	}
 
 	// mint only stable coin
 	if askDenom != appParams.BaseCoinUnit { // melody -> stable or stable -> stable
@@ -187,6 +192,12 @@ func (k Keeper) Swap(
 		if err != nil {
 			return nil, err
 		}
+
+		// Send fees to TxReceiver
+		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, taxReceiverAddr, sdk.NewCoins(feeCoin))
+		if err != nil {
+			return nil, fmt.Errorf("could not send from exchange vault to recipient: %w", err)
+		}
 	} else { // stable -> melody
 		// native coin transfer using exchange vault
 		marketVaultBalance := k.GetExchangePoolBalance(ctx)
@@ -196,6 +207,12 @@ func (k Keeper) Swap(
 		}
 
 		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiver, sdk.NewCoins(swapCoin))
+		if err != nil {
+			return nil, fmt.Errorf("could not send from exchange vault to recipient: %w", err)
+		}
+
+		// Send fees to TxReceiver
+		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, taxReceiverAddr, sdk.NewCoins(feeCoin))
 		if err != nil {
 			return nil, fmt.Errorf("could not send from exchange vault to recipient: %w", err)
 		}
