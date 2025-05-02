@@ -158,12 +158,14 @@ func (k Keeper) Swap(
 		}
 	}
 
+	totalCoin, decimalCoin := swapDecCoin.TruncateDecimal()
+	if !totalCoin.IsPositive() {
+		return nil, types.ErrZeroSwapCoin
+	}
+
 	// Subtract fee from the swap coin
 	swapDecCoin.Amount = swapDecCoin.Amount.Sub(feeDecCoin.Amount)
-
-	// Mint asked coins and credit Trader's account
 	swapCoin, decimalCoin := swapDecCoin.TruncateDecimal()
-
 	// Ensure to fail the swap tx when zero swap coin
 	if !swapCoin.IsPositive() {
 		return nil, types.ErrZeroSwapCoin
@@ -172,8 +174,6 @@ func (k Keeper) Swap(
 	feeDecCoin = feeDecCoin.Add(decimalCoin) // add truncated decimalCoin to swapFee
 	feeCoin, _ := feeDecCoin.TruncateDecimal()
 
-	mintCoins := sdk.NewCoins(swapCoin, feeCoin)
-
 	taxReceiverAddr, err := sdk.AccAddressFromBech32(k.GetParams(ctx).TaxReceiver)
 	if err != nil {
 		return nil, err
@@ -181,14 +181,13 @@ func (k Keeper) Swap(
 
 	// mint only stable coin
 	if askDenom != appParams.BaseCoinUnit { // melody -> stable or stable -> stable
-		err = k.BankKeeper.MintCoins(ctx, types.ModuleName, mintCoins)
+		err = k.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(totalCoin))
 		if err != nil {
 			return nil, err
 		}
 
 		// Send swap coin to the trader
-		swapCoins := sdk.NewCoins(swapCoin)
-		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiver, swapCoins)
+		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiver, sdk.NewCoins(swapCoin))
 		if err != nil {
 			return nil, err
 		}
@@ -201,9 +200,9 @@ func (k Keeper) Swap(
 	} else { // stable -> melody
 		// native coin transfer using exchange vault
 		marketVaultBalance := k.GetExchangePoolBalance(ctx)
-		if marketVaultBalance.Amount.LT(swapCoin.Amount) {
+		if marketVaultBalance.Amount.LT(totalCoin.Amount) {
 			return nil, errorsmod.Wrapf(types.ErrNotEnoughBalanceOnMarketVaults, "Market vaults do not have enough coins to swap. Available amount: (main: %v), needed amount: %v",
-				marketVaultBalance.Amount, swapCoin.Amount)
+				marketVaultBalance.Amount, totalCoin.Amount)
 		}
 
 		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiver, sdk.NewCoins(swapCoin))
