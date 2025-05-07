@@ -73,6 +73,8 @@ func (s *sqsStreamingService) ListenCommit(ctx context.Context, res types.Respon
 
 	// If the gRPC client is not connected, return early to avoid blocking processing the block data.
 	if err := s.grpcClient.IsConnected(); err != nil {
+		// Due to error mark the block data as not ingested for full processing on the block.
+		s.blockProcessStrategyManager.MarkErrorObserved()
 		emitFailureTelemetry(sdkCtx, err, domain.SQSProcessBlockErrorMetricName)
 		return nil // avoid breaking consensus
 	}
@@ -136,7 +138,7 @@ func (s *sqsStreamingService) processBlockRecoverError(ctx sdk.Context) (err err
 }
 
 // emitFailureTelemetry emits telemetry for panics or errors
-func emitFailureTelemetry(ctx sdk.Context, r interface{}, metricName string) {
+func emitFailureTelemetry(ctx sdk.Context, r any, metricName string) {
 	// Panics are silently logged and ignored.
 	ctx.Logger().Error(metricName, "err", r)
 
