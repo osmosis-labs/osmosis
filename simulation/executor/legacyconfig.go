@@ -133,7 +133,7 @@ func SetupSimulation(tb testing.TB, dirPrefix, dbName string) (cfg Config, db co
 	}
 	logger = simlogger.NewSimLogger(logger)
 
-	dir, err := os.MkdirTemp("", dirPrefix) // nolint:usetesting
+	dir, err := os.MkdirTemp("", dirPrefix)
 	if err != nil {
 		return Config{}, nil, nil, func() {}, err
 	}
