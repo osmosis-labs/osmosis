@@ -19,6 +19,6 @@ const (
 //
 // - 0x01: osmomath.Dec
 var (
-	// Keys for store prefixes
+	// TaxRateKey for store prefixes
 	TaxRateKey = []byte{0x01} // a key for a tax-rate
 )

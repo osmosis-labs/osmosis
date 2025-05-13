@@ -12,7 +12,7 @@ const DefaultSwapFeesEpochIdentifier = "day"
 
 var KeySwapFeesEpochIdentifier = []byte("SwapFeesEpochIdentifier")
 
-// ParamTable for txfees module.
+// ParamKeyTable for txfees module.
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
@@ -28,7 +28,7 @@ func DefaultParams() Params {
 	}
 }
 
-// validate params.
+// Validate validate params.
 func (p Params) Validate() error {
 	if epochtypes.ValidateEpochIdentifierString(p.SwapFeesEpochIdentifier) != nil {
 		return fmt.Errorf("treasury parameter SwapFeesEpochIdentifier must be a valid epoch identifier: %s", p.SwapFeesEpochIdentifier)
@@ -36,7 +36,7 @@ func (p Params) Validate() error {
 	return nil
 }
 
-// Implements params.ParamSet.
+// ParamSetPairs Implements params.ParamSet.
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramstypes.NewParamSetPair(KeySwapFeesEpochIdentifier, &p.SwapFeesEpochIdentifier, epochtypes.ValidateEpochIdentifierInterface),

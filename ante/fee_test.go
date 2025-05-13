@@ -3,6 +3,7 @@ package ante_test
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v27/ante"
 	"github.com/osmosis-labs/osmosis/v27/app/apptesting/assets"
 	"os"
@@ -33,7 +34,7 @@ func (s *AnteTestSuite) TestDeductFeeDecorator_ZeroGas() {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	coins := sdk.NewCoins(sdk.NewCoin("atom", osmomath.NewInt(300)))
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, coins)
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
@@ -67,7 +68,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFees() {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	coins := sdk.NewCoins(sdk.NewCoin("atom", osmomath.NewInt(300)))
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, coins)
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
@@ -142,7 +143,7 @@ func (s *AnteTestSuite) TestDeductFees() {
 	acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
 	coins := sdk.NewCoins(sdk.NewCoin("atom", osmomath.NewInt(10)))
-	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	err = testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, coins)
 	s.Require().NoError(err)
 
 	dfd := ante.NewDeductFeeDecorator(s.app.TxFeesKeeper, s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.TreasuryKeeper, s.app.OracleKeeper)
@@ -154,7 +155,7 @@ func (s *AnteTestSuite) TestDeductFees() {
 
 	// Set account with sufficient funds
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
-	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", osmomath.NewInt(200))))
+	err = testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, sdk.NewCoins(sdk.NewCoin("atom", osmomath.NewInt(200))))
 	s.Require().NoError(err)
 
 	_, err = antehandler(s.ctx, tx, false)
@@ -172,7 +173,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesSend() {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	coins := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, osmomath.NewInt(1000000)))
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, coins)
 
 	// msg and signatures
 	sendAmount := int64(1000000)
@@ -223,7 +224,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesSwapSend() {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	coins := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, osmomath.NewInt(1000000)))
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, coins)
 
 	// msg and signatures
 	sendAmount := int64(1000000)
@@ -273,16 +274,13 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesMultiSend() {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	coins := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, osmomath.NewInt(1000000)))
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, coins)
 
 	// msg and signatures
 	sendAmount := int64(1000000)
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin(assets.MicroSDRDenom, sendAmount))
 	msg := banktypes.NewMsgMultiSend(
-		[]banktypes.Input{
-			banktypes.NewInput(addr1, sendCoins),
-			banktypes.NewInput(addr1, sendCoins),
-		},
+		banktypes.NewInput(addr1, sendCoins),
 		[]banktypes.Output{
 			banktypes.NewOutput(addr1, sendCoins),
 			banktypes.NewOutput(addr1, sendCoins),
@@ -337,7 +335,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesInstantiateContract() {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	coins := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, osmomath.NewInt(1000000)))
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, coins)
 
 	// msg and signatures
 	sendAmount := int64(1000000)
@@ -393,7 +391,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesExecuteContract() {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	coins := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, osmomath.NewInt(1000000)))
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, coins)
 
 	// msg and signatures
 	sendAmount := int64(1000000)
@@ -448,7 +446,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesAuthzExec() {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	coins := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, osmomath.NewInt(1000000)))
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, coins)
 
 	// msg and signatures
 	sendAmount := int64(1000000)
@@ -579,16 +577,7 @@ func (s *AnteTestSuite) TestTaxExemption() {
 				msg1 := banktypes.NewMsgSend(addrs[0], addrs[1], sdk.NewCoins(sendCoin))
 				msgs = append(msgs, msg1)
 				msg2 := banktypes.NewMsgMultiSend(
-					[]banktypes.Input{
-						{
-							Address: addrs[0].String(),
-							Coins:   sdk.NewCoins(sendCoin),
-						},
-						{
-							Address: addrs[0].String(),
-							Coins:   sdk.NewCoins(sendCoin),
-						},
-					},
+					banktypes.NewInput(addrs[0], sdk.NewCoins(sendCoin)),
 					[]banktypes.Output{
 						{
 							Address: addrs[2].String(),
@@ -673,7 +662,7 @@ func (s *AnteTestSuite) TestTaxExemption() {
 
 		for i := 0; i < 4; i++ {
 			coins := sdk.NewCoins(sdk.NewCoin(assets.MicroSDRDenom, osmomath.NewInt(10000000)))
-			testutil.FundAccount(s.app.BankKeeper, s.ctx, addrs[i], coins)
+			testutil.FundAccount(s.ctx, s.app.BankKeeper, addrs[i], coins)
 		}
 
 		// msg and signatures
@@ -713,17 +702,19 @@ func (s *AnteTestSuite) TestOracleZeroFee() {
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	account := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.app.AccountKeeper.SetAccount(s.ctx, account)
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin(assets.MicroSDRDenom, 1_000_000_000)))
+	testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin(assets.MicroSDRDenom, 1_000_000_000)))
 
 	// new val
-	val, err := stakingtypes.NewValidator(sdk.ValAddress(addr1), priv1.PubKey(), stakingtypes.Description{})
+	val, err := stakingtypes.NewValidator(sdk.ValAddress(addr1).String(), priv1.PubKey(), stakingtypes.Description{})
 	s.Require().NoError(err)
 	s.app.StakingKeeper.SetValidator(s.ctx, val)
 
 	// msg and signatures
 
 	// MsgAggregateExchangeRatePrevote
-	msg := oracletypes.NewMsgAggregateExchangeRatePrevote(oracletypes.GetAggregateVoteHash("salt", "exchange rates", val.GetOperator()), addr1, val.GetOperator())
+	msg := oracletypes.NewMsgAggregateExchangeRatePrevote(
+		oracletypes.GetAggregateVoteHash("salt", "exchange rates",
+			sdk.ValAddress(val.GetOperator())), addr1, sdk.ValAddress(val.GetOperator()))
 	s.txBuilder.SetMsgs(msg)
 	s.txBuilder.SetGasLimit(testdata.NewTestGasLimit())
 	s.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewInt64Coin(assets.MicroSDRDenom, 0)))
@@ -739,7 +730,7 @@ func (s *AnteTestSuite) TestOracleZeroFee() {
 	s.Require().Equal(sdk.Coins{}, balances)
 
 	// MsgAggregateExchangeRateVote
-	msg1 := oracletypes.NewMsgAggregateExchangeRateVote("salt", "exchange rates", addr1, val.GetOperator())
+	msg1 := oracletypes.NewMsgAggregateExchangeRateVote("salt", "exchange rates", addr1, sdk.ValAddress(val.GetOperator()))
 	s.txBuilder.SetMsgs(msg1)
 	tx, err = s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 	s.Require().NoError(err)

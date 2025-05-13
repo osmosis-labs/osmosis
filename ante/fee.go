@@ -8,9 +8,12 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	treasurytypes "github.com/osmosis-labs/osmosis/v27/x/treasury/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v27/x/txfees/types"
 )
+
+var TaxRateMaxInStable = osmomath.NewDecWithPrec(1, 1) // 0.1
 
 // DeductFeeDecorator deducts fees from the first signer of the tx.
 // If the first signer does not have the funds to pay for the fees, we return an InsufficientFunds error.
@@ -61,6 +64,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	msgs := feeTx.GetMsgs()
 	taxes := FilterMsgAndComputeTax(ctx, dfd.treasuryKeeper, msgs...)
 	taxesInBaseDenom := sdk.NewCoin(baseDenom, taxes.AmountOf(baseDenom))
+
 	for _, denom := range taxes.Denoms() {
 		if denom == baseDenom {
 			continue
@@ -116,7 +120,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 
 	// deducts the fees and transfer them to the module account
 	if !fees.IsZero() {
-		err = DeductFees(dfd.txFeesKeeper, dfd.bankKeeper, ctx, deductFeesFromAcc, fees, taxesInBaseDenom)
+		err = dfd.DeductFees(ctx, deductFeesFromAcc, fees, taxesInBaseDenom)
 		if err != nil {
 			return ctx, err
 		}
@@ -131,14 +135,14 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 }
 
 // DeductFees deducts fees from the given account and transfers them to the set module account.
-func DeductFees(txFeesKeeper txfeestypes.TxFeesKeeper, bankKeeper BankKeeper, ctx sdk.Context, acc authtypes.AccountI, fees sdk.Coins, baseDenomTax sdk.Coin) error {
+func (dfd DeductFeeDecorator) DeductFees(ctx sdk.Context, acc authtypes.AccountI, fees sdk.Coins, baseDenomTax sdk.Coin) error {
 	// Checks the validity of the fee tokens (sorted, have positive amount, valid and unique denomination)
 	if !fees.IsValid() {
 		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}
 
 	// pulls base denom from TxFeesKeeper (should be NOTE)
-	baseDenom, err := txFeesKeeper.GetBaseDenom(ctx)
+	baseDenom, err := dfd.txFeesKeeper.GetBaseDenom(ctx)
 	if err != nil {
 		return err
 	}
@@ -150,22 +154,50 @@ func DeductFees(txFeesKeeper txfeestypes.TxFeesKeeper, bankKeeper BankKeeper, ct
 			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees (%s) to apply tax (%s)", fees[0], baseDenomTax)
 		}
 		if baseDenomTax.IsPositive() {
-			err = bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), treasurytypes.ModuleName, sdk.Coins{baseDenomTax})
+			err = dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), treasurytypes.ModuleName, sdk.Coins{baseDenomTax})
 			if err != nil {
 				return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 			}
 		}
 
 		// sends to FeeCollectorName module account, which distributes staking rewards
-		err = bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), authtypes.FeeCollectorName, deductedFees)
+		err = dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), authtypes.FeeCollectorName, deductedFees)
 		if err != nil {
 			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
 	} else {
-		// sends to FeeCollectorForStakingRewardsName module account
-		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), txfeestypes.NonNativeTxFeeCollectorName, fees)
-		if err != nil {
-			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+		if dfd.treasuryKeeper.GetTaxRate(ctx).LT(TaxRateMaxInStable) {
+			if !dfd.txFeesKeeper.IsFeeToken(ctx, fees[0].Denom) {
+				return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "fee denom %s is not accepted by the chain", fees[0].Denom)
+			}
+
+			exchangeRate, err := dfd.oracleKeeper.GetMelodyExchangeRate(ctx, fees[0].Denom)
+			if err != nil {
+				return fmt.Errorf("could not retrieve exchange rate for %s: %w", fees[0].Denom, err)
+			}
+			feeInStableDenom := sdk.NewCoin(fees[0].Denom, osmomath.NewDecFromInt(baseDenomTax.Amount).Quo(exchangeRate).TruncateInt())
+
+			deductedFees, anyNegative := fees.SafeSub(feeInStableDenom)
+			if anyNegative {
+				return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee,
+					"insufficient fees (%s) to apply tax (%s)", fees[0], feeInStableDenom)
+			}
+			err = dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), treasurytypes.ModuleName, sdk.Coins{feeInStableDenom})
+			if err != nil {
+				return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+			}
+			err = dfd.bankKeeper.BurnCoins(ctx, treasurytypes.ModuleName, sdk.Coins{feeInStableDenom})
+			if err != nil {
+				return err
+			}
+			// sends to FeeCollectorForStakingRewardsName module account
+			err = dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), txfeestypes.NonNativeTxFeeCollectorName, deductedFees)
+			if err != nil {
+				return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+			}
+		} else {
+			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee,
+				"The reserve fee is to high to use (%s) as fees. Use (%s) instead", fees[0].Denom, baseDenom)
 		}
 	}
 

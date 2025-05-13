@@ -274,6 +274,7 @@ github.com/GaijinEntertainment/go-exhaustruct/v3 v3.2.0/go.mod h1:Nl76DrGNJTA1KJ
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
 github.com/Masterminds/semver/v3 v3.2.1 h1:RN9w6+7QoMeJVGyfmbcgs28Br8cvmnucEXnY0rYXWg0=
 github.com/Masterminds/semver/v3 v3.2.1/go.mod h1:qvl/7zhW3nngYb5+80sSMF+FG2BjYrf8m9wsX0PNOMQ=
+github.com/Masterminds/semver/v3 v3.3.1/go.mod h1:4V+yj/TJE1HU9XfppCwVMZq3I84lprf4nC11bSS5beM=
 github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERoyfY=
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 h1:TngWCqHvy9oXAN6lEVMRuU21PR1EtLVZJmdB18Gu3Rw=
@@ -1151,6 +1152,8 @@ github.com/ory/dockertest/v3 v3.11.0 h1:OiHcxKAvSDUwsEVh2BjxQQc/5EHz9n0va9awCtNG
 github.com/ory/dockertest/v3 v3.11.0/go.mod h1:VIPxS1gwT9NpPOrfD3rACs8Y9Z7yhzO4SB194iUDnUI=
 github.com/osmosis-labs/cometbft v0.38.11-v26-osmo-1 h1:FWfVRnh2sKWIHjAvB06tB9WRcLATX/gsS9KKAe8bZCw=
 github.com/osmosis-labs/cometbft v0.38.11-v26-osmo-1/go.mod h1:jHPx9vQpWzPHEAiYI/7EDKaB1NXhK6o3SArrrY8ExKc=
+github.com/osmosis-labs/cometbft v0.38.17-v28-osmo-1 h1:0xPd6S6mCsVT0IKP0xIUmg6sgo12iHMu5H6vxwrrIo0=
+github.com/osmosis-labs/cometbft v0.38.17-v28-osmo-1/go.mod h1:5l0SkgeLRXi6bBfQuevXjKqML1jjfJJlvI1Ulp02/o4=
 github.com/osmosis-labs/cosmos-sdk/store v0.1.0-alpha.1.0.20240509221435-b8feb2ffb728 h1:AMz4HWC+WA/MwBQdsb11yIF9ForIvSLYYVy/jyhJ3/I=
 github.com/osmosis-labs/cosmos-sdk/store v0.1.0-alpha.1.0.20240509221435-b8feb2ffb728/go.mod h1:gjE3DZe4t/+VeIk6CmrouyqiuDbZ7QOVDDq3nLqBTpg=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=

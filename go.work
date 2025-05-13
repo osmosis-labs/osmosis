@@ -12,3 +12,5 @@ use (
 replace github.com/onsi/ginkgo => github.com/onsi/ginkgo v1.16.5
 
 replace cosmossdk.io/store => github.com/osmosis-labs/cosmos-sdk/store v1.1.1-v0.50.11-v28-osmo-2
+
+replace github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.38.17-v28-osmo-1

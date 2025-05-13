@@ -94,7 +94,7 @@ require (
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/Djarvur/go-err113 v0.0.0-20210108212216-aea10b59be24 // indirect
 	github.com/GaijinEntertainment/go-exhaustruct/v3 v3.2.0 // indirect
-	github.com/Masterminds/semver/v3 v3.2.1 // indirect
+	github.com/Masterminds/semver/v3 v3.3.1 // indirect
 	github.com/OpenPeeDeeP/depguard/v2 v2.2.0 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
@@ -418,7 +418,7 @@ replace (
 	// Direct cometbft branch link: https://github.com/osmosis-labs/cometbft/tree/osmo/v0.38.11, current branch: osmo/v0.38.11.
 	// Direct commit link: https://github.com/osmosis-labs/cometbft/commit/fc8a51f1afdfd43fcc497d285aec35515e3a28af
 	// Direct tag link: https://github.com/osmosis-labs/cometbft/releases/tag/v0.38.11-v26-osmo-1
-	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.38.11-v26-osmo-1
+	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.38.17-v28-osmo-1
 
 	// Direct cosmos-sdk branch link: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo/v0.50.x, current branch: osmo/v0.50.x.
 	// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/c88c7c36bf2b1c09b6c18a742bc5060f3cce1ebb

@@ -78,6 +78,7 @@ type BankKeeper interface {
 	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	IsSendEnabledCoins(ctx context.Context, coins ...sdk.Coin) error
 	SendCoins(ctx context.Context, from, to sdk.AccAddress, amt sdk.Coins) error
+	BurnCoins(ctx context.Context, modulename string, amounts sdk.Coins) error
 	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
