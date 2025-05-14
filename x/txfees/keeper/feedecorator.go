@@ -311,6 +311,16 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 		}
 	}
 
+	// CalculatePriorityFromFees calculates the priority of a transaction based on the fees paid.
+	// Higher fees result in higher priority. The priority is calculated by converting the fee to base denom
+	// and using its amount as the priority value.
+	priority, err := dfd.CalculatePriorityFromFees(ctx, fees)
+	if err != nil {
+		return ctx, err
+	}
+
+	ctx = ctx.WithPriority(priority)
+
 	ctx.EventManager().EmitEvents(sdk.Events{sdk.NewEvent(sdk.EventTypeTx,
 		sdk.NewAttribute(sdk.AttributeKeyFee, fees.String()),
 	)})
@@ -347,4 +357,32 @@ func DeductFees(txFeesKeeper types.TxFeesKeeper, bankKeeper types.BankKeeper, ct
 	}
 
 	return nil
+}
+
+// CalculatePriorityFromFees calculates the priority of a transaction based on the fees paid.
+// Higher fees result in higher priority. The priority is calculated by converting the fee to base denom
+// and using its amount as the priority value.
+func (dfd DeductFeeDecorator) CalculatePriorityFromFees(ctx sdk.Context, fees sdk.Coins) (int64, error) {
+	if fees.IsZero() {
+		return 0, nil
+	}
+
+	// Convert fee to base denom for consistent priority calculation
+	baseDenom, err := dfd.txFeesKeeper.GetBaseDenom(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	// If fee is already in base denom, use its amount directly
+	if fees[0].Denom == baseDenom {
+		return fees[0].Amount.Int64(), nil
+	}
+
+	// Convert non-base denom fee to base denom
+	convertedFee, err := dfd.txFeesKeeper.ConvertToBaseToken(ctx, fees[0])
+	if err != nil {
+		return 0, err
+	}
+
+	return convertedFee.Amount.Int64(), nil
 }
