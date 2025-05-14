@@ -331,6 +331,23 @@ func (s *KeeperTestSuite) TestMempoolFeeDecorator_AnteHandle_MsgTransfer() {
 	}
 }
 
+func (s *KeeperTestSuite) TestCalculatePriorityFromFees() {
+	s.SetupTest(false)
+
+	// Setup test
+	baseDenom, _ := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
+	fees := sdk.NewCoins(sdk.NewInt64Coin(baseDenom, 1000))
+
+	// Create decorator with the app's keeper
+	dfd := keeper.NewDeductFeeDecorator(*s.App.TxFeesKeeper, s.App.AccountKeeper, s.App.BankKeeper, nil)
+
+	// Test priority calculation
+	priority, err := dfd.CalculatePriorityFromFees(s.Ctx, fees)
+
+	s.Require().NoError(err)
+	s.Require().Equal(int64(1000), priority)
+}
+
 func (s *KeeperTestSuite) prepareTx(msg sdk.Msg, txFee sdk.Coins) (sdk.Tx, error) {
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
 	priv0, _, addr0 := testdata.KeyTestPubAddr()
