@@ -10,7 +10,7 @@ ARG BUILD_TAGS="netgo,ledger,muslc"
 # Builder
 # --------------------------------------------------------
 
-FROM golang:${GO_VERSION}-alpine3.20 as builder
+FROM golang:${GO_VERSION}-alpine3.20 AS builder
 
 ARG GIT_VERSION
 ARG GIT_COMMIT
