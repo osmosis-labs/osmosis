@@ -2,7 +2,7 @@
     "status": "killed",
     "network_type": "mainnet",
     "chain_id": "cosmoshub-3",
-    "genesis_url": "https://github.com/cosmos/mainnet/raw/master/genesis.json",
+    "genesis_url": "https://github.com/cosmos/mainnet/blob/master/genesis/genesis.json",
     "bech32_prefix": "cosmos",
     "codebase": {
         "git_repo": "https://github.com/cosmos/gaia",
