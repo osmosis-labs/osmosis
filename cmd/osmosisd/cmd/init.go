@@ -245,7 +245,7 @@ func CreateEnvFile(cmd *cobra.Command) error {
 			// Create ./osmosisd if not exist
 			if _, err = os.Stat(app.DefaultNodeHome); err != nil {
 				if os.IsNotExist(err) {
-					err = os.MkdirAll(app.DefaultNodeHome, 0o777)
+					err = os.MkdirAll(app.DefaultNodeHome, 0777)
 					if err != nil {
 						return err
 					}
@@ -321,7 +321,7 @@ func downloadGenesis(config *tmcfg.Config) error {
 	}
 
 	// Write the body to the destination genesis file
-	err = os.WriteFile(genFilePath, body, 0o644)
+	err = os.WriteFile(genFilePath, body, 0644)
 	if err != nil {
 		return errors.Wrap(err, "failed to write genesis file to destination")
 	}
