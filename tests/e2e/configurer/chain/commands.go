@@ -16,13 +16,13 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v29/app/params"
-	"github.com/osmosis-labs/osmosis/v29/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v29/tests/e2e/initialization"
-	"github.com/osmosis-labs/osmosis/v29/tests/e2e/util"
+	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
+	"github.com/osmosis-labs/osmosis/v30/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v30/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v30/tests/e2e/util"
 
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v29/x/ibc-rate-limit/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v29/x/lockup/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v30/x/ibc-rate-limit/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v30/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -31,7 +31,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/stretchr/testify/require"
 
-	app "github.com/osmosis-labs/osmosis/v29/app"
+	app "github.com/osmosis-labs/osmosis/v30/app"
 
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 )

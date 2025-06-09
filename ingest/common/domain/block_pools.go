@@ -3,7 +3,7 @@ package domain
 import (
 	"time"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
 )
 
 // PoolCreation contains the information about a pool creation.

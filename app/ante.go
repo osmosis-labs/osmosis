@@ -13,18 +13,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 
-	osmoante "github.com/osmosis-labs/osmosis/v29/ante"
-	v9 "github.com/osmosis-labs/osmosis/v29/app/upgrades/v9"
+	osmoante "github.com/osmosis-labs/osmosis/v30/ante"
+	v9 "github.com/osmosis-labs/osmosis/v30/app/upgrades/v9"
 
 	corestoretypes "cosmossdk.io/core/store"
 
-	smartaccountante "github.com/osmosis-labs/osmosis/v29/x/smart-account/ante"
-	smartaccountkeeper "github.com/osmosis-labs/osmosis/v29/x/smart-account/keeper"
+	smartaccountante "github.com/osmosis-labs/osmosis/v30/x/smart-account/ante"
+	smartaccountkeeper "github.com/osmosis-labs/osmosis/v30/x/smart-account/keeper"
 
 	auctionkeeper "github.com/skip-mev/block-sdk/v2/x/auction/keeper"
 
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v29/x/txfees/keeper"
-	txfeestypes "github.com/osmosis-labs/osmosis/v29/x/txfees/types"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v30/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/v30/x/txfees/types"
 
 	auctionante "github.com/skip-mev/block-sdk/v2/x/auction/ante"
 )

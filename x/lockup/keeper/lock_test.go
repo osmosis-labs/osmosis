@@ -8,11 +8,11 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v29/app/params"
-	cl "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity"
-	cltypes "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v29/x/lockup/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v29/x/lockup/types"
+	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
+	cl "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v30/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v30/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

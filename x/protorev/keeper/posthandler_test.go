@@ -13,11 +13,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v29/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v29/app/params"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v29/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v29/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v30/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v30/x/protorev/types"
 
 	storetypes "cosmossdk.io/store/types"
 )

@@ -15,9 +15,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	gammtypes "github.com/osmosis-labs/osmosis/v29/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v29/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v29/x/lockup/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v30/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v30/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v30/x/lockup/types"
 )
 
 var _ types.QueryServer = Querier{}

@@ -9,7 +9,7 @@ import "google/protobuf/timestamp.proto";
 import "osmosis/superfluid/superfluid.proto";
 import "cosmos/msg/v1/msg.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v29/x/superfluid/types";
+option go_package = "github.com/osmosis-labs/osmosis/v30/x/superfluid/types";
 
 // Msg defines the Msg service.
 service Msg {

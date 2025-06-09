@@ -16,8 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v29/app"
-	appparams "github.com/osmosis-labs/osmosis/v29/app/params"
+	"github.com/osmosis-labs/osmosis/v30/app"
+	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
 )
 
 func CreateTestInput() (*app.OsmosisApp, sdk.Context, string) {
