@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v29/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
 
-	"github.com/osmosis-labs/osmosis/v29/ingest/common/pooltracker"
+	"github.com/osmosis-labs/osmosis/v30/ingest/common/pooltracker"
 )
 
 type PoolTrackerTestSuite struct {

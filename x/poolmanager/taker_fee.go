@@ -12,8 +12,8 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v29/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v30/x/txfees/types"
 )
 
 var zero = osmomath.ZeroInt()

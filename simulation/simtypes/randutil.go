@@ -7,7 +7,7 @@ import (
 	"golang.org/x/exp/constraints"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	sdkrand "github.com/osmosis-labs/osmosis/v29/simulation/simtypes/random"
+	sdkrand "github.com/osmosis-labs/osmosis/v30/simulation/simtypes/random"
 )
 
 func RandLTBound[T constraints.Integer](sim *SimCtx, upperbound T) T {

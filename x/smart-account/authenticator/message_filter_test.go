@@ -11,11 +11,11 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v29/app"
-	"github.com/osmosis-labs/osmosis/v29/app/params"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v30/app"
+	"github.com/osmosis-labs/osmosis/v30/app/params"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
 
-	"github.com/osmosis-labs/osmosis/v29/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v30/x/smart-account/authenticator"
 
 	"github.com/stretchr/testify/suite"
 )

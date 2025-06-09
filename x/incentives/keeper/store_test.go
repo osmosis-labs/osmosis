@@ -5,9 +5,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v29/app/params"
-	"github.com/osmosis-labs/osmosis/v29/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v29/x/lockup/types"
+	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
+	"github.com/osmosis-labs/osmosis/v30/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v30/x/lockup/types"
 )
 
 var _ = suite.TestingSuite(nil)

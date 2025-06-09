@@ -7,7 +7,7 @@ import "osmosis/incentives/params.proto";
 import "osmosis/incentives/gauge.proto";
 import "osmosis/incentives/group.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v29/x/incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v30/x/incentives/types";
 
 // GenesisState defines the incentives module's various parameters when first
 // initialized

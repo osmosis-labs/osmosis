@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v29/x/gamm/client/cli"
+	"github.com/osmosis-labs/osmosis/v30/x/gamm/client/cli"
 )
 
 func TestParseCoinsNoSort(t *testing.T) {

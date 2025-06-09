@@ -16,9 +16,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v29/app"
-	"github.com/osmosis-labs/osmosis/v29/app/params"
-	"github.com/osmosis-labs/osmosis/v29/x/smart-account/ante"
+	"github.com/osmosis-labs/osmosis/v30/app"
+	"github.com/osmosis-labs/osmosis/v30/app/params"
+	"github.com/osmosis-labs/osmosis/v30/x/smart-account/ante"
 )
 
 // AuthenticatorCircuitBreakerAnteSuite is a test suite for the authenticator and CircuitBreaker AnteDecorator.

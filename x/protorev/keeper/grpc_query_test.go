@@ -4,11 +4,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v29/app/apptesting"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v29/app/params"
-	"github.com/osmosis-labs/osmosis/v29/x/protorev/types"
+	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
+	"github.com/osmosis-labs/osmosis/v30/x/protorev/types"
 )
 
 // TestParams tests the query for params

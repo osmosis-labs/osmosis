@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v29/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v29/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v30/x/cosmwasmpool/types"
 )
 
 type CWPoolGovTypesSuite struct {

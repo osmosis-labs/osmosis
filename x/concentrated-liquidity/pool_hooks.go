@@ -10,7 +10,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	types "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
+	types "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/types"
 )
 
 // --- Pool Hooks ---

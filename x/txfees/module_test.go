@@ -16,10 +16,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmosisapp "github.com/osmosis-labs/osmosis/v29/app"
+	osmosisapp "github.com/osmosis-labs/osmosis/v30/app"
 
-	simapp "github.com/osmosis-labs/osmosis/v29/app"
-	mempool1559 "github.com/osmosis-labs/osmosis/v29/x/txfees/keeper/mempool-1559"
+	simapp "github.com/osmosis-labs/osmosis/v30/app"
+	mempool1559 "github.com/osmosis-labs/osmosis/v30/x/txfees/keeper/mempool-1559"
 )
 
 func TestSetBaseDenomOnInitBlock(t *testing.T) {

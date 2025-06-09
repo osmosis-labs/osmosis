@@ -3,9 +3,9 @@ package mocks
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	commondomain "github.com/osmosis-labs/osmosis/v29/ingest/common/domain"
-	indexerdomain "github.com/osmosis-labs/osmosis/v29/ingest/indexer/domain"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
+	commondomain "github.com/osmosis-labs/osmosis/v30/ingest/common/domain"
+	indexerdomain "github.com/osmosis-labs/osmosis/v30/ingest/indexer/domain"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
 )
 
 var _ indexerdomain.PairPublisher = &MockPairPublisher{}

@@ -9,7 +9,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v29/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
 
 	"github.com/tidwall/gjson"
 
@@ -21,12 +21,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v29/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v29/x/gamm/types"
-	minttypes "github.com/osmosis-labs/osmosis/v29/x/mint/types"
-	txfeetypes "github.com/osmosis-labs/osmosis/v29/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v30/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v30/x/gamm/types"
+	minttypes "github.com/osmosis-labs/osmosis/v30/x/mint/types"
+	txfeetypes "github.com/osmosis-labs/osmosis/v30/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/v29/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
 
 	"github.com/stretchr/testify/suite"
 
@@ -37,9 +37,9 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 
-	"github.com/osmosis-labs/osmosis/v29/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v30/tests/osmosisibctesting"
 
-	"github.com/osmosis-labs/osmosis/v29/tests/ibc-hooks/testutils"
+	"github.com/osmosis-labs/osmosis/v30/tests/ibc-hooks/testutils"
 )
 
 type HooksTestSuite struct {

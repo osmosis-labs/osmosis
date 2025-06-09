@@ -8,13 +8,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	gammtypes "github.com/osmosis-labs/osmosis/v29/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v30/x/gamm/types"
 
-	"github.com/osmosis-labs/osmosis/v29/app/keepers"
-	"github.com/osmosis-labs/osmosis/v29/app/upgrades"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v30/app/keepers"
+	"github.com/osmosis-labs/osmosis/v30/app/upgrades"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
 
-	v18 "github.com/osmosis-labs/osmosis/v29/app/upgrades/v18"
+	v18 "github.com/osmosis-labs/osmosis/v30/app/upgrades/v18"
 )
 
 const lastPoolToCorrect = v18.FirstCLPoolId - 1

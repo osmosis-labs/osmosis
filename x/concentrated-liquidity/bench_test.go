@@ -11,14 +11,14 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v29/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v29/app/params"
-	cl "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity"
-	clmath "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/math"
-	clmodel "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v29/x/gamm/pool-models/balancer"
-	gammmigration "github.com/osmosis-labs/osmosis/v29/x/gamm/types/migration"
+	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
+	cl "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity"
+	clmath "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/math"
+	clmodel "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v30/x/gamm/pool-models/balancer"
+	gammmigration "github.com/osmosis-labs/osmosis/v30/x/gamm/types/migration"
 )
 
 type BenchTestSuite struct {

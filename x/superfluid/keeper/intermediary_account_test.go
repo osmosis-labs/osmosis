@@ -5,7 +5,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v29/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v30/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestIntermediaryAccountCreation() {

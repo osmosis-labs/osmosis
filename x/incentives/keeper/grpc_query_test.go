@@ -9,10 +9,10 @@ import (
 	query "github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v29/app/params"
-	"github.com/osmosis-labs/osmosis/v29/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v29/x/lockup/types"
-	pooltypes "github.com/osmosis-labs/osmosis/v29/x/pool-incentives/types"
+	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
+	"github.com/osmosis-labs/osmosis/v30/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v30/x/lockup/types"
+	pooltypes "github.com/osmosis-labs/osmosis/v30/x/pool-incentives/types"
 )
 
 var _ = suite.TestingSuite(nil)

@@ -3,14 +3,14 @@ package keeper_test
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v29/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v30/x/tokenfactory/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v29/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
 )
 
 // TestMintDenomMsg tests TypeMsgMint message is emitted on a successful mint

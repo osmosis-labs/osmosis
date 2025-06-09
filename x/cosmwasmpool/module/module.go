@@ -14,14 +14,14 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	"github.com/osmosis-labs/osmosis/v29/simulation/simtypes"
-	cosmwasmpool "github.com/osmosis-labs/osmosis/v29/x/cosmwasmpool"
-	moduleclient "github.com/osmosis-labs/osmosis/v29/x/cosmwasmpool/client"
-	"github.com/osmosis-labs/osmosis/v29/x/cosmwasmpool/client/cli"
-	"github.com/osmosis-labs/osmosis/v29/x/cosmwasmpool/client/grpc"
-	"github.com/osmosis-labs/osmosis/v29/x/cosmwasmpool/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v29/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v29/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v30/simulation/simtypes"
+	cosmwasmpool "github.com/osmosis-labs/osmosis/v30/x/cosmwasmpool"
+	moduleclient "github.com/osmosis-labs/osmosis/v30/x/cosmwasmpool/client"
+	"github.com/osmosis-labs/osmosis/v30/x/cosmwasmpool/client/cli"
+	"github.com/osmosis-labs/osmosis/v30/x/cosmwasmpool/client/grpc"
+	"github.com/osmosis-labs/osmosis/v30/x/cosmwasmpool/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v30/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v30/x/cosmwasmpool/types"
 )
 
 var (

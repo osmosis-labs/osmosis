@@ -9,10 +9,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v29/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v29/app/params"
-	balancer "github.com/osmosis-labs/osmosis/v29/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v29/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v30/app/params"
+	balancer "github.com/osmosis-labs/osmosis/v30/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v30/x/gamm/types"
 )
 
 func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {

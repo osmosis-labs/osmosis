@@ -7,11 +7,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v29/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity"
-	clmodel "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity"
+	clmodel "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
 )
 
 // TestCreateConcentratedPool_Events tests that events are correctly emitted

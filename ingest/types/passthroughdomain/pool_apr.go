@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/osmosis-labs/osmosis/v29/ingest/types/json"
+	"github.com/osmosis-labs/osmosis/v30/ingest/types/json"
 )
 
 // PoolDataRange represents the range of the pool APR data.

@@ -3,8 +3,8 @@ package mocks
 import (
 	"context"
 
-	"github.com/osmosis-labs/osmosis/v29/ingest/sqs/domain"
-	ingesttypes "github.com/osmosis-labs/osmosis/v29/ingest/types"
+	"github.com/osmosis-labs/osmosis/v30/ingest/sqs/domain"
+	ingesttypes "github.com/osmosis-labs/osmosis/v30/ingest/types"
 )
 
 type GRPCClientMock struct {

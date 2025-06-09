@@ -11,7 +11,7 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v29/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v30/x/protorev/types"
 )
 
 // ------------ types/functions to handle a SetHotRoutes CLI TX ------------ //

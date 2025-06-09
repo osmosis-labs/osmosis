@@ -6,10 +6,10 @@ import (
 	"sort"
 	"strings"
 
-	cltypes "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v29/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v29/x/superfluid/keeper/internal/events"
-	"github.com/osmosis-labs/osmosis/v29/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v30/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v30/x/superfluid/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/v30/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

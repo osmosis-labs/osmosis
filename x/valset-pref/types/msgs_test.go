@@ -6,9 +6,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v29/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v29/app/params"
-	"github.com/osmosis-labs/osmosis/v29/x/valset-pref/types"
+	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v30/app/params"
+	"github.com/osmosis-labs/osmosis/v30/x/valset-pref/types"
 )
 
 func TestMsgSetValidatorSetPreference(t *testing.T) {

@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v29/app/apptesting"
-	clmodel "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v29/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v29/x/cosmwasmpool/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
+	clmodel "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v30/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v30/x/cosmwasmpool/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 

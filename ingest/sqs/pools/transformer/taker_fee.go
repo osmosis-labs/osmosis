@@ -3,9 +3,9 @@ package poolstransformer
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	ingesttypes "github.com/osmosis-labs/osmosis/v29/ingest/types"
+	ingesttypes "github.com/osmosis-labs/osmosis/v30/ingest/types"
 
-	commondomain "github.com/osmosis-labs/osmosis/v29/ingest/common/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v30/ingest/common/domain"
 )
 
 // retrieveTakerFeeToMapIfNotExists retrieves the taker fee for the denom pair if it does not exist in the map

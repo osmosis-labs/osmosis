@@ -6,12 +6,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	clmodel "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v29/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v29/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v29/x/gamm/types/migration"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v29/x/poolmanager/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v29/x/superfluid/types"
+	clmodel "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v30/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v30/x/gamm/types/migration"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v30/x/superfluid/types"
 
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"

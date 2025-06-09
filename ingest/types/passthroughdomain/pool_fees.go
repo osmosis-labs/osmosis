@@ -1,7 +1,7 @@
 package passthroughdomain
 
 import (
-	"github.com/osmosis-labs/osmosis/v29/ingest/types/json" // TODO
+	"github.com/osmosis-labs/osmosis/v30/ingest/types/json" // TODO
 )
 
 // PoolFee represents the fees data of a pool.
