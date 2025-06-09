@@ -4,15 +4,9 @@ package keepers
 // Right now is strictly used for default genesis creation and registering codecs prior to app init
 // Unclear to me how to use NewBasicManagerFromManager for this purpose though prior to app init
 import (
-	"github.com/CosmWasm/wasmd/x/wasm"
-	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward"
-	transfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
-	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	tendermint "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
-	stablestakingincentives "github.com/osmosis-labs/osmosis/v27/x/stable-staking-incentives"
-
 	"cosmossdk.io/x/evidence"
 	"cosmossdk.io/x/upgrade"
+	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
@@ -27,10 +21,16 @@ import (
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v8"
 	"github.com/cosmos/ibc-go/modules/capability"
 	ibcwasm "github.com/cosmos/ibc-go/modules/light-clients/08-wasm"
 	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
+	transfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
+	ibc "github.com/cosmos/ibc-go/v8/modules/core"
+	tendermint "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
+	stablestakingincentives "github.com/osmosis-labs/osmosis/v27/x/stable-staking-incentives"
+	"github.com/osmosis-labs/osmosis/v27/x/stablestaking"
 
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 
@@ -139,4 +139,5 @@ var AppModuleBasics = module.NewBasicManager(
 	tendermint.AppModuleBasic{},
 	auction.AppModuleBasic{},
 	smartaccount.AppModuleBasic{},
+	stablestaking.AppModuleBasic{},
 )

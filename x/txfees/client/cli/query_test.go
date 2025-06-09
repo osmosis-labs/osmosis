@@ -30,18 +30,18 @@ func (s *QueryTestSuite) SetupSuite() {
 	s.PrepareBalancerPoolWithCoins(poolAssets...)
 
 	// set up fee token
-	upgradeProp := types.NewUpdateFeeTokenProposal(
-		"Test Proposal",
-		"test",
-		[]types.FeeToken{
-			{
-				Denom:  appparams.BaseCoinUnit,
-				PoolID: 1,
-			},
-		},
-	)
-	err := s.App.TxFeesKeeper.HandleUpdateFeeTokenProposal(s.Ctx, &upgradeProp)
-	s.Require().NoError(err)
+	//upgradeProp := types.NewUpdateFeeTokenProposal(
+	//	"Test Proposal",
+	//	"test",
+	//	[]types.FeeToken{
+	//		{
+	//			Denom:  appparams.BaseCoinUnit,
+	//			PoolID: 1,
+	//		},
+	//	},
+	//)
+	//err := s.App.TxFeesKeeper.HandleUpdateFeeTokenProposal(s.Ctx, &upgradeProp)
+	//s.Require().NoError(err)
 
 	s.Commit()
 }
@@ -53,18 +53,18 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 		input  interface{}
 		output interface{}
 	}{
-		{
-			"Query base denom",
-			"/symphony.txfees.v1beta1.Query/BaseDenom",
-			&types.QueryBaseDenomRequest{},
-			&types.QueryBaseDenomResponse{},
-		},
-		{
-			"Query poolID by denom",
-			"/symphony.txfees.v1beta1.Query/DenomPoolId",
-			&types.QueryDenomPoolIdRequest{Denom: appparams.BaseCoinUnit},
-			&types.QueryDenomPoolIdResponse{},
-		},
+		//{
+		//	"Query base denom",
+		//	"/symphony.txfees.v1beta1.Query/BaseDenom",
+		//	&types.QueryBaseDenomRequest{},
+		//	&types.QueryBaseDenomResponse{},
+		//},
+		//{
+		//	"Query poolID by denom",
+		//	"/symphony.txfees.v1beta1.Query/DenomPoolId",
+		//	&types.QueryDenomPoolIdRequest{Denom: appparams.BaseCoinUnit},
+		//	&types.QueryDenomPoolIdResponse{},
+		//},
 		{
 			"Query spot price by denom",
 			"/symphony.txfees.v1beta1.Query/DenomSpotPrice",

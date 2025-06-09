@@ -1,0 +1,88 @@
+syntax = "proto3";
+package symphony.stablestaking.v1beta1;
+
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/stablestaking/types";
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "symphony/stablestaking/v1beta1/stablestaking.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+service Query {
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/symphony/stablestaking/v1beta1/params";
+  }
+
+  rpc UserStake(QueryUserStakeRequest) returns (QueryUserStakeResponse) {
+    option (google.api.http).get = "/symphony/stablestaking/v1beta1/user_stake";
+  }
+
+  rpc UserTotalStake(QueryUserTotalStakeRequest)
+      returns (QueryUserTotalStakeResponse) {
+    option (google.api.http).get =
+        "/symphony/stablestaking/v1beta1/user_total_stake";
+  }
+
+  rpc StablePool(QueryPoolRequest) returns (QueryPoolResponse) {
+    option (google.api.http).get = "/symphony/stablestaking/v1beta1/stable_pool";
+  }
+
+  rpc StablePools(QueryPoolsRequest) returns (QueryPoolsResponse) {
+    option (google.api.http).get = "/symphony/stablestaking/v1beta1/stable_pools";
+  }
+
+  rpc UserUnbonding(QueryUserUnbondingRequest)
+      returns (QueryUserUnbondingResponse) {
+    option (google.api.http).get =
+        "/symphony/stablestaking/v1beta1/user_unbonding";
+  }
+
+  rpc UserTotalUnbonding(QueryUserTotalUnbondingRequest)
+      returns (QueryUserTotalUnbondingResponse) {
+    option (google.api.http).get =
+        "/symphony/stablestaking/v1beta1/user_total_unbonding";
+  }
+}
+
+message QueryParamsRequest {}
+
+message QueryParamsResponse {
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryUserStakeRequest {
+  string address = 1;
+  string denom = 2;
+}
+
+message QueryUserStakeResponse {
+  UserStake stakes = 1 [ (gogoproto.nullable) = true ];
+}
+
+message QueryUserTotalStakeRequest { string address = 1; }
+
+message QueryUserTotalStakeResponse {
+  repeated cosmos.base.v1beta1.DecCoin stakes = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message QueryPoolRequest { string denom = 1; }
+
+message QueryPoolResponse { StakingPool pool = 1; }
+
+message QueryPoolsRequest {}
+
+message QueryPoolsResponse { repeated StakingPool pools = 1; }
+
+message QueryUserUnbondingRequest {
+  string address = 1;
+  string denom = 2;
+}
+
+message QueryUserUnbondingResponse { UnbondingInfo info = 1; }
+
+message QueryUserTotalUnbondingRequest { string address = 1; }
+
+message QueryUserTotalUnbondingResponse { repeated UnbondingInfo info = 1; }

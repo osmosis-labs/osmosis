@@ -101,7 +101,7 @@ func init() {
 }
 
 // Setup sets up basic environment for suite (App, Ctx, and test accounts)
-// preserves the caching enabled/disabled state.
+// preserve the caching enabled/disabled state.
 func (s *KeeperTestHelper) Setup() {
 	dir, err := os.MkdirTemp("", "osmosisd-test-home")
 	if err != nil {

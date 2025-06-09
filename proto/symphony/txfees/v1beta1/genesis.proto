@@ -19,5 +19,5 @@ message TxFeesTracker {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
   int64 height_accounting_starts_from = 2
-    [ (gogoproto.moretags) = "yaml:\"height_accounting_starts_from\"" ];
+      [ (gogoproto.moretags) = "yaml:\"height_accounting_starts_from\"" ];
 }

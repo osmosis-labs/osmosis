@@ -1135,6 +1135,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -2268,6 +2271,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -5186,6 +5192,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -5466,6 +5475,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -6568,6 +6580,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -7268,6 +7283,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -7552,6 +7570,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -11406,6 +11427,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -15138,9 +15162,1071 @@ paths:
           type: string
       tags:
         - Query
+  /symphony/stablestaking/v1beta1/params:
+    get:
+      operationId: StableStakingParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                type: object
+                properties:
+                  reward_rate:
+                    type: string
+                  unbonding_duration:
+                    type: string
+                  supported_tokens:
+                    type: array
+                    items:
+                      type: string
+                  reward_epoch_identifier:
+                    type: string
+                  unbonding_epoch_identifier:
+                    type: string
+                  max_staking_amount:
+                    type: string
+                    format: byte
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /symphony/stablestaking/v1beta1/stable_pool:
+    get:
+      operationId: StablePool
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              pool:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  total_staked:
+                    type: string
+                    format: byte
+                  total_shares:
+                    type: string
+                    format: byte
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: denom
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
+  /symphony/stablestaking/v1beta1/stable_pools:
+    get:
+      operationId: StablePools
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              pools:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    total_staked:
+                      type: string
+                      format: byte
+                    total_shares:
+                      type: string
+                      format: byte
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /symphony/stablestaking/v1beta1/user_stake:
+    get:
+      operationId: UserStake
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              stakes:
+                type: object
+                properties:
+                  address:
+                    type: string
+                  shares:
+                    type: string
+                    format: byte
+                  epoch:
+                    type: string
+                    format: int64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: address
+          in: query
+          required: false
+          type: string
+        - name: denom
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
+  /symphony/stablestaking/v1beta1/user_total_stake:
+    get:
+      operationId: UserTotalStake
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              stakes:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    DecCoin defines a token with a denomination and a decimal
+                    amount.
+
+
+                    NOTE: The amount field is an Dec which implements the custom
+                    method
+
+                    signatures required by gogoproto.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: address
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
+  /symphony/stablestaking/v1beta1/user_total_unbonding:
+    get:
+      operationId: UserTotalUnbonding
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              info:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                    amount:
+                      type: string
+                      format: byte
+                    denom:
+                      type: string
+                    unbond_epoch:
+                      type: string
+                      format: int64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: address
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
+  /symphony/stablestaking/v1beta1/user_unbonding:
+    get:
+      operationId: UserUnbonding
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              info:
+                type: object
+                properties:
+                  address:
+                    type: string
+                  amount:
+                    type: string
+                    format: byte
+                  denom:
+                    type: string
+                  unbond_epoch:
+                    type: string
+                    format: int64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: address
+          in: query
+          required: false
+          type: string
+        - name: denom
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
+  /symphony/stablestaking/v1beta1/stake_tokens:
+    post:
+      operationId: StakeTokens
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              staker:
+                type: string
+              amount:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+              total_staked:
+                type: string
+                format: byte
+              total_shares:
+                type: string
+                format: byte
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com. As of May 2023, there are no widely
+                        used type server
+
+                        implementations and no plans to implement one.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                    value:
+                      type: string
+                      format: byte
+                      description: >-
+                        Must be a valid serialized protocol buffer of the above
+                        specified type.
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              staker:
+                type: string
+              amount:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+      tags:
+        - Msg
+  /symphony/stablestaking/v1beta1/unstake_tokens:
+    post:
+      operationId: UnstakeTokens
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              staker:
+                type: string
+              amount:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  DecCoin defines a token with a denomination and a decimal
+                  amount.
+
+
+                  NOTE: The amount field is an Dec which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+              total_staked:
+                type: string
+                format: byte
+              total_shares:
+                type: string
+                format: byte
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com. As of May 2023, there are no widely
+                        used type server
+
+                        implementations and no plans to implement one.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                    value:
+                      type: string
+                      format: byte
+                      description: >-
+                        Must be a valid serialized protocol buffer of the above
+                        specified type.
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              staker:
+                type: string
+              amount:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+      tags:
+        - Msg
+  /symphony/market/v1beta1/exchange_requirements:
+    get:
+      operationId: ExchangeRequirements
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              exchange_requirements:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    base_currency:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                    exchange_rate:
+                      type: string
+              total:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+            description: |-
+              QueryExchangeRequirementsResponse is the response type for the
+              Query/ExchangeRequirements RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /symphony/market/v1beta1/params:
+    get:
+      summary: Params queries all parameters.
+      operationId: MarketParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params defines the parameters of the module.
+                type: object
+                properties:
+                  exchange_pool:
+                    type: string
+                    format: byte
+                  min_stability_spread:
+                    type: string
+                    format: byte
+                  tax_receiver:
+                    type: string
+            description: >-
+              QueryParamsResponse is the response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /symphony/market/v1beta1/swap:
+    get:
+      summary: Swap returns simulated swap amount.
+      operationId: Swap
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              return_coin:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+            description: >-
+              QuerySwapResponse is the response type for the Query/Swap RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: offer_coin
+          description: offer_coin defines the coin being offered (i.e. 1000000uluna).
+          in: query
+          required: false
+          type: string
+        - name: ask_denom
+          description: ask_denom defines the denom of the coin to swap to.
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
   /cosmos/auth/v1beta1/account_info/{address}:
     get:
       summary: AccountInfo queries account info which is common to all account types.
+      description: 'Since: cosmos-sdk 0.47'
       operationId: AccountInfo
       responses:
         '200':
@@ -15344,7 +16430,10 @@ paths:
                   sequence:
                     type: string
                     format: uint64
-            description: QueryAccountInfoResponse is the Query/AccountInfo response type.
+            description: |-
+              QueryAccountInfoResponse is the Query/AccountInfo response type.
+
+              Since: cosmos-sdk 0.47
         default:
           description: An unexpected error response.
           schema:
@@ -15559,6 +16648,9 @@ paths:
         of
 
         gas if the pagination field is incorrectly set.
+
+
+        Since: cosmos-sdk 0.43
       operationId: Accounts
       responses:
         '200':
@@ -15775,6 +16867,9 @@ paths:
             description: >-
               QueryAccountsResponse is the response type for the Query/Accounts
               RPC method.
+
+
+              Since: cosmos-sdk 0.43
         default:
           description: An unexpected error response.
           schema:
@@ -16024,6 +17119,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -16431,6 +17529,7 @@ paths:
   /cosmos/auth/v1beta1/address_by_id/{id}:
     get:
       summary: AccountAddressByID returns account address based on account number.
+      description: 'Since: cosmos-sdk 0.46.2'
       operationId: AccountAddressByID
       responses:
         '200':
@@ -16440,6 +17539,7 @@ paths:
             properties:
               account_address:
                 type: string
+            description: 'Since: cosmos-sdk 0.46.2'
             title: >-
               QueryAccountAddressByIDResponse is the response type for
               AccountAddressByID rpc method
@@ -16654,7 +17754,10 @@ paths:
           type: string
           format: int64
         - name: account_id
-          description: account_id is the account number of the address to be queried.
+          description: |-
+            account_id is the account number of the address to be queried.
+
+            Since: cosmos-sdk 0.47
           in: query
           required: false
           type: string
@@ -16664,6 +17767,7 @@ paths:
   /cosmos/auth/v1beta1/bech32:
     get:
       summary: Bech32Prefix queries bech32Prefix
+      description: 'Since: cosmos-sdk 0.46'
       operationId: Bech32Prefix
       responses:
         '200':
@@ -16676,6 +17780,9 @@ paths:
             description: >-
               Bech32PrefixResponse is the response type for Bech32Prefix rpc
               method.
+
+
+              Since: cosmos-sdk 0.46
         default:
           description: An unexpected error response.
           schema:
@@ -16879,6 +17986,7 @@ paths:
   /cosmos/auth/v1beta1/bech32/{address_bytes}:
     get:
       summary: AddressBytesToString converts Account Address bytes to string
+      description: 'Since: cosmos-sdk 0.46'
       operationId: AddressBytesToString
       responses:
         '200':
@@ -16891,6 +17999,9 @@ paths:
             description: >-
               AddressBytesToStringResponse is the response type for
               AddressString rpc method.
+
+
+              Since: cosmos-sdk 0.46
         default:
           description: An unexpected error response.
           schema:
@@ -17100,6 +18211,7 @@ paths:
   /cosmos/auth/v1beta1/bech32/{address_string}:
     get:
       summary: AddressStringToBytes converts Address string to bytes
+      description: 'Since: cosmos-sdk 0.46'
       operationId: AddressStringToBytes
       responses:
         '200':
@@ -17113,6 +18225,9 @@ paths:
             description: >-
               AddressStringToBytesResponse is the response type for AddressBytes
               rpc method.
+
+
+              Since: cosmos-sdk 0.46
         default:
           description: An unexpected error response.
           schema:
@@ -17321,6 +18436,7 @@ paths:
   /cosmos/auth/v1beta1/module_accounts:
     get:
       summary: ModuleAccounts returns all the existing module accounts.
+      description: 'Since: cosmos-sdk 0.46'
       operationId: ModuleAccounts
       responses:
         '200':
@@ -17517,6 +18633,9 @@ paths:
             description: >-
               QueryModuleAccountsResponse is the response type for the
               Query/ModuleAccounts RPC method.
+
+
+              Since: cosmos-sdk 0.46
         default:
           description: An unexpected error response.
           schema:
@@ -18851,6 +19970,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -18859,6 +19981,7 @@ paths:
   /cosmos/authz/v1beta1/grants/grantee/{grantee}:
     get:
       summary: GranteeGrants returns a list of `GrantAuthorization` by grantee.
+      description: 'Since: cosmos-sdk 0.46'
       operationId: GranteeGrants
       responses:
         '200':
@@ -19345,6 +20468,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -19353,6 +20479,7 @@ paths:
   /cosmos/authz/v1beta1/grants/granter/{granter}:
     get:
       summary: GranterGrants returns list of `GrantAuthorization`, granted by granter.
+      description: 'Since: cosmos-sdk 0.46'
       operationId: GranterGrants
       responses:
         '200':
@@ -19839,6 +20966,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -19979,6 +21109,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -19986,6 +21119,9 @@ paths:
           description: >-
             resolve_denom is the flag to resolve the denom into a human-readable
             form from the metadata.
+
+
+            Since: cosmos-sdk 0.50
           in: query
           required: false
           type: boolean
@@ -20066,6 +21202,9 @@ paths:
         of
 
         gas if the pagination field is incorrectly set.
+
+
+        Since: cosmos-sdk 0.46
       operationId: DenomOwners
       responses:
         '200':
@@ -20106,6 +21245,9 @@ paths:
                     address and account
 
                     balance of the denominated token.
+
+
+                    Since: cosmos-sdk 0.46
               pagination:
                 description: pagination defines the pagination in the response.
                 type: object
@@ -20128,6 +21270,9 @@ paths:
             description: >-
               QueryDenomOwnersResponse defines the RPC response of a DenomOwners
               RPC query.
+
+
+              Since: cosmos-sdk 0.46
         default:
           description: An unexpected error response.
           schema:
@@ -20208,6 +21353,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -20220,6 +21368,7 @@ paths:
         particular token
 
         denomination.
+      description: 'Since: cosmos-sdk 0.50.3'
       operationId: DenomOwnersByQuery
       responses:
         '200':
@@ -20260,6 +21409,9 @@ paths:
                     address and account
 
                     balance of the denominated token.
+
+
+                    Since: cosmos-sdk 0.46
               pagination:
                 description: pagination defines the pagination in the response.
                 type: object
@@ -20282,6 +21434,9 @@ paths:
             description: >-
               QueryDenomOwnersByQueryResponse defines the RPC response of a
               DenomOwnersByQuery RPC query.
+
+
+              Since: cosmos-sdk 0.50.3
         default:
           description: An unexpected error response.
           schema:
@@ -20362,6 +21517,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -20437,6 +21595,7 @@ paths:
                         displayed in clients.
                     name:
                       type: string
+                      description: 'Since: cosmos-sdk 0.43'
                       title: 'name defines the name of the token (eg: Cosmos Atom)'
                     symbol:
                       type: string
@@ -20445,11 +21604,17 @@ paths:
                         (eg: ATOM). This can
 
                         be the same as the display.
+
+
+                        Since: cosmos-sdk 0.43
                     uri:
                       type: string
                       description: >-
                         URI to a document (on or off-chain) that contains
                         additional information. Optional.
+
+
+                        Since: cosmos-sdk 0.46
                     uri_hash:
                       type: string
                       description: >-
@@ -20457,6 +21622,9 @@ paths:
                         It's used to verify that
 
                         the document didn't change. Optional.
+
+
+                        Since: cosmos-sdk 0.46
                   description: |-
                     Metadata represents a struct that describes
                     a basic token.
@@ -20560,6 +21728,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -20631,6 +21802,7 @@ paths:
                       displayed in clients.
                   name:
                     type: string
+                    description: 'Since: cosmos-sdk 0.43'
                     title: 'name defines the name of the token (eg: Cosmos Atom)'
                   symbol:
                     type: string
@@ -20639,11 +21811,17 @@ paths:
                       ATOM). This can
 
                       be the same as the display.
+
+
+                      Since: cosmos-sdk 0.43
                   uri:
                     type: string
                     description: >-
                       URI to a document (on or off-chain) that contains
                       additional information. Optional.
+
+
+                      Since: cosmos-sdk 0.46
                   uri_hash:
                     type: string
                     description: >-
@@ -20651,6 +21829,9 @@ paths:
                       It's used to verify that
 
                       the document didn't change. Optional.
+
+
+                      Since: cosmos-sdk 0.46
                 description: |-
                   Metadata represents a struct that describes
                   a basic token.
@@ -20757,6 +21938,7 @@ paths:
                       displayed in clients.
                   name:
                     type: string
+                    description: 'Since: cosmos-sdk 0.43'
                     title: 'name defines the name of the token (eg: Cosmos Atom)'
                   symbol:
                     type: string
@@ -20765,11 +21947,17 @@ paths:
                       ATOM). This can
 
                       be the same as the display.
+
+
+                      Since: cosmos-sdk 0.43
                   uri:
                     type: string
                     description: >-
                       URI to a document (on or off-chain) that contains
                       additional information. Optional.
+
+
+                      Since: cosmos-sdk 0.46
                   uri_hash:
                     type: string
                     description: >-
@@ -20777,6 +21965,9 @@ paths:
                       It's used to verify that
 
                       the document didn't change. Optional.
+
+
+                      Since: cosmos-sdk 0.46
                 description: |-
                   Metadata represents a struct that describes
                   a basic token.
@@ -20896,6 +22087,9 @@ paths:
         default
 
         params.default_send_enabled, and will not be returned by this query.
+
+
+        Since: cosmos-sdk 0.47
       operationId: SendEnabled
       responses:
         '200':
@@ -20943,6 +22137,9 @@ paths:
             description: >-
               QuerySendEnabledResponse defines the RPC response of a SendEnable
               query.
+
+
+              Since: cosmos-sdk 0.47
         default:
           description: An unexpected error response.
           schema:
@@ -21026,6 +22223,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -21043,6 +22243,9 @@ paths:
         of
 
         gas if the pagination field is incorrectly set.
+
+
+        Since: cosmos-sdk 0.46
       operationId: SpendableBalances
       responses:
         '200':
@@ -21092,6 +22295,9 @@ paths:
               for querying
 
               an account's spendable balances.
+
+
+              Since: cosmos-sdk 0.46
         default:
           description: An unexpected error response.
           schema:
@@ -21170,6 +22376,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -21187,6 +22396,9 @@ paths:
         of
 
         gas if the pagination field is incorrectly set.
+
+
+        Since: cosmos-sdk 0.47
       operationId: SpendableBalanceByDenom
       responses:
         '200':
@@ -21214,6 +22426,9 @@ paths:
               structure for
 
               querying an account's spendable balance for a specific denom.
+
+
+              Since: cosmos-sdk 0.47
         default:
           description: An unexpected error response.
           schema:
@@ -21283,7 +22498,10 @@ paths:
                     signatures required by gogoproto.
                 title: supply is the supply of the coins
               pagination:
-                description: pagination defines the pagination in the response.
+                description: |-
+                  pagination defines the pagination in the response.
+
+                  Since: cosmos-sdk 0.43
                 type: object
                 properties:
                   next_key:
@@ -21379,6 +22597,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -21447,6 +22668,200 @@ paths:
           type: string
       tags:
         - Query
+  /cosmos/bank/v1beta1/supply_without_offset:
+    get:
+      summary: TotalSupplyWithoutOffset queries the total supply of all coins.
+      operationId: TotalSupplyWithoutOffset
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              supply:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
+
+
+                    NOTE: The amount field is an Int which implements the custom
+                    method
+
+                    signatures required by gogoproto.
+                title: supply is the supply of the coins
+              pagination:
+                description: |-
+                  pagination defines the pagination in the response.
+
+                  Since: cosmos-sdk 0.43
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    description: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently. It will be empty if
+                      there are no more results.
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+            title: >-
+              QueryTotalSupplyWithoutOffsetResponse is the response type for the
+              Query/TotalSupplyWithoutOffset RPC
+
+              method
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /cosmos/bank/v1beta1/supply_without_offset/{denom}:
+    get:
+      summary: SupplyOf queries the supply of a single coin.
+      operationId: SupplyOfWithoutOffset
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              amount:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+            description: >-
+              QuerySupplyOfWithoutOffsetResponse is the response type for the
+              Query/SupplyOfWithoutOffset RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: denom
+          description: denom is the coin denom to query balances for.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /cosmos/base/tendermint/v1beta1/abci_query:
     get:
       summary: >-
@@ -21457,6 +22872,7 @@ paths:
         contain
 
         a valid and supported path, including app, custom, p2p, and store.
+      description: 'Since: cosmos-sdk 0.46'
       operationId: ABCIQuery
       responses:
         '200':
@@ -22359,6 +23775,7 @@ paths:
                       Commit contains the evidence that a block was committed by
                       a set of validators.
               sdk_block:
+                title: 'Since: cosmos-sdk 0.47'
                 type: object
                 properties:
                   header:
@@ -23768,6 +25185,7 @@ paths:
                       Commit contains the evidence that a block was committed by
                       a set of validators.
               sdk_block:
+                title: 'Since: cosmos-sdk 0.47'
                 type: object
                 properties:
                   header:
@@ -24648,6 +26066,7 @@ paths:
                       title: Module is the type for VersionInfo
                   cosmos_sdk_version:
                     type: string
+                    title: 'Since: cosmos-sdk 0.43'
                 description: VersionInfo is the type for the GetNodeInfoResponse message.
             description: >-
               GetNodeInfoResponse is the response type for the Query/GetNodeInfo
@@ -25551,6 +26970,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -26045,6 +27467,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -26053,7 +27478,6 @@ paths:
   /cosmos/distribution/v1beta1/community_pool:
     get:
       summary: CommunityPool queries the community pool coins.
-      description: 'WARNING: This query will fail if an external community pool is used.'
       operationId: CommunityPool
       responses:
         '200':
@@ -26794,6 +28218,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -27269,6 +28696,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -27667,7 +29097,10 @@ paths:
                         }
       parameters:
         - name: hash
-          description: hash defines the evidence hash of the requested evidence.
+          description: |-
+            hash defines the evidence hash of the requested evidence.
+
+            Since: cosmos-sdk 0.47
           in: path
           required: true
           type: string
@@ -28376,6 +29809,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -28384,6 +29820,7 @@ paths:
   /cosmos/feegrant/v1beta1/issued/{granter}:
     get:
       summary: AllowancesByGranter returns all the grants given by an address
+      description: 'Since: cosmos-sdk 0.46'
       operationId: AllowancesByGranter
       responses:
         '200':
@@ -28505,6 +29942,9 @@ paths:
             description: >-
               QueryAllowancesByGranterResponse is the response type for the
               Query/AllowancesByGranter RPC method.
+
+
+              Since: cosmos-sdk 0.46
         default:
           description: An unexpected error response.
           schema:
@@ -28758,6 +30198,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -29641,6 +31084,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -30458,6 +31904,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -31028,7 +32477,13 @@ paths:
                         description: >-
                           WeightedVoteOption defines a unit of vote for vote
                           split.
-                      description: options is the weighted vote options.
+
+
+                          Since: cosmos-sdk 0.43
+                      description: |-
+                        options is the weighted vote options.
+
+                        Since: cosmos-sdk 0.43
                   description: >-
                     Vote defines a vote on a governance proposal.
 
@@ -31312,6 +32767,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -31380,7 +32838,13 @@ paths:
                       description: >-
                         WeightedVoteOption defines a unit of vote for vote
                         split.
-                    description: options is the weighted vote options.
+
+
+                        Since: cosmos-sdk 0.43
+                    description: |-
+                      options is the weighted vote options.
+
+                      Since: cosmos-sdk 0.43
                 description: >-
                   Vote defines a vote on a governance proposal.
 
@@ -31812,6 +33276,7 @@ paths:
       summary: >-
         Subspaces queries for all registered subspaces and all keys for a
         subspace.
+      description: 'Since: cosmos-sdk 0.46'
       operationId: Subspaces
       responses:
         '200':
@@ -31835,11 +33300,17 @@ paths:
                     that exist for
 
                     the subspace.
+
+
+                    Since: cosmos-sdk 0.46
             description: >-
               QuerySubspacesResponse defines the response types for querying for
               all
 
               registered subspaces and all keys for a subspace.
+
+
+              Since: cosmos-sdk 0.46
         default:
           description: An unexpected error response.
           schema:
@@ -31948,8 +33419,8 @@ paths:
                       type: string
                       format: int64
                       description: >-
-                        Index which is incremented every time a validator is
-                        bonded in a block and
+                        DEPRECATED: Index which is incremented every time a
+                        validator is bonded in a block and
 
                         _may_ have signed a pre-commit or not. This in
                         conjunction with the
@@ -32092,6 +33563,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -32122,8 +33596,8 @@ paths:
                     type: string
                     format: int64
                     description: >-
-                      Index which is incremented every time a validator is
-                      bonded in a block and
+                      DEPRECATED: Index which is incremented every time a
+                      validator is bonded in a block and
 
                       _may_ have signed a pre-commit or not. This in conjunction
                       with the
@@ -32543,6 +34017,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -32988,6 +34465,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -33353,6 +34833,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -33673,6 +35156,9 @@ paths:
                       description: >-
                         min_self_delegation is the validator's self declared
                         minimum self delegation.
+
+
+                        Since: cosmos-sdk 0.46
                     unbonding_on_hold_ref_count:
                       type: string
                       format: int64
@@ -33987,6 +35473,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -34297,6 +35786,9 @@ paths:
                     description: >-
                       min_self_delegation is the validator's self declared
                       minimum self delegation.
+
+
+                      Since: cosmos-sdk 0.46
                   unbonding_on_hold_ref_count:
                     type: string
                     format: int64
@@ -34939,6 +36431,9 @@ paths:
                           description: >-
                             min_self_delegation is the validator's self declared
                             minimum self delegation.
+
+
+                            Since: cosmos-sdk 0.46
                         unbonding_on_hold_ref_count:
                           type: string
                           format: int64
@@ -35964,6 +37459,9 @@ paths:
                       description: >-
                         min_self_delegation is the validator's self declared
                         minimum self delegation.
+
+
+                        Since: cosmos-sdk 0.46
                     unbonding_on_hold_ref_count:
                       type: string
                       format: int64
@@ -36278,6 +37776,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -36586,6 +38087,9 @@ paths:
                     description: >-
                       min_self_delegation is the validator's self declared
                       minimum self delegation.
+
+
+                      Since: cosmos-sdk 0.46
                   unbonding_on_hold_ref_count:
                     type: string
                     format: int64
@@ -37173,6 +38677,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -38089,6 +39596,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -38097,6 +39607,7 @@ paths:
   /cosmos/tx/v1beta1/decode:
     post:
       summary: TxDecode decodes the transaction.
+      description: 'Since: cosmos-sdk 0.47'
       operationId: TxDecode
       responses:
         '200':
@@ -38315,11 +39826,14 @@ paths:
             description: |-
               TxDecodeRequest is the request type for the Service.TxDecode
               RPC method.
+
+              Since: cosmos-sdk 0.47
       tags:
         - Service
   /cosmos/tx/v1beta1/decode/amino:
     post:
       summary: TxDecodeAmino decodes an Amino transaction from encoded bytes to JSON.
+      description: 'Since: cosmos-sdk 0.47'
       operationId: TxDecodeAmino
       responses:
         '200':
@@ -38334,6 +39848,9 @@ paths:
               Service.TxDecodeAmino
 
               RPC method.
+
+
+              Since: cosmos-sdk 0.47
         default:
           description: An unexpected error response.
           schema:
@@ -38547,11 +40064,15 @@ paths:
               Service.TxDecodeAmino
 
               RPC method.
+
+
+              Since: cosmos-sdk 0.47
       tags:
         - Service
   /cosmos/tx/v1beta1/encode:
     post:
       summary: TxEncode encodes the transaction.
+      description: 'Since: cosmos-sdk 0.47'
       operationId: TxEncode
       responses:
         '200':
@@ -38566,6 +40087,8 @@ paths:
             description: |-
               TxEncodeResponse is the response type for the
               Service.TxEncode method.
+
+              Since: cosmos-sdk 0.47
         default:
           description: An unexpected error response.
           schema:
@@ -38775,6 +40298,7 @@ paths:
   /cosmos/tx/v1beta1/encode/amino:
     post:
       summary: TxEncodeAmino encodes an Amino transaction from JSON to encoded bytes.
+      description: 'Since: cosmos-sdk 0.47'
       operationId: TxEncodeAmino
       responses:
         '200':
@@ -38790,6 +40314,9 @@ paths:
               Service.TxEncodeAmino
 
               RPC method.
+
+
+              Since: cosmos-sdk 0.47
         default:
           description: An unexpected error response.
           schema:
@@ -39002,6 +40529,9 @@ paths:
               Service.TxEncodeAmino
 
               RPC method.
+
+
+              Since: cosmos-sdk 0.47
       tags:
         - Service
   /cosmos/tx/v1beta1/simulate:
@@ -39275,6 +40805,9 @@ paths:
                     description: >-
                       msg_responses contains the Msg handler responses type
                       packed in Anys.
+
+
+                      Since: cosmos-sdk 0.46
             description: |-
               SimulateResponse is the response type for the
               Service.SimulateRPC method.
@@ -39756,6 +41289,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -39797,6 +41333,9 @@ paths:
             Tendermint's
 
             TxSearch RPC method. The query must be valid.
+
+
+            Since cosmos-sdk 0.50
           in: query
           required: false
           type: string
@@ -40131,6 +41670,9 @@ paths:
 
                       additional metadata, emitted only by processing the
                       messages.
+
+
+                      Since: cosmos-sdk 0.42.11, 0.44.5, 0.45
                 description: >-
                   TxResponse defines a structure containing relevant tx data and
                   metadata. The
@@ -40380,6 +41922,7 @@ paths:
   /cosmos/tx/v1beta1/txs/block/{height}:
     get:
       summary: GetBlockWithTxs fetches a block with decoded txs.
+      description: 'Since: cosmos-sdk 0.45.2'
       operationId: GetBlockWithTxs
       responses:
         '200':
@@ -40641,6 +42184,9 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
+
+
+            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -41089,6 +42635,7 @@ paths:
   /cosmos/upgrade/v1beta1/authority:
     get:
       summary: Returns the account with authority to conduct upgrades
+      description: 'Since: cosmos-sdk 0.46'
       operationId: Authority
       responses:
         '200':
@@ -41098,6 +42645,7 @@ paths:
             properties:
               address:
                 type: string
+            description: 'Since: cosmos-sdk 0.46'
             title: QueryAuthorityResponse is the response type for Query/Authority
         default:
           description: An unexpected error response.
@@ -41749,6 +43297,7 @@ paths:
   /cosmos/upgrade/v1beta1/module_versions:
     get:
       summary: ModuleVersions queries the list of module versions from state.
+      description: 'Since: cosmos-sdk 0.43'
       operationId: ModuleVersions
       responses:
         '200':
@@ -41768,7 +43317,10 @@ paths:
                       type: string
                       format: uint64
                       title: consensus version of the app module
-                  description: ModuleVersion specifies a module and its consensus version.
+                  description: |-
+                    ModuleVersion specifies a module and its consensus version.
+
+                    Since: cosmos-sdk 0.43
                 description: >-
                   module_versions is a list of module names with their consensus
                   versions.
@@ -41777,6 +43329,9 @@ paths:
               Query/ModuleVersions
 
               RPC method.
+
+
+              Since: cosmos-sdk 0.43
         default:
           description: An unexpected error response.
           schema:
@@ -42010,6 +43565,7 @@ paths:
               upgraded_consensus_state:
                 type: string
                 format: byte
+                title: 'Since: cosmos-sdk 0.43'
             description: >-
               QueryUpgradedConsensusStateResponse is the response type for the
               Query/UpgradedConsensusState
@@ -42812,6 +44368,9 @@ definitions:
         description: >-
           reverse is set to true if results are to be returned in the descending
           order.
+
+
+          Since: cosmos-sdk 0.43
     description: |-
       message SomeRequest {
                Foo some_parameter = 1;
@@ -49024,6 +50583,368 @@ definitions:
         type: array
         items:
           type: string
+  cosmos.base.v1beta1.DecCoin:
+    type: object
+    properties:
+      denom:
+        type: string
+      amount:
+        type: string
+    description: |-
+      DecCoin defines a token with a denomination and a decimal amount.
+
+      NOTE: The amount field is an Dec which implements the custom method
+      signatures required by gogoproto.
+  symphony.stablestaking.v1beta1.Params:
+    type: object
+    properties:
+      reward_rate:
+        type: string
+      unbonding_duration:
+        type: string
+      supported_tokens:
+        type: array
+        items:
+          type: string
+      reward_epoch_identifier:
+        type: string
+      unbonding_epoch_identifier:
+        type: string
+      max_staking_amount:
+        type: string
+        format: byte
+  symphony.stablestaking.v1beta1.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        type: object
+        properties:
+          reward_rate:
+            type: string
+          unbonding_duration:
+            type: string
+          supported_tokens:
+            type: array
+            items:
+              type: string
+          reward_epoch_identifier:
+            type: string
+          unbonding_epoch_identifier:
+            type: string
+          max_staking_amount:
+            type: string
+            format: byte
+  symphony.stablestaking.v1beta1.QueryPoolResponse:
+    type: object
+    properties:
+      pool:
+        type: object
+        properties:
+          denom:
+            type: string
+          total_staked:
+            type: string
+            format: byte
+          total_shares:
+            type: string
+            format: byte
+  symphony.stablestaking.v1beta1.QueryPoolsResponse:
+    type: object
+    properties:
+      pools:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            total_staked:
+              type: string
+              format: byte
+            total_shares:
+              type: string
+              format: byte
+  symphony.stablestaking.v1beta1.QueryUserStakeResponse:
+    type: object
+    properties:
+      stakes:
+        type: object
+        properties:
+          address:
+            type: string
+          shares:
+            type: string
+            format: byte
+          epoch:
+            type: string
+            format: int64
+  symphony.stablestaking.v1beta1.QueryUserTotalStakeResponse:
+    type: object
+    properties:
+      stakes:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            DecCoin defines a token with a denomination and a decimal amount.
+
+            NOTE: The amount field is an Dec which implements the custom method
+            signatures required by gogoproto.
+  symphony.stablestaking.v1beta1.QueryUserTotalUnbondingResponse:
+    type: object
+    properties:
+      info:
+        type: array
+        items:
+          type: object
+          properties:
+            address:
+              type: string
+            amount:
+              type: string
+              format: byte
+            denom:
+              type: string
+            unbond_epoch:
+              type: string
+              format: int64
+  symphony.stablestaking.v1beta1.QueryUserUnbondingResponse:
+    type: object
+    properties:
+      info:
+        type: object
+        properties:
+          address:
+            type: string
+          amount:
+            type: string
+            format: byte
+          denom:
+            type: string
+          unbond_epoch:
+            type: string
+            format: int64
+  symphony.stablestaking.v1beta1.StakingPool:
+    type: object
+    properties:
+      denom:
+        type: string
+      total_staked:
+        type: string
+        format: byte
+      total_shares:
+        type: string
+        format: byte
+  symphony.stablestaking.v1beta1.UnbondingInfo:
+    type: object
+    properties:
+      address:
+        type: string
+      amount:
+        type: string
+        format: byte
+      denom:
+        type: string
+      unbond_epoch:
+        type: string
+        format: int64
+  symphony.stablestaking.v1beta1.UserStake:
+    type: object
+    properties:
+      address:
+        type: string
+      shares:
+        type: string
+        format: byte
+      epoch:
+        type: string
+        format: int64
+  symphony.stablestaking.v1beta1.MsgStakeTokens:
+    type: object
+    properties:
+      staker:
+        type: string
+      amount:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+  symphony.stablestaking.v1beta1.MsgStakeTokensResponse:
+    type: object
+    properties:
+      staker:
+        type: string
+      amount:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+      total_staked:
+        type: string
+        format: byte
+      total_shares:
+        type: string
+        format: byte
+  symphony.stablestaking.v1beta1.MsgUnstakeTokens:
+    type: object
+    properties:
+      staker:
+        type: string
+      amount:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+  symphony.stablestaking.v1beta1.MsgUnstakeTokensResponse:
+    type: object
+    properties:
+      staker:
+        type: string
+      amount:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          DecCoin defines a token with a denomination and a decimal amount.
+
+          NOTE: The amount field is an Dec which implements the custom method
+          signatures required by gogoproto.
+      total_staked:
+        type: string
+        format: byte
+      total_shares:
+        type: string
+        format: byte
+  symphony.market.v1beta1.ExchangeRequirement:
+    type: object
+    properties:
+      base_currency:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+      exchange_rate:
+        type: string
+  symphony.market.v1beta1.Params:
+    type: object
+    properties:
+      exchange_pool:
+        type: string
+        format: byte
+      min_stability_spread:
+        type: string
+        format: byte
+      tax_receiver:
+        type: string
+    description: Params defines the parameters for the market module.
+  symphony.market.v1beta1.QueryExchangeRequirementsResponse:
+    type: object
+    properties:
+      exchange_requirements:
+        type: array
+        items:
+          type: object
+          properties:
+            base_currency:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+            exchange_rate:
+              type: string
+      total:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+    description: |-
+      QueryExchangeRequirementsResponse is the response type for the
+      Query/ExchangeRequirements RPC method.
+  symphony.market.v1beta1.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params defines the parameters of the module.
+        type: object
+        properties:
+          exchange_pool:
+            type: string
+            format: byte
+          min_stability_spread:
+            type: string
+            format: byte
+          tax_receiver:
+            type: string
+    description: QueryParamsResponse is the response type for the Query/Params RPC method.
+  symphony.market.v1beta1.QuerySwapResponse:
+    type: object
+    properties:
+      return_coin:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+    description: QuerySwapResponse is the response type for the Query/Swap RPC method.
   cosmos.auth.v1beta1.AddressBytesToStringResponse:
     type: object
     properties:
@@ -49032,6 +50953,9 @@ definitions:
     description: >-
       AddressBytesToStringResponse is the response type for AddressString rpc
       method.
+
+
+      Since: cosmos-sdk 0.46
   cosmos.auth.v1beta1.AddressStringToBytesResponse:
     type: object
     properties:
@@ -49041,6 +50965,9 @@ definitions:
     description: >-
       AddressStringToBytesResponse is the response type for AddressBytes rpc
       method.
+
+
+      Since: cosmos-sdk 0.46
   cosmos.auth.v1beta1.BaseAccount:
     type: object
     properties:
@@ -49233,7 +51160,10 @@ definitions:
     properties:
       bech32_prefix:
         type: string
-    description: Bech32PrefixResponse is the response type for Bech32Prefix rpc method.
+    description: |-
+      Bech32PrefixResponse is the response type for Bech32Prefix rpc method.
+
+      Since: cosmos-sdk 0.46
   cosmos.auth.v1beta1.Params:
     type: object
     properties:
@@ -49258,6 +51188,7 @@ definitions:
     properties:
       account_address:
         type: string
+    description: 'Since: cosmos-sdk 0.46.2'
     title: >-
       QueryAccountAddressByIDResponse is the response type for
       AccountAddressByID rpc method
@@ -49450,7 +51381,10 @@ definitions:
           sequence:
             type: string
             format: uint64
-    description: QueryAccountInfoResponse is the Query/AccountInfo response type.
+    description: |-
+      QueryAccountInfoResponse is the Query/AccountInfo response type.
+
+      Since: cosmos-sdk 0.47
   cosmos.auth.v1beta1.QueryAccountResponse:
     type: object
     properties:
@@ -49824,6 +51758,9 @@ definitions:
     description: >-
       QueryAccountsResponse is the response type for the Query/Accounts RPC
       method.
+
+
+      Since: cosmos-sdk 0.43
   cosmos.auth.v1beta1.QueryModuleAccountByNameResponse:
     type: object
     properties:
@@ -50177,6 +52114,9 @@ definitions:
     description: >-
       QueryModuleAccountsResponse is the response type for the
       Query/ModuleAccounts RPC method.
+
+
+      Since: cosmos-sdk 0.46
   cosmos.auth.v1beta1.QueryParamsResponse:
     type: object
     properties:
@@ -51254,6 +53194,8 @@ definitions:
       DenomOwner defines structure representing an account that owns or holds a
       particular denominated token. It contains the account address and account
       balance of the denominated token.
+
+      Since: cosmos-sdk 0.46
   cosmos.bank.v1beta1.DenomUnit:
     type: object
     properties:
@@ -51333,6 +53275,7 @@ definitions:
           displayed in clients.
       name:
         type: string
+        description: 'Since: cosmos-sdk 0.43'
         title: 'name defines the name of the token (eg: Cosmos Atom)'
       symbol:
         type: string
@@ -51341,11 +53284,17 @@ definitions:
           can
 
           be the same as the display.
+
+
+          Since: cosmos-sdk 0.43
       uri:
         type: string
         description: >-
           URI to a document (on or off-chain) that contains additional
           information. Optional.
+
+
+          Since: cosmos-sdk 0.46
       uri_hash:
         type: string
         description: >-
@@ -51353,6 +53302,9 @@ definitions:
           verify that
 
           the document didn't change. Optional.
+
+
+          Since: cosmos-sdk 0.46
     description: |-
       Metadata represents a struct that describes
       a basic token.
@@ -51502,6 +53454,7 @@ definitions:
               displayed in clients.
           name:
             type: string
+            description: 'Since: cosmos-sdk 0.43'
             title: 'name defines the name of the token (eg: Cosmos Atom)'
           symbol:
             type: string
@@ -51510,11 +53463,17 @@ definitions:
               This can
 
               be the same as the display.
+
+
+              Since: cosmos-sdk 0.43
           uri:
             type: string
             description: >-
               URI to a document (on or off-chain) that contains additional
               information. Optional.
+
+
+              Since: cosmos-sdk 0.46
           uri_hash:
             type: string
             description: >-
@@ -51522,6 +53481,9 @@ definitions:
               to verify that
 
               the document didn't change. Optional.
+
+
+              Since: cosmos-sdk 0.46
         description: |-
           Metadata represents a struct that describes
           a basic token.
@@ -51585,6 +53547,7 @@ definitions:
               displayed in clients.
           name:
             type: string
+            description: 'Since: cosmos-sdk 0.43'
             title: 'name defines the name of the token (eg: Cosmos Atom)'
           symbol:
             type: string
@@ -51593,11 +53556,17 @@ definitions:
               This can
 
               be the same as the display.
+
+
+              Since: cosmos-sdk 0.43
           uri:
             type: string
             description: >-
               URI to a document (on or off-chain) that contains additional
               information. Optional.
+
+
+              Since: cosmos-sdk 0.46
           uri_hash:
             type: string
             description: >-
@@ -51605,6 +53574,9 @@ definitions:
               to verify that
 
               the document didn't change. Optional.
+
+
+              Since: cosmos-sdk 0.46
         description: |-
           Metadata represents a struct that describes
           a basic token.
@@ -51647,6 +53619,9 @@ definitions:
             account
 
             balance of the denominated token.
+
+
+            Since: cosmos-sdk 0.46
       pagination:
         description: pagination defines the pagination in the response.
         type: object
@@ -51669,6 +53644,9 @@ definitions:
     description: >-
       QueryDenomOwnersByQueryResponse defines the RPC response of a
       DenomOwnersByQuery RPC query.
+
+
+      Since: cosmos-sdk 0.50.3
   cosmos.bank.v1beta1.QueryDenomOwnersResponse:
     type: object
     properties:
@@ -51703,6 +53681,9 @@ definitions:
             account
 
             balance of the denominated token.
+
+
+            Since: cosmos-sdk 0.46
       pagination:
         description: pagination defines the pagination in the response.
         type: object
@@ -51725,6 +53706,9 @@ definitions:
     description: >-
       QueryDenomOwnersResponse defines the RPC response of a DenomOwners RPC
       query.
+
+
+      Since: cosmos-sdk 0.46
   cosmos.bank.v1beta1.QueryDenomsMetadataResponse:
     type: object
     properties:
@@ -51781,6 +53765,7 @@ definitions:
                 displayed in clients.
             name:
               type: string
+              description: 'Since: cosmos-sdk 0.43'
               title: 'name defines the name of the token (eg: Cosmos Atom)'
             symbol:
               type: string
@@ -51789,11 +53774,17 @@ definitions:
                 ATOM). This can
 
                 be the same as the display.
+
+
+                Since: cosmos-sdk 0.43
             uri:
               type: string
               description: >-
                 URI to a document (on or off-chain) that contains additional
                 information. Optional.
+
+
+                Since: cosmos-sdk 0.46
             uri_hash:
               type: string
               description: >-
@@ -51801,6 +53792,9 @@ definitions:
                 to verify that
 
                 the document didn't change. Optional.
+
+
+                Since: cosmos-sdk 0.46
           description: |-
             Metadata represents a struct that describes
             a basic token.
@@ -51907,7 +53901,10 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
-    description: QuerySendEnabledResponse defines the RPC response of a SendEnable query.
+    description: |-
+      QuerySendEnabledResponse defines the RPC response of a SendEnable query.
+
+      Since: cosmos-sdk 0.47
   cosmos.bank.v1beta1.QuerySpendableBalanceByDenomResponse:
     type: object
     properties:
@@ -51928,6 +53925,9 @@ definitions:
       for
 
       querying an account's spendable balance for a specific denom.
+
+
+      Since: cosmos-sdk 0.47
   cosmos.bank.v1beta1.QuerySpendableBalancesResponse:
     type: object
     properties:
@@ -51970,6 +53970,9 @@ definitions:
       querying
 
       an account's spendable balances.
+
+
+      Since: cosmos-sdk 0.46
   cosmos.bank.v1beta1.QuerySupplyOfResponse:
     type: object
     properties:
@@ -51988,6 +53991,24 @@ definitions:
     description: >-
       QuerySupplyOfResponse is the response type for the Query/SupplyOf RPC
       method.
+  cosmos.bank.v1beta1.QuerySupplyOfWithoutOffsetResponse:
+    type: object
+    properties:
+      amount:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+    description: >-
+      QuerySupplyOfWithoutOffsetResponse is the response type for the
+      Query/SupplyOfWithoutOffset RPC method.
   cosmos.bank.v1beta1.QueryTotalSupplyResponse:
     type: object
     properties:
@@ -52007,7 +54028,10 @@ definitions:
             signatures required by gogoproto.
         title: supply is the supply of the coins
       pagination:
-        description: pagination defines the pagination in the response.
+        description: |-
+          pagination defines the pagination in the response.
+
+          Since: cosmos-sdk 0.43
         type: object
         properties:
           next_key:
@@ -52028,6 +54052,51 @@ definitions:
     title: >-
       QueryTotalSupplyResponse is the response type for the Query/TotalSupply
       RPC
+
+      method
+  cosmos.bank.v1beta1.QueryTotalSupplyWithoutOffsetResponse:
+    type: object
+    properties:
+      supply:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+        title: supply is the supply of the coins
+      pagination:
+        description: |-
+          pagination defines the pagination in the response.
+
+          Since: cosmos-sdk 0.43
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+    title: >-
+      QueryTotalSupplyWithoutOffsetResponse is the response type for the
+      Query/TotalSupplyWithoutOffset RPC
 
       method
   cosmos.bank.v1beta1.SendEnabled:
@@ -53283,6 +55352,7 @@ definitions:
               Commit contains the evidence that a block was committed by a set
               of validators.
       sdk_block:
+        title: 'Since: cosmos-sdk 0.47'
         type: object
         properties:
           header:
@@ -54465,6 +56535,7 @@ definitions:
               Commit contains the evidence that a block was committed by a set
               of validators.
       sdk_block:
+        title: 'Since: cosmos-sdk 0.47'
         type: object
         properties:
           header:
@@ -55341,6 +57412,7 @@ definitions:
               title: Module is the type for VersionInfo
           cosmos_sdk_version:
             type: string
+            title: 'Since: cosmos-sdk 0.43'
         description: VersionInfo is the type for the GetNodeInfoResponse message.
     description: >-
       GetNodeInfoResponse is the response type for the Query/GetNodeInfo RPC
@@ -55939,6 +58011,7 @@ definitions:
           title: Module is the type for VersionInfo
       cosmos_sdk_version:
         type: string
+        title: 'Since: cosmos-sdk 0.43'
     description: VersionInfo is the type for the GetNodeInfoResponse message.
   tendermint.crypto.PublicKey:
     type: object
@@ -58499,18 +60572,6 @@ definitions:
       application's
 
       state transition machine.
-  cosmos.base.v1beta1.DecCoin:
-    type: object
-    properties:
-      denom:
-        type: string
-      amount:
-        type: string
-    description: |-
-      DecCoin defines a token with a denomination and a decimal amount.
-
-      NOTE: The amount field is an Dec which implements the custom method
-      signatures required by gogoproto.
   cosmos.distribution.v1beta1.DelegationDelegatorReward:
     type: object
     properties:
@@ -59543,6 +61604,9 @@ definitions:
     description: >-
       QueryAllowancesByGranterResponse is the response type for the
       Query/AllowancesByGranter RPC method.
+
+
+      Since: cosmos-sdk 0.46
   cosmos.feegrant.v1beta1.QueryAllowancesResponse:
     type: object
     properties:
@@ -60747,8 +62811,14 @@ definitions:
                 weight:
                   type: string
                   description: weight is the vote weight associated with the vote option.
-              description: WeightedVoteOption defines a unit of vote for vote split.
-            description: options is the weighted vote options.
+              description: |-
+                WeightedVoteOption defines a unit of vote for vote split.
+
+                Since: cosmos-sdk 0.43
+            description: |-
+              options is the weighted vote options.
+
+              Since: cosmos-sdk 0.43
         description: |-
           Vote defines a vote on a governance proposal.
           A Vote consists of a proposal ID, the voter, and the vote option.
@@ -60805,8 +62875,14 @@ definitions:
                   weight:
                     type: string
                     description: weight is the vote weight associated with the vote option.
-                description: WeightedVoteOption defines a unit of vote for vote split.
-              description: options is the weighted vote options.
+                description: |-
+                  WeightedVoteOption defines a unit of vote for vote split.
+
+                  Since: cosmos-sdk 0.43
+              description: |-
+                options is the weighted vote options.
+
+                Since: cosmos-sdk 0.43
           description: |-
             Vote defines a vote on a governance proposal.
             A Vote consists of a proposal ID, the voter, and the vote option.
@@ -60916,8 +62992,14 @@ definitions:
             weight:
               type: string
               description: weight is the vote weight associated with the vote option.
-          description: WeightedVoteOption defines a unit of vote for vote split.
-        description: options is the weighted vote options.
+          description: |-
+            WeightedVoteOption defines a unit of vote for vote split.
+
+            Since: cosmos-sdk 0.43
+        description: |-
+          options is the weighted vote options.
+
+          Since: cosmos-sdk 0.43
     description: |-
       Vote defines a vote on a governance proposal.
       A Vote consists of a proposal ID, the voter, and the vote option.
@@ -60964,7 +63046,10 @@ definitions:
       weight:
         type: string
         description: weight is the vote weight associated with the vote option.
-    description: WeightedVoteOption defines a unit of vote for vote split.
+    description: |-
+      WeightedVoteOption defines a unit of vote for vote split.
+
+      Since: cosmos-sdk 0.43
   cosmos.mint.v1beta1.Params:
     type: object
     properties:
@@ -61080,9 +63165,14 @@ definitions:
             exist for
 
             the subspace.
+
+
+            Since: cosmos-sdk 0.46
     description: |-
       QuerySubspacesResponse defines the response types for querying for all
       registered subspaces and all keys for a subspace.
+
+      Since: cosmos-sdk 0.46
   cosmos.params.v1beta1.Subspace:
     type: object
     properties:
@@ -61095,6 +63185,8 @@ definitions:
     description: |-
       Subspace defines a parameter subspace name and all the keys that exist for
       the subspace.
+
+      Since: cosmos-sdk 0.46
   cosmos.slashing.v1beta1.Params:
     type: object
     properties:
@@ -61151,8 +63243,8 @@ definitions:
             type: string
             format: int64
             description: >-
-              Index which is incremented every time a validator is bonded in a
-              block and
+              DEPRECATED: Index which is incremented every time a validator is
+              bonded in a block and
 
               _may_ have signed a pre-commit or not. This in conjunction with
               the
@@ -61212,8 +63304,8 @@ definitions:
               type: string
               format: int64
               description: >-
-                Index which is incremented every time a validator is bonded in a
-                block and
+                DEPRECATED: Index which is incremented every time a validator is
+                bonded in a block and
 
                 _may_ have signed a pre-commit or not. This in conjunction with
                 the
@@ -61294,8 +63386,8 @@ definitions:
         type: string
         format: int64
         description: >-
-          Index which is incremented every time a validator is bonded in a block
-          and
+          DEPRECATED: Index which is incremented every time a validator is
+          bonded in a block and
 
           _may_ have signed a pre-commit or not. This in conjunction with the
 
@@ -61773,6 +63865,9 @@ definitions:
               description: >-
                 min_self_delegation is the validator's self declared minimum
                 self delegation.
+
+
+                Since: cosmos-sdk 0.46
             unbonding_on_hold_ref_count:
               type: string
               format: int64
@@ -62333,6 +64428,9 @@ definitions:
             description: >-
               min_self_delegation is the validator's self declared minimum self
               delegation.
+
+
+              Since: cosmos-sdk 0.46
           unbonding_on_hold_ref_count:
             type: string
             format: int64
@@ -62655,6 +64753,9 @@ definitions:
               description: >-
                 min_self_delegation is the validator's self declared minimum
                 self delegation.
+
+
+                Since: cosmos-sdk 0.46
             unbonding_on_hold_ref_count:
               type: string
               format: int64
@@ -63084,6 +65185,9 @@ definitions:
                   description: >-
                     min_self_delegation is the validator's self declared minimum
                     self delegation.
+
+
+                    Since: cosmos-sdk 0.46
                 unbonding_on_hold_ref_count:
                   type: string
                   format: int64
@@ -63731,6 +65835,9 @@ definitions:
             description: >-
               min_self_delegation is the validator's self declared minimum self
               delegation.
+
+
+              Since: cosmos-sdk 0.46
           unbonding_on_hold_ref_count:
             type: string
             format: int64
@@ -64129,6 +66236,9 @@ definitions:
               description: >-
                 min_self_delegation is the validator's self declared minimum
                 self delegation.
+
+
+                Since: cosmos-sdk 0.46
             unbonding_on_hold_ref_count:
               type: string
               format: int64
@@ -64797,6 +66907,9 @@ definitions:
         description: >-
           min_self_delegation is the validator's self declared minimum self
           delegation.
+
+
+          Since: cosmos-sdk 0.46
       unbonding_on_hold_ref_count:
         type: string
         format: int64
@@ -65117,7 +67230,10 @@ definitions:
                   "@type": "type.googleapis.com/google.protobuf.Duration",
                   "value": "1.212s"
                 }
-        description: msg_responses contains the Msg handler responses type packed in Anys.
+        description: |-
+          msg_responses contains the Msg handler responses type packed in Anys.
+
+          Since: cosmos-sdk 0.46
     description: Result is the union of ResponseFormat and ResponseCheckTx.
   cosmos.base.abci.v1beta1.StringEvent:
     type: object
@@ -65438,6 +67554,9 @@ definitions:
           emitted from the ante. Whereas Logs contains the events, with
 
           additional metadata, emitted only by processing the messages.
+
+
+          Since: cosmos-sdk 0.42.11, 0.44.5, 0.45
     description: >-
       TxResponse defines a structure containing relevant tx data and metadata.
       The
@@ -65564,28 +67683,23 @@ definitions:
             type: string
             description: >-
               if unset, the first signer is responsible for paying the fees. If
-              set, the
+              set, the specified account must pay the fees.
 
-              specified account must pay the fees. the payer must be a tx signer
-              (and
+              the payer must be a tx signer (and thus have signed this field in
+              AuthInfo).
 
-              thus have signed this field in AuthInfo). setting this field does
-              *not*
-
-              change the ordering of required signers for the transaction.
+              setting this field does *not* change the ordering of required
+              signers for the transaction.
           granter:
             type: string
             title: >-
               if set, the fee payer (either the first signer or the value of the
-              payer
+              payer field) requests that a fee grant be used
 
-              field) requests that a fee grant be used to pay fees instead of
-              the fee
+              to pay fees instead of the fee payer's own balance. If an
+              appropriate fee grant does not exist or the chain does
 
-              payer's own balance. If an appropriate fee grant does not exist or
-              the
-
-              chain does not support fee grants, this will fail
+              not support fee grants, this will fail
       tip:
         description: >-
           Tip is the optional tip used for transactions fees paid in another
@@ -65596,6 +67710,9 @@ definitions:
           the
 
           `TipDecorator` in its posthandler.
+
+
+          Since: cosmos-sdk 0.46
         type: object
         properties:
           amount:
@@ -65981,6 +68098,9 @@ definitions:
               emitted from the ante. Whereas Logs contains the events, with
 
               additional metadata, emitted only by processing the messages.
+
+
+              Since: cosmos-sdk 0.42.11, 0.44.5, 0.45
         description: >-
           TxResponse defines a structure containing relevant tx data and
           metadata. The
@@ -66019,27 +68139,23 @@ definitions:
         type: string
         description: >-
           if unset, the first signer is responsible for paying the fees. If set,
-          the
+          the specified account must pay the fees.
 
-          specified account must pay the fees. the payer must be a tx signer
-          (and
+          the payer must be a tx signer (and thus have signed this field in
+          AuthInfo).
 
-          thus have signed this field in AuthInfo). setting this field does
-          *not*
-
-          change the ordering of required signers for the transaction.
+          setting this field does *not* change the ordering of required signers
+          for the transaction.
       granter:
         type: string
         title: >-
           if set, the fee payer (either the first signer or the value of the
-          payer
+          payer field) requests that a fee grant be used
 
-          field) requests that a fee grant be used to pay fees instead of the
-          fee
+          to pay fees instead of the fee payer's own balance. If an appropriate
+          fee grant does not exist or the chain does
 
-          payer's own balance. If an appropriate fee grant does not exist or the
-
-          chain does not support fee grants, this will fail
+          not support fee grants, this will fail
     description: >-
       Fee includes the amount of coins paid in fees and the maximum
 
@@ -66670,6 +68786,9 @@ definitions:
       Service.GetBlockWithTxs
 
       method.
+
+
+      Since: cosmos-sdk 0.45.2
   cosmos.tx.v1beta1.GetTxResponse:
     type: object
     properties:
@@ -66982,6 +69101,9 @@ definitions:
               emitted from the ante. Whereas Logs contains the events, with
 
               additional metadata, emitted only by processing the messages.
+
+
+              Since: cosmos-sdk 0.42.11, 0.44.5, 0.45
         description: >-
           TxResponse defines a structure containing relevant tx data and
           metadata. The
@@ -67308,6 +69430,9 @@ definitions:
                 emitted from the ante. Whereas Logs contains the events, with
 
                 additional metadata, emitted only by processing the messages.
+
+
+                Since: cosmos-sdk 0.42.11, 0.44.5, 0.45
           description: >-
             TxResponse defines a structure containing relevant tx data and
             metadata. The
@@ -67740,7 +69865,10 @@ definitions:
       tx_bytes:
         type: string
         format: byte
-        description: tx_bytes is the raw transaction.
+        description: |-
+          tx_bytes is the raw transaction.
+
+          Since: cosmos-sdk 0.43
     description: |-
       SimulateRequest is the request type for the Service.Simulate
       RPC method.
@@ -68000,6 +70128,9 @@ definitions:
             description: >-
               msg_responses contains the Msg handler responses type packed in
               Anys.
+
+
+              Since: cosmos-sdk 0.46
     description: |-
       SimulateResponse is the response type for the
       Service.SimulateRPC method.
@@ -68024,7 +70155,10 @@ definitions:
       tipper:
         type: string
         title: tipper is the address of the account paying for the tip
-    description: Tip is the tip used for meta-transactions.
+    description: |-
+      Tip is the tip used for meta-transactions.
+
+      Since: cosmos-sdk 0.46
   cosmos.tx.v1beta1.Tx:
     type: object
     properties:
@@ -68240,56 +70374,13 @@ definitions:
               called memo,
 
               but should be called `note` instead (see
-
               https://github.com/cosmos/cosmos-sdk/issues/9122).
           timeout_height:
             type: string
             format: uint64
-            description: >-
-              timeout_height is the block height after which this transaction
-              will not
-
-              be processed by the chain.
-          unordered:
-            type: boolean
-            description: >-
-              unordered, when set to true, indicates that the transaction
-              signer(s)
-
-              intend for the transaction to be evaluated and executed in an
-              un-ordered
-
-              fashion. Specifically, the account's nonce will NOT be checked or
-
-              incremented, which allows for fire-and-forget as well as
-              concurrent
-
-              transaction execution.
-
-
-              Note, when set to true, the existing 'timeout_timestamp' value
-              must
-
-              be set and will be used to correspond to a timestamp in which the
-              transaction is deemed
-
-              valid.
-          timeout_timestamp:
-            type: string
-            format: date-time
-            description: >-
-              timeout_timestamp is the block time after which this transaction
-              will not
-
-              be processed by the chain.
-
-
-              Note, if unordered=true this value MUST be set
-
-              and will act as a short-lived TTL in which the transaction is
-              deemed valid
-
-              and kept in memory to prevent duplicates.
+            title: |-
+              timeout is the block height after which this transaction will not
+              be processed by the chain
           extension_options:
             type: array
             items:
@@ -68887,53 +70978,13 @@ definitions:
           memo,
 
           but should be called `note` instead (see
-
           https://github.com/cosmos/cosmos-sdk/issues/9122).
       timeout_height:
         type: string
         format: uint64
-        description: >-
-          timeout_height is the block height after which this transaction will
-          not
-
-          be processed by the chain.
-      unordered:
-        type: boolean
-        description: >-
-          unordered, when set to true, indicates that the transaction signer(s)
-
-          intend for the transaction to be evaluated and executed in an
-          un-ordered
-
-          fashion. Specifically, the account's nonce will NOT be checked or
-
-          incremented, which allows for fire-and-forget as well as concurrent
-
-          transaction execution.
-
-
-          Note, when set to true, the existing 'timeout_timestamp' value must
-
-          be set and will be used to correspond to a timestamp in which the
-          transaction is deemed
-
-          valid.
-      timeout_timestamp:
-        type: string
-        format: date-time
-        description: >-
-          timeout_timestamp is the block time after which this transaction will
-          not
-
-          be processed by the chain.
-
-
-          Note, if unordered=true this value MUST be set
-
-          and will act as a short-lived TTL in which the transaction is deemed
-          valid
-
-          and kept in memory to prevent duplicates.
+        title: |-
+          timeout is the block height after which this transaction will not
+          be processed by the chain
       extension_options:
         type: array
         items:
@@ -69304,6 +71355,8 @@ definitions:
     description: |-
       TxDecodeAminoRequest is the request type for the Service.TxDecodeAmino
       RPC method.
+
+      Since: cosmos-sdk 0.47
   cosmos.tx.v1beta1.TxDecodeAminoResponse:
     type: object
     properties:
@@ -69312,6 +71365,8 @@ definitions:
     description: |-
       TxDecodeAminoResponse is the response type for the Service.TxDecodeAmino
       RPC method.
+
+      Since: cosmos-sdk 0.47
   cosmos.tx.v1beta1.TxDecodeRequest:
     type: object
     properties:
@@ -69322,6 +71377,8 @@ definitions:
     description: |-
       TxDecodeRequest is the request type for the Service.TxDecode
       RPC method.
+
+      Since: cosmos-sdk 0.47
   cosmos.tx.v1beta1.TxDecodeResponse:
     type: object
     properties:
@@ -69331,6 +71388,8 @@ definitions:
     description: |-
       TxDecodeResponse is the response type for the
       Service.TxDecode method.
+
+      Since: cosmos-sdk 0.47
   cosmos.tx.v1beta1.TxEncodeAminoRequest:
     type: object
     properties:
@@ -69339,6 +71398,8 @@ definitions:
     description: |-
       TxEncodeAminoRequest is the request type for the Service.TxEncodeAmino
       RPC method.
+
+      Since: cosmos-sdk 0.47
   cosmos.tx.v1beta1.TxEncodeAminoResponse:
     type: object
     properties:
@@ -69348,6 +71409,8 @@ definitions:
     description: |-
       TxEncodeAminoResponse is the response type for the Service.TxEncodeAmino
       RPC method.
+
+      Since: cosmos-sdk 0.47
   cosmos.tx.v1beta1.TxEncodeRequest:
     type: object
     properties:
@@ -69357,6 +71420,8 @@ definitions:
     description: |-
       TxEncodeRequest is the request type for the Service.TxEncode
       RPC method.
+
+      Since: cosmos-sdk 0.47
   cosmos.tx.v1beta1.TxEncodeResponse:
     type: object
     properties:
@@ -69367,6 +71432,8 @@ definitions:
     description: |-
       TxEncodeResponse is the response type for the
       Service.TxEncode method.
+
+      Since: cosmos-sdk 0.47
   tendermint.abci.Event:
     type: object
     properties:
@@ -69408,7 +71475,10 @@ definitions:
         type: string
         format: uint64
         title: consensus version of the app module
-    description: ModuleVersion specifies a module and its consensus version.
+    description: |-
+      ModuleVersion specifies a module and its consensus version.
+
+      Since: cosmos-sdk 0.43
   cosmos.upgrade.v1beta1.Plan:
     type: object
     properties:
@@ -69639,6 +71709,7 @@ definitions:
     properties:
       address:
         type: string
+    description: 'Since: cosmos-sdk 0.46'
     title: QueryAuthorityResponse is the response type for Query/Authority
   cosmos.upgrade.v1beta1.QueryCurrentPlanResponse:
     type: object
@@ -69884,7 +71955,10 @@ definitions:
               type: string
               format: uint64
               title: consensus version of the app module
-          description: ModuleVersion specifies a module and its consensus version.
+          description: |-
+            ModuleVersion specifies a module and its consensus version.
+
+            Since: cosmos-sdk 0.43
         description: >-
           module_versions is a list of module names with their consensus
           versions.
@@ -69893,12 +71967,16 @@ definitions:
       Query/ModuleVersions
 
       RPC method.
+
+
+      Since: cosmos-sdk 0.43
   cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateResponse:
     type: object
     properties:
       upgraded_consensus_state:
         type: string
         format: byte
+        title: 'Since: cosmos-sdk 0.43'
     description: >-
       QueryUpgradedConsensusStateResponse is the response type for the
       Query/UpgradedConsensusState

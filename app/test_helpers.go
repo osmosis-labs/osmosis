@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	markettypes "github.com/osmosis-labs/osmosis/v27/x/market/types"
 	"os"
 	"time"
 
@@ -110,6 +111,12 @@ func GenesisStateWithValSet(app *SymphonyApp) GenesisState {
 	if err != nil {
 		panic("failed to get vals")
 	}
+
+	// set validators and delegations
+	marketGenesis := markettypes.NewGenesisState(markettypes.DefaultParams())
+	taxReceiver, err := sdk.AccAddressFromBech32("symphony1h0jhfjfpqc8463fd040w0wxme9aq5ujtclf3np")
+	marketGenesis.Params.TaxReceiver = taxReceiver.String()
+	genesisState[markettypes.ModuleName] = app.AppCodec().MustMarshalJSON(marketGenesis)
 
 	return genesisState
 }

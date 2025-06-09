@@ -19,30 +19,30 @@ import (
 
 var baseGas = uint64(10000)
 
-func (s *KeeperTestHelper) ExecuteUpgradeFeeTokenProposal(feeToken string, poolId uint64) error {
-	upgradeProp := types.NewUpdateFeeTokenProposal(
-		"Test Proposal",
-		"test",
-		[]types.FeeToken{
-			{
-				Denom:  feeToken,
-				PoolID: poolId,
-			},
-		},
-	)
-	return s.App.TxFeesKeeper.HandleUpdateFeeTokenProposal(s.Ctx, &upgradeProp)
-}
+//func (s *KeeperTestHelper) ExecuteUpgradeFeeTokenProposal(feeToken string, poolId uint64) error {
+//	upgradeProp := types.NewUpdateFeeTokenProposal(
+//		"Test Proposal",
+//		"test",
+//		[]types.FeeToken{
+//			{
+//				Denom:  feeToken,
+//				PoolID: poolId,
+//			},
+//		},
+//	)
+//	return s.App.TxFeesKeeper.HandleUpdateFeeTokenProposal(s.Ctx, &upgradeProp)
+//}
 
 func (s *KeeperTestHelper) SetupTxFeeAnteHandlerAndChargeFee(clientCtx client.Context, minGasPrices sdk.DecCoins, gasRequested uint64, isCheckTx, isSimulate bool, txFee sdk.Coins) error {
 	mempoolFeeOpts := types.NewDefaultMempoolFeeOptions()
 	mempoolFeeOpts.MinGasPriceForHighGasTx = osmomath.MustNewDecFromStr("0.0025")
 
-	uionPoolId := s.PrepareBalancerPoolWithCoins(
-		sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
-		sdk.NewInt64Coin("uion", 500),
-	)
-	err := s.ExecuteUpgradeFeeTokenProposal("uion", uionPoolId)
-	s.Require().NoError(err)
+	//uionPoolId := s.PrepareBalancerPoolWithCoins(
+	//	sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
+	//	sdk.NewInt64Coin("uion", 500),
+	//)
+	//err := s.ExecuteUpgradeFeeTokenProposal("uion", uionPoolId)
+	//s.Require().NoError(err)
 
 	if gasRequested == 0 {
 		gasRequested = baseGas
@@ -74,7 +74,7 @@ func (s *KeeperTestHelper) SetupTxFeeAnteHandlerAndChargeFee(clientCtx client.Co
 		accSeqs[0],
 	)
 
-	err = testutil.FundAccount(s.Ctx, s.App.BankKeeper, addr0, txFee)
+	err := testutil.FundAccount(s.Ctx, s.App.BankKeeper, addr0, txFee)
 	s.Require().NoError(err)
 
 	tx := s.BuildTx(txBuilder, msgs, sigV2, "", txFee, gasLimit)

@@ -1,7 +1,8 @@
+
 package grpc
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
-// SOURCE AT `proto/osmosis/concentratedliquidity/v1beta1/query.yml`
+// SOURCE AT `proto/symphony/concentratedliquidity/v1beta1/query.yml`
 
 import (
 	context "context"
@@ -179,3 +180,4 @@ func (q Querier) CFMMPoolIdLinkFromConcentratedPoolId(grpcCtx context.Context,
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.CFMMPoolIdLinkFromConcentratedPoolId(ctx, *req)
 }
+

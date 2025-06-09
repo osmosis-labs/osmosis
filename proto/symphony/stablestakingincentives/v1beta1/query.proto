@@ -10,13 +10,12 @@ option go_package = "github.com/osmosis-labs/osmosis/v27/x/stable-staking-incent
 service Query {
   // Params returns pool incentives params.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/symphony/stable-staking-incentives/v1beta1/params";
+    option (google.api.http).get =
+        "/symphony/stable-staking-incentives/v1beta1/params";
   }
 }
-
 
 message QueryParamsRequest {}
 message QueryParamsResponse {
   Params params = 1 [ (gogoproto.nullable) = false ];
 }
-

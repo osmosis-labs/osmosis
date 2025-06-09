@@ -1,7 +1,8 @@
+
 package grpcv2
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
-// SOURCE AT `proto/osmosis/poolmanager/v2/query.yml`
+// SOURCE AT `proto/symphony/poolmanager/v2/query.yml`
 
 import (
 	context "context"
@@ -29,3 +30,4 @@ func (q Querier) SpotPriceV2(grpcCtx context.Context,
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.SpotPriceV2(ctx, *req)
 }
+

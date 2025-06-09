@@ -22,5 +22,5 @@ message Params {
     (gogoproto.nullable) = false
   ];
 
-  string tax_receiver = 3 [(gogoproto.moretags) = "yaml:\"tax_receiver\""];
+  string tax_receiver = 3 [ (gogoproto.moretags) = "yaml:\"tax_receiver\"" ];
 }

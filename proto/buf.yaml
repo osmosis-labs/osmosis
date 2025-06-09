@@ -1,8 +1,8 @@
 version: v1
-name: buf.build/osmosis-labs/osmosis
+name: buf.build/symphony-labs/symphony
 deps:
   - buf.build/cosmos/gogo-proto
-  - buf.build/cosmos/cosmos-sdk:v0.47.0
+  - buf.build/cosmos/cosmos-sdk:v0.50.9
   - buf.build/cosmos/cosmos-proto
   - buf.build/googleapis/googleapis
 breaking:

@@ -43,8 +43,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	skParams.BondDenom = "note"
 	err = s.App.StakingKeeper.SetParams(s.Ctx, skParams)
 	s.Require().NoError(err)
-	err = s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, "note")
-	s.Require().NoError(err)
 	marketParams := s.App.MarketKeeper.GetParams(s.Ctx)
 	s.App.MarketKeeper.SetParams(s.Ctx, marketParams)
 

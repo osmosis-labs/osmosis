@@ -66,7 +66,8 @@ message AggregateExchangeRatePrevote {
 
   string hash = 1 [ (gogoproto.moretags) = "yaml:\"hash\"" ];
   string voter = 2 [ (gogoproto.moretags) = "yaml:\"voter\"" ];
-  uint64 submit_epoch_counter = 3 [ (gogoproto.moretags) = "yaml:\"submit_epoch_counter\"" ];
+  uint64 submit_epoch_counter = 3
+      [ (gogoproto.moretags) = "yaml:\"submit_epoch_counter\"" ];
 }
 
 // MsgAggregateExchangeRateVote - struct for voting on

@@ -12,7 +12,7 @@ var (
 	KeyDenomCreationFee        = []byte("DenomCreationFee")
 	KeyDenomCreationGasConsume = []byte("DenomCreationGasConsume")
 
-	// chosen as an arbitrary large number, less than the max_gas_wanted_per_tx in config.
+	// DefaultCreationGasFee chosen as an arbitrary large number, less than the max_gas_wanted_per_tx in config.
 	DefaultCreationGasFee = 1_000_000
 )
 

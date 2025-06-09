@@ -106,6 +106,8 @@ import (
 	protorevtypes "github.com/osmosis-labs/osmosis/v27/x/protorev/types"
 	stablestakingincentives "github.com/osmosis-labs/osmosis/v27/x/stable-staking-incentives"
 	stablestakingincentivestypes "github.com/osmosis-labs/osmosis/v27/x/stable-staking-incentives/types"
+	"github.com/osmosis-labs/osmosis/v27/x/stablestaking"
+	stablestakingtypes "github.com/osmosis-labs/osmosis/v27/x/stablestaking/types"
 	superfluid "github.com/osmosis-labs/osmosis/v27/x/superfluid"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v27/x/superfluid/types"
 	"github.com/osmosis-labs/osmosis/v27/x/tokenfactory"
@@ -121,36 +123,38 @@ import (
 // moduleAccountPermissions defines module account permissions
 // TODO: Having to input nil's here is unacceptable, we need a way to automatically derive this.
 var moduleAccountPermissions = map[string][]string{
-	authtypes.FeeCollectorName:               nil,
-	distrtypes.ModuleName:                    nil,
-	ibchookstypes.ModuleName:                 nil,
-	icatypes.ModuleName:                      nil,
-	icqtypes.ModuleName:                      nil,
-	minttypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
-	minttypes.DeveloperVestingModuleAcctName: nil,
-	stakingtypes.BondedPoolName:              {authtypes.Burner, authtypes.Staking},
-	stakingtypes.NotBondedPoolName:           {authtypes.Burner, authtypes.Staking},
-	govtypes.ModuleName:                      {authtypes.Burner},
-	ibctransfertypes.ModuleName:              {authtypes.Minter, authtypes.Burner},
-	gammtypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
-	incentivestypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
-	protorevtypes.ModuleName:                 {authtypes.Minter, authtypes.Burner},
-	lockuptypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
-	poolincentivestypes.ModuleName:           nil,
-	stablestakingincentivestypes.ModuleName:  nil,
-	superfluidtypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
-	txfeestypes.ModuleName:                   nil,
-	txfeestypes.NonNativeTxFeeCollectorName:  nil,
-	wasmtypes.ModuleName:                     {authtypes.Burner},
-	tokenfactorytypes.ModuleName:             {authtypes.Minter, authtypes.Burner},
-	valsetpreftypes.ModuleName:               {authtypes.Staking},
-	poolmanagertypes.ModuleName:              nil,
-	markettypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
-	treasurytypes.ModuleName:                 {authtypes.Minter, authtypes.Burner},
-	oracletypes.ModuleName:                   nil,
-	cosmwasmpooltypes.ModuleName:             nil,
-	auctiontypes.ModuleName:                  nil,
-	smartaccounttypes.ModuleName:             nil,
+	authtypes.FeeCollectorName:                    nil,
+	distrtypes.ModuleName:                         nil,
+	ibchookstypes.ModuleName:                      nil,
+	icatypes.ModuleName:                           nil,
+	icqtypes.ModuleName:                           nil,
+	minttypes.ModuleName:                          {authtypes.Minter, authtypes.Burner},
+	minttypes.DeveloperVestingModuleAcctName:      nil,
+	stakingtypes.BondedPoolName:                   {authtypes.Burner, authtypes.Staking},
+	stakingtypes.NotBondedPoolName:                {authtypes.Burner, authtypes.Staking},
+	govtypes.ModuleName:                           {authtypes.Burner},
+	ibctransfertypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
+	gammtypes.ModuleName:                          {authtypes.Minter, authtypes.Burner},
+	incentivestypes.ModuleName:                    {authtypes.Minter, authtypes.Burner},
+	protorevtypes.ModuleName:                      {authtypes.Minter, authtypes.Burner},
+	lockuptypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
+	poolincentivestypes.ModuleName:                nil,
+	stablestakingincentivestypes.ModuleName:       nil,
+	superfluidtypes.ModuleName:                    {authtypes.Minter, authtypes.Burner},
+	txfeestypes.ModuleName:                        nil,
+	txfeestypes.NonNativeTxFeeCollectorName:       nil,
+	wasmtypes.ModuleName:                          {authtypes.Burner},
+	tokenfactorytypes.ModuleName:                  {authtypes.Minter, authtypes.Burner},
+	valsetpreftypes.ModuleName:                    {authtypes.Staking},
+	poolmanagertypes.ModuleName:                   nil,
+	stablestakingtypes.ModuleName:                 nil,
+	stablestakingtypes.NativeRewardsCollectorName: {authtypes.Burner},
+	markettypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
+	treasurytypes.ModuleName:                      {authtypes.Minter, authtypes.Burner},
+	oracletypes.ModuleName:                        nil,
+	cosmwasmpooltypes.ModuleName:                  nil,
+	auctiontypes.ModuleName:                       nil,
+	smartaccounttypes.ModuleName:                  nil,
 }
 
 // appModules return modules to initialize module manager.
@@ -201,6 +205,7 @@ func appModules(
 		lockup.NewAppModule(*app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(*app.PoolIncentivesKeeper),
 		stablestakingincentives.NewAppModule(*app.StableStakingIncentivesKeeper),
+		stablestaking.NewAppModule(*app.StableStakingKeeper, app.AccountKeeper, app.BankKeeper, app.OracleKeeper),
 		epochs.NewAppModule(*app.EpochsKeeper),
 		superfluid.NewAppModule(
 			*app.SuperfluidKeeper,
@@ -320,6 +325,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		packetforwardtypes.ModuleName,
 		cosmwasmpooltypes.ModuleName,
 		auctiontypes.ModuleName,
+		stablestakingtypes.ModuleName,
 	}
 }
 
@@ -341,10 +347,11 @@ func (app *SymphonyApp) GetBankKeeper() simtypes.BankKeeper {
 	return app.AppKeepers.BankKeeper
 }
 
-// Required for ibctesting
+// GetStakingKeeper Required for ibc testing
 func (app *SymphonyApp) GetStakingKeeper() ibctestingtypes.StakingKeeper {
 	return *app.AppKeepers.StakingKeeper // Dereferencing the pointer
 }
+
 func (app *SymphonyApp) GetSDKStakingKeeper() stakingkeeper.Keeper {
 	return *app.AppKeepers.StakingKeeper // Dereferencing the pointer
 }

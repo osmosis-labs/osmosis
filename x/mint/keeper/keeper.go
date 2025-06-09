@@ -14,7 +14,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v27/x/mint/types"
-	stablestakingincentivestypes "github.com/osmosis-labs/osmosis/v27/x/stable-staking-incentives/types"
+	stablestaking "github.com/osmosis-labs/osmosis/v27/x/stablestaking/types"
 )
 
 // Keeper of the mint store.
@@ -130,8 +130,8 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 		return err
 	}
 
-	// allocate pool allocation ratio to stable-staking-incentives module account.
-	poolIncentivesAmount, err := k.distributeToModule(ctx, stablestakingincentivestypes.ModuleName, mintedCoin, proportions.PoolIncentives)
+	// allocate staking incentives into stable-staking module account.
+	poolIncentivesAmount, err := k.distributeToModule(ctx, stablestaking.NativeRewardsCollectorName, mintedCoin, proportions.PoolIncentives)
 	if err != nil {
 		return err
 	}
@@ -149,7 +149,7 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 		return err
 	}
 
-	// call an hook after the minting and distribution of new coins
+	// call a hook after the minting and distribution of new coins
 	k.hooks.AfterDistributeMintedCoin(ctx)
 
 	return err

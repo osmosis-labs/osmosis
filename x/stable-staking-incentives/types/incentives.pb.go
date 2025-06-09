@@ -24,8 +24,9 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type Params struct {
-	// distribution_contract_address is the address of the distribution contract that receives the minted coins
-	// and distributes them to the stable coin stakers.
+	// distribution_contract_address is the address of the distribution contract
+	// that receives the minted coins and distributes them to the stable coin
+	// stakers.
 	DistributionContractAddress string `protobuf:"bytes,1,opt,name=distribution_contract_address,json=distributionContractAddress,proto3" json:"distribution_contract_address,omitempty" yaml:"distribution_contract_address"`
 }
 

@@ -69,16 +69,16 @@ func (s *KeeperTestSuite) SetupTest(isCheckTx bool) {
 	}
 }
 
-func (s *KeeperTestSuite) ExecuteUpgradeFeeTokenProposal(feeToken string, poolId uint64) error {
-	upgradeProp := types.NewUpdateFeeTokenProposal(
-		"Test Proposal",
-		"test",
-		[]types.FeeToken{
-			{
-				Denom:  feeToken,
-				PoolID: poolId,
-			},
-		},
-	)
-	return s.App.TxFeesKeeper.HandleUpdateFeeTokenProposal(s.Ctx, &upgradeProp)
-}
+//func (s *KeeperTestSuite) ExecuteUpgradeFeeTokenProposal(feeToken string, poolId uint64) error {
+//	upgradeProp := types.NewUpdateFeeTokenProposal(
+//		"Test Proposal",
+//		"test",
+//		[]types.FeeToken{
+//			{
+//				Denom:  feeToken,
+//				PoolID: poolId,
+//			},
+//		},
+//	)
+//	return s.App.TxFeesKeeper.HandleUpdateFeeTokenProposal(s.Ctx, &upgradeProp)
+//}

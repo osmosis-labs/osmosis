@@ -26,6 +26,10 @@ for dir in $proto_dirs; do
   if [[ -n "$query_file" ]]; then
     buf generate --template proto/buf.gen.swagger.yaml "$query_file"
   fi
+  tx_file=$(find "${dir}" -maxdepth 1 \( -name 'tx.proto' \))
+    if [[ -n "$tx_file" ]]; then
+      buf generate --template proto/buf.gen.swagger.yaml "$tx_file"
+    fi
 done
 
 cd ..

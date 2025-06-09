@@ -1,0 +1,82 @@
+syntax = "proto3";
+package symphony.stablestaking.v1beta1;
+
+option go_package = "github.com/osmosis-labs/osmosis/v27/x/stablestaking/types";
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+message Params {
+  string reward_rate = 1;
+  google.protobuf.Duration unbonding_duration = 2
+      [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
+  repeated string supported_tokens = 3;
+  string reward_epoch_identifier = 4;
+  string unbonding_epoch_identifier = 5;
+  bytes max_staking_amount = 6 [
+    (gogoproto.moretags) = "yaml:\"max_staking_amount\"",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message GenesisState { Params params = 1 [ (gogoproto.nullable) = false ]; }
+
+message StakingPool {
+  string denom = 1;
+
+  bytes total_staked = 2 [
+    (gogoproto.moretags) = "yaml:\"total_staked\"",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+
+  bytes total_shares = 3 [
+    (gogoproto.moretags) = "yaml:\"total_shares\"",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message UserStake {
+  string address = 1;
+
+  bytes shares = 2 [
+    (gogoproto.moretags) = "yaml:\"shares\"",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+
+  int64 epoch = 3;
+}
+
+message UnbondingInfo {
+  string address = 1;
+
+  bytes amount = 2 [
+    (gogoproto.moretags) = "yaml:\"amount\"",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+
+  string denom = 3;
+
+  int64 unbond_epoch = 4;
+}
+
+message EpochSnapshot {
+  bytes total_staked = 1 [
+    (gogoproto.moretags) = "yaml:\"total_staked\"",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+
+  bytes total_shares = 2 [
+    (gogoproto.moretags) = "yaml:\"total_shares\"",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+  repeated UserStake stakers = 3;
+}

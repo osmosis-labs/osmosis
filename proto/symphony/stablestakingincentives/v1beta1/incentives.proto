@@ -8,7 +8,9 @@ option go_package = "github.com/osmosis-labs/osmosis/v27/x/stable-staking-incent
 message Params {
   option (gogoproto.goproto_stringer) = false;
 
-  // distribution_contract_address is the address of the distribution contract that receives the minted coins
-  // and distributes them to the stable coin stakers.
-  string distribution_contract_address = 1 [ (gogoproto.moretags) = "yaml:\"distribution_contract_address\"" ];
+  // distribution_contract_address is the address of the distribution contract
+  // that receives the minted coins and distributes them to the stable coin
+  // stakers.
+  string distribution_contract_address = 1
+      [ (gogoproto.moretags) = "yaml:\"distribution_contract_address\"" ];
 }

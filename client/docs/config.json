@@ -81,6 +81,30 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/symphony/stablestaking/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "StableStakingParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/symphony/stablestaking/v1beta1/tx.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "StableStakingTxParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/symphony/market/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "MarketParams"
+        }
+      }
+    },
+    {
       "url": "./tmp-swagger-gen/cosmos/auth/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
