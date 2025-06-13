@@ -6,10 +6,14 @@ The ``GAMM`` module (**G**eneralized **A**utomated **M**arket **M**aker) provide
 
 1. **[Concepts](#concepts)**
 2. **[Weights](#weights)**
-3. **[Pool Parameters](#network-parameters)**
-4. **[Messages](#messages)**
-5. **[Transactions](#transactions)**
-6. **[Queries and Transactions](#queries-and-transactions)**
+3. **[Network Parameters](#network-parameters)**
+4. **[Migration Records](#migration-records)**
+5. **[Messages](#messages)**
+6. **[Transactions](#transactions)**
+7. **[Queries](#queries)**
+8. **[Pool](#pool)**
+9. **[Other resources](#other-resources)**
+10. **[Events](#events)**
 
 ## Concepts
 
