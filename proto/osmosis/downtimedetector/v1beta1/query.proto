@@ -35,5 +35,5 @@ message RecoveredSinceDowntimeOfLengthRequest {
 }
 
 message RecoveredSinceDowntimeOfLengthResponse {
-  bool succesfully_recovered = 1;
+  bool successfully_recovered = 1;
 }
