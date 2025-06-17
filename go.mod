@@ -21,7 +21,7 @@ require (
 	github.com/CosmWasm/wasmd v0.53.2
 	github.com/CosmWasm/wasmvm/v2 v2.1.5
 	github.com/Masterminds/semver v1.5.0
-	github.com/cometbft/cometbft v0.38.13
+	github.com/cometbft/cometbft v0.38.17
 	github.com/cometbft/cometbft-db v0.14.1
 	github.com/cosmos/cosmos-db v1.1.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -294,11 +294,6 @@ replace (
 	// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/store/v1.1.1-v0.50.11-v28-osmo-2
 	cosmossdk.io/store => github.com/osmosis-labs/cosmos-sdk/store v1.1.1-v0.50.11-v28-osmo-2
 
-	// Direct cometbft branch link: https://github.com/osmosis-labs/cometbft/tree/osmo-v28/0.38.17, current branch: osmo-v28/v0.38.17
-	// Direct commit link: https://github.com/osmosis-labs/cometbft/commit/58bfcdcb2fdd81655586678c2062cdc51adbdf0d
-	// Direct tag link: https://github.com/osmosis-labs/cometbft/releases/tag/v0.38.17-v28-osmo-1
-	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.38.17-v28-osmo-1
-
 	// Direct cosmos-sdk branch link: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v28/0.50.11, current branch: osmo-v28/0.50.11
 	// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/5b4e03484cf88e7d1fce003ba75b4fdc5c81f15f
 	// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.50.11-v28-osmo-3
@@ -308,7 +303,7 @@ replace (
 	// Direct block-sdk branch link: https://github.com/osmosis-labs/block-sdk/tree/release/v2.x.x, current branch: release/v2.x.x
 	// Direct commit link: https://github.com/osmosis-labs/block-sdk/commit/a86e729f843d36392393a8ff6a14c9fbc15f2fcc
 	// Direct tag link: https://github.com/osmosis-labs/block-sdk/releases/tag/v2.1.6
-	github.com/skip-mev/block-sdk/v2 => github.com/osmosis-labs/block-sdk/v2 v2.1.6
+	github.com/skip-mev/block-sdk/v2 => github.com/osmosis-labs/block-sdk/v2 v2.1.7-0.20250611135306-7aca335f5a4c
 
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
