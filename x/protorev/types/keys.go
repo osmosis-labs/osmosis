@@ -51,7 +51,7 @@ var (
 	// KeyPrefixDenomPairToPool is the prefix that is used to store the pool id for a given denom pair (baseDenom, otherDenom)
 	KeyPrefixDenomPairToPool = []byte{prefixDenomPairToPool}
 
-	// DEPRECATED: KeyPrefixDeprecatedBaseDenoms is the prefix that is used to store the base denoms that are used to create cyclic arbitrage routes
+	// Deprecated: KeyPrefixDeprecatedBaseDenoms is the prefix that is used to store the base denoms that are used to create cyclic arbitrage routes
 	KeyPrefixDeprecatedBaseDenoms = []byte{prefixDeprecatedBaseDenoms}
 
 	// -------------- Keys for statistics stores -------------- //
