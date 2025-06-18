@@ -1,30 +1,30 @@
 {
-  "genesis_time": "2024-07-10T05:50:43.226991581Z",
-  "chain_id": "symphony-testnet-1",
-  "initial_height": "1",
-  "consensus_params": {
-    "block": {
-      "max_bytes": "5242880",
-      "max_gas": "6000000",
-      "time_iota_ms": "1000"
-    },
-    "evidence": {
-      "max_age_num_blocks": "403200",
-      "max_age_duration": "1209600000000000",
-      "max_bytes": "1048576"
-    },
-    "validator": {
-      "pub_key_types": [
-        "ed25519"
-      ]
-    },
-    "version": {
-      "app": "1"
-    }
-  },
-  "app_hash": "",
+  "app_name": "",
+  "app_version": "",
+  "genesis_time": "2025-06-18T18:52:56.160492+03:00",
+  "chain_id": "testing",
+  "initial_height": 1,
+  "app_hash": null,
   "app_state": {
-    "07-tendermint": null,
+    "08-wasm": {
+      "contracts": []
+    },
+    "auction": {
+      "params": {
+        "max_bundle_size": 2,
+        "escrow_account_address": "lUgrolt78Xjd4S2z/yDwDpD60Ak=",
+        "reserve_fee": {
+          "denom": "stake",
+          "amount": "1"
+        },
+        "min_bid_increment": {
+          "denom": "stake",
+          "amount": "1"
+        },
+        "front_running_protection": true,
+        "proposer_fee": "0.000000000000000000"
+      }
+    },
     "auth": {
       "params": {
         "max_memo_characters": "256",
@@ -36,339 +36,23 @@
       "accounts": [
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "symphony1nkdh6l5wkygv7cuw6kfalknpus6fqmsr746f6k",
+          "address": "symphony14q6z5sczy8tyxlj42t93rgvsf2sck7ay9xesjf",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "symphony16agv74asz2zlcyq4eusk4h0hkxwpp0hxex83jk",
+          "address": "symphony10rsn4k4a0032gjrsm7ysx54wkvnpckw6jzntas",
           "pub_key": null,
-          "account_number": "0",
+          "account_number": "1",
           "sequence": "0"
         },
         {
-          "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "symphony1dmlepawltn5hrvmz6humx99rrh48jdst4dce86",
-          "pub_key": null,
-          "account_number": "0",
-          "sequence": "0"
-        },
-        {
-          "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "symphony1vhhgnhmnw0x9zfslv4m2plchx8ecgthugemp74",
-          "pub_key": null,
-          "account_number": "0",
-          "sequence": "0"
-        },
-        {
-          "@type": "/cosmos.vesting.v1beta1.PeriodicVestingAccount",
+          "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
           "base_vesting_account": {
             "base_account": {
-              "address": "symphony1cancz7dux9y3nw5t8sfvxe0esytm3rnan7956e",
-              "pub_key": null,
-              "account_number": "0",
-              "sequence": "0"
-            },
-            "original_vesting": [
-              {
-                "denom": "note",
-                "amount": "40000000000000"
-              }
-            ],
-            "delegated_free": [],
-            "delegated_vesting": [],
-            "end_time": "1815292899"
-          },
-          "start_time": "1720622121",
-          "vesting_periods": [
-            {
-              "length": "15778458",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "6666664554082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759014"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759013"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759014"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759014"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759013"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759014"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759014"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759014"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759013"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759014"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759014"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759014"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759013"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759014"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759014"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759013"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759014"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759014"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759014"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759013"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759014"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759014"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759014"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759013"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759014"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759014"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759013"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759014"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759014"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1111110759014"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "@type": "/cosmos.vesting.v1beta1.PeriodicVestingAccount",
-          "base_vesting_account": {
-            "base_account": {
-              "address": "symphony1qmkrdx8tfqsfzkwnt9v5yxadrkn9yv06kcqlmd",
+              "address": "symphony1dqvrk3utykqgy560eueuphdx6sll96x3gnhrky",
               "pub_key": null,
               "account_number": "1",
               "sequence": "0"
@@ -376,637 +60,22 @@
             "original_vesting": [
               {
                 "denom": "note",
-                "amount": "2500000000000"
+                "amount": "2000000000000"
               }
             ],
             "delegated_free": [],
             "delegated_vesting": [],
-            "end_time": "1815292899"
+            "end_time": "1845546107"
           },
-          "start_time": "1720622121",
-          "vesting_periods": [
-            {
-              "length": "31556916",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "833333069260"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422438"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422439"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422438"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422438"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422439"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422438"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422438"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422439"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422438"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422438"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422439"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422438"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422438"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422439"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422438"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422439"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422438"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422438"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422439"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422438"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422438"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422439"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422438"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "69444422438"
-                }
-              ]
-            }
-          ]
+          "start_time": "1782387707"
         },
         {
-          "@type": "/cosmos.vesting.v1beta1.PeriodicVestingAccount",
+          "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
           "base_vesting_account": {
             "base_account": {
-              "address": "symphony1suwsjngrawmtequkrx4t8lv5a3ec0zuspzs3fu",
+              "address": "symphony15dwz8umgj2mkc9muusg74me7kdqyws5ff3wghh",
               "pub_key": null,
-              "account_number": "1",
-              "sequence": "0"
-            },
-            "original_vesting": [
-              {
-                "denom": "note",
-                "amount": "10000000000000"
-              }
-            ],
-            "delegated_free": [],
-            "delegated_vesting": [],
-            "end_time": "1815292899"
-          },
-          "start_time": "1720622121",
-          "vesting_periods": [
-            {
-              "length": "31556916",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3333332277041"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689753"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689754"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689753"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689753"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689754"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689753"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689754"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689753"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689754"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689753"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689753"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689754"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689753"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689754"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689753"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689754"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689753"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689753"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689754"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689753"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689754"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689753"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689754"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "277777689753"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "@type": "/cosmos.vesting.v1beta1.PeriodicVestingAccount",
-          "base_vesting_account": {
-            "base_account": {
-              "address": "symphony1mp0c2pszx8cug7vy44dx8x8336jkxzgcys2vhv",
-              "pub_key": null,
-              "account_number": "1",
-              "sequence": "0"
-            },
-            "original_vesting": [
-              {
-                "denom": "note",
-                "amount": "500000000000"
-              }
-            ],
-            "delegated_free": [],
-            "delegated_vesting": [],
-            "end_time": "1783735973"
-          },
-          "start_time": "1720622121",
-          "vesting_periods": [
-            {
-              "length": "31556916",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "249999920778"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "20833326731"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "20833326732"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "20833326731"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "20833326732"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "20833326731"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "20833326732"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "20833326731"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "20833326732"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "20833326731"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "20833326732"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "20833326731"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "20833326732"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "@type": "/cosmos.vesting.v1beta1.PeriodicVestingAccount",
-          "base_vesting_account": {
-            "base_account": {
-              "address": "symphony1wnwvxv3wnacyxaqnqed6yg2k8yr7lsev5nz3wx",
-              "pub_key": null,
-              "account_number": "1",
+              "account_number": "2",
               "sequence": "0"
             },
             "original_vesting": [
@@ -1017,538 +86,297 @@
             ],
             "delegated_free": [],
             "delegated_vesting": [],
-            "end_time": "1783735973"
+            "end_time": "1845546107"
           },
-          "start_time": "1720622121",
-          "vesting_periods": [
-            {
-              "length": "31556916",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "749999762334"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "62499980194"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "62499980195"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "62499980194"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "62499980195"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "62499980194"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "62499980195"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "62499980194"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "62499980195"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "62499980194"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "62499980195"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "62499980195"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "62499980194"
-                }
-              ]
-            }
-          ]
+          "start_time": "1782387707"
         },
         {
-          "@type": "/cosmos.vesting.v1beta1.PeriodicVestingAccount",
+          "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
           "base_vesting_account": {
             "base_account": {
-              "address": "symphony1vy6ae9g94y0wc7auh4ktvqf7fuqp0hqavlshfj",
+              "address": "symphony1rxe80slz3ne2w5x5w4dlqu733tkh05x9gnr8vv",
               "pub_key": null,
-              "account_number": "1",
+              "account_number": "3",
               "sequence": "0"
             },
             "original_vesting": [
               {
                 "denom": "note",
-                "amount": "97000000000000"
+                "amount": "1500000000000"
               }
             ],
             "delegated_free": [],
             "delegated_vesting": [],
-            "end_time": "1815292899"
+            "end_time": "1845546107"
           },
-          "start_time": "1720622121",
-          "vesting_periods": [
-            {
-              "length": "31556916",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "32333323087299"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590608"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590609"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590608"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590608"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590608"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590609"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590608"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590608"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590609"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590608"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590608"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590608"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590609"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590608"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590608"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590609"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590608"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590608"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590608"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590609"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590608"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590608"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590609"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2694443590608"
-                }
-              ]
-            }
-          ]
+          "start_time": "1782387707"
         },
         {
-          "@type": "/cosmos.vesting.v1beta1.PeriodicVestingAccount",
+          "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
           "base_vesting_account": {
             "base_account": {
-              "address": "symphony1ywduh048n79dnnpyt9jmp33xxhvxrnktdmwztg",
+              "address": "symphony19uptfhwgjyad3wp6wje0x67g3dcu4w0csc68vh",
               "pub_key": null,
-              "account_number": "1",
+              "account_number": "4",
               "sequence": "0"
             },
             "original_vesting": [
               {
                 "denom": "note",
-                "amount": "18500000000000"
+                "amount": "1500000000000"
               }
             ],
             "delegated_free": [],
             "delegated_vesting": [],
-            "end_time": "1783735973"
+            "end_time": "1845546107"
           },
-          "start_time": "1720622121",
-          "vesting_periods": [
-            {
-              "length": "31556916",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "9249997068789"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "770833089066"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "770833089065"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "770833089066"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "770833089066"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "770833089066"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "770833089065"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "770833089066"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "770833089066"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "770833089066"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "770833089066"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "770833089065"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "770833089066"
-                }
-              ]
-            }
-          ]
+          "start_time": "1782387707"
         },
         {
-          "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "symphony1uc760mfz6g7xf8euu482e4gva9rkp6z4gzch7f",
-          "pub_key": null,
-          "account_number": "0",
-          "sequence": "0"
-        },
-        {
-          "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "symphony1eaqj00782usyt40axy0h2utkw3udun4q8j5flt",
-          "pub_key": null,
-          "account_number": "0",
-          "sequence": "0"
-        },
-        {
-          "@type": "/cosmos.vesting.v1beta1.PeriodicVestingAccount",
+          "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
           "base_vesting_account": {
             "base_account": {
-              "address": "symphony1pz0wsj2pnvp5mt9nn2megzvnalf39w5lps2sr4",
+              "address": "symphony1fduscys8d6sv6gkf9ulr03g24795jnmmvcrkq7",
               "pub_key": null,
-              "account_number": "1",
+              "account_number": "5",
+              "sequence": "0"
+            },
+            "original_vesting": [
+              {
+                "denom": "note",
+                "amount": "1500000000000"
+              }
+            ],
+            "delegated_free": [],
+            "delegated_vesting": [],
+            "end_time": "1845546107"
+          },
+          "start_time": "1782387707"
+        },
+        {
+          "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
+          "base_vesting_account": {
+            "base_account": {
+              "address": "symphony1qmkrdx8tfqsfzkwnt9v5yxadrkn9yv06kcqlmd",
+              "pub_key": null,
+              "account_number": "6",
+              "sequence": "0"
+            },
+            "original_vesting": [
+              {
+                "denom": "note",
+                "amount": "1000000000000"
+              }
+            ],
+            "delegated_free": [],
+            "delegated_vesting": [],
+            "end_time": "1845546107"
+          },
+          "start_time": "1782387707"
+        },
+        {
+          "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
+          "base_vesting_account": {
+            "base_account": {
+              "address": "symphony1suwsjngrawmtequkrx4t8lv5a3ec0zuspzs3fu",
+              "pub_key": null,
+              "account_number": "7",
+              "sequence": "0"
+            },
+            "original_vesting": [
+              {
+                "denom": "note",
+                "amount": "1000000000000"
+              }
+            ],
+            "delegated_free": [],
+            "delegated_vesting": [],
+            "end_time": "1845546107"
+          },
+          "start_time": "1782387707"
+        },
+        {
+          "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
+          "base_vesting_account": {
+            "base_account": {
+              "address": "symphony1t3cvlw3qpw0rsst72ct4rw5tcrp8cway6kesyj",
+              "pub_key": null,
+              "account_number": "8",
+              "sequence": "0"
+            },
+            "original_vesting": [
+              {
+                "denom": "note",
+                "amount": "500000000000"
+              }
+            ],
+            "delegated_free": [],
+            "delegated_vesting": [],
+            "end_time": "1813923707"
+          },
+          "start_time": "1782387707"
+        },
+        {
+          "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
+          "base_vesting_account": {
+            "base_account": {
+              "address": "symphony1tsq5tfuqk2k6my5g6u7w47pekxsqftjpxdptqp",
+              "pub_key": null,
+              "account_number": "9",
+              "sequence": "0"
+            },
+            "original_vesting": [
+              {
+                "denom": "note",
+                "amount": "500000000000"
+              }
+            ],
+            "delegated_free": [],
+            "delegated_vesting": [],
+            "end_time": "1813923707"
+          },
+          "start_time": "1782387707"
+        },
+        {
+          "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
+          "base_vesting_account": {
+            "base_account": {
+              "address": "symphony1p09unul25zy4sj9qfzy8tjllr4w4x62w09rxup",
+              "pub_key": null,
+              "account_number": "10",
+              "sequence": "0"
+            },
+            "original_vesting": [
+              {
+                "denom": "note",
+                "amount": "100000000000"
+              }
+            ],
+            "delegated_free": [],
+            "delegated_vesting": [],
+            "end_time": "1813923707"
+          },
+          "start_time": "1782387707"
+        },
+        {
+          "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
+          "base_vesting_account": {
+            "base_account": {
+              "address": "symphony1yw54e7r6acray4j837yw77h0k7am0wppd2qjcz",
+              "pub_key": null,
+              "account_number": "11",
+              "sequence": "0"
+            },
+            "original_vesting": [
+              {
+                "denom": "note",
+                "amount": "100000000000"
+              }
+            ],
+            "delegated_free": [],
+            "delegated_vesting": [],
+            "end_time": "1813923707"
+          },
+          "start_time": "1782387707"
+        },
+        {
+          "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
+          "base_vesting_account": {
+            "base_account": {
+              "address": "symphony1afs676qne02jczsyevgtm20lfwyg0q67jj6mfy",
+              "pub_key": null,
+              "account_number": "12",
+              "sequence": "0"
+            },
+            "original_vesting": [
+              {
+                "denom": "note",
+                "amount": "100000000000"
+              }
+            ],
+            "delegated_free": [],
+            "delegated_vesting": [],
+            "end_time": "1813923707"
+          },
+          "start_time": "1782387707"
+        },
+        {
+          "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
+          "base_vesting_account": {
+            "base_account": {
+              "address": "symphony1fqh64hut3xmqdppj42q493ryxsjk2zcxrruz9z",
+              "pub_key": null,
+              "account_number": "13",
+              "sequence": "0"
+            },
+            "original_vesting": [
+              {
+                "denom": "note",
+                "amount": "200000000000"
+              }
+            ],
+            "delegated_free": [],
+            "delegated_vesting": [],
+            "end_time": "1813923707"
+          },
+          "start_time": "1782387707"
+        },
+        {
+          "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
+          "base_vesting_account": {
+            "base_account": {
+              "address": "symphony1rg2qwrqd5t9u4l0eyxzav3ugq4rd3v68nhmt4k",
+              "pub_key": null,
+              "account_number": "14",
+              "sequence": "0"
+            },
+            "original_vesting": [
+              {
+                "denom": "note",
+                "amount": "300000000000"
+              }
+            ],
+            "delegated_free": [],
+            "delegated_vesting": [],
+            "end_time": "1845546107"
+          },
+          "start_time": "1782387707"
+        },
+        {
+          "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
+          "base_vesting_account": {
+            "base_account": {
+              "address": "symphony1crwktt4h77uvmsj9wf0mena9qug5rsfmtgclt3",
+              "pub_key": null,
+              "account_number": "16",
+              "sequence": "0"
+            },
+            "original_vesting": [
+              {
+                "denom": "note",
+                "amount": "100000000000"
+              }
+            ],
+            "delegated_free": [],
+            "delegated_vesting": [],
+            "end_time": "1845546107"
+          },
+          "start_time": "1782387707"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "symphony1sgk50ehgzpul7dcjmd0gn8rqg5glcc9t6k6qe0",
+          "pub_key": null,
+          "account_number": "17",
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
+          "base_vesting_account": {
+            "base_account": {
+              "address": "symphony1uc760mfz6g7xf8euu482e4gva9rkp6z4gzch7f",
+              "pub_key": null,
+              "account_number": "18",
               "sequence": "0"
             },
             "original_vesting": [
@@ -1559,2109 +387,121 @@
             ],
             "delegated_free": [],
             "delegated_vesting": [],
-            "end_time": "1846849825"
+            "end_time": "1845546107"
           },
-          "start_time": "1720622121",
-          "vesting_periods":
-          [
-            {
-              "length": "0",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2000000000000"
-                }
-              ]
-            },
-            {
-              "length": "31556916",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1599999492979"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291081"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291081"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291081"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291081"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291081"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291081"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291081"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291081"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291081"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291081"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291081"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291081"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291081"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291081"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291081"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291081"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291082"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "133333291081"
-                }
-              ]
-            }
-          ]
+          "start_time": "1782387707"
         },
         {
-          "@type": "/cosmos.vesting.v1beta1.PeriodicVestingAccount",
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "symphony1eaqj00782usyt40axy0h2utkw3udun4q8j5flt",
+          "pub_key": null,
+          "account_number": "19",
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "symphony1pz0wsj2pnvp5mt9nn2megzvnalf39w5lps2sr4",
+          "pub_key": null,
+          "account_number": "20",
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
           "base_vesting_account": {
             "base_account": {
               "address": "symphony1whjglw26cpps4ccjyef0yg9r06gld6py4qruds",
               "pub_key": null,
-              "account_number": "1",
+              "account_number": "21",
               "sequence": "0"
             },
             "original_vesting": [
               {
                 "denom": "note",
-                "amount": "50000000000000"
+                "amount": "6000000000000"
               }
             ],
             "delegated_free": [],
             "delegated_vesting": [],
-            "end_time": "1846849825"
+            "end_time": "1877082107"
           },
-          "start_time": "1720622121",
-          "vesting_periods": [
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336576"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336576"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336576"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336576"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336576"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336576"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336576"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336576"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336576"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336576"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336576"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336576"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336576"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336576"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336576"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336576"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336576"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1041666336575"
-                }
-              ]
-            }
-          ]
+          "start_time": "1750851707"
         },
         {
-          "@type": "/cosmos.vesting.v1beta1.PeriodicVestingAccount",
+          "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
           "base_vesting_account": {
             "base_account": {
               "address": "symphony13luum7djwdhkqg3tw9rae04an6rl036095d7qr",
               "pub_key": null,
-              "account_number": "1",
+              "account_number": "22",
               "sequence": "0"
             },
             "original_vesting": [
               {
                 "denom": "note",
-                "amount": "99996000000000"
+                "amount": "15000000000000"
               }
             ],
             "delegated_free": [],
             "delegated_vesting": [],
-            "end_time": "1878406751"
+            "end_time": "1908618107"
           },
-          "start_time": "1720622121",
-          "vesting_periods": [
-            {
-              "length": "0",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "19999200000000"
-                }
-              ]
-            },
-            {
-              "length": "31556916",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "15999354930000"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577501"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577501"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "1333279577500"
-                }
-              ]
-            }
-          ]
+          "start_time": "1766666507"
         },
         {
-          "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "symphony1sexuqz3epjz8776dmrkwdyz0yr4ejgkdhf2q5z",
-          "pub_key": null,
-          "account_number": "0",
-          "sequence": "0"
-        },
-        {
-          "@type": "/cosmos.vesting.v1beta1.PeriodicVestingAccount",
-          "base_vesting_account": {
-            "base_account": {
-              "address": "symphony1t4jz0v2746prvgfakr9duf34yq58f3pl8z5zwt",
-              "pub_key": null,
-              "account_number": "1",
-              "sequence": "0"
-            },
-            "original_vesting": [
-              {
-                "denom": "note",
-                "amount": "150000000000000"
-              }
-            ],
-            "delegated_free": [],
-            "delegated_vesting": [],
-            "end_time": "1846849825"
-          },
-          "start_time": "1720622121",
-          "vesting_periods": [
-            {
-              "length": "31556916",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "37499988116713"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009727"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009727"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009727"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009726"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "3124999009727"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "@type": "/cosmos.vesting.v1beta1.PeriodicVestingAccount",
+          "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
           "base_vesting_account": {
             "base_account": {
               "address": "symphony1d3g7alk2zlcxjpq6r0dfz5sa8rvs0etg83nhac",
               "pub_key": null,
-              "account_number": "1",
+              "account_number": "23",
               "sequence": "0"
             },
             "original_vesting": [
               {
                 "denom": "note",
-                "amount": "100000000000000"
+                "amount": "12000000000000"
               }
             ],
             "delegated_free": [],
             "delegated_vesting": [],
-            "end_time": "1846849825"
+            "end_time": "1877082107"
           },
-          "start_time": "1720622121",
-          "vesting_periods": [
-            {
-              "length": "31556916",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "24999992077808"
-                }
-              ]
+          "start_time": "1782387707"
+        },
+        {
+          "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
+          "base_vesting_account": {
+            "base_account": {
+              "address": "symphony172fzjsgp3prjet29043jltcyh7qtrtp45eveds",
+              "pub_key": null,
+              "account_number": "24",
+              "sequence": "0"
             },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673150"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673150"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673150"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673150"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673150"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673150"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673150"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673150"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673150"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            },
-            {
-              "length": "2629743",
-              "amount": [
-                {
-                  "denom": "note",
-                  "amount": "2083332673151"
-                }
-              ]
-            }
-          ]
+            "original_vesting": [
+              {
+                "denom": "note",
+                "amount": "100000000000"
+              }
+            ],
+            "delegated_free": [],
+            "delegated_vesting": [],
+            "end_time": "1813923707"
+          },
+          "start_time": "1782387707"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "symphony1xkv75tnqjpawgy49plghtwztpfyyhql0zffw3m",
+          "pub_key": null,
+          "account_number": "25",
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "symphony1qgq33f9desr7hxpfarrkyr0sww4esuz3emd7sq",
+          "pub_key": null,
+          "account_number": "26",
+          "sequence": "0"
         }
       ]
     },
@@ -3675,11 +515,20 @@
       },
       "balances": [
         {
-          "address": "symphony1cancz7dux9y3nw5t8sfvxe0esytm3rnan7956e",
+          "address": "symphony14q6z5sczy8tyxlj42t93rgvsf2sck7ay9xesjf",
           "coins": [
             {
               "denom": "note",
-              "amount": "40000000000000"
+              "amount": "1000000"
+            }
+          ]
+        },
+        {
+          "address": "symphony1qgq33f9desr7hxpfarrkyr0sww4esuz3emd7sq",
+          "coins": [
+            {
+              "denom": "note",
+              "amount": "3000000000000"
             }
           ]
         },
@@ -3688,70 +537,7 @@
           "coins": [
             {
               "denom": "note",
-              "amount": "2500000000000"
-            }
-          ]
-        },
-        {
-          "address": "symphony1suwsjngrawmtequkrx4t8lv5a3ec0zuspzs3fu",
-          "coins": [
-            {
-              "denom": "note",
-              "amount": "10000000000000"
-            }
-          ]
-        },
-        {
-          "address": "symphony1mp0c2pszx8cug7vy44dx8x8336jkxzgcys2vhv",
-          "coins": [
-            {
-              "denom": "note",
-              "amount": "500000000000"
-            }
-          ]
-        },
-        {
-          "address": "symphony1wnwvxv3wnacyxaqnqed6yg2k8yr7lsev5nz3wx",
-          "coins": [
-            {
-              "denom": "note",
-              "amount": "1500000000000"
-            }
-          ]
-        },
-        {
-          "address": "symphony1vy6ae9g94y0wc7auh4ktvqf7fuqp0hqavlshfj",
-          "coins": [
-            {
-              "denom": "note",
-              "amount": "97000000000000"
-            }
-          ]
-        },
-        {
-          "address": "symphony1ywduh048n79dnnpyt9jmp33xxhvxrnktdmwztg",
-          "coins": [
-            {
-              "denom": "note",
-              "amount": "18500000000000"
-            }
-          ]
-        },
-        {
-          "address": "symphony1uc760mfz6g7xf8euu482e4gva9rkp6z4gzch7f",
-          "coins": [
-            {
-              "denom": "note",
-              "amount": "100000000000000"
-            }
-          ]
-        },
-        {
-          "address": "symphony1eaqj00782usyt40axy0h2utkw3udun4q8j5flt",
-          "coins": [
-            {
-              "denom": "note",
-              "amount": "60000000000000"
+              "amount": "1000000000000"
             }
           ]
         },
@@ -3760,43 +546,106 @@
           "coins": [
             {
               "denom": "note",
-              "amount": "10000000000000"
+              "amount": "3000000000000"
             }
           ]
         },
         {
-          "address": "symphony1whjglw26cpps4ccjyef0yg9r06gld6py4qruds",
+          "address": "symphony1p09unul25zy4sj9qfzy8tjllr4w4x62w09rxup",
           "coins": [
             {
               "denom": "note",
-              "amount": "50000000000000"
+              "amount": "100000000000"
             }
           ]
         },
         {
-          "address": "symphony13luum7djwdhkqg3tw9rae04an6rl036095d7qr",
+          "address": "symphony1rxe80slz3ne2w5x5w4dlqu733tkh05x9gnr8vv",
           "coins": [
             {
               "denom": "note",
-              "amount": "99996000000000"
+              "amount": "1500000000000"
             }
           ]
         },
         {
-          "address": "symphony1sexuqz3epjz8776dmrkwdyz0yr4ejgkdhf2q5z",
+          "address": "symphony1rg2qwrqd5t9u4l0eyxzav3ugq4rd3v68nhmt4k",
           "coins": [
             {
               "denom": "note",
-              "amount": "10000000000000"
+              "amount": "300000000000"
             }
           ]
         },
         {
-          "address": "symphony1t4jz0v2746prvgfakr9duf34yq58f3pl8z5zwt",
+          "address": "symphony1yw54e7r6acray4j837yw77h0k7am0wppd2qjcz",
           "coins": [
             {
               "denom": "note",
-              "amount": "150000000000000"
+              "amount": "100000000000"
+            }
+          ]
+        },
+        {
+          "address": "symphony19uptfhwgjyad3wp6wje0x67g3dcu4w0csc68vh",
+          "coins": [
+            {
+              "denom": "note",
+              "amount": "1500000000000"
+            }
+          ]
+        },
+        {
+          "address": "symphony1xkv75tnqjpawgy49plghtwztpfyyhql0zffw3m",
+          "coins": [
+            {
+              "denom": "note",
+              "amount": "25000000000000"
+            }
+          ]
+        },
+        {
+          "address": "symphony1fqh64hut3xmqdppj42q493ryxsjk2zcxrruz9z",
+          "coins": [
+            {
+              "denom": "note",
+              "amount": "200000000000"
+            }
+          ]
+        },
+        {
+          "address": "symphony1fduscys8d6sv6gkf9ulr03g24795jnmmvcrkq7",
+          "coins": [
+            {
+              "denom": "note",
+              "amount": "1500000000000"
+            }
+          ]
+        },
+        {
+          "address": "symphony1tsq5tfuqk2k6my5g6u7w47pekxsqftjpxdptqp",
+          "coins": [
+            {
+              "denom": "note",
+              "amount": "500000000000"
+            }
+          ]
+        },
+        {
+          "address": "symphony1t3cvlw3qpw0rsst72ct4rw5tcrp8cway6kesyj",
+          "coins": [
+            {
+              "denom": "note",
+              "amount": "500000000000"
+            }
+          ]
+        },
+        {
+          "address": "symphony1dqvrk3utykqgy560eueuphdx6sll96x3gnhrky",
+          "coins": [
+            {
+              "denom": "note",
+              "amount": "2000000000000"
             }
           ]
         },
@@ -3805,43 +654,97 @@
           "coins": [
             {
               "denom": "note",
-              "amount": "100000000000000"
+              "amount": "12000000000000"
             }
           ]
         },
         {
-          "address": "symphony1nkdh6l5wkygv7cuw6kfalknpus6fqmsr746f6k",
+          "address": "symphony1whjglw26cpps4ccjyef0yg9r06gld6py4qruds",
           "coins": [
             {
               "denom": "note",
-              "amount": "1000000000"
+              "amount": "6000000000000"
             }
           ]
         },
         {
-          "address": "symphony16agv74asz2zlcyq4eusk4h0hkxwpp0hxex83jk",
+          "address": "symphony1sgk50ehgzpul7dcjmd0gn8rqg5glcc9t6k6qe0",
           "coins": [
             {
               "denom": "note",
-              "amount": "1000000000"
+              "amount": "8000000000000"
             }
           ]
         },
         {
-          "address": "symphony1dmlepawltn5hrvmz6humx99rrh48jdst4dce86",
+          "address": "symphony1suwsjngrawmtequkrx4t8lv5a3ec0zuspzs3fu",
           "coins": [
             {
               "denom": "note",
-              "amount": "1000000000"
+              "amount": "1000000000000"
             }
           ]
         },
         {
-          "address": "symphony1vhhgnhmnw0x9zfslv4m2plchx8ecgthugemp74",
+          "address": "symphony13luum7djwdhkqg3tw9rae04an6rl036095d7qr",
           "coins": [
             {
               "denom": "note",
-              "amount": "1000000000"
+              "amount": "15000000000000"
+            }
+          ]
+        },
+        {
+          "address": "symphony15dwz8umgj2mkc9muusg74me7kdqyws5ff3wghh",
+          "coins": [
+            {
+              "denom": "note",
+              "amount": "1500000000000"
+            }
+          ]
+        },
+        {
+          "address": "symphony1crwktt4h77uvmsj9wf0mena9qug5rsfmtgclt3",
+          "coins": [
+            {
+              "denom": "note",
+              "amount": "100000000000"
+            }
+          ]
+        },
+        {
+          "address": "symphony1eaqj00782usyt40axy0h2utkw3udun4q8j5flt",
+          "coins": [
+            {
+              "denom": "note",
+              "amount": "6000000000000"
+            }
+          ]
+        },
+        {
+          "address": "symphony1uc760mfz6g7xf8euu482e4gva9rkp6z4gzch7f",
+          "coins": [
+            {
+              "denom": "note",
+              "amount": "10000000000000"
+            }
+          ]
+        },
+        {
+          "address": "symphony1afs676qne02jczsyevgtm20lfwyg0q67jj6mfy",
+          "coins": [
+            {
+              "denom": "note",
+              "amount": "100000000000"
+            }
+          ]
+        },
+        {
+          "address": "symphony172fzjsgp3prjet29043jltcyh7qtrtp45eveds",
+          "coins": [
+            {
+              "denom": "note",
+              "amount": "100000000000"
             }
           ]
         }
@@ -3872,13 +775,11 @@
           "0.005000000000000000"
         ],
         "balancer_shares_reward_discount": "0.050000000000000000",
-        "authorized_quote_denoms": [
-          "note"
-        ],
+        "authorized_quote_denoms": ["note"],
         "authorized_uptimes": [
           "0.000000001s"
         ],
-        "is_permissionless_pool_creation_enabled": true,
+        "is_permissionless_pool_creation_enabled": false,
         "unrestricted_pool_creator_whitelist": [],
         "hook_gas_limit": "2000000"
       },
@@ -3886,7 +787,8 @@
       "position_data": [],
       "next_position_id": "1",
       "next_incentive_record_id": "1",
-      "incentives_accumulator_pool_id_migration_threshold": "0"
+      "incentives_accumulator_pool_id_migration_threshold": "0",
+      "spread_factor_pool_id_migration_threshold": "0"
     },
     "consensus": null,
     "cosmwasmpool": {
@@ -3921,12 +823,135 @@
       "delegator_starting_infos": [],
       "validator_slash_events": []
     },
+    "downtimedetector": {
+      "downtimes": [
+        {
+          "duration": "DURATION_30S",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_1M",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_2M",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_3M",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_4M",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_5M",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_10M",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_20M",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_30M",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_40M",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_50M",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_1H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_1_5H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_2H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_2_5H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_3H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_4H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_5H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_6H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_9H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_12H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_18H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_24H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_36H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        },
+        {
+          "duration": "DURATION_48H",
+          "last_downtime": "1970-01-01T00:00:00Z"
+        }
+      ],
+      "last_block_time": "1970-01-01T00:00:00Z"
+    },
     "epochs": {
       "epochs": [
         {
           "identifier": "day",
           "start_time": "0001-01-01T00:00:00Z",
           "duration": "86400s",
+          "current_epoch": "0",
+          "current_epoch_start_time": "0001-01-01T00:00:00Z",
+          "epoch_counting_started": false,
+          "current_epoch_start_height": "0"
+        },
+        {
+          "identifier": "hour",
+          "start_time": "0001-01-01T00:00:00Z",
+          "duration": "60s",
+          "current_epoch": "0",
+          "current_epoch_start_time": "0001-01-01T00:00:00Z",
+          "epoch_counting_started": false,
+          "current_epoch_start_height": "0"
+        },
+        {
+          "identifier": "minute",
+          "start_time": "0001-01-01T00:00:00Z",
+          "duration": "60s",
           "current_epoch": "0",
           "current_epoch_start_time": "0001-01-01T00:00:00Z",
           "epoch_counting_started": false,
@@ -3946,7 +971,21 @@
     "evidence": {
       "evidence": []
     },
-    "gamm": null,
+    "gamm": {
+      "pools": [],
+      "next_pool_number": "1",
+      "params": {
+        "pool_creation_fee": [
+          {
+            "denom": "note",
+            "amount": "1000000000"
+          }
+        ]
+      },
+      "migration_records": {
+        "balancer_to_concentrated_pool_links": []
+      }
+    },
     "genutil": {
       "gen_txs": [
         {
@@ -3962,24 +1001,24 @@
                   "details": ""
                 },
                 "commission": {
-                  "rate": "0.050000000000000000",
-                  "max_rate": "0.600000000000000000",
-                  "max_change_rate": "0.500000000000000000"
+                  "rate": "0.100000000000000000",
+                  "max_rate": "0.200000000000000000",
+                  "max_change_rate": "0.010000000000000000"
                 },
-                "min_self_delegation": "1000000000",
-                "delegator_address": "symphony1nkdh6l5wkygv7cuw6kfalknpus6fqmsr746f6k",
-                "validator_address": "symphonyvaloper1nkdh6l5wkygv7cuw6kfalknpus6fqmsrdhjwdx",
+                "min_self_delegation": "1000000",
+                "delegator_address": "",
+                "validator_address": "symphonyvaloper14q6z5sczy8tyxlj42t93rgvsf2sck7ayky3h9e",
                 "pubkey": {
                   "@type": "/cosmos.crypto.ed25519.PubKey",
-                  "key": "DjUBgbX1i/TIAIyPCtFg6YoWZAziD2zYEDHjx0o/6jk="
+                  "key": "q/ypvQWVRWgGYd3zK3xUVuZGnjZwJDxBE8Kst/JRTN0="
                 },
                 "value": {
                   "denom": "note",
-                  "amount": "1000000000"
+                  "amount": "1000000"
                 }
               }
             ],
-            "memo": "8df964c61393d33d11f7c821aba1a72f428c0d24@192.168.88.244:26656",
+            "memo": "08355298ca7a7f0a5059db7154c19ec701651b18@192.168.1.216:26656",
             "timeout_height": "0",
             "extension_options": [],
             "non_critical_extension_options": []
@@ -3989,7 +1028,7 @@
               {
                 "public_key": {
                   "@type": "/cosmos.crypto.secp256k1.PubKey",
-                  "key": "A+Uv+rArBBphEQ4MJpV5TxK2GWdDks/iJFQ8MdKAIvuh"
+                  "key": "A8ROpNaGtNaazSQV6pZ1KJhZ5AJPiLsZmVp+fIgpqTcR"
                 },
                 "mode_info": {
                   "single": {
@@ -4008,7 +1047,7 @@
             "tip": null
           },
           "signatures": [
-            "pNrVcvN961a54k88DR7ItsLnBO20yfxH2QMYZRkSEvlVoddYkw/6iWNmdexNl2GI5RknnXbOvgstKpR8cxG0VA=="
+            "YfW4nMFp4+CcB5e4g1O6QJi7kpow2oteypEJAGG/r/pNkMNBx0ftoz1OWlPAn/yXXmuXJzOOkSVV1rrfOJsneQ=="
           ]
         }
       ]
@@ -4040,22 +1079,26 @@
         ],
         "max_deposit_period": "172800s",
         "voting_period": "172800s",
-        "quorum": "0.334000000000000000",
+        "quorum": "0.2",
         "threshold": "0.500000000000000000",
         "veto_threshold": "0.334000000000000000",
         "min_initial_deposit_ratio": "0.000000000000000000",
+        "proposal_cancel_ratio": "0.500000000000000000",
+        "proposal_cancel_dest": "",
         "expedited_voting_period": "86400s",
         "expedited_threshold": "0.667000000000000000",
         "expedited_min_deposit": [
           {
             "denom": "note",
-            "amount": "50000000"
+            "amount": "5000000000"
           }
         ],
         "burn_vote_quorum": false,
         "burn_proposal_deposit_prevote": false,
-        "burn_vote_veto": true
-      }
+        "burn_vote_veto": true,
+        "min_deposit_ratio": "0.010000000000000000"
+      },
+      "constitution": ""
     },
     "ibc": {
       "client_genesis": {
@@ -4064,8 +1107,7 @@
         "clients_metadata": [],
         "params": {
           "allowed_clients": [
-            "06-solomachine",
-            "07-tendermint"
+            "*"
           ]
         },
         "create_localhost": false,
@@ -4087,7 +1129,16 @@
         "send_sequences": [],
         "recv_sequences": [],
         "ack_sequences": [],
-        "next_channel_sequence": "0"
+        "next_channel_sequence": "0",
+        "params": {
+          "upgrade_timeout": {
+            "height": {
+              "revision_number": "0",
+              "revision_height": "0"
+            },
+            "timestamp": "600000000000"
+          }
+        }
       }
     },
     "ibchooks": {
@@ -4105,7 +1156,11 @@
           }
         ],
         "unrestricted_creator_whitelist": [],
-        "internal_uptime": "0.000000001s"
+        "internal_uptime": "0.000000001s",
+        "min_value_for_distribution": {
+          "denom": "",
+          "amount": "0"
+        }
       },
       "gauges": [],
       "lockable_durations": [
@@ -4151,6 +1206,13 @@
       "synthetic_locks": [],
       "params": null
     },
+    "market": {
+      "params": {
+        "exchange_pool": "0",
+        "min_stability_spread": "0.001250000000000000",
+        "tax_receiver": "symphony1d3g7alk2zlcxjpq6r0dfz5sa8rvs0etg83nhac"
+      }
+    },
     "mint": {
       "minter": {
         "epoch_provisions": "0.000000000000000000"
@@ -4162,20 +1224,77 @@
         "reduction_period_in_epochs": "208",
         "reduction_factor": "0.500000000000000000",
         "distribution_proportions": {
-          "staking": "0.700000000000000000",
-          "pool_incentives": "0.000000000000000000",
+          "staking": "0.450000000000000000",
+          "pool_incentives": "0.250000000000000000",
           "developer_rewards": "0.250000000000000000",
           "community_pool": "0.050000000000000000"
         },
         "weighted_developer_rewards_receivers": [
           {
-            "address": "symphony1g6pxgl8g0rnk7q86j9zh7yxsqdsn7jvdmc8fkx",
-            "weight": "1.0"
+            "address": "symphony1v4slg40yz2r34t93m6w7mgt0zemy4xzqnyllvv",
+            "weight": "1.000000000000000000"
           }
         ],
         "minting_rewards_distribution_start_epoch": "1"
       },
       "reduction_started_epoch": "0"
+    },
+    "oracle": {
+      "params": {
+        "vote_period_epoch_identifier": "minute",
+        "vote_threshold": "0.500000000000000000",
+        "reward_band": "0.020000000000000000",
+        "reward_distribution_window": "1",
+        "whitelist": [
+          {
+            "name": "uusd",
+            "tobin_tax": "0.000000000000000000"
+          },
+          {
+            "name": "ukhd",
+            "tobin_tax": "0.000000000000000000"
+          },
+          {
+            "name": "uvnd",
+            "tobin_tax": "0.000000000000000000"
+          }
+        ],
+        "slash_fraction": "0.000100000000000000",
+        "slash_window_epoch_identifier": "week",
+        "min_valid_per_window": "0.050000000000000000"
+      },
+      "feeder_delegations": [],
+      "exchange_rates": [
+        {
+          "denom": "uusd",
+          "exchange_rate": "3.0"
+        },
+        {
+          "denom": "uvnd",
+          "exchange_rate": "0.000399000000000000"
+        }
+      ],
+      "miss_counters": [],
+      "aggregate_exchange_rate_prevotes": [],
+      "aggregate_exchange_rate_votes": [],
+      "tobin_taxes": [
+        {
+          "denom": "uusd",
+          "tobin_tax": "0.000000000000000000"
+        },
+        {
+          "denom": "ukhd",
+          "tobin_tax": "0.000000000000000000"
+        },
+        {
+          "denom": "uvnd",
+          "tobin_tax": "0.000000000000000000"
+        },
+        {
+          "denom": "uusd",
+          "tobin_tax": "0.01"
+        }
+      ]
     },
     "packetfowardmiddleware": {
       "params": {
@@ -4253,6 +1372,12 @@
           "step_size": "1000000"
         }
       ],
+      "pool_weights": {
+        "stable_weight": "0",
+        "balancer_weight": "0",
+        "concentrated_weight": "0",
+        "cosmwasm_weight": "0"
+      },
       "days_since_module_genesis": "0",
       "developer_fees": [],
       "latest_block_height": "0",
@@ -4297,6 +1422,34 @@
       "signing_infos": [],
       "missed_blocks": []
     },
+    "smartaccount": {
+      "params": {
+        "maximum_unauthenticated_gas": "120000",
+        "is_smart_account_active": true,
+        "circuit_breaker_controllers": []
+      },
+      "next_authenticator_id": "0",
+      "authenticator_data": []
+    },
+    "stablestaking": {
+      "params": {
+        "reward_rate": "0.050000000000000000",
+        "unbonding_duration": "1209600s",
+        "supported_tokens": [
+          "uusd",
+          "ukhd",
+          "uvnd"
+        ],
+        "reward_epoch_identifier": "week",
+        "unbonding_epoch_identifier": "day",
+        "max_staking_amount": "0"
+      }
+    },
+    "stablestakingincentives": {
+      "params": {
+        "distribution_contract_address": "symphony14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s748pj4"
+      }
+    },
     "staking": {
       "params": {
         "unbonding_time": "1209600s",
@@ -4339,6 +1492,17 @@
       },
       "total_escrowed": []
     },
+    "treasury": {
+      "params": {
+        "reserve_allowable_offset": "5.000000000000000000",
+        "max_fee_multiplier": "1.000000000000000000",
+        "update_treasury_epoch_identifier": "minute",
+        "window_short": "4",
+        "window_long": "52",
+        "window_probation": "12"
+      },
+      "tax_rate": "0.010000000000000000"
+    },
     "twap": {
       "twaps": [],
       "params": {
@@ -4347,8 +1511,9 @@
       }
     },
     "txfees": {
-      "basedenom": "note",
-      "feetokens": []
+      "params": {
+        "swap_fees_epoch_identifier": "minute"
+      }
     },
     "upgrade": {},
     "valsetpref": null,
@@ -4364,6 +1529,30 @@
       "codes": [],
       "contracts": [],
       "sequences": []
+    }
+  },
+  "consensus": {
+    "params": {
+      "block": {
+        "max_bytes": "5242880",
+        "max_gas": "6000000"
+      },
+      "evidence": {
+        "max_age_num_blocks": "403200",
+        "max_age_duration": "1209600000000000",
+        "max_bytes": "1048576"
+      },
+      "validator": {
+        "pub_key_types": [
+          "ed25519"
+        ]
+      },
+      "version": {
+        "app": "1"
+      },
+      "abci": {
+        "vote_extensions_enable_height": "0"
+      }
     }
   }
 }
