@@ -2,7 +2,7 @@
   "app_name": "",
   "app_version": "",
   "genesis_time": "2025-06-18T18:52:56.160492+03:00",
-  "chain_id": "testing",
+  "chain_id": "symphony-1",
   "initial_height": 1,
   "app_hash": null,
   "app_state": {
@@ -1158,7 +1158,7 @@
         "unrestricted_creator_whitelist": [],
         "internal_uptime": "0.000000001s",
         "min_value_for_distribution": {
-          "denom": "",
+          "denom": "note",
           "amount": "0"
         }
       },
