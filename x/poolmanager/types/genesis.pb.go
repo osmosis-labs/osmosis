@@ -228,7 +228,8 @@ type TakerFeeParams struct {
 	// In the future, we will charge a reduced taker fee instead of no fee at all.
 	ReducedFeeWhitelist []string `protobuf:"bytes,6,rep,name=reduced_fee_whitelist,json=reducedFeeWhitelist,proto3" json:"reduced_fee_whitelist,omitempty" yaml:"reduced_fee_whitelist"`
 	// community_pool_denom_whitelist is a list of denoms that should be sent
-	// directly to the community pool instead of being swapped to the `community_pool_denom_to_swap_non_whitelisted_assets_to`.
+	// directly to the community pool instead of being swapped to the
+	// `community_pool_denom_to_swap_non_whitelisted_assets_to`.
 	CommunityPoolDenomWhitelist []string `protobuf:"bytes,7,rep,name=community_pool_denom_whitelist,json=communityPoolDenomWhitelist,proto3" json:"community_pool_denom_whitelist,omitempty" yaml:"community_pool_denom_whitelist"`
 }
 
