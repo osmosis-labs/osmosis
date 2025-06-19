@@ -50,6 +50,8 @@ edit_genesis () {
 
     # Update gov module
     dasel put -t string -f $GENESIS '.app_state.gov.voting_params.voting_period' -v '60s'
+    dasel put -t string -f $GENESIS '.app_state.gov.params.voting_period' -v '60s'
+    dasel put -t string -f $GENESIS '.app_state.gov.params.expedited_voting_period' -v '30s'
     dasel put -t string -f $GENESIS '.app_state.gov.params.min_deposit.[0].denom' -v 'uosmo'
 
     # Update epochs module

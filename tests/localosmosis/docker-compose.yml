@@ -1,4 +1,4 @@
-version: "4"
+version: "3.8"
 
 services:
   osmosisd:
@@ -7,8 +7,8 @@ services:
       context: ../../
       dockerfile: Dockerfile
       args:
-        RUNNER_IMAGE: golang:1.22.3-alpine3.19
-        GO_VERSION: "1.22"
+        RUNNER_IMAGE: golang:1.23-alpine3.20
+        GO_VERSION: "1.23"
     volumes:
       - ./scripts/uosmoUionBalancerPool.json:/osmosis/uosmoUionBalancerPool.json
       - ./scripts/uosmoUusdcBalancerPool.json:/osmosis/uosmoUusdcBalancerPool.json
