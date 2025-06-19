@@ -6,8 +6,11 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/v30/app/keepers"
 	"github.com/osmosis-labs/osmosis/v30/app/upgrades"
+	poolmanager "github.com/osmosis-labs/osmosis/v30/x/poolmanager"
 )
 
 func CreateUpgradeHandler(
@@ -24,6 +27,20 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+		setAuthorizedQuoteDenomsAsCommunityPoolDenomWhitelist(sdkCtx, keepers.PoolManagerKeeper)
+
 		return migrations, nil
 	}
+}
+
+// community_pool_denom_whitelist is a newly introduced parameter in poolmanager to decoupled
+// the community pool denom whitelist from the authorized quote denoms.
+// This migration copies the authorized quote denoms to the community pool denom whitelist to keep
+// the existing behavior the same.
+func setAuthorizedQuoteDenomsAsCommunityPoolDenomWhitelist(ctx sdk.Context, poolManagerKeeper *poolmanager.Keeper) {
+	poolManagerParams := poolManagerKeeper.GetParams(ctx)
+	poolManagerParams.TakerFeeParams.CommunityPoolDenomWhitelist = poolManagerParams.AuthorizedQuoteDenoms
+	poolManagerKeeper.SetParams(ctx, poolManagerParams)
 }
