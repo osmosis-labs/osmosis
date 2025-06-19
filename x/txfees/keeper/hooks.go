@@ -136,7 +136,7 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 	// Now, deal with the non-native tokens in the taker fee collector.
 	takerFeeModuleAccountCoins := k.bankKeeper.GetAllBalances(ctx, takerFeeModuleAccount)
 	nonOsmoTakerFeeDistribution := takerFeeParams.NonOsmoTakerFeeDistribution
-	authorizedQuoteDenoms := poolManagerParams.AuthorizedQuoteDenoms
+	communityPoolDenomWhitelist := poolManagerParams.TakerFeeParams.CommunityPoolDenomWhitelist
 
 	nonOsmoForCommunityPool := sdk.NewCoins()
 
@@ -144,7 +144,7 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 	for _, takerFeeCoin := range takerFeeModuleAccountCoins {
 		// Community Pool:
 		if nonOsmoTakerFeeDistribution.CommunityPool.GT(zeroDec) && takerFeeCoin.Amount.GT(osmomath.ZeroInt()) {
-			denomIsWhitelisted := isDenomWhitelisted(takerFeeCoin.Denom, authorizedQuoteDenoms)
+			denomIsWhitelisted := isDenomWhitelisted(takerFeeCoin.Denom, communityPoolDenomWhitelist)
 			// If the non osmo denom is a whitelisted quote asset, we directly send to the community pool
 			if denomIsWhitelisted {
 				nonOsmoTakerFeeToCommunityPoolDec := takerFeeCoin.Amount.ToLegacyDec().Mul(nonOsmoTakerFeeDistribution.CommunityPool)
@@ -330,11 +330,11 @@ func (k Keeper) clearTakerFeeShareAccumulators(ctx sdk.Context) {
 	}
 }
 
-// isDenomWhitelisted checks if the denom provided exists in the list of authorized quote denoms.
+// isDenomWhitelisted checks if the denom provided exists in the list of community pool denom whitelist.
 // If it does, it returns true, otherwise false.
-func isDenomWhitelisted(denom string, authorizedQuoteDenoms []string) bool {
-	for _, authorizedQuoteDenom := range authorizedQuoteDenoms {
-		if denom == authorizedQuoteDenom {
+func isDenomWhitelisted(denom string, communityPoolDenomWhitelist []string) bool {
+	for _, communityPoolDenom := range communityPoolDenomWhitelist {
+		if denom == communityPoolDenom {
 			return true
 		}
 	}

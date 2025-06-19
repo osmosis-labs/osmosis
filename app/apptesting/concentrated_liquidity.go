@@ -1527,6 +1527,9 @@ func (s *KeeperTestHelper) SetupConcentratedLiquidityDenomsAndPoolCreation() {
 
 	authorizedQuoteDenoms := append(poolmanagertypes.DefaultParams().AuthorizedQuoteDenoms, ETH, USDC, BAR, BAZ, FOO, appparams.BaseCoinUnit, STAKE, WBTC, usdcChainDenom)
 	s.App.PoolManagerKeeper.SetParam(s.Ctx, poolmanagertypes.KeyAuthorizedQuoteDenoms, authorizedQuoteDenoms)
+
+	communityPoolDenomWhitelist := authorizedQuoteDenoms
+	s.App.PoolManagerKeeper.SetParam(s.Ctx, poolmanagertypes.KeyCommunityPoolDenomWhitelist, communityPoolDenomWhitelist)
 }
 
 func (s *ConcentratedKeeperTestHelper) SetupTest() {
