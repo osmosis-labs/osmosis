@@ -33,7 +33,10 @@ message MsgStakeTokens {
   option (gogoproto.goproto_getters) = false;
   option (cosmos.msg.v1.signer) = "staker";
 
-  string staker = 1 [ (gogoproto.moretags) = "yaml:\"staker\"" ];
+  string staker = 1 [
+    (gogoproto.moretags) = "yaml:\"staker\"",
+    (cosmos_proto.scalar) = "cosmos.AddressString"
+  ];
   cosmos.base.v1beta1.Coin amount = 2 [
     (gogoproto.moretags) = "yaml:\"amount\"",
     (gogoproto.nullable) = false
@@ -41,7 +44,10 @@ message MsgStakeTokens {
 }
 
 message MsgStakeTokensResponse {
-  string staker = 1 [ (gogoproto.moretags) = "yaml:\"staker\"" ];
+  string staker = 1 [
+    (gogoproto.moretags) = "yaml:\"staker\"",
+    (cosmos_proto.scalar) = "cosmos.AddressString"
+  ];
   cosmos.base.v1beta1.Coin amount = 2;
   bytes total_staked = 3 [
     (gogoproto.moretags) = "yaml:\"total_staked\"",
@@ -61,7 +67,10 @@ message MsgUnstakeTokens {
   option (gogoproto.goproto_getters) = false;
   option (cosmos.msg.v1.signer) = "staker";
 
-  string staker = 1 [ (gogoproto.moretags) = "yaml:\"staker\"" ];
+  string staker = 1 [
+    (gogoproto.moretags) = "yaml:\"staker\"",
+    (cosmos_proto.scalar) = "cosmos.AddressString"
+  ];
   cosmos.base.v1beta1.Coin amount = 2 [
     (gogoproto.moretags) = "yaml:\"amount\"",
     (gogoproto.nullable) = false
@@ -69,7 +78,10 @@ message MsgUnstakeTokens {
 }
 
 message MsgUnstakeTokensResponse {
-  string staker = 1 [ (gogoproto.moretags) = "yaml:\"staker\"" ];
+  string staker = 1 [
+    (gogoproto.moretags) = "yaml:\"staker\"",
+    (cosmos_proto.scalar) = "cosmos.AddressString"
+  ];
   cosmos.base.v1beta1.DecCoin amount = 2 [
     (gogoproto.moretags) = "yaml:\"amount\"",
     (gogoproto.nullable) = false

@@ -68,7 +68,7 @@ func (q Querier) UserStake(c context.Context, request *types.QueryUserStakeReque
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	_, err := sdk.AccAddressFromBech32(request.Address)
+	reqAddress, err := sdk.AccAddressFromBech32(request.Address)
 	if err != nil {
 		panic(fmt.Sprintf("invalid staker address : %s", err))
 	}
@@ -78,7 +78,7 @@ func (q Querier) UserStake(c context.Context, request *types.QueryUserStakeReque
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	userStake, found := q.GetUserStake(ctx, sdk.AccAddress(request.Address), request.Denom)
+	userStake, found := q.GetUserStake(ctx, reqAddress, request.Denom)
 	if !found {
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("User stake not found with %s", request.Denom))
 	}
@@ -90,13 +90,13 @@ func (q Querier) UserTotalStake(c context.Context, request *types.QueryUserTotal
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	_, err := sdk.AccAddressFromBech32(request.Address)
+	reqAddress, err := sdk.AccAddressFromBech32(request.Address)
 	if err != nil {
 		panic(fmt.Sprintf("invalid staker address : %s", err))
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	userTotalStake := q.GetUserTotalStake(ctx, sdk.AccAddress(request.Address))
+	userTotalStake := q.GetUserTotalStake(ctx, reqAddress)
 
 	return &types.QueryUserTotalStakeResponse{Stakes: userTotalStake}, nil
 }
@@ -106,7 +106,7 @@ func (q Querier) UserUnbonding(ctx context.Context, request *types.QueryUserUnbo
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	_, err := sdk.AccAddressFromBech32(request.Address)
+	reqAddress, err := sdk.AccAddressFromBech32(request.Address)
 	if err != nil {
 		panic(fmt.Sprintf("invalid staker address : %s", err))
 	}
@@ -116,7 +116,7 @@ func (q Querier) UserUnbonding(ctx context.Context, request *types.QueryUserUnbo
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	unbondingInfo, found := q.GetUnbondingInfo(sdkCtx, sdk.AccAddress(request.Address), request.Denom)
+	unbondingInfo, found := q.GetUnbondingInfo(sdkCtx, reqAddress, request.Denom)
 	if !found {
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("Unbonding info not found for address %s and denom %s", request.Address, request.Denom))
 	}
@@ -131,13 +131,13 @@ func (q Querier) UserTotalUnbonding(ctx context.Context, request *types.QueryUse
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	_, err := sdk.AccAddressFromBech32(request.Address)
+	reqAddress, err := sdk.AccAddressFromBech32(request.Address)
 	if err != nil {
 		panic(fmt.Sprintf("invalid staker address : %s", err))
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	unbondingInfos := q.GetUnbondingTotalInfo(sdkCtx, sdk.AccAddress(request.Address))
+	unbondingInfos := q.GetUnbondingTotalInfo(sdkCtx, reqAddress)
 
 	var unbondInfos []*types.UnbondingInfo
 	for _, info := range unbondingInfos {

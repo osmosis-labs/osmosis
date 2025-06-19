@@ -16,11 +16,6 @@ func (k Keeper) StakeTokens(ctx sdk.Context, staker sdk.AccAddress, amount sdk.C
 		return nil, fmt.Errorf("unsupported token: %s", amount.Denom)
 	}
 
-	_, err := sdk.AccAddressFromBech32(staker.String())
-	if err != nil {
-		panic(fmt.Sprintf("invalid staker address : %s", err))
-	}
-
 	pool, found := k.GetPool(ctx, amount.Denom)
 	if !found {
 		pool = types.StakingPool{
@@ -54,7 +49,7 @@ func (k Keeper) StakeTokens(ctx sdk.Context, staker sdk.AccAddress, amount sdk.C
 
 	k.SetUserStake(ctx, userStake, amount.Denom)
 
-	err = k.BankKeeper.SendCoinsFromAccountToModule(ctx, staker, types.ModuleName, sdk.NewCoins(amount))
+	err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, staker, types.ModuleName, sdk.NewCoins(amount))
 	if err != nil {
 		return nil, err
 	}
@@ -65,11 +60,6 @@ func (k Keeper) StakeTokens(ctx sdk.Context, staker sdk.AccAddress, amount sdk.C
 func (k Keeper) UnStakeTokens(ctx sdk.Context, staker sdk.AccAddress, amount sdk.Coin) (*types.MsgUnstakeTokensResponse, error) {
 	if !types.IsAllowedToken(amount.Denom) {
 		return nil, fmt.Errorf("unsupported token: %s", amount.Denom)
-	}
-
-	_, err := sdk.AccAddressFromBech32(staker.String())
-	if err != nil {
-		panic(fmt.Sprintf("invalid staker address : %s", err))
 	}
 
 	pool, find := k.GetPool(ctx, amount.Denom)
@@ -111,7 +101,7 @@ func (k Keeper) UnStakeTokens(ctx sdk.Context, staker sdk.AccAddress, amount sdk
 }
 
 func (k Keeper) AddUnbondingRequest(ctx sdk.Context, staker sdk.AccAddress, amount sdk.Coin) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.UnbondingKey))
+	store := ctx.KVStore(k.storeKey)
 	key := k.GetUnbondingKey(staker, amount.Denom)
 
 	currentEpoch := k.epochKeeper.GetEpochInfo(ctx, "day")
@@ -133,7 +123,7 @@ func (k Keeper) AddUnbondingRequest(ctx sdk.Context, staker sdk.AccAddress, amou
 }
 
 func (k Keeper) GetUnbondingInfo(ctx sdk.Context, staker sdk.AccAddress, denom string) (types.UnbondingInfo, bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.UnbondingKey))
+	store := ctx.KVStore(k.storeKey)
 	key := k.GetUnbondingKey(staker, denom)
 	bz := store.Get(key)
 	if bz == nil {
@@ -146,7 +136,7 @@ func (k Keeper) GetUnbondingInfo(ctx sdk.Context, staker sdk.AccAddress, denom s
 }
 
 func (k Keeper) GetUnbondingTotalInfo(ctx sdk.Context, staker sdk.AccAddress) []types.UnbondingInfo {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.UnbondingKey))
+	store := ctx.KVStore(k.storeKey)
 	var totalUnbondingInfo []types.UnbondingInfo
 
 	key := k.GetUnbondingKey(staker, "")
@@ -201,9 +191,14 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.StakingPool) {
 	store.Set([]byte(pool.Denom), bz)
 }
 
+func (k Keeper) GetUserStakeKey(staker string, denom string) []byte {
+	return []byte(fmt.Sprintf("%s:%s%s", types.UserStakeKey, staker, denom))
+}
+
 func (k Keeper) GetUserStake(ctx sdk.Context, address sdk.AccAddress, token string) (types.UserStake, bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.UserStakeKey))
-	bz := store.Get([]byte(address.String() + token))
+	store := ctx.KVStore(k.storeKey)
+	keyVal := k.GetUserStakeKey(address.String(), token)
+	bz := store.Get(keyVal)
 	if bz == nil {
 		return types.UserStake{}, false
 	}
@@ -214,16 +209,18 @@ func (k Keeper) GetUserStake(ctx sdk.Context, address sdk.AccAddress, token stri
 }
 
 func (k Keeper) SetUserStake(ctx sdk.Context, stake types.UserStake, token string) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.UserStakeKey))
+	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&stake)
-	store.Set([]byte(stake.Address+token), bz)
+	keyVal := k.GetUserStakeKey(stake.Address, token)
+	store.Set(keyVal, bz)
 }
 
 func (k Keeper) GetUserTotalStake(ctx sdk.Context, address sdk.AccAddress) sdk.DecCoins {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.UserStakeKey))
+	store := ctx.KVStore(k.storeKey)
 	var stakes sdk.DecCoins
 
-	iterator := storetypes.KVStorePrefixIterator(store, []byte(address.String()))
+	keyPrefix := k.GetUserStakeKey(address.String(), "")
+	iterator := storetypes.KVStorePrefixIterator(store, keyPrefix)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -231,7 +228,7 @@ func (k Keeper) GetUserTotalStake(ctx sdk.Context, address sdk.AccAddress) sdk.D
 		k.cdc.MustUnmarshal(iterator.Value(), &stake)
 
 		key := string(iterator.Key())
-		token := key[len(address.String()):]
+		token := key[len(keyPrefix):]
 
 		stakes = append(stakes, sdk.DecCoin{
 			Denom:  token,
