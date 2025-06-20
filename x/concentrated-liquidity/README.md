@@ -1694,21 +1694,9 @@ the use of these hooks.
 
 ## Parameters
 
-- `AuthorizedQuoteDenoms` []string
+- `AuthorizedQuoteDenoms` []string (DEPRECATED)
 
-This is a list of quote denoms that can be used as token1 when creating a pool.
-We limit the quote assets to a small set for the purposes of having convenient
-price increments stemming from tick to price conversion. These increments are
-in a human readable magnitude only for token1 as a quote. For limit orders in
-the future, this will be a desirable property in terms of UX as to allow users
-to set limit orders at prices in terms of token1 (quote asset) that are easy
-to reason about.
-
-This goes in-hand with centralized exchanges that limit the quote asset set
-to only a few denoms.
-
-Our list at launch is expected to consist of OSMO, DAI and USDC. These are set
-in the v16 upgrade handler.
+**DEPRECATED**: Quote asset whitelisting requirement removed as per [Proposal 819](https://daodao.zone/dao/osmosis/proposals/819).
 
 - `IsPermisionlessPoolCreationEnabled` bool
 
