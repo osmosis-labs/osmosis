@@ -6,7 +6,7 @@ import (
 
 	signerextraction "github.com/skip-mev/block-sdk/v2/adapters/signer_extraction_adapter"
 	"github.com/skip-mev/block-sdk/v2/block/base"
-	defaultlane "github.com/skip-mev/block-sdk/v2/lanes/base"
+	baselane "github.com/skip-mev/block-sdk/v2/lanes/base"
 	mevlane "github.com/skip-mev/block-sdk/v2/lanes/mev"
 )
 
@@ -71,9 +71,17 @@ func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *
 		mevMatchHandler,
 	)
 
-	defaultLane := defaultlane.NewDefaultLane(
+	// Create a default mempool for the base lane
+	defaultMempool := base.NewMempoolWithDefaultOrdering(
+		base.DefaultTxPriority(),
+		signerAdapter,
+		maxTxPerDefaultLane,
+	)
+
+	defaultLane := baselane.NewDefaultLaneWithMempool(
 		defaultConfig,
 		defaultMatchHandler,
+		defaultMempool,
 	)
 
 	return mevLane, defaultLane
