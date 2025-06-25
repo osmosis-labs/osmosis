@@ -926,8 +926,8 @@ github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
 github.com/ory/dockertest/v3 v3.11.0 h1:OiHcxKAvSDUwsEVh2BjxQQc/5EHz9n0va9awCtNGuyA=
 github.com/ory/dockertest/v3 v3.11.0/go.mod h1:VIPxS1gwT9NpPOrfD3rACs8Y9Z7yhzO4SB194iUDnUI=
-github.com/osmosis-labs/block-sdk/v2 v2.1.7-0.20250611135306-7aca335f5a4c h1:XVklujydH/TrdEksNUG9c6sHdeOZEAKRxWnwXY9jIgE=
-github.com/osmosis-labs/block-sdk/v2 v2.1.7-0.20250611135306-7aca335f5a4c/go.mod h1:E8SvITZUdxkes3gI3+kgESZL+NLffkcLKnowUgYTOf4=
+github.com/osmosis-labs/block-sdk/v2 v2.1.7-mempool h1:X+ZlcvAfpz8KCuSHHRsZZ9g1ii5OYB9TzmG126RCQ2k=
+github.com/osmosis-labs/block-sdk/v2 v2.1.7-mempool/go.mod h1:E8SvITZUdxkes3gI3+kgESZL+NLffkcLKnowUgYTOf4=
 github.com/osmosis-labs/cosmos-sdk v0.50.11-v28-osmo-3 h1:BfJdINqLa6SHlWgfPPYTAzx/HuY88pA8yiSPeB/4zhI=
 github.com/osmosis-labs/cosmos-sdk v0.50.11-v28-osmo-3/go.mod h1:KO0mBgNmkMA+yVkq13GeHWzR2F2iwjkfevywmPUhCVY=
 github.com/osmosis-labs/cosmos-sdk/store v1.1.1-v0.50.11-v28-osmo-2 h1:1DjjPo2kkmyOUp6CKLyqSZsdwa906UrQHYH9m9kjw00=
