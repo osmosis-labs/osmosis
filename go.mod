@@ -294,6 +294,9 @@ replace (
 	// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/store/v1.1.1-v0.50.11-v28-osmo-2
 	cosmossdk.io/store => github.com/osmosis-labs/cosmos-sdk/store v1.1.1-v0.50.11-v28-osmo-2
 
+	// coinbase/rosetta-sdk-go is not longer maintained/available, we use the mesh-sdk-go fork instead
+	github.com/coinbase/rosetta-sdk-go/types v1.0.0 => github.com/coinbase/mesh-sdk-go/types v1.0.0-beta1
+
 	// Direct cosmos-sdk branch link: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v28/0.50.11, current branch: osmo-v28/0.50.11
 	// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/5b4e03484cf88e7d1fce003ba75b4fdc5c81f15f
 	// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.50.11-v28-osmo-3

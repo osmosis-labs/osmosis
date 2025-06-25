@@ -42,6 +42,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### State Breaking
+
+### State Compatible
+
+* [#9420](https://github.com/osmosis-labs/osmosis/pull/9420) chore: update seeds for the init command
+* [#9396](https://github.com/osmosis-labs/osmosis/pull/9396) fix: missing coinbase/rosetta-sdk-go/types dependency 
+
 ## v29.0.2
 
 ### State Breaking
