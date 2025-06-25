@@ -63,6 +63,8 @@ func (s *UpgradeTestSuite) TestUpgradeWithCustomAuthorizedQuoteDenoms() {
 
 	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
 	poolManagerParams.AuthorizedQuoteDenoms = customAuthorizedQuoteDenoms
+	// Clear the CommunityPoolDenomWhitelist to ensure it starts empty for the test
+	poolManagerParams.TakerFeeParams.CommunityPoolDenomWhitelist = []string{}
 	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
 
 	// Verify the custom denoms are set
@@ -100,6 +102,13 @@ func dummyUpgrade(s *UpgradeTestSuite) {
 func (s *UpgradeTestSuite) PrepareCommunityPoolDenomWhitelistTest() {
 	// Get current poolmanager parameters
 	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
+
+	// Clear the CommunityPoolDenomWhitelist to ensure it starts empty for the test
+	poolManagerParams.TakerFeeParams.CommunityPoolDenomWhitelist = []string{}
+	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
+
+	// Get the updated parameters to verify the whitelist is now empty
+	poolManagerParams = s.App.PoolManagerKeeper.GetParams(s.Ctx)
 
 	// Verify that CommunityPoolDenomWhitelist is empty before upgrade
 	s.Require().Empty(poolManagerParams.TakerFeeParams.CommunityPoolDenomWhitelist)
