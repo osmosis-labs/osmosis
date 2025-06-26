@@ -21,6 +21,7 @@ var (
 	KeyCommunityPoolDenomToSwapNonWhitelistedAssetsTo = []byte("CommunityPoolDenomToSwapNonWhitelistedAssetsTo")
 	KeyAuthorizedQuoteDenoms                          = []byte("AuthorizedQuoteDenoms")
 	KeyReducedTakerFeeByWhitelist                     = []byte("ReducedTakerFeeByWhitelist")
+	KeyCommunityPoolDenomWhitelist                    = []byte("CommunityPoolDenomWhitelist")
 
 	ZeroDec = osmomath.ZeroDec()
 	OneDec  = osmomath.OneDec()
@@ -66,6 +67,7 @@ func DefaultParams() Params {
 			AdminAddresses: []string{},
 			CommunityPoolDenomToSwapNonWhitelistedAssetsTo: "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // USDC
 			ReducedFeeWhitelist:                            []string{},
+			CommunityPoolDenomWhitelist:                    []string{},
 		},
 		AuthorizedQuoteDenoms: []string{
 			appparams.BaseCoinUnit,
@@ -99,6 +101,9 @@ func (p Params) Validate() error {
 	if err := osmoutils.ValidateAddressList(p.TakerFeeParams.ReducedFeeWhitelist); err != nil {
 		return err
 	}
+	if err := validateCommunityPoolDenomWhitelist(p.TakerFeeParams.CommunityPoolDenomWhitelist); err != nil {
+		return err
+	}
 	if err := validateAuthorizedQuoteDenoms(p.AuthorizedQuoteDenoms); err != nil {
 		return err
 	}
@@ -117,6 +122,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyCommunityPoolDenomToSwapNonWhitelistedAssetsTo, &p.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo, validateCommunityPoolDenomToSwapNonWhitelistedAssetsTo),
 		paramtypes.NewParamSetPair(KeyAuthorizedQuoteDenoms, &p.AuthorizedQuoteDenoms, validateAuthorizedQuoteDenoms),
 		paramtypes.NewParamSetPair(KeyReducedTakerFeeByWhitelist, &p.TakerFeeParams.ReducedFeeWhitelist, osmoutils.ValidateAddressList),
+		paramtypes.NewParamSetPair(KeyCommunityPoolDenomWhitelist, &p.TakerFeeParams.CommunityPoolDenomWhitelist, validateCommunityPoolDenomWhitelist),
 	}
 }
 
@@ -222,6 +228,23 @@ func validateCommunityPoolDenomToSwapNonWhitelistedAssetsTo(i interface{}) error
 
 	if err := sdk.ValidateDenom(communityPoolDenomToSwapNonWhitelistedAssetsTo); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func validateCommunityPoolDenomWhitelist(i interface{}) error {
+	communityPoolDenomWhitelist, ok := i.([]string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if len(communityPoolDenomWhitelist) > 0 {
+		for _, denom := range communityPoolDenomWhitelist {
+			if err := sdk.ValidateDenom(denom); err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil

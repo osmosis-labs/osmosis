@@ -106,6 +106,12 @@ message TakerFeeParams {
   // In the future, we will charge a reduced taker fee instead of no fee at all.
   repeated string reduced_fee_whitelist = 6
       [ (gogoproto.moretags) = "yaml:\"reduced_fee_whitelist\"" ];
+
+  // community_pool_denom_whitelist is a list of denoms that should be sent
+  // directly to the community pool instead of being swapped to the
+  // `community_pool_denom_to_swap_non_whitelisted_assets_to`.
+  repeated string community_pool_denom_whitelist = 7
+      [ (gogoproto.moretags) = "yaml:\"community_pool_denom_whitelist\"" ];
 }
 
 // TakerFeeDistributionPercentage defines what percent of the taker fee category

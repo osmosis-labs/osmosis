@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#9355](https://github.com/osmosis-labs/osmosis/pull/9355) chore: bump go version to v1.23 
 * [#9427](https://github.com/osmosis-labs/osmosis/pull/9427) chore: bump wasmd version 
+* [#9434](https://github.com/osmosis-labs/osmosis/pull/9434) Taker Fee non-OSMO revenue on separate whitelist to Quote Assets
 
 ### State Compatible
 
