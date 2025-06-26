@@ -11,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v30/app/keepers"
 	"github.com/osmosis-labs/osmosis/v30/app/upgrades"
 	poolmanager "github.com/osmosis-labs/osmosis/v30/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
 )
 
 func CreateUpgradeHandler(
@@ -40,7 +41,11 @@ func CreateUpgradeHandler(
 // This migration copies the authorized quote denoms to the community pool denom whitelist to keep
 // the existing behavior the same.
 func setAuthorizedQuoteDenomsAsCommunityPoolDenomWhitelist(ctx sdk.Context, poolManagerKeeper *poolmanager.Keeper) {
-	poolManagerParams := poolManagerKeeper.GetParams(ctx)
-	poolManagerParams.TakerFeeParams.CommunityPoolDenomWhitelist = poolManagerParams.AuthorizedQuoteDenoms
-	poolManagerKeeper.SetParams(ctx, poolManagerParams)
+	// Get the authorized quote denoms directly from the parameter store
+	// to avoid unmarshaling issues with the new TakerFeeParams field
+	var authorizedQuoteDenoms []string
+	poolManagerKeeper.GetParam(ctx, types.KeyAuthorizedQuoteDenoms, &authorizedQuoteDenoms)
+
+	// Set the community pool denom whitelist to the same value
+	poolManagerKeeper.SetParam(ctx, types.KeyCommunityPoolDenomWhitelist, authorizedQuoteDenoms)
 }
