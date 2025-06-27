@@ -95,7 +95,7 @@ func TestConnect_StateTransitionMultipleReady(t *testing.T) {
 	}()
 
 	time.Sleep(5 * time.Millisecond)
-	mock.State = connectivity.TransientFailure
+	mock.SetState(connectivity.TransientFailure)
 
 	wg.Wait()
 

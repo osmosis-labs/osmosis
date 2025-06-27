@@ -17,6 +17,12 @@ type ClientConn struct {
 	waitShouldBlock bool
 }
 
+func (m *ClientConn) SetState(s connectivity.State) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.State = s
+}
+
 func (m *ClientConn) GetState() connectivity.State {
 	m.mu.Lock()
 	defer m.mu.Unlock()
