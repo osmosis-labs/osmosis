@@ -21,7 +21,7 @@ import (
 )
 
 // InitializePool initializes a new concentrated liquidity pool with the given PoolI interface and creator address.
-// It validates tick spacing, spread factor, and authorized quote denominations before creating and setting
+// It validates tick spacing and spread factor before creating and setting
 // the pool's fee and uptime accumulators. If the pool is successfully created, it calls the AfterConcentratedPoolCreated
 // listener function.
 //
@@ -29,7 +29,6 @@ import (
 // - The poolI cannot be converted to a ConcentratedPool.
 // - The tick spacing is invalid.
 // - The spread factor is invalid.
-// - The quote denomination is unauthorized.
 // - There is an error creating the fee or uptime accumulator.
 // - There is an error setting the pool in the keeper's state.
 func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, creatorAddress sdk.AccAddress) error {
@@ -42,8 +41,6 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 	tickSpacing := concentratedPool.GetTickSpacing()
 	spreadFactor := concentratedPool.GetSpreadFactor(ctx)
 	poolId := concentratedPool.GetId()
-	quoteAsset := concentratedPool.GetToken1()
-	poolManagerParams := k.poolmanagerKeeper.GetParams(ctx)
 
 	bypassRestrictions := false
 
@@ -75,10 +72,6 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 
 		if !k.validateSpreadFactor(params, spreadFactor) {
 			return types.UnauthorizedSpreadFactorError{ProvidedSpreadFactor: spreadFactor, AuthorizedSpreadFactors: params.AuthorizedSpreadFactors}
-		}
-
-		if !validateAuthorizedQuoteDenoms(quoteAsset, poolManagerParams.AuthorizedQuoteDenoms) {
-			return types.UnauthorizedQuoteDenomError{ProvidedQuoteDenom: quoteAsset, AuthorizedQuoteDenoms: poolManagerParams.AuthorizedQuoteDenoms}
 		}
 	}
 
@@ -346,25 +339,6 @@ func (k Keeper) validateTickSpacingUpdate(pool types.ConcentratedPoolExtension, 
 func (k Keeper) validateSpreadFactor(params types.Params, spreadFactor osmomath.Dec) bool {
 	for _, authorizedSpreadFactor := range params.AuthorizedSpreadFactors {
 		if spreadFactor.Equal(authorizedSpreadFactor) {
-			return true
-		}
-	}
-	return false
-}
-
-// validateAuthorizedQuoteDenoms validates if a given denom1 is present in the authorized quote denoms list
-// It returns a boolean indicating if the denom1 is authorized or not.
-//
-// Parameters:
-// - ctx: sdk.Context - The context object
-// - denom1: string - The denom1 string to be checked
-// - authorizedQuoteDenoms: []string - The list of authorized quote denoms
-//
-// Returns:
-// - bool: A boolean indicating if the denom1 is authorized or not.
-func validateAuthorizedQuoteDenoms(denom1 string, authorizedQuoteDenoms []string) bool {
-	for _, authorizedQuoteDenom := range authorizedQuoteDenoms {
-		if denom1 == authorizedQuoteDenom {
 			return true
 		}
 	}

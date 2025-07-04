@@ -300,10 +300,6 @@ func (k Keeper) GetListenersUnsafe() types.ConcentratedLiquidityListeners {
 	return k.listeners
 }
 
-func ValidateAuthorizedQuoteDenoms(ctx sdk.Context, denom1 string, authorizedQuoteDenoms []string) bool {
-	return validateAuthorizedQuoteDenoms(denom1, authorizedQuoteDenoms)
-}
-
 func (k Keeper) ValidatePositionUpdateById(ctx sdk.Context, positionId uint64, updateInitiator sdk.AccAddress, lowerTickGiven int64, upperTickGiven int64, liquidityDeltaGiven osmomath.Dec, joinTimeGiven time.Time, poolIdGiven uint64) error {
 	return k.validatePositionUpdateById(ctx, positionId, updateInitiator, lowerTickGiven, upperTickGiven, liquidityDeltaGiven, joinTimeGiven, poolIdGiven)
 }

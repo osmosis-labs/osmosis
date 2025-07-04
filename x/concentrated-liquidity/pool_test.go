@@ -96,15 +96,6 @@ func (s *KeeperTestSuite) TestInitializePool() {
 			expectedErr:    types.UnauthorizedSpreadFactorError{ProvidedSpreadFactor: invalidSpreadFactor, AuthorizedSpreadFactors: s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx).AuthorizedSpreadFactors},
 		},
 		{
-			name:  "unauthorized quote denom",
-			poolI: validPoolI,
-			// this flag overwrites the default authorized quote denoms
-			// so that the test case fails.
-			authorizedDenomsOverwrite: []string{"otherDenom"},
-			creatorAddress:            validCreatorAddress,
-			expectedErr:               types.UnauthorizedQuoteDenomError{ProvidedQuoteDenom: USDC, AuthorizedQuoteDenoms: []string{"otherDenom"}},
-		},
-		{
 			name:                      "bypass unauthorized quote denom check because poolmanager module account",
 			poolI:                     validPoolI,
 			authorizedDenomsOverwrite: []string{"otherDenom"},
@@ -438,39 +429,6 @@ func (s *KeeperTestSuite) TestSetPool() {
 			retrievedPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, test.pool.GetId())
 			s.Require().NoError(err)
 			s.Require().Equal(test.pool, retrievedPool)
-		})
-	}
-}
-
-func (s *KeeperTestSuite) TestValidateAuthorizedQuoteDenoms() {
-	tests := []struct {
-		name                  string
-		quoteDenom            string
-		authorizedQuoteDenoms []string
-		expectValid           bool
-	}{
-		{
-			name:                  "found - true",
-			quoteDenom:            ETH,
-			authorizedQuoteDenoms: []string{ETH, USDC},
-			expectValid:           true,
-		},
-		{
-			name:                  "not found - false",
-			quoteDenom:            ETH,
-			authorizedQuoteDenoms: []string{BAR, FOO},
-			expectValid:           false,
-		},
-	}
-
-	for _, test := range tests {
-		s.Run(test.name, func() {
-			s.SetupTest()
-
-			// Method under test.
-			isValid := cl.ValidateAuthorizedQuoteDenoms(s.Ctx, test.quoteDenom, test.authorizedQuoteDenoms)
-
-			s.Require().Equal(test.expectValid, isValid)
 		})
 	}
 }
