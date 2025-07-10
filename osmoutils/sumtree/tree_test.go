@@ -58,9 +58,7 @@ func (p pairs) Less(i, j int) bool {
 }
 
 func (p pairs) Swap(i, j int) {
-	temp := p[i]
-	p[i] = p[j]
-	p[j] = temp
+	p[i], p[j] = p[j], p[i]
 }
 
 func (p pairs) sum() (res uint64) {
