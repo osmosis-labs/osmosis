@@ -28,6 +28,7 @@ type GRPCClient struct {
 	grpcAddress       string
 	conn              domain.ClientConn
 	appCodec          codec.Codec
+	stateChan         chan connectivity.State
 }
 
 var _ domain.SQSGRPClient = &GRPCClient{}
@@ -108,31 +109,53 @@ func (g *GRPCClient) PushData(ctx context.Context, height uint64, pools []ingest
 	return nil
 }
 
+// Set the state channel to receive connection state changes
+func (g *GRPCClient) SetStateChan(stateChan chan connectivity.State) {
+	g.stateChan = stateChan
+}
+
 // connect manages underlying gRPC connection by checking the connection state and attempting to reconnect when necessary.
 func (g *GRPCClient) connect(ctx context.Context) {
 	for {
 		// Check if the context is done
 		if ctx.Err() != nil {
+			g.shutdown() // graceful shutdown
 			return
 		}
 
 		state := g.conn.GetState()
+
+		// Notify state change
+		if g.stateChan != nil {
+			g.stateChan <- state
+		}
+
 		if state != connectivity.Ready {
 			// Attempt to connect
 			g.conn.Connect()
 
 			// Wait for a state change or timeout/cancel
 			if !g.conn.WaitForStateChange(ctx, state) {
-				return // Context done
+				g.shutdown() // graceful shutdown
+				return       // Context done
 			}
 		} else {
 			select {
 			case <-ctx.Done():
-				return
+				g.shutdown() // graceful shutdown
+				return       // context done
 			case <-g.timeAfterFunc(g.connCheckInterval):
 				// Recheck the connection state after interval
 			}
 		}
+	}
+}
+
+// shutdown gracefully releases resources
+// and closes the channels upon shutdown of the gRPC client.
+func (g *GRPCClient) shutdown() {
+	if g.stateChan != nil {
+		close(g.stateChan)
 	}
 }
 

@@ -39,12 +39,15 @@ func (m *ClientConn) WaitForStateChange(ctx context.Context, sourceState connect
 		return false
 	}
 
+	if ctx.Err() != nil {
+		return false // Context is done, no state change can occur.
+	}
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	if len(m.StateChanges) > 0 {
-		m.State = m.StateChanges[0]
-		m.StateChanges = m.StateChanges[1:]
+		m.State, m.StateChanges = m.StateChanges[0], m.StateChanges[1:]
 	}
 
 	return true
