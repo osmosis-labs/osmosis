@@ -34,13 +34,13 @@ func newClientWithStateChan(initial connectivity.State, transitions []connectivi
 	client.SetConn(mock)
 	client.SetStateChan(stateChan)
 	client.SetTimeAfterFunc(func(d time.Duration) <-chan time.Time {
-		return time.After(time.Millisecond)
+		return time.After(10 * time.Millisecond)
 	})
 	return client, stateChan
 }
 
 func shortTimeoutCtx() (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.Background(), 1*time.Millisecond)
+	return context.WithTimeout(context.Background(), 10*time.Millisecond)
 }
 
 func longTimeoutCtx() (context.Context, context.CancelFunc) {
