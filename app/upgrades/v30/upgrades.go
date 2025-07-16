@@ -59,6 +59,7 @@ func setAuthorizedQuoteDenomsAsCommunityPoolDenomWhitelist(ctx sdk.Context, pool
 	poolManagerKeeper.SetParam(ctx, types.KeyCommunityPoolDenomWhitelist, authorizedQuoteDenoms)
 }
 
+// see: https://daodao.zone/dao/osmosis/proposals/958
 func transferTopOfBlockAuctionFundsToCommunityPool(ctx sdk.Context, accountKeeper *authkeeper.AccountKeeper, bankKeeper *bankkeeper.BaseKeeper, distrKeeper *distrkeeper.Keeper) error {
 	auctionModuleAccountAddr := accountKeeper.GetModuleAccount(ctx, auctiontypes.ModuleName).GetAddress()
 	usdcDenom := "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4"
