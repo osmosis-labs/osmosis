@@ -45,7 +45,7 @@ store_prefix = 'ibc'
 max_gas = 10000000
 gas_multiplier = 2
 default_gas = 800000
-gas_price = { price = 0.0025, denom = 'e2e-default-feetoken' }
+gas_price = { price = 0.01, denom = 'e2e-default-feetoken' }
 clock_drift = '1m' # to accommodate docker containers
 trusting_period = '239seconds'
 trust_threshold = { numerator = '1', denominator = '3' }
@@ -61,7 +61,7 @@ store_prefix = 'ibc'
 max_gas = 10000000
 gas_multiplier = 2
 default_gas = 800000
-gas_price = { price = 0.0025, denom = 'e2e-default-feetoken' }
+gas_price = { price = 0.01, denom = 'e2e-default-feetoken' }
 clock_drift = '1m' # to accommodate docker containers
 trusting_period = '239seconds'
 trust_threshold = { numerator = '1', denominator = '3' }

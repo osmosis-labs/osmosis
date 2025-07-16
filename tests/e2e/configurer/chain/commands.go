@@ -111,8 +111,8 @@ func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpa
 func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, tokens string, token0MinAmt, token1MinAmt int64, poolId uint64) (uint64, osmomath.Dec) {
 	n.LogActionF("creating concentrated position")
 	// gas = 50,000 because e2e  default to 40,000, we hardcoded extra 10k gas to initialize tick
-	// fees = 2500 (because 100,000 * 0.0025 = 1250)
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", fmt.Sprint(poolId), lowerTick, upperTick, tokens, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), "--gas=1000000", "--fees=2500uosmo", "-o json"}
+	// fees = 10000 (because 100,000 * 0.01 = 10000)
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", fmt.Sprint(poolId), lowerTick, upperTick, tokens, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), "--gas=1000000", "--fees=10000uosmo", "-o json"}
 	resp, _, err := n.containerManager.ExecTxCmdWithSuccessStringJSON(n.t, n.chainId, n.Name, cmd, "\"code\":0,")
 	require.NoError(n.t, err)
 	response := formatNonJsonResponse(resp.String())
