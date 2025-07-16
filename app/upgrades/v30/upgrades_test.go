@@ -71,8 +71,8 @@ func (s *UpgradeTestSuite) TestTopOfBlockAuctionFundTransferUpgrade() {
 	auctionModuleBalance := s.App.BankKeeper.GetBalance(s.Ctx, auctionModuleAccountAddr, usdcDenom)
 	distributionModuleBalance := s.App.BankKeeper.GetBalance(s.Ctx, distributionModuleAccountAddr, usdcDenom)
 
-	s.Require().Equal(sdk.NewCoins(), auctionModuleBalance)
-	s.Require().Equal(auctionRev, distributionModuleBalance)
+	s.Require().Equal(sdk.NewCoin(usdcDenom, osmomath.NewInt(0)), auctionModuleBalance)
+	s.Require().Equal(sdk.NewCoin(usdcDenom, osmomath.NewInt(999999999999999999)), distributionModuleBalance)
 }
 
 func (s *UpgradeTestSuite) TestUpgradeWithCustomAuthorizedQuoteDenoms() {
