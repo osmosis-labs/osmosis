@@ -54,6 +54,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#9396](https://github.com/osmosis-labs/osmosis/pull/9396) fix: missing coinbase/rosetta-sdk-go/types dependency 
 * [#9436](https://github.com/osmosis-labs/osmosis/pull/9436) feat: remove authorized quote denom validation
 
+* [#9455](https://github.com/osmosis-labs/osmosis/pull/9455) chore: bump cosmos-sdk to v0.50.14
+
 ## v29.0.2
 
 ### State Breaking
