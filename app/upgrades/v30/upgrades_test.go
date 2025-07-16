@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	auctiontypes "github.com/skip-mev/block-sdk/v2/x/auction/types"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/appmodule"
@@ -13,6 +15,7 @@ import (
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
 	v30 "github.com/osmosis-labs/osmosis/v30/app/upgrades/v30"
 )
@@ -31,7 +34,7 @@ func TestUpgradeTestSuite(t *testing.T) {
 	suite.Run(t, new(UpgradeTestSuite))
 }
 
-func (s *UpgradeTestSuite) TestUpgrade() {
+func (s *UpgradeTestSuite) TestCommunityPoolDenomWhitelistUpgrade() {
 	s.Setup()
 	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
 
@@ -45,6 +48,31 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	})
 
 	s.ExecuteCommunityPoolDenomWhitelistTest()
+}
+
+func (s *UpgradeTestSuite) TestTopOfBlockAuctionFundTransferUpgrade() {
+	s.Setup()
+	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
+
+	usdcDenom := "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4"
+	auctionRev := sdk.NewCoins(sdk.NewCoin(usdcDenom, osmomath.NewInt(999999999999999999)))
+	s.FundModuleAcc(auctiontypes.ModuleName, auctionRev)
+
+	// Run the upgrade
+	dummyUpgrade(s)
+	s.Require().NotPanics(func() {
+		_, err := s.preModule.PreBlock(s.Ctx)
+		s.Require().NoError(err)
+	})
+
+	auctionModuleAccountAddr := s.App.AccountKeeper.GetModuleAccount(s.Ctx, auctiontypes.ModuleName).GetAddress()
+	distributionModuleAccountAddr := s.App.AccountKeeper.GetModuleAccount(s.Ctx, distrtypes.ModuleName).GetAddress()
+
+	auctionModuleBalance := s.App.BankKeeper.GetBalance(s.Ctx, auctionModuleAccountAddr, usdcDenom)
+	distributionModuleBalance := s.App.BankKeeper.GetBalance(s.Ctx, distributionModuleAccountAddr, usdcDenom)
+
+	s.Require().Equal(sdk.NewCoins(), auctionModuleBalance)
+	s.Require().Equal(auctionRev, distributionModuleBalance)
 }
 
 func (s *UpgradeTestSuite) TestUpgradeWithCustomAuthorizedQuoteDenoms() {

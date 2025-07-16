@@ -7,6 +7,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	auctiontypes "github.com/skip-mev/block-sdk/v2/x/auction/types"
 
 	"github.com/osmosis-labs/osmosis/v30/app/keepers"
 	"github.com/osmosis-labs/osmosis/v30/app/upgrades"
@@ -32,6 +36,11 @@ func CreateUpgradeHandler(
 
 		setAuthorizedQuoteDenomsAsCommunityPoolDenomWhitelist(sdkCtx, keepers.PoolManagerKeeper)
 
+		err = transferTopOfBlockAuctionFundsToCommunityPool(sdkCtx, keepers.AccountKeeper, keepers.BankKeeper, keepers.DistrKeeper)
+		if err != nil {
+			return nil, err
+		}
+
 		return migrations, nil
 	}
 }
@@ -48,4 +57,16 @@ func setAuthorizedQuoteDenomsAsCommunityPoolDenomWhitelist(ctx sdk.Context, pool
 
 	// Set the community pool denom whitelist to the same value
 	poolManagerKeeper.SetParam(ctx, types.KeyCommunityPoolDenomWhitelist, authorizedQuoteDenoms)
+}
+
+func transferTopOfBlockAuctionFundsToCommunityPool(ctx sdk.Context, accountKeeper *authkeeper.AccountKeeper, bankKeeper *bankkeeper.BaseKeeper, distrKeeper *distrkeeper.Keeper) error {
+	auctionModuleAccountAddr := accountKeeper.GetModuleAccount(ctx, auctiontypes.ModuleName).GetAddress()
+	usdcDenom := "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4"
+
+	totalUsdcBalance := bankKeeper.GetBalance(ctx, auctionModuleAccountAddr, usdcDenom)
+	return distrKeeper.FundCommunityPool(
+		ctx,
+		sdk.NewCoins(totalUsdcBalance),
+		auctionModuleAccountAddr,
+	)
 }
