@@ -1,14 +1,14 @@
 module github.com/osmosis-labs/osmosis/osmomath
 
-go 1.22.3
+go 1.23.0
+
 toolchain go1.24.1
 
 require (
 	cosmossdk.io/math v1.4.0
 	github.com/cosmos/cosmos-sdk v0.50.6
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	gopkg.in/yaml.v2 v2.4.0
-
 )
 
 require (
@@ -38,7 +38,7 @@ require (
 	github.com/cometbft/cometbft v0.38.12 // indirect
 	github.com/cometbft/cometbft-db v0.11.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
-	github.com/cosmos/cosmos-db v1.1.0 // indirect
+	github.com/cosmos/cosmos-db v1.1.1 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
 	github.com/cosmos/gogoproto v1.7.0 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
@@ -85,7 +85,7 @@ require (
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/rs/zerolog v1.33.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
-	github.com/spf13/cast v1.7.0 // indirect
+	github.com/spf13/cast v1.7.1 // indirect
 	github.com/spf13/cobra v1.8.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
@@ -106,7 +106,7 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-// Direct cosmos-sdk branch link: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v28/0.50.11, current branch: osmo-v28/0.50.11
-// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/5b4e03484cf88e7d1fce003ba75b4fdc5c81f15f
-// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.50.11-v28-osmo-3
-replace github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.50.11-v28-osmo-3
+// Direct cosmos-sdk branch link: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v30/0.50.14, current branch: osmo-v30/0.50.14
+// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/1f78f02de9b2f60779c5062686201b45361fcb3f
+// Direct tag link: https://github.com/osmosis-labs/cosmos-sdk/releases/tag/v0.50.14-v30-osmo
+replace github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.50.14-v30-osmo
