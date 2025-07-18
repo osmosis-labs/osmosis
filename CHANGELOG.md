@@ -54,10 +54,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#9396](https://github.com/osmosis-labs/osmosis/pull/9396) fix: missing coinbase/rosetta-sdk-go/types dependency 
 * [#9436](https://github.com/osmosis-labs/osmosis/pull/9436) feat: remove authorized quote denom validation
 * [#9440](https://github.com/osmosis-labs/osmosis/pull/9440) feat: increase consensus min fee to 0.01 uosmo / gas
-* [#9456](https://github.com/osmosis-labs/osmosis/pull/9456) feat: transfer top of block auction funds to community pool
-
-
 * [#9455](https://github.com/osmosis-labs/osmosis/pull/9455) chore: bump cosmos-sdk to v0.50.14
+* [#9456](https://github.com/osmosis-labs/osmosis/pull/9456) feat: transfer top of block auction funds to community pool
+* [#9457](https://github.com/osmosis-labs/osmosis/pull/9457) chore: bump submodules
 
 ## v29.0.2
 

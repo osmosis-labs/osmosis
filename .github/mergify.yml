@@ -211,6 +211,14 @@ pull_request_rules:
       backport:
         branches:
           - v29.x
+  - name: backport patches to v30.x branch
+    conditions:
+      - base=main
+      - label=A:backport/v30.x
+    actions:
+      backport:
+        branches:
+          - v30.x
   - name: automerge to the base branch with label automerge and branch protection
       passing
     conditions: []
