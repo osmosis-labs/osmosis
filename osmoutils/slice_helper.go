@@ -42,11 +42,11 @@ func ReverseSlice[T any](s []T) []T {
 // elements in the slice.
 func ContainsDuplicate[T any](arr []T) bool {
 	visited := make(map[any]bool, 0)
-	for i := 0; i < len(arr); i++ {
-		if visited[arr[i]] {
+	for _, item := range arr {
+		if visited[item] {
 			return true
 		} else {
-			visited[arr[i]] = true
+			visited[item] = true
 		}
 	}
 	return false
