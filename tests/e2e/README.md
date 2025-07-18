@@ -242,8 +242,8 @@ This section contains common "gotchas" that is sometimes very good to know when 
 
 3. Transaction fees.
 
-    Consensus min fee is set to "0.0025". This is how much is charged for 1 unit of gas. By default, we specify the gas limit
-    of `40000`. Therefore, each transaction should take `fee = 0.0025 uosmo / gas * 400000 gas = 1000 fee token.
+    Consensus min fee is set to "0.01". This is how much is charged for 1 unit of gas. By default, we specify the gas limit
+    of `40000`. Therefore, each transaction should take `fee = 0.01 uosmo / gas * 400000 gas = 4000 fee token.
     The fee denom is set in `tests/e2e/initialization/config.go` by the value of `E2EFeeToken`.
     See "Hermes Relayer - Consensus Min Fee" section for the relevant relayer configuration.
 
@@ -261,7 +261,7 @@ We set the following parameters Hermes configs to enable the consensus min fee i
     the denomination of the fee. The specified gas price should always be greater or equal to the `min-gas-price`
     configured on the chain. This is to ensure that at least some minimal price is 
     paid for each unit of gas per transaction.
-    In Osmosis, we set consensus min fee = .0025 uosmo / gas * 400000 gas = 1000
+    In Osmosis, we set consensus min fee = .01 uosmo / gas * 400000 gas = 4000
     See ConsensusMinFee in x/txfees/types/constants.go
 
     - `default_gas` - the gas amount to use when simulation fails.

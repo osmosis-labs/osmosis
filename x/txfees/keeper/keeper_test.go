@@ -60,7 +60,7 @@ func (s *KeeperTestSuite) SetupTest(isCheckTx bool) {
 			sdk.NewCoins(
 				sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000000)),
 				sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(100000000000000000)), // Needed for pool creation fee
-				sdk.NewCoin("uion", osmomath.NewInt(10000000)),
+				sdk.NewCoin("uion", osmomath.NewInt(100000000000000)),
 				sdk.NewCoin("atom", osmomath.NewInt(10000000)),
 				sdk.NewCoin("ust", osmomath.NewInt(10000000)),
 				sdk.NewCoin("foo", osmomath.NewInt(10000000)),

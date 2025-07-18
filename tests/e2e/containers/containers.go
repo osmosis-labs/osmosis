@@ -46,7 +46,7 @@ const (
 )
 
 var (
-	Fees                 = txfeestypes.ConsensusMinFee.Mul(osmomath.NewDec(GasLimit)).Ceil().TruncateInt64() // We set consensus min fee = .0025 uosmo / gas * 400000 gas = 1000
+	Fees                 = txfeestypes.ConsensusMinFee.Mul(osmomath.NewDec(GasLimit)).Ceil().TruncateInt64() // We set consensus min fee = .01 uosmo / gas * 400000 gas = 4000
 	defaultErrRegex      = regexp.MustCompile(`(E|e)rror`)
 	txArgs               = []string{"--yes", "--keyring-backend=test", "--log_format=json"}
 	txDefaultGasArgs     = []string{fmt.Sprintf("--gas=%d", GasLimit), fmt.Sprintf("--fees=%d", Fees) + initialization.E2EFeeToken} // See ConsensusMinFee in x/txfees/types/constants.go

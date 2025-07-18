@@ -17,7 +17,7 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v30/x/gamm/types"
 )
 
-var defaultFeePerTx = osmomath.NewInt(1000)
+var defaultFeePerTx = osmomath.NewInt(4000)
 
 // Get balances for address
 func (s *IntegrationTestSuite) addrBalance(node *chain.NodeConfig, address string) sdk.Coins {

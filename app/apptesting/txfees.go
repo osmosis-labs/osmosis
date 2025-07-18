@@ -34,7 +34,7 @@ func (s *KeeperTestHelper) ExecuteUpgradeFeeTokenProposal(feeToken string, poolI
 
 func (s *KeeperTestHelper) SetupTxFeeAnteHandlerAndChargeFee(clientCtx client.Context, minGasPrices sdk.DecCoins, gasRequested uint64, isCheckTx, isSimulate bool, txFee sdk.Coins) error {
 	mempoolFeeOpts := types.NewDefaultMempoolFeeOptions()
-	mempoolFeeOpts.MinGasPriceForHighGasTx = osmomath.MustNewDecFromStr("0.0025")
+	mempoolFeeOpts.MinGasPriceForHighGasTx = osmomath.MustNewDecFromStr("0.01")
 
 	uionPoolId := s.PrepareBalancerPoolWithCoins(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),

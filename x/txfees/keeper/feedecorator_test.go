@@ -30,9 +30,8 @@ func (s *KeeperTestSuite) TestFeeDecorator() {
 	s.SetupTest(false)
 
 	mempoolFeeOpts := types.NewDefaultMempoolFeeOptions()
-	mempoolFeeOpts.MinGasPriceForHighGasTx = osmomath.MustNewDecFromStr("0.0025")
 	baseDenom, _ := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
-	consensusMinFeeAmt := int64(25)
+	consensusMinFeeAmt := int64(100)
 	point1BaseDenomMinGasPrices := sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
 		osmomath.MustNewDecFromStr("0.1")))
 
@@ -101,7 +100,7 @@ func (s *KeeperTestSuite) TestFeeDecorator() {
 			},
 			{
 				name:         fmt.Sprintf("%s work with insufficient converted mempool fee in %s", succesType[isCheckTx], txType[isCheckTx]),
-				txFee:        sdk.NewCoins(sdk.NewInt64Coin(uion, 25)), // consensus minimum
+				txFee:        sdk.NewCoins(sdk.NewInt64Coin(uion, consensusMinFeeAmt)), // consensus minimum
 				minGasPrices: point1BaseDenomMinGasPrices,
 				isCheckTx:    isCheckTx == 1,
 				expectPass:   isCheckTx != 1,
@@ -141,7 +140,7 @@ func (s *KeeperTestSuite) TestFeeDecorator() {
 		},
 		{
 			name:         "tx with high gas and enough fee should pass",
-			txFee:        sdk.NewCoins(sdk.NewInt64Coin(uion, 10*1000)),
+			txFee:        sdk.NewCoins(sdk.NewInt64Coin(uion, int64(mempoolFeeOpts.HighGasTxThreshold))),
 			minGasPrices: sdk.NewDecCoins(sdk.NewInt64DecCoin(uion, 1)),
 			gasRequested: mempoolFeeOpts.HighGasTxThreshold,
 			isCheckTx:    true,
@@ -315,7 +314,7 @@ func (s *KeeperTestSuite) TestMempoolFeeDecorator_AnteHandle_MsgTransfer() {
 		s.Run(tc.name, func() {
 			s.Ctx = s.Ctx.WithBlockHeight(1_000_000_000).WithIsCheckTx(tc.isCheckTx)
 			baseDenom, _ := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
-			txFee := sdk.NewCoins(sdk.NewCoin(baseDenom, osmomath.NewInt(250000)))
+			txFee := sdk.NewCoins(sdk.NewCoin(baseDenom, osmomath.NewInt(1000000)))
 			tx, err := s.prepareTx(tc.msg, txFee)
 			s.Require().NoError(err)
 
