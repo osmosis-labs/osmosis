@@ -32,7 +32,7 @@ import (
 
    Global variables stored in memory:
    - DefaultBaseFee: Default base fee, initialized to 0.005.
-   - MinBaseFee: Minimum base fee, initialized to 0.0025.
+   - MinBaseFee: Minimum base fee, initialized to 0.01.
    - MaxBaseFee: Maximum base fee, initialized to 5.
    - MaxBlockChangeRate: The maximum block change rate, initialized to 1/10.
 
