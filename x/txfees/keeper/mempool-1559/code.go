@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/log"
 
 	osmomath "github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v30/x/txfees/types"
 )
 
 /*
@@ -31,7 +32,7 @@ import (
 
    Global variables stored in memory:
    - DefaultBaseFee: Default base fee, initialized to 0.005.
-   - MinBaseFee: Minimum base fee, initialized to 0.0025.
+   - MinBaseFee: Minimum base fee, initialized to 0.01.
    - MaxBaseFee: Maximum base fee, initialized to 5.
    - MaxBlockChangeRate: The maximum block change rate, initialized to 1/10.
 
@@ -46,7 +47,7 @@ var (
 	// We expect wallet multiplier * DefaultBaseFee < MinBaseFee * RecheckFeeConstant
 	// conservatively assume a wallet multiplier of at least 7%.
 	DefaultBaseFee = osmomath.MustNewDecFromStr("0.0060")
-	MinBaseFee     = osmomath.MustNewDecFromStr("0.0025")
+	MinBaseFee     = types.ConsensusMinFee
 	MaxBaseFee     = osmomath.MustNewDecFromStr("5")
 	ResetInterval  = int64(6000)
 
