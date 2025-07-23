@@ -9,13 +9,13 @@ def linspace(start: sp.Float, end: sp.Float, num_points: int) -> list[sp.Float]:
     equispaced points and returns them in increasing order as a list. 
     """
     if num_points == 1:
-        return [(end - start) / 2]
+        return [sp.Float((start + end) / 2, 200)]
 
     result: list[sp.Float] = []
     for i in range(num_points):
         cur_coord = sp.Float(start + i * (end - start) / (num_points - 1), 200)
 
-        if cur_coord is sp.nan:
+        if sp.isnan(cur_coord):
             raise ValueError("cur_coord is nan")
 
         result.append(cur_coord)
