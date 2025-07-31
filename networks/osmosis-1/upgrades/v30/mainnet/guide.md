@@ -57,7 +57,7 @@ mkdir -p ~/.osmosisd/cosmovisor/genesis
 mkdir -p ~/.osmosisd/cosmovisor/genesis/bin
 mkdir -p ~/.osmosisd/cosmovisor/upgrades
 cp $GOPATH/bin/osmosisd ~/.osmosisd/cosmovisor/genesis/bin
-mkdir -p ~/.osmosisd/cosmovisor/upgrades/v9/bin
+mkdir -p ~/.osmosisd/cosmovisor/upgrades/v29/bin
 cp $GOPATH/bin/osmosisd ~/.osmosisd/cosmovisor/upgrades/v29/bin
 ```
 
