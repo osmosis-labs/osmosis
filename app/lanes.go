@@ -71,9 +71,15 @@ func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *
 		mevMatchHandler,
 	)
 
-	defaultLane := defaultlane.NewDefaultLane(
+	defaultMempool := base.NewMempoolWithDefaultOrdering(
+		base.DefaultTxPriority(),
+		defaultConfig.SignerExtractor,
+		defaultConfig.MaxTxs,
+	)
+	defaultLane := defaultlane.NewDefaultLaneWithMempool(
 		defaultConfig,
 		defaultMatchHandler,
+		defaultMempool,
 	)
 
 	return mevLane, defaultLane
