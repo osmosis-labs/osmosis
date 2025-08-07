@@ -41,8 +41,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
-
 * [#9467](https://github.com/osmosis-labs/osmosis/pull/9467) fix: protorev returns incorrect values in posthandler
+
+## v30.0.1
+
+### State Compatible
+
+* [#9473](https://github.com/osmosis-labs/osmosis/pull/9473) chore: bump go version to v1.23.4 
+
 
 ## v30.0.0
 
