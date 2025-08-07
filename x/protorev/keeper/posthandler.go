@@ -33,7 +33,7 @@ func NewProtoRevDecorator(protoRevDecorator Keeper) ProtoRevDecorator {
 // and then execute the optimal route if it exists.
 func (protoRevDec ProtoRevDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, success bool, next sdk.PostHandler) (sdk.Context, error) {
 	if ctx.IsCheckTx() {
-		return next(ctx, tx, success, simulate)
+		return next(ctx, tx, simulate, success)
 	}
 
 	// Create a cache context to execute the posthandler such that
@@ -72,7 +72,7 @@ func (protoRevDec ProtoRevDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simu
 	// 50 mil gas was chosen as an arbitrary large number to ensure deletion does not run out of gas.
 	protoRevDec.ProtoRevKeeper.DeleteSwapsToBackrun(ctx.WithGasMeter(storetypes.NewGasMeter(storetypes.Gas(50_000_000))))
 
-	return next(ctx, tx, success, simulate)
+	return next(ctx, tx, simulate, success)
 }
 
 // AnteHandleCheck checks if the module is enabled and if the number of routes to be processed per block has been reached.
