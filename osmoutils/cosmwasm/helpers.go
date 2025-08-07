@@ -58,7 +58,9 @@ func Query[T any, K any](ctx sdk.Context, wasmKeeper WasmKeeper, contractAddress
 		return response, err
 	}
 
-	childCtx := ctx.WithGasMeter(storetypes.NewGasMeter(wasmKeeper.QueryGasLimit()))
+	// Check remaining gas in parent context and use the lesser of the query gas limit and remaining gas
+	gasLimit := min(ctx.GasMeter().GasRemaining(), wasmKeeper.QueryGasLimit())
+	childCtx := ctx.WithGasMeter(storetypes.NewGasMeter(gasLimit))
 	responseBz, err := wasmKeeper.QuerySmart(childCtx, sdk.MustAccAddressFromBech32(contractAddress), bz)
 	if err != nil {
 		return response, err

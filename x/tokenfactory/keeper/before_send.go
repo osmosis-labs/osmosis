@@ -163,11 +163,7 @@ func (k Keeper) callBeforeSendListener(context context.Context, from, to sdk.Acc
 			em := sdk.NewEventManager()
 
 			// Check remaining gas in parent context and use the lesser of the fixed limit and remaining gas
-			remainingGas := ctx.GasMeter().GasRemaining()
-			gasLimit := types.BeforeSendHookGasLimit
-			if remainingGas < gasLimit {
-				gasLimit = remainingGas
-			}
+			gasLimit := min(ctx.GasMeter().GasRemaining(), types.BeforeSendHookGasLimit)
 
 			childCtx := ctx.WithGasMeter(storetypes.NewGasMeter(gasLimit))
 			_, err = k.contractKeeper.Sudo(childCtx.WithEventManager(em), cwAddr, msgBz)
