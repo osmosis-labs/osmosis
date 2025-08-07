@@ -1,6 +1,7 @@
 package mempool1559
 
 import (
+	"os"
 	"testing"
 
 	"cosmossdk.io/log"
@@ -25,6 +26,7 @@ func TestUpdateBaseFee(t *testing.T) {
 	eip := &EipState{
 		currentBlockHeight:      0,
 		totalGasWantedThisBlock: 0,
+		BackupFilePath:          os.TempDir() + "/eip1559_update_test.json",
 		CurBaseFee:              DefaultBaseFee.Clone(),
 	}
 
@@ -54,6 +56,34 @@ func TestUpdateBaseFee(t *testing.T) {
 		// Assert that the actual result matches the expected result
 		assert.DeepEqual(t, expectedBaseFee, eip.CurBaseFee)
 	}
+}
+
+func TestPersistAndLoad(t *testing.T) {
+	baseEipState := CurEipState.Clone()
+	baseEipState.BackupFilePath = os.TempDir() + "/eip1559_test.json"
+
+	// CurBaseFee lower than MinBaseFee should be set to MinBaseFee
+	eip := baseEipState.Clone()
+	eip.CurBaseFee = MinBaseFee.Clone().Sub(osmomath.NewDec(1))
+
+	// Persist the state to the backup file
+	eip.tryPersist()
+
+	// Simulate node reset, load the eipState on startBlock
+	eip = baseEipState.Clone()
+	eip.startBlock(1, log.NewTestLogger(t))
+	assert.DeepEqual(t, eip.CurBaseFee, MinBaseFee.Clone())
+
+	// CurBaseFee greater than MaxBaseFee should be set to MaxBaseFee
+	eip = baseEipState.Clone()
+	eip.CurBaseFee = MaxBaseFee.Clone().Add(osmomath.NewDec(1))
+
+	eip.tryPersist()
+
+	// Simulate node reset, load the eipState on startBlock
+	eip = baseEipState.Clone()
+	eip.startBlock(1, log.NewTestLogger(t))
+	assert.DeepEqual(t, eip.CurBaseFee, MaxBaseFee.Clone())
 }
 
 // calculateBaseFee is the same as in is defined on the eip1559 code

@@ -46,7 +46,7 @@ import (
 var (
 	// We expect wallet multiplier * DefaultBaseFee < MinBaseFee * RecheckFeeConstant
 	// conservatively assume a wallet multiplier of at least 7%.
-	DefaultBaseFee = osmomath.MustNewDecFromStr("0.0060")
+	DefaultBaseFee = osmomath.MustNewDecFromStr("0.0250")
 	MinBaseFee     = types.ConsensusMinFee
 	MaxBaseFee     = osmomath.MustNewDecFromStr("5")
 	ResetInterval  = int64(6000)
@@ -242,5 +242,13 @@ func (e *EipState) tryLoad(logger log.Logger) osmomath.Dec {
 	}
 
 	logger.Info("Loaded eip1559 state", "CurBaseFee", loaded.CurBaseFee)
+	if loaded.CurBaseFee.LT(MinBaseFee) {
+		logger.Debug("CurBaseFee is less than MinBaseFee, setting to MinBaseFee", "CurBaseFee", loaded.CurBaseFee, "MinBaseFee", MinBaseFee)
+		return MinBaseFee.Clone()
+	}
+	if loaded.CurBaseFee.GT(MaxBaseFee) {
+		logger.Debug("CurBaseFee is greater than MaxBaseFee, setting to MaxBaseFee", "CurBaseFee", loaded.CurBaseFee, "MaxBaseFee", MaxBaseFee)
+		return MaxBaseFee.Clone()
+	}
 	return loaded.CurBaseFee.Clone()
 }
