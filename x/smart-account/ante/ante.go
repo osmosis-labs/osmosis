@@ -80,7 +80,9 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	// As long as the gas consumption remains below the fee payer gas limit, exceeding
 	// the original limit should be acceptable.
 	authenticatorParams := ad.smartAccountKeeper.GetParams(ctx)
-	payerGasMeter := storetypes.NewGasMeter(authenticatorParams.MaximumUnauthenticatedGas)
+	// Check remaining gas in parent context and use the lesser of the maximum unauthenticated gas and remaining gas
+	gasLimit := min(originalGasMeter.GasRemaining(), authenticatorParams.MaximumUnauthenticatedGas)
+	payerGasMeter := storetypes.NewGasMeter(gasLimit)
 	ctx = ctx.WithGasMeter(payerGasMeter)
 
 	// Recover from any OutOfGas panic to return an error with information of the gas limit having been reduced
