@@ -60,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
+* [#9443](https://github.com/osmosis-labs/osmosis/pull/9443) fix: Once SQS disconnects the node stales
 * [#9420](https://github.com/osmosis-labs/osmosis/pull/9420) chore: update seeds for the init command
 * [#9396](https://github.com/osmosis-labs/osmosis/pull/9396) fix: missing coinbase/rosetta-sdk-go/types dependency 
 * [#9436](https://github.com/osmosis-labs/osmosis/pull/9436) feat: remove authorized quote denom validation
