@@ -42,6 +42,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### State Compatible
+* [#9467](https://github.com/osmosis-labs/osmosis/pull/9467) fix: protorev returns incorrect values in posthandler
+* [#9476](https://github.com/osmosis-labs/osmosis/pull/9476) fix: update DefaultBaseFee and cap CurBaseFee when loaded 
+
+## v30.0.1
+
+### State Compatible
+
+* [#9473](https://github.com/osmosis-labs/osmosis/pull/9473) chore: bump go version to v1.23.4 
+
+
+## v30.0.0
+
 ### State Breaking
 
 * [#9355](https://github.com/osmosis-labs/osmosis/pull/9355) chore: bump go version to v1.23 
