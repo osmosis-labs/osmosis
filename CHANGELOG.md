@@ -71,7 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#9456](https://github.com/osmosis-labs/osmosis/pull/9456) feat: transfer top of block auction funds to community pool
 * [#9457](https://github.com/osmosis-labs/osmosis/pull/9457) chore: bump submodules
 * [#9460](https://github.com/osmosis-labs/osmosis/pull/9460) fix: mempool-1559 min base fee to match consensus min fee 
-
+* [#9465](https://github.com/osmosis-labs/osmosis/pull/9465) Fix: Check gas remaining in the parent context's gas meter for tokenfactory hook 
 ## v29.0.2
 
 ### State Breaking
