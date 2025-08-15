@@ -23,6 +23,14 @@ Each version is identified by a specific id, name, tag, block height and softwar
 | `v20` | Silicon   | `v20.2.1` | 12028900       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v20.2.1/) | [658](https://www.mintscan.io/osmosis/proposals/658) |
 | `v21` |           | `v21.1.4` | 12834100       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v21.1.4/) | [696](https://www.mintscan.io/osmosis/proposals/696) |
 | `v22` |           | `v22.0.1` | 13325950       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v22.0.1/) | [714](https://www.mintscan.io/osmosis/proposals/714) |
+| `v23` |           | `v23.0.0` | 13899375       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v23.0.0/) | [730](https://www.mintscan.io/osmosis/proposals/730) |
+| `v24` |           | `v24.0.4` | 14830300       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v24.0.4/) | [763](https://www.mintscan.io/osmosis/proposals/763) |
+| `v25` |           | `v25.2.1` | 15800000       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v25.2.1/) | [782](https://www.mintscan.io/osmosis/proposals/782) |
+| `v26` |           | `v26.0.2` | 17000000       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v26.0.2/) | [837](https://www.mintscan.io/osmosis/proposals/837) |
+| `v27` |           | `v27.0.1` | 24250100       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v27.0.1/) | [861](https://www.mintscan.io/osmosis/proposals/861) |
+| `v28` |           | `v28.0.6` | 25861100       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v28.0.6/) | [879](https://www.mintscan.io/osmosis/proposals/879) |
+| `v29` |           | `v29.0.2` | 33187000       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v29.0.2/) | [920](https://www.mintscan.io/osmosis/proposals/920) |
+| `v30` |           | `v30.0.2` | 41332000       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v30.0.2/) | [961](https://www.mintscan.io/osmosis/proposals/961) |
 
 ## Upgrade binaries
 
@@ -212,6 +220,94 @@ Each version is identified by a specific id, name, tag, block height and softwar
 }
 ```
 
+### v23.0.0
+
+```json
+{
+  "binaries": {
+    "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v23.0.0/osmosisd-23.0.0-linux-amd64?checksum=sha256:db5e29c6565a0eca9692d0f138decda2ca7cdfb2943b3a2319cae691927ad595",
+    "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v23.0.0/osmosisd-23.0.0-linux-arm64?checksum=sha256:35d39fcf166b4a287bc32523ae60a6c8a708df974a0b7cc6e23a7612157fe466"
+  }
+}
+```
+
+### v24.0.4
+
+```json
+{
+  "binaries": {
+    "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v24.0.4/osmosisd-24.0.4-linux-amd64?checksum=sha256:2e1b9f1485915025ce78bdcf6dbd47906de7b8d3ad64e47a3e87d2c8f137ba85",
+    "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v24.0.4/osmosisd-24.0.4-linux-arm64?checksum=sha256:2c1e03903ae652b218ca5a59bc17f8de1b8980263917f02ec06850a884185ebf"
+  }
+}
+```
+
+### v25.2.1
+
+```json
+{
+  "binaries": {
+    "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v25.2.1/osmosisd-25.2.1-linux-amd64?checksum=sha256:b13533d9118d40fc612d1f708566eabef8d5b56918978ad26a410baf582d9974",
+    "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v25.2.1/osmosisd-25.2.1-linux-arm64?checksum=sha256:2217c4156e58b8c4e42b8a7042eb8598ecc5e72413c0c636807cbe857d935cca"
+  }
+}
+```
+
+### v26.0.2
+
+```json
+{
+  "binaries": {
+    "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v26.0.2/osmosisd-26.0.2-linux-amd64?checksum=sha256:a72edc827551d55285421680651982aabed2ca9a2f732a55731531af5b15cf5b",
+    "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v26.0.2/osmosisd-26.0.2-linux-arm64?checksum=sha256:3293b649c599b9615fdf5d3f05a687150bdcbade31e20e26d5e5de1cd5dbbb94"
+  }
+}
+```
+
+### v27.0.1
+
+```json
+{
+  "binaries": {
+    "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v27.0.1/osmosisd-27.0.1-linux-amd64?checksum=sha256:84b989b90bae4036f4eb3f9a8b00d808d9bb709a75926630a20d32c26b367a14",
+    "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v27.0.1/osmosisd-27.0.1-linux-arm64?checksum=sha256:f8144e7d9a67a08f460c86178df1198a0bdd111dd82889ccbf6d410b75b28430"
+  }
+}
+```
+
+### v28.0.6
+
+```json
+{
+  "binaries": {
+    "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v28.0.6/osmosisd-28.0.6-linux-amd64?checksum=sha256:0fc943b34be983152ffb8f46543489d90111050be48f3eac2a5fcf4ee963ac45",
+    "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v28.0.6/osmosisd-28.0.6-linux-arm64?checksum=sha256:1dad4de3e53c563e34b997b1ccdd2373fec7b14d04a22fa1c79f94bb0ab02ea4"
+  }
+}
+```
+
+### v29.0.2
+
+```json
+{
+  "binaries": {
+    "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v29.0.2/osmosisd-29.0.2-linux-amd64?checksum=sha256:9276c11c814c8b5731ef7b904c96530c6933e71b02e6eb11f99b4be2b9968c92",
+    "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v29.0.2/osmosisd-29.0.2-linux-arm64?checksum=sha256:e6a3c81ba5ba9da6598582d6c430618a4cb083c7552302412def141f846098d6"
+  }
+}
+```
+
+### v30.0.2
+
+```json
+{
+  "binaries": {
+    "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v30.0.2/osmosisd-30.0.2-linux-amd64?checksum=sha256:e17d3635bf88c9859cbc2b3575006c2df38d93747402639ccc2f71424e3faffa",
+    "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v30.0.2/osmosisd-30.0.2-linux-arm64?checksum=sha256:bf853c52bf865080de4f3fb623214f2474bcbe24d879c93dd85d463e70bdc8f6"
+  }
+}
+```
+
 ## Replay from Genesis using Cosmovisor
 
 Assuming that your osmosis home it's already initialized with the desired genesis and configuration,
@@ -264,6 +360,36 @@ Alternatively, you can download the appropriate binary for your platform from ou
        ├── v20
        │   └── bin
        │       └── osmosisd
+       ├── v21
+       │   └── bin
+       │       └── osmosisd
+       ├── v22
+       │   └── bin
+       │       └── osmosisd
+       ├── v23
+       │   └── bin
+       │       └── osmosisd
+       ├── v24
+       │   └── bin
+       │       └── osmosisd
+       ├── v25
+       │   └── bin
+       │       └── osmosisd
+       ├── v26
+       │   └── bin
+       │       └── osmosisd
+       ├── v27
+       │   └── bin
+       │       └── osmosisd
+       ├── v28
+       │   └── bin
+       │       └── osmosisd
+       ├── v29
+       │   └── bin
+       │       └── osmosisd
+       ├── v30
+       │   └── bin
+       │       └── osmosisd
        ├── v4
        │   └── bin
        │       └── osmosisd
@@ -303,6 +429,14 @@ versions_info=(
     "v20:https://github.com/osmosis-labs/osmosis/releases/download/v20.2.1/osmosisd-20.2.1-linux-amd64?checksum=sha256:4e60a870861ca17819fbcb49fff981b5731ec1121d7cbab43987c5f04ff099fa"
     "v21:https://github.com/osmosis-labs/osmosis/releases/download/v21.1.4/osmosisd-21.1.4-linux-amd64?checksum=sha256:518fd61873622d505640ab08edb788e307e6beb4f52476fab77661dd96860416"
     "v22:https://github.com/osmosis-labs/osmosis/releases/download/v22.0.1/osmosisd-22.0.1-linux-amd64?checksum=sha256:427588cbdd82752e6b31383493637029358f4550fcc71b81182334de2a54a20c"
+    "v23:https://github.com/osmosis-labs/osmosis/releases/download/v23.0.0/osmosisd-23.0.0-linux-amd64?checksum=sha256:db5e29c6565a0eca9692d0f138decda2ca7cdfb2943b3a2319cae691927ad595"
+    "v24:https://github.com/osmosis-labs/osmosis/releases/download/v24.0.4/osmosisd-24.0.4-linux-amd64?checksum=sha256:2e1b9f1485915025ce78bdcf6dbd47906de7b8d3ad64e47a3e87d2c8f137ba85"
+    "v25:https://github.com/osmosis-labs/osmosis/releases/download/v25.2.1/osmosisd-25.2.1-linux-amd64?checksum=sha256:b13533d9118d40fc612d1f708566eabef8d5b56918978ad26a410baf582d9974"
+    "v26:https://github.com/osmosis-labs/osmosis/releases/download/v26.0.2/osmosisd-26.0.2-linux-amd64?checksum=sha256:a72edc827551d55285421680651982aabed2ca9a2f732a55731531af5b15cf5b"
+    "v27:https://github.com/osmosis-labs/osmosis/releases/download/v27.0.1/osmosisd-27.0.1-linux-amd64?checksum=sha256:84b989b90bae4036f4eb3f9a8b00d808d9bb709a75926630a20d32c26b367a14"
+    "v28:https://github.com/osmosis-labs/osmosis/releases/download/v28.0.6/osmosisd-28.0.6-linux-amd64?checksum=sha256:0fc943b34be983152ffb8f46543489d90111050be48f3eac2a5fcf4ee963ac45"
+    "v29:https://github.com/osmosis-labs/osmosis/releases/download/v29.0.2/osmosisd-29.0.2-linux-amd64?checksum=sha256:9276c11c814c8b5731ef7b904c96530c6933e71b02e6eb11f99b4be2b9968c92"
+    "v30:https://github.com/osmosis-labs/osmosis/releases/download/v30.0.2/osmosisd-30.0.2-linux-amd64?checksum=sha256:e17d3635bf88c9859cbc2b3575006c2df38d93747402639ccc2f71424e3faffa"
 )
 
 # Create the cosmovisor directory
