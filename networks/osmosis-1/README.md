@@ -25,8 +25,8 @@ Each version is identified by a specific id, name, tag, block height and softwar
 | `v22` |           | `v22.0.1` | 13325950       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v22.0.1/) | [714](https://www.mintscan.io/osmosis/proposals/714) |
 | `v23` |           | `v23.0.0` | 13899375       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v23.0.0/) | [730](https://www.mintscan.io/osmosis/proposals/730) |
 | `v24` |           | `v24.0.4` | 14830300       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v24.0.4/) | [763](https://www.mintscan.io/osmosis/proposals/763) |
-| `v25` |           | `v25.2.1` | 15800000       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v25.2.1/) | [782](https://www.mintscan.io/osmosis/proposals/782) |
-| `v26` |           | `v26.0.2` | 17000000       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v26.0.2/) | [837](https://www.mintscan.io/osmosis/proposals/837) |
+| `v25` |           | `v25.2.1` | 15753500       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v25.2.1/) | [782](https://www.mintscan.io/osmosis/proposals/782) |
+| `v26` |           | `v26.0.2` | 21046000       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v26.0.2/) | [837](https://www.mintscan.io/osmosis/proposals/837) |
 | `v27` |           | `v27.0.1` | 24250100       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v27.0.1/) | [861](https://www.mintscan.io/osmosis/proposals/861) |
 | `v28` |           | `v28.0.6` | 25861100       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v28.0.6/) | [879](https://www.mintscan.io/osmosis/proposals/879) |
 | `v29` |           | `v29.0.2` | 33187000       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v29.0.2/) | [920](https://www.mintscan.io/osmosis/proposals/920) |
