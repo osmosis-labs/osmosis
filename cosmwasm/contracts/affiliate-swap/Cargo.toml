@@ -1,0 +1,44 @@
+[package]
+name = "affiliate-swap"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.65.0"
+authors = ["Affiliate Swap Authors <dev@osmosis.zone>"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+backtraces = ["cosmwasm-std/backtraces"]
+imported = []
+
+[package.metadata.scripts]
+optimize = """docker run --rm -v \"$(pwd)\":/code \
+  --mount type=volume,source=\"$(basename \"$(pwd)\")_cache\",target=/code/target \
+  --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+  cosmwasm/rust-optimizer:0.16.0
+"""
+optimize-m1 = """docker run --rm -v \"$(pwd)\":/code \
+  --mount type=volume,source=\"$(basename \"$(pwd)\")_cache\",target=/code/target \
+  --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+  cosmwasm/rust-optimizer-arm64:0.16.0
+"""
+
+[[bin]]
+name = "build-schema"
+path = "build-schema/schema.rs"
+
+[dependencies]
+cosmwasm-schema = { workspace = true }
+cosmwasm-std = { workspace = true }
+cw-storage-plus = { workspace = true }
+cw2 = { workspace = true }
+schemars = { workspace = true }
+osmosis-std = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+cw-utils = { workspace = true }
+
+[dev-dependencies]
+osmosis-test-tube = { workspace = true }
+prost = "0.12"
