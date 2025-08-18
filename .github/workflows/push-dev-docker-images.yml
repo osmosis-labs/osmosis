@@ -42,7 +42,7 @@ jobs:
     steps:
       -
         name: Check out repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           ref: ${{ github.event.inputs.ref_name || github.ref }}
