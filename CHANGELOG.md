@@ -44,7 +44,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 * [#9467](https://github.com/osmosis-labs/osmosis/pull/9467) fix: protorev returns incorrect values in posthandler
+<<<<<<< HEAD
 * [#9476](https://github.com/osmosis-labs/osmosis/pull/9476) fix: update DefaultBaseFee and cap CurBaseFee when loaded
+=======
+* [#9476](https://github.com/osmosis-labs/osmosis/pull/9476) fix: update DefaultBaseFee and cap CurBaseFee when loaded 
+* [#9488](https://github.com/osmosis-labs/osmosis/pull/9488) chore: bump block-sdk to v2.1.8-mempool
+>>>>>>> 3dd21841 (Update block-sdk version with DefaultMempool that keep no duplicated tx (#9488))
 
 ## v30.0.1
 
