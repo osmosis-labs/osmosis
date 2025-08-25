@@ -577,9 +577,7 @@ func NewOsmosisApp(
 		panic(err)
 	}
 
-	lanedMempoolWithTelemetry := NewLanedMempoolWithTelemetry(
-		*lanedMempool,
-	)
+	lanedMempoolWithTelemetry := NewLanedMempoolWithTelemetry(lanedMempool)
 
 	// set the telemetry-enabled mempool
 	app.SetMempool(lanedMempoolWithTelemetry)

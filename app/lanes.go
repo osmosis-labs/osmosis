@@ -97,11 +97,11 @@ var _ block.Mempool = (*LanedMempoolWithTelemetry)(nil)
 const AppMempoolLabel = "app_mempool"
 
 type LanedMempoolWithTelemetry struct {
-	lanedMempool block.LanedMempool
+	lanedMempool *block.LanedMempool
 }
 
 // NewLanedMempoolWithTelemetry creates a new telemetry-enabled mempool wrapper
-func NewLanedMempoolWithTelemetry(lanedMempool block.LanedMempool) *LanedMempoolWithTelemetry {
+func NewLanedMempoolWithTelemetry(lanedMempool *block.LanedMempool) *LanedMempoolWithTelemetry {
 	return &LanedMempoolWithTelemetry{
 		lanedMempool: lanedMempool,
 	}
