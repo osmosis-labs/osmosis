@@ -1,10 +1,17 @@
 package app
 
 import (
+	"context"
+
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
+	"github.com/hashicorp/go-metrics"
 
 	signerextraction "github.com/skip-mev/block-sdk/v2/adapters/signer_extraction_adapter"
+	"github.com/skip-mev/block-sdk/v2/block"
 	"github.com/skip-mev/block-sdk/v2/block/base"
 	defaultlane "github.com/skip-mev/block-sdk/v2/lanes/base"
 	mevlane "github.com/skip-mev/block-sdk/v2/lanes/mev"
@@ -83,4 +90,79 @@ func CreateLanes(app *OsmosisApp, txConfig client.TxConfig) (*mevlane.MEVLane, *
 	)
 
 	return mevLane, defaultLane
+}
+
+var _ block.Mempool = (*LanedMempoolWithTelemetry)(nil)
+
+const AppMempoolLabel = "app_mempool"
+
+type LanedMempoolWithTelemetry struct {
+	lanedMempool *block.LanedMempool
+}
+
+// NewLanedMempoolWithTelemetry creates a new telemetry-enabled mempool wrapper
+func NewLanedMempoolWithTelemetry(lanedMempool *block.LanedMempool) *LanedMempoolWithTelemetry {
+	return &LanedMempoolWithTelemetry{
+		lanedMempool: lanedMempool,
+	}
+}
+
+// Insert attempts to insert a Tx into the app-side mempool returning
+// an error upon failure.
+func (m *LanedMempoolWithTelemetry) Insert(ctx context.Context, tx sdk.Tx) error {
+	m.emitTxDistributionMetric()
+	err := m.lanedMempool.Insert(ctx, tx)
+	if err != nil {
+		telemetry.IncrCounter(1, AppMempoolLabel, "insert_error")
+	}
+	return err
+}
+
+// Select returns an Iterator over the app-side mempool. If txs are specified,
+// then they shall be incorporated into the Iterator. The Iterator is not thread-safe to use.
+func (m *LanedMempoolWithTelemetry) Select(ctx context.Context, txs [][]byte) mempool.Iterator {
+	return m.lanedMempool.Select(ctx, txs)
+}
+
+// CountTx returns the number of transactions currently in the mempool.
+func (m *LanedMempoolWithTelemetry) CountTx() int {
+	return m.lanedMempool.CountTx()
+}
+
+// Remove attempts to remove a transaction from the mempool, returning an error
+// upon failure.
+func (m *LanedMempoolWithTelemetry) Remove(tx sdk.Tx) error {
+	m.emitTxDistributionMetric()
+	err := m.lanedMempool.Remove(tx)
+	if err != nil {
+		telemetry.IncrCounter(1, AppMempoolLabel, "remove_error")
+	}
+	return err
+}
+
+// Registry returns the mempool's lane registry.
+func (m *LanedMempoolWithTelemetry) Registry() []block.Lane {
+	return m.lanedMempool.Registry()
+}
+
+// Contains returns the any of the lanes currently contain the transaction.
+func (m *LanedMempoolWithTelemetry) Contains(tx sdk.Tx) bool {
+	return m.lanedMempool.Contains(tx)
+}
+
+// GetTxDistribution returns the number of transactions in each lane.
+func (m *LanedMempoolWithTelemetry) GetTxDistribution() map[string]uint64 {
+	return m.lanedMempool.GetTxDistribution()
+}
+
+func (m *LanedMempoolWithTelemetry) emitTxDistributionMetric() {
+	txDistribution := m.GetTxDistribution()
+	for lane, count := range txDistribution {
+		telemetry.SetGaugeWithLabels([]string{AppMempoolLabel, "tx_count_by_lane"}, float32(count), []metrics.Label{
+			{
+				Name:  "lane_name",
+				Value: lane,
+			},
+		})
+	}
 }

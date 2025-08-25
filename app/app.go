@@ -576,8 +576,11 @@ func NewOsmosisApp(
 	if err != nil {
 		panic(err)
 	}
-	// set the mempool
-	app.SetMempool(lanedMempool)
+
+	lanedMempoolWithTelemetry := NewLanedMempoolWithTelemetry(lanedMempool)
+
+	// set the telemetry-enabled mempool
+	app.SetMempool(lanedMempoolWithTelemetry)
 
 	// initialize stores
 	app.MountKVStores(app.GetKVStoreKey())
