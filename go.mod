@@ -320,9 +320,9 @@ replace (
 
 	// The block-sdk is no longer maintained by Skip, instead we use the osmosis-labs fork.
 	// Direct block-sdk branch link: https://github.com/osmosis-labs/block-sdk/tree/release/v2.x.x, current branch: release/v2.x.x
-	// Direct commit link: https://github.com/osmosis-labs/block-sdk/commit/4200fca089ca5112d390c6f107cbdd17d1642b8c
-	// Direct tag link: https://github.com/osmosis-labs/block-sdk/releases/tag/v2.1.8-mempool
-	github.com/skip-mev/block-sdk/v2 => github.com/osmosis-labs/block-sdk/v2 v2.1.8-mempool
+	// Direct commit link: https://github.com/osmosis-labs/block-sdk/commit/fe0ac1af68e4d328a82afc45984a7159b27d4311
+	// Direct tag link: https://github.com/osmosis-labs/block-sdk/releases/tag/v2.1.9-mempool
+	github.com/skip-mev/block-sdk/v2 => github.com/osmosis-labs/block-sdk/v2 v2.1.9-mempool
 
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
