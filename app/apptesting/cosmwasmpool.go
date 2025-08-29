@@ -30,6 +30,7 @@ const (
 	TransmuterContractName        = "transmuter"
 	TransmuterMigrateContractName = "transmuter_migrate"
 	TransmuterV3ContractName      = "transmuter_v3"
+	TransmuterV4ContractName      = "transmuter_v4"
 	OrderbookContractName         = "sumtree_orderbook"
 
 	DefaultCodeId = 1
@@ -294,12 +295,12 @@ func (s *KeeperTestHelper) JoinTransmuterPool(lpAddress sdk.AccAddress, poolId u
 }
 
 // PrepareAlloyTransmuterPool prepares a transmuter pool with the given owner and instantiateMsg
-func (s *KeeperTestHelper) PrepareAlloyTransmuterPool(owner sdk.AccAddress, instantiateMsg AlloyTransmuterInstantiateMsg) cosmwasmpooltypes.CosmWasmExtension {
+func (s *KeeperTestHelper) PrepareAlloyTransmuterPool(owner sdk.AccAddress, instantiateMsg AlloyTransmuterInstantiateMsg, contractName string) cosmwasmpooltypes.CosmWasmExtension {
 	// Mint some assets to the account.
 	s.FundAcc(owner, DefaultAcctFunds)
 
 	// Upload contract code and get the code id.
-	codeId := s.StoreCosmWasmPoolContractCode(TransmuterV3ContractName)
+	codeId := s.StoreCosmWasmPoolContractCode(contractName)
 
 	// Add code id to the whitelist.
 	s.App.CosmwasmPoolKeeper.WhitelistCodeId(s.Ctx, codeId)

@@ -5,15 +5,17 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	sqscosmwasmpool "github.com/osmosis-labs/osmosis/v30/ingest/types/cosmwasmpool"
 
 	commondomain "github.com/osmosis-labs/osmosis/v30/ingest/common/domain"
 )
 
 const (
-	listAssetConfigsQueryString = `{"list_asset_configs":{}}`
-	getShareDenomQueryString    = `{"get_share_denom":{}}`
-	listLimitersQueryString     = `{"list_limiters":{}}`
+	listAssetConfigsQueryString       = `{"list_asset_configs":{}}`
+	getShareDenomQueryString          = `{"get_share_denom":{}}`
+	listLimitersQueryString           = `{"list_limiters":{}}`
+	listRebalancingConfigsQueryString = `{"list_rebalancing_configs":{}}`
 )
 
 // updateAlloyTransmuterInfo updates cosmwasmPoolModel with alloyed transmuter specific info.
@@ -37,19 +39,30 @@ func (pi *poolTransformer) updateAlloyTransmuterInfo(
 	if err != nil {
 		return err
 	}
-
-	rateLimiterData, err := alloyTransmuterListLimiters(ctx, pi.wasmKeeper, poolId, contractAddress)
+	rebalancingConfigs, err := alloyedTransmuterListRebalancingConfigs(ctx, pi.wasmKeeper, poolId, contractAddress)
 	if err != nil {
-		return err
+		rateLimiterData, err := alloyTransmuterListLimiters(ctx, pi.wasmKeeper, poolId, contractAddress)
+		if err != nil {
+			return err
+		}
+		rebalancingConfigs = sqscosmwasmpool.RebalancingConfigs{
+			RebalancingConfigs: make(map[string]sqscosmwasmpool.RebalancingConfig),
+		}
+
+		for denom, rebalancingConfig := range rateLimiterData.StaticLimiterByDenomMap {
+			rebalancingConfigs.RebalancingConfigs[denom] = sqscosmwasmpool.RebalancingConfig{
+				Limit: rebalancingConfig.UpperLimit,
+			}
+		}
 	}
 
 	// append alloyed denom to denoms
 	*poolDenoms = append(*poolDenoms, alloyedDenom)
 
 	cosmWasmPoolModel.Data.AlloyTransmuter = &sqscosmwasmpool.AlloyTransmuterData{
-		AlloyedDenom:      alloyedDenom,
-		AssetConfigs:      assetConfigs,
-		RateLimiterConfig: rateLimiterData,
+		AlloyedDenom:       alloyedDenom,
+		AssetConfigs:       assetConfigs,
+		RebalancingConfigs: rebalancingConfigs,
 	}
 
 	return nil
@@ -124,6 +137,7 @@ type LimiterValue struct {
 }
 
 // alloyTransmuterListLimiters queries the limiters of the alloyed transmuter contract.
+// Deprecated: transmuter v4.0.0
 func alloyTransmuterListLimiters(
 	ctx sdk.Context,
 	wasmKeeper commondomain.WasmKeeper,
@@ -183,4 +197,64 @@ func alloyTransmuterListLimiters(
 		StaticLimiterByDenomMap: staticLimiters,
 		ChangeLimiterByDenomMap: changeLimiters,
 	}, nil
+}
+
+type listRebalancingConfigsResponse struct {
+	RebalancingConfigs [][]json.RawMessage `json:"rebalancing_configs"`
+}
+
+// alloyedTransmuterListRebalancingConfigs queries the rebalancing configs of the alloyed transmuter contract.
+// Since: transmuter v4.0.0
+func alloyedTransmuterListRebalancingConfigs(
+	ctx sdk.Context,
+	wasmKeeper commondomain.WasmKeeper,
+	poolId uint64,
+	contractAddress sdk.AccAddress,
+) (sqscosmwasmpool.RebalancingConfigs, error) {
+	bz, err := wasmKeeper.QuerySmart(ctx, contractAddress, []byte(listRebalancingConfigsQueryString))
+	if err != nil {
+		return sqscosmwasmpool.RebalancingConfigs{}, fmt.Errorf(
+			"error querying list_rebalancing_configs for pool (%d) contrat_address (%s): %w",
+			poolId, contractAddress, err,
+		)
+	}
+
+	var rebalancingConfigsResponse listRebalancingConfigsResponse
+
+	if err := json.Unmarshal(bz, &rebalancingConfigsResponse); err != nil {
+		return sqscosmwasmpool.RebalancingConfigs{}, fmt.Errorf(
+			"error unmarshalling rebalancing_configs for pool (%d) contrat_address (%s): %w",
+			poolId, contractAddress, err,
+		)
+	}
+
+	rebalancingConfigs := sqscosmwasmpool.RebalancingConfigs{
+		RebalancingConfigs: make(map[string]sqscosmwasmpool.RebalancingConfig),
+	}
+
+	for _, config := range rebalancingConfigsResponse.RebalancingConfigs {
+		// Each config is a tuple of [denom, RebalancingConfig]
+		if len(config) < 2 {
+			ctx.Logger().Error("Error parsing rebalancing config", "pool_id", poolId)
+			continue
+		}
+
+		// First element is the denom
+		var denom string
+		if err := json.Unmarshal(config[0], &denom); err != nil {
+			ctx.Logger().Error("Error unmarshalling denom from rebalancing config", "pool_id", poolId, "error", err)
+			continue
+		}
+
+		// Second element is the RebalancingConfig
+		var rebalancingConfig sqscosmwasmpool.RebalancingConfig
+		if err := json.Unmarshal(config[1], &rebalancingConfig); err != nil {
+			ctx.Logger().Error("Error unmarshalling rebalancing config", "pool_id", poolId, "denom", denom, "error", err)
+			continue
+		}
+
+		rebalancingConfigs.RebalancingConfigs[denom] = rebalancingConfig
+	}
+
+	return rebalancingConfigs, nil
 }

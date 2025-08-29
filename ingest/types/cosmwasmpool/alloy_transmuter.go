@@ -20,9 +20,9 @@ func (model *CosmWasmPoolModel) IsAlloyTransmuter() bool {
 // Tranmuter Alloyed Data, since v3.0.0
 // AssetConfigs is a list of denom and normalization factor pairs including the alloyed denom.
 type AlloyTransmuterData struct {
-	AlloyedDenom      string                  `json:"alloyed_denom"`
-	AssetConfigs      []TransmuterAssetConfig `json:"asset_configs"`
-	RateLimiterConfig AlloyedRateLimiter      `json:"rate_limiter"`
+	AlloyedDenom       string                  `json:"alloyed_denom"`
+	AssetConfigs       []TransmuterAssetConfig `json:"asset_configs"`
+	RebalancingConfigs RebalancingConfigs      `json:"rebalancing_configs"`
 
 	PreComputedData PrecomputedData `json:"precomputed_data"`
 }
@@ -100,4 +100,21 @@ type ChangeLimiter struct {
 	LatestValue    string       `json:"latest_value"`
 	WindowConfig   WindowConfig `json:"window_config"`
 	BoundaryOffset string       `json:"boundary_offset"`
+}
+
+// RebalancingConfig represents the rebalancing configuration for an asset.
+type RebalancingConfig struct {
+	IdealUpper             string `json:"ideal_upper"`
+	IdealLower             string `json:"ideal_lower"`
+	CriticalUpper          string `json:"critical_upper"`
+	CriticalLower          string `json:"critical_lower"`
+	Limit                  string `json:"limit"`
+	AdjustmentRateStrained string `json:"adjustment_rate_strained"`
+	AdjustmentRateCritical string `json:"adjustment_rate_critical"`
+}
+
+// RebalancingConfigs is a struct that contains the rebalancing configurations for the alloyed pool.
+// Since: transmuter v4.0.0
+type RebalancingConfigs struct {
+	RebalancingConfigs map[string]RebalancingConfig `json:"rebalancing_configs"`
 }

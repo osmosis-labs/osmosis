@@ -51,55 +51,74 @@ func (m *mockWasmKeeper) IterateContractState(ctx context.Context, contractAddre
 var _ commondomain.WasmKeeper = &mockWasmKeeper{}
 
 func (s *PoolTransformerTestSuite) TestUpdateAlloyedTransmuterPool() {
-	s.Setup()
-
-	s.FundAcc(s.TestAccs[0], sdk.NewCoins(
-		sdk.NewCoin(apptesting.DefaultTransmuterDenomA, osmomath.NewInt(100000000)),
-		sdk.NewCoin(apptesting.DefaultTransmuterDenomB, osmomath.NewInt(100000000)),
-	))
-
-	pool := s.PrepareAlloyTransmuterPool(s.TestAccs[0], apptesting.AlloyTransmuterInstantiateMsg{
-		PoolAssetConfigs:                []apptesting.AssetConfig{{Denom: apptesting.DefaultTransmuterDenomA, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomANormFactor)}, {Denom: apptesting.DefaultTransmuterDenomB, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomBNormFactor)}},
-		AlloyedAssetSubdenom:            apptesting.DefaultAlloyedSubDenom,
-		AlloyedAssetNormalizationFactor: osmomath.NewInt(apptesting.DefaultAlloyedDenomNormFactor),
-		Admin:                           s.TestAccs[0].String(),
-		Moderator:                       s.TestAccs[1].String(),
-	})
-
-	// Create OSMO / USDC pool
-	// Note that spot price is 1 OSMO = 2 USDC
-	usdcOsmoPoolID := s.PrepareBalancerPoolWithCoins(sdk.NewCoin(USDC, defaultAmount), sdk.NewCoin(UOSMO, halfDefaultAmount))
-
-	// Initialize the pool ingester
-	poolIngester := s.initializePoolIngester(usdcOsmoPoolID)
-
-	cosmWasmPoolModel := sqscosmwasmpool.CosmWasmPoolModel{}
-	poolDenoms := []string{apptesting.DefaultTransmuterDenomA, apptesting.DefaultTransmuterDenomB}
-
-	poolIngester.UpdateAlloyTransmuterInfo(s.Ctx, pool.GetId(), pool.GetAddress(), &cosmWasmPoolModel, &poolDenoms)
-
-	alloyedDenom := fmt.Sprintf("factory/%s/alloyed/%s", pool.GetAddress(), apptesting.DefaultAlloyedSubDenom)
-
-	// Check if the pool has been updated
-	s.Equal(sqscosmwasmpool.CosmWasmPoolData{
-		AlloyTransmuter: &sqscosmwasmpool.AlloyTransmuterData{
-			AlloyedDenom: alloyedDenom,
-			AssetConfigs: []sqscosmwasmpool.TransmuterAssetConfig{
-				{Denom: apptesting.DefaultTransmuterDenomA, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomANormFactor)},
-				{Denom: apptesting.DefaultTransmuterDenomB, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomBNormFactor)},
-				{Denom: alloyedDenom, NormalizationFactor: osmomath.NewInt(apptesting.DefaultAlloyedDenomNormFactor)}},
-			RateLimiterConfig: sqscosmwasmpool.AlloyedRateLimiter{
-				StaticLimiterByDenomMap: map[string]sqscosmwasmpool.StaticLimiter{},
-				ChangeLimiterByDenomMap: map[string]sqscosmwasmpool.ChangeLimiter{},
-			},
+	tests := []struct {
+		name         string
+		contractName string
+	}{
+		{
+			name:         "transmuter v3",
+			contractName: apptesting.TransmuterV3ContractName,
 		},
-	}, cosmWasmPoolModel.Data)
+		{
+			name:         "transmuter v4",
+			contractName: apptesting.TransmuterV4ContractName,
+		},
+	}
 
-	s.Equal([]string{
-		apptesting.DefaultTransmuterDenomA,
-		apptesting.DefaultTransmuterDenomB,
-		alloyedDenom,
-	}, poolDenoms)
+	for _, tc := range tests {
+		tc := tc
+		s.Run(tc.name, func() {
+			s.Setup()
+
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(
+				sdk.NewCoin(apptesting.DefaultTransmuterDenomA, osmomath.NewInt(100000000)),
+				sdk.NewCoin(apptesting.DefaultTransmuterDenomB, osmomath.NewInt(100000000)),
+			))
+
+			pool := s.PrepareAlloyTransmuterPool(s.TestAccs[0], apptesting.AlloyTransmuterInstantiateMsg{
+				PoolAssetConfigs:                []apptesting.AssetConfig{{Denom: apptesting.DefaultTransmuterDenomA, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomANormFactor)}, {Denom: apptesting.DefaultTransmuterDenomB, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomBNormFactor)}},
+				AlloyedAssetSubdenom:            apptesting.DefaultAlloyedSubDenom,
+				AlloyedAssetNormalizationFactor: osmomath.NewInt(apptesting.DefaultAlloyedDenomNormFactor),
+				Admin:                           s.TestAccs[0].String(),
+				Moderator:                       s.TestAccs[1].String(),
+			}, tc.contractName)
+
+			// Create OSMO / USDC pool
+			// Note that spot price is 1 OSMO = 2 USDC
+			usdcOsmoPoolID := s.PrepareBalancerPoolWithCoins(sdk.NewCoin(USDC, defaultAmount), sdk.NewCoin(UOSMO, halfDefaultAmount))
+
+			// Initialize the pool ingester
+			poolIngester := s.initializePoolIngester(usdcOsmoPoolID)
+
+			cosmWasmPoolModel := sqscosmwasmpool.CosmWasmPoolModel{}
+			poolDenoms := []string{apptesting.DefaultTransmuterDenomA, apptesting.DefaultTransmuterDenomB}
+
+			poolIngester.UpdateAlloyTransmuterInfo(s.Ctx, pool.GetId(), pool.GetAddress(), &cosmWasmPoolModel, &poolDenoms)
+
+			alloyedDenom := fmt.Sprintf("factory/%s/alloyed/%s", pool.GetAddress(), apptesting.DefaultAlloyedSubDenom)
+
+			// Check if the pool has been updated
+			s.Equal(sqscosmwasmpool.CosmWasmPoolData{
+				AlloyTransmuter: &sqscosmwasmpool.AlloyTransmuterData{
+					AlloyedDenom: alloyedDenom,
+					AssetConfigs: []sqscosmwasmpool.TransmuterAssetConfig{
+						{Denom: apptesting.DefaultTransmuterDenomA, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomANormFactor)},
+						{Denom: apptesting.DefaultTransmuterDenomB, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomBNormFactor)},
+						{Denom: alloyedDenom, NormalizationFactor: osmomath.NewInt(apptesting.DefaultAlloyedDenomNormFactor)}},
+					RebalancingConfigs: sqscosmwasmpool.RebalancingConfigs{
+						RebalancingConfigs: map[string]sqscosmwasmpool.RebalancingConfig{},
+					},
+				},
+			}, cosmWasmPoolModel.Data)
+
+			s.Equal([]string{
+				apptesting.DefaultTransmuterDenomA,
+				apptesting.DefaultTransmuterDenomB,
+				alloyedDenom,
+			}, poolDenoms)
+		})
+	}
+
 }
 
 func (s *PoolTransformerTestSuite) TestAlloyTransmuterListLimiters() {
