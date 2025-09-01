@@ -54,6 +54,7 @@ import (
 	indexerdomain "github.com/osmosis-labs/osmosis/v30/ingest/indexer/domain"
 	indexerservice "github.com/osmosis-labs/osmosis/v30/ingest/indexer/service"
 	indexerwritelistener "github.com/osmosis-labs/osmosis/v30/ingest/indexer/service/writelistener"
+	debugsvc "github.com/osmosis-labs/osmosis/v30/ingest/debug/service"
 	"github.com/osmosis-labs/osmosis/v30/ingest/sqs"
 	"github.com/osmosis-labs/osmosis/v30/ingest/sqs/domain"
 	poolstransformer "github.com/osmosis-labs/osmosis/v30/ingest/sqs/pools/transformer"
@@ -361,6 +362,13 @@ func NewOsmosisApp(
 	}
 
 	streamingServices := []storetypes.ABCIListener{}
+
+	// Optional debug tracer: write per-commit deterministic KV change dumps when enabled.
+	if v := os.Getenv("OSMOSIS_DEBUG_KV_TRACE_DIR"); v != "" {
+		// Register debug tracer first so it always runs.
+		dbg := debugsvc.New(v)
+		streamingServices = append(streamingServices, dbg)
+	}
 
 	// Initialize the SQS ingester if it is enabled.
 	if sqsConfig.IsEnabled {
