@@ -429,7 +429,7 @@ preinstall new binaries, and cosmovisor will automatically update them
 based on on-chain SoftwareUpgrade proposals.
 
 You should review the docs for cosmovisor located here:
-<https://docs.cosmos.network/main/tooling/cosmovisor>
+<https://docs.cosmos.network/v0.53/build/tooling/cosmovisor>
 
 If you choose to use cosmovisor, please continue with these
 instructions:
@@ -587,7 +587,7 @@ is a derivative of ["Agoric Validator
 Guide"](https://github.com/Agoric/agoric-sdk/wiki/Validator-Guide) used
 under [CC BY](http://creativecommons.org/licenses/by/4.0/). The Agoric
 validator gudie is itself is a derivative of ["Validating Kava
-Mainnet"](https://medium.com/kava-labs/validating-kava-mainnet-72fa1b6ea579)
+Mainnet"](https://medium.com/@kevin_35106/validating-kava-mainnet-72fa1b6ea579)
 by [Kevin Davis](https://medium.com/@kevin_35106), used under [CC
 BY](http://creativecommons.org/licenses/by/4.0/). "Osmosis Validator
 Guide" is licensed under [CC
