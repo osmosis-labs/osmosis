@@ -61,12 +61,24 @@ func Query[T any, K any](ctx sdk.Context, wasmKeeper WasmKeeper, contractAddress
 	// Check remaining gas in parent context and use the lesser of the query gas limit and remaining gas
 	gasLimit := min(ctx.GasMeter().GasRemaining(), wasmKeeper.QueryGasLimit())
 	childCtx := ctx.WithGasMeter(storetypes.NewGasMeter(gasLimit))
-	responseBz, err := wasmKeeper.QuerySmart(childCtx, sdk.MustAccAddressFromBech32(contractAddress), bz)
-	if err != nil {
-		return response, err
-	}
 
-	ctx.GasMeter().ConsumeGas(childCtx.GasMeter().GasConsumed(), "query smart")
+	// Execute the query with proper gas tracking and panic recovery
+	var queryErr error
+	var responseBz []byte
+	func() {
+		defer func() {
+			// Always consume gas from child context to parent, even if query panics
+			ctx.GasMeter().ConsumeGas(childCtx.GasMeter().GasConsumed(), "query smart")
+			if r := recover(); r != nil {
+				queryErr = fmt.Errorf("contract query ran out of gas: %v", r)
+			}
+		}()
+		responseBz, queryErr = wasmKeeper.QuerySmart(childCtx, sdk.MustAccAddressFromBech32(contractAddress), bz)
+	}()
+
+	if queryErr != nil {
+		return response, queryErr
+	}
 
 	if err := json.Unmarshal(responseBz, &response); err != nil {
 		return response, err
@@ -124,25 +136,29 @@ func Sudo[T any, K any](ctx sdk.Context, contractKeeper ContractKeeper, contract
 		return response, err
 	}
 
-	// Defer to catch panics in case the sudo call runs out of gas.
-	defer func() {
-		if r := recover(); r != nil {
-			var emptyResponse K
-			response = emptyResponse
-			err = fmt.Errorf("contract call ran out of gas")
-		}
-	}()
-
 	// Make contract call with a gas limit of 30M to ensure contracts cannot run unboundedly
 	gasLimit := min(ctx.GasMeter().Limit(), DefaultContractCallGasLimit)
 	childCtx := ctx.WithGasMeter(storetypes.NewGasMeter(gasLimit))
-	responseBz, err := contractKeeper.Sudo(childCtx, sdk.MustAccAddressFromBech32(contractAddress), bz)
-	if err != nil {
-		return response, err
-	}
 
-	// Consume gas used for calling contract to the parent ctx
-	ctx.GasMeter().ConsumeGas(childCtx.GasMeter().GasConsumed(), "Track contract call gas")
+	// Execute the contract call with proper gas tracking and panic recovery
+	var contractErr error
+	var responseBz []byte
+	func() {
+		defer func() {
+			// Always consume gas from child context to parent, even if contract panics
+			ctx.GasMeter().ConsumeGas(childCtx.GasMeter().GasConsumed(), "Track contract call gas")
+			if r := recover(); r != nil {
+				var emptyResponse K
+				response = emptyResponse
+				contractErr = fmt.Errorf("contract call ran out of gas: %v", r)
+			}
+		}()
+		responseBz, contractErr = contractKeeper.Sudo(childCtx, sdk.MustAccAddressFromBech32(contractAddress), bz)
+	}()
+
+	if contractErr != nil {
+		return response, contractErr
+	}
 
 	// valid empty response
 	if len(responseBz) == 0 {
