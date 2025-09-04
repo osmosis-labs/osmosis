@@ -82,3 +82,12 @@ func AlloyTransmuterListLimiters(
 ) (sqscosmwasmpool.AlloyedRateLimiter, error) {
 	return alloyTransmuterListLimiters(ctx, wasmKeeper, poolId, contractAddress)
 }
+
+func AlloyedTransmuterListAssetGroups(
+	ctx sdk.Context,
+	wasmKeeper commondomain.WasmKeeper,
+	poolId uint64,
+	contractAddress sdk.AccAddress,
+) (map[string]sqscosmwasmpool.AssetGroup, error) {
+	return alloyedTransmuterListAssetGroups(ctx, wasmKeeper, poolId, contractAddress)
+}

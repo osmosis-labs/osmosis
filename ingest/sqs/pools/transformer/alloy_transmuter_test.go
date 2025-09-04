@@ -83,6 +83,63 @@ func (s *PoolTransformerTestSuite) TestUpdateAlloyedTransmuterPool() {
 				Moderator:                       s.TestAccs[1].String(),
 			}, tc.contractName)
 
+			// Add asset groups to the pool
+			assetGroup := map[string]sqscosmwasmpool.AssetGroup{}
+			rebalancingConfigs := map[string]sqscosmwasmpool.RebalancingConfig{}
+			if tc.contractName == apptesting.TransmuterV4ContractName {
+				createAssetGroupMsg := `{"create_asset_group":{"label":"group1","denoms":["` + apptesting.DefaultTransmuterDenomA + `","` + apptesting.DefaultTransmuterDenomB + `"]}}`
+				_, err := s.App.ContractKeeper.Execute(s.Ctx, pool.GetAddress(), s.TestAccs[0], []byte(createAssetGroupMsg), sdk.NewCoins())
+				s.Require().NoError(err)
+
+				assetGroup = map[string]sqscosmwasmpool.AssetGroup{
+					"group1": {Denoms: []string{apptesting.DefaultTransmuterDenomA, apptesting.DefaultTransmuterDenomB}, IsCorrupted: false},
+				}
+
+				// add rebalancing config for asset group
+				addRebalancingConfigMsg := `{"add_rebalancing_config":{"scope":{"type":"asset_group","value":"group1"},"rebalancing_config":{"ideal_upper":"0.8","ideal_lower":"0.2","critical_upper":"0.9","critical_lower":"0.1","limit":"0.05","adjustment_rate_strained":"0.1","adjustment_rate_critical":"0.2"}}}`
+				_, err = s.App.ContractKeeper.Execute(s.Ctx, pool.GetAddress(), s.TestAccs[0], []byte(addRebalancingConfigMsg), sdk.NewCoins())
+				s.Require().NoError(err)
+
+				// add rebalancing config for denom
+				addDenomRebalancingConfigMsg := `{"add_rebalancing_config":{"scope":{"type":"denom","value":"` + apptesting.DefaultTransmuterDenomA + `"},"rebalancing_config":{"ideal_upper":"0.7","ideal_lower":"0.3","critical_upper":"0.85","critical_lower":"0.15","limit":"0.1","adjustment_rate_strained":"0.05","adjustment_rate_critical":"0.15"}}}`
+				_, err = s.App.ContractKeeper.Execute(s.Ctx, pool.GetAddress(), s.TestAccs[0], []byte(addDenomRebalancingConfigMsg), sdk.NewCoins())
+				s.Require().NoError(err)
+
+				rebalancingConfigs = map[string]sqscosmwasmpool.RebalancingConfig{
+					"asset_group::group1": {
+						IdealUpper:             "0.8",
+						IdealLower:             "0.2",
+						CriticalUpper:          "0.9",
+						CriticalLower:          "0.1",
+						Limit:                  "0.05",
+						AdjustmentRateStrained: "0.1",
+						AdjustmentRateCritical: "0.2",
+					},
+					"denom::" + apptesting.DefaultTransmuterDenomA: {
+						IdealUpper:             "0.7",
+						IdealLower:             "0.3",
+						CriticalUpper:          "0.85",
+						CriticalLower:          "0.15",
+						Limit:                  "0.1",
+						AdjustmentRateStrained: "0.05",
+						AdjustmentRateCritical: "0.15",
+					},
+				}
+			}
+
+			if tc.contractName == apptesting.TransmuterV3ContractName {
+				// register limiter
+				registerLimiterMsg := `{"register_limiter":{"denom":"` + apptesting.DefaultTransmuterDenomA + `","label":"limiter1","limiter_params":{"static_limiter":{"upper_limit":"0.2"}}}}`
+				_, err := s.App.ContractKeeper.Execute(s.Ctx, pool.GetAddress(), s.TestAccs[0], []byte(registerLimiterMsg), sdk.NewCoins())
+				s.Require().NoError(err)
+
+				rebalancingConfigs = map[string]sqscosmwasmpool.RebalancingConfig{
+					"denom::" + apptesting.DefaultTransmuterDenomA: {
+						Limit: "0.2",
+					},
+				}
+			}
+
 			// Create OSMO / USDC pool
 			// Note that spot price is 1 OSMO = 2 USDC
 			usdcOsmoPoolID := s.PrepareBalancerPoolWithCoins(sdk.NewCoin(USDC, defaultAmount), sdk.NewCoin(UOSMO, halfDefaultAmount))
@@ -105,9 +162,8 @@ func (s *PoolTransformerTestSuite) TestUpdateAlloyedTransmuterPool() {
 						{Denom: apptesting.DefaultTransmuterDenomA, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomANormFactor)},
 						{Denom: apptesting.DefaultTransmuterDenomB, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomBNormFactor)},
 						{Denom: alloyedDenom, NormalizationFactor: osmomath.NewInt(apptesting.DefaultAlloyedDenomNormFactor)}},
-					RebalancingConfigs: sqscosmwasmpool.RebalancingConfigs{
-						RebalancingConfigs: map[string]sqscosmwasmpool.RebalancingConfig{},
-					},
+					RebalancingConfigs: rebalancingConfigs,
+					AssetGroups:        assetGroup,
 				},
 			}, cosmWasmPoolModel.Data)
 
@@ -213,6 +269,79 @@ func (s *PoolTransformerTestSuite) TestAlloyTransmuterListLimiters() {
 			require.NoError(t, err)
 
 			result, err := poolstransformer.AlloyTransmuterListLimiters(s.Ctx, mockWasmKeeper, tc.poolID, contractAddr)
+
+			if tc.expectedError {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expectedResult, result)
+			}
+		})
+	}
+}
+
+func (s *PoolTransformerTestSuite) TestAlloyedTransmuterListAssetGroups() {
+	tests := []struct {
+		name            string
+		poolID          uint64
+		contractAddress string
+		mockQueryResult []byte
+		mockQueryError  error
+		expectedResult  map[string]sqscosmwasmpool.AssetGroup
+		expectedError   bool
+	}{
+		{
+			name:            "Success with multiple groups",
+			poolID:          1,
+			contractAddress: "osmo1z6r6qdknhgsc0zeracktgpcxf43j6sekq07nw8sxduc9lg0qjjlqfu25e3",
+			mockQueryResult: []byte(`{
+  "asset_groups": {
+    "group1": {"denoms": ["denom1", "denom2"], "is_corrupted": false},
+    "group2": {"denoms": ["denom3"], "is_corrupted": false}
+  }
+}`),
+			expectedResult: map[string]sqscosmwasmpool.AssetGroup{
+				"group1": {Denoms: []string{"denom1", "denom2"}, IsCorrupted: false},
+				"group2": {Denoms: []string{"denom3"}, IsCorrupted: false},
+			},
+		},
+		{
+			name:            "Empty groups returns empty",
+			poolID:          2,
+			contractAddress: "osmo1z6r6qdknhgsc0zeracktgpcxf43j6sekq07nw8sxduc9lg0qjjlqfu25e3",
+			mockQueryResult: []byte(`{"asset_groups": {}}`),
+			expectedResult:  map[string]sqscosmwasmpool.AssetGroup{},
+		},
+		{
+			name:            "Query error",
+			poolID:          3,
+			contractAddress: "osmo1z6r6qdknhgsc0zeracktgpcxf43j6sekq07nw8sxduc9lg0qjjlqfu25e3",
+			mockQueryError:  errors.New("query failed"),
+			expectedError:   true,
+		},
+		{
+			name:            "Unmarshal error",
+			poolID:          4,
+			contractAddress: "osmo1z6r6qdknhgsc0zeracktgpcxf43j6sekq07nw8sxduc9lg0qjjlqfu25e3",
+			mockQueryResult: []byte(`invalid json`),
+			expectedError:   true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			s.Setup()
+
+			mockWasmKeeper := &mockWasmKeeper{
+				QuerySmartFn: func(ctx context.Context, contractAddress sdk.AccAddress, req []byte) ([]byte, error) {
+					return tc.mockQueryResult, tc.mockQueryError
+				},
+			}
+
+			contractAddr, err := sdk.AccAddressFromBech32(tc.contractAddress)
+			require.NoError(t, err)
+
+			result, err := poolstransformer.AlloyedTransmuterListAssetGroups(s.Ctx, mockWasmKeeper, tc.poolID, contractAddr)
 
 			if tc.expectedError {
 				s.Require().Error(err)

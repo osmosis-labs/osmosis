@@ -23,8 +23,10 @@ type AlloyTransmuterData struct {
 	AlloyedDenom       string                  `json:"alloyed_denom"`
 	AssetConfigs       []TransmuterAssetConfig `json:"asset_configs"`
 	RebalancingConfigs RebalancingConfigs      `json:"rebalancing_configs"`
-
-	PreComputedData PrecomputedData `json:"precomputed_data"`
+	// AssetGroups is a map of group label to list of denoms
+	// Since: transmuter v4.0.0
+	AssetGroups     map[string]AssetGroup `json:"asset_groups"`
+	PreComputedData PrecomputedData       `json:"precomputed_data"`
 }
 
 // PrecomputedData for the alloyed pool.
@@ -115,6 +117,10 @@ type RebalancingConfig struct {
 
 // RebalancingConfigs is a struct that contains the rebalancing configurations for the alloyed pool.
 // Since: transmuter v4.0.0
-type RebalancingConfigs struct {
-	RebalancingConfigs map[string]RebalancingConfig `json:"rebalancing_configs"`
+type RebalancingConfigs map[string]RebalancingConfig
+
+// AssetGroup is a struct that contains the asset group configuration for the alloyed pool.
+type AssetGroup struct {
+	Denoms      []string `json:"denoms"`
+	IsCorrupted bool     `json:"is_corrupted"`
 }
