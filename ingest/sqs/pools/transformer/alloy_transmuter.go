@@ -17,6 +17,7 @@ const (
 	listLimitersQueryString           = `{"list_limiters":{}}`
 	listRebalancingConfigsQueryString = `{"list_rebalancing_configs":{}}`
 	listAssetGroupsQueryString        = `{"list_asset_groups":{}}`
+	incentivePoolBalancesQueryString  = `{"get_incentive_pool_balances":{}}`
 )
 
 // updateAlloyTransmuterInfo updates cosmwasmPoolModel with alloyed transmuter specific info.
@@ -64,11 +65,18 @@ func (pi *poolTransformer) updateAlloyTransmuterInfo(
 		assetGroups = groups
 	}
 
+	// Attempt to fetch incentive pool balances (v4+). If query fails (e.g., v3), ignore.
+	incentivePoolBalances := []sdk.Coin{}
+	if balances, err := alloyedTransmuterIncentivePoolBalances(ctx, pi.wasmKeeper, poolId, contractAddress); err == nil {
+		incentivePoolBalances = balances
+	}
+
 	cosmWasmPoolModel.Data.AlloyTransmuter = &sqscosmwasmpool.AlloyTransmuterData{
-		AlloyedDenom:       alloyedDenom,
-		AssetConfigs:       assetConfigs,
-		RebalancingConfigs: rebalancingConfigs,
-		AssetGroups:        assetGroups,
+		AlloyedDenom:          alloyedDenom,
+		AssetConfigs:          assetConfigs,
+		RebalancingConfigs:    rebalancingConfigs,
+		AssetGroups:           assetGroups,
+		IncentivePoolBalances: incentivePoolBalances,
 	}
 
 	return nil
@@ -292,4 +300,35 @@ func alloyedTransmuterListRebalancingConfigs(
 	}
 
 	return rebalancingConfigs, nil
+}
+
+type incentivePoolBalancesResponse struct {
+	Balances []sdk.Coin `json:"balances"`
+}
+
+// alloyedTransmuterIncentivePoolBalances queries the incentive pool balances of the alloyed transmuter contract.
+// Since: transmuter v4.0.0
+func alloyedTransmuterIncentivePoolBalances(
+	ctx sdk.Context,
+	wasmKeeper commondomain.WasmKeeper,
+	poolId uint64,
+	contractAddress sdk.AccAddress,
+) ([]sdk.Coin, error) {
+	bz, err := wasmKeeper.QuerySmart(ctx, contractAddress, []byte(incentivePoolBalancesQueryString))
+	if err != nil {
+		return nil, fmt.Errorf(
+			"error querying incentive_pool_balances for pool (%d) contrat_address (%s): %w",
+			poolId, contractAddress, err,
+		)
+	}
+
+	var resp incentivePoolBalancesResponse
+	if err := json.Unmarshal(bz, &resp); err != nil {
+		return nil, fmt.Errorf(
+			"error unmarshalling incentive_pool_balances for pool (%d) contrat_address (%s): %w",
+			poolId, contractAddress, err,
+		)
+	}
+
+	return resp.Balances, nil
 }

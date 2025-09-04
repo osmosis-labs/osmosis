@@ -1,6 +1,8 @@
 package cosmwasmpool
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
@@ -25,8 +27,12 @@ type AlloyTransmuterData struct {
 	RebalancingConfigs RebalancingConfigs      `json:"rebalancing_configs"`
 	// AssetGroups is a map of group label to list of denoms
 	// Since: transmuter v4.0.0
-	AssetGroups     map[string]AssetGroup `json:"asset_groups"`
-	PreComputedData PrecomputedData       `json:"precomputed_data"`
+	AssetGroups map[string]AssetGroup `json:"asset_groups"`
+
+	// IncentivePoolBalances is a list of coin balances for incentive pools
+	// Since: transmuter v4.0.0
+	IncentivePoolBalances []sdk.Coin      `json:"incentive_pool_balances"`
+	PreComputedData       PrecomputedData `json:"precomputed_data"`
 }
 
 // PrecomputedData for the alloyed pool.

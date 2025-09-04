@@ -96,12 +96,12 @@ func (s *PoolTransformerTestSuite) TestUpdateAlloyedTransmuterPool() {
 				}
 
 				// add rebalancing config for asset group
-				addRebalancingConfigMsg := `{"add_rebalancing_config":{"scope":{"type":"asset_group","value":"group1"},"rebalancing_config":{"ideal_upper":"0.8","ideal_lower":"0.2","critical_upper":"0.9","critical_lower":"0.1","limit":"0.05","adjustment_rate_strained":"0.1","adjustment_rate_critical":"0.2"}}}`
+				addRebalancingConfigMsg := `{"add_rebalancing_config":{"scope":{"type":"asset_group","value":"group1"},"rebalancing_config":{"ideal_upper":"0.8","ideal_lower":"0.2","critical_upper":"0.9","critical_lower":"0.1","limit":"1","adjustment_rate_strained":"0.1","adjustment_rate_critical":"0.2"}}}`
 				_, err = s.App.ContractKeeper.Execute(s.Ctx, pool.GetAddress(), s.TestAccs[0], []byte(addRebalancingConfigMsg), sdk.NewCoins())
 				s.Require().NoError(err)
 
 				// add rebalancing config for denom
-				addDenomRebalancingConfigMsg := `{"add_rebalancing_config":{"scope":{"type":"denom","value":"` + apptesting.DefaultTransmuterDenomA + `"},"rebalancing_config":{"ideal_upper":"0.7","ideal_lower":"0.3","critical_upper":"0.85","critical_lower":"0.15","limit":"0.1","adjustment_rate_strained":"0.05","adjustment_rate_critical":"0.15"}}}`
+				addDenomRebalancingConfigMsg := `{"add_rebalancing_config":{"scope":{"type":"denom","value":"` + apptesting.DefaultTransmuterDenomA + `"},"rebalancing_config":{"ideal_upper":"0.7","ideal_lower":"0.3","critical_upper":"0.85","critical_lower":"0.15","limit":"1","adjustment_rate_strained":"0.05","adjustment_rate_critical":"0.15"}}}`
 				_, err = s.App.ContractKeeper.Execute(s.Ctx, pool.GetAddress(), s.TestAccs[0], []byte(addDenomRebalancingConfigMsg), sdk.NewCoins())
 				s.Require().NoError(err)
 
@@ -111,7 +111,7 @@ func (s *PoolTransformerTestSuite) TestUpdateAlloyedTransmuterPool() {
 						IdealLower:             "0.2",
 						CriticalUpper:          "0.9",
 						CriticalLower:          "0.1",
-						Limit:                  "0.05",
+						Limit:                  "1",
 						AdjustmentRateStrained: "0.1",
 						AdjustmentRateCritical: "0.2",
 					},
@@ -120,11 +120,23 @@ func (s *PoolTransformerTestSuite) TestUpdateAlloyedTransmuterPool() {
 						IdealLower:             "0.3",
 						CriticalUpper:          "0.85",
 						CriticalLower:          "0.15",
-						Limit:                  "0.1",
+						Limit:                  "1",
 						AdjustmentRateStrained: "0.05",
 						AdjustmentRateCritical: "0.15",
 					},
 				}
+
+				// join pool to take some fee into incentive pool
+				_, err = s.App.ContractKeeper.Execute(s.Ctx, pool.GetAddress(), s.TestAccs[0], []byte(`{"join_pool":{}}`), sdk.NewCoins(
+					sdk.NewCoin(apptesting.DefaultTransmuterDenomA, osmomath.NewInt(1000000)),
+					sdk.NewCoin(apptesting.DefaultTransmuterDenomB, osmomath.NewInt(10000)),
+				))
+				s.Require().NoError(err)
+				_, err = s.App.ContractKeeper.Execute(s.Ctx, pool.GetAddress(), s.TestAccs[0], []byte(`{"join_pool":{}}`), sdk.NewCoins(
+					sdk.NewCoin(apptesting.DefaultTransmuterDenomA, osmomath.NewInt(1000000)),
+				))
+				s.Require().NoError(err)
+
 			}
 
 			if tc.contractName == apptesting.TransmuterV3ContractName {
@@ -154,6 +166,14 @@ func (s *PoolTransformerTestSuite) TestUpdateAlloyedTransmuterPool() {
 
 			alloyedDenom := fmt.Sprintf("factory/%s/alloyed/%s", pool.GetAddress(), apptesting.DefaultAlloyedSubDenom)
 
+			// Set expected incentive pool balances based on contract version
+			expectedIncentivePoolBalances := []sdk.Coin{}
+			if tc.contractName == apptesting.TransmuterV4ContractName {
+				expectedIncentivePoolBalances = []sdk.Coin{
+					sdk.NewCoin(alloyedDenom, osmomath.NewInt(15000)),
+				}
+			}
+
 			// Check if the pool has been updated
 			s.Equal(sqscosmwasmpool.CosmWasmPoolData{
 				AlloyTransmuter: &sqscosmwasmpool.AlloyTransmuterData{
@@ -162,8 +182,9 @@ func (s *PoolTransformerTestSuite) TestUpdateAlloyedTransmuterPool() {
 						{Denom: apptesting.DefaultTransmuterDenomA, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomANormFactor)},
 						{Denom: apptesting.DefaultTransmuterDenomB, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomBNormFactor)},
 						{Denom: alloyedDenom, NormalizationFactor: osmomath.NewInt(apptesting.DefaultAlloyedDenomNormFactor)}},
-					RebalancingConfigs: rebalancingConfigs,
-					AssetGroups:        assetGroup,
+					RebalancingConfigs:    rebalancingConfigs,
+					AssetGroups:           assetGroup,
+					IncentivePoolBalances: expectedIncentivePoolBalances,
 				},
 			}, cosmWasmPoolModel.Data)
 

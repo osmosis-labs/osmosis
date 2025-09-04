@@ -91,3 +91,12 @@ func AlloyedTransmuterListAssetGroups(
 ) (map[string]sqscosmwasmpool.AssetGroup, error) {
 	return alloyedTransmuterListAssetGroups(ctx, wasmKeeper, poolId, contractAddress)
 }
+
+func AlloyedTransmuterIncentivePoolBalances(
+	ctx sdk.Context,
+	wasmKeeper commondomain.WasmKeeper,
+	poolId uint64,
+	contractAddress sdk.AccAddress,
+) ([]sdk.Coin, error) {
+	return alloyedTransmuterIncentivePoolBalances(ctx, wasmKeeper, poolId, contractAddress)
+}
