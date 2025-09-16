@@ -268,6 +268,31 @@ osmosisd query mint epoch-provisions
 As of this writing, this number will be equal to the `genesis-epoch-provisions`. Once the `reduction_period_in_epochs` is reached, the `reduction_factor` will be initiated and reduce the amount of OSMO minted per epoch.
 :::
 
+### inflation
+
+Query the current inflation rate
+
+```sh
+query mint inflation
+```
+
+::: details Example
+
+Get the current inflation rate:
+
+```bash
+osmosisd query mint inflation
+```
+
+This returns the current annualized inflation rate affecting the circulating supply. The calculation is based on the formula:
+
+```
+((Epoch provisions * (1 - Community Pool distribution proportion)) * 365) / Total Supply
+```
+
+This gives the inflation rate that applies to tokens in circulation, excluding those allocated to the community pool.
+:::
+
 ## Appendix
 
 ### Current Configuration
