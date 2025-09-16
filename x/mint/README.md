@@ -286,9 +286,7 @@ osmosisd query mint inflation
 
 This returns the current annualized inflation rate affecting the circulating supply. The calculation is based on the formula:
 
-```
-((Epoch provisions * (1 - Community Pool distribution proportion)) * 365) / Total Supply
-```
+`((Epoch provisions * (1 - Community Pool distribution proportion)) * 365) / Total Supply`
 
 This gives the inflation rate that applies to tokens in circulation, excluding those allocated to the community pool.
 :::
