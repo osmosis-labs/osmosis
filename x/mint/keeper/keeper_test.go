@@ -721,3 +721,41 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestGetInflation() {
+	s.Setup()
+
+	// epoch_provisions: 121765601217.656011811263318112
+	// community_pool proportion: 0.670000000000000000
+	// uOSMO supply: 744387309021205
+
+	// Set epoch provisions in the minter
+	epochProvisions := osmomath.MustNewDecFromStr("121765601217.656011811263318112")
+	minter := types.Minter{
+		EpochProvisions: epochProvisions,
+	}
+	s.App.MintKeeper.SetMinter(s.Ctx, minter)
+
+	// Set up params with distribution proportions that match the real chain
+	params := types.DefaultParams()
+	params.DistributionProportions.Staking = osmomath.MustNewDecFromStr("0.080000000000000000")
+	params.DistributionProportions.PoolIncentives = osmomath.MustNewDecFromStr("0.000000000000000000")
+	params.DistributionProportions.DeveloperRewards = osmomath.MustNewDecFromStr("0.250000000000000000")
+	params.DistributionProportions.CommunityPool = osmomath.MustNewDecFromStr("0.670000000000000000")
+	params.MintDenom = "uosmo"
+	s.App.MintKeeper.SetParams(s.Ctx, params)
+
+	// Mock the bank keeper to return the total supply
+	totalSupply := osmomath.NewInt(744387309021205)
+	mintCoins := sdk.NewCoins(sdk.NewCoin("uosmo", totalSupply))
+	err := s.App.BankKeeper.MintCoins(s.Ctx, types.ModuleName, mintCoins)
+	s.Require().NoError(err)
+
+	// Get the inflation from the keeper
+	inflation, err := s.App.MintKeeper.GetInflation(s.Ctx)
+	s.Require().NoError(err)
+
+	// ((Epoch provisions * (1 - Distribution:Community Pool)) * 365) / uOSMO Supply
+	// = ((121765601217.656011811263318112 * (1 - 0.67)) * 365) / 744387309021205 = 0.019703004724720346
+	s.Require().Equal(osmomath.MustNewDecFromStr("0.019703004724720346"), inflation)
+}

@@ -19,6 +19,11 @@ service Query {
       returns (QueryEpochProvisionsResponse) {
     option (google.api.http).get = "/osmosis/mint/v1beta1/epoch_provisions";
   }
+
+  // Inflation returns the current minting inflation value.
+  rpc Inflation(QueryInflationRequest) returns (QueryInflationResponse) {
+    option (google.api.http).get = "/osmosis/mint/v1beta1/inflation";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -40,6 +45,19 @@ message QueryEpochProvisionsResponse {
   // epoch_provisions is the current minting per epoch provisions value.
   bytes epoch_provisions = 1 [
 
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryInflationRequest is the request type for the Query/Inflation RPC method.
+message QueryInflationRequest {}
+
+// QueryInflationResponse is the response type for the Query/Inflation RPC
+// method.
+message QueryInflationResponse {
+  // inflation is the current minting inflation value.
+  bytes inflation = 1 [
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
