@@ -381,6 +381,8 @@ github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06/go.mod h1:
 github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE/e/2PUdi/liOCUjSTXgM1o87ZssimdTWN964YiIeI=
 github.com/coinbase/mesh-sdk-go/types v1.0.0-beta1 h1:h/I5vEyr1rFmhN+8hvCkVOniqqTXTtnjF88SYQfpEUw=
 github.com/coinbase/mesh-sdk-go/types v1.0.0-beta1/go.mod h1:eq7W2TMRH22GTW0N0beDnN931DW0/WOI1R2sdHNHG4c=
+github.com/cometbft/cometbft v0.38.17 h1:FkrQNbAjiFqXydeAO81FUzriL4Bz0abYxN/eOHrQGOk=
+github.com/cometbft/cometbft v0.38.17/go.mod h1:5l0SkgeLRXi6bBfQuevXjKqML1jjfJJlvI1Ulp02/o4=
 github.com/cometbft/cometbft-db v0.14.1 h1:SxoamPghqICBAIcGpleHbmoPqy+crij/++eZz3DlerQ=
 github.com/cometbft/cometbft-db v0.14.1/go.mod h1:KHP1YghilyGV/xjD5DP3+2hyigWx0WTp9X+0Gnx0RxQ=
 github.com/containerd/continuity v0.4.3 h1:6HVkalIp+2u1ZLH1J/pYX2oBVXlJZvh1X1A7bEZ9Su8=
@@ -955,8 +957,6 @@ github.com/ory/dockertest/v3 v3.11.0 h1:OiHcxKAvSDUwsEVh2BjxQQc/5EHz9n0va9awCtNG
 github.com/ory/dockertest/v3 v3.11.0/go.mod h1:VIPxS1gwT9NpPOrfD3rACs8Y9Z7yhzO4SB194iUDnUI=
 github.com/osmosis-labs/block-sdk/v2 v2.1.9-mempool h1:69XykZzHcaijf7idwDwUDUIeHXPEXeOjMAdTAwh/c+A=
 github.com/osmosis-labs/block-sdk/v2 v2.1.9-mempool/go.mod h1:E8SvITZUdxkes3gI3+kgESZL+NLffkcLKnowUgYTOf4=
-github.com/osmosis-labs/cometbft v0.38.17-v28-osmo-1 h1:0xPd6S6mCsVT0IKP0xIUmg6sgo12iHMu5H6vxwrrIo0=
-github.com/osmosis-labs/cometbft v0.38.17-v28-osmo-1/go.mod h1:5l0SkgeLRXi6bBfQuevXjKqML1jjfJJlvI1Ulp02/o4=
 github.com/osmosis-labs/cosmos-sdk v0.50.14-v30-osmo h1:2SMqYSaLg07GcQf4ZLsG2kHDpnVoezzfJDWxEPkqJN4=
 github.com/osmosis-labs/cosmos-sdk v0.50.14-v30-osmo/go.mod h1:tshIx9dVEennip7xfHAGsRS0d8JlF7w1nqOLmOfJAKM=
 github.com/osmosis-labs/cosmos-sdk/store v1.1.1-v0.50.11-v28-osmo-2 h1:1DjjPo2kkmyOUp6CKLyqSZsdwa906UrQHYH9m9kjw00=
