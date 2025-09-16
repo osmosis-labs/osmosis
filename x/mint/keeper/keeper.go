@@ -156,6 +156,36 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 	return err
 }
 
+// GetInflation calculates the current inflation rate.
+// Formula: ((Epoch provisions * (1 - Community Pool proportion)) * 365) / Total Supply
+func (k Keeper) GetInflation(ctx sdk.Context) (osmomath.Dec, error) {
+	// Get current epoch provisions
+	minter := k.GetMinter(ctx)
+	epochProvisions := minter.EpochProvisions
+
+	// Get distribution parameters
+	params := k.GetParams(ctx)
+	communityPoolProportion := params.DistributionProportions.CommunityPool
+
+	// Get total supply of the mint denom
+	totalSupply := k.bankKeeper.GetSupply(ctx, params.MintDenom)
+
+	// Calculate circulating provisions: epoch provisions * (1 - community pool proportion)
+	oneMinusCommunityPool := osmomath.OneDec().Sub(communityPoolProportion)
+	circulatingProvisions := epochProvisions.Mul(oneMinusCommunityPool)
+
+	// Calculate annualized provisions: circulating provisions * 365
+	annualizedProvisions := circulatingProvisions.Mul(osmomath.NewDec(365))
+
+	// Calculate inflation rate: annualized provisions / total supply
+	if totalSupply.Amount.IsPositive() {
+		totalSupplyDec := totalSupply.Amount.ToLegacyDec()
+		return annualizedProvisions.Quo(totalSupplyDec), nil
+	}
+
+	return osmomath.ZeroDec(), nil
+}
+
 // getLastReductionEpochNum returns last reduction epoch number.
 func (k Keeper) getLastReductionEpochNum(ctx sdk.Context) int64 {
 	store := ctx.KVStore(k.storeKey)
