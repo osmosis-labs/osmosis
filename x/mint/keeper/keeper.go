@@ -168,7 +168,7 @@ func (k Keeper) GetInflation(ctx sdk.Context) (osmomath.Dec, error) {
 	communityPoolProportion := params.DistributionProportions.CommunityPool
 
 	// Get total supply of the mint denom
-	totalSupply := k.bankKeeper.GetSupply(ctx, params.MintDenom)
+	totalSupply := k.bankKeeper.GetSupplyWithOffset(ctx, params.MintDenom)
 
 	// Calculate circulating provisions: epoch provisions * (1 - community pool proportion)
 	oneMinusCommunityPool := osmomath.OneDec().Sub(communityPoolProportion)
