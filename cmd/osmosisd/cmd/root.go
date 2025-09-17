@@ -147,7 +147,7 @@ var (
 		{
 			Section: "consensus",
 			Key:     "timeout_commit",
-			Value:   "350ms",
+			Value:   "400ms",
 		},
 		{
 			Section: "consensus",
