@@ -150,6 +150,8 @@ message TakerFeesTracker {
       [ (gogoproto.nullable) = false ];
   int64 height_accounting_starts_from = 3
       [ (gogoproto.moretags) = "yaml:\"height_accounting_starts_from\"" ];
+  repeated cosmos.base.v1beta1.Coin taker_fees_to_burn = 4
+      [ (gogoproto.nullable) = false ];
 }
 
 // PoolVolume stores the KVStore entries for each pool's volume, which

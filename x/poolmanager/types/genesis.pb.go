@@ -4,8 +4,12 @@
 package types
 
 import (
-	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+
+	cosmossdk_io_math "cosmossdk.io/math"
 	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/cosmos-sdk/codec/types"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
@@ -13,9 +17,6 @@ import (
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	_ "google.golang.org/protobuf/types/known/durationpb"
-	io "io"
-	math "math"
-	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -357,6 +358,7 @@ type TakerFeesTracker struct {
 	TakerFeesToStakers         []types.Coin `protobuf:"bytes,1,rep,name=taker_fees_to_stakers,json=takerFeesToStakers,proto3" json:"taker_fees_to_stakers"`
 	TakerFeesToCommunityPool   []types.Coin `protobuf:"bytes,2,rep,name=taker_fees_to_community_pool,json=takerFeesToCommunityPool,proto3" json:"taker_fees_to_community_pool"`
 	HeightAccountingStartsFrom int64        `protobuf:"varint,3,opt,name=height_accounting_starts_from,json=heightAccountingStartsFrom,proto3" json:"height_accounting_starts_from,omitempty" yaml:"height_accounting_starts_from"`
+	TakerFeesToBurn            []types.Coin `protobuf:"bytes,4,rep,name=taker_fees_to_burn,json=takerFeesToBurn,proto3" json:"taker_fees_to_burn"`
 }
 
 func (m *TakerFeesTracker) Reset()         { *m = TakerFeesTracker{} }

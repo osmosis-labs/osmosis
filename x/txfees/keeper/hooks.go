@@ -117,7 +117,6 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 			}
 			return err
 		}, txfeestypes.TakerFeeFailedCommunityPoolUpdateMetricName, osmoTakerFeeToCommunityPoolCoin)
-		osmoFromTakerFeeModuleAccount = osmoFromTakerFeeModuleAccount.Sub(osmoTakerFeeToCommunityPoolCoin)
 	}
 
 	// Burn:
@@ -128,16 +127,19 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 
 		applyFuncIfNoErrorAndLog(ctx, func(cacheCtx sdk.Context) error {
 			err := k.bankKeeper.SendCoins(ctx, takerFeeModuleAccount, txfeestypes.DefaultNullAddress, sdk.NewCoins(osmoTakerFeeToBurnCoin))
+			trackerErr := k.poolManager.UpdateTakerFeeTrackerForBurnByDenom(ctx, osmoTakerFeeToBurnCoin.Denom, osmoTakerFeeToBurnCoin.Amount)
+			if trackerErr != nil {
+				ctx.Logger().Error("Error updating taker fee tracker for burn by denom", "error", trackerErr)
+			}
 			return err
-		}, "taker_fee_burn_failed", osmoTakerFeeToBurnCoin)
-
-		osmoFromTakerFeeModuleAccount = osmoFromTakerFeeModuleAccount.Sub(osmoTakerFeeToBurnCoin)
+		}, txfeestypes.TakerFeeFailedBurnUpdateMetricName, osmoTakerFeeToBurnCoin)
 	}
 
 	// Staking Rewards:
 	if osmoTakerFeeDistribution.StakingRewards.GT(zeroDec) && osmoFromTakerFeeModuleAccount.Amount.GT(osmomath.ZeroInt()) {
 		// Osmo staking rewards funds are a direct send to the auth fee token collector (indirectly distributing to stakers)
-		osmoTakerFeeToStakingRewardsCoin := sdk.NewCoin(defaultFeesDenom, osmoFromTakerFeeModuleAccount.Amount)
+		osmoTakerFeeToStakingRewardsDec := osmoFromTakerFeeModuleAccount.Amount.ToLegacyDec().Mul(osmoTakerFeeDistribution.StakingRewards)
+		osmoTakerFeeToStakingRewardsCoin := sdk.NewCoin(defaultFeesDenom, osmoTakerFeeToStakingRewardsDec.TruncateInt())
 		applyFuncIfNoErrorAndLog(ctx, func(cacheCtx sdk.Context) error {
 			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, takerFeeModuleAccount, authtypes.FeeCollectorName, sdk.NewCoins(osmoTakerFeeToStakingRewardsCoin))
 			trackerErr := k.poolManager.UpdateTakerFeeTrackerForStakersByDenom(ctx, osmoTakerFeeToStakingRewardsCoin.Denom, osmoTakerFeeToStakingRewardsCoin.Amount)
