@@ -88,7 +88,7 @@ jobs:
         run: |
           echo "MAINNET_MAJOR_VERSION=${{ needs.compare_versions.outputs.mainnet_major_version }}" >> $GITHUB_ENV
       - name: Checkout ref
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: 🐿 Setup Golang
