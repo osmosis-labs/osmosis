@@ -14,6 +14,7 @@ func DefaultGenesis() *GenesisState {
 		TakerFeesTracker: &TakerFeesTracker{
 			TakerFeesToStakers:         sdk.NewCoins(),
 			TakerFeesToCommunityPool:   sdk.NewCoins(),
+			TakerFeesToBurn:            sdk.NewCoins(),
 			HeightAccountingStartsFrom: 0,
 		},
 	}

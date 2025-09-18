@@ -83,11 +83,12 @@ func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumbe
 	return h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
 }
 
-// calculateDistributeAndTrackTakerFees calculates the taker fees and distributes them to the community pool and stakers.
+// calculateDistributeAndTrackTakerFees calculates the taker fees and distributes them to the community pool, burn address, and stakers.
 // The following is the logic for the taker fee distribution:
 //
 // - OSMO taker fees
 //   - For Community Pool: Sent directly to community pool
+//   - For Burn: Sent to the null address (osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030) to effectively burn the tokens
 //   - For Stakers: Sent directly to auth module account, which distributes it to stakers
 //
 // - Non native taker fees
@@ -116,13 +117,29 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 			}
 			return err
 		}, txfeestypes.TakerFeeFailedCommunityPoolUpdateMetricName, osmoTakerFeeToCommunityPoolCoin)
-		osmoFromTakerFeeModuleAccount = osmoFromTakerFeeModuleAccount.Sub(osmoTakerFeeToCommunityPoolCoin)
+	}
+
+	// Burn:
+	if osmoTakerFeeDistribution.Burn.GT(zeroDec) && osmoFromTakerFeeModuleAccount.Amount.GT(osmomath.ZeroInt()) {
+		// Calculate burn amount and send to null address to effectively burn the tokens
+		osmoTakerFeeToBurnDec := osmoFromTakerFeeModuleAccount.Amount.ToLegacyDec().Mul(osmoTakerFeeDistribution.Burn)
+		osmoTakerFeeToBurnCoin := sdk.NewCoin(defaultFeesDenom, osmoTakerFeeToBurnDec.TruncateInt())
+
+		applyFuncIfNoErrorAndLog(ctx, func(cacheCtx sdk.Context) error {
+			err := k.bankKeeper.SendCoins(ctx, takerFeeModuleAccount, txfeestypes.DefaultNullAddress, sdk.NewCoins(osmoTakerFeeToBurnCoin))
+			trackerErr := k.poolManager.UpdateTakerFeeTrackerForBurnByDenom(ctx, osmoTakerFeeToBurnCoin.Denom, osmoTakerFeeToBurnCoin.Amount)
+			if trackerErr != nil {
+				ctx.Logger().Error("Error updating taker fee tracker for burn by denom", "error", trackerErr)
+			}
+			return err
+		}, txfeestypes.TakerFeeFailedBurnUpdateMetricName, osmoTakerFeeToBurnCoin)
 	}
 
 	// Staking Rewards:
 	if osmoTakerFeeDistribution.StakingRewards.GT(zeroDec) && osmoFromTakerFeeModuleAccount.Amount.GT(osmomath.ZeroInt()) {
 		// Osmo staking rewards funds are a direct send to the auth fee token collector (indirectly distributing to stakers)
-		osmoTakerFeeToStakingRewardsCoin := sdk.NewCoin(defaultFeesDenom, osmoFromTakerFeeModuleAccount.Amount)
+		osmoTakerFeeToStakingRewardsDec := osmoFromTakerFeeModuleAccount.Amount.ToLegacyDec().Mul(osmoTakerFeeDistribution.StakingRewards)
+		osmoTakerFeeToStakingRewardsCoin := sdk.NewCoin(defaultFeesDenom, osmoTakerFeeToStakingRewardsDec.TruncateInt())
 		applyFuncIfNoErrorAndLog(ctx, func(cacheCtx sdk.Context) error {
 			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, takerFeeModuleAccount, authtypes.FeeCollectorName, sdk.NewCoins(osmoTakerFeeToStakingRewardsCoin))
 			trackerErr := k.poolManager.UpdateTakerFeeTrackerForStakersByDenom(ctx, osmoTakerFeeToStakingRewardsCoin.Denom, osmoTakerFeeToStakingRewardsCoin.Amount)

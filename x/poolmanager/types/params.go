@@ -59,10 +59,12 @@ func DefaultParams() Params {
 			OsmoTakerFeeDistribution: TakerFeeDistributionPercentage{
 				StakingRewards: osmomath.MustNewDecFromStr("1"), // 100%
 				CommunityPool:  osmomath.MustNewDecFromStr("0"), // 0%
+				Burn:           osmomath.MustNewDecFromStr("0"), // 0%
 			},
 			NonOsmoTakerFeeDistribution: TakerFeeDistributionPercentage{
 				StakingRewards: osmomath.MustNewDecFromStr("0.67"), // 67%
 				CommunityPool:  osmomath.MustNewDecFromStr("0.33"), // 33%
+				Burn:           osmomath.MustNewDecFromStr("0"),    // 0%
 			},
 			AdminAddresses: []string{},
 			CommunityPoolDenomToSwapNonWhitelistedAssetsTo: "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // USDC
@@ -168,6 +170,15 @@ func validateTakerFeeDistribution(i interface{}) error {
 	}
 	if takerFeeDistribution.CommunityPool.IsNegative() || takerFeeDistribution.CommunityPool.GT(OneDec) {
 		return fmt.Errorf("invalid community pool distribution: %s", takerFeeDistribution.CommunityPool)
+	}
+	if takerFeeDistribution.Burn.IsNegative() || takerFeeDistribution.Burn.GT(OneDec) {
+		return fmt.Errorf("invalid burn distribution: %s", takerFeeDistribution.Burn)
+	}
+
+	// Ensure all distribution percentages sum to 1.0
+	totalDistribution := takerFeeDistribution.StakingRewards.Add(takerFeeDistribution.CommunityPool).Add(takerFeeDistribution.Burn)
+	if !totalDistribution.Equal(OneDec) {
+		return fmt.Errorf("taker fee distribution percentages must sum to 1.0, got: %s", totalDistribution)
 	}
 
 	return nil

@@ -18,6 +18,13 @@ var (
 	// * coins - the coins that fail to be sent.
 	// * err - the error occurred
 	TakerFeeFailedCommunityPoolUpdateMetricName = formatTxFeesMetricName("takerfee_failed_community_pool_update")
+	// txfees_takerfee_failed_burn_update
+	//
+	// counter that is increased if taker fee distribution to burn address fails
+	// Has the following labels:
+	// * coins - the coins that fail to be burnt.
+	// * err - the error occurred
+	TakerFeeFailedBurnUpdateMetricName = formatTxFeesMetricName("takerfee_failed_burn_update")
 	// txfees_takerfee_swap_failed
 	//
 	// counter that is increased if taker fee swap to native denom fails

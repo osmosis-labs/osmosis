@@ -67,6 +67,7 @@ type PoolManagerKeeper interface {
 	RouteGetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error)
 	GetTakerFeeTrackerForStakers(ctx sdk.Context) []sdk.Coin
 	GetTakerFeeTrackerForCommunityPool(ctx sdk.Context) []sdk.Coin
+	GetTakerFeeTrackerForBurn(ctx sdk.Context) []sdk.Coin
 	GetTakerFeeTrackerStartHeight(ctx sdk.Context) int64
 }
 
