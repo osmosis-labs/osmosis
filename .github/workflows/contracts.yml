@@ -159,7 +159,7 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v4
       - name: Install toolchain
-        uses: dtolnay/rust-toolchain@1.69.0
+        uses: dtolnay/rust-toolchain@1.82.0
         with:
           components: rustfmt, clippy
 
