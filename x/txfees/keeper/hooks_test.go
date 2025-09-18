@@ -696,7 +696,7 @@ func (s *KeeperTestSuite) TestClearTakerFeeShareAccumulators() {
 func (s *KeeperTestSuite) TestTakerFeeBurnMechanism() {
 	s.Setup()
 
-	stakingDenom, _ := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
+	baseDenom, _ := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
 	burnAddress := types.DefaultNullAddress
 
 	// burn address should be the default null address
@@ -712,35 +712,35 @@ func (s *KeeperTestSuite) TestTakerFeeBurnMechanism() {
 
 	// Fund the taker fee collector with OSMO
 	initialAmount := osmomath.NewInt(1000000) // 1 OSMO
-	s.FundModuleAcc(types.TakerFeeCollectorName, sdk.NewCoins(sdk.NewCoin(stakingDenom, initialAmount)))
+	s.FundModuleAcc(types.TakerFeeCollectorName, sdk.NewCoins(sdk.NewCoin(baseDenom, initialAmount)))
 
 	// Get initial balances
 	stakingRewardsCollectorAddress := s.App.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
 
-	initialBurnBalance := s.App.BankKeeper.GetBalance(s.Ctx, burnAddress, stakingDenom)
-	initialStakingRewardsBalance := s.App.BankKeeper.GetBalance(s.Ctx, stakingRewardsCollectorAddress, stakingDenom)
+	initialBurnBalance := s.App.BankKeeper.GetBalance(s.Ctx, burnAddress, baseDenom)
+	initialStakingRewardsBalance := s.App.BankKeeper.GetBalance(s.Ctx, stakingRewardsCollectorAddress, baseDenom)
 
 	// System under test - trigger AfterEpochEnd to distribute taker fees
 	err := s.App.TxFeesKeeper.AfterEpochEnd(s.Ctx, "day", 1)
 	s.Require().NoError(err)
 
 	// Calculate expected amounts based on distribution percentages
-	expectedBurnAmount := initialAmount.ToLegacyDec().Mul(testOsmoTakerFeeDistributionWithBurn.Burn).TruncateInt()
-	expectedStakingRewardsAmount := initialAmount.ToLegacyDec().Mul(testOsmoTakerFeeDistributionWithBurn.StakingRewards).TruncateInt()
+	expectedBurnAmount := osmomath.NewInt(700000)
+	expectedStakingRewardsAmount := osmomath.NewInt(300000)
 
 	// Verify burn address received the correct amount
-	finalBurnBalance := s.App.BankKeeper.GetBalance(s.Ctx, burnAddress, stakingDenom)
+	finalBurnBalance := s.App.BankKeeper.GetBalance(s.Ctx, burnAddress, baseDenom)
 	burnAmountReceived := finalBurnBalance.Amount.Sub(initialBurnBalance.Amount)
 	s.Require().Equal(expectedBurnAmount, burnAmountReceived, "Burn address should receive 70% of taker fees")
 
 	// Verify staking rewards received the correct amount
-	finalStakingRewardsBalance := s.App.BankKeeper.GetBalance(s.Ctx, stakingRewardsCollectorAddress, stakingDenom)
+	finalStakingRewardsBalance := s.App.BankKeeper.GetBalance(s.Ctx, stakingRewardsCollectorAddress, baseDenom)
 	stakingRewardsAmountReceived := finalStakingRewardsBalance.Amount.Sub(initialStakingRewardsBalance.Amount)
 	s.Require().Equal(expectedStakingRewardsAmount, stakingRewardsAmountReceived, "Staking rewards should receive 30% of taker fees")
 
 	// Verify taker fee collector is empty
 	takerFeeCollectorAddress := s.App.AccountKeeper.GetModuleAddress(types.TakerFeeCollectorName)
-	finalTakerFeeCollectorBalance := s.App.BankKeeper.GetBalance(s.Ctx, takerFeeCollectorAddress, stakingDenom)
+	finalTakerFeeCollectorBalance := s.App.BankKeeper.GetBalance(s.Ctx, takerFeeCollectorAddress, baseDenom)
 	s.Require().True(finalTakerFeeCollectorBalance.IsZero(), "Taker fee collector should be empty after distribution")
 
 	// Verify total distribution equals initial amount
