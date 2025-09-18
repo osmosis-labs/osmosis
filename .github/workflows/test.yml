@@ -46,7 +46,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
       - name: 🐿 Setup Golang
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
       - name: Create a file with all core Cosmos SDK pkgs
@@ -91,7 +91,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
       - name: 🐿 Setup Golang
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
       - name: Display go version
@@ -126,7 +126,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: 🐿 Setup Golang
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
       - name: Build e2e image
