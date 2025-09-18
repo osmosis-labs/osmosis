@@ -1,6 +1,6 @@
 module github.com/osmosis-labs/osmosis/v30
 
-go 1.23.4
+go 1.24.0
 
 require (
 	cloud.google.com/go/pubsub v1.49.0
@@ -68,7 +68,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	gotest.tools v2.2.0+incompatible
-	mvdan.cc/gofumpt v0.8.0
+	mvdan.cc/gofumpt v0.9.1
 )
 
 require (
@@ -278,14 +278,14 @@ require (
 	github.com/zondax/hid v0.9.2 // indirect
 	go.etcd.io/bbolt v1.4.0-alpha.0.0.20240404170359-43604f3112c5 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	golang.org/x/crypto v0.38.0 // indirect
-	golang.org/x/mod v0.24.0 // indirect
-	golang.org/x/net v0.40.0 // indirect
-	golang.org/x/sync v0.14.0 // indirect
-	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/term v0.32.0 // indirect
-	golang.org/x/text v0.25.0 // indirect
-	golang.org/x/tools v0.32.0 // indirect
+	golang.org/x/crypto v0.41.0 // indirect
+	golang.org/x/mod v0.27.0 // indirect
+	golang.org/x/net v0.43.0 // indirect
+	golang.org/x/sync v0.16.0 // indirect
+	golang.org/x/sys v0.35.0 // indirect
+	golang.org/x/term v0.34.0 // indirect
+	golang.org/x/text v0.28.0 // indirect
+	golang.org/x/tools v0.36.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	nhooyr.io/websocket v1.8.10 // indirect
 )
