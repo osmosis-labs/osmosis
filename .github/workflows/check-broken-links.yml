@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Close Existing Broken Links Issue(s)
-        uses: actions/stale@v9
+        uses: actions/stale@v10
         with:
           repo-token: ${{secrets.GITHUB_TOKEN}}
           # Broken link issues are automatically created with the "automated issue" and "Broken links" labels, so we only care about closing those.
