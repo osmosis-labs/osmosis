@@ -795,13 +795,29 @@ func (s *PoolTransformerTestSuite) TestInitCosmWasmPoolModel() {
 		AlloyedAssetNormalizationFactor: osmomath.NewInt(apptesting.DefaultAlloyedDenomNormFactor),
 		Admin:                           s.TestAccs[0].String(),
 		Moderator:                       s.TestAccs[1].String(),
-	})
+	}, apptesting.TransmuterV3ContractName)
 
 	cwpm = poolIngester.InitCosmWasmPoolModel(s.Ctx, pool)
 	s.Equal(sqscosmwasmpool.CosmWasmPoolModel{
 		ContractInfo: sqscosmwasmpool.ContractInfo{
 			Contract: "crates.io:transmuter",
 			Version:  "3.0.0",
+		},
+	}, cwpm)
+
+	pool = s.PrepareAlloyTransmuterPool(s.TestAccs[0], apptesting.AlloyTransmuterInstantiateMsg{
+		PoolAssetConfigs:                []apptesting.AssetConfig{{Denom: apptesting.DefaultTransmuterDenomA, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomANormFactor)}, {Denom: apptesting.DefaultTransmuterDenomB, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomBNormFactor)}},
+		AlloyedAssetSubdenom:            apptesting.DefaultAlloyedSubDenom,
+		AlloyedAssetNormalizationFactor: osmomath.NewInt(apptesting.DefaultAlloyedDenomNormFactor),
+		Admin:                           s.TestAccs[0].String(),
+		Moderator:                       s.TestAccs[1].String(),
+	}, apptesting.TransmuterV4ContractName)
+
+	cwpm = poolIngester.InitCosmWasmPoolModel(s.Ctx, pool)
+	s.Equal(sqscosmwasmpool.CosmWasmPoolModel{
+		ContractInfo: sqscosmwasmpool.ContractInfo{
+			Contract: "crates.io:transmuter",
+			Version:  "4.0.0",
 		},
 	}, cwpm)
 }
