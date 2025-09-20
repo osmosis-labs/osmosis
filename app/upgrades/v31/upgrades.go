@@ -41,7 +41,7 @@ func CreateUpgradeHandler(
 func updateTakerFeeDistribution(ctx sdk.Context, poolManagerKeeper *poolmanager.Keeper) {
 	poolManagerParams := poolManagerKeeper.GetParams(ctx)
 
-	// Set community_pool to 0, burn and staking rewards to 50% each
+	// Set community_pool to 0, burn and staking rewards to 70%:30%
 	poolManagerParams.TakerFeeParams.OsmoTakerFeeDistribution.CommunityPool = osmomath.ZeroDec()
 	poolManagerParams.TakerFeeParams.OsmoTakerFeeDistribution.Burn = osmomath.MustNewDecFromStr("0.7")
 	poolManagerParams.TakerFeeParams.OsmoTakerFeeDistribution.StakingRewards = osmomath.MustNewDecFromStr("0.3")
