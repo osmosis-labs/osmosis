@@ -143,6 +143,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 			panic(err)
 		}
 	}
+	for _, coin := range genState.TakerFeesTracker.TakerFeesToBurn {
+		if err := k.UpdateTakerFeeTrackerForBurnByDenom(ctx, coin.Denom, coin.Amount); err != nil {
+			panic(err)
+		}
+	}
 	k.SetTakerFeeTrackerStartHeight(ctx, genState.TakerFeesTracker.HeightAccountingStartsFrom)
 
 	// Set the pool volumes KVStore.
@@ -183,6 +188,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	takerFeesTracker := types.TakerFeesTracker{
 		TakerFeesToStakers:         k.GetTakerFeeTrackerForStakers(ctx),
 		TakerFeesToCommunityPool:   k.GetTakerFeeTrackerForCommunityPool(ctx),
+		TakerFeesToBurn:            k.GetTakerFeeTrackerForBurn(ctx),
 		HeightAccountingStartsFrom: k.GetTakerFeeTrackerStartHeight(ctx),
 	}
 	return &types.GenesisState{
