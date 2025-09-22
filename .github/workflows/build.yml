@@ -54,7 +54,7 @@ jobs:
             Makefile
             .github/workflows/build.yml
       - name: 🐿 Setup Golang
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         if: env.GIT_DIFF
         with:
           go-version-file: go.mod
