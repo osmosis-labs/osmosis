@@ -528,6 +528,7 @@ func (k Keeper) GetAllProtocolRevenue(ctx sdk.Context) types.AllProtocolRevenue 
 	takerFeesTracker := poolmanagertypes.TakerFeesTracker{
 		TakerFeesToStakers:         k.poolmanagerKeeper.GetTakerFeeTrackerForStakers(ctx),
 		TakerFeesToCommunityPool:   k.poolmanagerKeeper.GetTakerFeeTrackerForCommunityPool(ctx),
+		TakerFeesToBurn:            k.poolmanagerKeeper.GetTakerFeeTrackerForBurn(ctx),
 		HeightAccountingStartsFrom: k.poolmanagerKeeper.GetTakerFeeTrackerStartHeight(ctx),
 	}
 

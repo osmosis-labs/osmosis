@@ -340,6 +340,7 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
 		TakerFeesTracker: poolmanagertypes.TakerFeesTracker{
 			TakerFeesToStakers:         []sdk.Coin{},
 			TakerFeesToCommunityPool:   []sdk.Coin{},
+			TakerFeesToBurn:            []sdk.Coin{},
 			HeightAccountingStartsFrom: 0,
 		},
 		CyclicArbTracker: types.CyclicArbTracker{
