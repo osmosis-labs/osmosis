@@ -33,9 +33,9 @@ jobs:
 
       # Setup Go
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
-          go-version: "^1.22"
+          go-version-file: go.mod
       - name: Fetch branches and checkout target
         run: |
           git fetch origin ${{ inputs.target-branch }}
