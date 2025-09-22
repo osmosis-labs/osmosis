@@ -57,6 +57,9 @@ var (
 
 	// KeyRegisteredAlloyPool defines the key to store registered alloy pool data.
 	KeyRegisteredAlloyPool = []byte{0x0C}
+
+	// KeyTakerFeeBurnProtoRevArray defines key to store the taker fee for burn tracker coin array.
+	KeyTakerFeeBurnProtoRevArray = []byte{0x0D}
 )
 
 // ModuleRouteToBytes serializes moduleRoute to bytes.
