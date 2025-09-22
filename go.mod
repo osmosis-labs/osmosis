@@ -19,7 +19,7 @@ require (
 	github.com/CosmWasm/wasmd v0.53.3
 	github.com/CosmWasm/wasmvm/v2 v2.2.4
 	github.com/Masterminds/semver v1.5.0
-	github.com/cometbft/cometbft v0.38.13
+	github.com/cometbft/cometbft v0.38.17
 	github.com/cometbft/cometbft-db v0.14.1
 	github.com/cosmos/cosmos-db v1.1.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -307,11 +307,6 @@ replace (
 
 	// coinbase/rosetta-sdk-go is not longer maintained/available, we use the mesh-sdk-go fork instead
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0 => github.com/coinbase/mesh-sdk-go/types v1.0.0-beta1
-
-	// Direct cometbft branch link: https://github.com/osmosis-labs/cometbft/tree/osmo-v28/0.38.17, current branch: osmo-v28/v0.38.17
-	// Direct commit link: https://github.com/osmosis-labs/cometbft/commit/58bfcdcb2fdd81655586678c2062cdc51adbdf0d
-	// Direct tag link: https://github.com/osmosis-labs/cometbft/releases/tag/v0.38.17-v28-osmo-1
-	github.com/cometbft/cometbft => github.com/osmosis-labs/cometbft v0.38.17-v28-osmo-1
 
 	// Direct cosmos-sdk branch link: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v30/0.50.14, current branch: osmo-v30/0.50.14
 	// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/1f78f02de9b2f60779c5062686201b45361fcb3f

@@ -43,6 +43,23 @@ func (k Keeper) UpdateTakerFeeTrackerForCommunityPoolByDenom(ctx sdk.Context, de
 	return osmoutils.IncreaseCoinByDenomFromPrefix(ctx, k.storeKey, types.KeyTakerFeeCommunityPoolProtoRevArray, denom, increasedAmt)
 }
 
+// GetTakerFeeTrackerForBurn returns the taker fee for burn tracker for all denoms that has been
+// collected since the accounting height.
+func (k Keeper) GetTakerFeeTrackerForBurn(ctx sdk.Context) []sdk.Coin {
+	return osmoutils.GetCoinArrayFromPrefix(ctx, k.storeKey, types.KeyTakerFeeBurnProtoRevArray)
+}
+
+// GetTakerFeeTrackerForBurnByDenom returns the taker fee for burn tracker for the specified denom that has been
+// collected since the accounting height. If the denom is not found, a zero coin is returned.
+func (k Keeper) GetTakerFeeTrackerForBurnByDenom(ctx sdk.Context, denom string) (sdk.Coin, error) {
+	return osmoutils.GetCoinByDenomFromPrefix(ctx, k.storeKey, types.KeyTakerFeeBurnProtoRevArray, denom)
+}
+
+// UpdateTakerFeeTrackerForBurnByDenom increases the take fee for burn tracker for the specified denom by the specified amount.
+func (k Keeper) UpdateTakerFeeTrackerForBurnByDenom(ctx sdk.Context, denom string, increasedAmt osmomath.Int) error {
+	return osmoutils.IncreaseCoinByDenomFromPrefix(ctx, k.storeKey, types.KeyTakerFeeBurnProtoRevArray, denom, increasedAmt)
+}
+
 // GetTakerFeeTrackerStartHeight gets the height from which we started accounting for taker fees.
 func (k Keeper) GetTakerFeeTrackerStartHeight(ctx sdk.Context) int64 {
 	startHeight := gogotypes.Int64Value{}
