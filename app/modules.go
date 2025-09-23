@@ -134,6 +134,7 @@ var moduleAccountPermissions = map[string][]string{
 	txfeestypes.NonNativeTxFeeCollectorName:  nil,
 	txfeestypes.TakerFeeStakersName:          nil,
 	txfeestypes.TakerFeeCommunityPoolName:    nil,
+	txfeestypes.TakerFeeBurnName:             nil,
 	txfeestypes.TakerFeeCollectorName:        nil,
 	wasmtypes.ModuleName:                     {authtypes.Burner},
 	tokenfactorytypes.ModuleName:             {authtypes.Minter, authtypes.Burner},

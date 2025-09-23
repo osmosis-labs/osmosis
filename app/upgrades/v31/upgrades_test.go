@@ -78,13 +78,25 @@ func (s *UpgradeTestSuite) ExecuteTakerFeeDistributionTest() {
 	// Get poolmanager parameters after upgrade
 	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
 
+	// Verify OSMO taker fee distribution
 	s.Require().Equal(osmomath.MustNewDecFromStr("0.3"), poolManagerParams.TakerFeeParams.OsmoTakerFeeDistribution.StakingRewards)
 	s.Require().Equal(osmomath.MustNewDecFromStr("0.0"), poolManagerParams.TakerFeeParams.OsmoTakerFeeDistribution.CommunityPool)
 	s.Require().Equal(osmomath.MustNewDecFromStr("0.7"), poolManagerParams.TakerFeeParams.OsmoTakerFeeDistribution.Burn)
 
-	// Verify that the total still sums to 1.0
-	total := poolManagerParams.TakerFeeParams.OsmoTakerFeeDistribution.CommunityPool.
+	// Verify that the OSMO total still sums to 1.0
+	osmoTotal := poolManagerParams.TakerFeeParams.OsmoTakerFeeDistribution.CommunityPool.
 		Add(poolManagerParams.TakerFeeParams.OsmoTakerFeeDistribution.Burn).
 		Add(poolManagerParams.TakerFeeParams.OsmoTakerFeeDistribution.StakingRewards)
-	s.Require().Equal(osmomath.OneDec(), total)
+	s.Require().Equal(osmomath.OneDec(), osmoTotal)
+
+	// Verify non-OSMO taker fee distribution
+	s.Require().Equal(osmomath.MustNewDecFromStr("0.225"), poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.StakingRewards)
+	s.Require().Equal(osmomath.MustNewDecFromStr("0.525"), poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.Burn)
+	s.Require().Equal(osmomath.MustNewDecFromStr("0.25"), poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.CommunityPool)
+
+	// Verify that the non-OSMO total sums to 1.0
+	nonOsmoTotal := poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.CommunityPool.
+		Add(poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.Burn).
+		Add(poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.StakingRewards)
+	s.Require().Equal(osmomath.OneDec(), nonOsmoTotal)
 }
