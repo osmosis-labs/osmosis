@@ -30,10 +30,12 @@ var (
 	testOsmoTakerFeeDistribution = types.TakerFeeDistributionPercentage{
 		StakingRewards: osmomath.MustNewDecFromStr("0.3"),
 		CommunityPool:  osmomath.MustNewDecFromStr("0.7"),
+		Burn:           osmomath.MustNewDecFromStr("0.0"),
 	}
 	testNonOsmoTakerFeeDistribution = types.TakerFeeDistributionPercentage{
 		StakingRewards: osmomath.MustNewDecFromStr("0.2"),
 		CommunityPool:  osmomath.MustNewDecFromStr("0.8"),
+		Burn:           osmomath.MustNewDecFromStr("0.0"),
 	}
 	testAdminAddresses                                 = []string{"osmo106x8q2nv7xsg7qrec2zgdf3vvq0t3gn49zvaha", "osmo105l5r3rjtynn7lg362r2m9hkpfvmgmjtkglsn9"}
 	testCommunityPoolDenomToSwapNonWhitelistedAssetsTo = "uusdc"
