@@ -285,7 +285,7 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 		if coin.Denom == denomToSwapTo {
 			continue
 		}
-		
+
 		// Skip coins with zero amount to avoid "token amount must be positive" error
 		if coin.Amount.IsZero() {
 			continue
