@@ -692,8 +692,8 @@ func (s *KeeperTestSuite) TestClearTakerFeeShareAccumulators() {
 	}
 }
 
-// TestTakerFeeBurnMechanism tests the burn functionality for OSMO taker fees
-func (s *KeeperTestSuite) TestTakerFeeBurnMechanism() {
+// TestOsmoTakerFeeBurnMechanism tests the burn functionality for OSMO taker fees
+func (s *KeeperTestSuite) TestOsmoTakerFeeBurnMechanism() {
 	s.Setup()
 
 	baseDenom, _ := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
@@ -746,4 +746,212 @@ func (s *KeeperTestSuite) TestTakerFeeBurnMechanism() {
 	// Verify total distribution equals initial amount
 	totalDistributed := burnAmountReceived.Add(stakingRewardsAmountReceived)
 	s.Require().Equal(initialAmount, totalDistributed, "Total distributed amount should equal initial amount")
+}
+
+// TestNonOsmoTakerFeeBurnMechanism tests the burn functionality for non-OSMO taker fees
+// Non-OSMO tokens should be swapped to OSMO before being sent to the burn address
+// Tests multiple denoms and failed swap recovery scenarios
+func (s *KeeperTestSuite) TestNonOsmoTakerFeeBurnMechanism() {
+	s.Setup()
+
+	baseDenom, _ := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
+	burnAddress := types.DefaultNullAddress
+
+	// Use real IBC denoms
+	daiDenom := "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7"  // DAI
+	usdcDenom := "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4" // USDC
+	failedSwapDenom := "ibc/FAILEDSWAP"                                                 // This denom will not have a pool, simulating failed swap
+
+	// burn address should be the default null address
+	s.Require().Equal("osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030", burnAddress.String())
+
+	var poolAssetAmount = int64(500000000)
+	// Set up pools for DAI and USDC to OSMO swapping
+	daiPoolId := s.PrepareBalancerPoolWithCoins(
+		sdk.NewInt64Coin(baseDenom, poolAssetAmount),
+		sdk.NewInt64Coin(daiDenom, poolAssetAmount),
+	)
+
+	usdcPoolId := s.PrepareBalancerPoolWithCoins(
+		sdk.NewInt64Coin(baseDenom, poolAssetAmount),
+		sdk.NewInt64Coin(usdcDenom, poolAssetAmount),
+	)
+
+	// Set the pools for the denom pairs in protorev
+	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, daiDenom, baseDenom, daiPoolId)
+	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, usdcDenom, baseDenom, usdcPoolId)
+	// Note: failedSwapDenom is intentionally not set up to test failed swap scenario
+
+	// Verify pools exist (needed for swapping)
+	_, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, daiPoolId)
+	s.Require().NoError(err)
+	_, err = s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, usdcPoolId)
+	s.Require().NoError(err)
+
+	// Set non-OSMO taker fee distribution: staking_rewards=22.5%, burn=52.5%, community_pool=25%
+	takerFeeParams := s.App.PoolManagerKeeper.GetParams(s.Ctx).TakerFeeParams
+	takerFeeParams.NonOsmoTakerFeeDistribution = poolmanagertypes.TakerFeeDistributionPercentage{
+		StakingRewards: osmomath.MustNewDecFromStr("0.225"), // 22.5%
+		CommunityPool:  osmomath.MustNewDecFromStr("0.25"),  // 25%
+		Burn:           osmomath.MustNewDecFromStr("0.525"), // 52.5%
+	}
+
+	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
+	poolManagerParams.TakerFeeParams = takerFeeParams
+	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
+
+	// Fund the taker fee collector with multiple non-OSMO tokens
+	initialDaiAmount := osmomath.NewInt(1000000)   // 1 DAI
+	initialUsdcAmount := osmomath.NewInt(1000000)  // 1 USDC
+	initialFailedAmount := osmomath.NewInt(500000) // 0.5 of failed swap token
+
+	s.FundModuleAcc(types.TakerFeeCollectorName, sdk.NewCoins(
+		sdk.NewCoin(daiDenom, initialDaiAmount),
+		sdk.NewCoin(usdcDenom, initialUsdcAmount),
+		sdk.NewCoin(failedSwapDenom, initialFailedAmount),
+	))
+
+	communityPoolPercentage := osmomath.MustNewDecFromStr("0.25")                                      // 25%
+	daiForCommunityPool := initialDaiAmount.ToLegacyDec().Mul(communityPoolPercentage).TruncateInt()   // 25% of 1,000,000 = 250,000
+	usdcForCommunityPool := initialUsdcAmount.ToLegacyDec().Mul(communityPoolPercentage).TruncateInt() // 25% of 1,000,000 = 250,000
+
+	burnPercentage := osmomath.MustNewDecFromStr("0.525")                            // 52.5%
+	daiForBurn := initialDaiAmount.ToLegacyDec().Mul(burnPercentage).TruncateInt()   // 52.5% of 1,000,000 = 525,000
+	usdcForBurn := initialUsdcAmount.ToLegacyDec().Mul(burnPercentage).TruncateInt() // 52.5% of 1,000,000 = 525,000
+
+	daiForStaking := initialDaiAmount.Sub(daiForCommunityPool).Sub(daiForBurn)
+	usdcForStaking := initialUsdcAmount.Sub(usdcForCommunityPool).Sub(usdcForBurn)
+
+	// Get pools to calculate expected swap outputs
+	daiCfmmPool, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, daiPoolId)
+	s.Require().NoError(err)
+	usdcCfmmPool, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, usdcPoolId)
+	s.Require().NoError(err)
+
+	// Calculate expected OSMO outputs from swapping
+	expectedDaiBurnOsmo, err := daiCfmmPool.CalcOutAmtGivenIn(s.Ctx, sdk.Coins{sdk.NewCoin(daiDenom, daiForBurn)}, baseDenom, osmomath.ZeroDec())
+	s.Require().NoError(err)
+
+	expectedUsdcBurnOsmo, err := usdcCfmmPool.CalcOutAmtGivenIn(s.Ctx, sdk.Coins{sdk.NewCoin(usdcDenom, usdcForBurn)}, baseDenom, osmomath.ZeroDec())
+	s.Require().NoError(err)
+
+	// update state
+	_, err = daiCfmmPool.SwapOutAmtGivenIn(s.Ctx, sdk.Coins{sdk.NewCoin(daiDenom, daiForBurn)}, baseDenom, osmomath.ZeroDec())
+	s.Require().NoError(err)
+	_, err = usdcCfmmPool.SwapOutAmtGivenIn(s.Ctx, sdk.Coins{sdk.NewCoin(usdcDenom, usdcForBurn)}, baseDenom, osmomath.ZeroDec())
+	s.Require().NoError(err)
+
+	expectedDaiStakingOsmo, err := daiCfmmPool.CalcOutAmtGivenIn(s.Ctx, sdk.Coins{sdk.NewCoin(daiDenom, daiForStaking)}, baseDenom, osmomath.ZeroDec())
+	s.Require().NoError(err)
+	expectedUsdcStakingOsmo, err := usdcCfmmPool.CalcOutAmtGivenIn(s.Ctx, sdk.Coins{sdk.NewCoin(usdcDenom, usdcForStaking)}, baseDenom, osmomath.ZeroDec())
+	s.Require().NoError(err)
+
+	expectedTotalBurnOsmo := expectedDaiBurnOsmo.Amount.Add(expectedUsdcBurnOsmo.Amount)
+	expectedTotalStakingOsmo := expectedDaiStakingOsmo.Amount.Add(expectedUsdcStakingOsmo.Amount)
+
+	// Get initial balances
+	stakingRewardsCollectorAddress := s.App.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+	takerFeeBurnModuleAddress := s.App.AccountKeeper.GetModuleAddress(types.TakerFeeBurnName)
+	takerFeeStakersModuleAddress := s.App.AccountKeeper.GetModuleAddress(types.TakerFeeStakersName)
+
+	initialBurnBalance := s.App.BankKeeper.GetBalance(s.Ctx, burnAddress, baseDenom)
+	initialStakingRewardsBalance := s.App.BankKeeper.GetBalance(s.Ctx, stakingRewardsCollectorAddress, baseDenom)
+
+	// Trigger AfterEpochEnd to distribute taker fees (first time)
+	err = s.App.TxFeesKeeper.AfterEpochEnd(s.Ctx, "day", 1)
+	s.Require().NoError(err)
+
+	// Verify burn address received the exact expected OSMO amount (key test for burn mechanism)
+	finalBurnBalance := s.App.BankKeeper.GetBalance(s.Ctx, burnAddress, baseDenom)
+	burnAmountReceived := finalBurnBalance.Amount.Sub(initialBurnBalance.Amount)
+	s.Require().Equal(expectedTotalBurnOsmo, burnAmountReceived,
+		"Burn address should receive exact expected OSMO amount: expected=%s, actual=%s", expectedTotalBurnOsmo.String(), burnAmountReceived.String())
+
+	// Verify staking rewards received exact expected OSMO amount (22.5% of total)
+	finalStakingRewardsBalance := s.App.BankKeeper.GetBalance(s.Ctx, stakingRewardsCollectorAddress, baseDenom)
+	stakingRewardsAmountReceived := finalStakingRewardsBalance.Amount.Sub(initialStakingRewardsBalance.Amount)
+
+	s.Require().Equal(expectedTotalStakingOsmo, stakingRewardsAmountReceived,
+		"Staking rewards should receive exact expected OSMO amount: expected=%s, actual=%s", expectedTotalStakingOsmo.String(), stakingRewardsAmountReceived.String())
+
+	// Verify taker fee collector is empty
+	takerFeeCollectorAddress := s.App.AccountKeeper.GetModuleAddress(types.TakerFeeCollectorName)
+	balancesAfterEpochEnd := s.App.BankKeeper.GetAllBalances(s.Ctx, takerFeeCollectorAddress)
+	s.Require().True(balancesAfterEpochEnd.IsZero(), "Taker fee collector should be empty after distribution")
+
+	// Verify that failed swap tokens remain in their respective module accounts with exact amounts
+	// (since swap failed, they should accumulate in the module accounts until a pool is available)
+	burnModuleFailedBalance := s.App.BankKeeper.GetBalance(s.Ctx, takerFeeBurnModuleAddress, failedSwapDenom)
+	stakersModuleFailedBalance := s.App.BankKeeper.GetBalance(s.Ctx, takerFeeStakersModuleAddress, failedSwapDenom)
+
+	expectedBurnModuleFailedAmount := takerFeeParams.NonOsmoTakerFeeDistribution.Burn.MulInt(initialFailedAmount).TruncateInt()
+	expectedStakersModuleFailedAmount := takerFeeParams.NonOsmoTakerFeeDistribution.StakingRewards.MulInt(initialFailedAmount).TruncateInt()
+
+	s.Require().Equal(expectedBurnModuleFailedAmount, burnModuleFailedBalance.Amount,
+		"Burn module should contain exact expected failed tokens: expected=%s, actual=%s", expectedBurnModuleFailedAmount.String(), burnModuleFailedBalance.Amount.String())
+	s.Require().Equal(expectedStakersModuleFailedAmount, stakersModuleFailedBalance.Amount,
+		"Stakers module should contain exact expected failed tokens: expected=%s, actual=%s", expectedStakersModuleFailedAmount.String(), stakersModuleFailedBalance.Amount.String())
+
+	// Now simulate second epoch where we create a pool for the failed token
+	// This tests the recovery mechanism where previously failed swaps get picked up
+
+	// Create pool for the previously failed token
+	failedTokenPoolId := s.PrepareBalancerPoolWithCoins(
+		sdk.NewInt64Coin(baseDenom, poolAssetAmount),
+		sdk.NewInt64Coin(failedSwapDenom, poolAssetAmount),
+	)
+
+	// Set the pool for the denom pair in protorev
+	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, failedSwapDenom, baseDenom, failedTokenPoolId)
+
+	// Verify new pool exists
+	_, err = s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, failedTokenPoolId)
+	s.Require().NoError(err)
+
+	// Calculate expected OSMO outputs for the failed token recovery
+	failedTokenCfmmPool, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, failedTokenPoolId)
+	s.Require().NoError(err)
+
+	// Use actual amounts from the first epoch to calculate expected swap outputs
+	actualBurnTokenAmount := burnModuleFailedBalance.Amount
+	expectedFailedBurnOsmo, err := failedTokenCfmmPool.CalcOutAmtGivenIn(s.Ctx, sdk.Coins{sdk.NewCoin(failedSwapDenom, actualBurnTokenAmount)}, baseDenom, osmomath.ZeroDec())
+	s.Require().NoError(err)
+
+	// update state
+	_, err = failedTokenCfmmPool.SwapOutAmtGivenIn(s.Ctx, sdk.Coins{sdk.NewCoin(failedSwapDenom, actualBurnTokenAmount)}, baseDenom, osmomath.ZeroDec())
+	s.Require().NoError(err)
+
+	actualStakersTokenAmount := stakersModuleFailedBalance.Amount
+	expectedFailedStakersOsmo, err := failedTokenCfmmPool.CalcOutAmtGivenIn(s.Ctx, sdk.Coins{sdk.NewCoin(failedSwapDenom, actualStakersTokenAmount)}, baseDenom, osmomath.ZeroDec())
+	s.Require().NoError(err)
+
+	// Record balances before second epoch end
+	burnBalanceBeforeSecond := s.App.BankKeeper.GetBalance(s.Ctx, burnAddress, baseDenom)
+	stakingBalanceBeforeSecond := s.App.BankKeeper.GetBalance(s.Ctx, stakingRewardsCollectorAddress, baseDenom)
+
+	// System under test - trigger AfterEpochEnd again (second time with pool available)
+	err = s.App.TxFeesKeeper.AfterEpochEnd(s.Ctx, "day", 2)
+	s.Require().NoError(err)
+
+	// Verify that the previously failed tokens are now successfully swapped and burned/distributed with exact amounts
+	finalBurnBalanceSecond := s.App.BankKeeper.GetBalance(s.Ctx, burnAddress, baseDenom)
+	finalStakingBalanceSecond := s.App.BankKeeper.GetBalance(s.Ctx, stakingRewardsCollectorAddress, baseDenom)
+
+	secondBurnIncrease := finalBurnBalanceSecond.Amount.Sub(burnBalanceBeforeSecond.Amount)
+	secondStakingIncrease := finalStakingBalanceSecond.Amount.Sub(stakingBalanceBeforeSecond.Amount)
+
+	// Verify exact amounts for the second epoch swaps
+	s.Require().Equal(expectedFailedBurnOsmo.Amount, secondBurnIncrease,
+		"Second epoch burn should match exact expected amount: expected=%s, actual=%s", expectedFailedBurnOsmo.Amount.String(), secondBurnIncrease.String())
+	s.Require().Equal(expectedFailedStakersOsmo.Amount, secondStakingIncrease,
+		"Second epoch staking should match exact expected amount: expected=%s, actual=%s", expectedFailedStakersOsmo.Amount.String(), secondStakingIncrease.String())
+
+	// Verify no non-OSMO tokens remain in burn address (they should have been swapped to OSMO first)
+	burnAddressDaiBalance := s.App.BankKeeper.GetBalance(s.Ctx, burnAddress, daiDenom)
+	burnAddressUsdcBalance := s.App.BankKeeper.GetBalance(s.Ctx, burnAddress, usdcDenom)
+	burnAddressFailedBalance := s.App.BankKeeper.GetBalance(s.Ctx, burnAddress, failedSwapDenom)
+
+	s.Require().True(burnAddressDaiBalance.IsZero(), "Burn address should not contain DAI tokens")
+	s.Require().True(burnAddressUsdcBalance.IsZero(), "Burn address should not contain USDC tokens")
+	s.Require().True(burnAddressFailedBalance.IsZero(), "Burn address should not contain failed swap tokens")
 }

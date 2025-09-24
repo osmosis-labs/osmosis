@@ -156,15 +156,19 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 	communityPoolDenomWhitelist := poolManagerParams.TakerFeeParams.CommunityPoolDenomWhitelist
 
 	nonOsmoForCommunityPool := sdk.NewCoins()
+	nonOsmoForBurn := sdk.NewCoins()
 
 	// Loop through all remaining tokens in the taker fee module account.
 	for _, takerFeeCoin := range takerFeeModuleAccountCoins {
+		// Store original amount to calculate percentages from the total, not from remaining amounts
+		originalAmount := takerFeeCoin.Amount
+
 		// Community Pool:
-		if nonOsmoTakerFeeDistribution.CommunityPool.GT(zeroDec) && takerFeeCoin.Amount.GT(osmomath.ZeroInt()) {
+		if nonOsmoTakerFeeDistribution.CommunityPool.GT(zeroDec) && originalAmount.GT(osmomath.ZeroInt()) {
 			denomIsWhitelisted := isDenomWhitelisted(takerFeeCoin.Denom, communityPoolDenomWhitelist)
 			// If the non osmo denom is a whitelisted quote asset, we directly send to the community pool
 			if denomIsWhitelisted {
-				nonOsmoTakerFeeToCommunityPoolDec := takerFeeCoin.Amount.ToLegacyDec().Mul(nonOsmoTakerFeeDistribution.CommunityPool)
+				nonOsmoTakerFeeToCommunityPoolDec := originalAmount.ToLegacyDec().Mul(nonOsmoTakerFeeDistribution.CommunityPool)
 				nonOsmoTakerFeeToCommunityPoolCoin := sdk.NewCoin(takerFeeCoin.Denom, nonOsmoTakerFeeToCommunityPoolDec.TruncateInt())
 				applyFuncIfNoErrorAndLog(ctx, func(cacheCtx sdk.Context) error {
 					err := k.distributionKeeper.FundCommunityPool(ctx, sdk.NewCoins(nonOsmoTakerFeeToCommunityPoolCoin), takerFeeModuleAccount)
@@ -179,11 +183,20 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 				}, txfeestypes.TakerFeeFailedCommunityPoolUpdateMetricName, nonOsmoTakerFeeToCommunityPoolCoin)
 			} else {
 				// If the non osmo denom is not a whitelisted asset, we track the assets here and later swap everything to the community pool denom.
-				nonOsmoTakerFeeToCommunityPoolDec := takerFeeCoin.Amount.ToLegacyDec().Mul(nonOsmoTakerFeeDistribution.CommunityPool)
+				nonOsmoTakerFeeToCommunityPoolDec := originalAmount.ToLegacyDec().Mul(nonOsmoTakerFeeDistribution.CommunityPool)
 				nonOsmoTakerFeeToCommunityPoolCoin := sdk.NewCoin(takerFeeCoin.Denom, nonOsmoTakerFeeToCommunityPoolDec.TruncateInt())
 				nonOsmoForCommunityPool = nonOsmoForCommunityPool.Add(nonOsmoTakerFeeToCommunityPoolCoin)
 				takerFeeCoin.Amount = takerFeeCoin.Amount.Sub(nonOsmoTakerFeeToCommunityPoolCoin.Amount)
 			}
+		}
+
+		// Burn: Calculate from original amount, not remaining amount
+		if nonOsmoTakerFeeDistribution.Burn.GT(zeroDec) && originalAmount.GT(osmomath.ZeroInt()) {
+			// For burn, we don't care about whitelist - all non-OSMO tokens designated for burn should be swapped to OSMO and burned
+			nonOsmoTakerFeeToBurnDec := originalAmount.ToLegacyDec().Mul(nonOsmoTakerFeeDistribution.Burn)
+			nonOsmoTakerFeeToBurnCoin := sdk.NewCoin(takerFeeCoin.Denom, nonOsmoTakerFeeToBurnDec.TruncateInt())
+			nonOsmoForBurn = nonOsmoForBurn.Add(nonOsmoTakerFeeToBurnCoin)
+			takerFeeCoin.Amount = takerFeeCoin.Amount.Sub(nonOsmoTakerFeeToBurnCoin.Amount)
 		}
 
 		// We don't need to calculate the staking rewards for non native taker fees, since it ends up being whatever is left over in the taker fee module account!
@@ -210,6 +223,28 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 			}
 			return err
 		}, txfeestypes.TakerFeeFailedCommunityPoolUpdateMetricName, totalCoinOut)
+	}
+
+	// Send the non-native taker fees slated for burn to the taker fee burn module account.
+	// We do this in the event that the swap fails, we can still track the amount of non-native taker fees that were intended for burn.
+	applyFuncIfNoErrorAndLog(ctx, func(cacheCtx sdk.Context) error {
+		err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, takerFeeModuleAccount, txfeestypes.TakerFeeBurnName, nonOsmoForBurn)
+		return err
+	}, txfeestypes.TakerFeeFailedBurnUpdateMetricName, nonOsmoForBurn)
+
+	// Swap the non-native taker fees slated for burn into OSMO.
+	takerFeeBurnModuleAccount := k.accountKeeper.GetModuleAddress(txfeestypes.TakerFeeBurnName)
+	totalCoinOutForBurn := k.swapNonNativeFeeToDenom(ctx, defaultFeesDenom, takerFeeBurnModuleAccount)
+	// Now that the non-native assets have been swapped to OSMO, burn them by sending to the null address.
+	if totalCoinOutForBurn.Amount.GT(osmomath.ZeroInt()) {
+		applyFuncIfNoErrorAndLog(ctx, func(cacheCtx sdk.Context) error {
+			err := k.bankKeeper.SendCoins(ctx, takerFeeBurnModuleAccount, txfeestypes.DefaultNullAddress, sdk.NewCoins(totalCoinOutForBurn))
+			trackerErr := k.poolManager.UpdateTakerFeeTrackerForBurnByDenom(ctx, totalCoinOutForBurn.Denom, totalCoinOutForBurn.Amount)
+			if trackerErr != nil {
+				ctx.Logger().Error("Error updating taker fee tracker for burn by denom", "error", err)
+			}
+			return err
+		}, txfeestypes.TakerFeeFailedBurnUpdateMetricName, totalCoinOutForBurn)
 	}
 
 	// Send the non-native taker fees slated for stakers to the taker fee staking module account.
@@ -248,6 +283,11 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 
 	for _, coin := range coinsToSwap {
 		if coin.Denom == denomToSwapTo {
+			continue
+		}
+
+		// Skip coins with zero amount to avoid "token amount must be positive" error
+		if coin.Amount.IsZero() {
 			continue
 		}
 
