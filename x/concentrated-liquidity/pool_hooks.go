@@ -126,14 +126,28 @@ func (k Keeper) callPoolActionListener(ctx sdk.Context, msgBuilderFn msgBuilderF
 	//
 	// We ensure this limit only applies to this call by creating a child context with a gas
 	// limit and then metering the gas used in parent context once the operation is completed.
-	childCtx := ctx.WithGasMeter(storetypes.NewGasMeter(k.GetParams(ctx).HookGasLimit))
-	_, err = k.contractKeeper.Sudo(childCtx.WithEventManager(em), cwAddr, msgBz)
-	if err != nil {
-		return err
-	}
+	// Check remaining gas in parent context and use the lesser of the hook gas limit and remaining gas
+	gasLimit := min(ctx.GasMeter().GasRemaining(), k.GetParams(ctx).HookGasLimit)
+	childCtx := ctx.WithGasMeter(storetypes.NewGasMeter(gasLimit))
 
-	// Consume gas used for calling contract to the parent ctx
-	ctx.GasMeter().ConsumeGas(childCtx.GasMeter().GasConsumed(), "Track CL action contract call gas")
+	// Execute the contract call with proper gas tracking and panic recovery
+	var contractErr error
+
+	// the immediately invoked function is used to scope down panic recovery to only the contract call
+	func() {
+		defer func() {
+			// Always consume gas from child context to parent, even if contract panics
+			ctx.GasMeter().ConsumeGas(childCtx.GasMeter().GasConsumed(), "Track CL action contract call gas")
+			if r := recover(); r != nil {
+				contractErr = types.ContractHookOutOfGasError{GasLimit: k.GetParams(ctx).HookGasLimit}
+			}
+		}()
+		_, contractErr = k.contractKeeper.Sudo(childCtx.WithEventManager(em), cwAddr, msgBz)
+	}()
+
+	if contractErr != nil {
+		return contractErr
+	}
 
 	return nil
 }
