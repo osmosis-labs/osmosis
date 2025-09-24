@@ -86,7 +86,7 @@ jobs:
       - name: "Upload Cargo.lock artifact"
         uses: actions/upload-artifact@v4
         with:
-          name: Cargo.lock
+          name: Cargo-${{ matrix.contract.name }}.lock
           path: ${{ matrix.contract.workdir }}Cargo.lock
           retention-days: 1
 
