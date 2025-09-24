@@ -5,13 +5,16 @@ import (
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v30/app/keepers"
 	"github.com/osmosis-labs/osmosis/v30/app/upgrades"
 	poolmanager "github.com/osmosis-labs/osmosis/v30/x/poolmanager"
+	txfeestypes "github.com/osmosis-labs/osmosis/v30/x/txfees/types"
 )
 
 func CreateUpgradeHandler(
@@ -30,7 +33,10 @@ func CreateUpgradeHandler(
 
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-		updateTakerFeeDistribution(sdkCtx, keepers.PoolManagerKeeper)
+		err = updateTakerFeeDistribution(sdkCtx, keepers.PoolManagerKeeper, keepers.AccountKeeper)
+		if err != nil {
+			return nil, err
+		}
 
 		return migrations, nil
 	}
@@ -38,7 +44,7 @@ func CreateUpgradeHandler(
 
 // updateTakerFeeDistribution updates the community_pool and burn values in the osmo_taker_fee_distribution
 // This changes taker fees from being sent to the community pool to being burned instead.
-func updateTakerFeeDistribution(ctx sdk.Context, poolManagerKeeper *poolmanager.Keeper) {
+func updateTakerFeeDistribution(ctx sdk.Context, poolManagerKeeper *poolmanager.Keeper, accountKeeper *authkeeper.AccountKeeper) error {
 	poolManagerParams := poolManagerKeeper.GetParams(ctx)
 
 	// Set community_pool to 0, burn and staking rewards to 70%:30%
@@ -52,4 +58,11 @@ func updateTakerFeeDistribution(ctx sdk.Context, poolManagerKeeper *poolmanager.
 	poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.CommunityPool = osmomath.MustNewDecFromStr("0.25")
 
 	poolManagerKeeper.SetParams(ctx, poolManagerParams)
+
+	// Ensure new module account exists for non‑native taker fee burn bucket. Error if it already exists.
+	err := osmoutils.CreateModuleAccountByName(ctx, accountKeeper, txfeestypes.TakerFeeBurnName)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
 	v31 "github.com/osmosis-labs/osmosis/v30/app/upgrades/v31"
+	txfeestypes "github.com/osmosis-labs/osmosis/v30/x/txfees/types"
 )
 
 const (
@@ -99,4 +100,9 @@ func (s *UpgradeTestSuite) ExecuteTakerFeeDistributionTest() {
 		Add(poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.Burn).
 		Add(poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.StakingRewards)
 	s.Require().Equal(osmomath.OneDec(), nonOsmoTotal)
+
+	// Verify the module account is set correctly
+	takerFeeBurnModuleAccount := s.App.AccountKeeper.GetModuleAccount(s.Ctx, txfeestypes.TakerFeeBurnName)
+	s.Require().Equal(txfeestypes.TakerFeeBurnName, takerFeeBurnModuleAccount.GetName())
+	s.Require().Equal([]string{}, takerFeeBurnModuleAccount.GetPermissions())
 }
