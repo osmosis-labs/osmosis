@@ -162,10 +162,6 @@ func (k Keeper) callBeforeSendListener(context context.Context, from, to sdk.Acc
 			}
 			em := sdk.NewEventManager()
 
-<<<<<<< HEAD
-			childCtx := ctx.WithGasMeter(storetypes.NewGasMeter(types.BeforeSendHookGasLimit))
-			_, err = k.contractKeeper.Sudo(childCtx.WithEventManager(em), cwAddr, msgBz)
-=======
 			// Check remaining gas in parent context and use the lesser of the fixed limit and remaining gas
 			gasLimit := min(ctx.GasMeter().GasRemaining(), types.BeforeSendHookGasLimit)
 
@@ -184,7 +180,6 @@ func (k Keeper) callBeforeSendListener(context context.Context, from, to sdk.Acc
 				_, err = k.contractKeeper.Sudo(childCtx.WithEventManager(em), cwAddr, msgBz)
 			}()
 
->>>>>>> 3af7d430 (fix: consume gas on contract out of gas error panic (#9511))
 			if err != nil {
 				if strings.Contains(err.Error(), "no such contract") {
 					return nil
