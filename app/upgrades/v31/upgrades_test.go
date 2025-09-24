@@ -31,7 +31,7 @@ func TestUpgradeTestSuite(t *testing.T) {
 	suite.Run(t, new(UpgradeTestSuite))
 }
 
-func (s *UpgradeTestSuite) TestTakerFeeDistributionSwap() {
+func (s *UpgradeTestSuite) TestUpdateTakerFeeDistribution() {
 	s.Setup()
 	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
 
@@ -104,5 +104,5 @@ func (s *UpgradeTestSuite) ExecuteTakerFeeDistributionTest() {
 	// Verify the module account is set correctly
 	takerFeeBurnModuleAccount := s.App.AccountKeeper.GetModuleAccount(s.Ctx, txfeestypes.TakerFeeBurnName)
 	s.Require().Equal(txfeestypes.TakerFeeBurnName, takerFeeBurnModuleAccount.GetName())
-	s.Require().Equal([]string{}, takerFeeBurnModuleAccount.GetPermissions())
+	s.Require().Nil(takerFeeBurnModuleAccount.GetPermissions())
 }
