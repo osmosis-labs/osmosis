@@ -162,8 +162,29 @@ func (k Keeper) callBeforeSendListener(context context.Context, from, to sdk.Acc
 			}
 			em := sdk.NewEventManager()
 
+<<<<<<< HEAD
 			childCtx := ctx.WithGasMeter(storetypes.NewGasMeter(types.BeforeSendHookGasLimit))
 			_, err = k.contractKeeper.Sudo(childCtx.WithEventManager(em), cwAddr, msgBz)
+=======
+			// Check remaining gas in parent context and use the lesser of the fixed limit and remaining gas
+			gasLimit := min(ctx.GasMeter().GasRemaining(), types.BeforeSendHookGasLimit)
+
+			childCtx := ctx.WithGasMeter(storetypes.NewGasMeter(gasLimit))
+
+			// Execute the contract call with proper gas tracking and panic recovery
+
+			func() {
+				defer func() {
+					// Always consume gas from child context to parent, even if contract panics
+					ctx.GasMeter().ConsumeGas(childCtx.GasMeter().GasConsumed(), "track before send gas")
+					if r := recover(); r != nil {
+						err = errorsmod.Wrapf(types.ErrBeforeSendHookOutOfGas, "%v", r)
+					}
+				}()
+				_, err = k.contractKeeper.Sudo(childCtx.WithEventManager(em), cwAddr, msgBz)
+			}()
+
+>>>>>>> 3af7d430 (fix: consume gas on contract out of gas error panic (#9511))
 			if err != nil {
 				if strings.Contains(err.Error(), "no such contract") {
 					return nil
@@ -174,9 +195,6 @@ func (k Keeper) callBeforeSendListener(context context.Context, from, to sdk.Acc
 
 				return errorsmod.Wrapf(err, "failed to call before send hook for denom %s", coin.Denom)
 			}
-
-			// consume gas used for calling contract to the parent ctx
-			ctx.GasMeter().ConsumeGas(childCtx.GasMeter().GasConsumed(), "track before send gas")
 		}
 	}
 	return nil
