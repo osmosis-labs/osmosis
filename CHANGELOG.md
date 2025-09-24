@@ -42,10 +42,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 * [9526](https://github.com/osmosis-labs/osmosis/pull/9526) feat: inflation endpoint
-* [9527](https://github.com/osmosis-labs/osmosis/pull/9527) chore: unfork cometbft
-* [9528](https://github.com/osmosis-labs/osmosis/pull/9529) chore: lower timeout configs
 * [9530](https://github.com/osmosis-labs/osmosis/pull/9530) feat: add taker fee burn mechanic for osmo collection
 * [9541](https://github.com/osmosis-labs/osmosis/pull/9541) feat: buy back and burn osmo using non osmo taker fee burn portion
+
+## v30.0.4
+
+### State Compatible
+* [9527](https://github.com/osmosis-labs/osmosis/pull/9527) chore: unfork cometbft
+* [9528](https://github.com/osmosis-labs/osmosis/pull/9529) chore: lower timeout configs
 
 ## v30.0.3
 
