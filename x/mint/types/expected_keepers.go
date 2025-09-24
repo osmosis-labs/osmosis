@@ -28,6 +28,7 @@ type BankKeeper interface {
 	MintCoins(ctx context.Context, name string, amt sdk.Coins) error
 	BurnCoins(ctx context.Context, name string, amt sdk.Coins) error
 	AddSupplyOffset(ctx context.Context, denom string, offsetAmount osmomath.Int)
+	GetSupplyWithOffset(ctx context.Context, denom string) sdk.Coin
 }
 
 // CommunityPoolKeeper defines the contract needed to be fulfilled for distribution keeper.

@@ -35,3 +35,15 @@ func (q Querier) EpochProvisions(c context.Context, _ *types.QueryEpochProvision
 
 	return &types.QueryEpochProvisionsResponse{EpochProvisions: minter.EpochProvisions}, nil
 }
+
+// Inflation returns the current minting inflation value.
+func (q Querier) Inflation(c context.Context, _ *types.QueryInflationRequest) (*types.QueryInflationResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	inflation, err := q.Keeper.GetInflation(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryInflationResponse{Inflation: inflation}, nil
+}
