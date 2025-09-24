@@ -132,6 +132,8 @@ func (k Keeper) callPoolActionListener(ctx sdk.Context, msgBuilderFn msgBuilderF
 
 	// Execute the contract call with proper gas tracking and panic recovery
 	var contractErr error
+
+	// the immediately invoked function is used to scope down panic recovery to only the contract call
 	func() {
 		defer func() {
 			// Always consume gas from child context to parent, even if contract panics

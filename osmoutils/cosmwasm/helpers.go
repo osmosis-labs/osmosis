@@ -65,6 +65,8 @@ func Query[T any, K any](ctx sdk.Context, wasmKeeper WasmKeeper, contractAddress
 	// Execute the query with proper gas tracking and panic recovery
 	var queryErr error
 	var responseBz []byte
+
+	// the immediately invoked function is used to scope down panic recovery to only the contract call
 	func() {
 		defer func() {
 			// Always consume gas from child context to parent, even if query panics
@@ -143,6 +145,8 @@ func Sudo[T any, K any](ctx sdk.Context, contractKeeper ContractKeeper, contract
 	// Execute the contract call with proper gas tracking and panic recovery
 	var contractErr error
 	var responseBz []byte
+
+	// the immediately invoked function is used to scope down panic recovery to only the contract call
 	func() {
 		defer func() {
 			// Always consume gas from child context to parent, even if contract panics
