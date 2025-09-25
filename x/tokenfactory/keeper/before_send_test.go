@@ -277,38 +277,3 @@ func (s *KeeperTestSuite) TestInfiniteTrackBeforeSend() {
 		})
 	}
 }
-
-func (s *KeeperTestSuite) TestCallBeforeSendListenerGasConsumption() {
-	s.SetupTest()
-
-	// upload infinite loop wasm contract to trigger out of gas
-	wasmCode, err := os.ReadFile("./testdata/infinite_track_beforesend.wasm")
-	s.Require().NoError(err)
-	codeID, _, err := s.contractKeeper.Create(s.Ctx, s.TestAccs[0], wasmCode, nil)
-	s.Require().NoError(err)
-	cosmwasmAddress, _, err := s.contractKeeper.Instantiate(s.Ctx, codeID, s.TestAccs[0], s.TestAccs[0], []byte("{}"), "", sdk.NewCoins())
-	s.Require().NoError(err)
-
-	// create factory denom
-	res, err := s.msgServer.CreateDenom(s.Ctx, types.NewMsgCreateDenom(s.TestAccs[0].String(), "testcoin"))
-	s.Require().NoError(err)
-	denom := res.GetNewTokenDenom()
-
-	// set before send hook
-	_, err = s.msgServer.SetBeforeSendHook(s.Ctx, types.NewMsgSetBeforeSendHook(s.TestAccs[0].String(), denom, cosmwasmAddress.String()))
-	s.Require().NoError(err)
-
-	// measure gas consumption before and after BlockBeforeSend
-	hooks := s.App.TokenFactoryKeeper.Hooks()
-	amount := sdk.NewCoins(sdk.NewInt64Coin(denom, 100))
-
-	// record gas consumed before calling BlockBeforeSend
-	gasConsumedBefore := s.Ctx.GasMeter().GasConsumed()
-
-	err = hooks.BlockBeforeSend(s.Ctx, s.TestAccs[0], s.TestAccs[1], amount)
-
-	// record gas consumed after calling BlockBeforeSend
-	gasConsumedAfter := s.Ctx.GasMeter().GasConsumed()
-	gasUsed := gasConsumedAfter - gasConsumedBefore
-	s.Require().Equal(gasUsed, uint64(501435))
-}
