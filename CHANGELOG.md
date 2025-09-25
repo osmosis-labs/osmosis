@@ -41,9 +41,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
-* [9526](https://github.com/osmosis-labs/osmosis/pull/9526) feat: inflation endpoint
-* [9530](https://github.com/osmosis-labs/osmosis/pull/9530) feat: add taker fee burn mechanic for osmo collection
-* [9541](https://github.com/osmosis-labs/osmosis/pull/9541) feat: buy back and burn osmo using non osmo taker fee burn portion
+
+### State Compatible
+
+### State Breaking
+* [#9526](https://github.com/osmosis-labs/osmosis/pull/9526) feat: inflation endpoint
+* [#9530](https://github.com/osmosis-labs/osmosis/pull/9530) feat: add taker fee burn mechanic for osmo collection
+* [#9541](https://github.com/osmosis-labs/osmosis/pull/9541) feat: buy back and burn osmo using non osmo taker fee burn portion
+* [#9547](https://github.com/osmosis-labs/osmosis/pull/9547) fix: feat: multihop taker fee swap
 
 ## v30.0.4
 
