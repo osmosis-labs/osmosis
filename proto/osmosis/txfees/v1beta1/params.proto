@@ -11,4 +11,11 @@ message Params {
     (gogoproto.moretags) = "yaml:\"whitelisted_fee_token_setters\"",
     (gogoproto.nullable) = false
   ];
+
+  // fee_swap_intermediary_denom_list is a list of denoms that can be used as
+  // intermediary denoms for multi-hop swaps when swapping non-native fee tokens
+  repeated string fee_swap_intermediary_denom_list = 2 [
+    (gogoproto.moretags) = "yaml:\"fee_swap_intermediary_denom_list\"",
+    (gogoproto.nullable) = false
+  ];
 }

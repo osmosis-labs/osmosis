@@ -26,6 +26,13 @@ type PoolManager interface {
 		tokenIn sdk.Coin,
 		tokenOutMinAmount osmomath.Int) (tokenOutAmount osmomath.Int, err error)
 
+	RouteExactAmountInNoTakerFee(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		routes []poolmanagertypes.SwapAmountInRoute,
+		tokenIn sdk.Coin,
+		tokenOutMinAmount osmomath.Int) (tokenOutAmount osmomath.Int, err error)
+
 	SwapExactAmountIn(
 		ctx sdk.Context,
 		sender sdk.AccAddress,
