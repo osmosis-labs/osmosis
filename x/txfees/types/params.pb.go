@@ -26,8 +26,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // Params holds parameters for the txfees module
 type Params struct {
 	WhitelistedFeeTokenSetters []string `protobuf:"bytes,1,rep,name=whitelisted_fee_token_setters,json=whitelistedFeeTokenSetters,proto3" json:"whitelisted_fee_token_setters,omitempty" yaml:"whitelisted_fee_token_setters"`
-	// fee_swap_intermediary_denom_list is a list of denoms that can be used as intermediary
-	// denoms for multi-hop swaps when swapping non-native fee tokens
+	// fee_swap_intermediary_denom_list is a list of denoms that can be used as
+	// intermediary denoms for multi-hop swaps when swapping non-native fee tokens
 	FeeSwapIntermediaryDenomList []string `protobuf:"bytes,2,rep,name=fee_swap_intermediary_denom_list,json=feeSwapIntermediaryDenomList,proto3" json:"fee_swap_intermediary_denom_list,omitempty" yaml:"fee_swap_intermediary_denom_list"`
 }
 
