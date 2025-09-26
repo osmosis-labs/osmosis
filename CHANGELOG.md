@@ -49,12 +49,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#9530](https://github.com/osmosis-labs/osmosis/pull/9530) feat: add taker fee burn mechanic for osmo collection
 * [#9541](https://github.com/osmosis-labs/osmosis/pull/9541) feat: buy back and burn osmo using non osmo taker fee burn portion
 * [#9547](https://github.com/osmosis-labs/osmosis/pull/9547) fix: feat: multihop taker fee swap
+* [#9548](https://github.com/osmosis-labs/osmosis/pull/9548) chore: update swagger
+
 
 ## v30.0.4
 
 ### State Compatible
-* [9527](https://github.com/osmosis-labs/osmosis/pull/9527) chore: unfork cometbft
-* [9528](https://github.com/osmosis-labs/osmosis/pull/9529) chore: lower timeout configs
+* [#9527](https://github.com/osmosis-labs/osmosis/pull/9527) chore: unfork cometbft
+* [#9528](https://github.com/osmosis-labs/osmosis/pull/9529) chore: lower timeout configs
 
 ## v30.0.3
 
