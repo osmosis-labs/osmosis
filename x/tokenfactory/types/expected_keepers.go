@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 )
 
 type BankKeeper interface {
@@ -41,4 +42,8 @@ type CommunityPoolKeeper interface {
 
 type ContractKeeper interface {
 	Sudo(ctx sdk.Context, contractAddress sdk.AccAddress, msg []byte) ([]byte, error)
+}
+
+type ChannelKeeper interface {
+	GetAllChannels(ctx sdk.Context) []channeltypes.IdentifiedChannel
 }

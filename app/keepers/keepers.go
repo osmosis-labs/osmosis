@@ -540,6 +540,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.DistrKeeper,
+		appKeepers.IBCKeeper.ChannelKeeper,
 	)
 	appKeepers.TokenFactoryKeeper = &tokenFactoryKeeper
 
