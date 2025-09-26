@@ -39,10 +39,7 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
-		err = setIntermediaryDenomList(sdkCtx, keepers.TxFeesKeeper)
-		if err != nil {
-			return nil, err
-		}
+		setIntermediaryDenomList(sdkCtx, keepers.TxFeesKeeper)
 
 		return migrations, nil
 	}
@@ -74,7 +71,7 @@ func updateTakerFeeDistribution(ctx sdk.Context, poolManagerKeeper *poolmanager.
 }
 
 // setIntermediaryDenomList sets the default intermediary denoms for multi-hop swaps in txfees
-func setIntermediaryDenomList(ctx sdk.Context, txFeesKeeper *txfeeskeeper.Keeper) error {
+func setIntermediaryDenomList(ctx sdk.Context, txFeesKeeper *txfeeskeeper.Keeper) {
 	txFeesParams := txFeesKeeper.GetParams(ctx)
 
 	// Set the fee swap intermediary denom list to the specified denoms
@@ -86,5 +83,4 @@ func setIntermediaryDenomList(ctx sdk.Context, txFeesKeeper *txfeeskeeper.Keeper
 	}
 
 	txFeesKeeper.SetParams(ctx, txFeesParams)
-	return nil
 }
