@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#9530](https://github.com/osmosis-labs/osmosis/pull/9530) feat: add taker fee burn mechanic for osmo collection
 * [#9541](https://github.com/osmosis-labs/osmosis/pull/9541) feat: buy back and burn osmo using non osmo taker fee burn portion
 * [#9511](https://github.com/osmosis-labs/osmosis/pull/9511) fix: tokenfactory before send hook gas consumption
+* [#9548](https://github.com/osmosis-labs/osmosis/pull/9548) chore: update swagger
 
 ## v30.0.5
 
