@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v30/x/tokenfactory/types"
@@ -187,10 +188,33 @@ func (k Keeper) callBeforeSendListener(context context.Context, from, to sdk.Acc
 				if k.IsModuleAcc(ctx, from) {
 					return nil
 				}
+				// Suppress errors when sending from IBC escrow addresses to prevent DoS attacks
+				if k.IsIBCEscrowAddress(ctx, from) {
+					return nil
+				}
 
 				return errorsmod.Wrapf(err, "failed to call before send hook for denom %s", coin.Denom)
 			}
 		}
 	}
 	return nil
+}
+
+// IsIBCEscrowAddress checks if the given address is an IBC escrow address
+// by querying all active IBC channels and comparing their escrow addresses
+func (k Keeper) IsIBCEscrowAddress(ctx sdk.Context, addr sdk.AccAddress) bool {
+	if k.channelKeeper == nil {
+		return false
+	}
+
+	channels := k.channelKeeper.GetAllChannels(ctx)
+
+	for _, channel := range channels {
+		escrowAddr := transfertypes.GetEscrowAddress(channel.PortId, channel.ChannelId)
+		if escrowAddr.Equals(addr) {
+			return true
+		}
+	}
+
+	return false
 }

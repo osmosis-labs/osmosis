@@ -5,6 +5,8 @@ import (
 	"os"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -310,5 +312,62 @@ func (s *KeeperTestSuite) TestCallBeforeSendListenerGasConsumption() {
 	// record gas consumed after calling BlockBeforeSend
 	gasConsumedAfter := s.Ctx.GasMeter().GasConsumed()
 	gasUsed := gasConsumedAfter - gasConsumedBefore
-	s.Require().Equal(gasUsed, uint64(501435))
+	s.Require().Equal(gasUsed, uint64(501465))
+}
+
+func (s *KeeperTestSuite) TestSkipBeforeSendHookForIBCEscrowAddress() {
+	s.SetupTest()
+
+	// upload and instantiate wasm code that blocks amount 100
+	wasmFile := "./testdata/no100.wasm"
+	wasmCode, err := os.ReadFile(wasmFile)
+	s.Require().NoError(err)
+	codeID, _, err := s.contractKeeper.Create(s.Ctx, s.TestAccs[0], wasmCode, nil)
+	s.Require().NoError(err)
+	cosmwasmAddress, _, err := s.contractKeeper.Instantiate(s.Ctx, codeID, s.TestAccs[0], s.TestAccs[0], []byte("{}"), "", sdk.NewCoins())
+	s.Require().NoError(err)
+
+	// create new denom
+	res, err := s.msgServer.CreateDenom(s.Ctx, types.NewMsgCreateDenom(s.TestAccs[0].String(), "allBTC"))
+	s.Require().NoError(err)
+	denom := res.GetNewTokenDenom()
+
+	// set beforesend hook to the new denom
+	_, err = s.msgServer.SetBeforeSendHook(s.Ctx, types.NewMsgSetBeforeSendHook(s.TestAccs[0].String(), denom, cosmwasmAddress.String()))
+	s.Require().NoError(err)
+
+	// Test that normal sends fail with amount 100
+	amount := sdk.NewCoins(sdk.NewCoin(denom, osmomath.NewInt(100)))
+	err = s.App.TokenFactoryKeeper.Hooks().BlockBeforeSend(s.Ctx, s.TestAccs[0], s.TestAccs[1], amount)
+	s.Require().Error(err)
+
+	// Create a mock IBC channel to test escrow address detection
+	channelID := "channel-0"
+	channel := channeltypes.Channel{
+		State:    channeltypes.OPEN,
+		Ordering: channeltypes.UNORDERED,
+		Counterparty: channeltypes.Counterparty{
+			PortId:    transfertypes.PortID,
+			ChannelId: "channel-0",
+		},
+		ConnectionHops: []string{"connection-0"},
+		Version:        transfertypes.Version,
+	}
+
+	// Store the channel in the channel keeper
+	s.App.IBCKeeper.ChannelKeeper.SetChannel(s.Ctx, transfertypes.PortID, channelID, channel)
+
+	// Now test that the escrow address is properly detected
+	escrowAddr := transfertypes.GetEscrowAddress(transfertypes.PortID, channelID)
+
+	// Test that sends from IBC escrow addresses succeed (errors are suppressed)
+	err = s.App.TokenFactoryKeeper.Hooks().BlockBeforeSend(s.Ctx, escrowAddr, s.TestAccs[1], amount)
+	s.Require().NoError(err, "Send from IBC escrow address should succeed (errors suppressed)")
+
+	// Test with a different escrow address that doesn't exist
+	nonEscrowAddr := sdk.AccAddress([]byte("addr1---------------"))
+
+	// Test that normal address (non-escrow) still fails
+	err = s.App.TokenFactoryKeeper.Hooks().BlockBeforeSend(s.Ctx, nonEscrowAddr, s.TestAccs[1], amount)
+	s.Require().Error(err)
 }
