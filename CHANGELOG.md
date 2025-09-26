@@ -50,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 * [#9527](https://github.com/osmosis-labs/osmosis/pull/9527) chore: unfork cometbft
-* [#9528](https://github.com/osmosis-labs/osmosis/pull/9529) chore: lower timeout configs
+* [#9528](https://github.com/osmosis-labs/osmosis/pull/9528) chore: lower timeout configs
 
 ## v30.0.3
 
