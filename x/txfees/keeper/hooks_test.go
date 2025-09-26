@@ -366,10 +366,10 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom_SimpleCases() {
 				// Sets up account with no balance
 				testAccount := apptesting.CreateRandomAccounts(1)[0]
 
-				poolId := uint64(1)
+				poolId := uint64(9999) // Use non-existent pool ID for failing tests
 				if !tc.doNotCreatePool || !tc.doNotAddLiquidity {
 					// Create a pool to be swapped against.
-					poolId := s.PrepareConcentratedPoolWithCoins(tc.poolCoins[0].Denom, tc.poolCoins[1].Denom).GetId()
+					poolId = s.PrepareConcentratedPoolWithCoins(tc.poolCoins[0].Denom, tc.poolCoins[1].Denom).GetId()
 
 					// Add liquidity
 					if !tc.doNotAddLiquidity {
@@ -382,6 +382,13 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom_SimpleCases() {
 				// Set the pool for the denom pair per configuration.
 				if len(tc.protoRevLinkDenoms) > 0 {
 					s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, tc.poolCoins[0].Denom, tc.poolCoins[1].Denom, poolId)
+				}
+
+				// For tests that expect swap to fail, clear any pre-existing protorev pools AFTER setup
+				if tc.doNotCreatePool || len(tc.protoRevLinkDenoms) == 0 {
+					// Clear protorev pool mappings to ensure no pre-existing routes
+					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, preSwapDenom)
+					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, defaultTxFeesDenom)
 				}
 
 				// Fund the account with the preFundCoins
