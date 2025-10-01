@@ -3,8 +3,8 @@ package v31
 import (
 	"context"
 	"fmt"
+	"time"
 
-	"cosmossdk.io/store/prefix"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -83,6 +83,7 @@ func updateTakerFeeDistribution(ctx sdk.Context, poolManagerKeeper *poolmanager.
 // 3. Delete all superfluid storage
 func cleanupSuperfluid(ctx sdk.Context, keepers *keepers.AppKeepers) error {
 	ctx.Logger().Info("Starting superfluid cleanup: undelegating all positions and removing all state")
+	startTime := time.Now()
 
 	// Undelegate all intermediary account positions
 	// This must happen first to properly handle the actual staking delegations
@@ -92,7 +93,7 @@ func cleanupSuperfluid(ctx sdk.Context, keepers *keepers.AppKeepers) error {
 
 	// Delete all synthetic locks
 	// This removes the overlay tracking before deleting the mappings
-	if err := deleteAllSyntheticLocks(ctx, keepers); err != nil {
+	if err := unlockAllSyntheticLocks(ctx, keepers); err != nil {
 		return err
 	}
 
@@ -102,7 +103,9 @@ func cleanupSuperfluid(ctx sdk.Context, keepers *keepers.AppKeepers) error {
 		return err
 	}
 
-	ctx.Logger().Info("Superfluid cleanup completed successfully")
+	elapsed := time.Since(startTime)
+
+	ctx.Logger().Info("Superfluid cleanup completed successfully, took " + elapsed.String())
 	return nil
 }
 
@@ -197,18 +200,18 @@ func undelegateSingleIntermediaryAccount(ctx sdk.Context, keepers *keepers.AppKe
 	return nil
 }
 
-// deleteAllSyntheticLocks deletes all synthetic locks associated with superfluid staking
+// unlockAllSyntheticLocks deletes all synthetic locks associated with superfluid staking
 // and unlocks the underlying locks to return gamm tokens to delegators.
 // Synthetic locks are overlay locks that track superfluid staking status. There are two types:
 // - Staking locks: {denom}/superbonding/{valAddr} - tracks active superfluid stake
 // - Unstaking locks: {denom}/superunbonding/{valAddr} - tracks undelegating positions
 // Both types must be cleaned up and the underlying locks must be unlocked.
-func deleteAllSyntheticLocks(ctx sdk.Context, keepers *keepers.AppKeepers) error {
+func unlockAllSyntheticLocks(ctx sdk.Context, keepers *keepers.AppKeepers) error {
 	connections := keepers.SuperfluidKeeper.GetAllLockIdIntermediaryAccountConnections(ctx)
 	ctx.Logger().Info(fmt.Sprintf("Found %d lock-intermediary connections to clean up", len(connections)))
 
 	for _, connection := range connections {
-		if err := deleteSyntheticLockAndUnlock(ctx, keepers, connection); err != nil {
+		if err := deleteForceUnlockSyntheticLock(ctx, keepers, connection); err != nil {
 			// Log error but continue with other locks
 			ctx.Logger().Error(fmt.Sprintf("Failed to delete synthetic locks for lock %d: %v", connection.LockId, err))
 			continue
@@ -218,61 +221,21 @@ func deleteAllSyntheticLocks(ctx sdk.Context, keepers *keepers.AppKeepers) error
 	return nil
 }
 
-// deleteSyntheticLockAndUnlock deletes both staking and unstaking synthetic locks for a single lock
-// and unlocks the underlying lock to return gamm tokens to the delegator.
-func deleteSyntheticLockAndUnlock(ctx sdk.Context, keepers *keepers.AppKeepers, connection superfuidtypes.LockIdIntermediaryAccountConnection) error {
+// deleteForceUnlockSyntheticLock unlocks the underlying lock to return gamm tokens to the delegator.
+// ForceUnlock automatically handles deleting any associated synthetic locks.
+func deleteForceUnlockSyntheticLock(ctx sdk.Context, keepers *keepers.AppKeepers, connection superfuidtypes.LockIdIntermediaryAccountConnection) error {
 	// Get the lock
 	lock, err := keepers.LockupKeeper.GetLockByID(ctx, connection.LockId)
 	if err != nil {
 		return fmt.Errorf("failed to get lock %d: %w", connection.LockId, err)
 	}
 
-	// Get intermediary account
-	accAddr, err := sdk.AccAddressFromBech32(connection.IntermediaryAccount)
-	if err != nil {
-		return fmt.Errorf("invalid intermediary account address %s: %w", connection.IntermediaryAccount, err)
-	}
-
-	store := ctx.KVStore(keepers.GetKey(superfuidtypes.StoreKey))
-	prefixStore := prefix.NewStore(store, superfuidtypes.KeyPrefixIntermediaryAccount)
-	intermediaryAccBytes := prefixStore.Get(accAddr)
-	if intermediaryAccBytes == nil {
-		return fmt.Errorf("intermediary account not found for lock %d", connection.LockId)
-	}
-
-	var intermediaryAcc superfuidtypes.SuperfluidIntermediaryAccount
-	err = intermediaryAcc.Unmarshal(intermediaryAccBytes)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal intermediary account: %w", err)
-	}
-
-	// Delete both staking and unstaking synthetic locks if they exist
-	if len(lock.Coins) > 0 {
-		denom := lock.Coins[0].Denom
-
-		// Try to delete staking synthetic lock: {denom}/superbonding/{valAddr}
-		stakingSynthDenom := fmt.Sprintf("%s/superbonding/%s", denom, intermediaryAcc.ValAddr)
-		if err := keepers.LockupKeeper.DeleteSyntheticLockup(ctx, connection.LockId, stakingSynthDenom); err != nil {
-			// Log but don't fail - synthetic lock might not exist
-			ctx.Logger().Info(fmt.Sprintf("Could not delete staking synthetic lock for lock %d: %v (may not exist)", connection.LockId, err))
-		}
-
-		// Try to delete unstaking synthetic lock: {denom}/superunbonding/{valAddr}
-		unstakingSynthDenom := fmt.Sprintf("%s/superunbonding/%s", denom, intermediaryAcc.ValAddr)
-		if err := keepers.LockupKeeper.DeleteSyntheticLockup(ctx, connection.LockId, unstakingSynthDenom); err != nil {
-			// Log but don't fail - synthetic lock might not exist
-			ctx.Logger().Info(fmt.Sprintf("Could not delete unstaking synthetic lock for lock %d: %v (may not exist)", connection.LockId, err))
-		}
-	}
-
 	// Force unlock the underlying lock to return gamm tokens to the delegator
+	// Note: ForceUnlock automatically handles deleting any synthetic locks first
 	err = keepers.LockupKeeper.ForceUnlock(ctx, *lock)
 	if err != nil {
 		return fmt.Errorf("failed to force unlock lock %d: %w", connection.LockId, err)
 	}
-
-	ctx.Logger().Info(fmt.Sprintf("Unlocked lock %d, returned %s to delegator %s",
-		lock.ID, lock.Coins.String(), lock.Owner))
 
 	return nil
 }
