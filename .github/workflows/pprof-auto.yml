@@ -19,7 +19,7 @@ jobs:
     steps:
       # Triggers a repository dispatch event to initiate pprof automation
       - name: Repository Dispatch
-        uses: peter-evans/repository-dispatch@v3
+        uses: peter-evans/repository-dispatch@v4
         with:
           token: ${{ secrets.GH_TOKEN }}
           repository: ${{ secrets.PPROF_REPO }}  # Target repository for dispatch
