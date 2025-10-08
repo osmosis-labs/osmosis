@@ -63,3 +63,24 @@ func (q Querier) BurnedSupply(c context.Context, _ *types.QueryBurnedRequest) (*
 
 	return &types.QueryBurnedResponse{Burned: burnedBalance.Amount}, nil
 }
+
+// TotalSupply returns the total supply (minted - burned).
+func (q Querier) TotalSupply(c context.Context, _ *types.QueryTotalSupplyRequest) (*types.QueryTotalSupplyResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	params := q.Keeper.GetParams(ctx)
+
+	// Get the minted supply (from bank module)
+	mintedSupply := q.Keeper.bankKeeper.GetSupply(ctx, params.MintDenom)
+
+	// Get the burned supply
+	burnAddr, err := sdk.AccAddressFromBech32("osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030")
+	if err != nil {
+		return nil, err
+	}
+	burnedBalance := q.Keeper.bankKeeper.GetBalance(ctx, burnAddr, params.MintDenom)
+
+	// Total supply = minted - burned
+	totalSupply := mintedSupply.Amount.Sub(burnedBalance.Amount)
+
+	return &types.QueryTotalSupplyResponse{TotalSupply: totalSupply}, nil
+}

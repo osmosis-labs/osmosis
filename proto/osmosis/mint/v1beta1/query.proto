@@ -29,6 +29,11 @@ service Query {
   rpc BurnedSupply(QueryBurnedRequest) returns (QueryBurnedResponse) {
     option (google.api.http).get = "/osmosis/mint/v1beta1/burned_supply";
   }
+
+  // TotalSupply returns the total supply (minted - burned).
+  rpc TotalSupply(QueryTotalSupplyRequest) returns (QueryTotalSupplyResponse) {
+    option (google.api.http).get = "/osmosis/mint/v1beta1/total_supply";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -75,6 +80,18 @@ message QueryBurnedRequest {}
 message QueryBurnedResponse {
   // burned is the total amount of burned tokens.
   bytes burned = 1 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC method.
+message QueryTotalSupplyRequest {}
+
+// QueryTotalSupplyResponse is the response type for the Query/TotalSupply RPC method.
+message QueryTotalSupplyResponse {
+  // total_supply is the total supply (minted - burned).
+  bytes total_supply = 1 [
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];

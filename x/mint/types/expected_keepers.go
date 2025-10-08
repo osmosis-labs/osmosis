@@ -28,6 +28,7 @@ type BankKeeper interface {
 	MintCoins(ctx context.Context, name string, amt sdk.Coins) error
 	BurnCoins(ctx context.Context, name string, amt sdk.Coins) error
 	AddSupplyOffset(ctx context.Context, denom string, offsetAmount osmomath.Int)
+	GetSupply(ctx context.Context, denom string) sdk.Coin
 	GetSupplyWithOffset(ctx context.Context, denom string) sdk.Coin
 }
 
