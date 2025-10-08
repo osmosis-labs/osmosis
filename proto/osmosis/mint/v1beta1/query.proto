@@ -24,6 +24,11 @@ service Query {
   rpc Inflation(QueryInflationRequest) returns (QueryInflationResponse) {
     option (google.api.http).get = "/osmosis/mint/v1beta1/inflation";
   }
+
+  // BurnedSupply returns the total amount of burned tokens.
+  rpc BurnedSupply(QueryBurnedRequest) returns (QueryBurnedResponse) {
+    option (google.api.http).get = "/osmosis/mint/v1beta1/burned_supply";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -59,6 +64,18 @@ message QueryInflationResponse {
   // inflation is the current minting inflation value.
   bytes inflation = 1 [
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryBurnedRequest is the request type for the Query/Burned RPC method.
+message QueryBurnedRequest {}
+
+// QueryBurnedResponse is the response type for the Query/Burned RPC method.
+message QueryBurnedResponse {
+  // burned is the total amount of burned tokens.
+  bytes burned = 1 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
 }

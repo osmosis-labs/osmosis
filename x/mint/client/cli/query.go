@@ -20,6 +20,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryParams(),
 		GetCmdQueryEpochProvisions(),
 		GetCmdQueryInflation(),
+		GetCmdQueryBurned(),
 	)
 
 	return cmd
@@ -104,6 +105,34 @@ func GetCmdQueryInflation() *cobra.Command {
 			}
 
 			return clientCtx.PrintString(fmt.Sprintf("%s\n", res.Inflation))
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdQueryBurned implements a command to return the total burned supply.
+func GetCmdQueryBurned() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "burned",
+		Short: "Query the total amount of burned tokens",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			params := &types.QueryBurnedRequest{}
+			res, err := queryClient.BurnedSupply(context.Background(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintString(fmt.Sprintf("%s\n", res.Burned))
 		},
 	}
 

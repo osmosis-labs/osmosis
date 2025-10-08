@@ -47,3 +47,19 @@ func (q Querier) Inflation(c context.Context, _ *types.QueryInflationRequest) (*
 
 	return &types.QueryInflationResponse{Inflation: inflation}, nil
 }
+
+// BurnedSupply returns the total amount of burned tokens.
+func (q Querier) BurnedSupply(c context.Context, _ *types.QueryBurnedRequest) (*types.QueryBurnedResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	params := q.Keeper.GetParams(ctx)
+
+	// The burn address is osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030
+	burnAddr, err := sdk.AccAddressFromBech32("osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030")
+	if err != nil {
+		return nil, err
+	}
+
+	burnedBalance := q.Keeper.bankKeeper.GetBalance(ctx, burnAddr, params.MintDenom)
+
+	return &types.QueryBurnedResponse{Burned: burnedBalance.Amount}, nil
+}
