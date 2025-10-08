@@ -39,6 +39,11 @@ service Query {
   rpc RestrictedSupply(QueryRestrictedSupplyRequest) returns (QueryRestrictedSupplyResponse) {
     option (google.api.http).get = "/osmosis/mint/v1beta1/restricted_supply";
   }
+
+  // CirculatingSupply returns the circulating supply (minted - burned - restricted).
+  rpc CirculatingSupply(QueryCirculatingSupplyRequest) returns (QueryCirculatingSupplyResponse) {
+    option (google.api.http).get = "/osmosis/mint/v1beta1/circulating_supply";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -109,6 +114,18 @@ message QueryRestrictedSupplyRequest {}
 message QueryRestrictedSupplyResponse {
   // restricted_supply is the supply held in restricted addresses.
   bytes restricted_supply = 1 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryCirculatingSupplyRequest is the request type for the Query/CirculatingSupply RPC method.
+message QueryCirculatingSupplyRequest {}
+
+// QueryCirculatingSupplyResponse is the response type for the Query/CirculatingSupply RPC method.
+message QueryCirculatingSupplyResponse {
+  // circulating_supply is the circulating supply (minted - burned - restricted).
+  bytes circulating_supply = 1 [
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];

@@ -98,6 +98,38 @@ func (q Querier) RestrictedSupply(c context.Context, _ *types.QueryRestrictedSup
 	ctx := sdk.UnwrapSDKContext(c)
 	params := q.Keeper.GetParams(ctx)
 
+	restrictedSupply := q.calculateRestrictedSupply(ctx, params)
+
+	return &types.QueryRestrictedSupplyResponse{RestrictedSupply: restrictedSupply}, nil
+}
+
+// CirculatingSupply returns the circulating supply (minted - burned - restricted).
+func (q Querier) CirculatingSupply(c context.Context, _ *types.QueryCirculatingSupplyRequest) (*types.QueryCirculatingSupplyResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	params := q.Keeper.GetParams(ctx)
+
+	// Get the minted supply (from bank module)
+	mintedSupply := q.Keeper.bankKeeper.GetSupply(ctx, params.MintDenom)
+
+	// Get the burned supply
+	burnAddr, err := sdk.AccAddressFromBech32("osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030")
+	if err != nil {
+		return nil, err
+	}
+	burnedBalance := q.Keeper.bankKeeper.GetBalance(ctx, burnAddr, params.MintDenom)
+
+	// Calculate restricted supply by calling the same logic as RestrictedSupply query
+	restrictedSupply := q.calculateRestrictedSupply(ctx, params)
+
+	// Circulating supply = minted - burned - restricted
+	circulatingSupply := mintedSupply.Amount.Sub(burnedBalance.Amount).Sub(restrictedSupply)
+
+	return &types.QueryCirculatingSupplyResponse{CirculatingSupply: circulatingSupply}, nil
+}
+
+// calculateRestrictedSupply is a helper that calculates the restricted supply.
+// This is extracted to be reusable by both RestrictedSupply and CirculatingSupply queries.
+func (q Querier) calculateRestrictedSupply(ctx sdk.Context, params types.Params) osmomath.Int {
 	restrictedSupply := osmomath.ZeroInt()
 
 	// 1. Developer vesting account balance
@@ -147,7 +179,7 @@ func (q Querier) RestrictedSupply(c context.Context, _ *types.QueryRestrictedSup
 		restrictedSupply = restrictedSupply.Add(stakedAmount)
 	}
 
-	return &types.QueryRestrictedSupplyResponse{RestrictedSupply: restrictedSupply}, nil
+	return restrictedSupply
 }
 
 // getStakedAmount returns the total amount staked by a delegator.
