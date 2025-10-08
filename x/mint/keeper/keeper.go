@@ -15,6 +15,8 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -159,7 +161,7 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 }
 
 // GetInflation calculates the current inflation rate.
-// Formula: ((Epoch provisions * (1 - Community Pool proportion)) * 365) / Total Supply
+// Formula: ((Epoch provisions * (1 - Community Pool proportion)) * 365) / Circulating Supply
 func (k Keeper) GetInflation(ctx sdk.Context) (osmomath.Dec, error) {
 	// Get current epoch provisions
 	minter := k.GetMinter(ctx)
@@ -169,8 +171,8 @@ func (k Keeper) GetInflation(ctx sdk.Context) (osmomath.Dec, error) {
 	params := k.GetParams(ctx)
 	communityPoolProportion := params.DistributionProportions.CommunityPool
 
-	// Get total supply of the mint denom
-	totalSupply := k.bankKeeper.GetSupplyWithOffset(ctx, params.MintDenom)
+	// Get circulating supply (minted - burned - restricted)
+	circulatingSupply := k.GetCirculatingSupply(ctx)
 
 	// Calculate circulating provisions: epoch provisions * (1 - community pool proportion)
 	oneMinusCommunityPool := osmomath.OneDec().Sub(communityPoolProportion)
@@ -179,13 +181,129 @@ func (k Keeper) GetInflation(ctx sdk.Context) (osmomath.Dec, error) {
 	// Calculate annualized provisions: circulating provisions * 365
 	annualizedProvisions := circulatingProvisions.Mul(osmomath.NewDec(365))
 
-	// Calculate inflation rate: annualized provisions / total supply
-	if totalSupply.Amount.IsPositive() {
-		totalSupplyDec := totalSupply.Amount.ToLegacyDec()
-		return annualizedProvisions.Quo(totalSupplyDec), nil
+	// Calculate inflation rate: annualized provisions / circulating supply
+	if circulatingSupply.IsPositive() {
+		circulatingSupplyDec := circulatingSupply.ToLegacyDec()
+		return annualizedProvisions.Quo(circulatingSupplyDec), nil
 	}
 
 	return osmomath.ZeroDec(), nil
+}
+
+// GetCirculatingSupply returns the circulating supply (minted - burned - restricted).
+func (k Keeper) GetCirculatingSupply(ctx sdk.Context) osmomath.Int {
+	params := k.GetParams(ctx)
+
+	// Get the minted supply (from bank module)
+	mintedSupply := k.bankKeeper.GetSupply(ctx, params.MintDenom)
+
+	// Get the burned supply
+	burnAddr, err := sdk.AccAddressFromBech32("osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030")
+	if err != nil {
+		// If burn address is invalid, return just minted supply
+		return mintedSupply.Amount
+	}
+	burnedBalance := k.bankKeeper.GetBalance(ctx, burnAddr, params.MintDenom)
+
+	// Calculate restricted supply
+	restrictedSupply := k.calculateRestrictedSupply(ctx, params)
+
+	// Circulating supply = minted - burned - restricted
+	circulatingSupply := mintedSupply.Amount.Sub(burnedBalance.Amount).Sub(restrictedSupply)
+
+	return circulatingSupply
+}
+
+// calculateRestrictedSupply calculates the restricted supply.
+// This includes dev vesting, community pool, dev addresses, and foundation/investor addresses.
+func (k Keeper) calculateRestrictedSupply(ctx sdk.Context, params types.Params) osmomath.Int {
+	restrictedSupply := osmomath.ZeroInt()
+
+	// 1. Developer vesting account balance
+	devVestingAddr := k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)
+	if devVestingAddr != nil {
+		devVestingBalance := k.bankKeeper.GetBalance(ctx, devVestingAddr, params.MintDenom)
+		restrictedSupply = restrictedSupply.Add(devVestingBalance.Amount)
+	}
+
+	// 2. Community pool balance
+	communityPoolAddr := k.accountKeeper.GetModuleAddress(distributiontypes.ModuleName)
+	if communityPoolAddr != nil {
+		communityPoolBalance := k.bankKeeper.GetBalance(ctx, communityPoolAddr, params.MintDenom)
+		restrictedSupply = restrictedSupply.Add(communityPoolBalance.Amount)
+	}
+
+	// 3. Developer vested addresses (from weighted_developer_rewards_receivers)
+	for _, devAddr := range params.WeightedDeveloperRewardsReceivers {
+		if devAddr.Address == "" {
+			continue // Skip empty addresses (community pool allocations)
+		}
+		addr, err := sdk.AccAddressFromBech32(devAddr.Address)
+		if err != nil {
+			continue // Skip invalid addresses
+		}
+		// Add balance
+		balance := k.bankKeeper.GetBalance(ctx, addr, params.MintDenom)
+		restrictedSupply = restrictedSupply.Add(balance.Amount)
+
+		// Add staked amount
+		stakedAmount := k.getStakedAmount(ctx, addr, params.MintDenom)
+		restrictedSupply = restrictedSupply.Add(stakedAmount)
+	}
+
+	// 4. Restricted addresses (from restricted_asset_addresses)
+	for _, addrStr := range params.RestrictedAssetAddresses {
+		addr, err := sdk.AccAddressFromBech32(addrStr)
+		if err != nil {
+			continue // Skip invalid addresses
+		}
+		// Add balance
+		balance := k.bankKeeper.GetBalance(ctx, addr, params.MintDenom)
+		restrictedSupply = restrictedSupply.Add(balance.Amount)
+
+		// Add staked amount
+		stakedAmount := k.getStakedAmount(ctx, addr, params.MintDenom)
+		restrictedSupply = restrictedSupply.Add(stakedAmount)
+	}
+
+	return restrictedSupply
+}
+
+// getStakedAmount returns the total amount staked by a delegator.
+// It properly converts delegation shares to tokens using the validator's exchange rate.
+func (k Keeper) getStakedAmount(ctx sdk.Context, delegator sdk.AccAddress, denom string) osmomath.Int {
+	totalStaked := osmomath.ZeroInt()
+
+	// Iterate through all delegations for this delegator
+	err := k.stakingKeeper.IterateDelegations(ctx, delegator, func(_ int64, delegation stakingtypes.DelegationI) bool {
+		shares := delegation.GetShares()
+
+		// Get the validator to convert shares to tokens
+		valAddr, err := sdk.ValAddressFromBech32(delegation.GetValidatorAddr())
+		if err != nil {
+			return false // Continue iteration
+		}
+
+		validator, err := k.stakingKeeper.GetValidator(ctx, valAddr)
+		if err != nil {
+			// If validator not found (perhaps unbonded/removed), use shares as approximation
+			totalStaked = totalStaked.Add(shares.TruncateInt())
+			return false // Continue iteration
+		}
+
+		// Convert shares to tokens using the validator's exchange rate
+		// This accounts for slashing and other events that affect the share-to-token ratio
+		tokens := validator.TokensFromShares(shares)
+		totalStaked = totalStaked.Add(tokens.TruncateInt())
+
+		return false // Continue iteration
+	})
+
+	if err != nil {
+		return osmomath.ZeroInt()
+	}
+
+	return totalStaked
 }
 
 // getLastReductionEpochNum returns last reduction epoch number.
