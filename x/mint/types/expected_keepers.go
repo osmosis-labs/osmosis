@@ -7,6 +7,7 @@ import (
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // AccountKeeper defines the contract required for account APIs.
@@ -40,4 +41,9 @@ type CommunityPoolKeeper interface {
 // EpochKeeper defines the contract needed to be fulfilled for epochs keeper.
 type EpochKeeper interface {
 	GetEpochInfo(ctx sdk.Context, identifier string) epochstypes.EpochInfo
+}
+
+// StakingKeeper defines the contract needed to query staking information.
+type StakingKeeper interface {
+	IterateDelegations(ctx context.Context, delegator sdk.AccAddress, fn func(int64, stakingtypes.DelegationI) bool) error
 }

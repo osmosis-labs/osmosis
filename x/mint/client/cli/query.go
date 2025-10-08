@@ -22,6 +22,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryInflation(),
 		GetCmdQueryBurned(),
 		GetCmdQueryTotalSupply(),
+		GetCmdQueryRestrictedSupply(),
 	)
 
 	return cmd
@@ -162,6 +163,34 @@ func GetCmdQueryTotalSupply() *cobra.Command {
 			}
 
 			return clientCtx.PrintString(fmt.Sprintf("%s\n", res.TotalSupply))
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdQueryRestrictedSupply implements a command to return the restricted supply.
+func GetCmdQueryRestrictedSupply() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "restricted-supply",
+		Short: "Query the restricted supply (Developer vesting, Community pool, Developer distribution addresses, Restricted addresses)",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			params := &types.QueryRestrictedSupplyRequest{}
+			res, err := queryClient.RestrictedSupply(context.Background(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintString(fmt.Sprintf("%s\n", res.RestrictedSupply))
 		},
 	}
 
