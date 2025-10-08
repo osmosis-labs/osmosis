@@ -20,7 +20,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryParams(),
 		GetCmdQueryEpochProvisions(),
 		GetCmdQueryInflation(),
-		GetCmdQueryBurned(),
+		GetCmdQueryBurnedSupply(),
 		GetCmdQueryTotalSupply(),
 		GetCmdQueryRestrictedSupply(),
 		GetCmdQueryCirculatingSupply(),
@@ -116,10 +116,10 @@ func GetCmdQueryInflation() *cobra.Command {
 	return cmd
 }
 
-// GetCmdQueryBurned implements a command to return the total burned supply.
-func GetCmdQueryBurned() *cobra.Command {
+// GetCmdQueryBurnedSupply implements a command to return the total burned supply.
+func GetCmdQueryBurnedSupply() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "burned",
+		Use:   "burned-supply",
 		Short: "Query the total amount of burned tokens",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
