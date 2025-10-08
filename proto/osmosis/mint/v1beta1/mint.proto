@@ -116,4 +116,10 @@ message Params {
   int64 minting_rewards_distribution_start_epoch = 8
       [ (gogoproto.moretags) =
             "yaml:\"minting_rewards_distribution_start_epoch\"" ];
+  // restricted_asset_addresses is a list of addresses whose balance and staked
+  // amounts should be excluded from circulating supply calculations.
+  // This typically includes foundation and investor addresses.
+  repeated string restricted_asset_addresses = 9 [
+    (gogoproto.moretags) = "yaml:\"restricted_asset_addresses\""
+  ];
 }

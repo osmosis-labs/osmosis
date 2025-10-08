@@ -24,6 +24,7 @@ var (
 	KeyPoolAllocationRatio                  = []byte("PoolAllocationRatio")
 	KeyDeveloperRewardsReceiver             = []byte("DeveloperRewardsReceiver")
 	KeyMintingRewardsDistributionStartEpoch = []byte("MintingRewardsDistributionStartEpoch")
+	KeyRestrictedAssetAddresses             = []byte("RestrictedAssetAddresses")
 
 	_ paramtypes.ParamSet = &Params{}
 )
@@ -38,6 +39,7 @@ func NewParams(
 	mintDenom string, genesisEpochProvisions osmomath.Dec, epochIdentifier string,
 	ReductionFactor osmomath.Dec, reductionPeriodInEpochs int64, distrProportions DistributionProportions,
 	weightedDevRewardsReceivers []WeightedAddress, mintingRewardsDistributionStartEpoch int64,
+	restrictedAssetAddresses []string,
 ) Params {
 	return Params{
 		MintDenom:                            mintDenom,
@@ -48,6 +50,7 @@ func NewParams(
 		DistributionProportions:              distrProportions,
 		WeightedDeveloperRewardsReceivers:    weightedDevRewardsReceivers,
 		MintingRewardsDistributionStartEpoch: mintingRewardsDistributionStartEpoch,
+		RestrictedAssetAddresses:             restrictedAssetAddresses,
 	}
 }
 
@@ -67,6 +70,7 @@ func DefaultParams() Params {
 		},
 		WeightedDeveloperRewardsReceivers:    []WeightedAddress{},
 		MintingRewardsDistributionStartEpoch: 0,
+		RestrictedAssetAddresses:             []string{},
 	}
 }
 
@@ -97,6 +101,9 @@ func (p Params) Validate() error {
 	if err := validateMintingRewardsDistributionStartEpoch(p.MintingRewardsDistributionStartEpoch); err != nil {
 		return err
 	}
+	if err := validateRestrictedAssetAddresses(p.RestrictedAssetAddresses); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -118,6 +125,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyPoolAllocationRatio, &p.DistributionProportions, validateDistributionProportions),
 		paramtypes.NewParamSetPair(KeyDeveloperRewardsReceiver, &p.WeightedDeveloperRewardsReceivers, validateWeightedDeveloperRewardsReceivers),
 		paramtypes.NewParamSetPair(KeyMintingRewardsDistributionStartEpoch, &p.MintingRewardsDistributionStartEpoch, validateMintingRewardsDistributionStartEpoch),
+		paramtypes.NewParamSetPair(KeyRestrictedAssetAddresses, &p.RestrictedAssetAddresses, validateRestrictedAssetAddresses),
 	}
 }
 
@@ -267,6 +275,31 @@ func validateMintingRewardsDistributionStartEpoch(i interface{}) error {
 
 	if v < 0 {
 		return fmt.Errorf("start epoch must be non-negative")
+	}
+
+	return nil
+}
+
+func validateRestrictedAssetAddresses(i interface{}) error {
+	v, ok := i.([]string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	// Empty list is valid
+	if len(v) == 0 {
+		return nil
+	}
+
+	// Validate each address
+	for idx, addr := range v {
+		if addr == "" {
+			return fmt.Errorf("empty address at index %d", idx)
+		}
+		_, err := sdk.AccAddressFromBech32(addr)
+		if err != nil {
+			return fmt.Errorf("invalid address at index %d: %s - %w", idx, addr, err)
+		}
 	}
 
 	return nil
