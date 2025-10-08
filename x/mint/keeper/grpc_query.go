@@ -151,23 +151,32 @@ func (q Querier) RestrictedSupply(c context.Context, _ *types.QueryRestrictedSup
 }
 
 // getStakedAmount returns the total amount staked by a delegator.
+// It properly converts delegation shares to tokens using the validator's exchange rate.
 func (q Querier) getStakedAmount(ctx sdk.Context, delegator sdk.AccAddress, denom string) osmomath.Int {
 	totalStaked := osmomath.ZeroInt()
 
 	// Iterate through all delegations for this delegator
 	err := q.Keeper.stakingKeeper.IterateDelegations(ctx, delegator, func(_ int64, delegation stakingtypes.DelegationI) bool {
-		// Get the delegation shares and convert to tokens
 		shares := delegation.GetShares()
-		// The shares represent the tokens, we need to get the validator to convert shares to tokens
+
+		// Get the validator to convert shares to tokens
 		valAddr, err := sdk.ValAddressFromBech32(delegation.GetValidatorAddr())
 		if err != nil {
 			return false // Continue iteration
 		}
 
-		// For simplicity, we'll use the shares as an approximation
-		// In production, you'd want to get the validator and call validator.TokensFromShares(shares)
-		// But that requires adding more methods to the StakingKeeper interface
-		totalStaked = totalStaked.Add(shares.TruncateInt())
+		validator, err := q.Keeper.stakingKeeper.GetValidator(ctx, valAddr)
+		if err != nil {
+			// If validator not found (perhaps unbonded/removed), use shares as approximation
+			totalStaked = totalStaked.Add(shares.TruncateInt())
+			return false // Continue iteration
+		}
+
+		// Convert shares to tokens using the validator's exchange rate
+		// This accounts for slashing and other events that affect the share-to-token ratio
+		tokens := validator.TokensFromShares(shares)
+		totalStaked = totalStaked.Add(tokens.TruncateInt())
+
 		return false // Continue iteration
 	})
 

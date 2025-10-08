@@ -46,4 +46,5 @@ type EpochKeeper interface {
 // StakingKeeper defines the contract needed to query staking information.
 type StakingKeeper interface {
 	IterateDelegations(ctx context.Context, delegator sdk.AccAddress, fn func(int64, stakingtypes.DelegationI) bool) error
+	GetValidator(ctx context.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, err error)
 }
