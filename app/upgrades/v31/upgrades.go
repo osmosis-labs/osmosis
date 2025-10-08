@@ -13,6 +13,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v30/app/keepers"
 	"github.com/osmosis-labs/osmosis/v30/app/upgrades"
+	mintkeeper "github.com/osmosis-labs/osmosis/v30/x/mint/keeper"
 	poolmanager "github.com/osmosis-labs/osmosis/v30/x/poolmanager"
 	txfeestypes "github.com/osmosis-labs/osmosis/v30/x/txfees/types"
 )
@@ -34,6 +35,11 @@ func CreateUpgradeHandler(
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 		err = updateTakerFeeDistribution(sdkCtx, keepers.PoolManagerKeeper, keepers.AccountKeeper)
+		if err != nil {
+			return nil, err
+		}
+
+		err = initializeRestrictedAddresses(sdkCtx, keepers.MintKeeper)
 		if err != nil {
 			return nil, err
 		}
@@ -64,5 +70,21 @@ func updateTakerFeeDistribution(ctx sdk.Context, poolManagerKeeper *poolmanager.
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+// initializeRestrictedAddresses sets the initial restricted asset addresses in mint params.
+// These addresses represent foundation and investor wallets whose balance and staked amounts
+// should be excluded from circulating supply calculations.
+func initializeRestrictedAddresses(ctx sdk.Context, mintKeeper *mintkeeper.Keeper) error {
+	params := mintKeeper.GetParams(ctx)
+
+	// Initialize with the example address provided
+	// This can be updated via governance in the future
+	params.RestrictedAssetAddresses = []string{
+		"osmo1ugku28hwyexpljrrmtet05nd6kjlrvr9jz6z00", // Example foundation/investor address
+	}
+
+	mintKeeper.SetParams(ctx, params)
 	return nil
 }
