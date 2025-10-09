@@ -42,7 +42,7 @@ import (
 func DebugProtoMarshalledBytes() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "proto-marshalled-bytes [query-path] [module] [struct-name] [struct-arguments...]",
-		Short: "Convert request proto struct into proto marhsalled bytes ",
+		Short: "Convert request proto struct into proto marshalled bytes ",
 		Long: `Convert request proto struct into proto marshalled bytes.
 Especially useful when debugging proto marshalled bytes or debugging stargate queries
 
