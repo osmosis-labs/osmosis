@@ -35,16 +35,16 @@ pub enum ContractError {
     //     actual_sender: String,
     // },
     //
-    #[error("alias already exists: {alias:?}")]
+    #[error("alias already exists: {alias}")]
     AliasAlreadyExists { alias: String },
 
-    #[error("alias already exists for: {base:?}")]
+    #[error("alias already exists for: {base}")]
     AliasAlreadyExistsFor { base: String },
 
-    #[error("alias does not exist: {alias:?}")]
+    #[error("alias does not exist: {alias}")]
     AliasDoesNotExist { alias: String },
 
-    #[error("alias does not exist for: {base:?}")]
+    #[error("alias does not exist for: {base}")]
     AliasDoesNotExistFor { base: String },
 
     #[error("existing alias {existing} does not match supplied alias: {expected}")]
@@ -54,37 +54,37 @@ pub enum ContractError {
     InvalidAlias { alias: String },
 
     #[error(
-        "PFM validation already in progress for {chain:?}. Wait for the ibc lifecycle to complete"
+        "PFM validation already in progress for {chain}. Wait for the ibc lifecycle to complete"
     )]
     PFMValidationAlreadyInProgress { chain: String },
 
-    #[error("No initiator found this validation. The validation has already completed.")]
+    #[error("No initiator found for this validation. The validation has already completed.")]
     PFMNoInitiator {},
 
-    #[error("authorized address already exists for source chain: {source_chain:?}")]
+    #[error("authorized address already exists for source chain: {source_chain}")]
     ChainAuthorizedAddressAlreadyExists { source_chain: String },
 
-    #[error("chain channel link already exists: {source_chain:?} -> {destination_chain:?}")]
+    #[error("chain channel link already exists: {source_chain} -> {destination_chain}")]
     ChainToChainChannelLinkAlreadyExists {
         source_chain: String,
         destination_chain: String,
     },
 
-    #[error("channel chain link already exists: {channel_id:?} -> {source_chain:?}")]
+    #[error("channel chain link already exists: {channel_id} -> {source_chain}")]
     ChannelToChainChainLinkAlreadyExists {
         channel_id: String,
         source_chain: String,
     },
 
-    #[error("native denom link already exists: {native_denom:?}")]
+    #[error("native denom link already exists: {native_denom}")]
     NativeDenomLinkAlreadyExists { native_denom: String },
 
-    #[error("input not valid: {message:?}")]
+    #[error("input not valid: {message}")]
     InvalidInput { message: String },
 
-    #[error("missing field: {field:?}")]
+    #[error("missing field: {field}")]
     MissingField { field: String },
 
-    #[error("custom error: {msg:?}")]
+    #[error("custom error: {msg}")]
     CustomError { msg: String },
 }
