@@ -445,15 +445,11 @@ func (k Keeper) distributeSmoothingBufferToStakers(ctx sdk.Context, baseDenom st
 	coinToDistribute := sdk.NewCoin(baseDenom, amountToDistribute)
 
 	// Send from smoothing buffer to fee collector
-	err := osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+	applyFuncIfNoErrorAndLog(ctx, func(cacheCtx sdk.Context) error {
 		return k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.TakerFeeStakingRewardsBuffer, authtypes.FeeCollectorName, sdk.NewCoins(coinToDistribute))
-	})
-	if err != nil {
-		ctx.Logger().Error("Failed to distribute smoothed staking rewards", "amount", coinToDistribute.String(), "error", err)
-		incTelementryCounter("failed_smoothed_staking_distribution", coinToDistribute.String(), err.Error())
-	} else {
-		ctx.Logger().Info("Distributed smoothed staking rewards", "amount", coinToDistribute.String(), "buffer_remaining", bufferBalance.Amount.Sub(amountToDistribute).String())
-	}
+	}, txfeestypes.TakerFeeFailedSmoothedStakingDistributionMetricName, coinToDistribute)
+
+	ctx.Logger().Info("Distributed smoothed staking rewards", "amount", coinToDistribute.String(), "buffer_remaining", bufferBalance.Amount.Sub(amountToDistribute).String())
 }
 
 // incTelementryCounter is a helper function to increment a telemetry counter with the given label.
