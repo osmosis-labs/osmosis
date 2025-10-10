@@ -1033,3 +1033,144 @@ func (s *KeeperTestSuite) TestDistributeSmoothingBufferToStakers() {
 		})
 	}
 }
+
+// TestStakingRewardSmoothing tests the complete staking reward smoothing flow:
+// - Starts with empty buffer and smoothing factor of 7
+// - First day epoch: collects OSMO and non-OSMO taker fees, swaps non-OSMO, accumulates in buffer, distributes 1/7
+// - Week epoch: does nothing to staking rewards
+// - Second day epoch: distributes 1/7 of remaining buffer
+func (s *KeeperTestSuite) TestStakingRewardSmoothing() {
+	s.Setup()
+
+	baseDenom, _ := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
+
+	// Use real IBC denoms
+	daiDenom := "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7"  // DAI
+	usdcDenom := "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4" // USDC
+
+	// Set smoothing factor to 7
+	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
+	poolManagerParams.TakerFeeParams.DailyStakingRewardsSmoothingFactor = 7
+	// Set staking rewards distribution to 30% for OSMO (rest to burn/community pool)
+	poolManagerParams.TakerFeeParams.OsmoTakerFeeDistribution.StakingRewards = osmomath.MustNewDecFromStr("0.3")
+	poolManagerParams.TakerFeeParams.OsmoTakerFeeDistribution.Burn = osmomath.MustNewDecFromStr("0.7")
+	poolManagerParams.TakerFeeParams.OsmoTakerFeeDistribution.CommunityPool = osmomath.ZeroDec()
+	// Set staking rewards distribution to 22.5% for non-OSMO
+	poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.StakingRewards = osmomath.MustNewDecFromStr("0.225")
+	poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.Burn = osmomath.MustNewDecFromStr("0.525")
+	poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.CommunityPool = osmomath.MustNewDecFromStr("0.25")
+	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
+
+	// Create pools for DAI and USDC with liquidity
+	var poolAssetAmount = int64(1000000000) // 1000 tokens
+	daiPoolId := s.PrepareBalancerPoolWithCoins(
+		sdk.NewInt64Coin(baseDenom, poolAssetAmount),
+		sdk.NewInt64Coin(daiDenom, poolAssetAmount),
+	)
+	usdcPoolId := s.PrepareBalancerPoolWithCoins(
+		sdk.NewInt64Coin(baseDenom, poolAssetAmount),
+		sdk.NewInt64Coin(usdcDenom, poolAssetAmount),
+	)
+
+	// Set protorev links for swapping
+	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, daiDenom, baseDenom, daiPoolId)
+	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, usdcDenom, baseDenom, usdcPoolId)
+
+	// Get module addresses
+	bufferAddr := s.App.AccountKeeper.GetModuleAddress(types.TakerFeeStakingRewardsBuffer)
+	feeCollectorAddr := s.App.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+	takerFeeCollectorAddr := s.App.AccountKeeper.GetModuleAddress(types.TakerFeeCollectorName)
+	nonNativeFeeCollectorAddr := s.App.AccountKeeper.GetModuleAddress(types.NonNativeTxFeeCollectorName)
+	takerFeeStakersAddr := s.App.AccountKeeper.GetModuleAddress(types.TakerFeeStakersName)
+
+	// Verify buffer starts empty
+	initialBufferBalance := s.App.BankKeeper.GetBalance(s.Ctx, bufferAddr, baseDenom)
+	s.Require().True(initialBufferBalance.IsZero(), "Buffer should start empty")
+
+	// Fund taker fee collector with OSMO and non-OSMO tokens
+	osmoTakerFees := osmomath.NewInt(7000000) // 7 OSMO
+	daiTakerFees := osmomath.NewInt(4000000)  // 4 DAI
+	usdcTakerFees := osmomath.NewInt(6000000) // 6 USDC
+	s.FundModuleAcc(types.TakerFeeCollectorName, sdk.NewCoins(
+		sdk.NewCoin(baseDenom, osmoTakerFees),
+		sdk.NewCoin(daiDenom, daiTakerFees),
+		sdk.NewCoin(usdcDenom, usdcTakerFees),
+	))
+
+	// Also fund NonNativeTxFeeCollectorName with some non-OSMO tokens
+	s.FundModuleAcc(types.NonNativeTxFeeCollectorName, sdk.NewCoins(
+		sdk.NewCoin(daiDenom, osmomath.NewInt(1000000)),  // 1 DAI
+		sdk.NewCoin(usdcDenom, osmomath.NewInt(2000000)), // 2 USDC
+	))
+
+	// Record initial fee collector balance
+	initialFeeCollectorBalance := s.App.BankKeeper.GetBalance(s.Ctx, feeCollectorAddr, baseDenom)
+
+	// ===== FIRST DAY EPOCH =====
+	err := s.App.TxFeesKeeper.AfterEpochEnd(s.Ctx, "day", 1)
+	s.Require().NoError(err)
+
+	// Verify taker fee collector is empty
+	takerFeeCollectorBalance := s.App.BankKeeper.GetBalance(s.Ctx, takerFeeCollectorAddr, baseDenom)
+	s.Require().True(takerFeeCollectorBalance.IsZero())
+
+	// Verify non-native collectors are empty
+	nonNativeFeeCollectorBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, nonNativeFeeCollectorAddr)
+	s.Require().True(nonNativeFeeCollectorBalance.IsZero())
+
+	takerFeeStakersBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, takerFeeStakersAddr)
+	s.Require().True(takerFeeStakersBalance.IsZero())
+
+	// Get actual buffer balance and distribution after first day
+	bufferBalanceAfterFirstDay := s.App.BankKeeper.GetBalance(s.Ctx, bufferAddr, baseDenom)
+	feeCollectorBalanceAfterFirstDay := s.App.BankKeeper.GetBalance(s.Ctx, feeCollectorAddr, baseDenom)
+	firstDayDistribution := feeCollectorBalanceAfterFirstDay.Amount.Sub(initialFeeCollectorBalance.Amount)
+
+	// Calculate total that went into buffer before distribution (buffer + what was distributed)
+	totalInBufferBeforeDistribution := bufferBalanceAfterFirstDay.Amount.Add(firstDayDistribution)
+
+	// Verify the 1/7 distribution: firstDayDistribution should be exactly 1/7 of total
+	expectedFirstDistribution := totalInBufferBeforeDistribution.QuoRaw(7)
+	s.Require().Equal(expectedFirstDistribution, firstDayDistribution)
+
+	// Verify buffer has exactly 6/7 remaining
+	expectedRemainingInBuffer := totalInBufferBeforeDistribution.Sub(expectedFirstDistribution)
+	s.Require().Equal(expectedRemainingInBuffer, bufferBalanceAfterFirstDay.Amount)
+
+	// ===== WEEK EPOCH (should do nothing to staking rewards) =====
+	bufferBalanceBeforeWeekEpoch := s.App.BankKeeper.GetBalance(s.Ctx, bufferAddr, baseDenom)
+	feeCollectorBalanceBeforeWeekEpoch := s.App.BankKeeper.GetBalance(s.Ctx, feeCollectorAddr, baseDenom)
+
+	err = s.App.TxFeesKeeper.AfterEpochEnd(s.Ctx, "week", 1)
+	s.Require().NoError(err)
+
+	// Verify buffer unchanged
+	bufferBalanceAfterWeekEpoch := s.App.BankKeeper.GetBalance(s.Ctx, bufferAddr, baseDenom)
+	s.Require().Equal(bufferBalanceBeforeWeekEpoch.Amount, bufferBalanceAfterWeekEpoch.Amount)
+
+	// Verify fee collector unchanged
+	feeCollectorBalanceAfterWeekEpoch := s.App.BankKeeper.GetBalance(s.Ctx, feeCollectorAddr, baseDenom)
+	s.Require().Equal(feeCollectorBalanceBeforeWeekEpoch.Amount, feeCollectorBalanceAfterWeekEpoch.Amount)
+
+	// ===== SECOND DAY EPOCH (should distribute 1/7 of remaining buffer) =====
+	bufferBeforeSecondDay := bufferBalanceAfterWeekEpoch.Amount
+	expectedSecondDistribution := bufferBeforeSecondDay.QuoRaw(7)
+	expectedRemainingAfterSecondDay := bufferBeforeSecondDay.Sub(expectedSecondDistribution)
+
+	err = s.App.TxFeesKeeper.AfterEpochEnd(s.Ctx, "day", 2)
+	s.Require().NoError(err)
+
+	// Verify buffer has correct remaining amount
+	bufferBalanceAfterSecondDay := s.App.BankKeeper.GetBalance(s.Ctx, bufferAddr, baseDenom)
+	s.Require().Equal(expectedRemainingAfterSecondDay, bufferBalanceAfterSecondDay.Amount)
+
+	// Verify fee collector received 1/7 of what was in buffer
+	feeCollectorBalanceAfterSecondDay := s.App.BankKeeper.GetBalance(s.Ctx, feeCollectorAddr, baseDenom)
+	secondDayDistribution := feeCollectorBalanceAfterSecondDay.Amount.Sub(feeCollectorBalanceAfterWeekEpoch.Amount)
+	s.Require().Equal(expectedSecondDistribution, secondDayDistribution)
+
+	// Verify total distributions add up correctly
+	totalDistributed := firstDayDistribution.Add(secondDayDistribution)
+	totalRemaining := bufferBalanceAfterSecondDay.Amount
+	s.Require().Equal(totalInBufferBeforeDistribution, totalDistributed.Add(totalRemaining))
+}
