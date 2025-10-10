@@ -1,6 +1,6 @@
 package v6
 
-import "github.com/osmosis-labs/osmosis/v30/app/upgrades"
+import "github.com/osmosis-labs/osmosis/v31/app/upgrades"
 
 const (
 	// UpgradeName defines the on-chain upgrade name for the Osmosis v6 upgrade.

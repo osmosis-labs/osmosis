@@ -7,8 +7,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	clmodel "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/types"
+	clmodel "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/types"
 )
 
 type msgServer struct {
