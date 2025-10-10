@@ -955,3 +955,81 @@ func (s *KeeperTestSuite) TestNonOsmoTakerFeeBurnMechanism() {
 	s.Require().True(burnAddressUsdcBalance.IsZero(), "Burn address should not contain USDC tokens")
 	s.Require().True(burnAddressFailedBalance.IsZero(), "Burn address should not contain failed swap tokens")
 }
+
+// TestDistributeSmoothingBufferToStakers tests the distributeSmoothingBufferToStakers function
+func (s *KeeperTestSuite) TestDistributeSmoothingBufferToStakers() {
+	s.SetupTest(false)
+
+	tests := []struct {
+		name                    string
+		bufferBalance           osmomath.Int
+		smoothingFactor         uint64
+		expectedDistribution    osmomath.Int
+		expectedRemainingBuffer osmomath.Int
+	}{
+		{
+			name:                    "Normal smoothing with factor 7",
+			bufferBalance:           osmomath.NewInt(7000000),
+			smoothingFactor:         7,
+			expectedDistribution:    osmomath.NewInt(1000000), // 7000000 / 7
+			expectedRemainingBuffer: osmomath.NewInt(6000000),
+		},
+		{
+			name:                    "No smoothing (factor 1)",
+			bufferBalance:           osmomath.NewInt(5000000),
+			smoothingFactor:         1,
+			expectedDistribution:    osmomath.NewInt(5000000), // All distributed
+			expectedRemainingBuffer: osmomath.ZeroInt(),
+		},
+		{
+			name:                    "Large smoothing factor",
+			bufferBalance:           osmomath.NewInt(30000000),
+			smoothingFactor:         30,
+			expectedDistribution:    osmomath.NewInt(1000000), // 30000000 / 30
+			expectedRemainingBuffer: osmomath.NewInt(29000000),
+		},
+		{
+			name:                    "Empty buffer",
+			bufferBalance:           osmomath.ZeroInt(),
+			smoothingFactor:         7,
+			expectedDistribution:    osmomath.ZeroInt(),
+			expectedRemainingBuffer: osmomath.ZeroInt(),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest(false)
+			baseDenom, _ := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
+
+			// Set smoothing factor in params
+			poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
+			poolManagerParams.TakerFeeParams.DailyStakingRewardsSmoothingFactor = tc.smoothingFactor
+			s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
+
+			// Fund the smoothing buffer by sending from a test account
+			if tc.bufferBalance.GT(osmomath.ZeroInt()) {
+				bufferAddr := s.App.AccountKeeper.GetModuleAddress(types.TakerFeeStakingRewardsBuffer)
+				err := s.App.BankKeeper.SendCoins(s.Ctx, s.TestAccs[0], bufferAddr, sdk.NewCoins(sdk.NewCoin(baseDenom, tc.bufferBalance)))
+				s.Require().NoError(err)
+			}
+
+			// Get initial fee collector balance
+			feeCollectorAddr := s.App.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+			initialFeeCollectorBalance := s.App.BankKeeper.GetBalance(s.Ctx, feeCollectorAddr, baseDenom)
+
+			// Execute distribution
+			s.App.TxFeesKeeper.DistributeSmoothingBufferToStakers(s.Ctx, baseDenom)
+
+			// Check fee collector received the expected amount
+			finalFeeCollectorBalance := s.App.BankKeeper.GetBalance(s.Ctx, feeCollectorAddr, baseDenom)
+			distributed := finalFeeCollectorBalance.Amount.Sub(initialFeeCollectorBalance.Amount)
+			s.Require().Equal(tc.expectedDistribution, distributed, "Fee collector should receive expected distribution")
+
+			// Check buffer has expected remaining balance
+			bufferAddr := s.App.AccountKeeper.GetModuleAddress(types.TakerFeeStakingRewardsBuffer)
+			finalBufferBalance := s.App.BankKeeper.GetBalance(s.Ctx, bufferAddr, baseDenom)
+			s.Require().Equal(tc.expectedRemainingBuffer, finalBufferBalance.Amount, "Buffer should have expected remaining balance")
+		})
+	}
+}
