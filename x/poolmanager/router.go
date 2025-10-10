@@ -13,9 +13,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v30/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v30/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v31/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v31/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
 )
 
 var (

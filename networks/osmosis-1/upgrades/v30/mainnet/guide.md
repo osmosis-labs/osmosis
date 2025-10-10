@@ -79,12 +79,12 @@ source ~/.profile
 _To prepare for the upgrade, execute these commands_:
 
 ```sh
-mkdir -p ~/.osmosisd/cosmovisor/upgrades/v30/bin
+mkdir -p ~/.osmosisd/cosmovisor/upgrades/v31/bin
 cd $HOME/osmosis
 git pull
 git checkout v30.0.0
 make build
-cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v30/bin
+cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v31/bin
 ```
 
 At the designated block height, Cosmovisor will automatically upgrade to version v30.

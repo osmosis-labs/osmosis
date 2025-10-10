@@ -8,16 +8,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	ingesttypes "github.com/osmosis-labs/osmosis/v30/ingest/types"
+	ingesttypes "github.com/osmosis-labs/osmosis/v31/ingest/types"
 
-	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v30/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v30/ingest/sqs/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v30/ingest/sqs/service"
+	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v31/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v31/ingest/sqs/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v31/ingest/sqs/service"
 
-	commondomain "github.com/osmosis-labs/osmosis/v30/ingest/common/domain"
-	commonmocks "github.com/osmosis-labs/osmosis/v30/ingest/common/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v30/ingest/common/pooltracker"
+	commondomain "github.com/osmosis-labs/osmosis/v31/ingest/common/domain"
+	commonmocks "github.com/osmosis-labs/osmosis/v31/ingest/common/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v31/ingest/common/pooltracker"
 )
 
 var (

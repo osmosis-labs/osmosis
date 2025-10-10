@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v30/x/incentives/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v30/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v31/x/incentives/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v31/x/lockup/types"
 )
 
 // This test validates that the FilterLocksByMinDuration function

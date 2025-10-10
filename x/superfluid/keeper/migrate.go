@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v30/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v31/x/lockup/types"
 )
 
 type MigrationType int

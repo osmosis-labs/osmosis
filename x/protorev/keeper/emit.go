@@ -10,7 +10,7 @@ import (
 	"github.com/cometbft/cometbft/crypto/tmhash"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v30/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v31/x/protorev/types"
 )
 
 // EmitBackrunEvent updates and emits a backrunEvent

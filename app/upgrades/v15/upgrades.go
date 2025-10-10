@@ -3,7 +3,7 @@ package v15
 import (
 	"context"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -15,19 +15,19 @@ import (
 	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v8/keeper"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 
-	"github.com/osmosis-labs/osmosis/v30/wasmbinding"
-	ibcratelimit "github.com/osmosis-labs/osmosis/v30/x/ibc-rate-limit"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v30/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v31/wasmbinding"
+	ibcratelimit "github.com/osmosis-labs/osmosis/v31/x/ibc-rate-limit"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v31/x/ibc-rate-limit/types"
 
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
-	"github.com/osmosis-labs/osmosis/v30/app/keepers"
-	appParams "github.com/osmosis-labs/osmosis/v30/app/params"
-	"github.com/osmosis-labs/osmosis/v30/app/upgrades"
-	gammkeeper "github.com/osmosis-labs/osmosis/v30/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v30/x/gamm/pool-models/stableswap"
-	gammtypes "github.com/osmosis-labs/osmosis/v30/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v30/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v31/app/keepers"
+	appParams "github.com/osmosis-labs/osmosis/v31/app/params"
+	"github.com/osmosis-labs/osmosis/v31/app/upgrades"
+	gammkeeper "github.com/osmosis-labs/osmosis/v31/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v31/x/gamm/pool-models/stableswap"
+	gammtypes "github.com/osmosis-labs/osmosis/v31/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v31/x/poolmanager"
 )
 
 func CreateUpgradeHandler(

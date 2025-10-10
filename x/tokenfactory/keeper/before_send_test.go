@@ -9,7 +9,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v30/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v31/x/tokenfactory/types"
 )
 
 type SendMsgTestCase struct {

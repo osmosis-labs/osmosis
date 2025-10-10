@@ -4,8 +4,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v30/x/twap/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v30/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v31/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v31/x/txfees/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.

@@ -8,7 +8,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	legacysim "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/v30/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v31/simulation/simtypes"
 )
 
 // AppStateFn returns the app state json bytes and the genesis accounts

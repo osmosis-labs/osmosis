@@ -1,9 +1,9 @@
 package blockprocessor_test
 
 import (
-	commondomain "github.com/osmosis-labs/osmosis/v30/ingest/common/domain"
-	commonmocks "github.com/osmosis-labs/osmosis/v30/ingest/common/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v30/ingest/sqs/service/blockprocessor"
+	commondomain "github.com/osmosis-labs/osmosis/v31/ingest/common/domain"
+	commonmocks "github.com/osmosis-labs/osmosis/v31/ingest/common/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v31/ingest/sqs/service/blockprocessor"
 )
 
 // TestProcessBlock tests the PublishChangedPools method by

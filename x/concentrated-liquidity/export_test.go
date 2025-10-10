@@ -7,10 +7,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
 )
 
 const (

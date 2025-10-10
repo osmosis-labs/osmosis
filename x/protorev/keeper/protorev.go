@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v30/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v31/x/protorev/types"
 
 	"cosmossdk.io/store/prefix"
 

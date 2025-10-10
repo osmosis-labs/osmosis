@@ -3,7 +3,7 @@ package keeper
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v30/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v31/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

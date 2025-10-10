@@ -8,9 +8,9 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmosimtypes "github.com/osmosis-labs/osmosis/v30/simulation/simtypes"
-	valsetkeeper "github.com/osmosis-labs/osmosis/v30/x/valset-pref"
-	"github.com/osmosis-labs/osmosis/v30/x/valset-pref/types"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v31/simulation/simtypes"
+	valsetkeeper "github.com/osmosis-labs/osmosis/v31/x/valset-pref"
+	"github.com/osmosis-labs/osmosis/v31/x/valset-pref/types"
 )
 
 func RandomMsgSetValSetPreference(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*types.MsgSetValidatorSetPreference, error) {

@@ -10,9 +10,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
-	"github.com/osmosis-labs/osmosis/v30/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
+	"github.com/osmosis-labs/osmosis/v31/wasmbinding"
 )
 
 func TestFullDenom(t *testing.T) {

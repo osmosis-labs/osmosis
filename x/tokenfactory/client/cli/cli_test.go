@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v30/x/tokenfactory/client/cli"
-	"github.com/osmosis-labs/osmosis/v30/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v31/x/tokenfactory/client/cli"
+	"github.com/osmosis-labs/osmosis/v31/x/tokenfactory/types"
 )
 
 func TestGetCmdDenomAuthorityMetadata(t *testing.T) {

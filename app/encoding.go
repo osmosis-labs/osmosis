@@ -1,8 +1,8 @@
 package app
 
 import (
-	"github.com/osmosis-labs/osmosis/v30/app/keepers"
-	"github.com/osmosis-labs/osmosis/v30/app/params"
+	"github.com/osmosis-labs/osmosis/v31/app/keepers"
+	"github.com/osmosis-labs/osmosis/v31/app/params"
 
 	"github.com/cosmos/cosmos-sdk/std"
 )

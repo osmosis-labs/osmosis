@@ -11,9 +11,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/stretchr/testify/require"
 
-	appParams "github.com/osmosis-labs/osmosis/v30/app/params"
+	appParams "github.com/osmosis-labs/osmosis/v31/app/params"
 
-	"github.com/osmosis-labs/osmosis/v30/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v31/x/txfees/types"
 )
 
 type extMsg interface {

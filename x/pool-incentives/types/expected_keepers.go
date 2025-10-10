@@ -6,10 +6,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammmigration "github.com/osmosis-labs/osmosis/v30/x/gamm/types/migration"
-	incentivestypes "github.com/osmosis-labs/osmosis/v30/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v30/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v31/x/gamm/types/migration"
+	incentivestypes "github.com/osmosis-labs/osmosis/v31/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v31/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 

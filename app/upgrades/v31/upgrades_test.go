@@ -13,9 +13,9 @@ import (
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
-	v31 "github.com/osmosis-labs/osmosis/v30/app/upgrades/v31"
-	txfeestypes "github.com/osmosis-labs/osmosis/v30/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
+	v31 "github.com/osmosis-labs/osmosis/v31/app/upgrades/v31"
+	txfeestypes "github.com/osmosis-labs/osmosis/v31/x/txfees/types"
 )
 
 const (

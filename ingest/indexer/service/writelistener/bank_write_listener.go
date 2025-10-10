@@ -9,8 +9,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	commondomain "github.com/osmosis-labs/osmosis/v30/ingest/common/domain"
-	indexerdomain "github.com/osmosis-labs/osmosis/v30/ingest/indexer/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v31/ingest/common/domain"
+	indexerdomain "github.com/osmosis-labs/osmosis/v31/ingest/indexer/domain"
 )
 
 var _ commondomain.WriteListener = (*bankWriteListener)(nil)

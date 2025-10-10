@@ -14,8 +14,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	sdkrand "github.com/osmosis-labs/osmosis/v30/simulation/simtypes/random"
-	"github.com/osmosis-labs/osmosis/v30/x/gamm/types"
+	sdkrand "github.com/osmosis-labs/osmosis/v31/simulation/simtypes/random"
+	"github.com/osmosis-labs/osmosis/v31/x/gamm/types"
 )
 
 // CfmmCommonTestSuite is the common test suite struct of Constant Function Market Maker,

@@ -1,13 +1,13 @@
 package v9
 
 import (
-	"github.com/osmosis-labs/osmosis/v30/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v31/app/upgrades"
 
 	store "cosmossdk.io/store/types"
 
 	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
 
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v30/x/tokenfactory/types"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v31/x/tokenfactory/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the Osmosis v9 upgrade.

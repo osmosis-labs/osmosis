@@ -15,10 +15,10 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
-	"github.com/osmosis-labs/osmosis/v30/app/keepers"
-	"github.com/osmosis-labs/osmosis/v30/app/upgrades"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v30/x/ibc-rate-limit/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v30/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v31/app/keepers"
+	"github.com/osmosis-labs/osmosis/v31/app/upgrades"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v31/x/ibc-rate-limit/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v31/x/lockup/types"
 )
 
 //go:embed rate_limiter.wasm

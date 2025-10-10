@@ -2,7 +2,7 @@ package types
 
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
 )
 
 // OsmosisDenomination stores the native denom name for Osmosis on chain used for route building

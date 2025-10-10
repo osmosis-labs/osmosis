@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/osmosis-labs/osmosis/v30/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v31/x/smart-account/types"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"

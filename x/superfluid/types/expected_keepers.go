@@ -10,12 +10,12 @@ import (
 	addresscodec "cosmossdk.io/core/address"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v30/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v30/x/gamm/types/migration"
-	incentivestypes "github.com/osmosis-labs/osmosis/v30/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v30/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v31/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v31/x/gamm/types/migration"
+	incentivestypes "github.com/osmosis-labs/osmosis/v31/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v31/x/lockup/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 

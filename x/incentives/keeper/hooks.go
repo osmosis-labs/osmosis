@@ -3,8 +3,8 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v30/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v30/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v31/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v31/x/lockup/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

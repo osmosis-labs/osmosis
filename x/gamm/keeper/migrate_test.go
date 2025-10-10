@@ -9,11 +9,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
-	"github.com/osmosis-labs/osmosis/v30/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v30/x/gamm/types/migration"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v30/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
+	"github.com/osmosis-labs/osmosis/v31/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v31/x/gamm/types/migration"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v31/x/pool-incentives/types"
 )
 
 const (

@@ -2,10 +2,10 @@ package mocks
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ingesttypes "github.com/osmosis-labs/osmosis/v30/ingest/types"
+	ingesttypes "github.com/osmosis-labs/osmosis/v31/ingest/types"
 
-	commondomain "github.com/osmosis-labs/osmosis/v30/ingest/common/domain"
-	"github.com/osmosis-labs/osmosis/v30/ingest/sqs/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v31/ingest/common/domain"
+	"github.com/osmosis-labs/osmosis/v31/ingest/sqs/domain"
 )
 
 type PoolsTransformerMock struct {

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v30/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v31/x/protorev/types"
 )
 
 func TestMsgSetHotRoutes(t *testing.T) {

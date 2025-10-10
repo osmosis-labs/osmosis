@@ -6,11 +6,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v30/x/cosmwasmpool/cosmwasm/msg"
-	"github.com/osmosis-labs/osmosis/v30/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v30/x/cosmwasmpool/types"
-	"github.com/osmosis-labs/osmosis/v30/x/poolmanager/events"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v31/x/cosmwasmpool/cosmwasm/msg"
+	"github.com/osmosis-labs/osmosis/v31/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v31/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v31/x/poolmanager/events"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
 )

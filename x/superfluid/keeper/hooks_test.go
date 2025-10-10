@@ -9,10 +9,10 @@ import (
 	distribution "github.com/cosmos/cosmos-sdk/x/distribution"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v30/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v30/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v30/x/superfluid/types"
+	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v31/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v31/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v31/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
