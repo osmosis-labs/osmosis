@@ -136,6 +136,7 @@ var moduleAccountPermissions = map[string][]string{
 	txfeestypes.TakerFeeCommunityPoolName:    nil,
 	txfeestypes.TakerFeeBurnName:             nil,
 	txfeestypes.TakerFeeCollectorName:        nil,
+	txfeestypes.TakerFeeStakingRewardsBuffer: nil,
 	wasmtypes.ModuleName:                     {authtypes.Burner},
 	tokenfactorytypes.ModuleName:             {authtypes.Minter, authtypes.Burner},
 	valsetpreftypes.ModuleName:               {authtypes.Staking},

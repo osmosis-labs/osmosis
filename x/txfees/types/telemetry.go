@@ -42,6 +42,13 @@ var (
 	// * match_denom - the match denom to swap to.
 	// * err - the error occurred
 	TakerFeeNoSkipRouteMetricName = formatTxFeesMetricName("takerfee_no_skip_route")
+	// txfees_takerfee_failed_smoothed_staking_distribution
+	//
+	// counter that is increased if smoothed staking distribution fails
+	// Has the following labels:
+	// * coins - the coins that fail to be sent.
+	// * err - the error occurred
+	TakerFeeFailedSmoothedStakingDistributionMetricName = formatTxFeesMetricName("takerfee_failed_smoothed_staking_distribution")
 )
 
 // formatTxFeesMetricName formats the tx fees module metric name.

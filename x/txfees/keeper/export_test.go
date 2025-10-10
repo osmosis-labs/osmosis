@@ -9,3 +9,7 @@ func (k Keeper) SwapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 func (k Keeper) ClearTakerFeeShareAccumulators(ctx sdk.Context) {
 	k.clearTakerFeeShareAccumulators(ctx)
 }
+
+func (k Keeper) DistributeSmoothingBufferToStakers(ctx sdk.Context, baseDenom string) {
+	k.distributeSmoothingBufferToStakers(ctx, baseDenom)
+}

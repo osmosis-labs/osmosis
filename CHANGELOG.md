@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#9541](https://github.com/osmosis-labs/osmosis/pull/9541) feat: buy back and burn osmo using non osmo taker fee burn portion
 * [#9511](https://github.com/osmosis-labs/osmosis/pull/9511) fix: tokenfactory before send hook gas consumption
 * [#9548](https://github.com/osmosis-labs/osmosis/pull/9548) chore: update swagger
+* [#9559](https://github.com/osmosis-labs/osmosis/pull/9559) feat: daily staking rewards smoothing 
 
 ## v30.0.5
 

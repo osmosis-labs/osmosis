@@ -44,6 +44,7 @@ func CreateUpgradeHandler(
 
 // updateTakerFeeDistribution updates the community_pool and burn values in the osmo_taker_fee_distribution
 // This changes taker fees from being sent to the community pool to being burned instead.
+// It also sets up the staking rewards smoothing feature with a smoothing factor of 7.
 func updateTakerFeeDistribution(ctx sdk.Context, poolManagerKeeper *poolmanager.Keeper, accountKeeper *authkeeper.AccountKeeper) error {
 	poolManagerParams := poolManagerKeeper.GetParams(ctx)
 
@@ -57,6 +58,10 @@ func updateTakerFeeDistribution(ctx sdk.Context, poolManagerKeeper *poolmanager.
 	poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.Burn = osmomath.MustNewDecFromStr("0.525")
 	poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.CommunityPool = osmomath.MustNewDecFromStr("0.25")
 
+	// Set daily staking rewards smoothing factor to 7
+	// This distributes 1/7th of the staking rewards buffer each day to smooth APR display
+	poolManagerParams.TakerFeeParams.DailyStakingRewardsSmoothingFactor = 7
+
 	poolManagerKeeper.SetParams(ctx, poolManagerParams)
 
 	// Ensure new module account exists for non‑native taker fee burn bucket. Error if it already exists.
@@ -64,5 +69,12 @@ func updateTakerFeeDistribution(ctx sdk.Context, poolManagerKeeper *poolmanager.
 	if err != nil {
 		return err
 	}
+
+	// Create the staking rewards smoothing buffer module account
+	err = osmoutils.CreateModuleAccountByName(ctx, accountKeeper, txfeestypes.TakerFeeStakingRewardsBuffer)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
