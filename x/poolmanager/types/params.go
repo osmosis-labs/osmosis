@@ -28,6 +28,10 @@ var (
 	OneDec  = osmomath.OneDec()
 )
 
+const (
+	maxSmoothingFactor = 5000
+)
+
 // ParamTable for gamm module.
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
@@ -303,6 +307,10 @@ func validateDailyStakingRewardsSmoothingFactor(i interface{}) error {
 
 	if smoothingFactor <= 0 {
 		return fmt.Errorf("daily staking rewards smoothing factor must be greater than 0")
+	}
+
+	if smoothingFactor > maxSmoothingFactor {
+		return fmt.Errorf("daily staking rewards smoothing factor must not exceed 5000")
 	}
 
 	return nil
