@@ -16,6 +16,10 @@ import (
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
+const (
+	dayEpochIdentifier = "day"
+)
+
 var zeroDec = osmomath.ZeroDec()
 
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
@@ -56,7 +60,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	k.calculateDistributeAndTrackTakerFees(ctx, defaultFeesDenom)
 
 	// Distribute smoothed staking rewards from buffer to fee collector (only on daily epoch)
-	if epochIdentifier == "day" {
+	if epochIdentifier == dayEpochIdentifier {
 		k.distributeSmoothingBufferToStakers(ctx, defaultFeesDenom)
 	}
 
