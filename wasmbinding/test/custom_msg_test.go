@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
 
 	"github.com/stretchr/testify/require"
 
@@ -15,8 +15,8 @@ import (
 	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v30/app"
-	"github.com/osmosis-labs/osmosis/v30/wasmbinding/bindings"
+	"github.com/osmosis-labs/osmosis/v31/app"
+	"github.com/osmosis-labs/osmosis/v31/wasmbinding/bindings"
 )
 
 func TestCreateDenomMsg(t *testing.T) {

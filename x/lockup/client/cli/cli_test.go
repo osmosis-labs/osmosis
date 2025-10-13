@@ -8,8 +8,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
-	"github.com/osmosis-labs/osmosis/v30/x/lockup/types"
+	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
+	"github.com/osmosis-labs/osmosis/v31/x/lockup/types"
 )
 
 var testAddresses = osmoutils.CreateRandomAccounts(3)

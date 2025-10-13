@@ -8,11 +8,11 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
-	cltypes "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v30/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v30/x/incentives/types"
-	incentivetypes "github.com/osmosis-labs/osmosis/v30/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
+	cltypes "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v31/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v31/x/incentives/types"
+	incentivetypes "github.com/osmosis-labs/osmosis/v31/x/incentives/types"
 )
 
 type KeeperTestSuite struct {

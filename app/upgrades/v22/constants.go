@@ -1,7 +1,7 @@
 package v22
 
 import (
-	"github.com/osmosis-labs/osmosis/v30/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v31/app/upgrades"
 
 	store "cosmossdk.io/store/types"
 )

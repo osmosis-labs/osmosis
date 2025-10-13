@@ -9,12 +9,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
-	"github.com/osmosis-labs/osmosis/v30/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v30/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v30/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v30/x/gamm/v2types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
+	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
+	"github.com/osmosis-labs/osmosis/v31/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v31/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v31/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v31/x/gamm/v2types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
 )
 
 func (s *KeeperTestSuite) TestParams() {

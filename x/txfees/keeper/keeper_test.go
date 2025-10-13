@@ -9,12 +9,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmosisapp "github.com/osmosis-labs/osmosis/v30/app"
+	osmosisapp "github.com/osmosis-labs/osmosis/v31/app"
 
-	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
-	protorevtypes "github.com/osmosis-labs/osmosis/v30/x/protorev/types"
-	"github.com/osmosis-labs/osmosis/v30/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
+	protorevtypes "github.com/osmosis-labs/osmosis/v31/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v31/x/txfees/types"
 )
 
 type KeeperTestSuite struct {

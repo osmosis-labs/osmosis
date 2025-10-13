@@ -214,7 +214,7 @@ pull_request_rules:
   - name: backport patches to v30.x branch
     conditions:
       - base=main
-      - label=A:backport/v30.x
+      - label=A:backport/v31.x
     actions:
       backport:
         branches:

@@ -9,9 +9,9 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/client/queryproto"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/client/queryproto"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
 )
 
 // Chain keepers required for extracting pool data.

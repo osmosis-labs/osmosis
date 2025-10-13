@@ -9,10 +9,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	sdkrand "github.com/osmosis-labs/osmosis/v30/simulation/simtypes/random"
-	"github.com/osmosis-labs/osmosis/v30/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v30/x/twap"
-	"github.com/osmosis-labs/osmosis/v30/x/twap/types"
+	sdkrand "github.com/osmosis-labs/osmosis/v31/simulation/simtypes/random"
+	"github.com/osmosis-labs/osmosis/v31/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v31/x/twap"
+	"github.com/osmosis-labs/osmosis/v31/x/twap/types"
 )
 
 var (

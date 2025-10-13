@@ -10,9 +10,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v30/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v30/x/poolmanager/events"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v31/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v31/x/poolmanager/events"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
 )
 
 // swapExactAmountIn is an internal method for swapping an exact amount of tokens

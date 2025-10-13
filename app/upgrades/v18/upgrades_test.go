@@ -16,16 +16,16 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
-	v17 "github.com/osmosis-labs/osmosis/v30/app/upgrades/v17"
+	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
+	v17 "github.com/osmosis-labs/osmosis/v31/app/upgrades/v17"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 
-	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
-	gammmigration "github.com/osmosis-labs/osmosis/v30/x/gamm/types/migration"
-	lockuptypes "github.com/osmosis-labs/osmosis/v30/x/lockup/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v30/x/protorev/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v30/x/superfluid/types"
+	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
+	gammmigration "github.com/osmosis-labs/osmosis/v31/x/gamm/types/migration"
+	lockuptypes "github.com/osmosis-labs/osmosis/v31/x/lockup/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v31/x/protorev/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v31/x/superfluid/types"
 )
 
 type UpgradeTestSuite struct {
