@@ -5,7 +5,7 @@ interchain assets that allows the creation and management of
 non-custodial, self-balancing, interchain token index similar to one of
 Balancer.
 
-Inspired by [Balancer](http://balancer.finance/whitepaper) and Sunny
+Inspired by [Balancer](https://docs.balancer.fi/whitepaper.pdf) and Sunny
 Aggarwal's '[DAOfying Uniswap Automated Market Maker
 Pools](https://www.sunnya97.com/blog/daoifying-uniswap-automated-market-maker-pools)',
 the goal for Osmosis is to provide the best-in-class tools that extend
