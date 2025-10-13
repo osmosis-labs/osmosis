@@ -751,7 +751,7 @@ grpc-ingest-max-call-size-bytes = "{{ .SidecarQueryServerConfig.GRPCIngestMaxCal
 is-enabled = "{{ .IndexerConfig.IsEnabled }}"
 
 # Max publish delay in seconds for the indexer service.
-# Migitate the issue of messages remaining pending when the publishing rate is low,
+# Mitigate the issue of messages remaining pending when the publishing rate is low,
 # ensuring timely delivery and preventing messages from appearing undelivered
 max-publish-delay = "{{ .IndexerConfig.MaxPublishDelay }}"
 

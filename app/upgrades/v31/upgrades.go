@@ -16,6 +16,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v30/app/keepers"
 	"github.com/osmosis-labs/osmosis/v30/app/upgrades"
 	poolmanager "github.com/osmosis-labs/osmosis/v30/x/poolmanager"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
 	superfuidtypes "github.com/osmosis-labs/osmosis/v30/x/superfluid/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v30/x/txfees/types"
 )
@@ -53,26 +54,41 @@ func CreateUpgradeHandler(
 
 // updateTakerFeeDistribution updates the community_pool and burn values in the osmo_taker_fee_distribution
 // This changes taker fees from being sent to the community pool to being burned instead.
+// It also sets up the staking rewards smoothing feature with a smoothing factor of 7.
 func updateTakerFeeDistribution(ctx sdk.Context, poolManagerKeeper *poolmanager.Keeper, accountKeeper *authkeeper.AccountKeeper) error {
-	poolManagerParams := poolManagerKeeper.GetParams(ctx)
-
-	// Set community_pool to 0, burn and staking rewards to 70%:30%
-	poolManagerParams.TakerFeeParams.OsmoTakerFeeDistribution.CommunityPool = osmomath.ZeroDec()
-	poolManagerParams.TakerFeeParams.OsmoTakerFeeDistribution.Burn = osmomath.MustNewDecFromStr("0.7")
-	poolManagerParams.TakerFeeParams.OsmoTakerFeeDistribution.StakingRewards = osmomath.MustNewDecFromStr("0.3")
+	// Set OSMO taker fee distribution: community_pool to 0, burn and staking rewards to 70%:30%
+	osmoTakerFeeDistribution := poolmanagertypes.TakerFeeDistributionPercentage{
+		CommunityPool:  osmomath.ZeroDec(),
+		Burn:           osmomath.MustNewDecFromStr("0.7"),
+		StakingRewards: osmomath.MustNewDecFromStr("0.3"),
+	}
+	poolManagerKeeper.SetParam(ctx, poolmanagertypes.KeyOsmoTakerFeeDistribution, osmoTakerFeeDistribution)
 
 	// Set non-OSMO taker fee distribution: staking_rewards=22.5%, burn=52.5%, community_pool=25%
-	poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.StakingRewards = osmomath.MustNewDecFromStr("0.225")
-	poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.Burn = osmomath.MustNewDecFromStr("0.525")
-	poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.CommunityPool = osmomath.MustNewDecFromStr("0.25")
+	nonOsmoTakerFeeDistribution := poolmanagertypes.TakerFeeDistributionPercentage{
+		StakingRewards: osmomath.MustNewDecFromStr("0.225"),
+		Burn:           osmomath.MustNewDecFromStr("0.525"),
+		CommunityPool:  osmomath.MustNewDecFromStr("0.25"),
+	}
+	poolManagerKeeper.SetParam(ctx, poolmanagertypes.KeyNonOsmoTakerFeeDistribution, nonOsmoTakerFeeDistribution)
 
-	poolManagerKeeper.SetParams(ctx, poolManagerParams)
+	// Set daily staking rewards smoothing factor to 7
+	// This distributes 1/7th of the staking rewards buffer each day to smooth APR display
+	dailyStakingRewardsSmoothingFactor := uint64(7)
+	poolManagerKeeper.SetParam(ctx, poolmanagertypes.KeyDailyStakingRewardsSmoothingFactor, dailyStakingRewardsSmoothingFactor)
 
 	// Ensure new module account exists for non‑native taker fee burn bucket. Error if it already exists.
 	err := osmoutils.CreateModuleAccountByName(ctx, accountKeeper, txfeestypes.TakerFeeBurnName)
 	if err != nil {
 		return err
 	}
+
+	// Create the staking rewards smoothing buffer module account
+	err = osmoutils.CreateModuleAccountByName(ctx, accountKeeper, txfeestypes.TakerFeeStakingRewardsBuffer)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
