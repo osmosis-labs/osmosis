@@ -9,13 +9,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
 
-	"github.com/osmosis-labs/osmosis/v31/app/keepers"
-	"github.com/osmosis-labs/osmosis/v31/app/upgrades"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/types"
-	cwpooltypes "github.com/osmosis-labs/osmosis/v31/x/cosmwasmpool/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v31/x/incentives/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v31/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v30/app/keepers"
+	"github.com/osmosis-labs/osmosis/v30/app/upgrades"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/types"
+	cwpooltypes "github.com/osmosis-labs/osmosis/v30/x/cosmwasmpool/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v30/x/incentives/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v30/x/txfees/types"
 )
 
 const (

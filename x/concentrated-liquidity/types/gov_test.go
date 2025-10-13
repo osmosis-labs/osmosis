@@ -6,7 +6,7 @@ import (
 	proto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/types"
 )
 
 func TestTickSpacingDecreaseProposalMarshalUnmarshal(t *testing.T) {

@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v31/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v30/x/smart-account/authenticator"
 )
 
 // Mock Authenticator for testing purposes

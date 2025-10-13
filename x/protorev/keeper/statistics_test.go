@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v31/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v30/x/protorev/types"
 )
 
 // TestGetNumberOfTrades tests GetNumberOfTrades and IncrementNumberOfTrades

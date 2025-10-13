@@ -8,8 +8,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v31/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v30/x/tokenfactory/types"
 )
 
 type QueryTestSuite struct {

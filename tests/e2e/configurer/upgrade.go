@@ -11,11 +11,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
-	"github.com/osmosis-labs/osmosis/v31/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v31/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v31/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v31/tests/e2e/initialization"
+	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
+	"github.com/osmosis-labs/osmosis/v30/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v30/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v30/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v30/tests/e2e/initialization"
 )
 
 type UpgradeSettings struct {

@@ -11,7 +11,7 @@ import (
 	"cosmossdk.io/log"
 
 	osmomath "github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v31/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v30/x/txfees/types"
 )
 
 /*

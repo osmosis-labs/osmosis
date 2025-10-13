@@ -5,9 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	ingesttypes "github.com/osmosis-labs/osmosis/v31/ingest/types"
+	ingesttypes "github.com/osmosis-labs/osmosis/v30/ingest/types"
 
-	commondomain "github.com/osmosis-labs/osmosis/v31/ingest/common/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v30/ingest/common/domain"
 )
 
 // PoolsTransformer is an interface that defines the methods for the pool transformer

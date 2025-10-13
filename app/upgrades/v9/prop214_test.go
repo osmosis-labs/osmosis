@@ -8,8 +8,8 @@ import (
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
-	v9 "github.com/osmosis-labs/osmosis/v31/app/upgrades/v9"
+	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
+	v9 "github.com/osmosis-labs/osmosis/v30/app/upgrades/v9"
 )
 
 type UpgradeTestSuite struct {

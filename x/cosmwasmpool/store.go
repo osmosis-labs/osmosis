@@ -9,8 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v31/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v31/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v30/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v30/x/cosmwasmpool/types"
 )
 
 // SetPool stores the given pool in state.

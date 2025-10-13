@@ -12,21 +12,21 @@ import (
 	"github.com/stretchr/testify/suite"
 	"golang.org/x/exp/rand"
 
-	ingesttypes "github.com/osmosis-labs/osmosis/v31/ingest/types"
+	ingesttypes "github.com/osmosis-labs/osmosis/v30/ingest/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
-	indexerdomain "github.com/osmosis-labs/osmosis/v31/ingest/indexer/domain"
-	indexermocks "github.com/osmosis-labs/osmosis/v31/ingest/indexer/domain/mocks"
-	indexerservice "github.com/osmosis-labs/osmosis/v31/ingest/indexer/service"
-	sqsmocks "github.com/osmosis-labs/osmosis/v31/ingest/sqs/domain/mocks"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v31/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
+	indexerdomain "github.com/osmosis-labs/osmosis/v30/ingest/indexer/domain"
+	indexermocks "github.com/osmosis-labs/osmosis/v30/ingest/indexer/domain/mocks"
+	indexerservice "github.com/osmosis-labs/osmosis/v30/ingest/indexer/service"
+	sqsmocks "github.com/osmosis-labs/osmosis/v30/ingest/sqs/domain/mocks"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v30/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
 
-	commondomain "github.com/osmosis-labs/osmosis/v31/ingest/common/domain"
-	commonmocks "github.com/osmosis-labs/osmosis/v31/ingest/common/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v31/ingest/common/pooltracker"
+	commondomain "github.com/osmosis-labs/osmosis/v30/ingest/common/domain"
+	commonmocks "github.com/osmosis-labs/osmosis/v30/ingest/common/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v30/ingest/common/pooltracker"
 )
 
 var (

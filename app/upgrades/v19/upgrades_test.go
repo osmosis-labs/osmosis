@@ -16,12 +16,12 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
-	gammtypes "github.com/osmosis-labs/osmosis/v31/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
+	gammtypes "github.com/osmosis-labs/osmosis/v30/x/gamm/types"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 
-	superfluidtypes "github.com/osmosis-labs/osmosis/v31/x/superfluid/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v30/x/superfluid/types"
 )
 
 const (

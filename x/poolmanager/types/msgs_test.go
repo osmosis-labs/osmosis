@@ -8,11 +8,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v31/app/params"
-	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
-	"github.com/osmosis-labs/osmosis/v31/x/poolmanager/module"
-	"github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v30/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
+	"github.com/osmosis-labs/osmosis/v30/x/poolmanager/module"
+	"github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
 )
 
 var (

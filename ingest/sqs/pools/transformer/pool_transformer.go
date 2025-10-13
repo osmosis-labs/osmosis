@@ -10,19 +10,19 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ingesttypes "github.com/osmosis-labs/osmosis/v31/ingest/types"
-	sqscosmwasmpool "github.com/osmosis-labs/osmosis/v31/ingest/types/cosmwasmpool"
+	ingesttypes "github.com/osmosis-labs/osmosis/v30/ingest/types"
+	sqscosmwasmpool "github.com/osmosis-labs/osmosis/v30/ingest/types/cosmwasmpool"
 
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v31/x/cosmwasmpool/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v30/x/cosmwasmpool/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	commondomain "github.com/osmosis-labs/osmosis/v31/ingest/common/domain"
-	"github.com/osmosis-labs/osmosis/v31/ingest/sqs/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v30/ingest/common/domain"
+	"github.com/osmosis-labs/osmosis/v30/ingest/sqs/domain"
 
-	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
-	"github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/client/queryproto"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
+	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
+	"github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/client/queryproto"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
 )
 
 // poolTransformer is a transformer for pools.

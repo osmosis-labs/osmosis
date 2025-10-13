@@ -4,9 +4,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v31/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v31/x/twap/types"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v30/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v30/x/twap/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 

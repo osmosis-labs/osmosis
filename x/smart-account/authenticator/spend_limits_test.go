@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v31/x/txfees/keeper"
+	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v30/x/txfees/keeper"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -18,19 +18,19 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
 
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v31/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v30/x/gamm/pool-models/balancer"
 
-	"github.com/osmosis-labs/osmosis/v31/app"
-	"github.com/osmosis-labs/osmosis/v31/x/smart-account/ante"
-	"github.com/osmosis-labs/osmosis/v31/x/smart-account/authenticator"
-	"github.com/osmosis-labs/osmosis/v31/x/smart-account/post"
-	"github.com/osmosis-labs/osmosis/v31/x/smart-account/testutils"
+	"github.com/osmosis-labs/osmosis/v30/app"
+	"github.com/osmosis-labs/osmosis/v30/x/smart-account/ante"
+	"github.com/osmosis-labs/osmosis/v30/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v30/x/smart-account/post"
+	"github.com/osmosis-labs/osmosis/v30/x/smart-account/testutils"
 
 	storetypes "cosmossdk.io/store/types"
 )

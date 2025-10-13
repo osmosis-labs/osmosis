@@ -46,7 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#9541](https://github.com/osmosis-labs/osmosis/pull/9541) feat: buy back and burn osmo using non osmo taker fee burn portion
 * [#9511](https://github.com/osmosis-labs/osmosis/pull/9511) fix: tokenfactory before send hook gas consumption
 * [#9548](https://github.com/osmosis-labs/osmosis/pull/9548) chore: update swagger
-* [#9559](https://github.com/osmosis-labs/osmosis/pull/9559) feat: daily staking rewards smoothing
+* [#9559](https://github.com/osmosis-labs/osmosis/pull/9559) feat: daily staking rewards smoothing 
 
 ## v30.0.5
 
@@ -58,44 +58,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 * [#9467](https://github.com/osmosis-labs/osmosis/pull/9467) fix: protorev returns incorrect values in posthandler
-* [#9476](https://github.com/osmosis-labs/osmosis/pull/9476) fix: update DefaultBaseFee and cap CurBaseFee when loaded
+* [#9476](https://github.com/osmosis-labs/osmosis/pull/9476) fix: update DefaultBaseFee and cap CurBaseFee when loaded 
 * [#9488](https://github.com/osmosis-labs/osmosis/pull/9488) chore: bump block-sdk to v2.1.8-mempool
-* [#9493](https://github.com/osmosis-labs/osmosis/pull/9493) fix: update block-sdk version that fix staled mempool and add tests
+* [#9493](https://github.com/osmosis-labs/osmosis/pull/9493) fix: update block-sdk version that fix staled mempool and add tests 
 
 
 ## v30.0.1
 
 ### State Compatible
 
-* [#9473](https://github.com/osmosis-labs/osmosis/pull/9473) chore: bump go version to v1.23.4
+* [#9473](https://github.com/osmosis-labs/osmosis/pull/9473) chore: bump go version to v1.23.4 
 
 
 ## v30.0.0
 
 ### State Breaking
 
-* [#9355](https://github.com/osmosis-labs/osmosis/pull/9355) chore: bump go version to v1.23
-* [#9427](https://github.com/osmosis-labs/osmosis/pull/9427) chore: bump wasmd version
+* [#9355](https://github.com/osmosis-labs/osmosis/pull/9355) chore: bump go version to v1.23 
+* [#9427](https://github.com/osmosis-labs/osmosis/pull/9427) chore: bump wasmd version 
 * [#9434](https://github.com/osmosis-labs/osmosis/pull/9434) Taker Fee non-OSMO revenue on separate whitelist to Quote Assets
 
 ### State Compatible
 
 * [#9420](https://github.com/osmosis-labs/osmosis/pull/9420) chore: update seeds for the init command
-* [#9396](https://github.com/osmosis-labs/osmosis/pull/9396) fix: missing coinbase/rosetta-sdk-go/types dependency
+* [#9396](https://github.com/osmosis-labs/osmosis/pull/9396) fix: missing coinbase/rosetta-sdk-go/types dependency 
 * [#9436](https://github.com/osmosis-labs/osmosis/pull/9436) feat: remove authorized quote denom validation
 * [#9440](https://github.com/osmosis-labs/osmosis/pull/9440) feat: increase consensus min fee to 0.01 uosmo / gas
 * [#9455](https://github.com/osmosis-labs/osmosis/pull/9455) chore: bump cosmos-sdk to v0.50.14
 * [#9456](https://github.com/osmosis-labs/osmosis/pull/9456) feat: transfer top of block auction funds to community pool
 * [#9457](https://github.com/osmosis-labs/osmosis/pull/9457) chore: bump submodules
-* [#9460](https://github.com/osmosis-labs/osmosis/pull/9460) fix: mempool-1559 min base fee to match consensus min fee
-* [#9465](https://github.com/osmosis-labs/osmosis/pull/9465) Fix: Check gas remaining in the parent context's gas meter for tokenfactory hook
+* [#9460](https://github.com/osmosis-labs/osmosis/pull/9460) fix: mempool-1559 min base fee to match consensus min fee 
+* [#9465](https://github.com/osmosis-labs/osmosis/pull/9465) Fix: Check gas remaining in the parent context's gas meter for tokenfactory hook 
 ## v29.0.2
 
 ### State Breaking
 
 ### State Compatible
 
-* [#9375](https://github.com/osmosis-labs/osmosis/pull/9375) chore: add fix for pagination of proposals
+* [#9375](https://github.com/osmosis-labs/osmosis/pull/9375) chore: add fix for pagination of proposals 
 
 ### State Breaking
 
@@ -107,13 +107,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### State Compatible
 
-* [#9372](https://github.com/osmosis-labs/osmosis/pull/9372) fix: query all proposals codec issues
+* [#9372](https://github.com/osmosis-labs/osmosis/pull/9372) fix: query all proposals codec issues 
 
 ## v29.0.0
 
 ### State Breaking
 
-* [#8996](https://github.com/osmosis-labs/osmosis/pull/8996) chore: upgrade pfm to v8.1.1
+* [#8996](https://github.com/osmosis-labs/osmosis/pull/8996) chore: upgrade pfm to v8.1.1 
 * [#8880](https://github.com/osmosis-labs/osmosis/pull/8880) chore: bump wasmd from 0.53.0 to 0.53.2
 * [#9005](https://github.com/osmosis-labs/osmosis/pull/9005) fix: bump ibc-go to v8.6.1
 * [#9011](https://github.com/osmosis-labs/osmosis/pull/9011) feat: Delete superfluid balancer -> CL migration code. Makes the message now just return an error if called.
@@ -122,25 +122,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### State Compatible
 
 * [#8985](https://github.com/osmosis-labs/osmosis/pull/8985) build: block-sdk import now uses forked version
-* [#9021](https://github.com/osmosis-labs/osmosis/pull/9021) chore: slightly increase blocktime
+* [#9021](https://github.com/osmosis-labs/osmosis/pull/9021) chore: slightly increase blocktime 
 
 ### Removed
 
-* [#9340](https://github.com/osmosis-labs/osmosis/pull/9340) chore: bump IAVL, ignore legacy state if it is broken
+* [#9340](https://github.com/osmosis-labs/osmosis/pull/9340) chore: bump IAVL, ignore legacy state if it is broken 
 
 ## v28.0.6
 
 ### State Compatible
 
-* [#9334](https://github.com/osmosis-labs/osmosis/pull/9334) fix: iavl pruning issue move onto next version if stuck
+* [#9334](https://github.com/osmosis-labs/osmosis/pull/9334) fix: iavl pruning issue move onto next version if stuck 
 * [#9332](https://github.com/osmosis-labs/osmosis/pull/9332) fix(poolmanager): only write to cache in finalize execution mode
-* [#9340](https://github.com/osmosis-labs/osmosis/pull/9340) chore: bump IAVL, ignore legacy state if it is broken
+* [#9340](https://github.com/osmosis-labs/osmosis/pull/9340) chore: bump IAVL, ignore legacy state if it is broken 
 
 ## v28.0.5
 
 ### State Compatible
 
-* [#9050](https://github.com/osmosis-labs/osmosis/pull/9050) chore: bump ibc-go to v8.7.0
+* [#9050](https://github.com/osmosis-labs/osmosis/pull/9050) chore: bump ibc-go to v8.7.0 
 * [#9006](https://github.com/osmosis-labs/osmosis/pull/9006) feat: CosmWasm Pool raw state query
 
 ## v28.0.4
@@ -252,9 +252,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#8535](https://github.com/osmosis-labs/osmosis/pull/8535) Prevent Setting Invalid Before Send Hook
 * [#8310](https://github.com/osmosis-labs/osmosis/pull/8310) Taker fee share
 * [#8494](https://github.com/osmosis-labs/osmosis/pull/8494) Add additional events in x/lockup, x/superfluid, x/concentratedliquidity
-* [#8581](https://github.com/osmosis-labs/osmosis/pull/8581) feat: add ledger signing to smart account module
+* [#8581](https://github.com/osmosis-labs/osmosis/pull/8581) feat: add ledger signing to smart account module 
 * [#8573](https://github.com/osmosis-labs/osmosis/pull/8573) fix: increase unauthenticated gas to fix fee token issue
-* [#8598](https://github.com/osmosis-labs/osmosis/pull/8598) feat: param changes for block and cost per byte
+* [#8598](https://github.com/osmosis-labs/osmosis/pull/8598) feat: param changes for block and cost per byte 
 * [#8609](https://github.com/osmosis-labs/osmosis/pull/8609) Exempt `UnrestrictedPoolCreatorWhitelist` addresses from pool creation fee
 * [#8615](https://github.com/osmosis-labs/osmosis/pull/8615) chore: add tagged cosmos-sdk version: v0.50.6-v26-osmo-1
 * [#8616](https://github.com/osmosis-labs/osmosis/pull/8616) chore: upgrade wasmd to v0.53.0 and wasmvm to v2.1.2
@@ -1166,7 +1166,7 @@ This release's main features are utility helpers for smart contract developers. 
   - This work is importable by external repositories, intended as an ecosystem standards
 - Downtime detection tooling
   - There is now an on-chain query, allowing you to test if the chain is recovering from a downtime of a given duration.
-    - The querier defines what recovering means, e.g. for a 1 hour downtime, do you consider the chain as recovering until at least 10 minutes since last 1 hr downtime?
+    - The querier defines what recovering means, e.g. for a 1 hour downtime, do you consider the chain as recovering until at least 10 minutes since last 1 hr downtime? 
 - Geometric TWAP
   - Every AMM pool now exposes a geometric TWAP, in addition to the existing arithmetic TWAP
 * IBC features
@@ -1188,7 +1188,7 @@ This release's main features are utility helpers for smart contract developers. 
 * [#3731](https://github.com/osmosis-labs/osmosis/pull/3731) BigDec Power functions with decimal exponent.
 * [#3847](https://github.com/osmosis-labs/osmosis/pull/3847) GeometricTwap and GeometricTwapToNow queries added to Stargate whitelist.
 * [#3899](https://github.com/osmosis-labs/osmosis/pull/3899) Fixed osmoutils so its importable by chains that don't use the osmosis CosmosSDK fork
-
+  
 ### API breaks
 
 * [#3763](https://github.com/osmosis-labs/osmosis/pull/3763) Move binary search and error tolerance code from `osmoutils` into `osmomath`

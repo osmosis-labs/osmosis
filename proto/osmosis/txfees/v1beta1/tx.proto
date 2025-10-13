@@ -6,7 +6,7 @@ import "amino/amino.proto";
 import "osmosis/txfees/v1beta1/feetoken.proto";
 import "cosmos/msg/v1/msg.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v31/x/txfees/types";
+option go_package = "github.com/osmosis-labs/osmosis/v30/x/txfees/types";
 
 service Msg {
   rpc SetFeeTokens(MsgSetFeeTokens) returns (MsgSetFeeTokensResponse);
