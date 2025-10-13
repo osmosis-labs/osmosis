@@ -14,16 +14,16 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v31/x/ibc-rate-limit/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v30/x/ibc-rate-limit/types"
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
-	v15 "github.com/osmosis-labs/osmosis/v31/app/upgrades/v15"
-	gamm "github.com/osmosis-labs/osmosis/v31/x/gamm/keeper"
-	balancer "github.com/osmosis-labs/osmosis/v31/x/gamm/pool-models/balancer"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
+	v15 "github.com/osmosis-labs/osmosis/v30/app/upgrades/v15"
+	gamm "github.com/osmosis-labs/osmosis/v30/x/gamm/keeper"
+	balancer "github.com/osmosis-labs/osmosis/v30/x/gamm/pool-models/balancer"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
 )
 
 type UpgradeTestSuite struct {

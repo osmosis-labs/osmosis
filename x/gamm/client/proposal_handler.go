@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/osmosis-labs/osmosis/v31/x/gamm/client/cli"
+	"github.com/osmosis-labs/osmosis/v30/x/gamm/client/cli"
 
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 )

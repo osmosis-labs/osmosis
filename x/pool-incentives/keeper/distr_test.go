@@ -5,8 +5,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
-	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
-	"github.com/osmosis-labs/osmosis/v31/x/pool-incentives/types"
+	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
+	"github.com/osmosis-labs/osmosis/v30/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

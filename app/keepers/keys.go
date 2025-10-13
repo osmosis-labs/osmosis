@@ -6,8 +6,8 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
-	protorevtypes "github.com/osmosis-labs/osmosis/v31/x/protorev/types"
-	twaptypes "github.com/osmosis-labs/osmosis/v31/x/twap/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v30/x/protorev/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v30/x/twap/types"
 )
 
 // GenerateKeys generates new keys (KV Store, Transient store, and memory store).

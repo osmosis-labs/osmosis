@@ -8,12 +8,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	cltypes "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
 )
 
 // Incentives parameters key store.

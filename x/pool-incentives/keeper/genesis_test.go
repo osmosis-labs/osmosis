@@ -13,11 +13,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	simapp "github.com/osmosis-labs/osmosis/v31/app"
-	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
-	lockuptypes "github.com/osmosis-labs/osmosis/v31/x/lockup/types"
-	pool_incentives "github.com/osmosis-labs/osmosis/v31/x/pool-incentives"
-	"github.com/osmosis-labs/osmosis/v31/x/pool-incentives/types"
+	simapp "github.com/osmosis-labs/osmosis/v30/app"
+	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/v30/x/lockup/types"
+	pool_incentives "github.com/osmosis-labs/osmosis/v30/x/pool-incentives"
+	"github.com/osmosis-labs/osmosis/v30/x/pool-incentives/types"
 )
 
 var (

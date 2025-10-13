@@ -12,15 +12,15 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
-	v26 "github.com/osmosis-labs/osmosis/v31/app/upgrades/v26"
+	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
+	v26 "github.com/osmosis-labs/osmosis/v30/app/upgrades/v26"
 
 	"cosmossdk.io/x/upgrade"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
 )
 
 const (

@@ -12,10 +12,10 @@ import (
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	auctiontypes "github.com/skip-mev/block-sdk/v2/x/auction/types"
 
-	"github.com/osmosis-labs/osmosis/v31/app/keepers"
-	"github.com/osmosis-labs/osmosis/v31/app/upgrades"
-	poolmanager "github.com/osmosis-labs/osmosis/v31/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v30/app/keepers"
+	"github.com/osmosis-labs/osmosis/v30/app/upgrades"
+	poolmanager "github.com/osmosis-labs/osmosis/v30/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
 )
 
 func CreateUpgradeHandler(

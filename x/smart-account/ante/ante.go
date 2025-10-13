@@ -8,7 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v31/x/txfees/keeper"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v30/x/txfees/keeper"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -19,9 +19,9 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	txsigning "cosmossdk.io/x/tx/signing"
 
-	"github.com/osmosis-labs/osmosis/v31/x/smart-account/authenticator"
-	smartaccountkeeper "github.com/osmosis-labs/osmosis/v31/x/smart-account/keeper"
-	"github.com/osmosis-labs/osmosis/v31/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v30/x/smart-account/authenticator"
+	smartaccountkeeper "github.com/osmosis-labs/osmosis/v30/x/smart-account/keeper"
+	"github.com/osmosis-labs/osmosis/v30/x/smart-account/types"
 )
 
 // AuthenticatorDecorator is responsible for processing authentication logic

@@ -7,11 +7,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v31/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v31/x/gamm/pool-models/internal/cfmm_common"
-	"github.com/osmosis-labs/osmosis/v31/x/gamm/pool-models/stableswap"
-	gammtypes "github.com/osmosis-labs/osmosis/v31/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v30/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v30/x/gamm/pool-models/internal/cfmm_common"
+	"github.com/osmosis-labs/osmosis/v30/x/gamm/pool-models/stableswap"
+	gammtypes "github.com/osmosis-labs/osmosis/v30/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

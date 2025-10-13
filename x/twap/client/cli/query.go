@@ -11,9 +11,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	poolmanager "github.com/osmosis-labs/osmosis/v31/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v31/x/twap/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v31/x/twap/types"
+	poolmanager "github.com/osmosis-labs/osmosis/v30/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v30/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v30/x/twap/types"
 )
 
 // twapQueryParseArgs represents the outcome

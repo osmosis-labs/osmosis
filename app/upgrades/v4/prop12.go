@@ -9,7 +9,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 
-	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
 )
 
 func Prop12(ctx sdk.Context, bank bankkeeper.Keeper, distr *distrkeeper.Keeper) {

@@ -8,13 +8,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v31/x/twap"
+	"github.com/osmosis-labs/osmosis/v30/x/twap"
 
 	storetypes "cosmossdk.io/store/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v31/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v31/x/twap/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v30/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v30/x/twap/types"
 )
 
 var (

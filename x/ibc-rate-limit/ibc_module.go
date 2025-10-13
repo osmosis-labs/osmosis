@@ -16,7 +16,7 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 
-	"github.com/osmosis-labs/osmosis/v31/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v30/x/ibc-rate-limit/types"
 )
 
 type IBCModule struct {

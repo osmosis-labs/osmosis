@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
-	"github.com/osmosis-labs/osmosis/v31/x/txfees/types"
+	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
+	"github.com/osmosis-labs/osmosis/v30/x/txfees/types"
 )
 
 var (

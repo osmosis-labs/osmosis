@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	markov "github.com/osmosis-labs/osmosis/v31/simulation/simtypes/transitionmatrix"
+	markov "github.com/osmosis-labs/osmosis/v30/simulation/simtypes/transitionmatrix"
 )
 
 const (

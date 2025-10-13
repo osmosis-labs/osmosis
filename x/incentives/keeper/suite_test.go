@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
-	"github.com/osmosis-labs/osmosis/v31/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v31/x/lockup/types"
+	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
+	"github.com/osmosis-labs/osmosis/v30/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v30/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

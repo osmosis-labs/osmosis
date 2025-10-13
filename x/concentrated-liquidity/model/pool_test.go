@@ -11,10 +11,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
-	clmath "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
+	clmath "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/types"
 )
 
 const (

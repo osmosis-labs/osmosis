@@ -7,12 +7,12 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
-	gammtypes "github.com/osmosis-labs/osmosis/v31/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v31/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v31/x/pool-incentives/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v31/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
+	gammtypes "github.com/osmosis-labs/osmosis/v30/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v30/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v30/x/pool-incentives/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v30/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
 )
 
 type KeeperTestSuite struct {

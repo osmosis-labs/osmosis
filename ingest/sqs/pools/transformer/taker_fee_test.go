@@ -1,10 +1,10 @@
 package poolstransformer_test
 
 import (
-	ingesttypes "github.com/osmosis-labs/osmosis/v31/ingest/types"
+	ingesttypes "github.com/osmosis-labs/osmosis/v30/ingest/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	poolstransformer "github.com/osmosis-labs/osmosis/v31/ingest/sqs/pools/transformer"
+	poolstransformer "github.com/osmosis-labs/osmosis/v30/ingest/sqs/pools/transformer"
 )
 
 var (

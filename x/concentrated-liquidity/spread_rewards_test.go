@@ -8,12 +8,12 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
-	cl "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity"
-	clmath "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/math"
-	clmodel "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
+	cl "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity"
+	clmath "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/math"
+	clmodel "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/types"
 )
 
 const (
