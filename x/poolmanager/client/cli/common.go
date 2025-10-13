@@ -7,7 +7,7 @@ import (
 
 	flag "github.com/spf13/pflag"
 
-	"github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
 )
 
 func swapAmountInRoutes(fs *flag.FlagSet) ([]types.SwapAmountInRoute, error) {

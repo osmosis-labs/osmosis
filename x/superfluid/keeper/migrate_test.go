@@ -7,12 +7,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	cltypes "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v30/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v30/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v30/x/gamm/types/migration"
-	lockuptypes "github.com/osmosis-labs/osmosis/v30/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v30/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v31/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v31/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v31/x/gamm/types/migration"
+	lockuptypes "github.com/osmosis-labs/osmosis/v31/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v31/x/superfluid/types"
 )
 
 var (

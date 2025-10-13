@@ -8,16 +8,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/hashicorp/go-metrics"
-	ingesttypes "github.com/osmosis-labs/osmosis/v30/ingest/types"
-	prototypes "github.com/osmosis-labs/osmosis/v30/ingest/types/proto/types"
+	ingesttypes "github.com/osmosis-labs/osmosis/v31/ingest/types"
+	prototypes "github.com/osmosis-labs/osmosis/v31/ingest/types/proto/types"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 
-	"github.com/osmosis-labs/osmosis/v30/ingest/sqs/domain"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v31/ingest/sqs/domain"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
 )
 
 type GRPCClient struct {
