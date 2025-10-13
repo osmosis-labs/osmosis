@@ -147,20 +147,35 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 			moduleAddrNonNativeFee := s.App.AccountKeeper.GetModuleAddress(types.NonNativeTxFeeCollectorName)
 			s.Equal(s.App.BankKeeper.GetAllBalances(s.Ctx, moduleAddrNonNativeFee), tc.coins)
 
-			// End of epoch, so all the non-osmo fee amount should be swapped to osmo and transfer to fee module account
-			params := s.App.IncentivesKeeper.GetParams(s.Ctx)
+			// End of epoch, so all the non-osmo fee amount should be swapped to osmo and transferred to buffer, then distributed
+			// Use "day" epoch identifier to trigger smoothing buffer distribution
 			futureCtx := s.Ctx.WithBlockTime(time.Now().Add(time.Minute))
-			err := s.App.TxFeesKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, int64(1))
+			err := s.App.TxFeesKeeper.AfterEpochEnd(futureCtx, "day", int64(1))
 			s.NoError(err)
 
-			// check the balance of the native-basedenom in module
+			// Get smoothing factor from params
+			poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
+			smoothingFactor := poolManagerParams.TakerFeeParams.DailyStakingRewardsSmoothingFactor
+
+			// check the balance of the native-basedenom in fee collector
 			moduleAddrFee := s.App.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
 			moduleBaseDenomBalance := s.App.BankKeeper.GetBalance(s.Ctx, moduleAddrFee, tc.baseDenom)
 
-			// non-osmos module account should be empty as all the funds should be transferred to osmo module
+			// check the balance in the smoothing buffer
+			bufferAddr := s.App.AccountKeeper.GetModuleAddress(types.TakerFeeStakingRewardsBuffer)
+			bufferBalance := s.App.BankKeeper.GetBalance(s.Ctx, bufferAddr, tc.baseDenom)
+
+			// non-osmos module account should be empty as all the funds should be transferred to buffer or fee collector
 			s.Empty(s.App.BankKeeper.GetAllBalances(s.Ctx, moduleAddrNonNativeFee))
-			// check that the total osmo amount has been transferred to module account
-			s.Equal(moduleBaseDenomBalance.Amount.String(), finalOutputAmount.String())
+
+			// With smoothing: total = (buffer + distributed) should equal finalOutputAmount
+			// distributed = finalOutputAmount / smoothingFactor
+			// buffer = finalOutputAmount - distributed
+			expectedDistributed := finalOutputAmount.QuoRaw(int64(smoothingFactor))
+			expectedBuffer := finalOutputAmount.Sub(expectedDistributed)
+
+			s.Equal(expectedDistributed.String(), moduleBaseDenomBalance.Amount.String(), "Fee collector should receive 1/smoothing_factor of swapped amount")
+			s.Equal(expectedBuffer.String(), bufferBalance.Amount.String(), "Buffer should contain remaining amount")
 		})
 	}
 }
