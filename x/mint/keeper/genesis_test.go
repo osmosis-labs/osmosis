@@ -35,7 +35,9 @@ var customGenesis = types.NewGenesisState(
 				Weight:  osmomath.NewDecWithPrec(4, 1),
 			},
 		},
-		2), // minting reward distribution start epoch
+		2,        // minting reward distribution start epoch
+		[]string{} // restricted asset addresses
+	),
 	3) // halven started epoch
 
 // TestMintInitGenesis tests that genesis is initialized correctly

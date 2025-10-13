@@ -133,7 +133,8 @@ func RandomizedGenState(simState *module.SimulationState) {
 		reductionPeriodInEpochs,
 		distributionProportions,
 		weightedDevRewardReceivers,
-		mintintRewardsDistributionStartEpoch)
+		mintintRewardsDistributionStartEpoch,
+		[]string{})
 
 	minter := types.NewMinter(epochProvisions)
 
