@@ -121,38 +121,60 @@ func cleanupSuperfluid(ctx sdk.Context, keepers *keepers.AppKeepers) error {
 func undelegateAllIntermediaryAccounts(ctx sdk.Context, keepers *keepers.AppKeepers) error {
 	intermediaryAccounts := keepers.SuperfluidKeeper.GetAllIntermediaryAccounts(ctx)
 	ctx.Logger().Info(fmt.Sprintf("Found %d intermediary accounts to clean up", len(intermediaryAccounts)))
+	totalUndelegatedCoins := sdk.Coins{}
 
 	for _, intermediaryAcc := range intermediaryAccounts {
-		if err := undelegateSingleIntermediaryAccount(ctx, keepers, intermediaryAcc); err != nil {
+		undelegatedCoins, err := undelegateSingleIntermediaryAccount(ctx, keepers, intermediaryAcc)
+		if err != nil {
 			// Log error but continue with other accounts
 			ctx.Logger().Error(fmt.Sprintf("Failed to undelegate intermediary account %s: %v",
 				intermediaryAcc.GetAccAddress().String(), err))
 			continue
 		}
+		totalUndelegatedCoins = totalUndelegatedCoins.Add(undelegatedCoins...)
 	}
+
+	// Validate that denoms contain only uosmo
+	bondDenom, err := keepers.StakingKeeper.BondDenom(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get bond denom: %w", err)
+	}
+
+	denoms := totalUndelegatedCoins.Denoms()
+	if len(denoms) > 1 || (len(denoms) == 1 && denoms[0] != bondDenom) {
+		return fmt.Errorf("expected only %s denom, but got: %v", bondDenom, denoms)
+	}
+
+	totalAmount := totalUndelegatedCoins.AmountOf(bondDenom)
+	if totalAmount.GT(totalSuperfluidDelegationAmount) {
+		return fmt.Errorf("total undelegated amount %s is greater than expected %s", totalAmount.String(), totalSuperfluidDelegationAmount.String())
+	}
+
+	ctx.Logger().Info(fmt.Sprintf("Successfully undelegated and burned %s %s from %d intermediary accounts",
+		totalAmount.String(), bondDenom, len(intermediaryAccounts)))
 
 	return nil
 }
 
 // undelegateSingleIntermediaryAccount handles the undelegation and burning for a single intermediary account.
-func undelegateSingleIntermediaryAccount(ctx sdk.Context, keepers *keepers.AppKeepers, intermediaryAcc superfuidtypes.SuperfluidIntermediaryAccount) error {
+func undelegateSingleIntermediaryAccount(ctx sdk.Context, keepers *keepers.AppKeepers, intermediaryAcc superfuidtypes.SuperfluidIntermediaryAccount) (sdk.Coins, error) {
 	// Get validator address
 	valAddr, err := sdk.ValAddressFromBech32(intermediaryAcc.ValAddr)
 	if err != nil {
-		return fmt.Errorf("invalid validator address %s: %w", intermediaryAcc.ValAddr, err)
+		return sdk.Coins{}, fmt.Errorf("invalid validator address %s: %w", intermediaryAcc.ValAddr, err)
 	}
 
 	// Check if there's a delegation from this intermediary account
 	delegation, err := keepers.StakingKeeper.GetDelegation(ctx, intermediaryAcc.GetAccAddress(), valAddr)
 	if err != nil {
 		// No delegation found, skip
-		return nil
+		return sdk.Coins{}, nil
 	}
 
 	// Get validator to calculate tokens from shares
 	validator, err := keepers.StakingKeeper.GetValidator(ctx, valAddr)
 	if err != nil {
-		return fmt.Errorf("validator not found for %s: %w", intermediaryAcc.ValAddr, err)
+		return sdk.Coins{}, fmt.Errorf("validator not found for %s: %w", intermediaryAcc.ValAddr, err)
 	}
 
 	// Calculate the amount of tokens to undelegate
@@ -160,44 +182,44 @@ func undelegateSingleIntermediaryAccount(ctx sdk.Context, keepers *keepers.AppKe
 	osmoAmount := tokens.RoundInt()
 
 	if !osmoAmount.IsPositive() {
-		return nil
+		return sdk.Coins{}, nil
 	}
 
 	// Validate unbond amount and get shares
 	shares, err := keepers.StakingKeeper.ValidateUnbondAmount(ctx, intermediaryAcc.GetAccAddress(), valAddr, osmoAmount)
 	if err != nil {
-		return fmt.Errorf("failed to validate unbond amount: %w", err)
+		return sdk.Coins{}, fmt.Errorf("failed to validate unbond amount: %w", err)
 	}
 
 	// Instant undelegate (bypass normal 21-day unbonding period)
 	undelegatedCoins, err := keepers.StakingKeeper.InstantUndelegate(ctx, intermediaryAcc.GetAccAddress(), valAddr, shares)
 	if err != nil {
-		return fmt.Errorf("failed to instant undelegate: %w", err)
+		return sdk.Coins{}, fmt.Errorf("failed to instant undelegate: %w", err)
 	}
 
 	// Send coins to superfluid module
 	err = keepers.BankKeeper.SendCoinsFromAccountToModule(ctx, intermediaryAcc.GetAccAddress(), superfuidtypes.ModuleName, undelegatedCoins)
 	if err != nil {
-		return fmt.Errorf("failed to send coins to module: %w", err)
+		return sdk.Coins{}, fmt.Errorf("failed to send coins to module: %w", err)
 	}
 
 	// Burn the coins (these were synthetically minted during superfluid delegation)
 	err = keepers.BankKeeper.BurnCoins(ctx, superfuidtypes.ModuleName, undelegatedCoins)
 	if err != nil {
-		return fmt.Errorf("failed to burn coins: %w", err)
+		return sdk.Coins{}, fmt.Errorf("failed to burn coins: %w", err)
 	}
 
 	// Adjust supply offset to maintain proper total supply accounting
 	bondDenom, err := keepers.StakingKeeper.BondDenom(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get bond denom: %w", err)
+		return sdk.Coins{}, fmt.Errorf("failed to get bond denom: %w", err)
 	}
 	keepers.BankKeeper.AddSupplyOffset(ctx, bondDenom, undelegatedCoins.AmountOf(bondDenom))
 
 	ctx.Logger().Info(fmt.Sprintf("Undelegated and burned %s from intermediary account %s (validator: %s)",
 		undelegatedCoins.String(), intermediaryAcc.GetAccAddress().String(), intermediaryAcc.ValAddr))
 
-	return nil
+	return undelegatedCoins, nil
 }
 
 // unlockAllSyntheticLocks deletes all synthetic locks associated with superfluid staking
