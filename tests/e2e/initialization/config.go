@@ -439,8 +439,6 @@ func updatePoolManagerGenesis(appGenState map[string]json.RawMessage) func(*pool
 				PoolType: poolmanagertypes.Balancer,
 			})
 		}
-		// Initialize params with defaults to prevent unmarshaling errors
-		s.Params = poolmanagertypes.DefaultParams()
 	}
 }
 
