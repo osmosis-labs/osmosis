@@ -66,7 +66,7 @@ func (n *NodeConfig) Run(rejectConfigDefaults bool) error {
 		n.rpcClient = rpcClient
 
 		success := false
-		timeout := time.After(time.Second * 120)
+		timeout := time.After(time.Second * 10)
 		ticker := time.NewTicker(10 * time.Millisecond)
 		defer ticker.Stop()
 
