@@ -16,6 +16,10 @@ import (
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
+const (
+	dayEpochIdentifier = "day"
+)
+
 var zeroDec = osmomath.ZeroDec()
 
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
@@ -39,10 +43,10 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	// Non-native fee token collector for staking rewards get swapped entirely into base denom.
 	k.swapNonNativeFeeToDenom(ctx, defaultFeesDenom, nonNativefeeTokenCollectorAddress)
 
-	// Now that the rewards have been swapped, transfer any base denom existing in the non-native tx fee collector to the auth fee token collector (indirectly distributing to stakers)
+	// Now that the rewards have been swapped, transfer any base denom existing in the non-native tx fee collector to the smoothing buffer for gradual distribution to stakers
 	baseDenomCoins := sdk.NewCoins(k.bankKeeper.GetBalance(ctx, nonNativefeeTokenCollectorAddress, defaultFeesDenom))
 	err := osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
-		err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.NonNativeTxFeeCollectorName, authtypes.FeeCollectorName, baseDenomCoins)
+		err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.NonNativeTxFeeCollectorName, txfeestypes.TakerFeeStakingRewardsBuffer, baseDenomCoins)
 		return err
 	})
 	if err != nil {
@@ -54,6 +58,11 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 	// Distribute and track the taker fees.
 	k.calculateDistributeAndTrackTakerFees(ctx, defaultFeesDenom)
+
+	// Distribute smoothed staking rewards from buffer to fee collector (only on daily epoch)
+	if epochIdentifier == dayEpochIdentifier {
+		k.distributeSmoothingBufferToStakers(ctx, defaultFeesDenom)
+	}
 
 	return nil
 }
@@ -137,11 +146,11 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 
 	// Staking Rewards:
 	if osmoTakerFeeDistribution.StakingRewards.GT(zeroDec) && osmoFromTakerFeeModuleAccount.Amount.GT(osmomath.ZeroInt()) {
-		// Osmo staking rewards funds are a direct send to the auth fee token collector (indirectly distributing to stakers)
+		// Osmo staking rewards funds are sent to the smoothing buffer for gradual distribution to stakers
 		osmoTakerFeeToStakingRewardsDec := osmoFromTakerFeeModuleAccount.Amount.ToLegacyDec().Mul(osmoTakerFeeDistribution.StakingRewards)
 		osmoTakerFeeToStakingRewardsCoin := sdk.NewCoin(defaultFeesDenom, osmoTakerFeeToStakingRewardsDec.TruncateInt())
 		applyFuncIfNoErrorAndLog(ctx, func(cacheCtx sdk.Context) error {
-			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, takerFeeModuleAccount, authtypes.FeeCollectorName, sdk.NewCoins(osmoTakerFeeToStakingRewardsCoin))
+			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, takerFeeModuleAccount, txfeestypes.TakerFeeStakingRewardsBuffer, sdk.NewCoins(osmoTakerFeeToStakingRewardsCoin))
 			trackerErr := k.poolManager.UpdateTakerFeeTrackerForStakersByDenom(ctx, osmoTakerFeeToStakingRewardsCoin.Denom, osmoTakerFeeToStakingRewardsCoin.Amount)
 			if trackerErr != nil {
 				ctx.Logger().Error("Error updating taker fee tracker for stakers by denom", "error", err)
@@ -260,9 +269,9 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 	takerFeeStakersModuleAccount := k.accountKeeper.GetModuleAddress(txfeestypes.TakerFeeStakersName)
 	totalCoinOut = k.swapNonNativeFeeToDenom(ctx, defaultFeesDenom, takerFeeStakersModuleAccount)
 	if totalCoinOut.Amount.GT(osmomath.ZeroInt()) {
-		// Now that the assets have been swapped, transfer any base denom existing in the taker fee module account to the auth fee collector module account (indirectly distributing to stakers)
+		// Now that the assets have been swapped, transfer any base denom existing in the taker fee module account to the smoothing buffer for gradual distribution to stakers
 		applyFuncIfNoErrorAndLog(ctx, func(cacheCtx sdk.Context) error {
-			err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.TakerFeeStakersName, authtypes.FeeCollectorName, sdk.NewCoins(totalCoinOut))
+			err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.TakerFeeStakersName, txfeestypes.TakerFeeStakingRewardsBuffer, sdk.NewCoins(totalCoinOut))
 			trackerErr := k.poolManager.UpdateTakerFeeTrackerForStakersByDenom(ctx, totalCoinOut.Denom, totalCoinOut.Amount)
 			if trackerErr != nil {
 				ctx.Logger().Error("Error updating taker fee tracker for stakers by denom", "error", err)
@@ -403,6 +412,48 @@ func applyFuncIfNoErrorAndLog[S fmt.Stringer](ctx sdk.Context, f func(sdk.Contex
 	if err != nil {
 		incTelementryCounter(metricName, coins.String(), err.Error())
 	}
+}
+
+// distributeSmoothingBufferToStakers distributes a portion of the staking rewards smoothing buffer to stakers.
+// The amount distributed is (buffer_balance / daily_staking_rewards_smoothing_factor).
+// This smooths out the APR display by distributing rewards gradually over multiple epochs.
+func (k Keeper) distributeSmoothingBufferToStakers(ctx sdk.Context, baseDenom string) {
+	// Get smoothing factor from poolmanager params
+	poolManagerParams := k.poolManager.GetParams(ctx)
+	smoothingFactor := poolManagerParams.TakerFeeParams.DailyStakingRewardsSmoothingFactor
+
+	// If smoothing factor is 0 (shouldn't happen due to validation, but safety check), skip distribution
+	if smoothingFactor == 0 {
+		ctx.Logger().Error("Daily staking rewards smoothing factor is 0, skipping smoothed distribution")
+		return
+	}
+
+	// Get buffer account balance
+	bufferAddress := k.accountKeeper.GetModuleAddress(txfeestypes.TakerFeeStakingRewardsBuffer)
+	bufferBalance := k.bankKeeper.GetBalance(ctx, bufferAddress, baseDenom)
+
+	// If buffer is empty, nothing to distribute
+	if bufferBalance.Amount.IsZero() {
+		return
+	}
+
+	// Calculate amount to distribute: buffer_balance / smoothing_factor
+	// If smoothing_factor is 1, distribute entire buffer (no smoothing)
+	amountToDistribute := bufferBalance.Amount.QuoRaw(int64(smoothingFactor))
+
+	// If amount is zero (buffer too small), skip distribution
+	if amountToDistribute.IsZero() {
+		return
+	}
+
+	coinToDistribute := sdk.NewCoin(baseDenom, amountToDistribute)
+
+	// Send from smoothing buffer to fee collector
+	applyFuncIfNoErrorAndLog(ctx, func(cacheCtx sdk.Context) error {
+		return k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.TakerFeeStakingRewardsBuffer, authtypes.FeeCollectorName, sdk.NewCoins(coinToDistribute))
+	}, txfeestypes.TakerFeeFailedSmoothedStakingDistributionMetricName, coinToDistribute)
+
+	ctx.Logger().Info("Distributed smoothed staking rewards", "amount", coinToDistribute.String(), "buffer_remaining", bufferBalance.Amount.Sub(amountToDistribute).String())
 }
 
 // incTelementryCounter is a helper function to increment a telemetry counter with the given label.
