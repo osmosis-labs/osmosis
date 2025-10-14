@@ -5,10 +5,10 @@ import (
 	bankmigv2 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v2"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v30/ingest/common/pooltracker"
-	"github.com/osmosis-labs/osmosis/v30/ingest/common/writelistener"
-	"github.com/osmosis-labs/osmosis/v30/x/cosmwasmpool/model"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v30/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v31/ingest/common/pooltracker"
+	"github.com/osmosis-labs/osmosis/v31/ingest/common/writelistener"
+	"github.com/osmosis-labs/osmosis/v31/x/cosmwasmpool/model"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v31/x/cosmwasmpool/types"
 )
 
 // Tests that the cosmwasm write listener correctly tracks pool updates

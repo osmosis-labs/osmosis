@@ -18,8 +18,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
-	"github.com/osmosis-labs/osmosis/v30/x/smart-account/authenticator"
-	"github.com/osmosis-labs/osmosis/v30/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v31/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v31/x/smart-account/types"
 )
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

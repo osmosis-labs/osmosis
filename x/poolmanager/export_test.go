@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	alloyedpooltypes "github.com/osmosis-labs/osmosis/v30/x/cosmwasmpool/cosmwasm/msg/v3"
-	"github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
+	alloyedpooltypes "github.com/osmosis-labs/osmosis/v31/x/cosmwasmpool/cosmwasm/msg/v3"
+	"github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
 )
 
 var IntMaxValue = intMaxValue

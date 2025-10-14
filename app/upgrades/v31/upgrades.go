@@ -11,11 +11,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v30/app/keepers"
-	"github.com/osmosis-labs/osmosis/v30/app/upgrades"
-	poolmanager "github.com/osmosis-labs/osmosis/v30/x/poolmanager"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v30/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v31/app/keepers"
+	"github.com/osmosis-labs/osmosis/v31/app/upgrades"
+	poolmanager "github.com/osmosis-labs/osmosis/v31/x/poolmanager"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v31/x/txfees/types"
 )
 
 func CreateUpgradeHandler(

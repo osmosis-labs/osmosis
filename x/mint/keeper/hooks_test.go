@@ -11,9 +11,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	osmoapp "github.com/osmosis-labs/osmosis/v30/app"
-	"github.com/osmosis-labs/osmosis/v30/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v30/x/mint/types"
+	osmoapp "github.com/osmosis-labs/osmosis/v31/app"
+	"github.com/osmosis-labs/osmosis/v31/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v31/x/mint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

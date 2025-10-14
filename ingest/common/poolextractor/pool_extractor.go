@@ -3,8 +3,8 @@ package poolextractor
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	commondomain "github.com/osmosis-labs/osmosis/v30/ingest/common/domain"
-	"github.com/osmosis-labs/osmosis/v30/ingest/sqs/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v31/ingest/common/domain"
+	"github.com/osmosis-labs/osmosis/v31/ingest/sqs/domain"
 )
 
 // poolExtractor is an abstraction that extracts pools from the chain.

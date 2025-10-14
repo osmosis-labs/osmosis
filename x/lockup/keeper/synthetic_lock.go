@@ -9,7 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v30/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v31/x/lockup/types"
 )
 
 // A synthetic lock object is a lock object used for the superfluid module.

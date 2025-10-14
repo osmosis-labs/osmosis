@@ -3,7 +3,7 @@ package v20
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v30/app/keepers"
+	"github.com/osmosis-labs/osmosis/v31/app/keepers"
 )
 
 func CreateGroupsForIncentivePairs(ctx sdk.Context, keepers *keepers.AppKeepers) error {
