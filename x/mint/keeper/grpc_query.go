@@ -4,7 +4,6 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -140,10 +139,15 @@ func (q Querier) calculateRestrictedSupply(ctx sdk.Context, params types.Params)
 	}
 
 	// 2. Community pool balance
-	communityPoolAddr := q.Keeper.accountKeeper.GetModuleAddress(distributiontypes.ModuleName)
-	if communityPoolAddr != nil {
-		communityPoolBalance := q.Keeper.bankKeeper.GetBalance(ctx, communityPoolAddr, params.MintDenom)
-		restrictedSupply = restrictedSupply.Add(communityPoolBalance.Amount)
+	feePool, err := q.Keeper.communityPoolKeeper.FeePool.Get(ctx)
+	if err == nil {
+		communityPool := feePool.GetCommunityPool()
+		for _, coin := range communityPool {
+			if coin.Denom == params.MintDenom {
+				restrictedSupply = restrictedSupply.Add(coin.Amount.TruncateInt())
+				break
+			}
+		}
 	}
 
 	// 3. Developer vested addresses (from weighted_developer_rewards_receivers)

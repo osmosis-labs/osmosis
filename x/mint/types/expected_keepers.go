@@ -7,6 +7,7 @@ import (
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -33,10 +34,8 @@ type BankKeeper interface {
 	GetSupplyWithOffset(ctx context.Context, denom string) sdk.Coin
 }
 
-// CommunityPoolKeeper defines the contract needed to be fulfilled for distribution keeper.
-type CommunityPoolKeeper interface {
-	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
-}
+// CommunityPoolKeeper is just an alias to the cosmos SDK distribution keeper pointer.
+type CommunityPoolKeeper = *distrkeeper.Keeper
 
 // EpochKeeper defines the contract needed to be fulfilled for epochs keeper.
 type EpochKeeper interface {

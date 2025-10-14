@@ -15,7 +15,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -243,10 +242,15 @@ func (k Keeper) calculateRestrictedSupply(ctx sdk.Context, params types.Params) 
 	}
 
 	// 2. Community pool balance
-	communityPoolAddr := k.accountKeeper.GetModuleAddress(distributiontypes.ModuleName)
-	if communityPoolAddr != nil {
-		communityPoolBalance := k.bankKeeper.GetBalance(ctx, communityPoolAddr, params.MintDenom)
-		restrictedSupply = restrictedSupply.Add(communityPoolBalance.Amount)
+	feePool, err := k.communityPoolKeeper.FeePool.Get(ctx)
+	if err == nil {
+		communityPool := feePool.GetCommunityPool()
+		for _, coin := range communityPool {
+			if coin.Denom == params.MintDenom {
+				restrictedSupply = restrictedSupply.Add(coin.Amount.TruncateInt())
+				break
+			}
+		}
 	}
 
 	// 3. Developer vested addresses (from weighted_developer_rewards_receivers)
