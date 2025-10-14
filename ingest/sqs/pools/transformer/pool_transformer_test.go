@@ -7,18 +7,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	ingesttypes "github.com/osmosis-labs/osmosis/v30/ingest/types"
-	sqscosmwasmpool "github.com/osmosis-labs/osmosis/v30/ingest/types/cosmwasmpool"
+	ingesttypes "github.com/osmosis-labs/osmosis/v31/ingest/types"
+	sqscosmwasmpool "github.com/osmosis-labs/osmosis/v31/ingest/types/cosmwasmpool"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v30/app/apptesting"
-	commondomain "github.com/osmosis-labs/osmosis/v30/ingest/common/domain"
-	poolstransformer "github.com/osmosis-labs/osmosis/v30/ingest/sqs/pools/transformer"
-	clqueryproto "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/client/queryproto"
-	cltypes "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v30/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
+	commondomain "github.com/osmosis-labs/osmosis/v31/ingest/common/domain"
+	poolstransformer "github.com/osmosis-labs/osmosis/v31/ingest/sqs/pools/transformer"
+	clqueryproto "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/client/queryproto"
+	cltypes "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v31/x/protorev/types"
 )
 
 type PoolTransformerTestSuite struct {

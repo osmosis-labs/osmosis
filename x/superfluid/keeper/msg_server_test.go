@@ -7,12 +7,12 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	v8constants "github.com/osmosis-labs/osmosis/v30/app/upgrades/v8/constants"
-	cltypes "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/types"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v30/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v30/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v30/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v30/x/superfluid/types"
+	v8constants "github.com/osmosis-labs/osmosis/v31/app/upgrades/v8/constants"
+	cltypes "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v31/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v31/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v31/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v31/x/superfluid/types"
 )
 
 var defaultFunds = sdk.NewCoins(defaultPoolAssets[0].Token, sdk.NewCoin("stake", osmomath.NewInt(5000000000)))

@@ -10,12 +10,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	incentivestypes "github.com/osmosis-labs/osmosis/v30/x/incentives/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v31/x/incentives/types"
 
-	"github.com/osmosis-labs/osmosis/v30/app/keepers"
-	"github.com/osmosis-labs/osmosis/v30/app/upgrades"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v30/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v31/app/keepers"
+	"github.com/osmosis-labs/osmosis/v31/app/upgrades"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/types"
 )
 
 const (

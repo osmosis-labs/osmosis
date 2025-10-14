@@ -5,7 +5,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	appparams "github.com/osmosis-labs/osmosis/v30/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -22,9 +22,14 @@ var (
 	KeyAuthorizedQuoteDenoms                          = []byte("AuthorizedQuoteDenoms")
 	KeyReducedTakerFeeByWhitelist                     = []byte("ReducedTakerFeeByWhitelist")
 	KeyCommunityPoolDenomWhitelist                    = []byte("CommunityPoolDenomWhitelist")
+	KeyDailyStakingRewardsSmoothingFactor             = []byte("DailyStakingRewardsSmoothingFactor")
 
 	ZeroDec = osmomath.ZeroDec()
 	OneDec  = osmomath.OneDec()
+)
+
+const (
+	maxSmoothingFactor = 5000
 )
 
 // ParamTable for gamm module.
@@ -36,7 +41,8 @@ func NewParams(poolCreationFee sdk.Coins,
 	defaultTakerFee osmomath.Dec,
 	osmoTakerFeeDistribution, nonOsmoTakerFeeDistribution TakerFeeDistributionPercentage,
 	adminAddresses, authorizedQuoteDenoms []string,
-	communityPoolDenomToSwapNonWhitelistedAssetsTo string) Params {
+	communityPoolDenomToSwapNonWhitelistedAssetsTo string,
+	dailyStakingRewardsSmoothingFactor uint64) Params {
 	return Params{
 		PoolCreationFee: poolCreationFee,
 		TakerFeeParams: TakerFeeParams{
@@ -45,6 +51,7 @@ func NewParams(poolCreationFee sdk.Coins,
 			NonOsmoTakerFeeDistribution:                    nonOsmoTakerFeeDistribution,
 			AdminAddresses:                                 adminAddresses,
 			CommunityPoolDenomToSwapNonWhitelistedAssetsTo: communityPoolDenomToSwapNonWhitelistedAssetsTo,
+			DailyStakingRewardsSmoothingFactor:             dailyStakingRewardsSmoothingFactor,
 		},
 		AuthorizedQuoteDenoms: authorizedQuoteDenoms,
 	}
@@ -70,6 +77,7 @@ func DefaultParams() Params {
 			CommunityPoolDenomToSwapNonWhitelistedAssetsTo: "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // USDC
 			ReducedFeeWhitelist:                            []string{},
 			CommunityPoolDenomWhitelist:                    []string{},
+			DailyStakingRewardsSmoothingFactor:             1, // No smoothing by default (1 = distribute all immediately)
 		},
 		AuthorizedQuoteDenoms: []string{
 			appparams.BaseCoinUnit,
@@ -109,6 +117,9 @@ func (p Params) Validate() error {
 	if err := validateAuthorizedQuoteDenoms(p.AuthorizedQuoteDenoms); err != nil {
 		return err
 	}
+	if err := validateDailyStakingRewardsSmoothingFactor(p.TakerFeeParams.DailyStakingRewardsSmoothingFactor); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -125,6 +136,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyAuthorizedQuoteDenoms, &p.AuthorizedQuoteDenoms, validateAuthorizedQuoteDenoms),
 		paramtypes.NewParamSetPair(KeyReducedTakerFeeByWhitelist, &p.TakerFeeParams.ReducedFeeWhitelist, osmoutils.ValidateAddressList),
 		paramtypes.NewParamSetPair(KeyCommunityPoolDenomWhitelist, &p.TakerFeeParams.CommunityPoolDenomWhitelist, validateCommunityPoolDenomWhitelist),
+		paramtypes.NewParamSetPair(KeyDailyStakingRewardsSmoothingFactor, &p.TakerFeeParams.DailyStakingRewardsSmoothingFactor, validateDailyStakingRewardsSmoothingFactor),
 	}
 }
 
@@ -284,5 +296,22 @@ func validateDenomPairTakerFees(pairs []DenomPairTakerFee) error {
 			return fmt.Errorf("taker fee must be between 0 and 1: %s", takerFee.String())
 		}
 	}
+	return nil
+}
+
+func validateDailyStakingRewardsSmoothingFactor(i interface{}) error {
+	smoothingFactor, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if smoothingFactor <= 0 {
+		return fmt.Errorf("daily staking rewards smoothing factor must be greater than 0")
+	}
+
+	if smoothingFactor > maxSmoothingFactor {
+		return fmt.Errorf("daily staking rewards smoothing factor must not exceed 5000")
+	}
+
 	return nil
 }

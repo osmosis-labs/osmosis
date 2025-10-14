@@ -9,7 +9,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/poolmanager/v1beta1/module_route.proto";
 import "osmosis/poolmanager/v1beta1/tx.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v30/x/poolmanager/types";
+option go_package = "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types";
 
 // Params holds parameters for the poolmanager module
 message Params {
@@ -118,6 +118,14 @@ message TakerFeeParams {
   // `community_pool_denom_to_swap_non_whitelisted_assets_to`.
   repeated string community_pool_denom_whitelist = 7
       [ (gogoproto.moretags) = "yaml:\"community_pool_denom_whitelist\"" ];
+
+  // daily_staking_rewards_smoothing_factor is the number of days over which
+  // staking rewards from taker fees are smoothed. A value of 1 means no
+  // smoothing. Staking rewards are accumulated in a buffer and distributed as
+  // (buffer_balance / daily_staking_rewards_smoothing_factor) per day epoch.
+  uint64 daily_staking_rewards_smoothing_factor = 8
+      [ (gogoproto.moretags) =
+            "yaml:\"daily_staking_rewards_smoothing_factor\"" ];
 }
 
 // TakerFeeDistributionPercentage defines what percent of the taker fee category

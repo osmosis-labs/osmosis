@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v30/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v31/x/smart-account/types"
 )
 
 func NewTxCmd() *cobra.Command {
