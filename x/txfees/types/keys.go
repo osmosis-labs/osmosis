@@ -33,6 +33,10 @@ const (
 	// TakerFeeCollectorName is the module account name for the taker fee collector account address. It collects both native and non-native taker fees.
 	TakerFeeCollectorName = "taker_fee_collector"
 
+	// TakerFeeStakingRewardsBuffer is the module account name for the staking rewards smoothing buffer.
+	// Taker fees destined for stakers accumulate here and are distributed gradually to smooth APR display.
+	TakerFeeStakingRewardsBuffer = "taker_fee_staking_rewards_buffer"
+
 	// QuerierRoute defines the module's query routing key
 	QuerierRoute = ModuleName
 )

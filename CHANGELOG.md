@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#9511](https://github.com/osmosis-labs/osmosis/pull/9511) fix: tokenfactory before send hook gas consumption
 * [#9548](https://github.com/osmosis-labs/osmosis/pull/9548) chore: update swagger
 * [#9560](https://github.com/osmosis-labs/osmosis/pull/9560) chore: update module path to v31
+* [#9559](https://github.com/osmosis-labs/osmosis/pull/9559) feat: daily staking rewards smoothing 
 
 ## v30.0.5
 
