@@ -139,7 +139,7 @@ import (
 	v28 "github.com/osmosis-labs/osmosis/v31/app/upgrades/v28"
 	v29 "github.com/osmosis-labs/osmosis/v31/app/upgrades/v29"
 	v3 "github.com/osmosis-labs/osmosis/v31/app/upgrades/v3"
-	v30 "github.com/osmosis-labs/osmosis/v31/app/upgrades/v31"
+	v30 "github.com/osmosis-labs/osmosis/v31/app/upgrades/v30"
 	v31 "github.com/osmosis-labs/osmosis/v31/app/upgrades/v31"
 	v4 "github.com/osmosis-labs/osmosis/v31/app/upgrades/v4"
 	v5 "github.com/osmosis-labs/osmosis/v31/app/upgrades/v5"

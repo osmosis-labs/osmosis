@@ -17,7 +17,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
-	v30 "github.com/osmosis-labs/osmosis/v31/app/upgrades/v31"
+	v30 "github.com/osmosis-labs/osmosis/v31/app/upgrades/v30"
 )
 
 const (
