@@ -110,11 +110,23 @@ func (k Keeper) SetMinter(ctx sdk.Context, minter types.Minter) {
 
 // GetParams returns the total set of minting parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	k.paramSpace.GetParamSet(ctx, &params)
-	// Ensure RestrictedAssetAddresses is initialized to avoid unmarshal errors with older state
-	if params.RestrictedAssetAddresses == nil {
+	// Get each param individually to handle missing RestrictedAssetAddresses gracefully
+	k.paramSpace.Get(ctx, types.KeyMintDenom, &params.MintDenom)
+	k.paramSpace.Get(ctx, types.KeyGenesisEpochProvisions, &params.GenesisEpochProvisions)
+	k.paramSpace.Get(ctx, types.KeyEpochIdentifier, &params.EpochIdentifier)
+	k.paramSpace.Get(ctx, types.KeyReductionPeriodInEpochs, &params.ReductionPeriodInEpochs)
+	k.paramSpace.Get(ctx, types.KeyReductionFactor, &params.ReductionFactor)
+	k.paramSpace.Get(ctx, types.KeyPoolAllocationRatio, &params.DistributionProportions)
+	k.paramSpace.Get(ctx, types.KeyDeveloperRewardsReceiver, &params.WeightedDeveloperRewardsReceivers)
+	k.paramSpace.Get(ctx, types.KeyMintingRewardsDistributionStartEpoch, &params.MintingRewardsDistributionStartEpoch)
+
+	// Handle RestrictedAssetAddresses gracefully for older state that doesn't have this field
+	if k.paramSpace.Has(ctx, types.KeyRestrictedAssetAddresses) {
+		k.paramSpace.Get(ctx, types.KeyRestrictedAssetAddresses, &params.RestrictedAssetAddresses)
+	} else {
 		params.RestrictedAssetAddresses = []string{}
 	}
+
 	return params
 }
 
