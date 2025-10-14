@@ -77,7 +77,7 @@ func setIntermediaryDenomList(ctx sdk.Context, txFeesKeeper *txfeeskeeper.Keeper
 	// Set the fee swap intermediary denom list to the specified denoms
 	txFeesParams.FeeSwapIntermediaryDenomList = []string{
 		"ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4",
-		"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
+		"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", // uatom
 		"factory/osmo1z6r6qdknhgsc0zeracktgpcxf43j6sekq07nw8sxduc9lg0qjjlqfu25e3/alloyed/allBTC",
 		"uosmo",
 	}
