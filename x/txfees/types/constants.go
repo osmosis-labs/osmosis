@@ -9,8 +9,8 @@ import (
 // ConsensusMinFee is a governance set parameter from prop 354 (https://www.mintscan.io/osmosis/proposals/354)
 // It was intended to be .0025 uosmo / gas
 // In v30, we set it to 0.01 uosmo / gas
-// in v31, we set it to 0.025 uosmo / gas
-var ConsensusMinFee osmomath.Dec = osmomath.NewDecWithPrec(25, 3)
+// in v31, we set it to 0.03 uosmo / gas
+var ConsensusMinFee osmomath.Dec = osmomath.NewDecWithPrec(3, 2)
 
 // DefaultNullAddress is the default value for the null account. Portion of tx fees are sent to this account to effectively burn the tokens.
 // This address is equivalent to osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030.
