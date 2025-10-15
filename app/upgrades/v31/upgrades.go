@@ -15,6 +15,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v31/app/upgrades"
 	poolmanager "github.com/osmosis-labs/osmosis/v31/x/poolmanager"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v31/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v31/x/txfees/types"
 )
 
@@ -38,6 +39,8 @@ func CreateUpgradeHandler(
 		if err != nil {
 			return nil, err
 		}
+
+		setIntermediaryDenomList(sdkCtx, keepers.TxFeesKeeper)
 
 		return migrations, nil
 	}
@@ -81,4 +84,17 @@ func updateTakerFeeDistribution(ctx sdk.Context, poolManagerKeeper *poolmanager.
 	}
 
 	return nil
+}
+
+// setIntermediaryDenomList sets the default intermediary denoms for multi-hop swaps in txfees
+func setIntermediaryDenomList(ctx sdk.Context, txFeesKeeper *txfeeskeeper.Keeper) {
+	// Set the fee swap intermediary denom list to the specified denoms
+	intermediaryDenomList := []string{
+		"ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4", // usdc
+		"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", // uatom
+		"factory/osmo1z6r6qdknhgsc0zeracktgpcxf43j6sekq07nw8sxduc9lg0qjjlqfu25e3/alloyed/allBTC",
+		"uosmo",
+	}
+
+	txFeesKeeper.SetParam(ctx, txfeestypes.KeyFeeSwapIntermediaryDenomList, intermediaryDenomList)
 }

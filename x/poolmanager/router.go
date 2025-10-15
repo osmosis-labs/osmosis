@@ -244,6 +244,41 @@ func (k Keeper) SwapExactAmountInNoTakerFee(
 	return tokenOutAmount, nil
 }
 
+// RouteExactAmountInNoTakerFee routes the swap across multiple pools to get the desired token out.
+// This method does NOT charge taker fees and should only be used in txfees hooks when swapping taker fees.
+func (k Keeper) RouteExactAmountInNoTakerFee(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	route []types.SwapAmountInRoute,
+	tokenIn sdk.Coin,
+	tokenOutMinAmount osmomath.Int,
+) (tokenOutAmount osmomath.Int, err error) {
+	// Ensure that provided route is not empty and has valid denom format.
+	if err := types.SwapAmountInRoutes(route).Validate(); err != nil {
+		return osmomath.Int{}, err
+	}
+
+	// Iterate through the route and execute a series of swaps through each pool.
+	for i, routeStep := range route {
+		// To prevent the multihop swap from being interrupted prematurely, we keep
+		// the minimum expected output at a very low number until the last pool
+		_outMinAmount := osmomath.NewInt(1)
+		if len(route)-1 == i {
+			_outMinAmount = tokenOutMinAmount
+		}
+
+		tokenOutAmount, err = k.SwapExactAmountInNoTakerFee(ctx, sender, routeStep.PoolId, tokenIn, routeStep.TokenOutDenom, _outMinAmount)
+		if err != nil {
+			return osmomath.Int{}, err
+		}
+
+		// Chain output of current pool as the input for the next routed pool
+		tokenIn = sdk.NewCoin(routeStep.TokenOutDenom, tokenOutAmount)
+	}
+
+	return tokenOutAmount, nil
+}
+
 func (k Keeper) MultihopEstimateOutGivenExactAmountInNoTakerFee(
 	ctx sdk.Context,
 	route []types.SwapAmountInRoute,
