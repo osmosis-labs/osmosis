@@ -242,6 +242,9 @@ blocks.db
 .ash_history
 .bash_history
 
+# Ignore generated test directories in tests/ibc-hooks
+tests/ibc-hooks/[0-9]*/
+
 # Python
 **/venv/*
 **/*.pyc
