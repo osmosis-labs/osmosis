@@ -81,8 +81,8 @@ const (
 	IonBalanceB       = 100000000000
 	StakeBalanceB     = 440000000000
 	StakeAmountB      = 400000000000
-	GenesisFeeBalance = 100000000000
-	WalletFeeBalance  = 100000000
+	GenesisFeeBalance = 1000000000000
+	WalletFeeBalance  = 1000000000
 
 	EpochDayDuration      = time.Second * 60
 	EpochWeekDuration     = time.Second * 120
