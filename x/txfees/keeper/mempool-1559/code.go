@@ -46,10 +46,10 @@ import (
 var (
 	// We expect wallet multiplier * DefaultBaseFee < MinBaseFee * RecheckFeeConstant
 	// conservatively assume a wallet multiplier of at least 7%.
-	DefaultBaseFee = osmomath.MustNewDecFromStr("0.0250")
+	DefaultBaseFee = types.ConsensusMinFee
 	MinBaseFee     = types.ConsensusMinFee
-	MaxBaseFee     = osmomath.MustNewDecFromStr("5")
-	ResetInterval  = int64(6000)
+	MaxBaseFee     = osmomath.MustNewDecFromStr("10")
+	ResetInterval  = int64(12000)
 
 	// Max increase per block is a factor of 1.06, max decrease is 9/10
 	// If recovering at ~30M gas per block, decrease is .916
@@ -76,10 +76,10 @@ var (
 	// In face of continuous spam, will take ~15 blocks from base fee > spam cost, to mempool eviction
 	// ceil(log_{1.06}(RecheckFeeConstantHighBaseFee)) (assuming base fee surpasses threshold)
 	RecheckFeeConstantHighBaseFee = "2.3"
-	// Note, the choice of 0.01 was made by observing base fee metrics on mainnet and selecting
+	// Note, the choice of 0.03 was made by observing base fee metrics on mainnet and selecting
 	// this value from Grafana dashboards. The observation is that below this threshold, we do not
 	// observe user UX degradation. Therefore, we keep the original recheck factor.
-	RecheckFeeBaseFeeThreshold = osmomath.MustNewDecFromStr("0.01")
+	RecheckFeeBaseFeeThreshold = osmomath.MustNewDecFromStr("0.09")
 )
 
 var (
