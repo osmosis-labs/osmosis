@@ -174,8 +174,8 @@ github.com/cosmos/gogogateway v1.2.0/go.mod h1:iQpLkGWxYcnCdz5iAdLcRBSw3h7NXeOkZ
 github.com/cosmos/gogoproto v1.4.2/go.mod h1:cLxOsn1ljAHSV527CHOtaIP91kK6cCrZETRBrkzItWU=
 github.com/cosmos/gogoproto v1.7.0 h1:79USr0oyXAbxg3rspGh/m4SWNyoz/GLaAh0QlCe2fro=
 github.com/cosmos/gogoproto v1.7.0/go.mod h1:yWChEv5IUEYURQasfyBW5ffkMHR/90hiHgbNgrtp4j0=
-github.com/cosmos/iavl v1.2.2 h1:qHhKW3I70w+04g5KdsdVSHRbFLgt3yY3qTMd4Xa4rC8=
-github.com/cosmos/iavl v1.2.2/go.mod h1:GiM43q0pB+uG53mLxLDzimxM9l/5N9UuSY3/D0huuVw=
+github.com/cosmos/iavl v1.2.6 h1:Hs3LndJbkIB+rEvToKJFXZvKo6Vy0Ex1SJ54hhtioIs=
+github.com/cosmos/iavl v1.2.6/go.mod h1:GiM43q0pB+uG53mLxLDzimxM9l/5N9UuSY3/D0huuVw=
 github.com/cosmos/ibc-go/modules/capability v1.0.1 h1:ibwhrpJ3SftEEZRxCRkH0fQZ9svjthrX2+oXdZvzgGI=
 github.com/cosmos/ibc-go/modules/capability v1.0.1/go.mod h1:rquyOV262nGJplkumH+/LeYs04P3eV8oB7ZM4Ygqk4E=
 github.com/cosmos/ibc-go/v8 v8.7.0 h1:HqhVOkO8bDpClXE81DFQgFjroQcTvtpm0tCS7SQVKVY=
@@ -394,8 +394,8 @@ github.com/hashicorp/go-cleanhttp v0.5.0/go.mod h1:JpRdi6/HCYpAwUzNwuwqhbovhLtng
 github.com/hashicorp/go-cleanhttp v0.5.1/go.mod h1:JpRdi6/HCYpAwUzNwuwqhbovhLtngrth3wmdIIUrZ80=
 github.com/hashicorp/go-cleanhttp v0.5.2 h1:035FKYIWjmULyFRBKPs8TBQoi0x6d9G4xc9neXJWAZQ=
 github.com/hashicorp/go-cleanhttp v0.5.2/go.mod h1:kO/YDlP8L1346E6Sodw+PrpBSV4/SoxCXGY6BqNFT48=
-github.com/hashicorp/go-getter v1.7.5 h1:dT58k9hQ/vbxNMwoI5+xFYAJuv6152UNvdHokfI5wE4=
-github.com/hashicorp/go-getter v1.7.5/go.mod h1:W7TalhMmbPmsSMdNjD0ZskARur/9GJ17cfHTRtXV744=
+github.com/hashicorp/go-getter v1.7.9 h1:G9gcjrDixz7glqJ+ll5IWvggSBR+R0B54DSRt4qfdC4=
+github.com/hashicorp/go-getter v1.7.9/go.mod h1:dyFCmT1AQkDfOIt9NH8pw9XBDqNrIKJT5ylbpi7zPNE=
 github.com/hashicorp/go-hclog v1.5.0 h1:bI2ocEMgcVlz55Oj1xZNBsVi900c7II+fWDyV9o+13c=
 github.com/hashicorp/go-hclog v1.5.0/go.mod h1:W4Qnvbt70Wk/zYJryRzDRU/4r0kIg0PVHBcfoyhpF5M=
 github.com/hashicorp/go-immutable-radix v1.0.0/go.mod h1:0y9vanUI8NX6FsYoO3zeMjhV/C5i9g4Q3DwcSNZ4P60=
@@ -597,10 +597,10 @@ github.com/osmosis-labs/cometbft v0.38.17-v28-osmo-1 h1:0xPd6S6mCsVT0IKP0xIUmg6s
 github.com/osmosis-labs/cometbft v0.38.17-v28-osmo-1/go.mod h1:5l0SkgeLRXi6bBfQuevXjKqML1jjfJJlvI1Ulp02/o4=
 github.com/osmosis-labs/cosmos-sdk v0.50.14-v30-osmo h1:2SMqYSaLg07GcQf4ZLsG2kHDpnVoezzfJDWxEPkqJN4=
 github.com/osmosis-labs/cosmos-sdk v0.50.14-v30-osmo/go.mod h1:tshIx9dVEennip7xfHAGsRS0d8JlF7w1nqOLmOfJAKM=
-github.com/osmosis-labs/osmosis/osmomath v0.0.16 h1:OPUKl8jLWqMkQvMTwnLJSXDIZvOBSGtRi7mX9A3dJwQ=
-github.com/osmosis-labs/osmosis/osmomath v0.0.16/go.mod h1:OE6UM1+/8AeL+v2id1BYLSzSBJJRZ8ZgOx0hTepbKY4=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.16 h1:hOhPIhwoCacWUHaiAbZJ9IG2Nk7qkpJwR9XnWa8F3BE=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.16/go.mod h1:w0Td1ly9qH6jxxyK+kh4ZNGxQMzTivQOxFfqH98wkso=
+github.com/osmosis-labs/osmosis/osmomath v0.0.19 h1:k0QlGAyTgy3wrNhy9vvKdwxUsLwgT9uDiB1y/zwg9rE=
+github.com/osmosis-labs/osmosis/osmomath v0.0.19/go.mod h1:KCEAU7L8zFsm8BCrMkerV6KgxL0vJIWlKVcl1rSKFSA=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.19 h1:KlOfSEHXzIwDlsCZH/ZS0Wj9EUkw6k9dberw9Rhgbgo=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.19/go.mod h1:i2ezlhQu+Pf7KY99301uXg0zG8XhNLkzb+ON2yt1VRw=
 github.com/pact-foundation/pact-go v1.0.4/go.mod h1:uExwJY4kCzNPcHRj+hCR/HBbOOIwwtUjcrb0b5/5kLM=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pascaldekloe/goe v0.1.0 h1:cBOtyMzM9HTpWjXfbbunk26uA6nG3a8n06Wieeh0MwY=
