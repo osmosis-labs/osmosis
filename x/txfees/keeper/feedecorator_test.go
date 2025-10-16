@@ -31,7 +31,7 @@ func (s *KeeperTestSuite) TestFeeDecorator() {
 
 	mempoolFeeOpts := types.NewDefaultMempoolFeeOptions()
 	baseDenom, _ := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
-	consensusMinFeeAmt := int64(100)
+	consensusMinFeeAmt := int64(300)
 	point1BaseDenomMinGasPrices := sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
 		osmomath.MustNewDecFromStr("0.1")))
 
