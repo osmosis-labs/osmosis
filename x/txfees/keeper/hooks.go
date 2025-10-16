@@ -3,15 +3,16 @@ package keeper
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/hashicorp/go-metrics"
-
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/hashicorp/go-metrics"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v31/x/txfees/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
@@ -300,33 +301,37 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 			continue
 		}
 
-		// Search for the denom pair route via the protorev store.
-		// Since OSMO is one of the protorev denoms, many of the routes will exist in this store.
-		// There will be times when this store does not know about a route, but this is acceptable
-		// since this will likely be a very small value of a relatively unknown token. If this begins
-		// to accrue more value, we can always manually register the route and it will get swapped in
-		// the next epoch.
-		poolId, err := k.protorevKeeper.GetPoolForDenomPairNoOrder(ctx, denomToSwapTo, coin.Denom)
-		if err != nil {
-			telemetry.IncrCounterWithLabels([]string{txfeestypes.TakerFeeNoSkipRouteMetricName}, 1, []metrics.Label{
-				{
-					Name:  "base_denom",
-					Value: denomToSwapTo,
-				},
-				{
-					Name:  "match_denom",
-					Value: coin.Denom,
-				},
-				{
-					Name:  "err",
-					Value: err.Error(),
-				},
-			})
+		var route []poolmanagertypes.SwapAmountInRoute
+		var routeType string // For telemetry tracking
 
-			// The pool route either doesn't exist or is disabled in protorev.
-			// It will just accrue in the non-native fee collector account.
-			// Skip this denom and move on to the next one.
-			continue
+		// First, try to find a direct single hop route
+		route, err := k.getDirectRoute(ctx, denomToSwapTo, coin.Denom)
+		if err == nil {
+			routeType = "single_hop"
+		} else {
+			// No direct route found, try 2-hop routes using intermediary denoms as intermediaries
+			route, routeType, err = k.get2HopRoute(ctx, denomToSwapTo, coin.Denom)
+			if err != nil {
+				telemetry.IncrCounterWithLabels([]string{txfeestypes.TakerFeeNoSkipRouteMetricName}, 1, []metrics.Label{
+					{
+						Name:  "base_denom",
+						Value: denomToSwapTo,
+					},
+					{
+						Name:  "match_denom",
+						Value: coin.Denom,
+					},
+					{
+						Name:  "err",
+						Value: fmt.Sprintf("no single hop route: %v, no 2-hop routes found via intermediary denoms", err),
+					},
+				})
+
+				// The route either doesn't exist or is disabled in protorev.
+				// It will just accrue in the non-native fee collector account.
+				// Skip this denom and move on to the next one.
+				continue
+			}
 		}
 
 		// Do the swap of this fee token denom to base denom.
@@ -339,23 +344,38 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 
 			// We swap without charging a taker fee / sending to the non native fee collector, since these are funds that
 			// are accruing from the taker fee itself.
-			amtOutInt, err := k.poolManager.SwapExactAmountInNoTakerFee(cacheCtx, feeCollectorAddress, poolId, coin, denomToSwapTo, minAmountOut)
+			amtOutInt, err := k.poolManager.RouteExactAmountInNoTakerFee(cacheCtx, feeCollectorAddress, route, coin, minAmountOut)
 			if err != nil {
-				coinsNotSwapped = append(coinsNotSwapped, fmt.Sprintf("%s via pool %v", coin.String(), poolId))
+				routeDesc := buildRouteLogDesc(route)
+				coinsNotSwapped = append(coinsNotSwapped, fmt.Sprintf("%s via %s", coin.String(), routeDesc))
 			} else {
 				totalCoinOut = totalCoinOut.Add(sdk.NewCoin(denomToSwapTo, amtOutInt))
 			}
 			return err
 		})
 		if err != nil {
+			// Build route info for telemetry
+			routePoolIds := ""
+			if len(route) > 0 {
+				poolIds := make([]string, len(route))
+				for i, r := range route {
+					poolIds[i] = strconv.FormatUint(r.PoolId, 10)
+				}
+				routePoolIds = strings.Join(poolIds, "->")
+			}
+
 			telemetry.IncrCounterWithLabels([]string{txfeestypes.TakerFeeSwapFailedMetricName}, 1, []metrics.Label{
 				{
 					Name:  "coin_in",
 					Value: coin.String(),
 				},
 				{
-					Name:  "pool_id",
-					Value: strconv.FormatUint(poolId, 10),
+					Name:  "route_pools",
+					Value: routePoolIds,
+				},
+				{
+					Name:  "route_type",
+					Value: routeType,
 				},
 				{
 					Name:  "err",
@@ -369,6 +389,89 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 	}
 
 	return totalCoinOut
+}
+
+// Search for the denom pair route via the protorev store.
+// Since OSMO is one of the protorev denoms, many of the routes will exist in this store.
+func (k Keeper) getDirectRoute(ctx sdk.Context, denomToSwapTo, coinDenom string) ([]poolmanagertypes.SwapAmountInRoute, error) {
+	poolId, err := k.protorevKeeper.GetPoolForDenomPairNoOrder(ctx, denomToSwapTo, coinDenom)
+	if err != nil {
+		return nil, fmt.Errorf("no pool found for direct route %s -> %s: %w", denomToSwapTo, coinDenom, err)
+	}
+	return []poolmanagertypes.SwapAmountInRoute{
+		{
+			PoolId:        poolId,
+			TokenOutDenom: denomToSwapTo,
+		},
+	}, nil
+}
+
+// 2-hop routes using any asset in params.FeeSwapIntermediaryDenomList as an intermediary
+func (k Keeper) get2HopRoute(ctx sdk.Context, denomToSwapTo, coinDenom string) ([]poolmanagertypes.SwapAmountInRoute, string, error) {
+	// No direct route found, try
+	params := k.GetParams(ctx)
+	intermediaryDenoms := params.FeeSwapIntermediaryDenomList
+
+	// Try each intermediary denom until we find a valid 2-hop route
+	for _, intermediaryDenom := range intermediaryDenoms {
+		if intermediaryDenom == coinDenom || intermediaryDenom == denomToSwapTo {
+			continue // Skip if same as input or output denom
+		}
+
+		twoHopRoute, routeFound := k.build2HopsRoute(ctx, coinDenom, intermediaryDenom, denomToSwapTo)
+		if routeFound {
+			route := twoHopRoute
+			routeType := fmt.Sprintf("two_hop_via_%s", intermediaryDenom)
+			return route, routeType, nil
+		}
+	}
+
+	return []poolmanagertypes.SwapAmountInRoute{}, "", fmt.Errorf("no 2-hop route found")
+}
+
+// build2HopsRoute builds a 2-hops swap route given an intermediary denom and target denom.
+// It first finds a pool from the input coin to the intermediary denom, then from intermediary to target.
+// Returns the complete route, true, OR []route{}, false if no path is found.
+func (k Keeper) build2HopsRoute(ctx sdk.Context, inputDenom, intermediaryDenom, denomToSwapTo string) ([]poolmanagertypes.SwapAmountInRoute, bool) {
+	// Find pool for first hop: inputDenom -> intermediaryDenom
+	poolId1, err := k.protorevKeeper.GetPoolForDenomPairNoOrder(ctx, inputDenom, intermediaryDenom)
+	if err != nil {
+		return nil, false
+	}
+
+	// Find pool for second hop: intermediaryDenom -> denomToSwapTo
+	poolId2, err := k.protorevKeeper.GetPoolForDenomPairNoOrder(ctx, intermediaryDenom, denomToSwapTo)
+	if err != nil {
+		return nil, false
+	}
+
+	// Build the 2-hops route
+	route := []poolmanagertypes.SwapAmountInRoute{
+		{
+			PoolId:        poolId1,
+			TokenOutDenom: intermediaryDenom,
+		},
+		{
+			PoolId:        poolId2,
+			TokenOutDenom: denomToSwapTo,
+		},
+	}
+
+	return route, true
+}
+
+func buildRouteLogDesc(route []poolmanagertypes.SwapAmountInRoute) string {
+	routeDesc := ""
+	if len(route) == 1 {
+		routeDesc = fmt.Sprintf("pool %d", route[0].PoolId)
+	} else {
+		poolIds := make([]string, len(route))
+		for i, r := range route {
+			poolIds[i] = strconv.FormatUint(r.PoolId, 10)
+		}
+		routeDesc = fmt.Sprintf("pools %s", strings.Join(poolIds, "->"))
+	}
+	return routeDesc
 }
 
 // clearTakerFeeShareAccumulators retrieves all taker fee share accumulators and sends the coins to the respective addresses.

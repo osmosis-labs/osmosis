@@ -23,6 +23,10 @@ const (
 	otherPreSwapDenom       = "bar"
 	denomWithNoPool         = "baz"
 	denomWithNoProtorevLink = "qux"
+
+	// For 2-hop routing tests
+	intermediaryDenom        = "usdc" // Common intermediary denom
+	anotherIntermediaryDenom = "weth" // Another intermediary denom for multiple route tests
 )
 
 var defaultPooledAssetAmount = int64(500)
@@ -272,8 +276,16 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom_SimpleCases() {
 		// Validate that the final denoms in the balance are as expected per test configuration.
 		// On success, swapped to denomToSwapTo. On failure, kept as is.
 		s.Require().Len(balances, len(expectedEndBalanceDenoms))
-		for i, actualDenomInBalance := range expectedEndBalanceDenoms {
-			s.Require().Contains(expectedEndBalanceDenoms[i], actualDenomInBalance)
+
+		// Create slice of actual denoms for comparison
+		actualDenoms := make([]string, len(balances))
+		for i, balance := range balances {
+			actualDenoms[i] = balance.Denom
+		}
+
+		// Check that all expected denoms are present in actual balances
+		for _, expectedDenom := range expectedEndBalanceDenoms {
+			s.Require().Contains(actualDenoms, expectedDenom)
 		}
 	}
 
@@ -369,10 +381,10 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom_SimpleCases() {
 				// Sets up account with no balance
 				testAccount := apptesting.CreateRandomAccounts(1)[0]
 
-				poolId := uint64(1)
+				poolId := uint64(9999) // Use non-existent pool ID for failing tests
 				if !tc.doNotCreatePool || !tc.doNotAddLiquidity {
 					// Create a pool to be swapped against.
-					poolId := s.PrepareConcentratedPoolWithCoins(tc.poolCoins[0].Denom, tc.poolCoins[1].Denom).GetId()
+					poolId = s.PrepareConcentratedPoolWithCoins(tc.poolCoins[0].Denom, tc.poolCoins[1].Denom).GetId()
 
 					// Add liquidity
 					if !tc.doNotAddLiquidity {
@@ -385,6 +397,13 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom_SimpleCases() {
 				// Set the pool for the denom pair per configuration.
 				if len(tc.protoRevLinkDenoms) > 0 {
 					s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, tc.poolCoins[0].Denom, tc.poolCoins[1].Denom, poolId)
+				}
+
+				// For tests that expect swap to fail, clear any pre-existing protorev pools AFTER setup
+				if tc.doNotCreatePool || len(tc.protoRevLinkDenoms) == 0 {
+					// Clear protorev pool mappings to ensure no pre-existing routes
+					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, preSwapDenom)
+					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, defaultTxFeesDenom)
 				}
 
 				// Fund the account with the preFundCoins
@@ -427,6 +446,181 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom_SimpleCases() {
 
 		// Check balance
 		validateFinalBalance(expectedEndBalanceDenoms, testAccount)
+	})
+
+	// tests SwapNonNativeFeeToDenom 2-hop routing via intermediary denoms
+	// when no direct route exists between input and output denoms
+	s.Run("2-hop routing via intermediary denoms", func() {
+
+		// Set up intermediary denoms in txfees params
+		params := s.App.TxFeesKeeper.GetParams(s.Ctx)
+		params.FeeSwapIntermediaryDenomList = []string{intermediaryDenom, anotherIntermediaryDenom}
+		s.App.TxFeesKeeper.SetParams(s.Ctx, params)
+
+		// Custom pool setup function type
+		type poolSetupFunc func(s *KeeperTestSuite, inputDenom, intermediaryDenom, denomToSwapTo string)
+
+		// Pool setup functions for different scenarios
+		setupBothHopPools := func(s *KeeperTestSuite, inputDenom, intermediaryDenom, denomToSwapTo string) {
+			// Create first hop pool: inputDenom -> intermediaryDenom
+			firstHopPoolCoins := sdk.NewCoins(
+				sdk.NewCoin(inputDenom, osmomath.NewInt(100)),
+				sdk.NewCoin(intermediaryDenom, osmomath.NewInt(100)),
+			)
+			firstHopPoolId := s.PrepareConcentratedPoolWithCoins(inputDenom, intermediaryDenom).GetId()
+			s.FundAcc(s.TestAccs[0], firstHopPoolCoins)
+			_, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, firstHopPoolId, s.TestAccs[0], firstHopPoolCoins)
+			s.Require().NoError(err)
+			s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, inputDenom, intermediaryDenom, firstHopPoolId)
+
+			// Create second hop pool: intermediaryDenom -> denomToSwapTo
+			secondHopPoolCoins := sdk.NewCoins(
+				sdk.NewCoin(intermediaryDenom, osmomath.NewInt(100)),
+				sdk.NewCoin(denomToSwapTo, osmomath.NewInt(100)),
+			)
+			secondHopPoolId := s.PrepareConcentratedPoolWithCoins(intermediaryDenom, denomToSwapTo).GetId()
+			s.FundAcc(s.TestAccs[1], secondHopPoolCoins)
+			_, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, secondHopPoolId, s.TestAccs[1], secondHopPoolCoins)
+			s.Require().NoError(err)
+			s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, intermediaryDenom, denomToSwapTo, secondHopPoolId)
+		}
+
+		setupDirectPoolWithFallback := func(s *KeeperTestSuite, inputDenom, intermediaryDenom, denomToSwapTo string) {
+			// Create direct pool: inputDenom -> denomToSwapTo (should take precedence)
+			directPoolCoins := sdk.NewCoins(
+				sdk.NewCoin(inputDenom, osmomath.NewInt(100)),
+				sdk.NewCoin(denomToSwapTo, osmomath.NewInt(100)),
+			)
+			directPoolId := s.PrepareConcentratedPoolWithCoins(inputDenom, denomToSwapTo).GetId()
+			s.FundAcc(s.TestAccs[0], directPoolCoins)
+			_, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, directPoolId, s.TestAccs[0], directPoolCoins)
+			s.Require().NoError(err)
+			s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, inputDenom, denomToSwapTo, directPoolId)
+
+			// Also create the 2-hop pools to test precedence
+			setupBothHopPools(s, inputDenom, intermediaryDenom, denomToSwapTo)
+		}
+
+		setupFirstHopOnly := func(s *KeeperTestSuite, inputDenom, intermediaryDenom, denomToSwapTo string) {
+			// Only create first hop pool
+			firstHopPoolCoins := sdk.NewCoins(
+				sdk.NewCoin(inputDenom, osmomath.NewInt(100)),
+				sdk.NewCoin(intermediaryDenom, osmomath.NewInt(100)),
+			)
+			firstHopPoolId := s.PrepareConcentratedPoolWithCoins(inputDenom, intermediaryDenom).GetId()
+			s.FundAcc(s.TestAccs[0], firstHopPoolCoins)
+			_, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, firstHopPoolId, s.TestAccs[0], firstHopPoolCoins)
+			s.Require().NoError(err)
+			s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, inputDenom, intermediaryDenom, firstHopPoolId)
+		}
+
+		setupSecondHopOnly := func(s *KeeperTestSuite, inputDenom, intermediaryDenom, denomToSwapTo string) {
+			// Only create second hop pool
+			secondHopPoolCoins := sdk.NewCoins(
+				sdk.NewCoin(intermediaryDenom, osmomath.NewInt(100)),
+				sdk.NewCoin(denomToSwapTo, osmomath.NewInt(100)),
+			)
+			secondHopPoolId := s.PrepareConcentratedPoolWithCoins(intermediaryDenom, denomToSwapTo).GetId()
+			s.FundAcc(s.TestAccs[0], secondHopPoolCoins)
+			_, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, secondHopPoolId, s.TestAccs[0], secondHopPoolCoins)
+			s.Require().NoError(err)
+			s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, intermediaryDenom, denomToSwapTo, secondHopPoolId)
+		}
+
+		setupNoPools := func(s *KeeperTestSuite, inputDenom, intermediaryDenom, denomToSwapTo string) {
+			// Don't create any pools - for testing complete failure cases
+		}
+
+		tests := []struct {
+			name                     string
+			denomToSwapTo            string
+			inputDenom               string
+			intermediaryDenom        string
+			preFundCoins             sdk.Coins
+			poolSetup                poolSetupFunc
+			expectedEndBalanceDenoms []string
+		}{
+			{
+				name:                     "successful 2-hop swap: twoHopInputDenom -> intermediaryDenom -> defaultTxFeesDenom",
+				denomToSwapTo:            defaultTxFeesDenom,
+				inputDenom:               preSwapDenom,
+				intermediaryDenom:        intermediaryDenom,
+				preFundCoins:             sdk.NewCoins(sdk.NewCoin(preSwapDenom, osmomath.NewInt(100))),
+				poolSetup:                setupBothHopPools,
+				expectedEndBalanceDenoms: []string{defaultTxFeesDenom},
+			},
+			{
+				name:                     "direct route takes precedence over 2-hop route",
+				denomToSwapTo:            defaultTxFeesDenom,
+				inputDenom:               preSwapDenom,
+				intermediaryDenom:        intermediaryDenom,
+				preFundCoins:             sdk.NewCoins(sdk.NewCoin(preSwapDenom, osmomath.NewInt(100))),
+				poolSetup:                setupDirectPoolWithFallback,
+				expectedEndBalanceDenoms: []string{defaultTxFeesDenom},
+			},
+			{
+				name:                     "2-hop fails when first hop pool missing",
+				denomToSwapTo:            defaultTxFeesDenom,
+				inputDenom:               preSwapDenom,
+				intermediaryDenom:        intermediaryDenom,
+				preFundCoins:             sdk.NewCoins(sdk.NewCoin(preSwapDenom, osmomath.NewInt(100))),
+				poolSetup:                setupSecondHopOnly,
+				expectedEndBalanceDenoms: []string{preSwapDenom}, // No swap happened
+			},
+			{
+				name:                     "2-hop fails when second hop pool missing",
+				denomToSwapTo:            defaultTxFeesDenom,
+				inputDenom:               preSwapDenom,
+				intermediaryDenom:        intermediaryDenom,
+				preFundCoins:             sdk.NewCoins(sdk.NewCoin(preSwapDenom, osmomath.NewInt(100))),
+				poolSetup:                setupFirstHopOnly,
+				expectedEndBalanceDenoms: []string{preSwapDenom}, // No swap happened
+			},
+			{
+				name:                     "multiple intermediary denoms - uses first valid route",
+				denomToSwapTo:            defaultTxFeesDenom,
+				inputDenom:               preSwapDenom,
+				intermediaryDenom:        anotherIntermediaryDenom, // Use second intermediary denom
+				preFundCoins:             sdk.NewCoins(sdk.NewCoin(preSwapDenom, osmomath.NewInt(100))),
+				poolSetup:                setupBothHopPools,
+				expectedEndBalanceDenoms: []string{defaultTxFeesDenom},
+			},
+			{
+				name:                     "no pools available - swap fails gracefully",
+				denomToSwapTo:            defaultTxFeesDenom,
+				inputDenom:               preSwapDenom,
+				intermediaryDenom:        intermediaryDenom,
+				preFundCoins:             sdk.NewCoins(sdk.NewCoin(preSwapDenom, osmomath.NewInt(100))),
+				poolSetup:                setupNoPools,
+				expectedEndBalanceDenoms: []string{preSwapDenom}, // No swap happened
+			},
+		}
+
+		for _, tc := range tests {
+			s.Run(tc.name, func() {
+				s.Setup()
+
+				// Re-set intermediary denoms params for each test
+				params := s.App.TxFeesKeeper.GetParams(s.Ctx)
+				params.FeeSwapIntermediaryDenomList = []string{intermediaryDenom, anotherIntermediaryDenom}
+				s.App.TxFeesKeeper.SetParams(s.Ctx, params)
+
+				// Sets up account with no balance
+				testAccount := apptesting.CreateRandomAccounts(1)[0]
+
+				// Use the custom pool setup function
+				tc.poolSetup(s, tc.inputDenom, tc.intermediaryDenom, tc.denomToSwapTo)
+
+				// Fund the account with the preFundCoins
+				s.FundAcc(testAccount, tc.preFundCoins)
+
+				// System under test.
+				s.App.TxFeesKeeper.SwapNonNativeFeeToDenom(s.Ctx, tc.denomToSwapTo, testAccount)
+
+				// Check balance
+				validateFinalBalance(tc.expectedEndBalanceDenoms, testAccount)
+			})
+		}
 	})
 }
 

@@ -42,10 +42,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v31.0.0
 
+* [#9511](https://github.com/osmosis-labs/osmosis/pull/9511) fix: tokenfactory before send hook gas consumption
 * [#9526](https://github.com/osmosis-labs/osmosis/pull/9526) feat: inflation endpoint
 * [#9530](https://github.com/osmosis-labs/osmosis/pull/9530) feat: add taker fee burn mechanic for osmo collection
 * [#9541](https://github.com/osmosis-labs/osmosis/pull/9541) feat: buy back and burn osmo using non osmo taker fee burn portion
-* [#9511](https://github.com/osmosis-labs/osmosis/pull/9511) fix: tokenfactory before send hook gas consumption
+* [#9547](https://github.com/osmosis-labs/osmosis/pull/9547) feat: multihop taker fee swap
 * [#9548](https://github.com/osmosis-labs/osmosis/pull/9548) chore: update swagger
 * [#9560](https://github.com/osmosis-labs/osmosis/pull/9560) chore: update module path to v31
 * [#9559](https://github.com/osmosis-labs/osmosis/pull/9559) feat: daily staking rewards smoothing 
