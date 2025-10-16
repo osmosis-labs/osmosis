@@ -49,14 +49,14 @@ type params struct {
 
 func (n *NodeConfig) SetMaxPoolPointsPerTx(maxPoolPoints int, from string) {
 	n.LogActionF("setting max pool points per tx for protorev at %d points", maxPoolPoints)
-	cmd := []string{"osmosisd", "tx", "protorev", "set-max-pool-points-per-tx", fmt.Sprintf("%d", maxPoolPoints), fmt.Sprintf("--from=%s", from), "--gas=700000", "--fees=7000uosmo"}
+	cmd := []string{"osmosisd", "tx", "protorev", "set-max-pool-points-per-tx", fmt.Sprintf("%d", maxPoolPoints), fmt.Sprintf("--from=%s", from), "--gas=700000", "--fees=21000uosmo"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 }
 
 func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
 	n.LogActionF("creating balancer pool from file %s", poolFile)
-	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--from=%s", from), "--gas=700000", "--fees=7000uosmo"}
+	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--from=%s", from), "--gas=700000", "--fees=21000uosmo"}
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
@@ -69,7 +69,7 @@ func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
 
 func (n *NodeConfig) CreateStableswapPool(poolFile, from string) uint64 {
 	n.LogActionF("creating stableswap pool from file %s", poolFile)
-	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), "--pool-type=stableswap", fmt.Sprintf("--from=%s", from), "--gas=700000", "--fees=7000uosmo"}
+	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), "--pool-type=stableswap", fmt.Sprintf("--from=%s", from), "--gas=700000", "--fees=21000uosmo"}
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
@@ -110,9 +110,9 @@ func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpa
 // token{0,1} - liquidity to create position with
 func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, tokens string, token0MinAmt, token1MinAmt int64, poolId uint64) (uint64, osmomath.Dec) {
 	n.LogActionF("creating concentrated position")
-	// gas = 50,000 because e2e  default to 40,000, we hardcoded extra 10k gas to initialize tick
-	// fees = 10000 (because 100,000 * 0.01 = 10000)
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", fmt.Sprint(poolId), lowerTick, upperTick, tokens, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), "--gas=1000000", "--fees=10000uosmo", "-o json"}
+	// gas = 1,000,000 because e2e positions need sufficient gas to initialize tick
+	// fees = 30000 (because 1,000,000 * 0.03 = 30000)
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", fmt.Sprint(poolId), lowerTick, upperTick, tokens, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), "--gas=1000000", "--fees=30000uosmo", "-o json"}
 	resp, _, err := n.containerManager.ExecTxCmdWithSuccessStringJSON(n.t, n.chainId, n.Name, cmd, "\"code\":0,")
 	require.NoError(n.t, err)
 	response := formatNonJsonResponse(resp.String())
@@ -164,7 +164,7 @@ func (n *NodeConfig) StoreWasmCode(wasmFile, from string) int {
 
 func (n *NodeConfig) WithdrawPosition(from, liquidityOut string, positionId uint64) {
 	n.LogActionF("withdrawing liquidity from position %d", positionId)
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", fmt.Sprint(positionId), liquidityOut, fmt.Sprintf("--from=%s", from), "--gas=700000", "--fees=7000uosmo"}
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", fmt.Sprint(positionId), liquidityOut, fmt.Sprintf("--from=%s", from), "--gas=700000", "--fees=21000uosmo"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully withdrew %s liquidity from position %d", liquidityOut, positionId)
@@ -429,14 +429,14 @@ func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight 
 }
 
 func (n *NodeConfig) SubmitSuperfluidProposal(asset string, isLegacy bool) int {
-	cmd := []string{"set-superfluid-assets-proposal", fmt.Sprintf("--superfluid-assets=%s", asset), "--title=\"superfluid asset prop\"", fmt.Sprintf("--summary=\"%s superfluid asset\"", asset), "--from=val", "--gas=700000", "--fees=7000uosmo"}
+	cmd := []string{"set-superfluid-assets-proposal", fmt.Sprintf("--superfluid-assets=%s", asset), "--title=\"superfluid asset prop\"", fmt.Sprintf("--summary=\"%s superfluid asset\"", asset), "--from=val", "--gas=700000", "--fees=21000uosmo"}
 
 	// TODO: no expedited flag for some reason
 	return n.SubmitProposal(cmd, false, fmt.Sprintf("superfluid proposal for asset %s", asset), isLegacy)
 }
 
 func (n *NodeConfig) SubmitCreateConcentratedPoolProposal(isExpedited, isLegacy bool) int {
-	cmd := []string{"create-concentratedliquidity-pool-proposal", "--pool-records=stake,uosmo,100,0.001", "--title=\"create concentrated pool\"", "--summary=\"create concentrated pool\"", "--from=val", "--gas=400000", "--fees=7000uosmo"}
+	cmd := []string{"create-concentratedliquidity-pool-proposal", "--pool-records=stake,uosmo,100,0.001", "--title=\"create concentrated pool\"", "--summary=\"create concentrated pool\"", "--from=val", "--gas=400000", "--fees=12000uosmo"}
 	return n.SubmitProposal(cmd, isExpedited, "create concentrated liquidity pool", isLegacy)
 }
 
@@ -537,7 +537,7 @@ func (n *NodeConfig) BankSend(amount string, sendAddress string, receiveAddress 
 
 func (n *NodeConfig) FundCommunityPool(sendAddress string, funds string) {
 	n.LogActionF("funding community pool from address %s with %s", sendAddress, funds)
-	cmd := []string{"osmosisd", "tx", "distribution", "fund-community-pool", funds, fmt.Sprintf("--from=%s", sendAddress), "--gas=600000", "--fees=6000uosmo"}
+	cmd := []string{"osmosisd", "tx", "distribution", "fund-community-pool", funds, fmt.Sprintf("--from=%s", sendAddress), "--gas=600000", "--fees=18000uosmo"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully funded community pool from address %s with %s", sendAddress, funds)
