@@ -49,8 +49,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#9547](https://github.com/osmosis-labs/osmosis/pull/9547) feat: multihop taker fee swap
 * [#9548](https://github.com/osmosis-labs/osmosis/pull/9548) chore: update swagger
 * [#9560](https://github.com/osmosis-labs/osmosis/pull/9560) chore: update module path to v31
-* [#9559](https://github.com/osmosis-labs/osmosis/pull/9559) feat: daily staking rewards smoothing 
+* [#9559](https://github.com/osmosis-labs/osmosis/pull/9559) feat: daily staking rewards smoothing
 * [#9440](https://github.com/osmosis-labs/osmosis/pull/9440) feat: increase consensus min fee to 0.03 uosmo / gas
+* [#9569](https://github.com/osmosis-labs/osmosis/pull/9569) fix: raise timeout back to fix missing blocks in some validators
 
 ## v30.0.5
 
