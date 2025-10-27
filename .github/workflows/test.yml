@@ -62,19 +62,19 @@ jobs:
       - name: Split pkgs into 4 files
         run: |
           split -d -n l/4 pkgs.txt pkgs.txt.part.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: "${{ github.sha }}-00"
           path: ./pkgs.txt.part.00
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: "${{ github.sha }}-01"
           path: ./pkgs.txt.part.01
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: "${{ github.sha }}-02"
           path: ./pkgs.txt.part.02
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: "${{ github.sha }}-03"
           path: ./pkgs.txt.part.03
@@ -151,7 +151,7 @@ jobs:
           tar cvzf ./logs.tgz ./logs
       - name: Upload logs to GitHub
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: logs.tgz
           path: ./logs.tgz
