@@ -96,7 +96,7 @@ jobs:
           go-version-file: go.mod
       - name: Display go version
         run: go version
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: "${{ github.sha }}-${{ matrix.part }}"
       - name: Test & coverage report creation
