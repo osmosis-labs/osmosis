@@ -434,7 +434,8 @@ func (k Keeper) get2HopRoute(ctx sdk.Context, denomToSwapTo, coinDenom string) (
 // Returns the complete route, true, OR []route{}, false if no path is found.
 func (k Keeper) build2HopsRoute(ctx sdk.Context, inputDenom, intermediaryDenom, denomToSwapTo string) ([]poolmanagertypes.SwapAmountInRoute, bool) {
 	// Find pool for first hop: inputDenom -> intermediaryDenom
-	poolId1, err := k.protorevKeeper.GetPoolForDenomPairNoOrder(ctx, inputDenom, intermediaryDenom)
+	// Try intermediary as base_denom first since these are likely to be registered as the base denoms for route finding.
+	poolId1, err := k.protorevKeeper.GetPoolForDenomPairNoOrder(ctx, intermediaryDenom, inputDenom)
 	if err != nil {
 		return nil, false
 	}
