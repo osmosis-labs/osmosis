@@ -19,6 +19,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/DataDog/dd-trace-go/v2/profiler"
 	"github.com/skip-mev/block-sdk/v2/block"
 	"github.com/skip-mev/block-sdk/v2/block/base"
 
@@ -283,6 +284,24 @@ func NewOsmosisApp(
 		if err != nil {
 			panic(err)
 		}
+	}
+
+	// Initialize DataDog profiler if enabled
+	err := profiler.Start(
+		profiler.WithService("osmosis-dd-profiler"),
+		// profiler.WithEnv("<ENVIRONMENT>"),
+		// profiler.WithVersion("<APPLICATION_VERSION>"),
+		// profiler.WithTags("<KEY1>:<VALUE1>", "<KEY2>:<VALUE2>"),
+		profiler.WithProfileTypes(
+			profiler.CPUProfile,
+			profiler.HeapProfile,
+			profiler.BlockProfile,
+			profiler.MutexProfile,
+			profiler.GoroutineProfile,
+		),
+	)
+	if err != nil {
+		panic(err)
 	}
 
 	initReusablePackageInjections() // This should run before anything else to make sure the variables are properly initialized
