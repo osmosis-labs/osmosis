@@ -47,7 +47,7 @@ require (
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.15
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.21
 	github.com/pkg/errors v0.9.1
-	github.com/rakyll/statik v0.1.7
+	github.com/rakyll/statik v0.1.8
 	github.com/skip-mev/block-sdk/v2 v2.1.6
 	github.com/spf13/cast v1.10.0
 	github.com/spf13/cobra v1.10.1
