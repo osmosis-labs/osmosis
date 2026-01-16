@@ -3,7 +3,7 @@ from typing import Dict, Tuple, List
 from collections import namedtuple
 
 # Set to 0 for current height.
-block_height = 11155925
+block_height = 0
 pagination_limit = 1000
 validator_count = 150
 INCLUDE_JAILED = False
@@ -15,7 +15,7 @@ Validator = namedtuple(
 
 # returns all validators
 def get_all_validators() -> List[Validator]:
-    command = f"osmosisd q staking validators --output=json --limit={pagination_limit}"
+    command = f"osmosisd q staking validators --output=json --page-limit={pagination_limit}"
     if block_height > 0:
         command += f" --height={block_height}"
     response = get_json_cli_response(command)
@@ -32,7 +32,7 @@ def get_all_validators() -> List[Validator]:
 
 def get_json_cli_response(command):
     # Execute the shell command and capture the response
-    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
+    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     output, _ = process.communicate()
     # Parse the response as JSON
     return json.loads(output)
@@ -43,7 +43,7 @@ def validator_from_json(obj) -> Validator:
         operator_address=obj["operator_address"],
         tokens=obj["tokens"],
         commission=obj["commission"]["commission_rates"]["rate"],
-        jailed=obj["jailed"],
+        jailed=obj.get("jailed", False),
     )
 
 validators = get_all_validators()
