@@ -148,15 +148,15 @@
 
 ---
 
-### Task 1.2: Document Fork Patches (from local checkout) 📋 `pending`
+### Task 1.2: Document Fork Patches (from local checkout) ✅ `completed`
 
 **Description**: Identify and document all Osmosis SDK fork modifications using the local fork checkout.
 
 **Acceptance Criteria**:
-- [ ] List all modified files vs upstream v0.50.14
-- [ ] Categorize patches (bug fix, feature, optimization)
-- [ ] Assess each patch (still needed, can upstream, SDK alternative exists)
-- [ ] Update knowledge.md with findings
+- [x] List all modified files vs upstream v0.50.14
+- [x] Categorize patches (bug fix, feature, optimization)
+- [x] Assess each patch (still needed, can upstream, SDK alternative exists)
+- [x] Update knowledge.md with findings
 
 ---
 

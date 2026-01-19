@@ -98,6 +98,21 @@ Document each Osmosis fork modification and determine:
 | Governance + query fixes | Query all proposals, pagination checks, whitelist settings parse. | 📋 pending | Verify upstream v0.53; re-apply if still missing. |
 | Misc backports | Denom regex removal, types speedups, epoch account access changes, supply offset helpers. | 📋 pending | Audit against upstream v0.53 and remove/re-apply as needed. |
 
+### Fork Diff Overview (v0.50.14 → osmo-v30/0.50.14)
+
+High-level categories from `git diff --name-only`:
+- **Bank module**: hooks + supply offsets (`x/bank/*`, related proto/gen files).
+- **Vesting module**: clawback/cliff and new CLI/proto (`x/auth/vesting/*`, `proto/cosmos/vesting/*`).
+- **Slashing + staking**: perf and migration tweaks (`x/slashing/*`, `x/staking/*`).
+- **Store/IAVL**: pruning + rootmulti changes (`store/*`).
+- **Baseapp/server**: recheck behavior + OTEL (`baseapp/*`, `server/*`).
+- **Gov queries**: pagination fixes (`x/gov/*`).
+- **Types**: coin/dec coin tweaks (`types/*`).
+- **Tests + CI**: integration/vesting tests and workflow adjustments.
+
+Full file list is available via:
+`git diff --name-only v0.50.14..osmo-v30/0.50.14`
+
 ---
 
 ## Migration Strategy
@@ -148,3 +163,4 @@ _(To be updated during implementation)_
 | 2026-01-13 | Initial document creation | AI Assistant |
 | 2026-01-19 | Document SDK v0.53.4 dependency baseline and conflicts | AI Assistant |
 | 2026-01-19 | Draft fork patch reconciliation map | AI Assistant |
+| 2026-01-19 | Document fork diff overview and categories | AI Assistant |
