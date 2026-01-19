@@ -103,14 +103,14 @@
 
 ---
 
-### Task 0.8: State/Store Upgrade Plan 📋 `pending`
+### Task 0.8: State/Store Upgrade Plan ✅ `completed`
 
 **Description**: Identify new store keys, migrations, and state transformations needed for v0.53.
 
 **Acceptance Criteria**:
-- [ ] Store keys list prepared
-- [ ] Migration handlers mapped
-- [ ] Upgrade handler outline drafted
+- [x] Store keys list prepared
+- [x] Migration handlers mapped
+- [x] Upgrade handler outline drafted
 
 ---
 

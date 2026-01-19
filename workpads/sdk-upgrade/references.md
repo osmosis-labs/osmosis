@@ -37,6 +37,20 @@
 
 - No stable `v0.51.x` or `v0.52.x` tags exist in upstream; the `v0.53.x` UPGRADING guide is the canonical path from `v0.50.x` → `v0.53.x`.
 
+#### State/Store Upgrade Plan (Draft)
+
+| Area | Store/State Change | Osmosis Impact |
+|------|--------------------|----------------|
+| **IBC capability module (v10)** | Remove `capability` KV store key and mem store key; delete scoped keepers and module wiring. | Requires a store upgrade that removes the capability store keys and updates app wiring. |
+| **Optional SDK modules** | `x/epoch` and `x/protocolpool` require new store keys if adopted. | Decide whether to add; if yes, include store keys and upgrade handler additions. |
+| **Wasm module (v0.60.x)** | Potential x/wasm state migrations or params changes per wasmd changelog. | Audit `x/wasm` migrations between v0.53.x + wasmd v0.60.x; add migration handlers as needed. |
+| **IBC / ICA / PFM / rate-limit** | Version bumps may include module-specific migrations (params or store layout). | Review module migrations in v10 series and add to upgrade handler if required. |
+
+**Upgrade handler outline**:
+1. Define `storetypes.StoreUpgrades` with added/removed store keys (capability removal; optional adds).
+2. Run module migrations in order (SDK/IBC/wasm) using `UpgradeKeeper`.
+3. Validate no orphaned store keys remain (remove capability keys if present).
+
 ---
 
 ## §2 Reference Implementations
@@ -267,3 +281,4 @@ _(Track relevant upstream issues and PRs here)_
 | 2026-01-19 | Add IBC-Go v10 migration notes | AI Assistant |
 | 2026-01-19 | Add Wasmd v0.60.x compatibility notes | AI Assistant |
 | 2026-01-19 | Add module wiring deltas vs Gaia v25.3.0 | AI Assistant |
+| 2026-01-19 | Add draft state/store upgrade plan | AI Assistant |
