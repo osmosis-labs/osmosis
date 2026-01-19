@@ -10,7 +10,7 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
@@ -196,17 +196,6 @@ func (s *UpgradeTestSuite) TestRegisterOsmoIonMetadata() {
 
 	s.Require().Equal(expectedUosmodenom, uosmoMetadata.Base)
 	s.Require().Equal(expectedUiondenom, uionMetadata.Base)
-}
-
-func (s *UpgradeTestSuite) TestSetICQParams() {
-	s.SetupTest() // reset
-
-	// system under test.
-	v15.SetICQParams(s.Ctx, s.App.ICQKeeper)
-
-	s.Require().True(s.App.ICQKeeper.IsHostEnabled(s.Ctx))
-	// commented out for historical reasons since v15 upgrade is now over.
-	// s.Require().Len(s.App.ICQKeeper.GetAllowQueries(s.Ctx), 65)
 }
 
 func (s *UpgradeTestSuite) TestSetRateLimits() {

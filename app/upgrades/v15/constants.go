@@ -2,8 +2,7 @@ package v15
 
 import (
 	store "cosmossdk.io/store/types"
-	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward/types"
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v10/packetforward/types"
 
 	"github.com/osmosis-labs/osmosis/v31/app/upgrades"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
@@ -25,7 +24,7 @@ var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
 	CreateUpgradeHandler: CreateUpgradeHandler,
 	StoreUpgrades: store.StoreUpgrades{
-		Added:   []string{poolmanagertypes.StoreKey, valsetpreftypes.StoreKey, protorevtypes.StoreKey, icqtypes.StoreKey, packetforwardtypes.StoreKey},
+		Added:   []string{poolmanagertypes.StoreKey, valsetpreftypes.StoreKey, protorevtypes.StoreKey, packetforwardtypes.StoreKey},
 		Deleted: []string{},
 	},
 }

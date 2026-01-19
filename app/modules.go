@@ -9,26 +9,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	icq "github.com/cosmos/ibc-apps/modules/async-icq/v8"
-	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 
-	ibcwasm "github.com/cosmos/ibc-go/modules/light-clients/08-wasm"
-	ibcwasmtypes "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	ibchost "github.com/cosmos/ibc-go/v8/modules/core/exported"
-	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
-	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
-
-	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward"
-	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward/types"
+	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v10/packetforward"
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v10/packetforward/types"
+	ibcwasm "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/v10"
+	ibcwasmtypes "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/v10/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v10/modules/core"
+	ibchost "github.com/cosmos/ibc-go/v10/modules/core/exported"
+	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
-	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
-	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
-
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
+	ica "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts"
+	icatypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/types"
 
 	downtimemodule "github.com/osmosis-labs/osmosis/v31/x/downtime-detector/module"
 	downtimetypes "github.com/osmosis-labs/osmosis/v31/x/downtime-detector/types"
@@ -63,8 +57,6 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/ibc-go/modules/capability"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 
 	"github.com/skip-mev/block-sdk/v2/x/auction"
 	auctiontypes "github.com/skip-mev/block-sdk/v2/x/auction/types"
@@ -117,7 +109,6 @@ var moduleAccountPermissions = map[string][]string{
 	distrtypes.ModuleName:                    nil,
 	ibchookstypes.ModuleName:                 nil,
 	icatypes.ModuleName:                      nil,
-	icqtypes.ModuleName:                      nil,
 	minttypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
 	minttypes.DeveloperVestingModuleAcctName: nil,
 	stakingtypes.BondedPoolName:              {authtypes.Burner, authtypes.Staking},
@@ -164,7 +155,6 @@ func appModules(
 		auth.NewAppModule(appCodec, *app.AccountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
 		vesting.NewAppModule(*app.AccountKeeper, app.BankKeeper),
 		bank.NewAppModule(appCodec, *app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
-		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
 		gov.NewAppModule(appCodec, app.GovKeeper, *app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
 		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper, app.BankKeeper),
 		slashing.NewAppModule(appCodec, *app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName), app.interfaceRegistry),
@@ -205,7 +195,6 @@ func appModules(
 		valsetprefmodule.NewAppModule(appCodec, *app.ValidatorSetPreferenceKeeper),
 		ibcratelimitmodule.NewAppModule(*app.RateLimitingICS4Wrapper),
 		ibc_hooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
-		icq.NewAppModule(*app.AppKeepers.ICQKeeper, app.GetSubspace(icqtypes.ModuleName)),
 		packetforward.NewAppModule(app.PacketForwardKeeper, app.GetSubspace(packetforwardtypes.ModuleName)),
 		cwpoolmodule.NewAppModule(appCodec, *app.CosmwasmPoolKeeper),
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)),
@@ -223,7 +212,7 @@ func orderBeginBlockers(allModuleNames []string) []string {
 	// Epochs must come before staking, because txfees epoch hook sends fees to the auth "fee collector"
 	// module account, which is then distributed to stakers. If staking comes before epochs, then the
 	// funds will not be distributed to stakers as expected.
-	ord.FirstElements(epochstypes.ModuleName, capabilitytypes.ModuleName)
+	ord.FirstElements(epochstypes.ModuleName)
 
 	// Staking ordering
 	// TODO: Perhaps this can be relaxed, left to future work to analyze.
@@ -257,11 +246,7 @@ func OrderEndBlockers(allModuleNames []string) []string {
 func OrderInitGenesis(allModuleNames []string) []string {
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
-	// NOTE: Capability module must occur first so that it can initialize any capabilities
-	// so that other modules that want to create or claim capabilities afterwards in InitChain
-	// can do so safely.
 	return []string{
-		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		distrtypes.ModuleName,
@@ -301,7 +286,6 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		ibcwasmtypes.ModuleName,
 		// ibc_hooks after auth keeper
 		ibchookstypes.ModuleName,
-		icqtypes.ModuleName,
 		packetforwardtypes.ModuleName,
 		cosmwasmpooltypes.ModuleName,
 		auctiontypes.ModuleName,
@@ -327,7 +311,7 @@ func (app *OsmosisApp) GetBankKeeper() simtypes.BankKeeper {
 }
 
 // Required for ibctesting
-func (app *OsmosisApp) GetStakingKeeper() ibctestingtypes.StakingKeeper {
+func (app *OsmosisApp) GetStakingKeeper() simtypes.IBCTestingStakingKeeper {
 	return *app.AppKeepers.StakingKeeper // Dereferencing the pointer
 }
 func (app *OsmosisApp) GetSDKStakingKeeper() stakingkeeper.Keeper {
@@ -336,10 +320,6 @@ func (app *OsmosisApp) GetSDKStakingKeeper() stakingkeeper.Keeper {
 
 func (app *OsmosisApp) GetIBCKeeper() *ibckeeper.Keeper {
 	return app.AppKeepers.IBCKeeper // This is a *ibckeeper.Keeper
-}
-
-func (app *OsmosisApp) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
-	return app.AppKeepers.ScopedIBCKeeper
 }
 
 func (app *OsmosisApp) GetPoolManagerKeeper() simtypes.PoolManagerKeeper {

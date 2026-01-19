@@ -10,11 +10,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
-	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
+	icacontrollertypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller/types"
+	icahosttypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -100,9 +98,6 @@ func CreateUpgradeHandler(
 				keyTable = icahosttypes.ParamKeyTable() //nolint:staticcheck
 			case icacontrollertypes.SubModuleName:
 				keyTable = icacontrollertypes.ParamKeyTable() //nolint:staticcheck
-			case icqtypes.ModuleName:
-				keyTable = icqtypes.ParamKeyTable() //nolint:staticcheck
-
 			// wasm
 			case wasmtypes.ModuleName:
 				keyTable = wasmv2.ParamKeyTable() //nolint:staticcheck

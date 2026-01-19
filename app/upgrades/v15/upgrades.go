@@ -12,10 +12,7 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v8/keeper"
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 
-	"github.com/osmosis-labs/osmosis/v31/wasmbinding"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v31/x/ibc-rate-limit"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v31/x/ibc-rate-limit/types"
 
@@ -46,8 +43,6 @@ func CreateUpgradeHandler(
 		// NOTE: This function has been removed in packet-forward-middleware v8.1.1
 		// leaving this here commented out for legacy purposes
 		// keepers.PacketForwardKeeper.SetParams(ctx, packetforwardtypes.DefaultParams())
-		setICQParams(ctx, keepers.ICQKeeper)
-
 		// N.B: pool id in gamm is to be deprecated in the future
 		// Instead,it is moved to poolmanager.
 		migrateNextPoolId(ctx, keepers.GAMMKeeper, keepers.PoolManagerKeeper)
@@ -74,15 +69,6 @@ func CreateUpgradeHandler(
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
-}
-
-func setICQParams(ctx sdk.Context, icqKeeper *icqkeeper.Keeper) {
-	icqparams := icqtypes.DefaultParams()
-	icqparams.AllowQueries = wasmbinding.GetStargateWhitelistedPaths()
-	// Adding SmartContractState query to allowlist
-	icqparams.AllowQueries = append(icqparams.AllowQueries, "/cosmwasm.wasm.v1.Query/SmartContractState")
-	//nolint:errcheck
-	icqKeeper.SetParams(ctx, icqparams)
 }
 
 func migrateBalancerPoolsToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, bankKeeper bankkeeper.Keeper) {

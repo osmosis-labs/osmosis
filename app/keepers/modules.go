@@ -5,10 +5,10 @@ package keepers
 // Unclear to me how to use NewBasicManagerFromManager for this purpose though prior to app init
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
-	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward"
-	transfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
-	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	tendermint "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
+	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v10/packetforward"
+	transfer "github.com/cosmos/ibc-go/v10/modules/apps/transfer"
+	ibc "github.com/cosmos/ibc-go/v10/modules/core"
+	tendermint "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint"
 
 	"cosmossdk.io/x/evidence"
 	"cosmossdk.io/x/upgrade"
@@ -26,10 +26,8 @@ import (
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	icq "github.com/cosmos/ibc-apps/modules/async-icq/v8"
-	"github.com/cosmos/ibc-go/modules/capability"
-	ibcwasm "github.com/cosmos/ibc-go/modules/light-clients/08-wasm"
-	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
+	ibcwasm "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/v10"
+	ica "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts"
 
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 
@@ -73,7 +71,6 @@ var AppModuleBasics = module.NewBasicManager(
 	auth.AppModuleBasic{},
 	genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
 	bank.AppModuleBasic{},
-	capability.AppModuleBasic{},
 	staking.AppModuleBasic{},
 	mint.AppModuleBasic{},
 	downtimemodule.AppModuleBasic{},
@@ -122,7 +119,6 @@ var AppModuleBasics = module.NewBasicManager(
 	tokenfactory.AppModuleBasic{},
 	valsetprefmodule.AppModuleBasic{},
 	wasm.AppModuleBasic{},
-	icq.AppModuleBasic{},
 	ica.AppModuleBasic{},
 	ibc_hooks.AppModuleBasic{},
 	ibcratelimitmodule.AppModuleBasic{},
