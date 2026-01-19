@@ -6,8 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	distribution "github.com/cosmos/cosmos-sdk/x/distribution"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
 	lockupkeeper "github.com/osmosis-labs/osmosis/v31/x/lockup/keeper"
@@ -76,8 +74,8 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			// run epoch actions
 			// run begin block for each validator so that both validator gets block rewards
 			for i, valAddr := range valAddrs {
-				// ensure we are at a block height that is a multiple of the distribution block height
-				blockHeight := distribution.BlockMultipleToDistributeRewards * int64(i+1)
+				// ensure we are at a valid non-zero block height for distribution.
+				blockHeight := int64(i + 1)
 				s.Ctx = s.Ctx.WithBlockHeight(blockHeight - 1)
 				s.BeginNewBlockWithProposer(true, valAddr)
 			}
