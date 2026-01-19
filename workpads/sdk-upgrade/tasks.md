@@ -231,7 +231,7 @@
 
 ## Phase 2: Implementation
 
-### Task 2.1: Prepare SDK Upgrade Branch 📋 `pending`
+### Task 2.1: Create SDK Upgrade Branch 📋 `pending`
 
 **Depends On**: Phase 1 complete
 
