@@ -994,13 +994,13 @@ func (s *KeeperTestSuite) TestWithdrawDelegationRewards() {
 				if test.setValSetDelegation {
 					for _, val := range preferences {
 						rewardAfterWithdrawValSet, _ := s.GetDelegationRewards(ctx, val.ValOperAddress, test.delegator)
-						s.Require().Nil(rewardAfterWithdrawValSet)
+						s.Require().Empty(rewardAfterWithdrawValSet)
 					}
 				}
 
 				if test.setExistingDelegation {
 					rewardAfterWithdrawExistingSet, _ := s.GetDelegationRewards(ctx, valAddrs[0], test.delegator)
-					s.Require().Nil(rewardAfterWithdrawExistingSet)
+					s.Require().Empty(rewardAfterWithdrawExistingSet)
 				}
 			} else {
 				s.Require().Error(err)
