@@ -3,35 +3,34 @@ package ibc_hooks
 import (
 	// external libraries
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 
 	// ibc-go
-	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
+	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 )
 
 type Hooks interface{}
 
 type OnChanOpenInitOverrideHooks interface {
-	OnChanOpenInitOverride(im IBCMiddleware, ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID string, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, version string) (string, error)
+	OnChanOpenInitOverride(im IBCMiddleware, ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID string, channelID string, counterparty channeltypes.Counterparty, version string) (string, error)
 }
 type OnChanOpenInitBeforeHooks interface {
-	OnChanOpenInitBeforeHook(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID string, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, version string)
+	OnChanOpenInitBeforeHook(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID string, channelID string, counterparty channeltypes.Counterparty, version string)
 }
 type OnChanOpenInitAfterHooks interface {
-	OnChanOpenInitAfterHook(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID string, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, version string, finalVersion string, err error)
+	OnChanOpenInitAfterHook(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID string, channelID string, counterparty channeltypes.Counterparty, version string, finalVersion string, err error)
 }
 
 // OnChanOpenTry Hooks
 type OnChanOpenTryOverrideHooks interface {
-	OnChanOpenTryOverride(im IBCMiddleware, ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, counterpartyVersion string) (string, error)
+	OnChanOpenTryOverride(im IBCMiddleware, ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID, channelID string, counterparty channeltypes.Counterparty, counterpartyVersion string) (string, error)
 }
 type OnChanOpenTryBeforeHooks interface {
-	OnChanOpenTryBeforeHook(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, counterpartyVersion string)
+	OnChanOpenTryBeforeHook(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID, channelID string, counterparty channeltypes.Counterparty, counterpartyVersion string)
 }
 type OnChanOpenTryAfterHooks interface {
-	OnChanOpenTryAfterHook(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, counterpartyVersion string, version string, err error)
+	OnChanOpenTryAfterHook(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID, channelID string, counterparty channeltypes.Counterparty, counterpartyVersion string, version string, err error)
 }
 
 // OnChanOpenAck Hooks
@@ -80,57 +79,57 @@ type OnChanCloseConfirmAfterHooks interface {
 
 // OnRecvPacket Hooks
 type OnRecvPacketOverrideHooks interface {
-	OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement
+	OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, channelVersion string, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement
 }
 type OnRecvPacketBeforeHooks interface {
-	OnRecvPacketBeforeHook(ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress)
+	OnRecvPacketBeforeHook(ctx sdk.Context, channelVersion string, packet channeltypes.Packet, relayer sdk.AccAddress)
 }
 type OnRecvPacketAfterHooks interface {
-	OnRecvPacketAfterHook(ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress, ack ibcexported.Acknowledgement)
+	OnRecvPacketAfterHook(ctx sdk.Context, channelVersion string, packet channeltypes.Packet, relayer sdk.AccAddress, ack ibcexported.Acknowledgement)
 }
 
 // OnAcknowledgementPacket Hooks
 type OnAcknowledgementPacketOverrideHooks interface {
-	OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error
+	OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Context, channelVersion string, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error
 }
 type OnAcknowledgementPacketBeforeHooks interface {
-	OnAcknowledgementPacketBeforeHook(ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress)
+	OnAcknowledgementPacketBeforeHook(ctx sdk.Context, channelVersion string, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress)
 }
 type OnAcknowledgementPacketAfterHooks interface {
-	OnAcknowledgementPacketAfterHook(ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress, err error)
+	OnAcknowledgementPacketAfterHook(ctx sdk.Context, channelVersion string, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress, err error)
 }
 
 // OnTimeoutPacket Hooks
 type OnTimeoutPacketOverrideHooks interface {
-	OnTimeoutPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) error
+	OnTimeoutPacketOverride(im IBCMiddleware, ctx sdk.Context, channelVersion string, packet channeltypes.Packet, relayer sdk.AccAddress) error
 }
 type OnTimeoutPacketBeforeHooks interface {
-	OnTimeoutPacketBeforeHook(ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress)
+	OnTimeoutPacketBeforeHook(ctx sdk.Context, channelVersion string, packet channeltypes.Packet, relayer sdk.AccAddress)
 }
 type OnTimeoutPacketAfterHooks interface {
-	OnTimeoutPacketAfterHook(ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress, err error)
+	OnTimeoutPacketAfterHook(ctx sdk.Context, channelVersion string, packet channeltypes.Packet, relayer sdk.AccAddress, err error)
 }
 
 // SendPacket Hooks
 type SendPacketOverrideHooks interface {
-	SendPacketOverride(i ICS4Middleware, ctx sdk.Context, chanCap *capabilitytypes.Capability, sourcePort string, sourceChannel string, timeoutHeight clienttypes.Height, timeoutTimestamp uint64, data []byte) (uint64, error)
+	SendPacketOverride(i ICS4Middleware, ctx sdk.Context, sourcePort string, sourceChannel string, timeoutHeight clienttypes.Height, timeoutTimestamp uint64, data []byte) (uint64, error)
 }
 type SendPacketBeforeHooks interface {
-	SendPacketBeforeHook(ctx sdk.Context, chanCap *capabilitytypes.Capability, sourcePort string, sourceChannel string, timeoutHeight clienttypes.Height, timeoutTimestamp uint64, data []byte)
+	SendPacketBeforeHook(ctx sdk.Context, sourcePort string, sourceChannel string, timeoutHeight clienttypes.Height, timeoutTimestamp uint64, data []byte)
 }
 type SendPacketAfterHooks interface {
-	SendPacketAfterHook(cctx sdk.Context, chanCap *capabilitytypes.Capability, sourcePort string, sourceChannel string, timeoutHeight clienttypes.Height, timeoutTimestamp uint64, data []byte, err error)
+	SendPacketAfterHook(cctx sdk.Context, sourcePort string, sourceChannel string, timeoutHeight clienttypes.Height, timeoutTimestamp uint64, data []byte, err error)
 }
 
 // WriteAcknowledgement Hooks
 type WriteAcknowledgementOverrideHooks interface {
-	WriteAcknowledgementOverride(i ICS4Middleware, ctx sdk.Context, chanCap *capabilitytypes.Capability, packet ibcexported.PacketI, ack ibcexported.Acknowledgement) error
+	WriteAcknowledgementOverride(i ICS4Middleware, ctx sdk.Context, packet ibcexported.PacketI, ack ibcexported.Acknowledgement) error
 }
 type WriteAcknowledgementBeforeHooks interface {
-	WriteAcknowledgementBeforeHook(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet ibcexported.PacketI, ack ibcexported.Acknowledgement)
+	WriteAcknowledgementBeforeHook(ctx sdk.Context, packet ibcexported.PacketI, ack ibcexported.Acknowledgement)
 }
 type WriteAcknowledgementAfterHooks interface {
-	WriteAcknowledgementAfterHook(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet ibcexported.PacketI, ack ibcexported.Acknowledgement, err error)
+	WriteAcknowledgementAfterHook(ctx sdk.Context, packet ibcexported.PacketI, ack ibcexported.Acknowledgement, err error)
 }
 
 // GetAppVersion Hooks

@@ -5,8 +5,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	// ibc-go
-	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
+	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 
 	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 )
@@ -25,18 +25,18 @@ type Status struct {
 // Recv
 type TestRecvOverrideHooks struct{ Status *Status }
 
-func (t TestRecvOverrideHooks) OnRecvPacketOverride(im ibchooks.IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
+func (t TestRecvOverrideHooks) OnRecvPacketOverride(im ibchooks.IBCMiddleware, ctx sdk.Context, channelVersion string, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
 	t.Status.OverrideRan = true
-	ack := im.App.OnRecvPacket(ctx, packet, relayer)
+	ack := im.App.OnRecvPacket(ctx, channelVersion, packet, relayer)
 	return ack
 }
 
 type TestRecvBeforeAfterHooks struct{ Status *Status }
 
-func (t TestRecvBeforeAfterHooks) OnRecvPacketBeforeHook(ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) {
+func (t TestRecvBeforeAfterHooks) OnRecvPacketBeforeHook(ctx sdk.Context, channelVersion string, packet channeltypes.Packet, relayer sdk.AccAddress) {
 	t.Status.BeforeRan = true
 }
 
-func (t TestRecvBeforeAfterHooks) OnRecvPacketAfterHook(ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress, ack ibcexported.Acknowledgement) {
+func (t TestRecvBeforeAfterHooks) OnRecvPacketAfterHook(ctx sdk.Context, channelVersion string, packet channeltypes.Packet, relayer sdk.AccAddress, ack ibcexported.Acknowledgement) {
 	t.Status.AfterRan = true
 }

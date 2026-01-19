@@ -8,8 +8,8 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	ibctesting "github.com/cosmos/ibc-go/v8/testing"
+	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	ibctesting "github.com/cosmos/ibc-go/v10/testing"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v31/tests/osmosisibctesting"

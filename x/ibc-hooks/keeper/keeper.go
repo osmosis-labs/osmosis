@@ -12,7 +12,7 @@ import (
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
@@ -196,12 +196,6 @@ func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequen
 		return nil, fmt.Errorf("sender %s is not allowed to send an ack for channel %s packet %d", sender, channel, packetSequence)
 	}
 
-	// Write the acknowledgement
-	_, cap, err := k.channelKeeper.LookupModuleByChannel(ctx, "transfer", channel)
-	if err != nil {
-		return nil, errorsmod.Wrap(err, "could not retrieve module from port-id")
-	}
-
 	// Calling the contract. This could be made generic by using an interface if we want
 	// to support other types of AckActors, but keeping it here for now for simplicity.
 	contractAddr, err := sdk.AccAddressFromBech32(contract)
@@ -256,7 +250,7 @@ func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequen
 	}
 
 	// Now we can write the acknowledgement
-	err = k.channelKeeper.WriteAcknowledgement(ctx, cap, packet, newAck)
+	err = k.channelKeeper.WriteAcknowledgement(ctx, packet, newAck)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "could not write acknowledgement")
 	}
