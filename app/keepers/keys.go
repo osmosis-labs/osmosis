@@ -2,7 +2,6 @@ package keepers
 
 import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 
 	storetypes "cosmossdk.io/store/types"
 
@@ -20,7 +19,7 @@ func (appKeepers *AppKeepers) GenerateKeys() {
 	appKeepers.tkeys = storetypes.NewTransientStoreKeys(paramstypes.TStoreKey, twaptypes.TransientStoreKey, protorevtypes.TransientStoreKey)
 
 	// MemKeys are for information that is stored only in RAM.
-	appKeepers.memKeys = storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
+	appKeepers.memKeys = storetypes.NewMemoryStoreKeys()
 }
 
 // GetSubspace gets existing substore from keeper.

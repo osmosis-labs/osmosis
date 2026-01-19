@@ -27,7 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -40,12 +39,11 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/ibc-go/modules/capability"
-	ibcwasmkeeper "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/keeper"
-	ibcwasmtypes "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
+	ibcwasmkeeper "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/v10/keeper"
+	ibcwasmtypes "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/v10/types"
 
-	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
-	ibc "github.com/cosmos/ibc-go/v8/modules/core"
+	"github.com/cosmos/ibc-go/v10/modules/apps/transfer"
+	ibc "github.com/cosmos/ibc-go/v10/modules/core"
 
 	"github.com/osmosis-labs/osmosis/v31/ingest/common/poolextractor"
 	"github.com/osmosis-labs/osmosis/v31/ingest/common/pooltracker"
@@ -240,10 +238,8 @@ func init() {
 // This is done to ensure they can be built without depending on at compilation time and thus imported by other chains
 // This should always be called before any other function to avoid inconsistent data
 func initReusablePackageInjections() {
-	// Inject ClawbackVestingAccount account type into osmoutils
-	osmoutils.OsmoUtilsExtraAccountTypes = map[reflect.Type]struct{}{
-		reflect.TypeOf(&vestingtypes.ClawbackVestingAccount{}): {},
-	}
+	// Inject any extra account types into osmoutils (empty on SDK v0.53+).
+	osmoutils.OsmoUtilsExtraAccountTypes = map[reflect.Type]struct{}{}
 }
 
 // overrideWasmVariables overrides the wasm variables to:
@@ -316,9 +312,7 @@ func NewOsmosisApp(
 		SupportedCapabilities: []string{"iterator", "stargate", "abort"},
 		ContractDebugMode:     false,
 	}
-	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
-	// Uncomment this for debugging contracts. In the future this could be made into a param passed by the tests
-	// wasmConfig.ContractDebugMode = true
+	nodeConfig, err := wasm.ReadNodeConfig(appOpts)
 	if err != nil {
 		panic(fmt.Sprintf("error while reading wasm config: %s", err))
 	}
@@ -339,7 +333,8 @@ func NewOsmosisApp(
 		maccPerms,
 		dataDir,
 		wasmDir,
-		wasmConfig,
+		nodeConfig,
+		wasmtypes.VMConfig{},
 		wasmOpts,
 		app.BlockedAddrs(),
 		ibcWasmConfig,
@@ -491,10 +486,8 @@ func NewOsmosisApp(
 	// there is nothing left over in the validator fee pool, so as to keep the
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
-	// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
-
 	// Upgrades from v0.50.x onwards happen in pre block
-	app.mm.SetOrderPreBlockers(upgradetypes.ModuleName)
+	app.mm.SetOrderPreBlockers(upgradetypes.ModuleName, authtypes.ModuleName)
 
 	// Tell the app's module manager how to set the order of BeginBlockers, which are run at the beginning of every block.
 	app.mm.SetOrderBeginBlockers(orderBeginBlockers(app.mm.ModuleNames())...)
@@ -544,7 +537,6 @@ func NewOsmosisApp(
 	app.sm = module.NewSimulationManager(
 		auth.NewAppModule(appCodec, *app.AccountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
 		bank.NewAppModule(appCodec, *app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
-		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
 		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper, app.BankKeeper),
@@ -591,7 +583,7 @@ func NewOsmosisApp(
 
 	anteHandler := NewAnteHandler(
 		appOpts,
-		wasmConfig,
+		nodeConfig,
 		runtime.NewKVStoreService(app.GetKey(wasmtypes.StoreKey)),
 		app.AccountKeeper,
 		app.SmartAccountKeeper,
@@ -697,7 +689,7 @@ func NewOsmosisApp(
 			tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
 		}
 
-		if err := ibcwasmkeeper.InitializePinnedCodes(ctx); err != nil {
+		if err := app.IBCWasmClientKeeper.InitializePinnedCodes(ctx); err != nil {
 			tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
 		}
 	}
