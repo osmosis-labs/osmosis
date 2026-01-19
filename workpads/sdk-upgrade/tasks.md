@@ -137,14 +137,14 @@
 
 ## Phase 1: Analysis & Design
 
-### Task 1.1: Baseline Inputs & Reference Checkouts 📋 `pending`
+### Task 1.1: Baseline Inputs & Reference Checkouts ✅ `completed`
 
 **Description**: Use existing local checkouts as baselines; only clone extra references into `workpads/sdk-upgrade/repos` if needed.
 
 **Acceptance Criteria**:
-- [ ] `/Users/nicolas/devel/osmosis` baseline noted
-- [ ] `/Users/nicolas/devel/cosmos-sdk` on `osmo-v30/0.50.14`
-- [ ] Any extra reference checkouts (if needed) live under `workpads/sdk-upgrade/repos/`
+- [x] `/Users/nicolas/devel/osmosis` baseline noted
+- [x] `/Users/nicolas/devel/cosmos-sdk` on `osmo-v30/0.50.14`
+- [x] Any extra reference checkouts (if needed) live under `workpads/sdk-upgrade/repos/`
 
 ---
 

@@ -142,6 +142,7 @@ git clone --depth 1 --branch v0.50.14 https://github.com/cosmos/cosmos-sdk.git c
 
 - **Local SDK checkout**: `/Users/nicolas/devel/cosmos-sdk`
 - **Aligned branch**: `osmo-v30/0.50.14` (tracks `origin/osmo-v30/0.50.14`, tag `v0.50.14-v30-osmo`)
+- **Local Osmosis checkout**: `/Users/nicolas/devel/osmosis` (branch `nicolas/sdk-upgrade`)
 
 ---
 
