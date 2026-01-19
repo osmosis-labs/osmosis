@@ -81,14 +81,14 @@
 
 ---
 
-### Task 0.6b: Wasmd / CosmWasm SDK Compatibility Research 📋 `pending`
+### Task 0.6b: Wasmd / CosmWasm SDK Compatibility Research ✅ `completed`
 
 **Description**: Review Wasmd v0.60.x and CosmWasm SDK compatibility notes to identify breaking changes and required upgrades for Osmosis.
 
 **Acceptance Criteria**:
-- [ ] Wasmd v0.60.x migration/compat notes summarized in `references.md`
-- [ ] Contract/runtime compatibility risks documented
-- [ ] Osmosis-specific conflicts or upgrade steps identified
+- [x] Wasmd v0.60.x migration/compat notes summarized in `references.md`
+- [x] Contract/runtime compatibility risks documented
+- [x] Osmosis-specific conflicts or upgrade steps identified
 
 ---
 

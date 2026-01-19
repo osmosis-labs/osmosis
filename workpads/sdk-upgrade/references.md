@@ -154,6 +154,22 @@ Sources:
 - **Repository**: <https://github.com/CosmWasm/wasmd>
 - **SDK Compatibility**: <https://github.com/CosmWasm/wasmd/blob/main/INTEGRATION.md>
 
+#### Wasmd v0.60.x / CosmWasm Compatibility Notes
+
+Sources:
+- Wasmd releases: <https://github.com/CosmWasm/wasmd/releases>
+- Wasmd changelog: <https://github.com/CosmWasm/wasmd/blob/main/CHANGELOG.md>
+- INTEGRATION.md: <https://github.com/CosmWasm/wasmd/blob/main/INTEGRATION.md>
+- Advisory (IBC channel open error handling): <https://advisories.gitlab.com/pkg/golang/github.com/cosmwasm/wasmd/GHSA-79xg-q4qm-7v9w/>
+
+| Change | Osmosis Impact |
+|--------|----------------|
+| **No clear v0.60.2 migration guide published** | Plan to audit the tag/changelog directly; treat as potentially consensus-affecting until confirmed. |
+| **IBC channel open error handling fix (CWA-2025-006)** | v0.60.1+ fixes erroneous channel open when contract errors; ensure behavior change is acceptable for Osmosis IBC hooks and tests. |
+| **WasmVM minor version bumps are consensus-breaking** | Align wasmvm to wasmd v0.60.x (`v2.2.4` in Gaia); requires coordinated chain upgrade. |
+| **Go toolchain requirement bump (v0.60.0+)** | Ensure build toolchain matches wasmd requirements during upgrade CI. |
+| **Capability flags / feature gates** | Review `INTEGRATION.md` for capability flags and ensure Osmosis enables required features when moving to v0.60.x. |
+
 ### Dependency Alignment Matrix (SDK v0.53.4 baseline)
 
 Source: `gaia` v25.3.0 `go.mod` (SDK v0.53.4).
@@ -215,6 +231,8 @@ _(Track relevant upstream issues and PRs here)_
 | Gaia v25.3.0 `go.mod` | Authoritative dependency versions for SDK v0.53.4 | Dependency alignment matrix |
 | IBC-Go v10 migration guide | Concrete IBC v10 breaking changes and wiring changes | IBC v10 migration notes |
 | IBC-Go v10 release notes | API removals and module changes | IBC v10 migration notes |
+| Wasmd changelog/releases | Primary source for v0.60.x changes | Wasmd compatibility notes |
+| Wasmd integration docs | Capability flags and runtime compatibility | Wasmd compatibility notes |
 
 ### Less Useful Than Expected
 
@@ -238,3 +256,4 @@ _(Track relevant upstream issues and PRs here)_
 | 2026-01-19 | Add prior upgrade notes, migration guide summary, fork delta notes | AI Assistant |
 | 2026-01-19 | Add dependency alignment matrix from Gaia v25.3.0 | AI Assistant |
 | 2026-01-19 | Add IBC-Go v10 migration notes | AI Assistant |
+| 2026-01-19 | Add Wasmd v0.60.x compatibility notes | AI Assistant |
