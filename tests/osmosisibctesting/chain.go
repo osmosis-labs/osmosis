@@ -25,7 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ibctesting "github.com/cosmos/ibc-go/v8/testing"
+	ibctesting "github.com/cosmos/ibc-go/v10/testing"
 
 	"github.com/osmosis-labs/osmosis/v31/app"
 )
@@ -56,7 +56,7 @@ func (chain *TestChain) commitBlock(res *abci.ResponseFinalizeBlock) {
 
 	// set the last header to the current header
 	// use nil trusted fields
-	chain.LastHeader = chain.CurrentTMClientHeader()
+	chain.LatestCommittedHeader = chain.CurrentTMClientHeader()
 
 	// val set changes returned from previous block get applied to the next validators
 	// of this block. See tendermint spec for details.
@@ -64,16 +64,16 @@ func (chain *TestChain) commitBlock(res *abci.ResponseFinalizeBlock) {
 	chain.NextVals = ibctesting.ApplyValSetChanges(chain, chain.Vals, res.ValidatorUpdates)
 
 	// increment the current header
-	chain.CurrentHeader = cmtproto.Header{
+	chain.ProposedHeader = cmtproto.Header{
 		ChainID: chain.ChainID,
 		Height:  chain.App.LastBlockHeight() + 1,
 		AppHash: chain.App.LastCommitID().Hash,
 		// NOTE: the time is increased by the coordinator to maintain time synchrony amongst
 		// chains.
-		Time:               chain.CurrentHeader.Time,
+		Time:               chain.ProposedHeader.Time,
 		ValidatorsHash:     chain.Vals.Hash(),
 		NextValidatorsHash: chain.NextVals.Hash(),
-		ProposerAddress:    chain.CurrentHeader.ProposerAddress,
+		ProposerAddress:    chain.ProposedHeader.ProposerAddress,
 	}
 }
 
@@ -90,7 +90,7 @@ func (chain *TestChain) SendMsgsNoCheck(msgs ...sdk.Msg) (*abci.ExecTxResult, er
 		}
 	}()
 
-	resp, err := SignAndDeliver(chain.TB, chain.TxConfig, chain.App.GetBaseApp(), msgs, chain.ChainID, []uint64{chain.SenderAccount.GetAccountNumber()}, []uint64{chain.SenderAccount.GetSequence()}, chain.CurrentHeader.GetTime(), chain.NextVals.Hash(), chain.SenderPrivKey)
+	resp, err := SignAndDeliver(chain.TB, chain.TxConfig, chain.App.GetBaseApp(), msgs, chain.ChainID, []uint64{chain.SenderAccount.GetAccountNumber()}, []uint64{chain.SenderAccount.GetSequence()}, chain.ProposedHeader.GetTime(), chain.NextVals.Hash(), chain.SenderPrivKey)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func (chain *TestChain) SendMsgsFromPrivKeys(privKeys []cryptotypes.PrivKey, msg
 		seenSequence[signerAcc.String()] = accountSequences[i]
 	}
 
-	resp, err := SignAndDeliver(chain.TB, chain.TxConfig, chain.App.GetBaseApp(), msgs, chain.ChainID, accountNumbers, accountSequences, chain.CurrentHeader.GetTime(), chain.NextVals.Hash(), privKeys...)
+	resp, err := SignAndDeliver(chain.TB, chain.TxConfig, chain.App.GetBaseApp(), msgs, chain.ChainID, accountNumbers, accountSequences, chain.ProposedHeader.GetTime(), chain.NextVals.Hash(), privKeys...)
 	if err != nil {
 		return nil, err
 	}

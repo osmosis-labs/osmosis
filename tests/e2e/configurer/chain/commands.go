@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/libs/bytes"
-	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
