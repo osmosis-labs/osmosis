@@ -114,13 +114,13 @@
 
 ---
 
-### Task 0.9: Fork Patch Reconciliation 📋 `pending`
+### Task 0.9: Fork Patch Reconciliation ✅ `completed`
 
 **Description**: Map each fork patch to an upstream equivalent or re-application plan.
 
 **Acceptance Criteria**:
-- [ ] Fork patch list mapped to upstream
-- [ ] Re-apply plan drafted for critical patches
+- [x] Fork patch list mapped to upstream
+- [x] Re-apply plan drafted for critical patches
 
 ---
 

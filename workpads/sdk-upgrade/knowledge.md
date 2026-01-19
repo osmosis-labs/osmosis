@@ -89,7 +89,14 @@ Document each Osmosis fork modification and determine:
 
 | Patch Area | Description | Status | Action Needed |
 |------------|-------------|--------|---------------|
-| (TBD) | | 📋 pending | |
+| Bank hooks + supply offsets | Adds `TrackBeforeSend`/`BlockBeforeSend` hooks and supply offset support. | 📋 pending | Identify Osmosis modules using hooks; re-apply or replace with upstream features. |
+| Clawback + cliff vesting | Adds clawback vesting account + cliff vesting CLI/protos. | 📋 pending | Determine if Osmosis relies on clawback/cliff; re-apply or migrate to upstream alternative. |
+| Slashing perf + migration tweak | Stops per-block sign info writes; includes slashing migration key change. | 📋 pending | Check upstream v0.53 behavior; re-apply if perf regression or migration mismatch. |
+| IAVL pruning + fast nodes | Async pruning, pruning fixes, per-module fast nodes. | 📋 pending | Validate if upstream v0.53 includes equivalents; re-apply if needed for mainnet performance. |
+| ReCheckTx ValidateBasic | Skip ValidateBasic on recheck. | 📋 pending | Confirm upstream behavior; keep if Osmosis depends on recheck behavior. |
+| OTEL gRPC interceptor | Adds OTEL span attributes in gRPC server. | 📋 pending | Decide whether to keep instrumentation or drop with upstream logging. |
+| Governance + query fixes | Query all proposals, pagination checks, whitelist settings parse. | 📋 pending | Verify upstream v0.53; re-apply if still missing. |
+| Misc backports | Denom regex removal, types speedups, epoch account access changes, supply offset helpers. | 📋 pending | Audit against upstream v0.53 and remove/re-apply as needed. |
 
 ---
 
@@ -140,3 +147,4 @@ _(To be updated during implementation)_
 |------|--------|--------|
 | 2026-01-13 | Initial document creation | AI Assistant |
 | 2026-01-19 | Document SDK v0.53.4 dependency baseline and conflicts | AI Assistant |
+| 2026-01-19 | Draft fork patch reconciliation map | AI Assistant |
