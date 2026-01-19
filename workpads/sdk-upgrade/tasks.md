@@ -92,14 +92,14 @@
 
 ---
 
-### Task 0.7: Module Wiring & Conflicts 📋 `pending`
+### Task 0.7: Module Wiring & Conflicts ✅ `completed`
 
 **Description**: Plan wiring changes for v0.53, including `PreBlocker`, `x/epoch` vs `x/epochs`, and `x/protocolpool`.
 
 **Acceptance Criteria**:
-- [ ] Wiring deltas documented
-- [ ] Store upgrade needs identified
-- [ ] Module name conflicts resolved
+- [x] Wiring deltas documented
+- [x] Store upgrade needs identified
+- [x] Module name conflicts resolved
 
 ---
 

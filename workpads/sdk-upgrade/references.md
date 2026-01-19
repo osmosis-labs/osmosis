@@ -24,6 +24,15 @@
 | **CheckTx handler support, ed25519 verification enabled** | Review any custom `CheckTx` logic; ensure any ed25519-based keys or tests still pass. | Fork may have diverged sig verification; upstream version should be accepted unless fork changes are re-applied. |
 | **`testnet init-files` flag changes** | Update any local scripts that call `init-files` flags (validator count, staking denom, commit timeout, single-host). | Fork scripts may rely on old flags; these should be updated to upstream defaults. |
 
+#### Module Wiring Deltas (Osmosis v31 vs Gaia v25.3.0)
+
+| Area | Observation | Osmosis Impact |
+|------|-------------|----------------|
+| **PreBlocker ordering** | Gaia sets `SetOrderPreBlockers(upgradetypes.ModuleName, authtypes.ModuleName)`; Osmosis only sets upgrade module. | Add `authtypes.ModuleName` to pre-blockers when moving to SDK v0.53. |
+| **Epoch module naming** | Osmosis uses `x/epochs` (custom module). SDK v0.53 introduces optional `x/epoch`. | Avoid wiring SDK `x/epoch` unless explicitly desired; ensure no name conflict and plan store upgrade if added. |
+| **Protocol pool** | Gaia v25.3.0 does not wire `x/protocolpool`; SDK v0.53 describes it as optional. | Likely skip `x/protocolpool` unless Osmosis wants the new community pool semantics; if added, requires store upgrade and distribution wiring changes. |
+| **Capability module (IBC v10)** | Osmosis still wires `capability` module and uses scoped keepers. IBC-Go v10 removes capability module. | Plan removal of capability module and related store keys when upgrading IBC to v10; adjust begin/init ordering accordingly. |
+
 #### Version Availability Notes
 
 - No stable `v0.51.x` or `v0.52.x` tags exist in upstream; the `v0.53.x` UPGRADING guide is the canonical path from `v0.50.x` → `v0.53.x`.
@@ -257,3 +266,4 @@ _(Track relevant upstream issues and PRs here)_
 | 2026-01-19 | Add dependency alignment matrix from Gaia v25.3.0 | AI Assistant |
 | 2026-01-19 | Add IBC-Go v10 migration notes | AI Assistant |
 | 2026-01-19 | Add Wasmd v0.60.x compatibility notes | AI Assistant |
+| 2026-01-19 | Add module wiring deltas vs Gaia v25.3.0 | AI Assistant |
