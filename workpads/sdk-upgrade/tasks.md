@@ -183,15 +183,15 @@
 
 ---
 
-### Task 1.5: Wiring + Store Upgrade Design 📋 `pending`
+### Task 1.5: Wiring + Store Upgrade Design ✅ `completed`
 
 **Description**: Plan v0.53 wiring changes, module conflicts, and store upgrades.
 
 **Acceptance Criteria**:
-- [ ] `PreBlocker` ordering plan documented
-- [ ] `x/epoch` vs `x/epochs` decision documented
-- [ ] `x/protocolpool` inclusion decision documented
-- [ ] Store upgrade needs identified
+- [x] `PreBlocker` ordering plan documented
+- [x] `x/epoch` vs `x/epochs` decision documented
+- [x] `x/protocolpool` inclusion decision documented
+- [x] Store upgrade needs identified
 
 ---
 

@@ -48,6 +48,19 @@ Key breaking areas to account for in Osmosis:
 - **CLI/AutoCLI**: pagination flags renamed; several commands removed/relocated; output nesting changes.
 - **Deprecated types**: `IntProto` / `DecProto` deprecated in favor of `math.Int`/`math.LegacyDec`.
 
+### Wiring + Store Upgrade Design (Draft)
+
+Wiring deltas needed for SDK v0.53 + IBC v10:
+- **PreBlockers**: add `authtypes.ModuleName` to `SetOrderPreBlockers` alongside `upgradetypes.ModuleName`.
+- **Capability module removal**: remove capability module wiring, scoped keepers, and store keys when moving to IBC v10.
+- **Epoch module**: keep Osmosis `x/epochs`; do not add SDK `x/epoch` unless explicitly desired (would require new store key).
+- **Protocol pool**: omit `x/protocolpool` unless Osmosis wants the new community pool semantics; adding requires store upgrade and distribution keeper wiring.
+
+Store upgrade checklist:
+- Remove `capability` KV store key + mem store key.
+- Add store keys only if adopting optional modules (`x/epoch`, `x/protocolpool`).
+- Ensure `x/wasm` migrations are executed with v0.60.x as needed.
+
 ### Dependency Alignment (SDK v0.53.4 baseline)
 
 Baseline derived from Gaia v25.3.0.
