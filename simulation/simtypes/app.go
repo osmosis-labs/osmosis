@@ -10,8 +10,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-
-	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
 )
@@ -23,7 +22,7 @@ type App interface {
 	AppCodec() codec.Codec
 	GetAccountKeeper() AccountKeeper
 	GetBankKeeper() BankKeeper
-	GetStakingKeeper() ibctestingtypes.StakingKeeper
+	GetStakingKeeper() IBCTestingStakingKeeper
 	GetSDKStakingKeeper() stakingkeeper.Keeper
 	ModuleManager() module.Manager
 	GetPoolManagerKeeper() PoolManagerKeeper
@@ -32,7 +31,6 @@ type App interface {
 
 type AccountKeeper interface {
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
-	GetAllAccounts(ctx context.Context) []sdk.AccountI
 }
 
 type BankKeeper interface {
@@ -46,4 +44,8 @@ type BankKeeper interface {
 
 type PoolManagerKeeper interface {
 	CreatePool(ctx sdk.Context, msg poolmanagertypes.CreatePoolMsg) (uint64, error)
+}
+
+type IBCTestingStakingKeeper interface {
+	GetHistoricalInfo(ctx context.Context, height int64) (stakingtypes.HistoricalInfo, error)
 }
