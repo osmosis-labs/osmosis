@@ -126,6 +126,17 @@ Document each Osmosis fork modification and determine:
 | Governance + query fixes | Query all proposals, pagination checks, whitelist settings parse. | 📋 pending | Verify upstream v0.53; re-apply if still missing. |
 | Misc backports | Denom regex removal, types speedups, epoch account access changes, supply offset helpers. | 📋 pending | Audit against upstream v0.53 and remove/re-apply as needed. |
 
+### Fork Patch Reconciliation Plan (Draft)
+
+- **Bank hooks + supply offsets**: Re-apply if Osmosis modules still depend on hooks; map to upstream `x/bank` hooks if available or keep custom hooks.
+- **Clawback + cliff vesting**: Determine usage in Osmosis (modules/scripts); if used, re-apply or migrate to upstream vesting alternatives.
+- **Slashing perf + migration tweak**: Compare upstream slashing behavior; re-apply if performance or migration behavior changes are unacceptable.
+- **IAVL pruning + fast nodes**: Validate upstream store/IAVL changes; re-apply if pruning/regression risk for mainnet ops.
+- **ReCheckTx ValidateBasic**: Confirm upstream baseapp behavior in v0.53; re-apply only if needed for mempool/txflow.
+- **OTEL gRPC interceptor**: Optional; keep only if observability requirements persist.
+- **Governance + query fixes**: Check upstream gov queries/pagination; re-apply only if still missing.
+- **Misc backports**: Audit against upstream v0.53 and drop anything already fixed upstream.
+
 ### Fork Diff Overview (v0.50.14 → osmo-v30/0.50.14)
 
 High-level categories from `git diff --name-only`:

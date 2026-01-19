@@ -206,15 +206,15 @@
 
 ---
 
-### Task 1.7: Fork Patch Reconciliation Plan 📋 `pending`
+### Task 1.7: Fork Patch Reconciliation Plan ✅ `completed`
 
 **Description**: Map each fork patch to upstream equivalents or re-apply plan.
 
 **Depends On**: Task 1.2, Task 1.3
 
 **Acceptance Criteria**:
-- [ ] Fork patch list mapped to upstream
-- [ ] Re-apply plan drafted for critical patches
+- [x] Fork patch list mapped to upstream
+- [x] Re-apply plan drafted for critical patches
 
 ---
 
@@ -231,7 +231,7 @@
 
 ## Phase 2: Implementation
 
-### Task 2.1: Create SDK Upgrade Branch 📋 `pending`
+### Task 2.1: Prepare SDK Upgrade Branch 📋 `pending`
 
 **Depends On**: Phase 1 complete
 
