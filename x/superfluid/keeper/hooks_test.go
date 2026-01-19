@@ -74,8 +74,8 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			// run epoch actions
 			// run begin block for each validator so that both validator gets block rewards
 			for i, valAddr := range valAddrs {
-				// ensure we are at a valid non-zero block height for distribution.
-				blockHeight := int64(i + 1)
+				// ensure we are past height 1 so distribution runs for the previous block.
+				blockHeight := int64(i + 2)
 				s.Ctx = s.Ctx.WithBlockHeight(blockHeight - 1)
 				s.BeginNewBlockWithProposer(true, valAddr)
 			}
