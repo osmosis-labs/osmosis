@@ -80,7 +80,7 @@ Baseline derived from Gaia v25.3.0.
 - `cosmossdk.io/*` packages lag Gaia; `cosmossdk.io/store` is fork-replaced and must be reconciled.
 
 #### Dependency Compatibility Actions
-- Confirm IBC apps compatibility: `packet-forward-middleware/v10`, `rate-limiting/v10`, decide on `async-icq` upgrade path.
+- Confirm IBC apps compatibility: `packet-forward-middleware/v10`, `rate-limiting/v10`, async-icq removed for v0.53.
 - Reconcile `cosmossdk.io/store` fork replacement vs upstream v1.1.2.
 - Align `cosmossdk.io/client/v2` beta version to Gaia (`beta.9`) to avoid API mismatch.
 
@@ -186,6 +186,7 @@ Full file list is available via:
 2. **IBC compatibility**: Any IBC changes between SDK versions?
 3. **WASM compatibility**: CosmWasm compatibility with SDK v0.53?
 4. **State migration**: Are there state migrations between versions?
+5. **Async-ICQ**: No v10 release exists; drop the module for v0.53 upgrade.
 
 ---
 
@@ -204,3 +205,5 @@ _(To be updated during implementation)_
 | 2026-01-19 | Draft fork patch reconciliation map | AI Assistant |
 | 2026-01-19 | Document fork diff overview and categories | AI Assistant |
 | 2026-01-19 | Summarize SDK v0.53.4 changelog breakpoints | AI Assistant |
+| 2026-01-19 | Drop async-icq and remove wiring/go.mod entry | AI Assistant |
+| 2026-01-19 | Resolve 08-wasm v10 module path and tidy modules | AI Assistant |

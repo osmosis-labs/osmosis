@@ -258,14 +258,14 @@ Source: `gaia` v25.3.0 `go.mod` (SDK v0.53.4).
 #### Conflicts vs current Osmosis `go.mod`
 
 - **IBC-Go**: Osmosis uses `v8.7.0` + `08-wasm` `v0.4.2-*`; target is v10.x.
-- **IBC apps**: Osmosis uses `packet-forward-middleware/v8` and `async-icq/v8`; Gaia baseline is v10 series (no async-icq in Gaia).
+- **IBC apps**: Osmosis uses `packet-forward-middleware/v10` (async-icq dropped for v0.53); Gaia baseline is v10 series.
 - **Wasmd**: Osmosis uses `v0.53.3`; Gaia baseline is `v0.60.2`.
 - **CometBFT**: Osmosis uses `v0.38.17`; Gaia baseline is `v0.38.20`.
 - **cosmossdk.io/client/v2**: Osmosis uses `v2.0.0-beta.6`; Gaia baseline is `beta.9`.
 - **cosmossdk.io/core**: Osmosis uses `v0.12.1-*` but replaces to `v0.11.0`; Gaia baseline is `v0.11.3`.
 - **cosmossdk.io/errors/log/store/x/*:** Osmosis pins older versions (`errors v1.0.1`, `log v1.6.0`, `store v1.1.1`, `x/tx v0.13.7`, `x/upgrade v0.1.4`, `x/evidence v0.1.1`).
 - **cosmossdk.io/store replace**: Osmosis uses a forked `cosmossdk.io/store` replace; needs reconciliation for v0.53.4.
-- **async-icq**: Osmosis depends on `async-icq/v8`; Gaia baseline omits it (check v10 availability or drop).
+- **async-icq**: Dropped for v0.53 upgrade (no v10 release).
 
 ---
 

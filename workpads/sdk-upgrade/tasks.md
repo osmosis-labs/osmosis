@@ -242,7 +242,7 @@ test coverage; incorporate any missing validation steps.
 
 ## Phase 2: Implementation
 
-### Task 2.0: Staged Code Upgrade Plan 📋 `pending`
+### Task 2.0: Staged Code Upgrade Plan 🚧 `in_progress`
 
 **Description**: Execute the SDK upgrade in staged code changes while targeting
 a single coordinated on-chain upgrade height.
@@ -258,7 +258,7 @@ a single coordinated on-chain upgrade height.
 - [ ] Single coordinated on-chain upgrade height planned (no intermediate
       on-chain upgrades)
 
-### Task 2.1: Prepare SDK Upgrade Branch 📋 `pending`
+### Task 2.1: Prepare SDK Upgrade Branch 🚧 `in_progress`
 
 **Depends On**: Phase 1 complete
 
@@ -266,6 +266,29 @@ a single coordinated on-chain upgrade height.
 - [ ] Branch created from main (already on nicolas/sdk-upgrade)
 - [ ] go.mod updated with target SDK version
 - [ ] Initial compilation attempted
+
+---
+
+### Task 2.1b: Resolve 08-wasm Module Fetch ✅ `completed`
+
+**Description**: Fix `go mod tidy` failure resolving
+`github.com/cosmos/ibc-go/modules/light-clients/08-wasm/v10`.
+
+**Acceptance Criteria**:
+- [x] `go mod tidy` succeeds in root and submodules
+- [x] go.sum updated for v10 08-wasm module
+
+---
+
+### Task 2.1a: Async-ICQ v10 Strategy ✅ `completed`
+
+**Description**: Decide how to handle `async-icq` which is only available at
+v8 and depends on IBC capability module removed in IBC v10.
+
+**Acceptance Criteria**:
+- [x] Decision made: drop, fork/upgrade, or replace
+- [x] Wiring/go.mod updated accordingly
+- [x] Impact documented in `knowledge.md`
 
 ---
 
