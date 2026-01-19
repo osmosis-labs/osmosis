@@ -66,6 +66,11 @@ Baseline derived from Gaia v25.3.0.
 - CometBFT v0.38.17 → v0.38.20 upgrade required.
 - `cosmossdk.io/*` packages lag Gaia; `cosmossdk.io/store` is fork-replaced and must be reconciled.
 
+#### Dependency Compatibility Actions
+- Confirm IBC apps compatibility: `packet-forward-middleware/v10`, `rate-limiting/v10`, decide on `async-icq` upgrade path.
+- Reconcile `cosmossdk.io/store` fork replacement vs upstream v1.1.2.
+- Align `cosmossdk.io/client/v2` beta version to Gaia (`beta.9`) to avoid API mismatch.
+
 ### Breaking Changes Checklist
 
 - [ ] Module API changes
