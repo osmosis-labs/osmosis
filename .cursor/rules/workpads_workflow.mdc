@@ -1,0 +1,231 @@
+---
+description: Workpads workflow for structured knowledge, references, and tasks
+globs:
+alwaysApply: true
+---
+
+# Workpads Workflow
+
+## Overview
+
+This project uses **workpads** - structured project documentation in `workpads/`.
+
+> Progress persists in **files and git**, not in conversation context.
+> When unsure, read project files - they are the source of truth.
+
+Each project folder contains **three standard files**:
+
+```
+workpads/
+├── {project}/
+│   ├── knowledge.md    # Internal decisions, specs, architecture
+│   ├── references.md   # External links, research, patterns
+│   ├── tasks.md        # Current task list (committed)
+│   └── repos/          # Reference repositories (gitignored, optional)
+└── README.md
+```
+
+---
+
+## Before Starting ANY Work
+
+### 1. Identify the Active Project
+
+Check `workpads/README.md` for active projects, or infer from the user's request.
+
+### 2. Load All Three Files
+
+For the active project, read:
+```
+workpads/{project}/knowledge.md    # Design decisions, specs
+workpads/{project}/references.md   # External resources
+workpads/{project}/tasks.md        # Current focus
+```
+
+### 3. Check Reference Repositories (if applicable)
+
+If `workpads/{project}/repos/` is referenced but empty, follow setup commands in `references.md`.
+
+---
+
+## Standard File Types
+
+| File | Purpose | Committed? |
+|------|---------|------------|
+| `knowledge.md` | Internal decisions, architecture, lessons learned | ✅ Yes |
+| `references.md` | Curated external references with quality notes | ✅ Yes |
+| `tasks.md` | Current task list with acceptance criteria | ✅ Yes |
+| `repos/` | Reference repository clones | ❌ No (gitignored) |
+
+---
+
+## Task Protocol
+
+### Status Markers
+
+```markdown
+📋 pending      - Not yet started
+🚧 in_progress  - Currently working on
+✅ completed    - Finished and verified
+🚫 blocked      - Cannot proceed
+```
+
+### Before Starting Task
+
+1. Mark task as `🚧 in_progress`
+2. Read relevant sections of `knowledge.md`
+3. Consult `references.md` as needed
+4. Review any reference repos/files listed in the task
+
+### Before Completing Task
+
+Verify:
+- [ ] Acceptance criteria met
+- [ ] `knowledge.md` updated if decisions made
+- [ ] `references.md` updated if new references found
+
+### After Completing Task
+
+1. Mark task as `✅ completed`
+2. Update `knowledge.md` with any decisions or learnings
+3. Update `references.md` if new references or quality notes were added
+4. Record progress in git with a commit when appropriate
+5. Request user confirmation before starting next task
+
+---
+
+## Progress Tracking & Git History
+
+**Files are memory** - state lives in `workpads/` files and task status, not chat history.  
+**Git is long-term memory** - commits preserve progress across sessions.
+
+### Progress Tracking Rules
+
+- Update `tasks.md` status as you work: `📋` → `🚧` → `✅` or `🚫`
+- Keep `tasks.md` in git to preserve progress history
+- Keep task descriptions and acceptance criteria current
+- Add new tasks when you discover them
+
+### Git Usage Rules
+
+- Use git commits to record completed work (unless the user explicitly says not to)
+- Prefer small, descriptive commits that reflect task completion
+- Do not amend or force-push unless explicitly requested
+
+---
+
+## When to Update Documents
+
+### Update `knowledge.md` when
+
+- **Design decisions** are made (add to Decision Log with rationale)
+- **Technical specs** are determined
+- **Breaking changes** are identified
+- **Lessons learned** from implementation or debugging
+- **Open questions** are identified or resolved
+
+Format for design decisions:
+```markdown
+| D# | Decision | Rationale | Date |
+```
+
+### Update `references.md` when
+
+- **New external resources** are discovered
+- **Useful commands** are found
+- **Links become stale** or better alternatives found
+
+### Reference Quality Tracking
+
+After using any reference, update the **Reference Quality Notes** section:
+
+1. **If highly useful** → Add to "Highly Useful ⭐" table
+2. **If not helpful** → Add to "Less Useful Than Expected"
+3. **If you discover new reference** → Add to "New References to Consider"
+
+---
+
+## Workflow Diagram
+
+```
+Start Work
+    ↓
+Identify project from context
+    ↓
+Read tasks.md → Find current task
+    ↓
+Read knowledge.md → Gather context
+    ↓
+Consult references.md → As needed
+    ↓
+Check repos/ exist → Clone if needed
+    ↓
+Implement / Analyze
+    ↓
+Update tasks.md → Mark complete
+    ↓
+Update knowledge.md → Record learnings
+    ↓
+Update references.md → Note quality
+    ↓
+Request confirmation → Next task
+```
+
+---
+
+## For AI Assistants
+
+### Mandatory Behaviors
+
+1. **Start every session** by loading the active project's workpad files
+2. **Check tasks.md** for current focus
+3. **Consult references.md** based on work context
+4. **Update task status** in real-time during work
+5. **Record all design decisions** with rationale in `knowledge.md`
+6. **Add new references** to `references.md` when discovered
+7. **Track reference quality** after using a reference
+8. **Commit progress** to git when work is complete (unless user says not to)
+
+### Citation Format
+
+```markdown
+Per workpads/{project}/knowledge.md §Section Name, ...
+See workpads/{project}/references.md §Section Number
+Per repos/{repo-name}/path/to/file, ...
+```
+
+### Document Update Format
+
+When updating `knowledge.md`:
+```markdown
+| Date | Change | Author |
+|------|--------|--------|
+| YYYY-MM-DD | Description of change | AI Assistant |
+```
+
+When updating `tasks.md`:
+```markdown
+### Task X.Y: Title 📋 `pending` → 🚧 `in_progress`
+```
+
+---
+
+## Enforcement
+
+This rule MUST be followed for all workpad-based projects. The LLM assistant will:
+
+- **Refuse to proceed** without following the workflow
+- **Always check** tasks.md status before starting work
+- **Always read** knowledge.md for context
+- **Always consult** relevant references.md sections
+- **Request user confirmation** before switching tasks
+- **Break down complex tasks** when unclear
+
+---
+
+## Exception Handling
+
+- **Urgent Fixes**: May interrupt current task flow, but must update tasks.md
+- **Scope Changes**: Update tasks.md with new requirements before proceeding
+- **Blocked Tasks**: Mark as blocked and create unblocking tasks as needed
+- **Missing Repos**: Clone reference repos before proceeding with analysis
