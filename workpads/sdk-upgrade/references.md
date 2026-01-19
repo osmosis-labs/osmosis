@@ -12,6 +12,19 @@
 - **v0.50 → v0.53 Migration**: <https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md>
 - **State Migrations**: <https://docs.cosmos.network/v0.53/build/migrations/>
 
+#### SDK v0.50 → v0.53 Changelog Highlights (v0.53.4)
+
+Source: <https://github.com/cosmos/cosmos-sdk/blob/main/CHANGELOG.md>
+
+| Area | Notable Changes | Osmosis Impact |
+|------|-----------------|----------------|
+| **Core/baseapp** | Begin/EndBlock replaced by FinalizeBlock; `NewContext` signature changed; new ABCI APIs, exec modes. | Update app wiring and tests; ensure use of new core APIs. |
+| **Address codecs** | Many Msg/keeper constructors now take string addresses and address codecs. | Update keepers/messages and any custom helpers to pass codecs and use strings. |
+| **Keeper APIs** | Many keepers now use `context.Context` + `KVStoreService`; collections migration removes legacy getters/setters. | Refactor module integrations and keeper calls to new signatures. |
+| **Gov collections** | Gov proposal/vote/deposit collections finalized; legacy methods removed. | Update any Osmosis gov queries/helpers that use removed APIs. |
+| **CLI/AutoCLI** | Pagination flag changes; some commands removed/renamed; AutoCLI output nesting. | Update scripts/docs and tests that depend on old CLI behavior. |
+| **Deprecated types** | `IntProto`/`DecProto` deprecated. | Update protobuf usage if present in Osmosis code. |
+
 #### v0.50.x → v0.53.x Migration Notes (UPGRADING.md v0.53.4)
 
 | Note | Osmosis Impact | SDK Fork Impact |
