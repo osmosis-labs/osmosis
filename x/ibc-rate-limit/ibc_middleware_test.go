@@ -8,16 +8,14 @@ import (
 	"testing"
 	"time"
 
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
-	ibctesting "github.com/cosmos/ibc-go/v8/testing"
+	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
+	ibctesting "github.com/cosmos/ibc-go/v10/testing"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -52,8 +50,8 @@ func NewTransferPath(chainA, chainB *osmosisibctesting.TestChain) *ibctesting.Pa
 	path := ibctesting.NewPath(chainA.TestChain, chainB.TestChain)
 	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
 	path.EndpointB.ChannelConfig.PortID = ibctesting.TransferPort
-	path.EndpointA.ChannelConfig.Version = transfertypes.Version
-	path.EndpointB.ChannelConfig.Version = transfertypes.Version
+	path.EndpointA.ChannelConfig.Version = transfertypes.V1
+	path.EndpointB.ChannelConfig.Version = transfertypes.V1
 	return path
 }
 
@@ -404,7 +402,7 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	channel := "channel-0"
 	if !native {
 		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", denom))
-		restrictedDenom = denomTrace.GetFullDenomPath()
+		restrictedDenom = denomTrace.Path()
 		fmt.Println(denomTrace)
 		denom = denomTrace.IBCDenom()
 	}
@@ -529,7 +527,7 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithRestrictedChannelNonNative
 	suite.RemovePath(contractAddr, "channel-0", denom)
 
 	// Set the restrictions to allow only channel-1
-	suite.SetDenomRestrictions(contractAddr, denomTrace.GetFullDenomPath(), "channel-1")
+	suite.SetDenomRestrictions(contractAddr, denomTrace.Path(), "channel-1")
 
 	_, err = suite.AssertSend(false, suite.MessageFromAToB(denom, osmomath.NewInt(1)))
 	suite.Require().Error(err)
@@ -547,11 +545,11 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) sdk.AccAddress {
 	if native {
 		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", localDenom))
 		localDenom = denomTrace.IBCDenom()
-		restrictedDenom = denomTrace.GetFullDenomPath()
+		restrictedDenom = denomTrace.Path()
 	} else {
 		denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", sendDenom))
 		sendDenom = denomTrace.IBCDenom()
-		restrictedDenom = denomTrace.GetFullDenomPath()
+		restrictedDenom = denomTrace.Path()
 	}
 
 	osmosisApp := suite.chainA.GetOsmosisApp()
@@ -748,7 +746,7 @@ func (suite *MiddlewareTestSuite) TestNonICS20() {
 	osmosisApp := suite.chainA.GetOsmosisApp()
 
 	data := []byte("{}")
-	_, err := osmosisApp.RateLimitingICS4Wrapper.SendPacket(suite.chainA.GetContext(), capabilitytypes.NewCapability(1), "wasm.osmo1873ls0d60tg7hk00976teq9ywhzv45u3hk2urw8t3eau9eusa4eqtun9xn", "channel-0", clienttypes.NewHeight(0, 0), 1, data)
+	_, err := osmosisApp.RateLimitingICS4Wrapper.SendPacket(suite.chainA.GetContext(), "wasm.osmo1873ls0d60tg7hk00976teq9ywhzv45u3hk2urw8t3eau9eusa4eqtun9xn", "channel-0", clienttypes.NewHeight(0, 0), 1, data)
 
 	suite.Require().Error(err)
 	// This will error out, but not because of rate limiting
