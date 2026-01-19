@@ -83,7 +83,9 @@ Source: <https://github.com/cosmos/cosmos-sdk/blob/main/CHANGELOG.md>
 ### Gaia (Cosmos Hub)
 - **Repository**: <https://github.com/cosmos/gaia>
 - **v25.3.0 Release**: <https://github.com/cosmos/gaia/releases/tag/v25.3.0>
-- **SDK Upgrade PR**: (to be found - v25.0.0 upgrade)
+- **SDK Upgrade PR**: <https://github.com/cosmos/gaia/pull/3773>
+- **IBC v10 bump PR**: <https://github.com/cosmos/gaia/pull/3560>
+- **Add 08-wasm client PR**: <https://github.com/cosmos/gaia/pull/3554>
 
 ### Other SDK v0.53 Chains
 _(To be populated as references are found)_
@@ -94,6 +96,12 @@ _(To be populated as references are found)_
 |---------|-------|----------------|
 | **v26.0.0** (SDK v0.50 + Comet v0.38) | PR #8274 upgraded SDK and Comet; added tagged fork versions (v0.50.6-v26-osmo-1, v0.38.11-v26-osmo-1). | Indicates prior large SDK jump required state breaking upgrade; expect similar coordination for v0.53. |
 | **v11 / v10.1** (SDK v0.45.0x-osmo) | PR #2245 and #2146 upgraded SDK fork with new governance deposit rules, concurrency query client, log changes, vesting CLI changes. | Past upgrades frequently required custom fork patches; expect equivalent reconciliation work for v0.50 → v0.53. |
+
+### Gaia v25 Migration Patterns (from #3773)
+
+- Large upgrade PR removed multiple legacy upgrade handlers and scripts, updated `app/app.go`, `app/keepers`, module wiring, and `go.mod`.
+- Upgrade included changes to test configuration and simulation tests.
+- Dependency updates and changelog updates were bundled with the upgrade.
 
 ---
 
@@ -310,3 +318,4 @@ _(Track relevant upstream issues and PRs here)_
 | 2026-01-19 | Add module wiring deltas vs Gaia v25.3.0 | AI Assistant |
 | 2026-01-19 | Add draft state/store upgrade plan | AI Assistant |
 | 2026-01-19 | Add draft upgrade test matrix | AI Assistant |
+| 2026-01-19 | Add Gaia v25 migration references | AI Assistant |
