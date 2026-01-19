@@ -124,14 +124,14 @@
 
 ---
 
-### Task 0.10: Upgrade Test Matrix 📋 `pending`
+### Task 0.10: Upgrade Test Matrix ✅ `completed`
 
 **Description**: Define tests for upgrade, migration, and rollback safety.
 
 **Acceptance Criteria**:
-- [ ] State export/import test plan
-- [ ] Mainnet fork test plan
-- [ ] E2E and simulation test plan
+- [x] State export/import test plan
+- [x] Mainnet fork test plan
+- [x] E2E and simulation test plan
 
 ---
 

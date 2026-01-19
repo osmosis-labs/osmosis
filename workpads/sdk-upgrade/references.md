@@ -51,6 +51,18 @@
 2. Run module migrations in order (SDK/IBC/wasm) using `UpgradeKeeper`.
 3. Validate no orphaned store keys remain (remove capability keys if present).
 
+#### Upgrade Test Matrix (Draft)
+
+| Test Area | What to Verify | Notes |
+|-----------|----------------|-------|
+| **State export/import** | Export from v31, import into upgraded binary, compare balances/supply/modules. | Use representative mainnet snapshot if possible. |
+| **Upgrade handler** | Store upgrades applied, module migrations run, no panics on upgrade height. | Run upgrade handler in simulation and on a forked state. |
+| **IBC v10 migration** | Channels/clients/connections survive upgrade; transfer/ICA/callbacks still work. | Validate channel handshake + packet flows. |
+| **Wasm contract execution** | Existing contracts can execute/instantiate/query; no gas regressions or runtime errors. | Include IBC-hooks + cosmwasm pool contracts. |
+| **Governance proposals** | Param change/gov v1 workflows succeed post-upgrade. | Validate query routing and proposal handlers. |
+| **RPC/GRPC/CLI** | Core queries and txs still work; autocli if used. | Spot-check critical endpoints. |
+| **Performance** | Block times and memory/CPU within acceptable bounds. | Compare to pre-upgrade baseline. |
+
 ---
 
 ## §2 Reference Implementations
@@ -282,3 +294,4 @@ _(Track relevant upstream issues and PRs here)_
 | 2026-01-19 | Add Wasmd v0.60.x compatibility notes | AI Assistant |
 | 2026-01-19 | Add module wiring deltas vs Gaia v25.3.0 | AI Assistant |
 | 2026-01-19 | Add draft state/store upgrade plan | AI Assistant |
+| 2026-01-19 | Add draft upgrade test matrix | AI Assistant |
