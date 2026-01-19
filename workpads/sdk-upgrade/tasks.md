@@ -242,6 +242,22 @@ test coverage; incorporate any missing validation steps.
 
 ## Phase 2: Implementation
 
+### Task 2.0: Staged Code Upgrade Plan 📋 `pending`
+
+**Description**: Execute the SDK upgrade in staged code changes while targeting
+a single coordinated on-chain upgrade height.
+
+**Acceptance Criteria**:
+- [ ] Stage 1: Dependency alignment only (SDK v0.53.4, IBC v10, wasmd v0.60.x,
+      comet, cosmossdk.io) with minimal app logic changes
+- [ ] Stage 2: Fix compilation errors and wiring updates (PreBlockers,
+      capability removal, new keeper/context APIs)
+- [ ] Stage 3: Reapply critical fork patches with targeted tests per patch
+- [ ] Stage 4: Safety validation (unit/integration + inplace testnet +
+      historical sync through upgrade height)
+- [ ] Single coordinated on-chain upgrade height planned (no intermediate
+      on-chain upgrades)
+
 ### Task 2.1: Prepare SDK Upgrade Branch 📋 `pending`
 
 **Depends On**: Phase 1 complete
