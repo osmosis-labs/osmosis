@@ -229,6 +229,17 @@
 
 ---
 
+### Task 1.9: Review Upgrade Plan for Safety ✅ `completed`
+
+**Description**: Review the current upgrade plan for safety, chain-halt risk, and
+test coverage; incorporate any missing validation steps.
+
+**Acceptance Criteria**:
+- [x] Plan review captured in response
+- [x] Tasks updated if new validation steps are needed
+
+---
+
 ## Phase 2: Implementation
 
 ### Task 2.1: Prepare SDK Upgrade Branch 📋 `pending`
@@ -351,6 +362,31 @@
 - [ ] Benchmarks run
 - [ ] No significant performance regression
 - [ ] Document any changes
+
+---
+
+### Task 4.4: Inplace Testnet Upgrade Validation 📋 `pending`
+
+**Description**: Use the inplace testnet (mainnet fork with local valset) to
+validate the upgrade end-to-end.
+
+**Acceptance Criteria**:
+- [ ] Inplace testnet runs pre-upgrade and post-upgrade
+- [ ] Upgrade handler executes without panics
+- [ ] Basic tx flows (bank send, swaps, IBC transfer) succeed after upgrade
+- [ ] Node remains stable (no halts) for a soak period
+
+---
+
+### Task 4.5: Historical Sync Validation 📋 `pending`
+
+**Description**: Sync from an older height through the upgrade height to ensure
+all historical txs replay and apply cleanly.
+
+**Acceptance Criteria**:
+- [ ] Sync from old block through upgrade height completes
+- [ ] No panics or ABCI errors during replay
+- [ ] Post-upgrade state matches expectations (balances, modules, params)
 
 ---
 

@@ -70,6 +70,8 @@ Source: <https://github.com/cosmos/cosmos-sdk/blob/main/CHANGELOG.md>
 |-----------|----------------|-------|
 | **State export/import** | Export from v31, import into upgraded binary, compare balances/supply/modules. | Use representative mainnet snapshot if possible. |
 | **Upgrade handler** | Store upgrades applied, module migrations run, no panics on upgrade height. | Run upgrade handler in simulation and on a forked state. |
+| **Inplace testnet** | Run mainnet fork with local valset, execute upgrade, and validate post-upgrade tx flows. | Use inplace testnet tool; include soak period. |
+| **Historical sync** | Sync from old height through upgrade height without replay errors. | Ensures deterministic tx replay and no chain halts. |
 | **IBC v10 migration** | Channels/clients/connections survive upgrade; transfer/ICA/callbacks still work. | Validate channel handshake + packet flows. |
 | **Wasm contract execution** | Existing contracts can execute/instantiate/query; no gas regressions or runtime errors. | Include IBC-hooks + cosmwasm pool contracts. |
 | **Governance proposals** | Param change/gov v1 workflows succeed post-upgrade. | Validate query routing and proposal handlers. |
@@ -319,3 +321,4 @@ _(Track relevant upstream issues and PRs here)_
 | 2026-01-19 | Add draft state/store upgrade plan | AI Assistant |
 | 2026-01-19 | Add draft upgrade test matrix | AI Assistant |
 | 2026-01-19 | Add Gaia v25 migration references | AI Assistant |
+| 2026-01-19 | Add inplace testnet + historical sync validation steps | AI Assistant |
