@@ -60,13 +60,35 @@
 
 ---
 
-### Task 0.6: Dependency Alignment Matrix 📋 `pending`
+### Task 0.6: Dependency Alignment Matrix ✅ `completed`
 
 **Description**: Define target versions for IBC-Go, Wasmd, CometBFT, and `cosmossdk.io/*` packages compatible with SDK v0.53.4.
 
 **Acceptance Criteria**:
-- [ ] Version matrix documented
-- [ ] Conflicts with Osmosis modules identified
+- [x] Version matrix documented
+- [x] Conflicts with Osmosis modules identified
+
+---
+
+### Task 0.6a: IBC-Go v10 Migration Research ✅ `completed`
+
+**Description**: Review IBC-Go v10 release notes and migration docs to identify breaking changes, module wiring changes, and required upgrades for Osmosis.
+
+**Acceptance Criteria**:
+- [x] IBC-Go v10 migration notes summarized in `references.md`
+- [x] API or module changes impacting Osmosis identified
+- [x] Known conflicts or upgrade risks documented
+
+---
+
+### Task 0.6b: Wasmd / CosmWasm SDK Compatibility Research 📋 `pending`
+
+**Description**: Review Wasmd v0.60.x and CosmWasm SDK compatibility notes to identify breaking changes and required upgrades for Osmosis.
+
+**Acceptance Criteria**:
+- [ ] Wasmd v0.60.x migration/compat notes summarized in `references.md`
+- [ ] Contract/runtime compatibility risks documented
+- [ ] Osmosis-specific conflicts or upgrade steps identified
 
 ---
 

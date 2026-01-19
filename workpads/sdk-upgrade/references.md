@@ -133,9 +133,63 @@ git log --oneline v0.50.14..v0.53.4 -- CHANGELOG.md
 - **Repository**: <https://github.com/cosmos/ibc-go>
 - **Compatibility Matrix**: <https://github.com/cosmos/ibc-go/blob/main/RELEASES.md>
 
+#### IBC-Go v10 Migration Notes (v8.x → v10)
+
+Sources:
+- Migration guide: <https://ibc.cosmos.network/v10/migrations/v8_1-to-v10/>
+- Release notes: <https://docs.cosmos.network/ibc/v10.1.x/changelog/release-notes>
+- GitHub releases: <https://github.com/cosmos/ibc-go/releases>
+
+| Change | Osmosis Impact |
+|--------|----------------|
+| **Module versioning in lockstep with v10** | Update import paths to `/v10` for ibc-go core and `08-wasm`; ensure all IBC-related modules use v10 series. |
+| **Capability module removed** | Remove `CapabilityKeeper`, scoped keepers, and capability store keys; adjust app wiring and any IBC stack code relying on capabilities. |
+| **ICS29 fee middleware removed** | If Osmosis uses IBC fee middleware, remove from stack and module manager; verify no fee-related store keys or params remain. |
+| **Channel upgradeability removed** | Remove any channel upgrade feature usage or wiring. |
+| **IBC v2 support added (optional)** | Decide whether to wire IBC v2 transfer stack (`transferv2` + callbacks v2). If not, keep v1 stack. |
+| **Legacy proposal route removal** | Remove legacy 02-client proposal route wiring if present. |
+| **API removals (LookupModuleByChannel/Port, ChannelCapabilityPath, ICA Authenticate/ClaimCapability)** | Update any Osmosis modules or middleware referencing these APIs. |
+
 ### CosmWasm
 - **Repository**: <https://github.com/CosmWasm/wasmd>
 - **SDK Compatibility**: <https://github.com/CosmWasm/wasmd/blob/main/INTEGRATION.md>
+
+### Dependency Alignment Matrix (SDK v0.53.4 baseline)
+
+Source: `gaia` v25.3.0 `go.mod` (SDK v0.53.4).
+
+| Package | Target Version | Notes |
+|---------|----------------|-------|
+| **IBC-Go** | `github.com/cosmos/ibc-go/v10 v10.5.0` | Gaia uses IBC-Go v10 for SDK v0.53.4. |
+| **IBC-Go 08-wasm** | `github.com/cosmos/ibc-go/modules/light-clients/08-wasm/v10 v10.3.0` | Matches IBC-Go v10 series. |
+| **IBC Apps PFM** | `github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v10 v10.1.0` | Gaia baseline. |
+| **IBC Apps Rate Limiting** | `github.com/cosmos/ibc-apps/modules/rate-limiting/v10 v10.1.0` | Gaia baseline. |
+| **Wasmd** | `github.com/CosmWasm/wasmd v0.60.2` | Gaia baseline for SDK v0.53.4. |
+| **WasmVM** | `github.com/CosmWasm/wasmvm/v2 v2.2.4` | Matches Gaia. |
+| **CometBFT** | `github.com/cometbft/cometbft v0.38.20` | Gaia baseline for SDK v0.53.4. |
+| **CometBFT DB** | `github.com/cometbft/cometbft-db v1.0.4` | Gaia baseline. |
+| **cosmossdk.io/api** | `v0.9.2` | Gaia baseline. |
+| **cosmossdk.io/client/v2** | `v2.0.0-beta.9` | Gaia baseline. |
+| **cosmossdk.io/core** | `v0.11.3` | Gaia baseline. |
+| **cosmossdk.io/errors** | `v1.0.2` | Gaia baseline. |
+| **cosmossdk.io/log** | `v1.6.1` | Gaia baseline. |
+| **cosmossdk.io/math** | `v1.5.3` | Gaia baseline. |
+| **cosmossdk.io/store** | `v1.1.2` | Gaia baseline. |
+| **cosmossdk.io/x/tx** | `v0.14.0` | Gaia baseline. |
+| **cosmossdk.io/x/upgrade** | `v0.2.0` | Gaia baseline. |
+| **cosmossdk.io/x/evidence** | `v0.2.0` | Gaia baseline. |
+| **cosmossdk.io/x/feegrant** | `v0.2.0` | Gaia baseline. |
+
+#### Conflicts vs current Osmosis `go.mod`
+
+- **IBC-Go**: Osmosis uses `v8.7.0` + `08-wasm` `v0.4.2-*`; target is v10.x.
+- **IBC apps**: Osmosis uses `packet-forward-middleware/v8` and `async-icq/v8`; Gaia baseline is v10 series (no async-icq in Gaia).
+- **Wasmd**: Osmosis uses `v0.53.3`; Gaia baseline is `v0.60.2`.
+- **CometBFT**: Osmosis uses `v0.38.17`; Gaia baseline is `v0.38.20`.
+- **cosmossdk.io/client/v2**: Osmosis uses `v2.0.0-beta.6`; Gaia baseline is `beta.9`.
+- **cosmossdk.io/core**: Osmosis uses `v0.12.1-*` but replaces to `v0.11.0`; Gaia baseline is `v0.11.3`.
+- **cosmossdk.io/errors/log/store/x/*:** Osmosis pins older versions (`errors v1.0.1`, `log v1.6.0`, `store v1.1.1`, `x/tx v0.13.7`, `x/upgrade v0.1.4`, `x/evidence v0.1.1`).
+- **cosmossdk.io/store replace**: Osmosis uses a forked `cosmossdk.io/store` replace; needs reconciliation for v0.53.4.
 
 ---
 
@@ -158,6 +212,9 @@ _(Track relevant upstream issues and PRs here)_
 | Cosmos SDK v0.53.4 UPGRADING.md | Canonical migration notes from v0.50 → v0.53 | Migration guide summary + repo-specific impact |
 | Osmosis CHANGELOG.md | Historical SDK upgrade context and prior patterns | Prior upgrade notes |
 | Local osmosis-labs/cosmos-sdk fork (`osmo-v30/0.50.14`) | Concrete diff vs upstream v0.50.14 | Fork delta summary |
+| Gaia v25.3.0 `go.mod` | Authoritative dependency versions for SDK v0.53.4 | Dependency alignment matrix |
+| IBC-Go v10 migration guide | Concrete IBC v10 breaking changes and wiring changes | IBC v10 migration notes |
+| IBC-Go v10 release notes | API removals and module changes | IBC v10 migration notes |
 
 ### Less Useful Than Expected
 
@@ -179,3 +236,5 @@ _(Track relevant upstream issues and PRs here)_
 |------|--------|--------|
 | 2026-01-13 | Initial document creation | AI Assistant |
 | 2026-01-19 | Add prior upgrade notes, migration guide summary, fork delta notes | AI Assistant |
+| 2026-01-19 | Add dependency alignment matrix from Gaia v25.3.0 | AI Assistant |
+| 2026-01-19 | Add IBC-Go v10 migration notes | AI Assistant |

@@ -105,6 +105,7 @@ Verify:
 - Keep `tasks.md` in git to preserve progress history
 - Keep task descriptions and acceptance criteria current
 - Add new tasks when you discover them
+- If new required tasks are uncovered during execution, add them to `tasks.md`
 
 ### Git Usage Rules
 

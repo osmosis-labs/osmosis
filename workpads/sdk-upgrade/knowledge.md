@@ -38,6 +38,24 @@
 | v0.51.x → v0.52.x | (to be documented) |
 | v0.52.x → v0.53.x | (to be documented) |
 
+### Dependency Alignment (SDK v0.53.4 baseline)
+
+Baseline derived from Gaia v25.3.0.
+
+| Dependency | Target Version |
+|------------|----------------|
+| IBC-Go | `github.com/cosmos/ibc-go/v10 v10.5.0` |
+| IBC-Go 08-wasm | `github.com/cosmos/ibc-go/modules/light-clients/08-wasm/v10 v10.3.0` |
+| Wasmd | `github.com/CosmWasm/wasmd v0.60.2` |
+| CometBFT | `github.com/cometbft/cometbft v0.38.20` |
+| cosmossdk.io/* | Align to Gaia v25.3.0 (`api v0.9.2`, `client/v2 v2.0.0-beta.9`, `core v0.11.3`, `errors v1.0.2`, `log v1.6.1`, `store v1.1.2`, `x/tx v0.14.0`, `x/upgrade v0.2.0`, `x/evidence v0.2.0`, `x/feegrant v0.2.0`) |
+
+#### Noted Conflicts (current Osmosis vs baseline)
+- IBC-Go v8 → v10 upgrade required; `08-wasm` module also jumps to v10 series.
+- Wasmd v0.53.3 → v0.60.2 upgrade required.
+- CometBFT v0.38.17 → v0.38.20 upgrade required.
+- `cosmossdk.io/*` packages lag Gaia; `cosmossdk.io/store` is fork-replaced and must be reconciled.
+
 ### Breaking Changes Checklist
 
 - [ ] Module API changes
@@ -121,3 +139,4 @@ _(To be updated during implementation)_
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-01-13 | Initial document creation | AI Assistant |
+| 2026-01-19 | Document SDK v0.53.4 dependency baseline and conflicts | AI Assistant |
