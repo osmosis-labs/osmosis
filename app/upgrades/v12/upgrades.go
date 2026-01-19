@@ -10,8 +10,8 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	icahosttypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v31/x/gamm/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v31/x/superfluid/types"

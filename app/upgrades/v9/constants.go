@@ -5,7 +5,7 @@ import (
 
 	store "cosmossdk.io/store/types"
 
-	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
+	icahosttypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host/types"
 
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v31/x/tokenfactory/types"
 )

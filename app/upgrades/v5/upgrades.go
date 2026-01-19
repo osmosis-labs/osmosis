@@ -3,7 +3,7 @@ package v5
 import (
 	"context"
 
-	ibcconnectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
+	ibcconnectiontypes "github.com/cosmos/ibc-go/v10/modules/core/03-connection/types"
 	// bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"

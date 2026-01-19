@@ -14,10 +14,9 @@ import (
 
 	gammtypes "github.com/osmosis-labs/osmosis/v31/x/gamm/types"
 
-	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
-	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
-	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
-	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	icacontrollertypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller/types"
+	icahosttypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host/types"
+	icatypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/types"
 
 	"github.com/osmosis-labs/osmosis/v31/app/keepers"
 	"github.com/osmosis-labs/osmosis/v31/app/upgrades"
@@ -80,15 +79,10 @@ func CreateUpgradeHandler(
 			},
 		}
 
-		// initialize ICS27 module
-		icamodule, correctTypecast := mm.Modules[icatypes.ModuleName].(ica.AppModule)
-		if !correctTypecast {
-			panic("mm.Modules[icatypes.ModuleName] is not of type ica.AppModule")
-		}
-
 		// skip InitModule in upgrade tests after the upgrade has gone through.
 		if oldIcaVersion != fromVM[icatypes.ModuleName] {
-			icamodule.InitModule(ctx, controllerParams, hostParams)
+			keepers.ICAControllerKeeper.SetParams(ctx, controllerParams)
+			keepers.ICAHostKeeper.SetParams(ctx, hostParams)
 		}
 
 		return mm.RunMigrations(ctx, configurator, fromVM)

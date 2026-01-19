@@ -13,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 
 	"github.com/osmosis-labs/osmosis/v31/app/keepers"
 	"github.com/osmosis-labs/osmosis/v31/app/upgrades"
