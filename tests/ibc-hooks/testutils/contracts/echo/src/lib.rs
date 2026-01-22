@@ -93,7 +93,7 @@ pub fn execute(
         ExecuteMsg::ForceEmitIBCAck { packet, channel, success } => {
             INFLIGHT_PACKETS.save(
                 deps.storage,
-                (&packet.destination_channel, packet.sequence),
+                (&channel, packet.sequence),
                 &(packet.clone(), success),
             )?;
             let msg = MsgEmitIBCAck {

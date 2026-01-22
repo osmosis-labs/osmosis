@@ -69,7 +69,7 @@ pub fn execute_swap(
 
     let ibc_transfer_msg = registry::proto::MsgTransfer {
         source_port: "transfer".to_string(),
-        source_channel: "channel-0".to_string(),
+        source_channel: config.osmosis_channel,
         token: Some(Coin::new(coin.amount.into(), coin.denom).into()),
         sender: own_addr.to_string(),
         receiver: config.crosschain_swaps_contract,

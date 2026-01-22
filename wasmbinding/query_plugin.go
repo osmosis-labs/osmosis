@@ -3,6 +3,7 @@ package wasmbinding
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	errorsmod "cosmossdk.io/errors"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
@@ -12,12 +13,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+
 	"github.com/osmosis-labs/osmosis/v31/wasmbinding/bindings"
 )
 
 // StargateQuerier dispatches whitelisted stargate queries
 func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
 	return func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
+		if request.Path == "/ibc.applications.transfer.v1.Query/DenomTrace" {
+			return legacyDenomTraceQuery(ctx, queryRouter, cdc, request)
+		}
+
 		protoResponseType, err := getWhitelistedQuery(request.Path)
 		if err != nil {
 			return nil, err
@@ -51,6 +58,53 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(
 
 		return bz, nil
 	}
+}
+
+func legacyDenomTraceQuery(ctx sdk.Context, queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec, request *wasmvmtypes.StargateQuery) ([]byte, error) {
+	route := queryRouter.Route("/ibc.applications.transfer.v1.Query/Denom")
+	if route == nil {
+		return nil, wasmvmtypes.UnsupportedRequest{Kind: "No route to query '/ibc.applications.transfer.v1.Query/Denom'"}
+	}
+
+	res, err := route(ctx, &abci.RequestQuery{
+		Data: request.Data,
+		Path: "/ibc.applications.transfer.v1.Query/Denom",
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if res.Value == nil {
+		return nil, fmt.Errorf("Res returned from abci query route is nil")
+	}
+
+	var denomResp ibctransfertypes.QueryDenomResponse
+	if err := cdc.Unmarshal(res.Value, &denomResp); err != nil {
+		return nil, wasmvmtypes.Unknown{}
+	}
+
+	if denomResp.Denom == nil {
+		return nil, wasmvmtypes.Unknown{}
+	}
+
+	response := struct {
+		DenomTrace struct {
+			Path      string `json:"path"`
+			BaseDenom string `json:"base_denom"`
+		} `json:"denom_trace"`
+	}{}
+	var path string
+	if len(denomResp.Denom.Trace) > 0 {
+		segments := make([]string, len(denomResp.Denom.Trace))
+		for i, hop := range denomResp.Denom.Trace {
+			segments[i] = hop.String()
+		}
+		path = strings.Join(segments, "/")
+	}
+	response.DenomTrace.Path = path
+	response.DenomTrace.BaseDenom = denomResp.Denom.Base
+
+	return json.Marshal(response)
 }
 
 // CustomQuerier dispatches custom CosmWasm bindings queries.

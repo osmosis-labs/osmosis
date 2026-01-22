@@ -103,9 +103,6 @@ func (suite *HooksTestSuite) getCW20Balance(chain *osmosisibctesting.TestChain, 
 
 // Test that the cw20-ics20 contract can be instantiated and used to send tokens to chainA
 func (suite *HooksTestSuite) TestCW20ICS20() {
-	// Hardcoding the cw20 ibc denom for simplicity
-	cw20IbcDenom := "ibc/134A49086C1164C78313D57E69E5A8656D8AE8CF6BB45B52F2DBFEFAE6EE30B8"
-
 	cw20Addr, cw20ics20Addr := suite.SetupCW20(ChainB)
 	swaprouterAddr, crosschainAddr := suite.SetupCrosschainSwaps(ChainA, true)
 
@@ -115,12 +112,17 @@ func (suite *HooksTestSuite) TestCW20ICS20() {
 	path := ibctesting.NewPath(chainA.TestChain, chainB.TestChain)
 	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
 	path.EndpointB.ChannelConfig.PortID = fmt.Sprintf("wasm.%s", cw20ics20Addr.String())
-	path.EndpointA.ChannelConfig.Version = transfertypes.Version
-	path.EndpointB.ChannelConfig.Version = transfertypes.Version
+	path.EndpointA.ChannelConfig.Version = transfertypes.V1
+	path.EndpointB.ChannelConfig.Version = transfertypes.V1
 
 	suite.pathCW20 = path
 
 	suite.coordinator.Setup(path)
+
+	baseDenom := fmt.Sprintf("cw20:%s", cw20Addr.String())
+	cw20IbcDenom := transfertypes.ParseDenomTrace(
+		transfertypes.GetPrefixedDenom("transfer", path.EndpointA.ChannelID, baseDenom),
+	).IBCDenom()
 
 	osmosisAppB := chainB.GetOsmosisApp()
 

@@ -312,6 +312,13 @@ replace (
 
 	// replace as directed by sdk upgrading.md https://github.com/cosmos/cosmos-sdk/blob/393de266c8675dc16cc037c1a15011b1e990975f/UPGRADING.md?plain=1#L713
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
+
+	// Osmosis SDK fork with bank hooks + supply offsets re-applied.
+	// NOTE: keep `go.work` local override for development (`use ../cosmos-sdk`).
+	// If you're not using go.work, uncomment and point to the fork branch
+	// `osmo-v53/0.53.4` (or an equivalent tag/commit) in
+	// github.com/osmosis-labs/cosmos-sdk.
+	// github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.53.4-0.20260119150754-523350f08182
 // // Local replaces commented for development
 // github.com/osmosis-labs/osmosis/osmomath => ./osmomath
 // github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils

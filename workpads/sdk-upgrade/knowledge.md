@@ -81,6 +81,11 @@ Baseline derived from Gaia v25.3.0.
 
 #### Dependency Compatibility Actions
 - Confirm IBC apps compatibility: `packet-forward-middleware/v10`, `rate-limiting/v10`, async-icq removed for v0.53.
+- Wasmd v0.60 uses `wasmtypes.NodeConfig` + `DefaultNodeConfig()` and
+  `DefaultConfigTemplate()` instead of `WasmConfig`/`DefaultWasmConfig()`.
+- IBC transfer v10 uses `transfertypes.V1` (no `Version` const) and
+  `Denom`/`Hop` types instead of `DenomTrace`; `OnRecvPacket` now requires
+  a `channelVersion` string argument.
 - Reconcile `cosmossdk.io/store` fork replacement vs upstream v1.1.2.
 - Align `cosmossdk.io/client/v2` beta version to Gaia (`beta.9`) to avoid API mismatch.
 
@@ -192,7 +197,13 @@ Full file list is available via:
 
 ## Lessons Learned
 
-_(To be updated during implementation)_
+- IBC transfer v10 tests need receiver-channel-based denom traces; sender-channel traces break when channel IDs diverge.
+- Mock IBC packets now require both escrow funds and `total_escrow` tracking to avoid negative unescrow panics.
+- Wasm artifacts must be built with cosmwasm optimizer; local `cargo build` output can fail VM validation.
+- On arm64 dev machines, the `*-aarch64.wasm` artifacts are required for local tests.
+- Outpost tests still show a `channel-0` send path; added an assertion in `ExecuteOutpostSwap` to validate the resolved `channelBA` against the active path.
+- `echo` test contract inflight storage should key off the channel passed to `MsgEmitIBCAck` to match async ack requests.
+- Rebuilding test wasm on arm64 can trigger bulk-memory validation errors or wasmer dlmalloc panics; need a toolchain/build pipeline that produces wasm compatible with wasmvm/wasmer on arm.
 
 ---
 
