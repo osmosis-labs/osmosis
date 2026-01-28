@@ -265,7 +265,24 @@ Updated paths from `osmosis.*` to `gaia.*` and updated go_package paths.
 - `proto/gaia/accum/v1beta1/` - accumulator types
 
 **Note**: Proto regeneration requires Docker with cosmos proto-builder.
-Existing `.pb.go` files work correctly. Build and all tests pass.
+
+---
+
+## Proto Regeneration
+
+| Aspect | Details |
+|--------|---------|
+| **Commit** | `14df8441d` |
+
+Regenerated all protobuf files using `make proto-gen`:
+- Fixed go_package in .proto files (removed v26/ to match Gaia convention)
+- Fixed import paths in .pb.go files (added v26/ to match go.mod)
+
+**New files generated**:
+- `x/poolmanager/client/queryproto/query.pb.go`, `query.pb.gw.go`
+- `x/poolmanager/client/queryprotov2/query.pb.go`, `query.pb.gw.go`
+
+**Build and all tests pass.**
 
 ---
 
@@ -281,3 +298,4 @@ Existing `.pb.go` files work correctly. Build and all tests pass.
 | 2026-01-28 | Added test fixes entry (5fbf3bf42) | AI Assistant |
 | 2026-01-28 | Added CL migration removal entry (0aebc617c) | AI Assistant |
 | 2026-01-28 | Added proto files entry (d06225e8d) | AI Assistant |
+| 2026-01-28 | Added proto regeneration entry (14df8441d) | AI Assistant |
