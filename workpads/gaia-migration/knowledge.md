@@ -55,6 +55,9 @@ These Osmosis modules use SDK fork features and are NOT part of this migration:
 - `x/mint` - Uses supply offsets
 - `x/ibc-rate-limit` - Uses bank hooks
 
+These modules are excluded for complexity reasons (functionality will be reimplemented simpler):
+- `x/txfees` - Fee distribution logic will be added directly to poolmanager via epoch hooks (see D3). The txfees module has unnecessary complexity: EIP-1559 mempool, fee token whitelist, fee decorators.
+
 ---
 
 ## Migration Plan
@@ -143,6 +146,7 @@ For each component above:
 **Modules That Depend on It**:
 - `gamm` - EpochKeeper for epoch info (IncentivesKeeper)
 - `protorev` - EpochKeeper + epoch hooks for periodic route updates
+- `poolmanager` - ⚠️ **NEW for Gaia** - epoch hooks for taker fee distribution (moved from txfees)
 
 **SDK 0.53 Has x/epochs**: Yes, SDK 0.53 includes `x/epochs` module.
 
@@ -188,6 +192,62 @@ The SDK version is compatible and simpler. Required adaptations:
 - Hook interface change is minor - just context type and remove one method
 - Osmosis uses custom panic recovery; SDK relies on standard error returns
 - No need to port Osmosis x/epochs - use upstream SDK version
+
+---
+
+### Taker Fee Distribution Design
+
+**Context**: In Osmosis, poolmanager collects taker fees at swap time and sends them to the `taker_fee_collector` module account. The actual distribution happens in `x/txfees` via epoch hooks (`AfterEpochEnd`).
+
+**Decision**: ✅ **Add epoch hooks directly to poolmanager** instead of migrating `x/txfees`.
+
+**Rationale**:
+- `x/txfees` has significant complexity not needed for Gaia (EIP-1559 mempool, fee token whitelist, fee decorators)
+- The core fee distribution logic is straightforward
+- Keeps poolmanager self-contained for fee lifecycle
+
+**What poolmanager needs to implement**:
+
+```go
+// AfterEpochEnd distributes accumulated taker fees
+func (k Keeper) AfterEpochEnd(ctx context.Context, epochIdentifier string, epochNumber int64) error {
+    if epochIdentifier != "day" {
+        return nil
+    }
+    
+    // 1. Get accumulated fees from taker_fee_collector
+    // 2. Swap non-native fees to ATOM (base denom)
+    // 3. Distribute according to TakerFeeParams:
+    //    - CommunityPool % → FundCommunityPool()
+    //    - Burn % → send to null address
+    //    - StakingRewards % → send to fee_collector (auth module)
+    // 4. Clear taker fee share accumulators (partner skims)
+    
+    return nil
+}
+```
+
+**Key Design Points**:
+
+| Aspect | Osmosis (txfees) | Gaia (poolmanager) |
+|--------|------------------|-------------------|
+| Base denom | OSMO | ATOM |
+| Swap non-native fees | Yes, via protorev pools | Yes, via protorev pools |
+| Smoothing buffer | Yes (gradual APR) | TBD - may simplify |
+| 2-hop routing | Yes, for obscure tokens | TBD - may simplify |
+| Epoch trigger | "day" | "day" |
+
+**Dependencies for fee distribution**:
+- `EpochsKeeper` - to register hooks (use SDK 0.53 x/epochs)
+- `DistributionKeeper` - for `FundCommunityPool()`
+- `BankKeeper` - for token transfers
+- `ProtorevKeeper` - for finding swap routes (already a dependency)
+
+**Open Items** (to investigate later):
+1. Exact swap routing logic - use protorev's `GetPoolForDenomPairNoOrder`?
+2. Whether to implement smoothing buffer or simplify to immediate distribution
+3. Handling of failed swaps (leave in collector for next epoch?)
+4. Taker fee share agreements (partner skims) - port the accumulator clearing logic
 
 ---
 
@@ -317,10 +377,11 @@ After analyzing all DEX modules, here is the complete picture of osmoutils usage
 
 **Key Components**:
 - Pool routing and swap execution
-- Taker fee management and distribution
+- Taker fee collection (at swap time) and distribution (at epoch end)
 - Multi-hop swap routing
 - Pool creation delegation to specific pool modules
 - Governance proposals for pool management
+- ⚠️ **For Gaia**: Epoch hooks for fee distribution (moved from txfees)
 
 **Cosmos SDK Dependencies**:
 - `x/auth/types` - Account types
@@ -334,7 +395,7 @@ After analyzing all DEX modules, here is the complete picture of osmoutils usage
 - `osmomath` - Math utilities ⚠️ MUST MIGRATE FIRST
 - `osmoutils` - General utilities ⚠️ MUST MIGRATE FIRST
 - `x/pool-incentives/types` - Pool incentives types
-- `x/txfees/types` - Transaction fees types
+- `x/txfees/types` - Transaction fees types ⚠️ NOT MIGRATING - define needed types/constants locally (module account names, etc.)
 
 **Pool Module Relationships** (NOT circular - see note):
 - `poolmanager/types` defines `PoolModuleI` interface (no imports from pool modules)
@@ -351,12 +412,14 @@ After analyzing all DEX modules, here is the complete picture of osmoutils usage
 - `PoolIncentivesKeeperI` - Pool incentives keeper
 - `ProtorevKeeper` - Protorev keeper
 - `WasmKeeper` - Wasm query keeper
+- `EpochsKeeper` - ⚠️ NEW for Gaia - needed for fee distribution epoch hooks (use SDK 0.53 x/epochs)
 
 **Migration Notes**:
 - ✅ **No true circular dependency**: `poolmanager/types` defines interfaces only and does not import pool modules. Pool modules import `poolmanager/types` to implement interfaces. Keepers are wired via DI.
 - Depends on osmomath and osmoutils which must be migrated first
 - Can migrate `poolmanager/types` → `gamm` → `poolmanager/keeper` → other pools incrementally
 - No direct SDK fork feature usage detected
+- ⚠️ **Needs epoch hooks for fee distribution** - See "Taker Fee Distribution Design" section
 
 ---
 
@@ -811,13 +874,21 @@ tests/localgaia-dex/
     └── test_accounts.txt
 ```
 
-**Mainnet State Testing** (advanced):
-- Osmosis has `in-place-testnet` feature for forking mainnet state
-- For Gaia+DEX, we can:
-  1. Export Osmosis DEX state (pools, positions)
-  2. Import into Gaia genesis
-  3. Test with realistic pool configurations
-- This is optional for initial migration, useful for final validation
+**Realistic Data Testing** (simpler approaches):
+
+| Approach | Complexity | Description |
+|----------|------------|-------------|
+| **Synthetic fixtures** | Low | Create JSON genesis files with representative pool configs (various weights, tick ranges, liquidity amounts) |
+| **Parallel validation** | Medium | Run same swap/liquidity operations on localosmosis and localgaia-dex, compare results |
+| **Recorded test cases** | Low | Capture real mainnet transactions, replay as test cases against Gaia DEX |
+
+The simplest path: create `tests/localgaia-dex/fixtures/` with hand-crafted genesis state that includes:
+- 3-5 Balancer pools (different token pairs, weights)
+- 2-3 Stableswap pools
+- 2-3 CL pools with positions at various price ranges
+- Sample swap routes for multi-hop testing
+
+This gives realistic coverage without complex state migration
 
 #### Testing Priority Order
 
@@ -971,6 +1042,7 @@ Some DEX module files reference modules we're NOT migrating (superfluid, tokenfa
 |----|----------|-----------|------|
 | D1 | Migrate to Gaia (not fork) | Align with ecosystem, reduce maintenance | 2026-01-28 |
 | D2 | Start with simplest dependencies | Build confidence, establish workflow | 2026-01-28 |
+| D3 | Add epoch hooks to poolmanager for fee distribution (not migrate txfees) | txfees has unnecessary complexity (EIP-1559, fee tokens); core distribution logic is simple; swap non-native to ATOM before distributing | 2026-01-28 |
 
 ---
 
@@ -1011,3 +1083,4 @@ _(to be populated during migration)_
 | 2026-01-28 | Minimal osmoutils subset identified - 6 subpackages needed, all use standard store.KVStore interface | AI Assistant |
 | 2026-01-28 | Added Executive Summary and detailed Migration Plan based on Phase 0 findings | AI Assistant |
 | 2026-01-28 | Testing Harness documented - 3-level strategy with fixture patterns, commands, and file structure | AI Assistant |
+| 2026-01-28 | **D3: Taker Fee Distribution** - decided to add epoch hooks to poolmanager instead of migrating txfees; swap non-native fees to ATOM | AI Assistant |
