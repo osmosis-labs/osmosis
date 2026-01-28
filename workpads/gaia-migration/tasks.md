@@ -829,7 +829,7 @@ These tasks track deferred test issues identified by `TODO(gaia-migration):` com
 
 ---
 
-### Task 5.6: Enable cosmwasmpool-dependent tests (after Task 3.2) 📋 `pending`
+### Task 5.6: Enable cosmwasmpool-dependent tests (after Task 3.2) ✅ `completed`
 
 **Depends On**: Task 3.2
 
@@ -838,11 +838,30 @@ These tasks track deferred test issues identified by `TODO(gaia-migration):` com
 **Files Affected**:
 - `x/poolmanager/router_test.go` (lines 201, 2281, 2304, 3371)
 - `x/poolmanager/create_pool_test.go` (lines 160, 199, 230)
+- `tests/dex/apptesting/gamm.go` (added CosmWasm support to CreatePoolFromType functions)
 
 **Acceptance Criteria**:
-- [ ] Uncomment cosmwasmpool-related test cases
-- [ ] Fix any API differences
-- [ ] All cosmwasmpool tests pass
+- [x] Uncomment cosmwasmpool-related test cases
+- [x] Fix any API differences
+- [x] All cosmwasmpool tests pass
+
+**Enabled Tests**:
+- `TestGetPoolModule/valid_cosmwasm_pool`
+- `TestRouteGetPoolDenoms/valid_cosmwasm_pool`
+- `TestRouteCalculateSpotPrice/valid_cosmwasm_pool_with_LP`
+- `TestMultihopSwapExactAmountIn/[Cosmwasm]` (2 tests)
+- `TestMultihopSwapExactAmountOut/[Cosmwasm]` (2 tests)
+- `TestAllPools_RealPools` (with cosmwasm pool)
+- `TestGetTotalPoolLiquidity/Cosmwasm_pool`
+- `TestListPoolsByDenom/A_cosmwasm_pool`
+
+**API Fixes Applied**:
+- Added `CosmWasm` case to `CreatePoolFromType` and `CreatePoolFromTypeWithCoinsAndSpreadFactor` in `tests/dex/apptesting/gamm.go`
+- Pool creation now funds the pool with liquidity via `JoinTransmuterPool`
+- Added `cwmodel` import to `router_test.go` for pool type assertions
+
+**Notes**:
+- One test (`TestTrackVolume/Non-OSMO volume priced with CosmWasm pool`) remains commented as it depends on protorev (Task 4.1)
 
 ---
 
