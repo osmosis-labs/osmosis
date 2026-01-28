@@ -27,6 +27,8 @@
 
 ### Task 0.1a: Identify Required SDK Fork Features 📋 `pending` ⚠️ HIGH PRIORITY
 
+**Depends On**: Tasks 0.2-0.6 (need dependency analysis first to know what SDK features modules use)
+
 **Description**: Analyze which Osmosis SDK fork features are used by the DEX modules and determine if they are available in upstream SDK 0.53. This is critical to assess early as it may fundamentally affect our migration approach.
 
 **Why Important**: If the DEX modules depend on Osmosis-specific SDK fork features that don't exist in upstream SDK 0.53, we have several options:
@@ -47,18 +49,72 @@
 - block-sdk fork from Skip protocol
 - Any other custom SDK modifications
 
+**Preliminary Finding**: Initial scan shows osmo-v53/0.53.4 fork only has 2 commits adding bank hooks and supply offsets. DEX modules do NOT directly use these features - they're used by tokenfactory, superfluid, mint, and ibc-rate-limit instead.
+
 ---
 
-### Task 0.2: Analyze poolmanager Dependencies 📋 `pending`
+### Task 0.1b: Analyze osmomath Dependencies 📋 `pending`
+
+**Description**: Map all dependencies of the `osmomath` package. This is a leaf dependency that must be migrated first.
+
+**Why Important**: osmomath is used by all DEX modules for mathematical operations. It must compile in Gaia before any module can be migrated.
+
+**Acceptance Criteria**:
+- [ ] List all external imports (cosmos-sdk, cosmossdk.io, third-party)
+- [ ] Confirm no Osmosis-internal dependencies (should be a leaf)
+- [ ] Identify any SDK version-specific APIs that may need adaptation
+- [ ] Update `knowledge.md` with findings
+
+---
+
+### Task 0.1c: Analyze osmoutils Dependencies 📋 `pending`
+
+**Description**: Map all dependencies of the `osmoutils` package. This is a leaf dependency that must be migrated first.
+
+**Why Important**: osmoutils provides general utilities used across DEX modules. It must compile in Gaia before any module can be migrated.
+
+**Acceptance Criteria**:
+- [ ] List all external imports (cosmos-sdk, cosmossdk.io, third-party)
+- [ ] Check if it depends on osmomath (would make osmomath the true leaf)
+- [ ] Identify any SDK version-specific APIs that may need adaptation
+- [ ] Update `knowledge.md` with findings
+
+---
+
+### Task 0.1d: Compare Tokenfactory Implementations 📋 `pending`
+
+**Description**: Gaia has its own tokenfactory module. If any Osmosis DEX modules depend on tokenfactory, we need to compare the Osmosis and Gaia implementations to understand compatibility and determine if we can use Gaia's native implementation.
+
+**Why Important**: Tokenfactory in Osmosis uses bank hooks and supply offsets (the SDK fork features). If DEX modules depend on tokenfactory, we need to:
+1. Understand if Gaia's tokenfactory has equivalent functionality
+2. Identify any API differences that would require adaptation
+3. Determine if Gaia's implementation can serve as a drop-in replacement
+
+**Acceptance Criteria**:
+- [ ] Identify which DEX modules (if any) import or depend on tokenfactory
+- [ ] Document Osmosis tokenfactory's key APIs and features
+- [ ] Document Gaia tokenfactory's key APIs and features
+- [ ] Compare implementations and identify differences
+- [ ] Determine if Gaia's tokenfactory can be used as-is or needs adaptation
+- [ ] Update `knowledge.md` with findings and recommendations
+
+---
+
+### Task 0.2: Analyze poolmanager Dependencies ✅ `completed`
 
 **Description**: Map all internal and external dependencies of the `poolmanager` module.
 
 **Acceptance Criteria**:
-- [ ] List all Osmosis-internal imports
-- [ ] List all cosmos-sdk imports
-- [ ] List all third-party imports
-- [ ] Identify which dependencies need to migrate first
-- [ ] Update `knowledge.md` with module description and dependencies
+- [x] List all Osmosis-internal imports
+- [x] List all cosmos-sdk imports
+- [x] List all third-party imports
+- [x] Identify which dependencies need to migrate first
+- [x] Update `knowledge.md` with module description and dependencies
+
+**Key Findings**:
+- Must migrate `osmomath` and `osmoutils` first
+- Has circular dependencies with gamm, CL, and cosmwasmpool
+- No SDK fork features used directly
 
 ---
 
@@ -184,3 +240,4 @@ _(Tasks will be added as Phase 2 progresses)_
 | 2026-01-28 | Initial task structure created | AI Assistant |
 | 2026-01-28 | Task 0.1 completed - SDK version differences documented | AI Assistant |
 | 2026-01-28 | Added Task 0.1a - Identify Required SDK Fork Features (high priority) | AI Assistant |
+| 2026-01-28 | Added Task 0.1b - Compare Tokenfactory Implementations | AI Assistant |

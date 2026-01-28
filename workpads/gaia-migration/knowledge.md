@@ -36,16 +36,50 @@
 
 ### poolmanager
 
-**Purpose**: _(to be documented)_
+**Purpose**: Central router for all pool types. Manages pool creation, routing swaps across different pool types, taker fees, and provides a unified interface for interacting with any pool (GAMM, Concentrated Liquidity, CosmWasm pools).
 
 **Key Components**:
-- _(to be documented)_
+- Pool routing and swap execution
+- Taker fee management and distribution
+- Multi-hop swap routing
+- Pool creation delegation to specific pool modules
+- Governance proposals for pool management
 
-**External Dependencies**:
-- _(to be documented)_
+**Cosmos SDK Dependencies**:
+- `x/auth/types` - Account types
+- `x/bank/types` - Bank types
+- `x/distribution/types` - Community pool
+- `x/gov/*` - Governance integration
+- `x/params/types` - Params (legacy)
+- `cosmossdk.io/core/appmodule`, `errors`, `math`, `store/types`
 
-**Internal Dependencies**:
-- _(to be documented)_
+**Osmosis Internal Dependencies**:
+- `osmomath` - Math utilities ⚠️ MUST MIGRATE FIRST
+- `osmoutils` - General utilities ⚠️ MUST MIGRATE FIRST
+- `x/pool-incentives/types` - Pool incentives types
+- `x/txfees/types` - Transaction fees types
+
+**Pool Module Relationships** (NOT circular - see note):
+- `poolmanager/types` defines `PoolModuleI` interface (no imports from pool modules)
+- `x/gamm`, `x/concentrated-liquidity`, `x/cosmwasmpool` import `poolmanager/types` to implement `PoolModuleI`
+- `poolmanager/keeper` receives pool keepers via dependency injection at app wiring
+
+**Required External Keepers**:
+- `AccountI` - Account keeper
+- `BankI` - Bank keeper (standard, no fork features needed)
+- `CommunityPoolI` - Distribution keeper
+- `StakingKeeper` - Staking keeper
+- `PoolModuleI` - Generic pool interface (gamm, CL, cosmwasmpool implement this)
+- `ConcentratedI` - CL-specific interface
+- `PoolIncentivesKeeperI` - Pool incentives keeper
+- `ProtorevKeeper` - Protorev keeper
+- `WasmKeeper` - Wasm query keeper
+
+**Migration Notes**:
+- ✅ **No true circular dependency**: `poolmanager/types` defines interfaces only and does not import pool modules. Pool modules import `poolmanager/types` to implement interfaces. Keepers are wired via DI.
+- Depends on osmomath and osmoutils which must be migrated first
+- Can migrate `poolmanager/types` → `gamm` → `poolmanager/keeper` → other pools incrementally
+- No direct SDK fork feature usage detected
 
 ---
 
@@ -113,9 +147,37 @@
 
 The dependency graph determines migration order. Start with leaf nodes (no internal dependencies) and work up.
 
+### Architecture Insight: No True Circular Dependencies
+
+The poolmanager ↔ pool modules relationship is **NOT a Go import cycle**:
+
 ```
-(to be built after dependency analysis)
+poolmanager/types  ←── defines interfaces (PoolI, PoolModuleI)
+        ↑               NO imports from pool modules
+        │
+        ├── gamm ─────────────────── imports poolmanager/types, implements PoolModuleI
+        ├── concentrated-liquidity ── imports poolmanager/types, implements PoolModuleI  
+        └── cosmwasmpool ──────────── imports poolmanager/types, implements PoolModuleI
+
+poolmanager/keeper ←── receives pool keepers via dependency injection at app wiring
 ```
+
+**Key insight**: `poolmanager/types` only defines interfaces and can compile standalone. Pool modules import those types to implement the interfaces. The keeper receives pool module keepers via DI at runtime.
+
+### Recommended Migration Order
+
+```
+1. osmomath              ← leaf dependency, no internal deps
+2. osmoutils             ← leaf dependency, may use osmomath  
+3. poolmanager/types     ← interfaces only, compiles standalone
+4. gamm                  ← first pool type (simplest, most established)
+5. poolmanager/keeper    ← can now route to gamm
+6. concentrated-liquidity ← add next pool type
+7. cosmwasmpool          ← add CosmWasm pools (requires wasmd)
+8. protorev              ← uses poolmanager for arbitrage routing
+```
+
+Each step produces a **compilable, testable unit**. We can run gamm + poolmanager without CL or cosmwasmpool initially, then add pool types incrementally.
 
 ---
 
@@ -273,3 +335,5 @@ _(to be populated during migration)_
 | 2026-01-28 | Initial document creation | AI Assistant |
 | 2026-01-28 | Documented SDK version differences (Task 0.1) - major gap: SDK 0.50→0.53, IBC v8→v10 | AI Assistant |
 | 2026-01-28 | Enhanced overview, testing strategy with detailed rationale for each level | AI Assistant |
+| 2026-01-28 | Documented poolmanager dependencies; confirmed NO true circular dependency | AI Assistant |
+| 2026-01-28 | Added recommended migration order based on dependency analysis | AI Assistant |
