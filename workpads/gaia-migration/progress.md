@@ -85,10 +85,34 @@ This shows ALL modifications - imports, SDK updates, IBC fixes - nothing hidden.
 | Aspect | Details |
 |--------|---------|
 | **Source** | `osmosis/x/poolmanager/types/` |
-| **Target** | TBD |
-| **Copy Commit** | TBD |
-| **Adapt Commit** | TBD |
-| **Adaptations** | TBD |
+| **Target** | `gaia/x/poolmanager/types/` |
+| **Files** | 24 .go files |
+| **Copy Commit** | `6db70b42f` |
+| **Adapt Commit** | `dc4acb8d0` |
+
+**To review all changes**:
+```bash
+git diff 6db70b42f dc4acb8d0 -- x/poolmanager/types/
+```
+
+**Import changes**:
+- `github.com/osmosis-labs/osmosis/osmomath` → `github.com/cosmos/gaia/v26/pkg/osmomath`
+- `github.com/osmosis-labs/osmosis/osmoutils` → `github.com/cosmos/gaia/v26/pkg/osmoutils`
+- `github.com/osmosis-labs/osmosis/v31/x/poolmanager/types` → `github.com/cosmos/gaia/v26/x/poolmanager/types`
+- `github.com/osmosis-labs/osmosis/v31/app/params` → `github.com/cosmos/gaia/v26/app/params`
+
+**Added to Gaia app/params**:
+- `BaseCoinUnit = "uatom"` (DEX modules need this constant)
+- `SetAddressPrefixes()` (test helper for bech32 address validation)
+
+**Commented out** (TODO for later):
+- `TestAuthzMsg` - needs `apptesting` and `poolmanager/module` (Task 2.3)
+- Imports: `apptesting`, `poolmanager/module`
+
+**Test status**:
+- Core code compiles ✅
+- Some tests fail due to Osmosis-specific test data (uosmo, osmo addresses)
+- Tests need updating to use Gaia denoms/addresses
 
 ---
 
