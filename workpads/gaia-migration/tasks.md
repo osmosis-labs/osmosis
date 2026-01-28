@@ -132,6 +132,24 @@
 
 ---
 
+### Task 0.1f: Analyze x/epochs Dependency 🚧 `in_progress`
+
+**Description**: The `x/epochs` module is used by gamm and protorev (and other Osmosis modules). SDK 0.53 has its own `x/epochs` module. Determine if we can use the SDK version or need to port Osmosis's version.
+
+**Why Important**: Epochs provides time-based hooks that trigger periodic operations. Multiple DEX modules depend on it:
+- `gamm` - uses EpochKeeper for epoch info
+- `protorev` - uses EpochKeeper + epoch hooks for periodic updates
+
+**Acceptance Criteria**:
+- [ ] Analyze Osmosis x/epochs API (EpochInfo type, hooks interface)
+- [ ] Analyze SDK 0.53 x/epochs API
+- [ ] Compare the two implementations
+- [ ] Determine if SDK epochs can be used as drop-in replacement
+- [ ] Document any API differences that need adaptation
+- [ ] Update `knowledge.md` with findings and recommendations
+
+---
+
 ### Task 0.2: Analyze poolmanager Dependencies ✅ `completed`
 
 **Description**: Map all internal and external dependencies of the `poolmanager` module.
