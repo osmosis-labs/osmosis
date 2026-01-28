@@ -10,13 +10,15 @@ Tracks what changed for each migrated component. Each entry shows:
 ## Review Guide
 
 For each component, there are **two commits**:
-1. **Copy commit**: Raw copy with only import path changes
-2. **Adapt commit**: Any API/logic changes needed for SDK 0.53 / IBC v10
+1. **Copy commit**: Raw copy with NO changes (exact files from Osmosis)
+2. **Adapt commit**: ALL changes (imports + API fixes)
 
-To review adaptations, diff between the two commits:
+To review everything that changed:
 ```bash
 git diff <copy-commit> <adapt-commit> -- path/to/component/
 ```
+
+This shows ALL modifications - imports, SDK updates, IBC fixes - nothing hidden.
 
 ---
 

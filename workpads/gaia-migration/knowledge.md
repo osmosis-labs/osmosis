@@ -690,14 +690,16 @@ Each step produces a **compilable, testable unit**. We can run gamm + poolmanage
 
 **Every migration must use two commits for reviewability:**
 
-1. **Copy Commit**: Raw copy with ONLY import path changes (mechanical sed replacements)
-2. **Adapt Commit**: Any API/logic changes needed for SDK 0.53 / IBC v10
+1. **Copy Commit**: Raw copy with NO changes - exact files from Osmosis
+2. **Adapt Commit**: ALL changes (imports, API fixes, SDK updates)
 
-**Why**: This allows human reviewers to easily see what actually changed:
+**Why**: This allows human reviewers to see EVERYTHING that changed:
 ```bash
-# To review adaptations (what actually changed beyond imports):
+# To review ALL changes (imports + adaptations):
 git diff <copy-commit> <adapt-commit> -- path/to/component/
 ```
+
+The diff shows exactly what we modified - nothing hidden.
 
 **Tracking**: All migrations are documented in `workpads/gaia-migration/progress.md` with:
 - Source and target paths
@@ -706,16 +708,16 @@ git diff <copy-commit> <adapt-commit> -- path/to/component/
 
 ### Per-Module Migration Steps
 
-1. **Copy** - Copy module from Osmosis to Gaia
-2. **Update Imports** - Mechanical sed replacement of import paths
-3. **Commit (Copy)** - Commit as "copy" commit with only import changes
-4. **Compile** - Attempt to compile in Gaia, document all errors
-5. **Adapt** - Update module to match Gaia SDK version and patterns
-6. **Commit (Adapt)** - Commit adaptations separately for review
-7. **Unit Tests** - Run migrated unit tests, review and fix failures
-8. **Integrate** - Wire module into Gaia app initialization
-9. **Integration Tests** - Run existing integration tests; if none exist, write them
-10. **Manual Tests** - Run a local node with realistic data, test with scripts
+1. **Copy** - Copy module from Osmosis to Gaia (no changes)
+2. **Commit (Copy)** - Commit raw copy as-is
+3. **Update Imports** - Change import paths to Gaia module
+4. **Compile** - Attempt to compile, document errors
+5. **Adapt** - Fix SDK/IBC API changes
+6. **Commit (Adapt)** - Commit all changes for review
+7. **Unit Tests** - Run tests, fix failures
+8. **Integrate** - Wire module into Gaia app
+9. **Integration Tests** - Run or write integration tests
+10. **Manual Tests** - Test with local node
 
 > **Note**: Track all work in `progress.md` for reviewability.
 
