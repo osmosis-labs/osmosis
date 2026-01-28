@@ -74,21 +74,46 @@
 
 ---
 
-### Task 0.1c: Analyze osmoutils Dependencies 📋 `pending`
+### Task 0.1c: Analyze osmoutils Dependencies ✅ `completed`
 
 **Description**: Map all dependencies of the `osmoutils` package. This is a leaf dependency that must be migrated first.
 
 **Why Important**: osmoutils provides general utilities used across DEX modules. It must compile in Gaia before any module can be migrated.
 
 **Acceptance Criteria**:
-- [ ] List all external imports (cosmos-sdk, cosmossdk.io, third-party)
-- [ ] Check if it depends on osmomath (would make osmomath the true leaf)
-- [ ] Identify any SDK version-specific APIs that may need adaptation
+- [x] List all external imports (cosmos-sdk, cosmossdk.io, third-party)
+- [x] Check if it depends on osmomath (would make osmomath the true leaf)
+- [x] Identify any SDK version-specific APIs that may need adaptation
+- [x] Update `knowledge.md` with findings
+
+**Key Findings**:
+- Depends on osmomath → confirms osmomath is true leaf
+- ⚠️ Uses store fork (iavlFastNodeModuleWhitelist) - potential blocker
+- Uses IBC-go v8 (needs v10 for Gaia)
+- Has multiple replace directives for SDK, CometBFT, store
+- **Important**: We only need to migrate the osmoutils subpackages actually used by DEX modules, not the entire package
+
+---
+
+### Task 0.1d: Investigate Store Fork Requirement 📋 `pending`
+
+**Description**: The osmoutils package uses an Osmosis store fork with `iavlFastNodeModuleWhitelist` feature. Determine if this is required for the DEX modules or if upstream SDK v0.53 store can be used.
+
+**Why Important**: If the store fork is required, we may need to:
+1. Port the feature to Gaia's store
+2. Find an equivalent in SDK v0.53
+3. Accept potential performance impact without it
+
+**Acceptance Criteria**:
+- [ ] Understand what iavlFastNodeModuleWhitelist does
+- [ ] Identify which modules/features depend on it
+- [ ] Check if SDK v0.53 has equivalent functionality
+- [ ] Recommend approach: use upstream store or port feature
 - [ ] Update `knowledge.md` with findings
 
 ---
 
-### Task 0.1d: Compare Tokenfactory Implementations 📋 `pending`
+### Task 0.1e: Compare Tokenfactory Implementations 📋 `pending`
 
 **Description**: Gaia has its own tokenfactory module. If any Osmosis DEX modules depend on tokenfactory, we need to compare the Osmosis and Gaia implementations to understand compatibility and determine if we can use Gaia's native implementation.
 
@@ -190,6 +215,23 @@
 
 ---
 
+### Task 0.7a: Determine Minimal osmoutils Subset 📋 `pending`
+
+**Depends On**: Tasks 0.2-0.6, 0.7
+
+**Description**: After completing all module dependency analyses, review which osmoutils subpackages are actually imported by our target DEX modules. Determine the minimal subset needed and identify if store fork features can be avoided.
+
+**Why Important**: osmoutils has store fork dependencies that may be blockers. If we can avoid importing those subpackages, migration becomes much simpler.
+
+**Acceptance Criteria**:
+- [ ] List all osmoutils subpackages imported by each DEX module
+- [ ] Identify which subpackages use store fork features
+- [ ] Determine if we can avoid store fork by using minimal subset
+- [ ] Update migration plan based on findings
+- [ ] Update `knowledge.md` with minimal osmoutils requirements
+
+---
+
 ### Task 0.8: Define Testing Harness 📋 `pending`
 
 **Description**: Design the three-level testing strategy and document setup requirements.
@@ -237,6 +279,7 @@ _(Tasks will be added as Phase 2 progresses)_
 - Migration order will be determined by the dependency graph (Task 0.7)
 - The workflow (copy → compile → adapt → test → integrate) will be refined with each module
 - Focus on getting one module fully working before moving to the next
+- **Important**: For osmoutils, only migrate the subpackages actually used by DEX modules. Track which osmoutils imports each module uses during dependency analysis.
 
 ---
 

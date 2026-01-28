@@ -62,16 +62,39 @@
 
 ### osmoutils
 
-**Purpose**: _(to be documented in Task 0.1c)_
+**Purpose**: General utility library providing accumulators, store helpers, CLI wrappers, CosmWasm helpers, and other shared functionality used across Osmosis modules.
 
 **Key Components**:
-- _(to be documented)_
+- `accum/` - Accumulator for reward distribution
+- `sumtree/` - Sum tree data structure
+- `osmocli/` - CLI command wrappers and helpers
+- `coinutil/` - Coin math utilities
+- `cosmwasm/` - CosmWasm helpers
+- Store helpers, encoding, parsing utilities
 
 **External Dependencies**:
-- _(to be documented)_
+- `cosmossdk.io/store` - **⚠️ Uses Osmosis fork** for iavlFastNodeModuleWhitelist
+- `cosmossdk.io/math`, `log` - Standard cosmossdk.io packages
+- `github.com/cosmos/cosmos-sdk` - Uses fork via replace
+- `github.com/cosmos/ibc-go/v8` - **Needs update to v10** for Gaia
+- `github.com/CosmWasm/wasmvm/v2` - For CosmWasm helpers
+- `github.com/cometbft/cometbft` - Uses Osmosis fork
 
 **Internal Dependencies**:
-- _(to be documented)_
+- `osmomath` - Depends on osmomath (osmomath is the true leaf)
+
+**Migration Notes**:
+- Standalone Go module with own `go.mod`
+- **Store fork is a potential blocker** - uses iavlFastNodeModuleWhitelist for sync performance
+- Must remove all replace directives and use upstream dependencies
+- IBC-go v8 → v10 update required
+- SDK v0.50 → v0.53 update required
+
+**Key Insight: Partial Migration**:
+- We do NOT need to migrate all of osmoutils
+- Only migrate the specific utilities used by our target DEX modules
+- If the store fork features are only used by parts we don't need, we can skip them
+- Need to identify exactly which osmoutils subpackages each DEX module imports
 
 ---
 
@@ -381,3 +404,4 @@ _(to be populated during migration)_
 | 2026-01-28 | Documented poolmanager dependencies; confirmed NO true circular dependency | AI Assistant |
 | 2026-01-28 | Added recommended migration order based on dependency analysis | AI Assistant |
 | 2026-01-28 | Completed osmomath analysis - confirmed TRUE LEAF dependency | AI Assistant |
+| 2026-01-28 | Completed osmoutils analysis - depends on osmomath, uses store fork | AI Assistant |
