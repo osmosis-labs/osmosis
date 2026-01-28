@@ -32,6 +32,63 @@
 
 ---
 
+## Shared Module Dependencies
+
+### x/epochs
+
+**Purpose**: Provides time-based epoch hooks that trigger periodic operations across modules.
+
+**Modules That Depend on It**:
+- `gamm` - EpochKeeper for epoch info (IncentivesKeeper)
+- `protorev` - EpochKeeper + epoch hooks for periodic route updates
+
+**SDK 0.53 Has x/epochs**: Yes, SDK 0.53 includes `x/epochs` module.
+
+**Comparison: Osmosis vs SDK 0.53 x/epochs**:
+
+| Aspect | Osmosis | SDK 0.53 |
+|--------|---------|----------|
+| EpochInfo fields | Identifier, StartTime, Duration, CurrentEpoch, CurrentEpochStartTime, EpochCountingStarted, CurrentEpochStartHeight | **Identical** |
+| Proto field numbers | 1,2,3,4,5,6,8 | **Identical** |
+| Hook context | `sdk.Context` | `context.Context` |
+| GetModuleName() | Yes (for telemetry) | No |
+| Panic handling | `osmoutils.ApplyFuncIfNoError` | Standard `errors.Join` |
+| Depinject support | No | Yes (`EpochHooksWrapper`) |
+
+**Key Differences in Hooks Interface**:
+
+```go
+// Osmosis
+type EpochHooks interface {
+    AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error
+    BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error
+    GetModuleName() string  // Extra method for telemetry
+}
+
+// SDK 0.53
+type EpochHooks interface {
+    AfterEpochEnd(ctx context.Context, epochIdentifier string, epochNumber int64) error
+    BeforeEpochStart(ctx context.Context, epochIdentifier string, epochNumber int64) error
+    // No GetModuleName - uses depinject for module identification
+}
+```
+
+**Recommendation**: ✅ **Use SDK 0.53 x/epochs**
+
+The SDK version is compatible and simpler. Required adaptations:
+1. Change hook implementations to use `context.Context` instead of `sdk.Context`
+2. Remove `GetModuleName()` from hook implementations (minor)
+3. Use SDK's depinject patterns for hook registration
+4. Accept slightly different panic handling (SDK doesn't catch panics, Osmosis does)
+
+**Migration Notes**:
+- EpochInfo type is wire-compatible (same proto fields) - genesis migration should work
+- Hook interface change is minor - just context type and remove one method
+- Osmosis uses custom panic recovery; SDK relies on standard error returns
+- No need to port Osmosis x/epochs - use upstream SDK version
+
+---
+
 ## Utility Packages (Leaf Dependencies)
 
 ### osmomath
@@ -572,3 +629,4 @@ _(to be populated during migration)_
 | 2026-01-28 | Documented gamm dependencies - simpler than CL, no accum usage | AI Assistant |
 | 2026-01-28 | Documented cosmwasmpool dependencies - requires wasmd v0.53→v0.60 | AI Assistant |
 | 2026-01-28 | Documented protorev dependencies - depends on all DEX modules, migrate last | AI Assistant |
+| 2026-01-28 | Analyzed x/epochs - SDK 0.53 version can be used, minor hook adaptations needed | AI Assistant |

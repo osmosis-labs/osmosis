@@ -132,7 +132,7 @@
 
 ---
 
-### Task 0.1f: Analyze x/epochs Dependency 🚧 `in_progress`
+### Task 0.1f: Analyze x/epochs Dependency ✅ `completed`
 
 **Description**: The `x/epochs` module is used by gamm and protorev (and other Osmosis modules). SDK 0.53 has its own `x/epochs` module. Determine if we can use the SDK version or need to port Osmosis's version.
 
@@ -141,12 +141,21 @@
 - `protorev` - uses EpochKeeper + epoch hooks for periodic updates
 
 **Acceptance Criteria**:
-- [ ] Analyze Osmosis x/epochs API (EpochInfo type, hooks interface)
-- [ ] Analyze SDK 0.53 x/epochs API
-- [ ] Compare the two implementations
-- [ ] Determine if SDK epochs can be used as drop-in replacement
-- [ ] Document any API differences that need adaptation
-- [ ] Update `knowledge.md` with findings and recommendations
+- [x] Analyze Osmosis x/epochs API (EpochInfo type, hooks interface)
+- [x] Analyze SDK 0.53 x/epochs API
+- [x] Compare the two implementations
+- [x] Determine if SDK epochs can be used as drop-in replacement
+- [x] Document any API differences that need adaptation
+- [x] Update `knowledge.md` with findings and recommendations
+
+**Key Findings**:
+- ✅ EpochInfo type is wire-compatible (identical proto fields)
+- ✅ SDK 0.53 x/epochs can be used as replacement
+- Minor hook interface changes needed:
+  - `sdk.Context` → `context.Context`
+  - Remove `GetModuleName()` method
+- Osmosis uses osmoutils panic recovery; SDK uses standard errors
+- **Recommendation**: Use SDK 0.53 x/epochs, adapt hook implementations
 
 ---
 
@@ -348,3 +357,4 @@ _(Tasks will be added as Phase 2 progresses)_
 | 2026-01-28 | Task 0.4 completed - gamm dependencies documented (simpler than CL, no accum) | AI Assistant |
 | 2026-01-28 | Task 0.5 completed - cosmwasmpool dependencies documented (requires wasmd) | AI Assistant |
 | 2026-01-28 | Task 0.6 completed - protorev dependencies documented (depends on all DEX) | AI Assistant |
+| 2026-01-28 | Task 0.1f added and completed - x/epochs comparison (use SDK version) | AI Assistant |
