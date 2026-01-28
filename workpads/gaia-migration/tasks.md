@@ -587,14 +587,66 @@
 - Legacy x/params migration
 
 **Acceptance Criteria**:
-- [ ] Copy `x/concentrated-liquidity/` to Gaia
-- [ ] Verify `osmoutils/accum` works correctly
-- [ ] Update all imports
-- [ ] Adapt legacy x/params if needed
-- [ ] Clean compile with no errors
-- [ ] All unit tests pass
-- [ ] Wire as pool module in poolmanager
+- [x] Copy `x/concentrated-liquidity/` to Gaia
+- [x] Verify `osmoutils/accum` works correctly
+- [x] Update all imports
+- [x] Adapt legacy x/params if needed
+- [x] Clean compile with no errors
+- [ ] All unit tests pass (partial - see progress notes)
+- [x] Wire as pool module in poolmanager
 - [ ] Integration test: create CL pool, add liquidity, execute swap
+
+**Progress Notes** (Jan 2026):
+
+Test suite fixes applied:
+1. Removed lockup-specific tests from `position_test.go`:
+   - `TestMintSharesAndLock`, `TestPositionHasActiveUnderlyingLock`, `TestPositionHasActiveUnderlyingLockAndUpdate`, `TestPositionToLockCRUD`, `TestCreateFullRangePositionLocked`
+   - Removed lockup test cases from `TestCreateFullRangePosition`
+2. Fixed `tick_test.go` keeper initialization (removed unused keepers)
+3. Fixed osmo→cosmos bech32 address issues in test files
+4. Fixed invalid address test cases in `model/msgs_test.go` and `types/msgs_test.go`
+5. Enabled permissionless pool creation in `swapstrategy` tests
+6. Added helper methods to apptesting: `RunTestCaseWithoutStateUpdates`, `SetupAndFundSwapTest`, `PreparePoolWithCustSpread`
+
+Passing test packages:
+- `x/concentrated-liquidity/math` ✓
+- `x/concentrated-liquidity/swapstrategy` ✓
+- `x/concentrated-liquidity/types` ✓
+- `x/concentrated-liquidity/types/genesis` ✓
+
+Remaining failures (need follow-up):
+- **Missing test contracts**: See Task 3.1a
+- **Lockup stubs**: Tests calling `CreateFullRangePositionLocked/Unlocking` should be removed (lockup not migrated)
+
+---
+
+### Task 3.1a: Copy CL test contracts 📋 `pending`
+
+**Depends On**: Task 3.1
+
+**Description**: Copy the CosmWasm test contracts used by concentrated-liquidity pool hooks tests.
+
+**Files to copy from Osmosis**:
+- `x/concentrated-liquidity/testcontracts/compiled-wasm/hooks.wasm`
+- `x/concentrated-liquidity/testcontracts/compiled-wasm/counter.wasm`
+
+**Acceptance Criteria**:
+- [ ] Copy test contract WASM files to Gaia
+- [ ] `TestPoolHooks` tests pass
+- [ ] `TestSetAndGetPoolHookContract` tests pass
+
+---
+
+### Task 3.1b: Remove remaining lockup tests 📋 `pending`
+
+**Depends On**: Task 3.1
+
+**Description**: Remove remaining tests that call lockup-stubbed functions (`CreateFullRangePositionLocked`, `CreateFullRangePositionUnlocking`, `MintSharesAndLock`).
+
+**Acceptance Criteria**:
+- [ ] Identify all tests calling lockup stubs
+- [ ] Remove or skip those tests
+- [ ] All CL unit tests pass
 
 ---
 
