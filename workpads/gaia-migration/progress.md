@@ -105,14 +105,32 @@ git diff 6db70b42f dc4acb8d0 -- x/poolmanager/types/
 - `BaseCoinUnit = "uatom"` (DEX modules need this constant)
 - `SetAddressPrefixes()` (test helper for bech32 address validation)
 
-**Commented out** (TODO for later):
-- `TestAuthzMsg` - needs `apptesting` and `poolmanager/module` (Task 2.3)
-- Imports: `apptesting`, `poolmanager/module`
+**Commented out** (TODO for Task 2.3):
+- `TestAuthzMsg` - needs `poolmanager/module.AppModuleBasic{}`
 
-**Test status**:
-- Core code compiles ✅
-- Some tests fail due to Osmosis-specific test data (uosmo, osmo addresses)
-- Tests need updating to use Gaia denoms/addresses
+**Test status**: ✅ All unit tests pass (after Task 0.9 fixes)
+
+---
+
+## Test Infrastructure (Task 0.9)
+
+| Aspect | Details |
+|--------|---------|
+| **Commit** | `0c758f641` |
+
+**Files created**:
+- `tests/dex/test_helpers.go`
+
+**Provides**:
+- `TestMessageAuthzSerialization(t, msg, module)` - Gaia equivalent of Osmosis apptesting
+- `GenerateTestAddrs()` - generates valid/invalid test addresses
+- `TestDenom = "uatom"`, `SecondaryTestDenom = "uion"` - test constants
+
+**Test fixes applied to poolmanager/types**:
+- Added `init()` to set bech32 prefixes before address creation
+- Changed `invalidAddr` to malformed bech32 string ("cosmos1invalid")
+- Updated test data to use different denoms (uatom/uion instead of uatom/uatom)
+- Fixed expected keys (uosmo → uatom)
 
 ---
 
@@ -122,3 +140,5 @@ git diff 6db70b42f dc4acb8d0 -- x/poolmanager/types/
 |------|--------|--------|
 | 2026-01-28 | Created progress tracking file | AI Assistant |
 | 2026-01-28 | Added osmomath and osmoutils entries | AI Assistant |
+| 2026-01-28 | Added poolmanager/types entry | AI Assistant |
+| 2026-01-28 | Added test infrastructure (Task 0.9) | AI Assistant |
