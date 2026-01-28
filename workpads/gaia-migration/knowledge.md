@@ -151,16 +151,62 @@
 
 ### concentrated-liquidity
 
-**Purpose**: _(to be documented)_
+**Purpose**: Concentrated liquidity pools (Uniswap v3 style) that allow liquidity providers to specify price ranges for their liquidity, improving capital efficiency. This is the most complex pool type in Osmosis.
 
 **Key Components**:
-- _(to be documented)_
+- Tick-based price ranges with configurable tick spacing
+- Position management (create, add, withdraw liquidity)
+- Swap execution with tick crossing logic
+- Spread rewards (fees) accumulated per position
+- Incentive distribution to liquidity providers
+- Pool hooks for extensibility (CosmWasm contracts)
+- Internal `math/` package for tick/price calculations
+- Internal `model/` package for pool and position types
+- Internal `swapstrategy/` for direction-specific swap logic
 
-**External Dependencies**:
-- _(to be documented)_
+**Cosmos SDK Dependencies**:
+- `cosmossdk.io/core/appmodule` - App module interface
+- `cosmossdk.io/store` (prefix, types) - KV store access
+- `cosmossdk.io/errors` - Error handling
+- `cosmossdk.io/math` - Math types (Int, LegacyDec)
+- `github.com/cosmos/cosmos-sdk/codec` - Encoding
+- `github.com/cosmos/cosmos-sdk/types` - SDK types (sdk.Context, sdk.Coin, etc.)
+- `github.com/cosmos/cosmos-sdk/types/query` - Pagination
+- `github.com/cosmos/cosmos-sdk/x/params/types` - Legacy params
+- `github.com/cosmos/cosmos-sdk/x/bank/types` - Bank types
+- `github.com/cosmos/cosmos-sdk/x/gov/types` - Governance module address
+- `github.com/cosmos/cosmos-sdk/telemetry` - Metrics
 
-**Internal Dependencies**:
-- _(to be documented)_
+**Osmosis Internal Dependencies**:
+- `osmomath` - BigDec and math utilities ⚠️ MUST MIGRATE FIRST
+- `osmoutils` - General utilities ⚠️ MUST MIGRATE FIRST
+  - Uses `osmoutils.MustGet`, `osmoutils.MustSet` for store helpers
+  - Uses `osmoutils/accum` for accumulator (spread rewards, incentives)
+- `x/poolmanager/types` - Pool interfaces (PoolI, CreatePoolMsg)
+- `x/lockup/types` - For superfluid integration (lock types)
+- `x/gamm` - Via GAMMKeeper interface (linked Balancer pools)
+- `x/pool-incentives` - Via PoolIncentivesKeeper interface
+- `x/incentives` - Via IncentivesKeeper interface
+
+**Required External Keepers**:
+- `AccountKeeper` - Module account management
+- `BankKeeper` - Token transfers, minting, burning (standard, no fork features)
+- `PoolManagerKeeper` - Pool creation, routing
+- `GAMMKeeper` - Linked Balancer pool lookups
+- `PoolIncentivesKeeper` - Pool gauge management
+- `IncentivesKeeper` - Reward distribution
+- `LockupKeeper` - Position locking (superfluid)
+- `CommunityPoolKeeper` - Community pool funding
+- `ContractKeeper` - CosmWasm contract sudo calls (pool hooks)
+
+**Migration Notes**:
+- Large, complex module with ~60 source files
+- Uses `osmoutils/accum` heavily for reward distribution - critical path
+- Has CosmWasm integration for pool hooks (requires wasmd)
+- Implements `poolmanager/types.PoolModuleI` interface
+- Uses legacy params (x/params) - may need migration to in-module params
+- ✅ No direct SDK fork feature usage detected
+- ⚠️ Heavy use of `osmoutils/accum` - need to ensure this subpackage works with upstream store
 
 ---
 
@@ -405,3 +451,4 @@ _(to be populated during migration)_
 | 2026-01-28 | Added recommended migration order based on dependency analysis | AI Assistant |
 | 2026-01-28 | Completed osmomath analysis - confirmed TRUE LEAF dependency | AI Assistant |
 | 2026-01-28 | Completed osmoutils analysis - depends on osmomath, uses store fork | AI Assistant |
+| 2026-01-28 | Documented concentrated-liquidity dependencies - uses osmoutils/accum heavily | AI Assistant |
