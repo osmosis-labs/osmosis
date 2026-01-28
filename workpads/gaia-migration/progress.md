@@ -315,6 +315,95 @@ Regenerated all protobuf files using `make proto-gen`:
 
 ---
 
+## concentrated-liquidity (partial)
+
+| Aspect | Details |
+|--------|---------|
+| **Copy Commit** | `74e54a2a1` |
+| **Adapt Commit** | `8e2ee54b7` (partial - WIP) |
+
+**Files Copied** (83 files):
+- Root module files: `keeper.go`, `lp.go`, `pool.go`, `position.go`, `swaps.go`, etc.
+- `clmodule/module.go`
+- `client/`, `model/`, `math/`, `swapstrategy/`, `types/`
+
+**Adaptations Applied**:
+1. Import paths updated (osmomath, osmoutils, gamm, poolmanager)
+2. Removed incentives/lockup/superfluid keeper dependencies
+3. Stubbed lockup-dependent functions with "not supported" errors:
+   - `CreateFullRangePositionLocked`, `CreateFullRangePositionUnlocking`
+   - `mintSharesAndLock`, `GetLinkedBalancerPoolID`
+   - `isLockMature` (always returns true)
+4. Created `x/lockup/types/lock.pb.go` stub for proto compatibility
+5. Created `x/lockup/types/errors.go` for stub error types
+6. Removed simulation code from `clmodule/module.go`
+7. Added `//go:build osmosis_apptesting` to many test files
+
+**Tests Excluded** (need Gaia apptesting):
+- All keeper tests, swap strategy tests, model tests (30+ files)
+
+---
+
+## App Integration (Task 2.4 / 4.2 overlap)
+
+| Aspect | Details |
+|--------|---------|
+| **Commit** | `267c7e450` |
+
+**Files Modified**:
+- `app/keepers/keys.go`: Added DEX store keys (poolmanager, gamm, CL)
+- `app/keepers/keepers.go`: Added DEX keeper initialization
+- `app/modules.go`: Added DEX modules to begin/end/init blockers, module account permissions
+
+**Key Changes**:
+1. **Store Keys**: Added `poolmanagertypes.StoreKey`, `gammtypes.StoreKey`, `cltypes.StoreKey`
+2. **Keeper Initialization**:
+   - GAMM keeper (Balancer/Stableswap)
+   - CL keeper (concentrated liquidity)
+   - PoolManager keeper (routes to pool modules)
+3. **Circular Dependency Resolution**: Use setter methods for back-references
+4. **Module Account Permissions**:
+   - `gamm`: minter, burner
+   - `concentratedliquidity`: minter, burner
+   - `poolmanager`: none
+   - `taker_fee_collector`: none
+
+---
+
+## Gaia-native apptesting Package (Task 2.4)
+
+| Aspect | Details |
+|--------|---------|
+| **Commit** | `14f7ad66a` |
+
+**Files Created**:
+- `tests/dex/apptesting/test_suite.go` - KeeperTestHelper struct and core setup
+- `tests/dex/apptesting/gamm.go` - Balancer/Stableswap pool creation helpers
+- `tests/dex/apptesting/concentrated_liquidity.go` - CL pool creation helpers
+- `tests/dex/apptesting/apptesting_test.go` - Validation tests
+
+**Key Features**:
+1. **KeeperTestHelper**: Full app setup with keepers, context, test accounts
+2. **Setup Methods**: `Setup()`, `SetupApp()`, `Commit()`
+3. **Fund Methods**: `FundAcc()`, `FundModuleAcc()`
+4. **Pool Methods**:
+   - `PrepareBalancerPool()`, `PrepareCustomBalancerPool()`
+   - `PrepareConcentratedPool()`, `PrepareCustomConcentratedPool()`
+   - `CreateFullRangePosition()`
+5. **Test Constants**: Default denoms, pool params, random accounts
+
+**Additional Fixes**:
+- `app/modules.go`: Added DEX modules to begin/end/init blockers
+- `x/gamm/keeper/pool_service.go`: Added nil check for hooks
+- `x/gamm/keeper/share.go`: Added nil checks for hooks
+- `x/gamm/keeper/swap.go`: Added nil check for hooks
+
+**All 5 validation tests pass**:
+- TestSetup, TestFundAcc, TestCommit
+- TestPrepareBalancerPool, TestPrepareConcentratedPool
+
+---
+
 ## Change Log
 
 | Date | Change | Author |
@@ -329,3 +418,6 @@ Regenerated all protobuf files using `make proto-gen`:
 | 2026-01-28 | Added proto files entry (d06225e8d) | AI Assistant |
 | 2026-01-28 | Added proto regeneration entry (14df8441d) | AI Assistant |
 | 2026-01-28 | Added poolmanager keeper/module entry (Task 2.3) | AI Assistant |
+| 2026-01-28 | Added CL partial adaptation entry (8e2ee54b7) | AI Assistant |
+| 2026-01-28 | Added app integration entry (267c7e450) | AI Assistant |
+| 2026-01-28 | Added apptesting package entry (14f7ad66a) | AI Assistant |

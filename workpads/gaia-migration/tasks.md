@@ -511,11 +511,73 @@
 
 ---
 
-## Phase 3: Additional Pool Types
-
-### Task 3.1: Migrate concentrated-liquidity 📋 `pending`
+### Task 2.4: Create Gaia-native apptesting infrastructure ✅ `completed`
 
 **Depends On**: Task 2.3
+
+**Description**: Create a Gaia-native equivalent of Osmosis's `app/apptesting` package. This is blocking most keeper tests across all modules (poolmanager, gamm, concentrated-liquidity).
+
+**Commits**:
+- App integration: `267c7e450` (wire DEX modules into Gaia app)
+- Apptesting package: `14f7ad66a` (full apptesting infrastructure)
+
+**Files Created**:
+- `tests/dex/apptesting/test_suite.go` - KeeperTestHelper struct and core setup
+- `tests/dex/apptesting/gamm.go` - Balancer/Stableswap pool creation helpers
+- `tests/dex/apptesting/concentrated_liquidity.go` - CL pool creation helpers
+- `tests/dex/apptesting/apptesting_test.go` - Validation tests
+
+**Key Features Implemented**:
+
+1. **KeeperTestHelper** (core struct):
+   - `App` - full GaiaApp instance
+   - `Ctx` - SDK context
+   - `QueryHelper` - gRPC query helper
+   - `TestAccs` - random test accounts
+
+2. **Setup Methods**:
+   - `Setup()` - initialize app with genesis
+   - `SetupApp()` - create new app instance
+   - `Commit()` - finalize block
+
+3. **Fund Methods**:
+   - `FundAcc(addr, coins)` - fund account
+   - `FundModuleAcc(name, coins)` - fund module
+
+4. **Pool Methods**:
+   - `PrepareBalancerPool()` - create test balancer pool
+   - `PrepareConcentratedPool()` - create test CL pool
+   - `PrepareCustomBalancerPool()` - custom balancer pool
+   - `PrepareCustomConcentratedPool()` - custom CL pool
+   - `CreateFullRangePosition()` - add liquidity to CL pool
+
+5. **Test Constants**:
+   - Default denoms: `uatom`, `uosmo`, `eth`, `usdc`, etc.
+   - Default pool params
+   - Random account generation
+
+**Acceptance Criteria**:
+- [x] Create `tests/dex/apptesting/` package
+- [x] Implement `KeeperTestHelper` struct
+- [x] Implement fund methods
+- [x] Implement pool creation helpers
+- [x] Validation tests pass (TestSetup, TestFundAcc, TestCommit, TestPrepareBalancerPool, TestPrepareConcentratedPool)
+- [ ] Convert existing tests to use new infrastructure (deferred to follow-up)
+- [ ] Remove `osmosis_apptesting` build tag from converted tests (deferred to follow-up)
+
+**Notes**:
+- DEX modules now fully wired into Gaia app (keepers, modules, begin/end blockers)
+- Added nil checks for GAMM hooks to support testing without hook modules
+- Proto annotations for msg services are informational warnings (not errors)
+- [ ] All converted tests pass
+
+---
+
+## Phase 3: Additional Pool Types
+
+### Task 3.1: Migrate concentrated-liquidity 🚧 `in_progress`
+
+**Depends On**: Task 2.4 (apptesting infrastructure) ✅
 
 **Description**: Migrate the concentrated-liquidity module. This is the most complex pool type with heavy `osmoutils/accum` usage.
 
