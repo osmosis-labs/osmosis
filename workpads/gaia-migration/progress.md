@@ -286,6 +286,35 @@ Regenerated all protobuf files using `make proto-gen`:
 
 ---
 
+## poolmanager (keeper, module, client)
+
+| Aspect | Details |
+|--------|---------|
+| **Copy Commit** | `10c716fff` |
+| **Adapt Commit** | `804871ba8` |
+
+**Files Copied** (30 files):
+- Root: `keeper.go`, `store.go`, `router.go`, `msg_server.go`, `create_pool.go`, `gov.go`, `taker_fee.go`, `protorev.go`, test files
+- `module/module.go`
+- `client/cli/*.go`, `client/grpc/*.go`, `client/grpcv2/*.go`
+- `client/proposal_handler.go`, `client/query_proto_wrap.go`
+
+**Adaptations Applied**:
+1. Import paths updated (osmomath, osmoutils, gamm, poolmanager)
+2. Removed simulation dependencies (simtypes, gamm/simulation)
+3. Replaced txfees dependency with local `TakerFeeCollectorName` constant
+4. Created `cwpooltypes/` stub package for CosmWasm pool query types
+5. Added `//go:build osmosis_apptesting` to 10 test files that depend on Osmosis's apptesting
+
+**Tests Excluded** (need Gaia apptesting):
+- `store_test.go`, `keeper_test.go`, `router_test.go`, `taker_fee_test.go`
+- `create_pool_test.go`, `msg_server_test.go`, `protorev_test.go`
+- `client/cli/*_test.go`
+
+**Note**: App-level wiring deferred to Task 4.2 (App Integration).
+
+---
+
 ## Change Log
 
 | Date | Change | Author |
@@ -299,3 +328,4 @@ Regenerated all protobuf files using `make proto-gen`:
 | 2026-01-28 | Added CL migration removal entry (0aebc617c) | AI Assistant |
 | 2026-01-28 | Added proto files entry (d06225e8d) | AI Assistant |
 | 2026-01-28 | Added proto regeneration entry (14df8441d) | AI Assistant |
+| 2026-01-28 | Added poolmanager keeper/module entry (Task 2.3) | AI Assistant |
