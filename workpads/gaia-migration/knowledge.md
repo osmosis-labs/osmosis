@@ -1070,6 +1070,24 @@ Some DEX module files reference modules we're NOT migrating (superfluid, tokenfa
 
 **Location decision**: Placed in `pkg/osmomath/` following Gaia's existing pattern for shared packages (e.g., `pkg/address/`).
 
+### L2: osmoutils Migration (Task 1.2)
+
+**What worked well**:
+- Bulk copy of subpackages then sed-based import replacement worked efficiently
+- Most code compiled without changes after import updates
+- Tests pass with minimal modifications
+
+**IBC v10 API changes discovered**:
+- `DenomTrace` type replaced with `Denom` type
+- `denomTrace.Path` (field) → `denom.Path()` (method)
+- `ParseDenomTrace` is deprecated, prefer `ExtractDenomFromPath`
+
+**Unexpected additions**:
+- `noapptest/` needed for test context creation
+- `wrapper/` needed for accum tests (database wrapper for IAVL)
+
+**Key insight**: The IBC v8→v10 migration has breaking changes in the transfer types. Always check method signatures when upgrading IBC versions.
+
 ---
 
 ## Change Log
