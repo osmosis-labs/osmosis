@@ -318,15 +318,22 @@
 
 ---
 
-### Task 0.8: Define Testing Harness 📋 `pending`
+### Task 0.8: Define Testing Harness ✅ `completed`
 
 **Description**: Design the three-level testing strategy and document setup requirements.
 
 **Acceptance Criteria**:
-- [ ] Unit test migration approach documented
-- [ ] Integration test framework chosen
-- [ ] Manual test setup documented (local node + mainnet data)
-- [ ] Update `knowledge.md` with testing strategy
+- [x] Unit test migration approach documented
+- [x] Integration test framework chosen
+- [x] Manual test setup documented (local node + mainnet data)
+- [x] Update `knowledge.md` with testing strategy
+
+**Key Findings**:
+- **Unit Tests**: Migrate from Osmosis `apptesting.KeeperTestHelper` to SDK's `integration.App` fixture pattern
+- **Integration Tests**: Use Gaia's existing `tests/integration/` pattern with `cosmos-sdk/testutil/integration`
+- **E2E Tests**: Extend Gaia's Docker-based `tests/e2e/` framework for DEX testing
+- **Manual Tests**: Create `tests/localgaia-dex/` similar to Osmosis's localosmosis
+- Test infrastructure files to create: `tests/dex/test_common.go`, `tests/integration/dex_test.go`, etc.
 
 ---
 
@@ -563,3 +570,4 @@
 | 2026-01-28 | Tasks 0.7, 0.1d, 0.1e completed - dependency graph already documented; store fork and tokenfactory questions resolved by 0.1a | AI Assistant |
 | 2026-01-28 | Task 0.7a completed - minimal osmoutils subset identified; all use standard store APIs | AI Assistant |
 | 2026-01-28 | Added concrete Phase 1-4 tasks matching migration plan in knowledge.md | AI Assistant |
+| 2026-01-28 | Task 0.8 completed - Testing Harness defined with 3-level strategy (unit/integration/e2e) | AI Assistant |

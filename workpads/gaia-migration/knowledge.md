@@ -675,10 +675,168 @@ Testing is done at **three levels**, each with a distinct purpose:
 
 ### Testing Harness
 
-We will build a testing harness to iterate efficiently:
-- Automated unit test execution per module
-- Integration test framework for user workflow validation
-- Local node setup with mainnet data import capability
+#### Level 1: Unit Test Migration
+
+**Osmosis Pattern** (to migrate from):
+- Uses `apptesting.KeeperTestHelper` from `app/apptesting/` package
+- Full `OsmosisApp` instance with all keepers wired
+- Suite-based tests using `testify/suite`
+- Helper methods for pool creation, funding, etc.
+
+**Gaia Pattern** (to migrate to):
+- Uses `github.com/cosmos/cosmos-sdk/testutil/integration` package
+- Lightweight `integration.App` with only necessary modules
+- Fixture pattern with explicit keeper setup
+- Follows SDK 0.53 conventions
+
+**Migration Approach**:
+1. Create a DEX test helper in Gaia: `tests/dex/test_common.go`
+2. Build a fixture that wires DEX modules with minimal dependencies
+3. Port Osmosis test helpers (pool creation, swap execution, etc.)
+4. Migrate tests file by file, adapting import paths and context patterns
+
+**Example Fixture Structure** (to be created):
+```go
+// tests/dex/test_common.go
+type dexFixture struct {
+    app        *integration.App
+    sdkCtx     sdk.Context
+    cdc        codec.Codec
+    
+    // Standard keepers
+    accountKeeper authkeeper.AccountKeeper
+    bankKeeper    bankkeeper.Keeper
+    
+    // DEX keepers (migrated)
+    poolManagerKeeper poolmanagerkeeper.Keeper
+    gammKeeper        gammkeeper.Keeper
+    clKeeper          clkeeper.Keeper
+    cosmwasmPoolKeeper cosmwasmpoolkeeper.Keeper
+    protorevKeeper    protorevkeeper.Keeper
+}
+```
+
+**Commands**:
+```bash
+# Run unit tests for a specific module
+cd /Users/nicolas/devel/gaia
+go test ./x/{module}/... -v
+
+# Run all DEX tests
+go test ./tests/dex/... -v
+```
+
+#### Level 2: Integration Tests
+
+**Gaia Pattern** (existing):
+- Located in `tests/integration/`
+- Uses `integration.NewIntegrationApp()` from SDK
+- Tests full message flows (MsgServer calls)
+- Verifies keeper interactions work correctly
+
+**DEX Integration Tests** (to create):
+```
+tests/integration/
+├── test_common.go       # Existing fixture
+├── dex_test.go          # NEW: Pool creation, swaps, routing
+├── dex_arbitrage_test.go # NEW: Protorev MEV tests
+└── ...
+```
+
+**Test Scenarios to Cover**:
+1. **Pool Lifecycle**: Create Balancer → Create Stableswap → Create CL pool
+2. **Swap Routing**: Multi-hop swaps through different pool types
+3. **Liquidity Operations**: Add/remove liquidity, position management
+4. **Protorev**: Verify arbitrage detection and execution
+5. **Genesis**: Export → Import round-trip for all pool types
+
+**Commands**:
+```bash
+# Run integration tests
+cd /Users/nicolas/devel/gaia
+go test ./tests/integration/... -v -run TestDex
+
+# Run specific test
+go test ./tests/integration/... -v -run TestDexSwapRouting
+```
+
+#### Level 3: E2E / Manual Tests
+
+**E2E Tests** (Docker-based):
+- Gaia has existing e2e framework in `tests/e2e/`
+- Uses `dockertest` to spin up full chains
+- Includes IBC relayer (Hermes) setup
+- Add DEX-specific e2e tests: `tests/e2e/e2e_dex_test.go`
+
+**Manual Testing** (LocalGaia with DEX):
+- Similar to Osmosis's `localosmosis` setup
+- Use Gaia's `contrib/single-node.sh` as base
+- Create `tests/localgaia-dex/` with:
+  - Docker compose setup
+  - Pre-funded test accounts
+  - Sample pool creation scripts
+  - Swap test scripts
+
+**Local Testing Setup**:
+```bash
+# Build Gaia binary with DEX modules
+cd /Users/nicolas/devel/gaia
+make build
+
+# Start local node (simple, single validator)
+./contrib/single-node.sh
+
+# Or use docker-compose for more control
+cd tests/localgaia-dex
+docker-compose up
+```
+
+**Test Scripts to Create**:
+```
+tests/localgaia-dex/
+├── docker-compose.yml
+├── README.md
+├── scripts/
+│   ├── create_balancer_pool.sh
+│   ├── create_cl_pool.sh
+│   ├── create_stableswap_pool.sh
+│   ├── execute_swap.sh
+│   ├── test_multihop_swap.sh
+│   └── test_protorev.sh
+└── data/
+    ├── pool_definitions/
+    │   ├── balancer.json
+    │   ├── stableswap.json
+    │   └── cl.json
+    └── test_accounts.txt
+```
+
+**Mainnet State Testing** (advanced):
+- Osmosis has `in-place-testnet` feature for forking mainnet state
+- For Gaia+DEX, we can:
+  1. Export Osmosis DEX state (pools, positions)
+  2. Import into Gaia genesis
+  3. Test with realistic pool configurations
+- This is optional for initial migration, useful for final validation
+
+#### Testing Priority Order
+
+| Priority | Test Type | When to Run | Purpose |
+|----------|-----------|-------------|---------|
+| 1 | Unit tests | After each module compiles | Verify logic correctness |
+| 2 | Integration tests | After keeper wiring | Verify cross-module interactions |
+| 3 | E2E tests | After app integration | Verify full stack works |
+| 4 | Manual tests | Final validation | Catch edge cases |
+
+#### Test Infrastructure Files to Create
+
+| File | Description | Priority |
+|------|-------------|----------|
+| `tests/dex/test_common.go` | DEX test fixture and helpers | P1 |
+| `tests/dex/pool_helpers.go` | Pool creation/manipulation helpers | P1 |
+| `tests/integration/dex_test.go` | Integration tests for DEX | P2 |
+| `tests/e2e/e2e_dex_test.go` | E2E tests for DEX | P3 |
+| `tests/localgaia-dex/` | Local test environment | P3 |
 
 ---
 
@@ -852,3 +1010,4 @@ _(to be populated during migration)_
 | 2026-01-28 | **SDK Fork Analysis Complete** - DEX modules do NOT require fork features (bank hooks/supply offsets used by tokenfactory/superfluid/mint only) | AI Assistant |
 | 2026-01-28 | Minimal osmoutils subset identified - 6 subpackages needed, all use standard store.KVStore interface | AI Assistant |
 | 2026-01-28 | Added Executive Summary and detailed Migration Plan based on Phase 0 findings | AI Assistant |
+| 2026-01-28 | Testing Harness documented - 3-level strategy with fixture patterns, commands, and file structure | AI Assistant |
