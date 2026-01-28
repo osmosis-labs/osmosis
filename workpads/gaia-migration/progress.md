@@ -134,6 +134,51 @@ git diff 6db70b42f dc4acb8d0 -- x/poolmanager/types/
 
 ---
 
+## gamm (Task 2.2)
+
+| Aspect | Details |
+|--------|---------|
+| **Source** | `osmosis/x/gamm/` |
+| **Target** | `gaia/x/gamm/` |
+| **Files** | 95 .go files (copy), 80 modified (adapt) |
+| **Copy Commit** | `28e055001` |
+| **Adapt Commit** | `83cd5bfbc` |
+
+**To review all changes**:
+```bash
+git diff 28e055001 83cd5bfbc -- x/gamm/
+```
+
+**Import changes**:
+- `osmomath`, `osmoutils` → `gaia/pkg/`
+- `x/gamm/*`, `x/poolmanager/*` → `gaia/x/`
+- `app/params` → `gaia/app/params`
+
+**Removed dependencies** (Osmosis-specific, not needed for core DEX):
+- `x/incentives` - reward gauges
+- `x/pool-incentives` - pool reward distribution  
+- `x/superfluid` - superfluid staking
+- `x/concentrated-liquidity` - CL migration
+- `simulation/simtypes` - simulation framework
+
+**Removed files**:
+- `keeper/migrate.go`, `migrate_test.go` - CL migration
+- `simulation/` - simulation code
+- `pool-models/internal/test_helpers/` - test helpers (needs recreation)
+
+**Added files**:
+- `x/poolmanager/events/` - swap event emission
+
+**Stubbed (not supported)**:
+- CL migration queries return "unimplemented"
+- CL migration gov proposals return "not supported"
+
+**Test status**:
+- `cfmm_common` tests pass ✅
+- Other tests need apptesting adaptation (use Osmosis test framework)
+
+---
+
 ## Change Log
 
 | Date | Change | Author |
@@ -142,3 +187,4 @@ git diff 6db70b42f dc4acb8d0 -- x/poolmanager/types/
 | 2026-01-28 | Added osmomath and osmoutils entries | AI Assistant |
 | 2026-01-28 | Added poolmanager/types entry | AI Assistant |
 | 2026-01-28 | Added test infrastructure (Task 0.9) | AI Assistant |
+| 2026-01-28 | Added gamm entry (Task 2.2) | AI Assistant |
