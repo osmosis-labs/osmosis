@@ -606,6 +606,67 @@ Osmosis uses forked versions with custom features:
 
 ---
 
+## SDK Fork Features Analysis
+
+### Summary
+
+**The DEX modules do NOT require any Osmosis SDK fork features.** The fork features are used by other modules that are outside our migration scope.
+
+### Osmosis SDK Fork (osmo-v53/0.53.4)
+
+The Osmosis SDK fork has only **2 custom commits** on top of upstream SDK 0.53.4:
+
+1. `76dc4a4d65 Add Osmosis bank hooks and supply offsets`
+2. `523350f081 Add supply offset accessors to bank keeper interface`
+
+These commits add:
+- **Bank Hooks**: `TrackBeforeSend`, `BlockBeforeSend` hooks for tracking/blocking token transfers
+- **Supply Offsets**: `GetSupplyOffset`, `AddSupplyOffset` for virtual supply tracking
+
+### Modules That USE Fork Features
+
+| Module | Fork Feature | Purpose |
+|--------|-------------|---------|
+| `x/tokenfactory` | Bank Hooks | Track/block transfers of factory tokens |
+| `x/superfluid` | Supply Offsets | Virtual bonded token supply |
+| `x/mint` | Supply Offsets | Epoch provisions offset |
+
+### DEX Modules: Fork Feature Usage
+
+| DEX Module | Uses Bank Hooks? | Uses Supply Offsets? |
+|------------|------------------|---------------------|
+| `poolmanager` | ❌ No | ❌ No |
+| `concentrated-liquidity` | ❌ No | ❌ No |
+| `gamm` | ❌ No | ❌ No |
+| `cosmwasmpool` | ❌ No | ❌ No |
+| `protorev` | ❌ No | ❌ No |
+
+**Conclusion**: ✅ DEX modules can use upstream SDK 0.53 without any fork features.
+
+### Store Fork Analysis
+
+The osmoutils go.mod has a replace directive for the Osmosis store fork, which provides:
+- `iavlFastNodeModuleWhitelist` - Performance optimization for syncing
+- Async pruning - Performance optimization for snapshot nodes
+
+**Key Finding**: osmoutils does NOT use any fork-specific APIs. It uses standard store operations:
+- `store.Get()`, `store.Set()`, `store.Delete()`, `store.Has()`, `store.Iterator()`
+
+These are identical in upstream SDK store. The fork only provides **performance optimizations at the node level**, not different functionality.
+
+**Conclusion**: ✅ Can use upstream SDK store. Minor performance differences possible but functionally equivalent.
+
+### Minor Dependencies Resolution
+
+| Issue | Location | Resolution |
+|-------|----------|------------|
+| `superfluidtypes.MigrationPoolIDs` | `gamm/keeper/migrate.go` | Move struct to gamm/types (trivial 2-field struct) |
+| superfluid import in tests | `concentrated-liquidity/pool_test.go` | Test-only, can mock or skip |
+| tokenfactory import in tests | `cosmwasmpool/.../transmuter_test.go` | Test-only, can mock or skip |
+| mint import in simulation | `concentrated-liquidity/simulation/sim_msgs.go` | Simulation-only, can adapt |
+
+---
+
 ## Risks and Watch Items
 
 | Risk | Description | Mitigation |
@@ -633,7 +694,7 @@ Osmosis uses forked versions with custom features:
 3. What state/genesis migration is needed for each module?
 4. How do we handle CosmWasm integration differences (wasmd v0.53 → v0.60)?
 5. **NEW**: How do we handle the IBC v8 → v10 migration for modules that use IBC?
-6. **CRITICAL**: What Osmosis SDK fork features are required by the DEX modules, and are they available in upstream SDK 0.53? (See Task 0.1a)
+6. ~~**CRITICAL**: What Osmosis SDK fork features are required by the DEX modules?~~ ✅ Answered: **None!** DEX modules don't use bank hooks or supply offsets. See "SDK Fork Features Analysis" section.
 
 ---
 
@@ -659,3 +720,4 @@ _(to be populated during migration)_
 | 2026-01-28 | Documented cosmwasmpool dependencies - requires wasmd v0.53→v0.60 | AI Assistant |
 | 2026-01-28 | Documented protorev dependencies - depends on all DEX modules, migrate last | AI Assistant |
 | 2026-01-28 | Analyzed x/epochs - SDK 0.53 version can be used, minor hook adaptations needed | AI Assistant |
+| 2026-01-28 | **SDK Fork Analysis Complete** - DEX modules do NOT require fork features (bank hooks/supply offsets used by tokenfactory/superfluid/mint only) | AI Assistant |
