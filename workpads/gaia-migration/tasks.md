@@ -95,7 +95,7 @@
 
 ---
 
-### Task 0.1d: Investigate Store Fork Requirement 📋 `pending`
+### Task 0.1d: Investigate Store Fork Requirement ✅ `completed`
 
 **Description**: The osmoutils package uses an Osmosis store fork with `iavlFastNodeModuleWhitelist` feature. Determine if this is required for the DEX modules or if upstream SDK v0.53 store can be used.
 
@@ -105,15 +105,21 @@
 3. Accept potential performance impact without it
 
 **Acceptance Criteria**:
-- [ ] Understand what iavlFastNodeModuleWhitelist does
-- [ ] Identify which modules/features depend on it
-- [ ] Check if SDK v0.53 has equivalent functionality
-- [ ] Recommend approach: use upstream store or port feature
-- [ ] Update `knowledge.md` with findings
+- [x] Understand what iavlFastNodeModuleWhitelist does
+- [x] Identify which modules/features depend on it
+- [x] Check if SDK v0.53 has equivalent functionality
+- [x] Recommend approach: use upstream store or port feature
+- [x] Update `knowledge.md` with findings
+
+**Key Findings** (from Task 0.1a analysis):
+- Store fork provides **performance optimizations only** (fast node whitelist, async pruning)
+- osmoutils uses only standard store APIs (Get, Set, Delete, Has, Iterator)
+- No store fork-specific APIs are called by DEX modules
+- **Recommendation**: Use upstream SDK store - functionality is identical, minor performance difference acceptable
 
 ---
 
-### Task 0.1e: Compare Tokenfactory Implementations 📋 `pending`
+### Task 0.1e: Compare Tokenfactory Implementations ✅ `completed`
 
 **Description**: Gaia has its own tokenfactory module. If any Osmosis DEX modules depend on tokenfactory, we need to compare the Osmosis and Gaia implementations to understand compatibility and determine if we can use Gaia's native implementation.
 
@@ -123,12 +129,18 @@
 3. Determine if Gaia's implementation can serve as a drop-in replacement
 
 **Acceptance Criteria**:
-- [ ] Identify which DEX modules (if any) import or depend on tokenfactory
-- [ ] Document Osmosis tokenfactory's key APIs and features
-- [ ] Document Gaia tokenfactory's key APIs and features
-- [ ] Compare implementations and identify differences
-- [ ] Determine if Gaia's tokenfactory can be used as-is or needs adaptation
-- [ ] Update `knowledge.md` with findings and recommendations
+- [x] Identify which DEX modules (if any) import or depend on tokenfactory
+- [ ] ~~Document Osmosis tokenfactory's key APIs and features~~ (not needed)
+- [ ] ~~Document Gaia tokenfactory's key APIs and features~~ (not needed)
+- [ ] ~~Compare implementations and identify differences~~ (not needed)
+- [ ] ~~Determine if Gaia's tokenfactory can be used as-is~~ (not needed)
+- [x] Update `knowledge.md` with findings and recommendations
+
+**Key Findings** (from Task 0.1a analysis):
+- ✅ **DEX modules do NOT depend on tokenfactory**
+- Only reference: `cosmwasmpool/.../transmuter_test.go` (test file only, not production)
+- **No comparison needed** - tokenfactory is outside our migration scope
+- Gaia's native tokenfactory is unaffected by this migration
 
 ---
 
@@ -264,20 +276,25 @@
 
 ---
 
-### Task 0.7: Build Dependency Graph 📋 `pending`
+### Task 0.7: Build Dependency Graph ✅ `completed`
 
 **Depends On**: Tasks 0.2-0.6
 
 **Description**: Create a dependency DAG showing migration order from simplest to most complex.
 
 **Acceptance Criteria**:
-- [ ] Dependency graph documented in `knowledge.md`
-- [ ] Migration order determined (leaf nodes first)
-- [ ] Shared utilities (osmomath, osmoutils) positioned in graph
+- [x] Dependency graph documented in `knowledge.md`
+- [x] Migration order determined (leaf nodes first)
+- [x] Shared utilities (osmomath, osmoutils) positioned in graph
+
+**Key Findings**:
+- Graph and 8-step migration order documented in knowledge.md § Dependency Graph
+- No true circular dependencies - poolmanager/types defines interfaces only
+- Migration order: osmomath → osmoutils → poolmanager/types → gamm → poolmanager/keeper → CL → cosmwasmpool → protorev
 
 ---
 
-### Task 0.7a: Determine Minimal osmoutils Subset 📋 `pending`
+### Task 0.7a: Determine Minimal osmoutils Subset ✅ `completed`
 
 **Depends On**: Tasks 0.2-0.6, 0.7
 
@@ -286,11 +303,18 @@
 **Why Important**: osmoutils has store fork dependencies that may be blockers. If we can avoid importing those subpackages, migration becomes much simpler.
 
 **Acceptance Criteria**:
-- [ ] List all osmoutils subpackages imported by each DEX module
-- [ ] Identify which subpackages use store fork features
-- [ ] Determine if we can avoid store fork by using minimal subset
-- [ ] Update migration plan based on findings
-- [ ] Update `knowledge.md` with minimal osmoutils requirements
+- [x] List all osmoutils subpackages imported by each DEX module
+- [x] Identify which subpackages use store fork features
+- [x] Determine if we can avoid store fork by using minimal subset
+- [x] Update migration plan based on findings
+- [x] Update `knowledge.md` with minimal osmoutils requirements
+
+**Key Findings**:
+- 6 subpackages needed: root, accum, osmocli, osmoassert, cosmwasm, observability
+- 5 subpackages can be excluded: sumtree, coinutil, partialord, noapptest, wrapper
+- ✅ **ALL required subpackages use standard store.KVStore interface only**
+- ✅ **Store fork NOT required** - upstream SDK store will work
+- `osmoutils/accum` is critical for concentrated-liquidity (spread rewards, incentives)
 
 ---
 
@@ -359,3 +383,5 @@ _(Tasks will be added as Phase 2 progresses)_
 | 2026-01-28 | Task 0.6 completed - protorev dependencies documented (depends on all DEX) | AI Assistant |
 | 2026-01-28 | Task 0.1f added and completed - x/epochs comparison (use SDK version) | AI Assistant |
 | 2026-01-28 | Task 0.1a completed - SDK fork analysis shows NO blockers for DEX migration | AI Assistant |
+| 2026-01-28 | Tasks 0.7, 0.1d, 0.1e completed - dependency graph already documented; store fork and tokenfactory questions resolved by 0.1a | AI Assistant |
+| 2026-01-28 | Task 0.7a completed - minimal osmoutils subset identified; all use standard store APIs | AI Assistant |

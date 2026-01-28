@@ -130,28 +130,51 @@ The SDK version is compatible and simpler. Required adaptations:
 - Store helpers, encoding, parsing utilities
 
 **External Dependencies**:
-- `cosmossdk.io/store` - **⚠️ Uses Osmosis fork** for iavlFastNodeModuleWhitelist
+- `cosmossdk.io/store` - Uses standard KVStore interface (no fork APIs needed)
 - `cosmossdk.io/math`, `log` - Standard cosmossdk.io packages
-- `github.com/cosmos/cosmos-sdk` - Uses fork via replace
+- `github.com/cosmos/cosmos-sdk` - Uses fork via replace (remove for Gaia)
 - `github.com/cosmos/ibc-go/v8` - **Needs update to v10** for Gaia
 - `github.com/CosmWasm/wasmvm/v2` - For CosmWasm helpers
-- `github.com/cometbft/cometbft` - Uses Osmosis fork
+- `github.com/cometbft/cometbft` - Uses Osmosis fork (use upstream for Gaia)
 
 **Internal Dependencies**:
 - `osmomath` - Depends on osmomath (osmomath is the true leaf)
 
 **Migration Notes**:
 - Standalone Go module with own `go.mod`
-- **Store fork is a potential blocker** - uses iavlFastNodeModuleWhitelist for sync performance
+- ✅ **Store fork NOT required** - all subpackages use standard store.KVStore interface
 - Must remove all replace directives and use upstream dependencies
 - IBC-go v8 → v10 update required
 - SDK v0.50 → v0.53 update required
 
-**Key Insight: Partial Migration**:
-- We do NOT need to migrate all of osmoutils
-- Only migrate the specific utilities used by our target DEX modules
-- If the store fork features are only used by parts we don't need, we can skip them
-- Need to identify exactly which osmoutils subpackages each DEX module imports
+### Minimal osmoutils Subset for DEX Modules
+
+Analysis of which osmoutils subpackages each DEX module actually imports:
+
+| DEX Module | osmoutils (root) | accum | osmocli | osmoassert | cosmwasm | observability |
+|------------|------------------|-------|---------|------------|----------|---------------|
+| **poolmanager** | ✅ | ❌ | ✅ | test only | ❌ | ❌ |
+| **gamm** | ✅ | ❌ | ✅ | test only | ❌ | ❌ |
+| **concentrated-liquidity** | ✅ | ✅ **critical** | ✅ | ✅ | ❌ | ✅ |
+| **cosmwasmpool** | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| **protorev** | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
+
+**Minimal Required Subpackages**:
+1. `osmoutils` (root) - store helpers, used by ALL modules
+2. `osmoutils/accum` - **CRITICAL for CL** - accumulator for spread rewards and incentives
+3. `osmoutils/osmocli` - CLI helpers, used by ALL modules
+4. `osmoutils/osmoassert` - assertions, used by CL and tests
+5. `osmoutils/cosmwasm` - CosmWasm helpers, used by cosmwasmpool
+6. `osmoutils/observability` - telemetry, used by CL
+
+**NOT Required** (can be excluded):
+- `osmoutils/sumtree` - not imported by DEX modules
+- `osmoutils/coinutil` - not imported by DEX modules
+- `osmoutils/partialord` - not imported by DEX modules
+- `osmoutils/noapptest` - test utilities
+- `osmoutils/wrapper` - database wrapper
+
+**Key Finding**: ✅ All required subpackages use only standard `store.KVStore` interface methods (Get, Set, Delete, Has, Iterator). No store fork-specific APIs are called. The upstream SDK store will work.
 
 ---
 
@@ -725,3 +748,4 @@ _(to be populated during migration)_
 | 2026-01-28 | Documented protorev dependencies - depends on all DEX modules, migrate last | AI Assistant |
 | 2026-01-28 | Analyzed x/epochs - SDK 0.53 version can be used, minor hook adaptations needed | AI Assistant |
 | 2026-01-28 | **SDK Fork Analysis Complete** - DEX modules do NOT require fork features (bank hooks/supply offsets used by tokenfactory/superfluid/mint only) | AI Assistant |
+| 2026-01-28 | Minimal osmoutils subset identified - 6 subpackages needed, all use standard store.KVStore interface | AI Assistant |
