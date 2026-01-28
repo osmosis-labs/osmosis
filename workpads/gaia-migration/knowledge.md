@@ -55,8 +55,18 @@ These Osmosis modules use SDK fork features and are NOT part of this migration:
 - `x/mint` - Uses supply offsets
 - `x/ibc-rate-limit` - Uses bank hooks
 
+These modules are Osmosis-specific reward/incentive systems and are NOT part of this migration:
+- `x/incentives` - Gauge-based reward distribution (Osmosis-specific)
+- `x/pool-incentives` - Pool reward distribution (Osmosis-specific)
+- `x/lockup` - LP token locking for rewards (Osmosis-specific)
+
 These modules are excluded for complexity reasons (functionality will be reimplemented simpler):
 - `x/txfees` - Fee distribution logic will be added directly to poolmanager via epoch hooks (see D3). The txfees module has unnecessary complexity: EIP-1559 mempool, fee token whitelist, fee decorators.
+
+**Impact on DEX Modules**: 
+- DEX modules originally had keeper interfaces for these (PoolIncentivesKeeper, IncentivesKeeper)
+- These interfaces are **removed** during migration - core pool/swap functionality works without them
+- CL migration features (CFMM → CL pool migration with superfluid) are **removed**
 
 ---
 
@@ -144,7 +154,7 @@ For each component above:
 **Purpose**: Provides time-based epoch hooks that trigger periodic operations across modules.
 
 **Modules That Depend on It**:
-- `gamm` - EpochKeeper for epoch info (IncentivesKeeper)
+- ~~`gamm` - EpochKeeper for epoch info~~ (removed - was via IncentivesKeeper which is excluded)
 - `protorev` - EpochKeeper + epoch hooks for periodic route updates
 - `poolmanager` - ⚠️ **NEW for Gaia** - epoch hooks for taker fee distribution (moved from txfees)
 
@@ -486,16 +496,23 @@ After analyzing all DEX modules, here is the complete picture of osmoutils usage
 
 ### gamm
 
-**Purpose**: Generalized Automated Market Maker - the original pool type in Osmosis. Provides Balancer-style weighted pools and Stableswap pools (Curve-style). GAMM pools can be migrated to concentrated-liquidity pools.
+**Purpose**: Generalized Automated Market Maker - the original pool type in Osmosis. Provides Balancer-style weighted pools and Stableswap pools (Curve-style).
 
-**Key Components**:
+**Key Components** (migrated to Gaia):
 - `pool-models/balancer/` - Balancer-style weighted pools with configurable token weights
 - `pool-models/stableswap/` - Curve-style stableswap pools optimized for similar-value assets
 - `pool-models/internal/cfmm_common/` - Shared CFMM (constant function market maker) logic
 - Pool lifecycle: create, join, exit, swap
 - GAMM shares (LP tokens) minting/burning
-- Migration to concentrated-liquidity pools
-- Governance proposals for pool parameters
+- Governance proposals for pool parameters (scaling factor controller)
+
+**Removed from Gaia Migration** (Osmosis-specific features):
+- ~~Migration to concentrated-liquidity pools~~ - CL not in scope
+- ~~PoolIncentivesKeeper~~ - Incentives system not in scope
+- ~~IncentivesKeeper~~ - Incentives system not in scope
+- ~~ConcentratedLiquidityKeeper~~ - CL not in scope
+- ~~keeper/migrate.go~~ - CL migration functionality
+- ~~simulation/~~ - Simulation framework
 
 **Cosmos SDK Dependencies**:
 - `cosmossdk.io/core/appmodule` - App module interface
@@ -507,37 +524,29 @@ After analyzing all DEX modules, here is the complete picture of osmoutils usage
 - `github.com/cosmos/cosmos-sdk/x/params/types` - Legacy params
 - `github.com/cosmos/cosmos-sdk/x/bank/types` - Bank types
 
-**Osmosis Internal Dependencies**:
-- `osmomath` - Math utilities ⚠️ MUST MIGRATE FIRST
-- `osmoutils` - General utilities ⚠️ MUST MIGRATE FIRST
+**Osmosis Internal Dependencies** (migrated):
+- `osmomath` - Math utilities ✅ migrated to `gaia/pkg/osmomath`
+- `osmoutils` - General utilities ✅ migrated to `gaia/pkg/osmoutils`
   - Uses root `osmoutils` package (store helpers)
   - Uses `osmoutils/osmocli` (CLI helpers)
-  - Uses `osmoutils/osmoassert` (test only)
   - ✅ Does NOT use `osmoutils/accum` (simpler than CL!)
-- `x/poolmanager/types` - Pool interfaces (PoolI, CreatePoolMsg)
-- `x/concentrated-liquidity/types` - CL pool types (for migration feature)
-- `x/incentives/types` - Incentive types
-- `x/pool-incentives/types` - Pool incentives types
-- `x/epochs/types` - Epoch types (from x/epochs module)
-- `app/params` - App parameters (bond denom)
+- `x/poolmanager/types` - Pool interfaces ✅ migrated to `gaia/x/poolmanager/types`
+- `app/params` - App parameters ✅ using `gaia/app/params` with `BaseCoinUnit = "uatom"`
 
-**Required External Keepers**:
+**Required External Keepers** (simplified for Gaia):
 - `AccountKeeper` - Module account management
 - `BankKeeper` - Token transfers, minting LP shares, burning
 - `CommunityPoolKeeper` - Community pool funding
 - `PoolManager` - Pool routing and creation delegation
-- `ConcentratedLiquidityKeeper` - For migration to CL pools
-- `PoolIncentivesKeeper` - Pool gauge management
-- `IncentivesKeeper` - Epoch info
 
 **Migration Notes**:
 - Well-established module, simpler than concentrated-liquidity
 - Two pool types (Balancer, Stableswap) with internal CFMM logic
-- Migration feature to CL pools creates bidirectional dependency with x/concentrated-liquidity
 - Uses osmoutils but NOT the accumulator (simpler migration path)
 - Uses legacy x/params (may need migration)
 - ✅ No SDK fork features used directly
 - ✅ Simpler osmoutils usage - no store fork concerns from accum
+- ✅ **Migrated in Task 2.2** - core functionality preserved, incentives removed
 
 ---
 
@@ -1133,3 +1142,5 @@ Some DEX module files reference modules we're NOT migrating (superfluid, tokenfa
 | 2026-01-28 | Added Executive Summary and detailed Migration Plan based on Phase 0 findings | AI Assistant |
 | 2026-01-28 | Testing Harness documented - 3-level strategy with fixture patterns, commands, and file structure | AI Assistant |
 | 2026-01-28 | **D3: Taker Fee Distribution** - decided to add epoch hooks to poolmanager instead of migrating txfees; swap non-native fees to ATOM | AI Assistant |
+| 2026-01-28 | **Scope Update**: Added incentives, pool-incentives, lockup to "Modules Outside Scope". DEX modules simplified by removing these dependencies. | AI Assistant |
+| 2026-01-28 | **gamm Migration Complete** - core functionality preserved, incentives/CL migration removed. Simplified keeper to accountKeeper, bankKeeper, communityPoolKeeper only. | AI Assistant |
