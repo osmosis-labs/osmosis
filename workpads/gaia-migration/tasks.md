@@ -25,6 +25,30 @@
 
 ---
 
+### Task 0.1a: Identify Required SDK Fork Features 📋 `pending` ⚠️ HIGH PRIORITY
+
+**Description**: Analyze which Osmosis SDK fork features are used by the DEX modules and determine if they are available in upstream SDK 0.53. This is critical to assess early as it may fundamentally affect our migration approach.
+
+**Why Important**: If the DEX modules depend on Osmosis-specific SDK fork features that don't exist in upstream SDK 0.53, we have several options:
+1. Port those features to Gaia (adds complexity)
+2. Refactor modules to not need those features (may be significant work)
+3. Contribute missing features upstream (long-term, unlikely for this project timeline)
+
+**Acceptance Criteria**:
+- [ ] List all Osmosis SDK fork modifications (from `osmosis-labs/cosmos-sdk v0.50.14-v30-osmo`)
+- [ ] For each fork modification, identify if DEX modules depend on it
+- [ ] For each required fork feature, check if equivalent exists in SDK 0.53
+- [ ] Document blockers or risks in `knowledge.md`
+- [ ] Recommend approach for each missing feature
+
+**Known Fork Areas to Investigate** (from knowledge.md):
+- Bank module hooks / supply offsets
+- Store fork (iavlFastNodeModuleWhitelist, async pruning)
+- block-sdk fork from Skip protocol
+- Any other custom SDK modifications
+
+---
+
 ### Task 0.2: Analyze poolmanager Dependencies 📋 `pending`
 
 **Description**: Map all internal and external dependencies of the `poolmanager` module.
@@ -159,3 +183,4 @@ _(Tasks will be added as Phase 2 progresses)_
 |------|--------|--------|
 | 2026-01-28 | Initial task structure created | AI Assistant |
 | 2026-01-28 | Task 0.1 completed - SDK version differences documented | AI Assistant |
+| 2026-01-28 | Added Task 0.1a - Identify Required SDK Fork Features (high priority) | AI Assistant |

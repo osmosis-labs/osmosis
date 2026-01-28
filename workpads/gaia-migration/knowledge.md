@@ -2,13 +2,21 @@
 
 ## Overview
 
-**Goal**: Migrate core Osmosis DEX modules to Gaia, enabling all Osmosis DEX operations to run on Gaia with production-grade quality.
+**Goal**: Migrate core Osmosis DEX modules to Gaia, enabling all Osmosis DEX operations to run on Gaia with **production-grade quality**.
 
 | Source | Target |
 |--------|--------|
 | Osmosis (`/Users/nicolas/devel/osmosis`) | Gaia (`/Users/nicolas/devel/gaia`) |
 
-When complete, Gaia should be able to run all Osmosis DEX operations with full test coverage.
+**Success Criteria**: When this project is complete, we should be able to run Gaia and execute **all Osmosis DEX operations** there. This is production-grade work, not a prototype.
+
+**Approach**:
+1. Both Gaia and Osmosis serve as references, but **Gaia is the main project** where we test and validate
+2. First identify module dependencies to build a DAG (dependency graph)
+3. Migrate from simplest (leaf nodes with no dependencies) to most complex
+4. Each module must be fully working (all tests passing) before moving to the next
+
+**Key Challenge**: Osmosis uses a different SDK version (v0.50.x fork) than Gaia (v0.53.4), so modules will not compile directly after copying. Each module requires adaptation.
 
 ---
 
@@ -116,21 +124,59 @@ The dependency graph determines migration order. Start with leaf nodes (no inter
 ### Per-Module Migration Steps
 
 1. **Copy** - Copy module from Osmosis to Gaia
-2. **Compile** - Attempt to compile in Gaia, document errors
+2. **Compile** - Attempt to compile in Gaia, document all errors
 3. **Adapt** - Update module to match Gaia SDK version and patterns
-4. **Verify Compile** - Ensure clean compilation
-5. **Unit Tests** - Run migrated unit tests, fix failures
+4. **Verify Compile** - Ensure clean compilation with no errors
+5. **Unit Tests** - Run migrated unit tests, review and fix failures
 6. **Integrate** - Wire module into Gaia app initialization
-7. **Integration Tests** - Run or write integration tests
-8. **Manual Tests** - Test on local node with realistic data
+7. **Integration Tests** - Run existing integration tests; if none exist, write them
+8. **Manual Tests** - Run a local node with realistic data, test with scripts
 
-### Testing Strategy
+> **Note**: There may be an intermediate step before manual tests where we create realistic test data.
 
-| Level | Source | Purpose |
-|-------|--------|---------|
-| Unit Tests | Migrated from Osmosis | Verify module logic |
-| Integration Tests | New (focused on user workflows) | Verify cross-module behavior |
-| Manual Tests | Local node + mainnet data | Validate production readiness |
+### Workflow Evolution
+
+This workflow will be **refined iteratively** as we migrate the first few modules. Once the first few modules are migrated, the workflow should be clear and explicit enough to be independently repeatable.
+
+---
+
+## Testing Strategy
+
+Testing is done at **three levels**, each with a distinct purpose:
+
+### Level 1: Unit Tests
+
+| Aspect | Details |
+|--------|---------|
+| **Source** | Migrated from Osmosis |
+| **Purpose** | Verify individual module logic works correctly |
+| **Why Important** | Catches regressions in core module functionality; ensures the adaptation to the new SDK didn't break internal logic |
+| **When to Run** | After module compiles, before integration |
+
+### Level 2: Integration / E2E Tests
+
+| Aspect | Details |
+|--------|---------|
+| **Source** | New tests, focused on user workflows |
+| **Purpose** | Verify cross-module behavior and real user scenarios |
+| **Why Important** | Unit tests can pass while integration fails; this catches issues in how modules interact with each other and with Gaia's existing modules |
+| **When to Run** | After module is wired into Gaia app |
+
+### Level 3: Manual Tests
+
+| Aspect | Details |
+|--------|---------|
+| **Source** | Run a local node with mainnet data, interact with scripts |
+| **Purpose** | Validate production readiness with realistic conditions |
+| **Why Important** | Integration tests use synthetic data; manual tests with real mainnet data catch edge cases, state migration issues, and performance problems that only appear with production-scale data |
+| **When to Run** | Final validation before considering a module "done" |
+
+### Testing Harness
+
+We will build a testing harness to iterate efficiently:
+- Automated unit test execution per module
+- Integration test framework for user workflow validation
+- Local node setup with mainnet data import capability
 
 ---
 
@@ -210,7 +256,7 @@ Osmosis uses forked versions with custom features:
 3. What state/genesis migration is needed for each module?
 4. How do we handle CosmWasm integration differences (wasmd v0.53 → v0.60)?
 5. **NEW**: How do we handle the IBC v8 → v10 migration for modules that use IBC?
-6. **NEW**: What Osmosis SDK fork features are required by the DEX modules, and are they available in upstream SDK 0.53?
+6. **CRITICAL**: What Osmosis SDK fork features are required by the DEX modules, and are they available in upstream SDK 0.53? (See Task 0.1a)
 
 ---
 
@@ -226,3 +272,4 @@ _(to be populated during migration)_
 |------|--------|--------|
 | 2026-01-28 | Initial document creation | AI Assistant |
 | 2026-01-28 | Documented SDK version differences (Task 0.1) - major gap: SDK 0.50→0.53, IBC v8→v10 | AI Assistant |
+| 2026-01-28 | Enhanced overview, testing strategy with detailed rationale for each level | AI Assistant |
