@@ -874,21 +874,20 @@ tests/localgaia-dex/
     └── test_accounts.txt
 ```
 
-**Realistic Data Testing** (simpler approaches):
+**Realistic Data Testing**:
 
-| Approach | Complexity | Description |
-|----------|------------|-------------|
-| **Synthetic fixtures** | Low | Create JSON genesis files with representative pool configs (various weights, tick ranges, liquidity amounts) |
-| **Parallel validation** | Medium | Run same swap/liquidity operations on localosmosis and localgaia-dex, compare results |
-| **Recorded test cases** | Low | Capture real mainnet transactions, replay as test cases against Gaia DEX |
-
-The simplest path: create `tests/localgaia-dex/fixtures/` with hand-crafted genesis state that includes:
+Create `tests/localgaia-dex/fixtures/` with hand-crafted genesis state:
 - 3-5 Balancer pools (different token pairs, weights)
-- 2-3 Stableswap pools
+- 2-3 Stableswap pools  
 - 2-3 CL pools with positions at various price ranges
 - Sample swap routes for multi-hop testing
 
-This gives realistic coverage without complex state migration
+**Validation approach**: Run operations on localgaia-dex and verify:
+- Operations succeed/fail as expected
+- Invariants hold (balances conserved, pool state consistent)
+- Outputs match expectations (swap amounts, fees, slippage)
+
+No need to compare with Osmosis - just validate correctness against defined expectations
 
 #### Testing Priority Order
 
