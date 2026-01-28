@@ -212,16 +212,58 @@
 
 ### gamm
 
-**Purpose**: _(to be documented)_
+**Purpose**: Generalized Automated Market Maker - the original pool type in Osmosis. Provides Balancer-style weighted pools and Stableswap pools (Curve-style). GAMM pools can be migrated to concentrated-liquidity pools.
 
 **Key Components**:
-- _(to be documented)_
+- `pool-models/balancer/` - Balancer-style weighted pools with configurable token weights
+- `pool-models/stableswap/` - Curve-style stableswap pools optimized for similar-value assets
+- `pool-models/internal/cfmm_common/` - Shared CFMM (constant function market maker) logic
+- Pool lifecycle: create, join, exit, swap
+- GAMM shares (LP tokens) minting/burning
+- Migration to concentrated-liquidity pools
+- Governance proposals for pool parameters
 
-**External Dependencies**:
-- _(to be documented)_
+**Cosmos SDK Dependencies**:
+- `cosmossdk.io/core/appmodule` - App module interface
+- `cosmossdk.io/store/types` - KV store types
+- `cosmossdk.io/math` - Math types (Int, LegacyDec)
+- `github.com/cosmos/cosmos-sdk/codec` - Encoding
+- `github.com/cosmos/cosmos-sdk/types` - SDK types
+- `github.com/cosmos/cosmos-sdk/x/auth/types` - Module account permissions
+- `github.com/cosmos/cosmos-sdk/x/params/types` - Legacy params
+- `github.com/cosmos/cosmos-sdk/x/bank/types` - Bank types
 
-**Internal Dependencies**:
-- _(to be documented)_
+**Osmosis Internal Dependencies**:
+- `osmomath` - Math utilities ⚠️ MUST MIGRATE FIRST
+- `osmoutils` - General utilities ⚠️ MUST MIGRATE FIRST
+  - Uses root `osmoutils` package (store helpers)
+  - Uses `osmoutils/osmocli` (CLI helpers)
+  - Uses `osmoutils/osmoassert` (test only)
+  - ✅ Does NOT use `osmoutils/accum` (simpler than CL!)
+- `x/poolmanager/types` - Pool interfaces (PoolI, CreatePoolMsg)
+- `x/concentrated-liquidity/types` - CL pool types (for migration feature)
+- `x/incentives/types` - Incentive types
+- `x/pool-incentives/types` - Pool incentives types
+- `x/epochs/types` - Epoch types (from x/epochs module)
+- `app/params` - App parameters (bond denom)
+
+**Required External Keepers**:
+- `AccountKeeper` - Module account management
+- `BankKeeper` - Token transfers, minting LP shares, burning
+- `CommunityPoolKeeper` - Community pool funding
+- `PoolManager` - Pool routing and creation delegation
+- `ConcentratedLiquidityKeeper` - For migration to CL pools
+- `PoolIncentivesKeeper` - Pool gauge management
+- `IncentivesKeeper` - Epoch info
+
+**Migration Notes**:
+- Well-established module, simpler than concentrated-liquidity
+- Two pool types (Balancer, Stableswap) with internal CFMM logic
+- Migration feature to CL pools creates bidirectional dependency with x/concentrated-liquidity
+- Uses osmoutils but NOT the accumulator (simpler migration path)
+- Uses legacy x/params (may need migration)
+- ✅ No SDK fork features used directly
+- ✅ Simpler osmoutils usage - no store fork concerns from accum
 
 ---
 
@@ -452,3 +494,4 @@ _(to be populated during migration)_
 | 2026-01-28 | Completed osmomath analysis - confirmed TRUE LEAF dependency | AI Assistant |
 | 2026-01-28 | Completed osmoutils analysis - depends on osmomath, uses store fork | AI Assistant |
 | 2026-01-28 | Documented concentrated-liquidity dependencies - uses osmoutils/accum heavily | AI Assistant |
+| 2026-01-28 | Documented gamm dependencies - simpler than CL, no accum usage | AI Assistant |
