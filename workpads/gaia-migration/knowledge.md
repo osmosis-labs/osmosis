@@ -686,18 +686,38 @@ Each step produces a **compilable, testable unit**. We can run gamm + poolmanage
 
 ## Migration Workflow
 
+### Two-Commit Rule (IMPORTANT)
+
+**Every migration must use two commits for reviewability:**
+
+1. **Copy Commit**: Raw copy with ONLY import path changes (mechanical sed replacements)
+2. **Adapt Commit**: Any API/logic changes needed for SDK 0.53 / IBC v10
+
+**Why**: This allows human reviewers to easily see what actually changed:
+```bash
+# To review adaptations (what actually changed beyond imports):
+git diff <copy-commit> <adapt-commit> -- path/to/component/
+```
+
+**Tracking**: All migrations are documented in `workpads/gaia-migration/progress.md` with:
+- Source and target paths
+- Copy commit and adapt commit references
+- List of adaptations made and why
+
 ### Per-Module Migration Steps
 
 1. **Copy** - Copy module from Osmosis to Gaia
-2. **Compile** - Attempt to compile in Gaia, document all errors
-3. **Adapt** - Update module to match Gaia SDK version and patterns
-4. **Verify Compile** - Ensure clean compilation with no errors
-5. **Unit Tests** - Run migrated unit tests, review and fix failures
-6. **Integrate** - Wire module into Gaia app initialization
-7. **Integration Tests** - Run existing integration tests; if none exist, write them
-8. **Manual Tests** - Run a local node with realistic data, test with scripts
+2. **Update Imports** - Mechanical sed replacement of import paths
+3. **Commit (Copy)** - Commit as "copy" commit with only import changes
+4. **Compile** - Attempt to compile in Gaia, document all errors
+5. **Adapt** - Update module to match Gaia SDK version and patterns
+6. **Commit (Adapt)** - Commit adaptations separately for review
+7. **Unit Tests** - Run migrated unit tests, review and fix failures
+8. **Integrate** - Wire module into Gaia app initialization
+9. **Integration Tests** - Run existing integration tests; if none exist, write them
+10. **Manual Tests** - Run a local node with realistic data, test with scripts
 
-> **Note**: There may be an intermediate step before manual tests where we create realistic test data.
+> **Note**: Track all work in `progress.md` for reviewability.
 
 ### Workflow Evolution
 
