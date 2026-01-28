@@ -246,6 +246,29 @@ Proto-generated types in `gov.pb.go` retain stub implementations that return
 
 ---
 
+## Proto Files Added
+
+| Aspect | Details |
+|--------|---------|
+| **Commit** | `d06225e8d` |
+
+Copied proto definitions from Osmosis to Gaia's proto directory.
+Updated paths from `osmosis.*` to `gaia.*` and updated go_package paths.
+
+**Proto directories added**:
+- `proto/gaia/gamm/v1beta1/` - core types, genesis, gov, query, tx
+- `proto/gaia/gamm/v2/` - v2 query
+- `proto/gaia/gamm/poolmodels/balancer/v1beta1/` - balancer pool
+- `proto/gaia/gamm/poolmodels/stableswap/v1beta1/` - stableswap pool
+- `proto/gaia/poolmanager/v1beta1/` - core types
+- `proto/gaia/poolmanager/v2/` - v2 query
+- `proto/gaia/accum/v1beta1/` - accumulator types
+
+**Note**: Proto regeneration requires Docker with cosmos proto-builder.
+Existing `.pb.go` files work correctly. Build and all tests pass.
+
+---
+
 ## Change Log
 
 | Date | Change | Author |
@@ -257,3 +280,4 @@ Proto-generated types in `gov.pb.go` retain stub implementations that return
 | 2026-01-28 | Added gamm entry (Task 2.2) | AI Assistant |
 | 2026-01-28 | Added test fixes entry (5fbf3bf42) | AI Assistant |
 | 2026-01-28 | Added CL migration removal entry (0aebc617c) | AI Assistant |
+| 2026-01-28 | Added proto files entry (d06225e8d) | AI Assistant |
