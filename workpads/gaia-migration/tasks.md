@@ -339,19 +339,25 @@
 
 ## Phase 1: Foundation Migration
 
-### Task 1.1: Migrate osmomath 📋 `pending`
+### Task 1.1: Migrate osmomath ✅ `completed`
 
 **Description**: Migrate the `osmomath` package to Gaia. This is the true leaf dependency with no Osmosis-internal imports.
 
 **Workflow**: Copy → Compile → Adapt → Test
 
 **Acceptance Criteria**:
-- [ ] Copy `osmomath/` to Gaia (location TBD: likely `pkg/osmomath/` or `x/dex/osmomath/`)
-- [ ] Update `cosmossdk.io/math` from v1.4.0 → v1.5.3
-- [ ] Remove SDK fork replace directive
-- [ ] Clean compile with no errors
-- [ ] All unit tests pass
-- [ ] Document any API adaptations needed
+- [x] Copy `osmomath/` to Gaia (location: `pkg/osmomath/`)
+- [x] Update `cosmossdk.io/math` from v1.4.0 → v1.5.3 (already v1.5.3 in Gaia go.mod)
+- [x] Remove SDK fork replace directive (not needed - using Gaia's module)
+- [x] Clean compile with no errors
+- [x] All unit tests pass
+- [x] Document any API adaptations needed
+
+**Migration Notes**:
+- Copied 23 .go files to `gaia/pkg/osmomath/`
+- No go.mod needed - becomes part of Gaia's module
+- Updated 2 test file imports: `github.com/osmosis-labs/osmosis/osmomath` → `github.com/cosmos/gaia/v26/pkg/osmomath`
+- **No API adaptations needed** - package compiled and all tests passed with Gaia's SDK 0.53.4
 
 ---
 
@@ -571,3 +577,4 @@
 | 2026-01-28 | Task 0.7a completed - minimal osmoutils subset identified; all use standard store APIs | AI Assistant |
 | 2026-01-28 | Added concrete Phase 1-4 tasks matching migration plan in knowledge.md | AI Assistant |
 | 2026-01-28 | Task 0.8 completed - Testing Harness defined with 3-level strategy (unit/integration/e2e) | AI Assistant |
+| 2026-01-28 | Task 1.1 completed - osmomath migrated to gaia/pkg/osmomath/, all tests pass | AI Assistant |

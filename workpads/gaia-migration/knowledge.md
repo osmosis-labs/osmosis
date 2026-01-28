@@ -1058,7 +1058,17 @@ Some DEX module files reference modules we're NOT migrating (superfluid, tokenfa
 
 ## Lessons Learned
 
-_(to be populated during migration)_
+### L1: osmomath Migration (Task 1.1)
+
+**What worked well**:
+- Package was truly a leaf dependency - no internal Osmosis imports
+- Gaia's `cosmossdk.io/math v1.5.3` is compatible with osmomath (which used v1.4.0)
+- No SDK fork replace directive needed - Gaia's module already has correct deps
+- All 23 source files copied without modification (except 2 test import paths)
+
+**Key insight**: The SDK version upgrade (0.50 → 0.53) had no impact on osmomath because it only uses `cosmossdk.io/math` types (Int, LegacyDec), which are stable across versions.
+
+**Location decision**: Placed in `pkg/osmomath/` following Gaia's existing pattern for shared packages (e.g., `pkg/address/`).
 
 ---
 
