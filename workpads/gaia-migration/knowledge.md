@@ -155,6 +155,35 @@ The SDK version is compatible and simpler. Required adaptations:
 
 ---
 
+## osmoutils Usage Summary (All Module Analyses Complete)
+
+After analyzing all DEX modules, here is the complete picture of osmoutils usage:
+
+| Module | Uses osmoutils/accum? | osmoutils subpackages used |
+|--------|----------------------|---------------------------|
+| poolmanager | No | root |
+| concentrated-liquidity | **YES** | root, accum |
+| gamm | No | root, osmocli |
+| cosmwasmpool | No | root, cosmwasm |
+| protorev | No | root |
+
+**Key Insight**: Only `concentrated-liquidity` uses `osmoutils/accum`. All other DEX modules use simpler osmoutils patterns (root package helpers, CLI wrappers, or CosmWasm helpers).
+
+**Implications for Migration**:
+1. **osmoutils/accum is the critical path** - this is where store fork concerns may apply
+2. **Other subpackages are simpler** - osmocli, cosmwasm, root helpers should work with upstream SDK
+3. **If we can make accum work**, the rest of osmoutils migration is straightforward
+4. **Fallback option**: If accum has blockers, we could potentially refactor CL module (significant work)
+
+**Minimal osmoutils Subpackages Needed**:
+- `osmoutils` (root) - store helpers, MustGet/MustSet, etc.
+- `osmoutils/accum` - accumulator for CL spread rewards and incentives
+- `osmoutils/osmocli` - CLI helpers for gamm
+- `osmoutils/cosmwasm` - CosmWasm helpers for cosmwasmpool
+- `osmoutils/osmoassert` - test assertions (tests only)
+
+---
+
 ## Module Descriptions
 
 ### poolmanager
