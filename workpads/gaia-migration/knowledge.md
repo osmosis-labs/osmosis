@@ -32,6 +32,49 @@
 
 ---
 
+## Utility Packages (Leaf Dependencies)
+
+### osmomath
+
+**Purpose**: Extended math library providing `BigDec` (36-decimal precision) and aliases to `cosmossdk.io/math` types. Used by all DEX modules for precise mathematical operations.
+
+**Key Components**:
+- `BigDec` - High-precision decimal (36 places) for concentrated liquidity calculations
+- Type aliases: `Dec`, `Int`, `Uint` → `cosmossdk.io/math.LegacyDec`, `Int`, `Uint`
+- Helper functions: `exp2`, `sqrt`, binary search, rounding utilities
+
+**External Dependencies**:
+- `cosmossdk.io/math v1.4.0` - Core math types (need to update to v1.5.3 for Gaia)
+- `github.com/cosmos/cosmos-sdk/types` - Only for `sdk.Coin` in some helpers
+- Standard library: `math/big`, `encoding/json`, etc.
+
+**Internal Dependencies**:
+- ✅ **TRUE LEAF** - No Osmosis-internal dependencies
+
+**Migration Notes**:
+- Standalone Go module with own `go.mod`
+- Currently uses Osmosis SDK fork via replace directive - must remove
+- Update `cosmossdk.io/math` from v1.4.0 → v1.5.3
+- Remove SDK replace directive, use upstream SDK types
+- Should compile with minimal changes after version updates
+
+---
+
+### osmoutils
+
+**Purpose**: _(to be documented in Task 0.1c)_
+
+**Key Components**:
+- _(to be documented)_
+
+**External Dependencies**:
+- _(to be documented)_
+
+**Internal Dependencies**:
+- _(to be documented)_
+
+---
+
 ## Module Descriptions
 
 ### poolmanager
@@ -337,3 +380,4 @@ _(to be populated during migration)_
 | 2026-01-28 | Enhanced overview, testing strategy with detailed rationale for each level | AI Assistant |
 | 2026-01-28 | Documented poolmanager dependencies; confirmed NO true circular dependency | AI Assistant |
 | 2026-01-28 | Added recommended migration order based on dependency analysis | AI Assistant |
+| 2026-01-28 | Completed osmomath analysis - confirmed TRUE LEAF dependency | AI Assistant |
