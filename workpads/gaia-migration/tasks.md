@@ -193,16 +193,25 @@
 
 ---
 
-### Task 0.5: Analyze cosmwasmpool Dependencies 📋 `pending`
+### Task 0.5: Analyze cosmwasmpool Dependencies ✅ `completed`
 
 **Description**: Map all internal and external dependencies of the `cosmwasmpool` module.
 
 **Acceptance Criteria**:
-- [ ] List all Osmosis-internal imports
-- [ ] List all cosmos-sdk imports
-- [ ] List all third-party imports
-- [ ] Identify which dependencies need to migrate first
-- [ ] Update `knowledge.md` with module description and dependencies
+- [x] List all Osmosis-internal imports
+- [x] List all cosmos-sdk imports
+- [x] List all third-party imports
+- [x] Identify which dependencies need to migrate first
+- [x] Update `knowledge.md` with module description and dependencies
+
+**Key Findings**:
+- CosmWasm-based pools (Transmuter, orderbook) via smart contracts
+- Depends on: `osmomath`, `osmoutils` (root, cosmwasm), `poolmanager/types`
+- ⚠️ Requires wasmd integration (v0.53 → v0.60 upgrade)
+- Ships with pre-compiled WASM bytecode
+- ✅ Does NOT use `osmoutils/accum` - simpler than CL
+- ✅ No SDK fork features used directly
+- Gaia already has wasmd - check API compatibility
 
 ---
 
@@ -310,3 +319,4 @@ _(Tasks will be added as Phase 2 progresses)_
 | 2026-01-28 | Added Task 0.1b - Compare Tokenfactory Implementations | AI Assistant |
 | 2026-01-28 | Task 0.3 completed - concentrated-liquidity dependencies documented | AI Assistant |
 | 2026-01-28 | Task 0.4 completed - gamm dependencies documented (simpler than CL, no accum) | AI Assistant |
+| 2026-01-28 | Task 0.5 completed - cosmwasmpool dependencies documented (requires wasmd) | AI Assistant |

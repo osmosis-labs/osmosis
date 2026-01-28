@@ -269,16 +269,54 @@
 
 ### cosmwasmpool
 
-**Purpose**: _(to be documented)_
+**Purpose**: CosmWasm-based pools that allow custom pool logic implemented as smart contracts. Enables extensible pool types like Transmuter (1:1 swaps for similar assets) and orderbook pools.
 
 **Key Components**:
-- _(to be documented)_
+- `model/` - Pool model that wraps a CosmWasm contract address
+- `cosmwasm/msg/` - Message types for interacting with pool contracts (sudo, query)
+- `bytecode/` - Pre-compiled WASM pool contracts (transmuter, orderbook)
+- Pool lifecycle: create (instantiate contract), swap (sudo), query
+- Governance: migrate pools to new contract versions, whitelist code IDs
+- Transmuter pool: 1:1 swaps for similar-value assets (like stableswap but simpler)
 
-**External Dependencies**:
-- _(to be documented)_
+**Cosmos SDK Dependencies**:
+- `cosmossdk.io/core/appmodule` - App module interface
+- `cosmossdk.io/store/types` - KV store types
+- `github.com/cosmos/cosmos-sdk/codec` - Encoding
+- `github.com/cosmos/cosmos-sdk/types` - SDK types
+- `github.com/cosmos/cosmos-sdk/x/params/types` - Legacy params
 
-**Internal Dependencies**:
-- _(to be documented)_
+**CosmWasm/wasmd Dependencies**:
+- `github.com/CosmWasm/wasmd/x/wasm/types` - AccessConfig, ContractInfo
+- `github.com/CosmWasm/wasmd/x/wasm/keeper` - Wasm keeper (tests)
+- `github.com/CosmWasm/wasmd/x/wasm/ioutils` - File reading (CLI)
+- ⚠️ Osmosis uses wasmd v0.53.3, Gaia uses v0.60.2 - API changes expected
+
+**Osmosis Internal Dependencies**:
+- `osmomath` - Math utilities ⚠️ MUST MIGRATE FIRST
+- `osmoutils` - General utilities ⚠️ MUST MIGRATE FIRST
+  - Uses root `osmoutils` package (store helpers)
+  - Uses `osmoutils/cosmwasm` (CosmWasm helpers)
+  - ✅ Does NOT use `osmoutils/accum` (simpler than CL!)
+- `x/poolmanager/types` - Pool interfaces (PoolI, CreatePoolMsg)
+- `x/poolmanager/events` - Pool events
+
+**Required External Keepers**:
+- `AccountKeeper` - Module address
+- `BankKeeper` - Token transfers
+- `PoolManagerKeeper` - Pool creation, routing
+- `ContractKeeper` - CosmWasm contract execution (Instantiate, Sudo, Execute, Create, Migrate)
+- `WasmKeeper` - CosmWasm queries and contract info
+
+**Migration Notes**:
+- Requires wasmd integration - Gaia already has this
+- wasmd version upgrade v0.53 → v0.60 may have breaking changes
+- Ships with pre-compiled WASM bytecode - need to verify compatibility
+- Transmuter is a key pool type for similar-asset swaps
+- Uses osmoutils but NOT the accumulator (simpler migration path)
+- Uses legacy x/params (may need migration)
+- ✅ No SDK fork features used directly
+- ⚠️ Need to verify wasmd API compatibility between versions
 
 ---
 
@@ -495,3 +533,4 @@ _(to be populated during migration)_
 | 2026-01-28 | Completed osmoutils analysis - depends on osmomath, uses store fork | AI Assistant |
 | 2026-01-28 | Documented concentrated-liquidity dependencies - uses osmoutils/accum heavily | AI Assistant |
 | 2026-01-28 | Documented gamm dependencies - simpler than CL, no accum usage | AI Assistant |
+| 2026-01-28 | Documented cosmwasmpool dependencies - requires wasmd v0.53→v0.60 | AI Assistant |
