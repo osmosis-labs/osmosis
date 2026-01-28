@@ -1073,6 +1073,7 @@ Some DEX module files reference modules we're NOT migrating (superfluid, tokenfa
 | D1 | Migrate to Gaia (not fork) | Align with ecosystem, reduce maintenance | 2026-01-28 |
 | D2 | Start with simplest dependencies | Build confidence, establish workflow | 2026-01-28 |
 | D3 | Add epoch hooks to poolmanager for fee distribution (not migrate txfees) | txfees has unnecessary complexity (EIP-1559, fee tokens); core distribution logic is simple; swap non-native to ATOM before distributing | 2026-01-28 |
+| D4 | Never remove tests without explicit user approval | Tests are critical for verifying correctness. If a test fails, investigate why and ask user before removing. Comment out with TODO if blocking, but document in progress.md | 2026-01-28 |
 
 ---
 
