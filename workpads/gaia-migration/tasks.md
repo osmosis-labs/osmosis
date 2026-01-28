@@ -332,40 +332,217 @@
 
 ## Phase 1: Foundation Migration
 
-_(Tasks will be added after Phase 0 completes and migration order is determined)_
+### Task 1.1: Migrate osmomath 📋 `pending`
 
-### Task 1.0: Migrate First Leaf Dependency 📋 `pending`
+**Description**: Migrate the `osmomath` package to Gaia. This is the true leaf dependency with no Osmosis-internal imports.
 
-**Depends On**: Task 0.7
-
-**Description**: Migrate the first leaf node in the dependency graph (likely a utility package).
+**Workflow**: Copy → Compile → Adapt → Test
 
 **Acceptance Criteria**:
-- [ ] Package copied to Gaia
-- [ ] Compiles in Gaia
-- [ ] Unit tests pass
-- [ ] Workflow documented and refined
+- [ ] Copy `osmomath/` to Gaia (location TBD: likely `pkg/osmomath/` or `x/dex/osmomath/`)
+- [ ] Update `cosmossdk.io/math` from v1.4.0 → v1.5.3
+- [ ] Remove SDK fork replace directive
+- [ ] Clean compile with no errors
+- [ ] All unit tests pass
+- [ ] Document any API adaptations needed
 
 ---
 
-## Phase 2: Core Module Migration
+### Task 1.2: Migrate osmoutils (minimal subset) 📋 `pending`
 
-_(Tasks will be added as Phase 1 progresses)_
+**Depends On**: Task 1.1
+
+**Description**: Migrate the minimal osmoutils subset needed by DEX modules. Only 6 subpackages required.
+
+**Subpackages to Migrate**:
+- `osmoutils/` (root) - store helpers
+- `osmoutils/accum/` - accumulator (critical for CL)
+- `osmoutils/osmocli/` - CLI helpers
+- `osmoutils/osmoassert/` - assertions
+- `osmoutils/cosmwasm/` - CosmWasm helpers
+- `osmoutils/observability/` - telemetry
+
+**Subpackages to EXCLUDE**:
+- `osmoutils/sumtree/`, `coinutil/`, `partialord/`, `noapptest/`, `wrapper/`
+
+**Acceptance Criteria**:
+- [ ] Copy required subpackages to Gaia
+- [ ] Update IBC-go v8 → v10 imports
+- [ ] Update SDK v0.50 → v0.53 imports
+- [ ] Remove all replace directives (SDK, CometBFT, store)
+- [ ] Update osmomath import path to Gaia location
+- [ ] Clean compile with no errors
+- [ ] All unit tests pass for migrated subpackages
 
 ---
 
-## Phase 3: Integration & Testing
+## Phase 2: Core Pool Infrastructure
 
-_(Tasks will be added as Phase 2 progresses)_
+### Task 2.1: Migrate poolmanager/types 📋 `pending`
+
+**Depends On**: Task 1.2
+
+**Description**: Migrate `poolmanager/types` package. This defines interfaces only (PoolI, PoolModuleI) and should compile standalone.
+
+**Acceptance Criteria**:
+- [ ] Copy `x/poolmanager/types/` to Gaia
+- [ ] Update imports (osmomath, osmoutils, SDK)
+- [ ] Clean compile with no errors
+- [ ] Document interface definitions for pool modules to implement
+
+---
+
+### Task 2.2: Migrate gamm 📋 `pending`
+
+**Depends On**: Task 2.1
+
+**Description**: Migrate the `gamm` module (Balancer and Stableswap pools). This is the simplest pool type and most established.
+
+**Key Adaptations**:
+- Move `superfluidtypes.MigrationPoolIDs` struct to gamm/types (trivial 2-field struct)
+- Exclude superfluid migration features or stub them
+- Update SDK patterns for v0.53
+
+**Acceptance Criteria**:
+- [ ] Copy `x/gamm/` to Gaia
+- [ ] Update all imports (osmomath, osmoutils, poolmanager/types, SDK)
+- [ ] Adapt legacy x/params if needed
+- [ ] Clean compile with no errors
+- [ ] All unit tests pass
+- [ ] Wire module into Gaia app (basic registration)
+
+---
+
+### Task 2.3: Complete poolmanager 📋 `pending`
+
+**Depends On**: Task 2.2
+
+**Description**: Migrate `poolmanager` keeper and complete the module. Wire gamm as the first pool type.
+
+**Acceptance Criteria**:
+- [ ] Copy remaining `x/poolmanager/` (keeper, module, etc.)
+- [ ] Update all imports
+- [ ] Wire gamm as pool module via dependency injection
+- [ ] Clean compile with no errors
+- [ ] All unit tests pass
+- [ ] Integration test: create Balancer pool, execute swap
+
+---
+
+## Phase 3: Additional Pool Types
+
+### Task 3.1: Migrate concentrated-liquidity 📋 `pending`
+
+**Depends On**: Task 2.3
+
+**Description**: Migrate the concentrated-liquidity module. This is the most complex pool type with heavy `osmoutils/accum` usage.
+
+**Key Challenges**:
+- Heavy use of `osmoutils/accum` for spread rewards and incentives
+- CosmWasm pool hooks integration
+- Legacy x/params migration
+
+**Acceptance Criteria**:
+- [ ] Copy `x/concentrated-liquidity/` to Gaia
+- [ ] Verify `osmoutils/accum` works correctly
+- [ ] Update all imports
+- [ ] Adapt legacy x/params if needed
+- [ ] Clean compile with no errors
+- [ ] All unit tests pass
+- [ ] Wire as pool module in poolmanager
+- [ ] Integration test: create CL pool, add liquidity, execute swap
+
+---
+
+### Task 3.2: Migrate cosmwasmpool 📋 `pending`
+
+**Depends On**: Task 2.3
+
+**Description**: Migrate the cosmwasmpool module for CosmWasm-based pools (Transmuter, orderbook).
+
+**Key Challenges**:
+- wasmd v0.53 → v0.60 API compatibility
+- Pre-compiled WASM bytecode compatibility
+- Gaia already has wasmd - verify integration
+
+**Acceptance Criteria**:
+- [ ] Copy `x/cosmwasmpool/` to Gaia
+- [ ] Verify wasmd v0.60 API compatibility
+- [ ] Update all imports
+- [ ] Clean compile with no errors
+- [ ] All unit tests pass
+- [ ] Wire as pool module in poolmanager
+- [ ] Integration test: instantiate Transmuter contract, execute swap
+
+---
+
+## Phase 4: MEV & Integration
+
+### Task 4.1: Migrate protorev 📋 `pending`
+
+**Depends On**: Tasks 3.1, 3.2
+
+**Description**: Migrate the protorev MEV arbitrage module. Depends on all pool modules.
+
+**Key Components**:
+- PostHandler for transaction-level arbitrage
+- Route finding across pool types
+- Epoch hooks for periodic updates
+
+**Acceptance Criteria**:
+- [ ] Copy `x/protorev/` to Gaia
+- [ ] Update all imports
+- [ ] Wire PostHandler into Gaia app
+- [ ] Clean compile with no errors
+- [ ] All unit tests pass
+- [ ] Integration test: verify arb detection across pool types
+
+---
+
+### Task 4.2: App Integration 📋 `pending`
+
+**Depends On**: Task 4.1
+
+**Description**: Complete Gaia app integration for all DEX modules.
+
+**Acceptance Criteria**:
+- [ ] All modules registered in app.go
+- [ ] Genesis import/export working
+- [ ] Upgrade handler if needed
+- [ ] CLI commands available
+- [ ] gRPC/REST endpoints working
+- [ ] Clean build of full Gaia binary
+
+---
+
+### Task 4.3: Testing & Validation 📋 `pending`
+
+**Depends On**: Task 4.2
+
+**Description**: Comprehensive testing to validate production readiness.
+
+**Test Levels**:
+1. **Unit Tests**: All migrated tests passing
+2. **Integration Tests**: User workflow scenarios
+3. **Manual Tests**: Local node with realistic data
+
+**Acceptance Criteria**:
+- [ ] All unit tests pass
+- [ ] Create pools of all types (Balancer, Stableswap, CL, CosmWasm)
+- [ ] Execute swaps through poolmanager routing
+- [ ] Multi-hop swaps work correctly
+- [ ] Protorev finds and executes arbitrage
+- [ ] Genesis export/import round-trip works
+- [ ] Performance acceptable for production use
 
 ---
 
 ## Notes
 
-- Migration order will be determined by the dependency graph (Task 0.7)
-- The workflow (copy → compile → adapt → test → integrate) will be refined with each module
-- Focus on getting one module fully working before moving to the next
-- **Important**: For osmoutils, only migrate the subpackages actually used by DEX modules. Track which osmoutils imports each module uses during dependency analysis.
+- Each task follows workflow: `COPY → COMPILE → ADAPT → VERIFY → TEST → INTEGRATE → VALIDATE`
+- Focus on getting one component fully working before moving to the next
+- Document all adaptations and lessons learned in `knowledge.md`
+- Commit progress after each task completion
 
 ---
 
@@ -385,3 +562,4 @@ _(Tasks will be added as Phase 2 progresses)_
 | 2026-01-28 | Task 0.1a completed - SDK fork analysis shows NO blockers for DEX migration | AI Assistant |
 | 2026-01-28 | Tasks 0.7, 0.1d, 0.1e completed - dependency graph already documented; store fork and tokenfactory questions resolved by 0.1a | AI Assistant |
 | 2026-01-28 | Task 0.7a completed - minimal osmoutils subset identified; all use standard store APIs | AI Assistant |
+| 2026-01-28 | Added concrete Phase 1-4 tasks matching migration plan in knowledge.md | AI Assistant |
