@@ -656,14 +656,18 @@ These are identical in upstream SDK store. The fork only provides **performance 
 
 **Conclusion**: ✅ Can use upstream SDK store. Minor performance differences possible but functionally equivalent.
 
-### Minor Dependencies Resolution
+### References to Non-Migrated Modules
 
-| Issue | Location | Resolution |
-|-------|----------|------------|
-| `superfluidtypes.MigrationPoolIDs` | `gamm/keeper/migrate.go` | Move struct to gamm/types (trivial 2-field struct) |
-| superfluid import in tests | `concentrated-liquidity/pool_test.go` | Test-only, can mock or skip |
-| tokenfactory import in tests | `cosmwasmpool/.../transmuter_test.go` | Test-only, can mock or skip |
-| mint import in simulation | `concentrated-liquidity/simulation/sim_msgs.go` | Simulation-only, can adapt |
+Some DEX module files reference modules we're NOT migrating (superfluid, tokenfactory, mint). These are **not blockers** - they relate to features that integrate with those modules:
+
+| Reference | Location | Why Not a Blocker |
+|-----------|----------|-------------------|
+| `superfluidtypes.MigrationPoolIDs` | `gamm/keeper/migrate.go` | Superfluid migration feature - exclude or define struct locally |
+| superfluid import | `concentrated-liquidity/pool_test.go` | Test for superfluid integration - exclude test |
+| tokenfactory import | `cosmwasmpool/.../transmuter_test.go` | Test for tokenfactory integration - exclude test |
+| mint import | `concentrated-liquidity/simulation/sim_msgs.go` | Simulation code - exclude or adapt |
+
+**Bottom line**: These are integration points with modules outside our scope. They can be excluded, disabled, or stubbed without affecting core DEX functionality.
 
 ---
 
