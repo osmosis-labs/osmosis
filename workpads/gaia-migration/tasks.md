@@ -215,16 +215,25 @@
 
 ---
 
-### Task 0.6: Analyze protorev Dependencies 📋 `pending`
+### Task 0.6: Analyze protorev Dependencies ✅ `completed`
 
 **Description**: Map all internal and external dependencies of the `protorev` module.
 
 **Acceptance Criteria**:
-- [ ] List all Osmosis-internal imports
-- [ ] List all cosmos-sdk imports
-- [ ] List all third-party imports
-- [ ] Identify which dependencies need to migrate first
-- [ ] Update `knowledge.md` with module description and dependencies
+- [x] List all Osmosis-internal imports
+- [x] List all cosmos-sdk imports
+- [x] List all third-party imports
+- [x] Identify which dependencies need to migrate first
+- [x] Update `knowledge.md` with module description and dependencies
+
+**Key Findings**:
+- MEV arbitrage module - finds and executes arb opportunities
+- Depends on ALL DEX modules: `poolmanager`, `gamm`, `concentrated-liquidity`
+- Also: `osmomath`, `osmoutils`, `epochs`, `txfees` (proto reference)
+- Uses PostHandler for transaction-level arb execution
+- ✅ Does NOT use `osmoutils/accum` - simpler than CL
+- ✅ No SDK fork features used directly
+- Should be migrated LAST (depends on all other DEX modules)
 
 ---
 
@@ -320,3 +329,4 @@ _(Tasks will be added as Phase 2 progresses)_
 | 2026-01-28 | Task 0.3 completed - concentrated-liquidity dependencies documented | AI Assistant |
 | 2026-01-28 | Task 0.4 completed - gamm dependencies documented (simpler than CL, no accum) | AI Assistant |
 | 2026-01-28 | Task 0.5 completed - cosmwasmpool dependencies documented (requires wasmd) | AI Assistant |
+| 2026-01-28 | Task 0.6 completed - protorev dependencies documented (depends on all DEX) | AI Assistant |

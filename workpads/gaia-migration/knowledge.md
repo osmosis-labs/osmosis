@@ -322,16 +322,53 @@
 
 ### protorev
 
-**Purpose**: _(to be documented)_
+**Purpose**: MEV (Maximal Extractable Value) arbitrage module that finds and executes arbitrage opportunities across Osmosis pools. Captures value that would otherwise go to MEV searchers and directs it to the protocol.
 
 **Key Components**:
-- _(to be documented)_
+- PostHandler: Executes arb opportunities after every swap transaction
+- Route finding: Identifies profitable cyclic arb routes across pool types
+- Statistics: Tracks profits, trades, and route performance
+- Epoch hook: Periodic route updates and rebalancing
+- Developer fees: Profit distribution mechanism
+- Transient store: Temporary state during transaction execution
 
-**External Dependencies**:
-- _(to be documented)_
+**Cosmos SDK Dependencies**:
+- `cosmossdk.io/core/appmodule` - App module interface
+- `cosmossdk.io/store/types` - KV store types (including TransientStoreKey)
+- `cosmossdk.io/log` - Logging
+- `github.com/cosmos/cosmos-sdk/codec` - Encoding
+- `github.com/cosmos/cosmos-sdk/types` - SDK types
+- `github.com/cosmos/cosmos-sdk/x/params/types` - Legacy params
 
-**Internal Dependencies**:
-- _(to be documented)_
+**Osmosis Internal Dependencies**:
+- `osmomath` - Math utilities ⚠️ MUST MIGRATE FIRST
+- `osmoutils` - General utilities ⚠️ MUST MIGRATE FIRST
+  - Uses root `osmoutils` package (store helpers)
+  - ✅ Does NOT use `osmoutils/accum` (simpler than CL!)
+- `x/poolmanager/types` - Pool interfaces for routing
+- `x/gamm/types` - CFMMPoolI interface
+- `x/txfees/types` - Referenced in protobuf (taker fee tracking)
+- `x/epochs/types` - Epoch info for periodic updates
+- `app/params` - Bond denom
+
+**Required External Keepers**:
+- `AccountKeeper` - Module address
+- `BankKeeper` - Token transfers, minting profits, burning
+- `GAMMKeeper` - Pool and poke operations
+- `EpochKeeper` - Epoch info
+- `PoolManagerKeeper` - Pool routing, estimates, taker fee tracking
+- `ConcentratedLiquidityKeeper` - Max tick calculations for CL pools
+- `DistributionKeeper` - Community pool funding
+
+**Migration Notes**:
+- Depends on ALL other DEX modules (poolmanager, gamm, concentrated-liquidity)
+- Should be migrated LAST among the DEX modules
+- PostHandler integration required at app level
+- Uses transient store key (standard SDK feature)
+- Uses osmoutils but NOT the accumulator (simpler migration path)
+- Uses legacy x/params (may need migration)
+- ✅ No SDK fork features used directly
+- ⚠️ Has txfees dependency (may need to migrate x/txfees or mock it)
 
 ---
 
@@ -534,3 +571,4 @@ _(to be populated during migration)_
 | 2026-01-28 | Documented concentrated-liquidity dependencies - uses osmoutils/accum heavily | AI Assistant |
 | 2026-01-28 | Documented gamm dependencies - simpler than CL, no accum usage | AI Assistant |
 | 2026-01-28 | Documented cosmwasmpool dependencies - requires wasmd v0.53→v0.60 | AI Assistant |
+| 2026-01-28 | Documented protorev dependencies - depends on all DEX modules, migrate last | AI Assistant |
