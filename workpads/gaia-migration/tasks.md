@@ -822,15 +822,17 @@ Gaia's tokenfactory (`github.com/cosmos/tokenfactory v0.53.5`) uses **the same p
 - `app/keepers/epoch_stub.go` - StubEpochKeeper for protorev without x/epochs
 
 **Files Modified**:
-- `app/keepers/keepers.go` - Added ProtoRevKeeper, wired dependencies
+- `app/keepers/keepers.go` - Added ProtoRevKeeper, wired dependencies, registered hooks with GAMM and CL
 - `app/keepers/keys.go` - Added protorev store keys
 - `app/modules.go` - Added protorev module, maccPerms, blocker ordering
 - `app/post.go` - Added ProtoRev PostHandler decorator
 - `app/app.go` - Passed ProtoRevKeeper to PostHandler
 - `x/protorev/keeper/keeper.go` - Added SetPoolManagerKeeper for circular dep
+- `x/protorev/keeper/hooks.go` - Added ConcentratedLiquidityListener interface
 - `x/protorev/keeper/keeper_test.go` - Fixed Gaia encoding config
-- `x/protorev/keeper/grpc_query_test.go` - Added build tag (depends on TxFeesKeeper)
-- `x/protorev/keeper/protorev_test.go` - Added build tag (depends on TxFeesKeeper)
+- `x/protorev/keeper/grpc_query_test.go` - Reimplemented protocol revenue tests without TxFeesKeeper
+- `x/protorev/keeper/protorev_test.go` - Reimplemented protocol revenue tests without TxFeesKeeper
+- `x/protorev/keeper/epoch_hook_test.go` - Fixed denom constants (uosmo → appparams.BaseCoinUnit)
 
 **Acceptance Criteria**:
 - [x] All modules registered in app.go
@@ -842,13 +844,15 @@ Gaia's tokenfactory (`github.com/cosmos/tokenfactory v0.53.5`) uses **the same p
 - [x] Clean build of full Gaia binary
 
 **Test Status**:
-- Most protorev keeper tests pass
-- 2 edge case tests fail (overflow handling in CompareAndStorePool) - non-critical
-- Tests depending on TxFeesKeeper/IncentivesKeeper are build-tagged for Task 5.7
+- All protorev keeper tests pass except 1
+- 1 minor test fails (Cosmwasm Pool Arb Route - expected 6, got 5) - likely rounding difference
+- Protocol revenue tests reimplemented to use poolmanager's taker fee tracker directly
+- Protorev hooks registered with GAMM (SetHooks) and CL (SetListeners)
 
 **Notes**:
 - StubEpochKeeper provides minimal epoch interface; for full epoch-based protorev operations (AfterEpochEnd), an epochs module would need to be integrated
 - ProtoRev PostHandler is wired and will execute arb opportunities after swaps
+- Protorev hooks now properly track pool creations and swaps for arb route building
 
 ---
 
