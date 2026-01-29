@@ -1094,6 +1094,38 @@ These tasks track deferred test issues identified by `TODO(gaia-migration):` com
 
 ---
 
+### Task 5.11: Fix protorev CosmWasm pool arb test 📋 `pending`
+
+**Description**: The `TestPostHandle/Cosmwasm_Pool_Arb_Route_-_2_Pools` test fails in Gaia. The test expects 6 total trades but only 5 are executed, indicating the CosmWasm pool arb trade is not being executed.
+
+**Analysis**:
+- This is a **pre-existing bug** from the original protorev migration - test has never passed in Gaia
+- The test passes in Osmosis when run with all TestPostHandle subtests
+- When running the Cosmwasm test alone, expected 6 trades (cumulative) vs actual 5 trades
+- The arb route uses pools 34, 35, 36, and pool 51 (CosmWasm transmuter)
+- Pool 51 is a transmuter pool with "Atom" and "test/2" denoms
+
+**Potential Causes**:
+1. Weight map contract address mismatch (unlikely - uses same contract address)
+2. Pool type detection issue for CosmWasm pools
+3. Route validation failing silently
+4. Pool points calculation issue
+5. Transmuter contract behavior difference
+
+**Investigation Steps**:
+- [ ] Add debug logging to protorev backrunner
+- [ ] Verify weight map is correctly set with contract address
+- [ ] Check if route calculation succeeds for the CosmWasm route
+- [ ] Compare transmuter contract behavior between Osmosis and Gaia
+- [ ] Verify pool IDs match between test setup and route definition
+
+**Acceptance Criteria**:
+- [ ] Identify root cause of failed CosmWasm arb trade
+- [ ] Fix the issue or update test expectations if behavior is intentionally different
+- [ ] TestPostHandle/Cosmwasm_Pool_Arb_Route passes
+
+---
+
 ## Notes
 
 - Each task follows workflow: `COPY → COMPILE → ADAPT → VERIFY → TEST → INTEGRATE → VALIDATE`
