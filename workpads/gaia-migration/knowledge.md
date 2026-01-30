@@ -1109,6 +1109,7 @@ Some DEX module files reference modules we're NOT migrating (superfluid, tokenfa
 | D4 | Never remove tests without explicit user approval | Tests are critical for verifying correctness. If a test fails, investigate why and ask user before removing. Comment out with TODO if blocking, but document in progress.md | 2026-01-28 |
 | D5 | Remove lockup-specific CL tests entirely | Lockup module is out of scope for Gaia migration. Tests for `CreateFullRangePositionLocked`, `MintSharesAndLock`, `PositionHasActiveUnderlyingLock`, etc. are no longer relevant. | 2026-01-28 |
 | D6 | Add protorev to unblocked module accounts | SDK 0.53 blocks module accounts from receiving MsgSend by default. Protorev needs to receive funds from CosmWasm contracts after arb trades. Added to `BlockedModuleAccountAddrs()` alongside governance and ConsumerRewardsPool. | 2026-01-30 |
+| D7 | Implement taker fee distribution in poolmanager (Task 5.3) | Ported fee distribution logic from Osmosis's x/txfees to x/poolmanager/taker_fee_distribution.go. Created epoch_hooks.go for hook wiring. Protorev epoch hook now calls poolmanager.DistributeTakerFees. Uses native denom as 2-hop intermediary for swaps. | 2026-01-30 |
 
 ---
 
