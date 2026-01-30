@@ -194,11 +194,11 @@ go test -v -run TestIntegrationTestSuite
 **Description**: Fix the failing e2e tests from Task 6.0 (spot price query, join/exit pool).
 
 **Results** (Jan 30, 2026):
-- [x] Fix spot price query API endpoint - **FIXED** (now returns "1.000000000000000000")
-- [ ] Fix join-pool transaction - **DEFERRED** (needs CLI investigation)
-- [ ] Fix exit-pool transaction - **DEFERRED** (blocked on join-pool)
+- [x] Fix spot price query API endpoint - **FIXED** (returns "1.000000000000000000")
+- [x] Fix join-pool transaction - **FIXED** (share-amount-out was too small)
+- [x] Fix exit-pool transaction - **FIXED** (works after join-pool fixed)
 
-**E2E Test Status**: 5/6 passing
+**E2E Test Status**: 6/6 passing ✅
 | Test | Status |
 |------|--------|
 | create_gamm_balancer_pool | ✅ PASS |
@@ -206,9 +206,9 @@ go test -v -run TestIntegrationTestSuite
 | query_spot_price | ✅ PASS |
 | swap_exact_amount_in | ✅ PASS |
 | swap_exact_amount_out | ✅ PASS |
-| join_and_exit_pool | ⚠️ SKIP (needs investigation) |
+| join_and_exit_pool | ✅ PASS |
 
-**Note**: Core DEX functionality (pool creation, swaps, queries) is working. Join/exit pool CLI command issue needs separate investigation.
+**Key Fix**: The join-pool `share-amount-out` was set to "1" which caused "Too few shares out wanted" error. Fixed by using "1000000000000000000" (10^18) which is reasonable for a pool with 10^20 total shares.
 
 ---
 
