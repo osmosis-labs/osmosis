@@ -350,6 +350,27 @@ go test -v -run TestIntegrationTestSuite
 
 ---
 
+### Task 6.9: Rename Osmo → Atom in TakerFeeDistribution Types 📋 `pending`
+
+**Description**: Rename taker fee distribution types from Osmosis naming to Cosmos Hub naming:
+- `OsmoTakerFeeDistribution` → `AtomTakerFeeDistribution`
+- `NonOsmoTakerFeeDistribution` → `NonAtomTakerFeeDistribution`
+
+**Files to Update**:
+- Proto files (if any define these types)
+- Generated `.pb.go` files (regenerate after proto changes)
+- Any Go code referencing these types
+
+**Acceptance Criteria**:
+- [ ] Rename `OsmoTakerFeeDistribution` to `AtomTakerFeeDistribution`
+- [ ] Rename `NonOsmoTakerFeeDistribution` to `NonAtomTakerFeeDistribution`
+- [ ] Update all references in Go code
+- [ ] Regenerate protobuf files if needed
+- [ ] Build compiles successfully
+- [ ] E2E tests still pass
+
+---
+
 ## Notes
 
 - Each task follows workflow: `SETUP → EXECUTE → VERIFY → REPORT`
@@ -365,3 +386,4 @@ go test -v -run TestIntegrationTestSuite
 |------|--------|--------|
 | 2026-01-30 | Created Phase 6 (Manual Testing) task structure | AI Assistant |
 | 2026-01-30 | Archived Phases 0-5 to tasks-completed-phases-0-5.md | AI Assistant |
+| 2026-01-30 | Added Task 6.9: Rename Osmo → Atom in TakerFeeDistribution types | AI Assistant |
