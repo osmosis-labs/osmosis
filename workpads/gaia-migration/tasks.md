@@ -212,7 +212,7 @@ go test -v -run TestIntegrationTestSuite
 
 ---
 
-### Task 6.2: GAMM - Stableswap E2E Tests 📋 `pending`
+### Task 6.2: GAMM - Stableswap E2E Tests ✅ `completed`
 
 **Depends On**: Task 6.1
 
@@ -223,9 +223,23 @@ go test -v -run TestIntegrationTestSuite
 2. **Verify Curve**: Confirm stableswap curve math (lower slippage near 1:1)
 3. **Swap Operations**: Test swaps at different pool imbalances
 
-**Acceptance Criteria**:
-- [ ] Add stableswap test functions to `e2e_dex_test.go`
-- [ ] All stableswap e2e tests passing
+**Results** (Jan 30, 2026):
+- [x] Add `WriteStableswapPoolFile` helper to `tx/dex.go`
+- [x] Add `ExecGammCreateStableswapPool` helper to `tx/dex.go`
+- [x] Add `testDEXGammCreateStableswapPool` test
+- [x] Add `testDEXStableswapSwap` test
+- [x] Add `testDEXStableswapLowSlippage` test (verifies spot price ≈ 1.0)
+
+**E2E Test Status**: 3/3 stableswap tests passing ✅
+| Test | Status |
+|------|--------|
+| create_gamm_stableswap_pool | ✅ PASS |
+| stableswap_swap | ✅ PASS |
+| stableswap_low_slippage | ✅ PASS (deviation: 0.000001990000000000) |
+
+**Key Learnings**:
+- Stableswap coins must be sorted alphabetically (stake < uatom)
+- Stableswap maintains spot price very close to 1.0 for equal-weight assets
 
 ---
 
