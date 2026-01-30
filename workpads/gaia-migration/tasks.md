@@ -844,8 +844,7 @@ Gaia's tokenfactory (`github.com/cosmos/tokenfactory v0.53.5`) uses **the same p
 - [x] Clean build of full Gaia binary
 
 **Test Status**:
-- All protorev keeper tests pass except 1
-- 1 minor test fails (Cosmwasm Pool Arb Route - expected 6, got 5) - likely rounding difference
+- ✅ All protorev keeper tests pass (including CosmWasm arb test)
 - Protocol revenue tests reimplemented to use poolmanager's taker fee tracker directly
 - Protorev hooks registered with GAMM (SetHooks) and CL (SetListeners)
 
@@ -1063,12 +1062,11 @@ These tasks track deferred test issues identified by `TODO(gaia-migration):` com
 **Acceptance Criteria**:
 - [x] Wire ProtoRevKeeper into GaiaApp (Task 4.2)
 - [x] Uncomment protorev-related test code in router_test.go
-- [x] Protorev keeper tests pass (except known issue - Task 5.11)
+- [x] Protorev keeper tests pass (including CosmWasm arb - fixed in Task 5.11)
 - [x] Tests pass with protorev integration
 
 **Notes**:
 - The `TestTakerFee` function remains commented as it depends on Task 5.3 (epoch hooks for taker fee distribution)
-- The `TestPostHandle/Cosmwasm_Pool_Arb_Route` test still fails (pre-existing issue tracked in Task 5.11)
 
 ---
 
@@ -1125,34 +1123,38 @@ These tasks track deferred test issues identified by `TODO(gaia-migration):` com
 
 **Investigation Completed**:
 - **Route building works correctly**: `BuildRoutes(test/2, Atom, 51)` returns 2 routes:
-  - Route 0: [25, 51, 36] (3-pool route via OSMO)
+  - Route 0: [25, 51, 36] (3-pool route via uatom)
   - Route 1: [51, 37] (2-pool route via pool 37 GAMM)
 - **Weight map is correctly set**: Pool 51's contract address matches the weight map entry
 - **Pool-for-denom-pair is registered**: GetPoolForDenomPair(Atom, test/2) correctly returns pool 37
+- **Profit estimation works**: Route 0 is correctly identified as profitable (profit > 0)
 
-**Root Cause**:
-The issue is in `EstimateMultihopProfit` - when simulating the CosmWasm transmuter swap, the profit calculation returns zero or negative profit, causing the arb opportunity to be skipped. This is likely due to:
-1. The transmuter pool has no price impact (1:1 swap ratio) so there's no arbitrage opportunity
-2. The test setup doesn't create the price imbalance needed to generate arb profit
-3. Subtle differences in how the transmuter contract behaves vs Osmosis
+**Root Cause (ACTUAL)**:
+The protorev module account was in SDK 0.53's blocked addresses list, preventing the transmuter contract from sending tokens back to protorev via MsgSend. When the contract tried to return tokens after a swap, the bank module rejected the transfer with "is not allowed to receive funds: unauthorized".
+
+This is a **SDK 0.53-specific issue** - in SDK 0.50 (Osmosis), module accounts are not blocked by default for MsgSend recipients. In SDK 0.53, they are.
 
 **Resolution**:
-- Commented out the failing test case with detailed explanation
-- Added TODO(gaia-migration) marker for future investigation
-- All other protorev tests continue to pass (balancer, stableswap, CL arbs work)
+1. Added protorev module to the list of unblocked addresses in `BlockedModuleAccountAddrs()` (app/app.go)
+2. Re-enabled the CosmWasm arb test case in posthandler_test.go
+3. Added documentation that transmuter is kept for testing purposes only
 
 **Files Modified**:
-- `x/protorev/keeper/posthandler_test.go` - Commented out CosmWasm arb test case with explanation
+- `app/app.go` - Added protorev to unblocked module accounts list
+- `x/protorev/keeper/posthandler_test.go` - Re-enabled CosmWasm arb test case
+- `x/protorev/keeper/keeper_test.go` - Added documentation that transmuter is for testing only
 
 **Acceptance Criteria**:
-- [x] Identify root cause of failed CosmWasm arb trade (EstimateMultihopProfit returns zero profit)
-- [x] Document findings and disable test with clear explanation
-- [x] All other protorev tests pass
+- [x] Identify root cause of failed CosmWasm arb trade (protorev blocked from receiving funds)
+- [x] Fix blocked address issue by adding protorev to unblocked list
+- [x] All protorev tests pass (including CosmWasm arb test)
+- [x] Document transmuter is kept for testing purposes only
 
 **Notes**:
-- This is an edge case specific to transmuter pools (zero-fee 1:1 swaps)
-- The core protorev functionality works correctly for other pool types
-- Requires deeper investigation into transmuter contract swap simulation if CosmWasm arbs are needed
+- This was an SDK 0.53 vs SDK 0.50 difference - module accounts are blocked from receiving MsgSend by default in SDK 0.53
+- The fix is to add protorev to the unblocked list in `BlockedModuleAccountAddrs()`, similar to governance and ConsumerRewardsPool
+- Transmuter is NOT being migrated to Gaia production but is kept for testing protorev's CosmWasm pool arb functionality
+- The transmuter bytecode remains in `x/cosmwasmpool/bytecode/` for test purposes only
 
 ---
 
@@ -1204,4 +1206,4 @@ The issue is in `EstimateMultihopProfit` - when simulating the CosmWasm transmut
 | 2026-01-29 | Task 5.2 completed - enabled CLI parsing tests (8 tests) and query tests | AI Assistant |
 | 2026-01-30 | Task 5.7 completed - enabled 12 protorev-dependent TrackVolume tests, removed protorevKeeper nil check | AI Assistant |
 | 2026-01-30 | Task 5.5 completed - created mocks package, enabled TestAllPools with 9 subtests | AI Assistant |
-| 2026-01-30 | Task 5.11 completed - investigated CosmWasm arb test failure, documented root cause (transmuter profit estimation), disabled test with explanation | AI Assistant |
+| 2026-01-30 | Task 5.11 fully fixed - found actual root cause (protorev blocked from receiving funds in SDK 0.53), added protorev to unblocked list, all tests pass | AI Assistant |

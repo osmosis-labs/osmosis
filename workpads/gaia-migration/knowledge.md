@@ -205,6 +205,39 @@ The SDK version is compatible and simpler. Required adaptations:
 
 ---
 
+### SDK 0.53 Blocked Module Accounts
+
+**Context**: SDK 0.53 has stricter handling of module account addresses when receiving funds via `MsgSend`. By default, all module accounts are in the "blocked addresses" list and cannot receive funds from `MsgSend` messages (including those dispatched by CosmWasm contracts).
+
+**Impact on DEX modules**:
+- **Protorev**: When a CosmWasm pool (e.g., transmuter) executes an arb swap, it sends tokens back to the protorev module via `MsgSend`. If protorev is blocked, the arb trade fails.
+- **Other modules**: Any module that needs to receive funds from contract-dispatched `MsgSend` must be unblocked.
+
+**Solution**:
+Add modules that need to receive contract funds to `BlockedModuleAccountAddrs()` in `app/app.go`:
+
+```go
+func (app *GaiaApp) BlockedModuleAccountAddrs(modAccAddrs map[string]bool) map[string]bool {
+    // Existing unblocked modules
+    delete(modAccAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+    delete(modAccAddrs, authtypes.NewModuleAddress(providertypes.ConsumerRewardsPool).String())
+    
+    // Add protorev so CosmWasm pools can send tokens back after arb trades
+    delete(modAccAddrs, authtypes.NewModuleAddress(protorevtypes.ModuleName).String())
+    
+    return modAccAddrs
+}
+```
+
+**SDK 0.50 vs 0.53 Difference**:
+| Aspect | SDK 0.50 (Osmosis) | SDK 0.53 (Gaia) |
+|--------|-------------------|-----------------|
+| Module account blocking | Less strict | All module accounts blocked by default |
+| MsgSend to modules | Works | Blocked unless explicitly unblocked |
+| Impact | N/A | Must add protorev to unblocked list |
+
+---
+
 ### Taker Fee Distribution Design
 
 **Context**: In Osmosis, poolmanager collects taker fees at swap time and sends them to the `taker_fee_collector` module account. The actual distribution happens in `x/txfees` via epoch hooks (`AfterEpochEnd`).
@@ -1075,6 +1108,7 @@ Some DEX module files reference modules we're NOT migrating (superfluid, tokenfa
 | D3 | Add epoch hooks to poolmanager for fee distribution (not migrate txfees) | txfees has unnecessary complexity (EIP-1559, fee tokens); core distribution logic is simple; swap non-native to ATOM before distributing | 2026-01-28 |
 | D4 | Never remove tests without explicit user approval | Tests are critical for verifying correctness. If a test fails, investigate why and ask user before removing. Comment out with TODO if blocking, but document in progress.md | 2026-01-28 |
 | D5 | Remove lockup-specific CL tests entirely | Lockup module is out of scope for Gaia migration. Tests for `CreateFullRangePositionLocked`, `MintSharesAndLock`, `PositionHasActiveUnderlyingLock`, etc. are no longer relevant. | 2026-01-28 |
+| D6 | Add protorev to unblocked module accounts | SDK 0.53 blocks module accounts from receiving MsgSend by default. Protorev needs to receive funds from CosmWasm contracts after arb trades. Added to `BlockedModuleAccountAddrs()` alongside governance and ConsumerRewardsPool. | 2026-01-30 |
 
 ---
 
@@ -1083,9 +1117,159 @@ Some DEX module files reference modules we're NOT migrating (superfluid, tokenfa
 1. ~~What is the exact SDK version difference between Osmosis and Gaia?~~ ✅ Answered: SDK 0.50.14 (Osmosis fork) → 0.53.4 (Gaia)
 2. Are there shared utility packages that need to migrate first (e.g., `osmomath`, `osmoutils`)?
 3. What state/genesis migration is needed for each module?
-4. How do we handle CosmWasm integration differences (wasmd v0.53 → v0.60)?
+4. ~~How do we handle CosmWasm integration differences (wasmd v0.53 → v0.60)?~~ ✅ Answered: See "CosmWasm Pool Contract Analysis" section below.
 5. **NEW**: How do we handle the IBC v8 → v10 migration for modules that use IBC?
 6. ~~**CRITICAL**: What Osmosis SDK fork features are required by the DEX modules?~~ ✅ Answered: **None!** DEX modules don't use bank hooks or supply offsets. See "SDK Fork Features Analysis" section.
+
+---
+
+## CosmWasm Pool Contract Analysis
+
+### Problem Statement
+
+The `cosmwasmpool` module uses pre-compiled WASM contracts (transmuter, orderbook) that are compiled against Osmosis-specific dependencies (`osmosis-std`). These contracts have chain assumptions baked in:
+- Address validation expects `osmo` bech32 prefix
+- Tokenfactory denom generation uses `osmo` prefix
+- Proto types are Osmosis-specific
+
+### Source Repositories
+
+| Contract | Repository | Key Dependency |
+|----------|------------|----------------|
+| Transmuter | <https://github.com/osmosis-labs/transmuter> | `osmosis-std = "0.26.0"` |
+| Orderbook | <https://github.com/osmosis-labs/orderbook> | `osmosis-std = "0.25.0"` |
+
+### Usage Context
+
+The bytecode files in `x/cosmwasmpool/bytecode/` serve **dual purposes**:
+
+1. **Testing**: Used by Go tests to verify module logic with real contracts
+2. **Production**: Same bytecode deployed to Osmosis mainnet via governance
+
+For Gaia, we need to handle both contexts:
+- **Testing**: Either recompile or create test-specific workarounds
+- **Production**: Will need properly compiled contracts for Gaia deployment
+
+### Technical Analysis
+
+**Why contracts are chain-specific**:
+- `osmosis-std` package contains proto-generated types from Osmosis chain
+- Contract code may call Osmosis-specific stargate queries
+- Tokenfactory integration assumes `osmo` prefix for factory denoms
+
+**What works vs what doesn't**:
+- ✅ Basic contract instantiation (cosmwasm-std is chain-agnostic)
+- ✅ Basic storage operations
+- ❌ Address validation with cosmos prefix (contract may reject)
+- ❌ Alloyed asset creation (tokenfactory denom prefix)
+- ❌ Any Osmosis-specific stargate queries
+
+### Options Analysis
+
+| Option | Effort | Risk | Recommendation |
+|--------|--------|------|----------------|
+| **A: Recompile for Gaia** | High | Low | ✅ For production |
+| **B: Fix test bech32 only** | Low | Medium | ✅ For tests (temporary) |
+| **C: Create test-only contracts** | Medium | Medium | Alternative to B |
+| **D: Defer cosmwasmpool** | None | High (incomplete migration) | ❌ Not recommended |
+
+**Recommended Approach**:
+1. **Immediate (testing)**: Fix hardcoded `osmo` bech32 prefixes in Go test code
+2. **Short-term (testing)**: Investigate if wasmd VM handles bech32 at chain level
+3. **Long-term (production)**: Create Gaia-compatible contract builds
+
+### Go Test Fixes Needed
+
+1. **pool_module_test.go:563**: Change `"osmo"` → `"cosmos"` in `uploadAndInstantiateContract`
+2. **CL permissionless creation**: Enable in test genesis params
+3. **Code ID expectations**: Account for pre-existing uploads in test setup
+
+### Contract Recompilation Strategy
+
+**Major Discovery: Proto Compatibility!**
+
+Gaia's tokenfactory (`github.com/cosmos/tokenfactory v0.53.5`) uses **the exact same proto type URLs** as Osmosis's:
+
+```
+/osmosis.tokenfactory.v1beta1.MsgCreateDenom
+/osmosis.tokenfactory.v1beta1.MsgMint
+/osmosis.tokenfactory.v1beta1.MsgBurn
+/osmosis.tokenfactory.v1beta1.MsgSetDenomMetadata
+```
+
+This is because Gaia's tokenfactory is derived from Osmosis's proto definitions.
+
+**Transmuter Production Code osmosis-std Usage**:
+
+| Type | Module | Notes |
+|------|--------|-------|
+| `cosmos::bank::v1beta1::Metadata` | Standard cosmos | ✅ Compatible |
+| `osmosis::tokenfactory::v1beta1::MsgCreateDenom` | Tokenfactory | ✅ Same proto as Gaia |
+| `osmosis::tokenfactory::v1beta1::MsgMint` | Tokenfactory | ✅ Same proto as Gaia |
+| `osmosis::tokenfactory::v1beta1::MsgBurn` | Tokenfactory | ✅ Same proto as Gaia |
+| `osmosis::tokenfactory::v1beta1::MsgSetDenomMetadata` | Tokenfactory | ✅ Same proto as Gaia |
+
+**Orderbook Production Code osmosis-std Usage**:
+
+| Type | Module | Notes |
+|------|--------|-------|
+| `cosmos::bank::v1beta1::MsgSend` | Standard cosmos | ✅ Compatible |
+| `cosmos::base::v1beta1::Coin` | Standard cosmos | ✅ Compatible |
+
+**Test-only types** (not compiled into WASM):
+- `osmosis::poolmanager::v1beta1::*` - swap messages for e2e tests
+- `osmosis::cosmwasmpool::v1beta1::*` - pool creation for e2e tests
+
+### Recommended Strategy
+
+**Option 1: Use Existing Bytecode (Preferred for Testing)**
+
+The existing WASM contracts MAY work on Gaia without recompilation because:
+1. ✅ Gaia has tokenfactory with same proto types
+2. ✅ Stargate messages use same type URLs
+3. ⚠️ Need to verify: Bech32 prefix handling in wasmd
+
+**Test Approach**:
+1. Fix Go test bech32 prefixes (Task 3.2a)
+2. Run tests with existing bytecode
+3. If tests pass, contracts likely work on Gaia
+
+**Option 2: Recompile for Gaia (If Option 1 Fails)**
+
+Only needed if bech32 prefix validation fails at contract level:
+
+1. Fork transmuter/orderbook repos
+2. Keep `osmosis-std` dependency (proto types are compatible)
+3. Verify no address validation happens in contract code
+4. Build with rust-optimizer
+5. Test on Gaia testnet
+
+**Option 3: Full Recompilation with gaia-std (Maximum Compatibility)**
+
+Create chain-agnostic bindings:
+
+1. Fork `osmosis-rust` → create `gaia-rust` 
+2. Generate proto bindings from Gaia's protos
+3. Update contracts to use `gaia-std`
+4. Recompile contracts
+
+This is the most work but provides maximum compatibility.
+
+### Bech32 Prefix Analysis
+
+The bech32 prefix issue is likely **NOT in the contract code** itself:
+- CosmWasm contracts use `cosmwasm_std::Addr` which is chain-agnostic
+- The wasmd VM handles address encoding at the chain level
+- Contracts don't validate bech32 prefixes internally
+
+The hardcoded `"osmo"` in Go tests is a **test-side issue**, not a contract issue.
+
+### Action Plan
+
+1. **Immediate**: Fix Go test bech32 prefixes
+2. **Test**: Run tests with existing bytecode
+3. **Evaluate**: Based on test results, decide if recompilation needed
+4. **Long-term**: Consider creating `gaia-std` for cleaner integration
 
 ---
 
@@ -1146,3 +1330,5 @@ Some DEX module files reference modules we're NOT migrating (superfluid, tokenfa
 | 2026-01-28 | **D3: Taker Fee Distribution** - decided to add epoch hooks to poolmanager instead of migrating txfees; swap non-native fees to ATOM | AI Assistant |
 | 2026-01-28 | **Scope Update**: Added incentives, pool-incentives, lockup to "Modules Outside Scope". DEX modules simplified by removing these dependencies. | AI Assistant |
 | 2026-01-28 | **gamm Migration Complete** - core functionality preserved, incentives/CL migration removed. Simplified keeper to accountKeeper, bankKeeper, communityPoolKeeper only. | AI Assistant |
+| 2026-01-28 | **CosmWasm Pool Analysis** - Documented contract sources (transmuter, orderbook repos), bech32 prefix problem, and recommended fix approach. Added to Open Questions as resolved. | AI Assistant |
+| 2026-01-28 | **Proto Compatibility Discovery** - Gaia's tokenfactory uses same proto type URLs as Osmosis. Existing WASM contracts may work without recompilation. Updated recompilation strategy with this finding. | AI Assistant |
