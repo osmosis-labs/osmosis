@@ -243,21 +243,25 @@ go test -v -run TestIntegrationTestSuite
 
 ---
 
-### Task 6.3: Concentrated Liquidity E2E Tests 📋 `pending`
+### Task 6.3: Concentrated Liquidity E2E Tests 🚫 `blocked`
 
 **Depends On**: Task 6.1
 
-**Description**: Add e2e tests for concentrated liquidity pools in `tests/e2e/e2e_dex_test.go`.
+**Description**: Add e2e tests for concentrated liquidity pools.
 
-**Test Scenarios**:
-1. **Create Pool**: Create a CL pool with specific tick spacing
-2. **Create Position**: Add liquidity in a specific price range
-3. **Swap Through Range**: Execute swaps that cross tick boundaries
+**Blocker**: CL pool creation requires governance - "permissionless pool creation is disabled for the concentrated liquidity module"
 
-**Acceptance Criteria**:
-- [ ] Add CL tx helpers to `tests/e2e/tx/dex.go`
-- [ ] Add CL test functions to `e2e_dex_test.go`
-- [ ] All CL e2e tests passing
+**Work Completed**:
+- [x] Split test files by module (dex_gamm.go, dex_poolmanager.go, dex_cl.go)
+- [x] Add CL tx helpers to `tests/e2e/tx/dex_cl.go`
+- [x] Add CL test functions to `e2e_dex_cl_test.go`
+- [x] Add DEX_TEST_FILTER env var for fast iteration
+
+**Remaining Work**:
+- [ ] Add governance proposal support for CL pool creation
+- [ ] Run CL tests with governance
+
+**New Task Created**: Task 6.3a (CL Governance) to unblock this
 
 ---
 
@@ -274,6 +278,19 @@ go test -v -run TestIntegrationTestSuite
 **Acceptance Criteria**:
 - [ ] Add multi-hop test functions to `e2e_dex_test.go`
 - [ ] All routing e2e tests passing
+
+---
+
+### Task 6.3a: CL Governance Pool Creation 📋 `pending`
+
+**Depends On**: None
+
+**Description**: Add governance proposal support for creating CL pools (required since permissionless creation is disabled).
+
+**Acceptance Criteria**:
+- [ ] Add governance proposal tx helper for CL pool creation
+- [ ] Update CL tests to use governance flow
+- [ ] Unblock Task 6.3
 
 ---
 
