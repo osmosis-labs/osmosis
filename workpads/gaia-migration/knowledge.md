@@ -1274,6 +1274,105 @@ The hardcoded `"osmo"` in Go tests is a **test-side issue**, not a contract issu
 
 ---
 
+## Manual Testing Infrastructure (Phase 6)
+
+### Location
+`gaia/tests/manual-dex/`
+
+### Structure Created
+```
+tests/manual-dex/
+├── README.md                 # Setup instructions
+├── run-all-tests.sh          # Run all test suites
+├── setup/
+│   ├── config.sh             # Configuration (ports, denoms, accounts)
+│   ├── start-node.sh         # Start local test node
+│   └── fund-accounts.sh      # Fund test accounts
+├── gamm/
+│   ├── README.md             # GAMM-specific notes
+│   └── test-balancer.sh      # Balancer pool tests
+└── lib/
+    ├── test-utils.sh         # Shared utilities
+    └── assertions.sh         # Test assertions
+```
+
+### Port Configuration
+To avoid conflicts with existing Docker/OrbStack containers:
+- RPC: 36657 (instead of 26657)
+- gRPC: 39090 (instead of 9090)
+- API: 31317 (instead of 1317)
+- P2P: 36656 (instead of 26656)
+- Home directory: `~/.gaia-dex-test`
+
+### Feemarket Genesis Configuration
+
+**Problem**: Shell-based node startup crashed during InitChain with "UnmarshalJSON cannot decode empty bytes" in feemarket PostHandler.
+
+**Root cause**: The feemarket PostHandler is called during gentx processing, but the default genesis state may have initialization order issues.
+
+**Solution**: Use Docker-based e2e tests like Gaia does. The e2e framework properly initializes feemarket genesis state in `tests/e2e/genesis.go` (lines 140-149):
+
+```go
+feemarketState := feemarkettypes.GetGenesisStateFromAppState(common.Cdc, appState)
+feemarketState.Params.MinBaseGasPrice = math.LegacyMustNewDecFromStr(basefee)
+feemarketState.Params.FeeDenom = denom
+feemarketState.Params.DistributeFees = true
+feemarketState.State.BaseGasPrice = math.LegacyMustNewDecFromStr(basefee)
+```
+
+**Gaia's feemarket module ordering** (from `app/modules.go`):
+- Feemarket is initialized AFTER genutil to ensure min fee is empty when gentx is called
+- Comment in code: "To resolve this issue, we should initialize the feemarket module after genutil"
+
+**Alternative for shell scripts**: Disable feemarket in genesis:
+```bash
+jq '.app_state.feemarket.params.enabled = false' genesis.json > temp.json && mv temp.json genesis.json
+```
+
+### E2E Testing Framework
+
+Gaia uses two e2e test frameworks:
+
+| Framework | Location | Docker | Description |
+|-----------|----------|--------|-------------|
+| **e2e** | `tests/e2e/` | dockertest | Traditional e2e with 2 chains, IBC relayer |
+| **interchain** | `tests/interchain/` | interchaintest | Upgrade testing, consumer chains |
+
+**DEX E2E tests added**:
+- `tests/e2e/tx/dex.go` - Transaction helpers
+- `tests/e2e/query/dex.go` - Query helpers
+- `tests/e2e/e2e_dex_test.go` - Test functions
+
+**Running e2e tests**:
+```bash
+# Build docker image
+docker build -t gaia:local .
+
+# Run tests
+cd tests/e2e
+go test -v -run TestIntegrationTestSuite
+```
+
+### Upgrade Handler Store Keys
+
+For in-place testnet support, DEX module store keys added to `app/upgrades/v26_0_0/constants.go`:
+
+```go
+StoreUpgrades: storetypes.StoreUpgrades{
+    Added: []string{
+        tokenfactorytypes.ModuleName,
+        // DEX modules
+        poolmanagertypes.ModuleName,
+        gammtypes.ModuleName,
+        cltypes.ModuleName,
+        cosmwasmpooltypes.ModuleName,
+        protorevtypes.ModuleName,
+    },
+},
+```
+
+---
+
 ## Lessons Learned
 
 ### L1: osmomath Migration (Task 1.1)
@@ -1305,6 +1404,75 @@ The hardcoded `"osmo"` in Go tests is a **test-side issue**, not a contract issu
 - `wrapper/` needed for accum tests (database wrapper for IAVL)
 
 **Key insight**: The IBC v8→v10 migration has breaking changes in the transfer types. Always check method signatures when upgrading IBC versions.
+
+---
+
+## DEX Module Parameter Initialization (v26 Upgrade)
+
+### Problem Statement
+
+When testing with a fresh genesis on a remote node, we discovered that the DEX modules need proper parameter initialization during the v25→v26 upgrade. The default params have issues:
+
+1. **Pool creation fee uses wrong denom**: Defaults use `appparams.BaseCoinUnit` which is `uatom`, but defaults were set to 1000 ATOM (1,000,000,000 uatom) - very high for testing
+2. **Poolmanager authorized quote denoms**: Need to include common trading denoms for the Hub
+
+### Genesis Modifications We Made (Testing)
+
+For testing, we modified the genesis directly via `jq`:
+
+```bash
+jq '.app_state.gamm.params.pool_creation_fee = [{"denom": "stake", "amount": "1000000"}] | 
+    .app_state.poolmanager.params.pool_creation_fee = [{"denom": "stake", "amount": "1000000"}]' \
+    genesis.json > /tmp/genesis_fixed.json && mv /tmp/genesis_fixed.json genesis.json
+```
+
+This lowered the pool creation fee to 1 stake (1,000,000 ustake) for easy testing.
+
+### Upgrade Handler Updates
+
+These learnings were incorporated into `app/upgrades/v26_0_0/upgrades.go`:
+
+1. **GAMM params**: Set pool creation fee to 1000 ATOM (production value)
+2. **PoolManager params**: Set pool creation fee, taker fee params, authorized quote denoms
+
+```go
+// Initialize DEX module params
+poolCreationFee := sdk.NewCoins(sdk.NewInt64Coin("uatom", 1000_000_000)) // 1000 ATOM
+
+// GAMM
+keepers.GAMMKeeper.SetParam(ctx, gammtypes.KeyPoolCreationFee, poolCreationFee)
+
+// PoolManager
+poolManagerParams := poolmanagertypes.Params{
+    PoolCreationFee: poolCreationFee,
+    TakerFeeParams: poolmanagertypes.TakerFeeParams{
+        DefaultTakerFee: osmomath.ZeroDec(), // No taker fee initially
+        CommunityPoolDenomToSwapNonWhitelistedAssetsTo: "uatom", // Swap to ATOM
+        // ... distribution params
+    },
+    AuthorizedQuoteDenoms: []string{
+        "uatom",
+        "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4", // USDC Noble
+    },
+}
+keepers.PoolManagerKeeper.SetParams(ctx, poolManagerParams)
+```
+
+**Note on IBC denoms**: On the Hub, ATOM is just `uatom` - no IBC wrapper needed. The IBC denom `ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2` is ATOM from *other chains'* perspective (ATOM IBC'd to them), not needed on the Hub itself.
+
+### Key Insights
+
+1. **New modules need param initialization**: When adding new modules in an upgrade, their params won't be set until `InitGenesis` runs - but for upgrade scenarios (not fresh genesis), you need to set them in the upgrade handler
+2. **Default params may not be appropriate**: The defaults from Osmosis (1000 OSMO fee) translate to 1000 ATOM on Gaia which may be too high
+3. **Quote denoms need updating**: The authorized quote denoms should reflect the Hub's common trading pairs, not Osmosis's
+
+### Testing vs Production Values
+
+| Parameter | Testing Value | Production Value |
+|-----------|---------------|------------------|
+| Pool creation fee | 1M stake | 1000 ATOM (1B uatom) |
+| Taker fee | 0% | 0% (can be adjusted via governance) |
+| Authorized quote denoms | stake | uatom, ATOM IBC, USDC |
 
 ---
 
