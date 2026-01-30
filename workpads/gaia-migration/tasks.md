@@ -1271,6 +1271,26 @@ This is a **SDK 0.53-specific issue** - in SDK 0.50 (Osmosis), module accounts a
 - [x] Documented as cancelled with rationale
 - [x] Transmuter remains functional for protorev arb testing (verified in Task 5.11)
 
+### Task 5.14: Fix proto annotation warnings (cosmos.msg.v1.service) ✅ `completed`
+
+**Description**: The migrated proto files show warnings about missing `cosmos.msg.v1.service` annotation. Add the annotation to all Msg service definitions.
+
+**Files Affected**:
+- `proto/gaia/gamm/v1beta1/tx.proto`
+- `proto/gaia/poolmanager/v1beta1/tx.proto`
+- `proto/gaia/protorev/v1beta1/tx.proto`
+- `proto/gaia/concentratedliquidity/v1beta1/tx.proto`
+- `proto/gaia/gamm/poolmodels/balancer/v1beta1/tx.proto`
+- `proto/gaia/cosmwasmpool/v1beta1/tx.proto` (also added missing import)
+- `proto/gaia/concentratedliquidity/poolmodel/concentrated/v1beta1/tx.proto`
+- `proto/gaia/gamm/poolmodels/stableswap/v1beta1/tx.proto`
+
+**Acceptance Criteria**:
+- [x] Add `option (cosmos.msg.v1.service) = true;` to all 8 Msg service definitions
+- [x] Build succeeds without warnings
+- [x] Regenerate proto files (`make proto-gen`)
+- [x] All tests pass
+
 ---
 
 ## Notes
@@ -1325,3 +1345,4 @@ This is a **SDK 0.53-specific issue** - in SDK 0.50 (Osmosis), module accounts a
 | 2026-01-30 | Task 4.3 completed - all DEX module unit tests pass, validated pool creation, swaps, protorev arb, genesis round-trip | AI Assistant |
 | 2026-01-30 | Added Task 5.12 - CLI network integration tests (pending, requires gaia.DefaultConfig()) | AI Assistant |
 | 2026-01-30 | Added Task 5.13 - Transmuter test suite (cancelled, depends on non-migrated incentives/lockup) | AI Assistant |
+| 2026-01-30 | Added Task 5.14 - Fix proto annotation warnings (cosmos.msg.v1.service) | AI Assistant |
