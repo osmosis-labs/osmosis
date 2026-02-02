@@ -291,7 +291,7 @@ go test -v -run TestIntegrationTestSuite
 
 ---
 
-### Task 6.5: CosmWasm Pool Tests 📋 `pending`
+### Task 6.5: CosmWasm Pool Tests 🚫 `blocked`
 
 **Depends On**: Task 6.0
 
@@ -299,13 +299,27 @@ go test -v -run TestIntegrationTestSuite
 
 **Test Scenarios**:
 1. **Upload Contract**: Upload transmuter WASM
-2. **Create Pool**: Create transmuter pool via governance or direct
+2. **Create Pool**: Create transmuter pool via cosmwasmpool module
 3. **Execute Swap**: 1:1 swap through transmuter
 4. **Query State**: Verify pool state and liquidity
 
-**Acceptance Criteria**:
-- [ ] Create `cosmwasmpool/test-transmuter.sh`
-- [ ] All tests print clear pass/fail results
+**Work Completed**:
+- [x] Created `tests/e2e/tx/dex_cosmwasmpool.go` with `ExecCosmwasmPoolCreate` helper
+- [x] Created `tests/e2e/e2e_dex_cosmwasmpool_test.go` with test functions
+- [x] Added `StoreWasmHighGas` helper for large contracts (transmuter is 2.2MB)
+- [x] Added `cosmwasmpool` filter to `DEX_TEST_FILTER`
+
+**Blocker**: Large WASM upload times out in e2e test infrastructure
+
+The transmuter.wasm (2.2MB) upload transaction is accepted (code:0) but the test validation times out waiting for block inclusion. This appears to be an e2e infrastructure issue with large contract uploads.
+
+**Options to Unblock**:
+1. Increase e2e test timeout for WASM uploads
+2. Use gzip-compressed WASM (if available)
+3. Test cosmwasmpool in unit tests only (skip e2e)
+4. Debug the ExecuteGaiaTxCommand validation for large txs
+
+**Note**: The transmuter contract also has known bech32 prefix issues documented in references.md - contracts are compiled against Osmosis (`osmo` prefix) and may not work with Gaia (`cosmos` prefix) without recompilation.
 
 ---
 
