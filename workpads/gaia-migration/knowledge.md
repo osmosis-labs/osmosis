@@ -29,7 +29,7 @@
 | **SDK Fork Features** | ✅ No blocker | DEX modules do NOT use bank hooks or supply offsets. Use upstream SDK 0.53. |
 | **Store Fork** | ✅ No blocker | Performance optimization only. All code uses standard `store.KVStore` interface. |
 | **osmoutils** | ✅ Manageable | Only 6 of 11 subpackages needed. All use standard APIs. |
-| **x/epochs** | ✅ Use SDK version | SDK 0.53 x/epochs is wire-compatible. Minor hook interface adaptations needed. |
+| **x/epochs** | ✅ Use SDK version | SDK 0.53 has x/epochs (upstreamed from Osmosis). Gaia currently uses stub; should switch to SDK module. |
 | **Circular Dependencies** | ✅ No issue | No true Go import cycles. `poolmanager/types` defines interfaces only. |
 | **wasmd Version** | ⚠️ Requires work | v0.53 → v0.60 upgrade needed for cosmwasmpool. Gaia already has wasmd. |
 | **IBC Version** | ⚠️ Requires work | v8 → v10 upgrade. osmoutils has IBC imports that need updating. |
@@ -158,50 +158,56 @@ For each component above:
 - `protorev` - EpochKeeper + epoch hooks for periodic route updates
 - `poolmanager` - ⚠️ **NEW for Gaia** - epoch hooks for taker fee distribution (moved from txfees)
 
-**SDK 0.53 Has x/epochs**: Yes, SDK 0.53 includes `x/epochs` module.
+**SDK x/epochs**: ✅ **Available since SDK v0.52.0** (upstreamed from Osmosis in PR #19697, April 2024)
 
-**Comparison: Osmosis vs SDK 0.53 x/epochs**:
+The SDK's x/epochs module (`github.com/cosmos/cosmos-sdk/x/epochs`) is the **recommended choice** for Gaia since:
+- It's part of the SDK Gaia already uses (v0.53)
+- Uses depinject for hook registration
+- Follows SDK patterns (context.Context, errors.Join)
+- No external dependency needed
 
-| Aspect | Osmosis | SDK 0.53 |
-|--------|---------|----------|
-| EpochInfo fields | Identifier, StartTime, Duration, CurrentEpoch, CurrentEpochStartTime, EpochCountingStarted, CurrentEpochStartHeight | **Identical** |
-| Proto field numbers | 1,2,3,4,5,6,8 | **Identical** |
-| Hook context | `sdk.Context` | `context.Context` |
-| GetModuleName() | Yes (for telemetry) | No |
-| Panic handling | `osmoutils.ApplyFuncIfNoError` | Standard `errors.Join` |
-| Depinject support | No | Yes (`EpochHooksWrapper`) |
+**Current Status in Gaia**: Gaia uses a **stub implementation** despite SDK having x/epochs:
+- Returns hardcoded epoch info (24h duration, "day" identifier)
+- Does NOT trigger epoch transitions in BeginBlock
+- Epoch hooks are never fired
 
-**Key Differences in Hooks Interface**:
+**Stub Locations** (to be replaced):
+- `app/keepers/epoch_stub.go` - StubEpochKeeper implementation
+- `x/protorev/epochstypes/types.go` - Local epoch type definitions
+
+**SDK vs Osmosis x/epochs Comparison**:
+
+| Aspect | SDK x/epochs | Osmosis x/epochs |
+|--------|--------------|------------------|
+| Import | `github.com/cosmos/cosmos-sdk/x/epochs` | `github.com/osmosis-labs/osmosis/x/epochs` |
+| Hook context | `context.Context` | `sdk.Context` |
+| GetModuleName() | No (uses depinject) | Yes (for telemetry) |
+| Error handling | `errors.Join` | `osmoutils.ApplyFuncIfNoError` |
+| Depinject | Yes (`EpochHooksWrapper`) | No |
+
+**SDK EpochHooks Interface**:
 
 ```go
-// Osmosis
-type EpochHooks interface {
-    AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error
-    BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error
-    GetModuleName() string  // Extra method for telemetry
-}
-
-// SDK 0.53
 type EpochHooks interface {
     AfterEpochEnd(ctx context.Context, epochIdentifier string, epochNumber int64) error
     BeforeEpochStart(ctx context.Context, epochIdentifier string, epochNumber int64) error
-    // No GetModuleName - uses depinject for module identification
 }
 ```
 
-**Recommendation**: ✅ **Use SDK 0.53 x/epochs**
+**Recommendation**: ✅ **Use SDK's x/epochs module**
 
-The SDK version is compatible and simpler. Required adaptations:
-1. Change hook implementations to use `context.Context` instead of `sdk.Context`
-2. Remove `GetModuleName()` from hook implementations (minor)
-3. Use SDK's depinject patterns for hook registration
-4. Accept slightly different panic handling (SDK doesn't catch panics, Osmosis does)
+Since Gaia uses SDK 0.53, use the built-in x/epochs:
+1. Import `github.com/cosmos/cosmos-sdk/x/epochs`
+2. Create epochs keeper with store key
+3. Register in BeginBlockers (fires epoch transitions)
+4. Adapt protorev/poolmanager hooks to use `context.Context` (not `sdk.Context`)
+5. Use `EpochHooksWrapper` for depinject hook registration
+6. Remove stub code and local epochstypes
 
 **Migration Notes**:
-- EpochInfo type is wire-compatible (same proto fields) - genesis migration should work
-- Hook interface change is minor - just context type and remove one method
-- Osmosis uses custom panic recovery; SDK relies on standard error returns
-- No need to port Osmosis x/epochs - use upstream SDK version
+- Hook interface change: `sdk.Context` → `context.Context` (use `sdk.UnwrapSDKContext(ctx)`)
+- Remove `GetModuleName()` from hook implementations
+- See Task 6.10 for implementation plan
 
 ---
 
@@ -1120,6 +1126,7 @@ Some DEX module files reference modules we're NOT migrating (superfluid, tokenfa
 3. What state/genesis migration is needed for each module?
 4. ~~How do we handle CosmWasm integration differences (wasmd v0.53 → v0.60)?~~ ✅ Answered: See "CosmWasm Pool Contract Analysis" section below.
 5. **NEW**: How do we handle the IBC v8 → v10 migration for modules that use IBC?
+7. ~~How does Gaia handle x/epochs?~~ ✅ Answered: SDK 0.53 HAS x/epochs (upstreamed from Osmosis in v0.52). Gaia incorrectly uses a stub; should switch to SDK's built-in module (Task 6.10).
 6. ~~**CRITICAL**: What Osmosis SDK fork features are required by the DEX modules?~~ ✅ Answered: **None!** DEX modules don't use bank hooks or supply offsets. See "SDK Fork Features Analysis" section.
 
 ---
