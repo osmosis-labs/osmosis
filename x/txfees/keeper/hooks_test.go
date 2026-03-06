@@ -957,6 +957,35 @@ func (s *KeeperTestSuite) TestOsmoTakerFeeBurnMechanism() {
 	s.Require().Equal(initialAmount, totalDistributed, "Total distributed amount should equal initial amount")
 }
 
+// TestOsmoTakerFeeDustRemainsInCollector ensures base-denom dust created by truncation
+// stays in the main taker fee collector for the next epoch instead of entering the non-native path.
+func (s *KeeperTestSuite) TestOsmoTakerFeeDustRemainsInCollector() {
+	s.Setup()
+
+	baseDenom, _ := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
+	takerFeeCollectorAddr := s.App.AccountKeeper.GetModuleAddress(types.TakerFeeCollectorName)
+	takerFeeStakersAddr := s.App.AccountKeeper.GetModuleAddress(types.TakerFeeStakersName)
+
+	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
+	poolManagerParams.TakerFeeParams.OsmoTakerFeeDistribution = poolmanagertypes.TakerFeeDistributionPercentage{
+		StakingRewards: osmomath.MustNewDecFromStr("0.3"),
+		CommunityPool:  osmomath.ZeroDec(),
+		Burn:           osmomath.MustNewDecFromStr("0.7"),
+	}
+	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
+
+	s.FundModuleAcc(types.TakerFeeCollectorName, sdk.NewCoins(sdk.NewCoin(baseDenom, osmomath.OneInt())))
+
+	err := s.App.TxFeesKeeper.AfterEpochEnd(s.Ctx, "week", 1)
+	s.Require().NoError(err)
+
+	collectorBalance := s.App.BankKeeper.GetBalance(s.Ctx, takerFeeCollectorAddr, baseDenom)
+	s.Require().Equal(osmomath.OneInt(), collectorBalance.Amount, "dust OSMO should remain in the taker fee collector for the next epoch")
+
+	stakersBalance := s.App.BankKeeper.GetBalance(s.Ctx, takerFeeStakersAddr, baseDenom)
+	s.Require().True(stakersBalance.IsZero(), "dust OSMO must not be routed through the non-native stakers module path")
+}
+
 // TestNonOsmoTakerFeeBurnMechanism tests the burn functionality for non-OSMO taker fees
 // Non-OSMO tokens should be swapped to OSMO before being sent to the burn address
 // Tests multiple denoms and failed swap recovery scenarios

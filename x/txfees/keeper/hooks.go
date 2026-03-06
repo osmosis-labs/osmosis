@@ -170,6 +170,12 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 
 	// Loop through all remaining tokens in the taker fee module account.
 	for _, takerFeeCoin := range takerFeeModuleAccountCoins {
+		// Base-denom dust from truncated OSMO splits should stay here and be included
+		// in the next epoch's OSMO distribution, not routed through the non-native flow.
+		if takerFeeCoin.Denom == defaultFeesDenom {
+			continue
+		}
+
 		// Store original amount to calculate percentages from the total, not from remaining amounts
 		originalAmount := takerFeeCoin.Amount
 
@@ -261,7 +267,15 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 	// We do this in the event that the swap fails, we can still track the amount of non-native taker fees that were intended for stakers.
 	var remainingTakerFeeModuleAccBal sdk.Coins
 	applyFuncIfNoErrorAndLog(ctx, func(cacheCtx sdk.Context) error {
-		remainingTakerFeeModuleAccBal = k.bankKeeper.GetAllBalances(ctx, takerFeeModuleAccount)
+		for _, coin := range k.bankKeeper.GetAllBalances(ctx, takerFeeModuleAccount) {
+			if coin.Denom == defaultFeesDenom {
+				continue
+			}
+			remainingTakerFeeModuleAccBal = remainingTakerFeeModuleAccBal.Add(coin)
+		}
+		if remainingTakerFeeModuleAccBal.IsZero() {
+			return nil
+		}
 		err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, takerFeeModuleAccount, txfeestypes.TakerFeeStakersName, remainingTakerFeeModuleAccBal)
 		return err
 	}, txfeestypes.TakerFeeFailedNativeRewardUpdateMetricName, remainingTakerFeeModuleAccBal)
