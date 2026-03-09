@@ -81,7 +81,7 @@ jobs:
           echo "OSMOSIS_VERSION=${SAFE_REF_NAME}-$SHORT_SHA" >> $GITHUB_ENV
       -
         name: Build and Push Docker Images
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           file: Dockerfile
           context: .
@@ -96,7 +96,7 @@ jobs:
             ${{ env.OSMOSIS_DEV_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
       -
         name: Build and Push E2E Init Docker Images
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           file: tests/e2e/initialization/init.Dockerfile
           context: .
@@ -108,7 +108,7 @@ jobs:
             ${{ env.OSMOSIS_INIT_CHAIN_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
       -
         name: Build and Push Cosmovisor Docker Images
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           file: Dockerfile.cosmovisor
           context: .
