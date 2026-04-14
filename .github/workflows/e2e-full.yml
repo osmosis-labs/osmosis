@@ -35,7 +35,7 @@ jobs:
   e2e:
     needs: get_diff
     if: needs.get_diff.outputs.git_diff
-    runs-on: buildjet-4vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - name: Check out repository

@@ -38,7 +38,7 @@ env:
 
 jobs:
   push-docker-images:
-    runs-on: buildjet-2vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
     steps:
       -
         name: Check out repo
