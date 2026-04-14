@@ -709,7 +709,7 @@ section.
 - `MsgSwapExactIn`
 - `MsgSwapExactOut`
 
-Once a message is received by the `x/poolmanager`, it is propageted into a
+Once a message is received by the `x/poolmanager`, it is propagated into a
 corresponding keeper
 in `x/concentrated-liquidity`.
 
