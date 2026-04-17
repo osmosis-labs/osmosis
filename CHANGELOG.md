@@ -40,6 +40,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+* [#9676](https://github.com/osmosis-labs/osmosis/pull/9676) chore: bump cometbft version to v0.38.22
+
 ## v31.0.0
 
 * [#9511](https://github.com/osmosis-labs/osmosis/pull/9511) fix: tokenfactory before send hook gas consumption
