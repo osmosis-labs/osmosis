@@ -42,7 +42,7 @@ env:
 
 jobs:
   push-docker-images:
-    runs-on: buildjet-4vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
     if: ${{ !contains(github.ref_name, 'iavl') }}
     steps:
       - name: Check out the repo
@@ -164,7 +164,7 @@ jobs:
             ${{ env.DOCKER_REPOSITORY_COSMOVISOR }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.PATCH_VERSION }}
 
   push-iavl-docker-images:
-    runs-on: buildjet-4vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
     if: ${{ contains(github.ref_name, 'iavl') }}
     steps:
       - name: Check out the repo
