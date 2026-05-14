@@ -108,20 +108,44 @@ func (k Keeper) EndBlock(ctx sdk.Context) {
 	// 'altered pool ids' gets automatically cleared on commit by being a transient store
 	changedPoolIds := k.getChangedPools(ctx)
 	for _, id := range changedPoolIds {
-		err := k.updateRecords(ctx, id)
-		if err != nil {
-			ctx.Logger().Error(fmt.Errorf(
-				"error in TWAP end block, for updating records for pool id %d."+
-					" Skipping record update. Underlying err: %w", id, err).Error())
-		}
+		k.updateRecordsWithPanicRecovery(ctx, id)
 	}
 
 	state := k.GetPruningState(ctx)
 	if state.IsPruning {
-		err := k.pruneRecordsBeforeTimeButNewest(ctx, state)
-		if err != nil {
-			ctx.Logger().Error("Error pruning old twaps at the end block", err)
+		k.pruneRecordsWithPanicRecovery(ctx, state)
+	}
+}
+
+func (k Keeper) updateRecordsWithPanicRecovery(ctx sdk.Context, poolId uint64) {
+	defer func() {
+		if r := recover(); r != nil {
+			ctx.Logger().Error(fmt.Sprintf(
+				"panic in TWAP end block, for updating records for pool id %d. Skipping record update. Underlying panic: %v",
+				poolId,
+				r,
+			))
 		}
+	}()
+
+	err := k.updateRecords(ctx, poolId)
+	if err != nil {
+		ctx.Logger().Error(fmt.Errorf(
+			"error in TWAP end block, for updating records for pool id %d."+
+				" Skipping record update. Underlying err: %w", poolId, err).Error())
+	}
+}
+
+func (k Keeper) pruneRecordsWithPanicRecovery(ctx sdk.Context, state types.PruningState) {
+	defer func() {
+		if r := recover(); r != nil {
+			ctx.Logger().Error(fmt.Sprintf("panic pruning old twaps at the end block: %v", r))
+		}
+	}()
+
+	err := k.pruneRecordsBeforeTimeButNewest(ctx, state)
+	if err != nil {
+		ctx.Logger().Error("Error pruning old twaps at the end block", err)
 	}
 }
 

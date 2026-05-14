@@ -819,8 +819,8 @@ github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06/go.mod h1:
 github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE/e/2PUdi/liOCUjSTXgM1o87ZssimdTWN964YiIeI=
 github.com/coinbase/mesh-sdk-go/types v1.0.0-beta1 h1:h/I5vEyr1rFmhN+8hvCkVOniqqTXTtnjF88SYQfpEUw=
 github.com/coinbase/mesh-sdk-go/types v1.0.0-beta1/go.mod h1:eq7W2TMRH22GTW0N0beDnN931DW0/WOI1R2sdHNHG4c=
-github.com/cometbft/cometbft v0.38.22 h1:T9BLO8f4DOhvQ5ic9ULq+4WjOlgxeKtFt2lR0IL5Qos=
-github.com/cometbft/cometbft v0.38.22/go.mod h1:jtH//cs5e2U5dNiaYIPMBwWXZsedXJfIie77gVhuRaA=
+github.com/cometbft/cometbft v0.38.23 h1:jtCe5Do4EcHVf/FCyZMvkBm+AmsRGGyvswImXYAabdM=
+github.com/cometbft/cometbft v0.38.23/go.mod h1:jtH//cs5e2U5dNiaYIPMBwWXZsedXJfIie77gVhuRaA=
 github.com/cometbft/cometbft-db v0.14.1 h1:SxoamPghqICBAIcGpleHbmoPqy+crij/++eZz3DlerQ=
 github.com/cometbft/cometbft-db v0.14.1/go.mod h1:KHP1YghilyGV/xjD5DP3+2hyigWx0WTp9X+0Gnx0RxQ=
 github.com/containerd/continuity v0.4.3 h1:6HVkalIp+2u1ZLH1J/pYX2oBVXlJZvh1X1A7bEZ9Su8=
