@@ -41,9 +41,10 @@ func (k Keeper) ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin
 }
 
 // CalcFeeSpotPrice converts the provided tx fees into their equivalent value in the base denomination.
-// Spot Price Calculation: spotPrice / (1 - spreadFactor),
-// where spotPrice is defined as:
-// (tokenBalanceIn / tokenWeightIn) / (tokenBalanceOut / tokenWeightOut)
+// It first attempts the registered direct pool (FeeToken.PoolID). If that fails, it falls back to
+// a 2-hop route discovered via protorev + FeeSwapIntermediaryDenomList, matching the route discovery
+// used at epoch-end by swapNonNativeFeeToDenom. This keeps registration-time validation and
+// runtime swap behaviour aligned on the same routing source of truth.
 func (k Keeper) CalcFeeSpotPrice(ctx sdk.Context, inputDenom string) (osmomath.BigDec, error) {
 	baseDenom, err := k.GetBaseDenom(ctx)
 	if err != nil {
@@ -55,11 +56,16 @@ func (k Keeper) CalcFeeSpotPrice(ctx sdk.Context, inputDenom string) (osmomath.B
 		return osmomath.BigDec{}, err
 	}
 
-	spotPrice, err := k.poolManager.RouteCalculateSpotPrice(ctx, feeToken.PoolID, baseDenom, feeToken.Denom)
-	if err != nil {
-		return osmomath.BigDec{}, err
+	// Direct route via the registered pool. Argument order matches the existing convention
+	// (quote=baseDenom, base=feeToken.Denom) so the return is in units of base/fee.
+	spotPrice, directErr := k.poolManager.RouteCalculateSpotPrice(ctx, feeToken.PoolID, baseDenom, feeToken.Denom)
+	if directErr == nil {
+		return spotPrice, nil
 	}
-	return spotPrice, nil
+
+	// Fall back to 2-hop discovery via protorev. This is the same path swapNonNativeFeeToDenom
+	// takes, so validation passing here means the epoch swap will find a route too.
+	return k.calc2HopSpotPrice(ctx, feeToken.Denom, baseDenom)
 }
 
 // GetFeeToken returns the fee token record for a specific denom,
@@ -89,12 +95,11 @@ func (k Keeper) SetBaseDenom(ctx sdk.Context, denom string) error {
 	return nil
 }
 
-// ValidateFeeToken validates that a fee token record is valid
-// It checks:
-// - The denom exists
-// - The denom is not the base denom
-// - The gamm pool exists
-// - The gamm pool includes the base token and fee token.
+// ValidateFeeToken validates that a fee token record is valid.
+// It first tries the registered direct pool (FeeToken.PoolID). If that fails, it tries to
+// discover a 2-hop route via protorev + FeeSwapIntermediaryDenomList. This mirrors the
+// route-discovery used at epoch swap time in swapNonNativeFeeToDenom, so any token that
+// validates here will also be swappable at epoch end.
 func (k Keeper) ValidateFeeToken(ctx sdk.Context, feeToken types.FeeToken) error {
 	baseDenom, err := k.GetBaseDenom(ctx)
 	if err != nil {
@@ -103,13 +108,21 @@ func (k Keeper) ValidateFeeToken(ctx sdk.Context, feeToken types.FeeToken) error
 	if baseDenom == feeToken.Denom {
 		return errorsmod.Wrap(types.ErrInvalidFeeToken, "cannot add basedenom as a whitelisted fee token")
 	}
-	// This not returning an error implies that:
-	// - feeToken.Denom exists
-	// - feeToken.PoolID exists
-	// - feeToken.PoolID has both feeToken.Denom and baseDenom
-	_, err = k.poolManager.RouteCalculateSpotPrice(ctx, feeToken.PoolID, feeToken.Denom, baseDenom)
 
-	return err
+	// Try the registered direct pool first. Success here implies the pool exists and contains
+	// both feeToken.Denom and baseDenom.
+	_, directErr := k.poolManager.RouteCalculateSpotPrice(ctx, feeToken.PoolID, feeToken.Denom, baseDenom)
+	if directErr == nil {
+		return nil
+	}
+
+	// Direct route failed. Fall back to 2-hop discovery via protorev.
+	if _, _, _, err := k.find2HopRoute(ctx, feeToken.Denom, baseDenom); err != nil {
+		// Surface the original direct-route error when no fallback is available, since that
+		// is what the caller almost always cares about.
+		return directErr
+	}
+	return nil
 }
 
 // GetFeeToken returns a unique fee token record for a specific denom.
@@ -131,8 +144,9 @@ func (k Keeper) GetFeeToken(ctx sdk.Context, denom string) (types.FeeToken, erro
 }
 
 // setFeeToken sets a new fee token record for a specific denom.
-// PoolID is just the pool to swap rate between alt fee token and native fee token.
-// If the feeToken pool ID is 0, deletes the fee Token entry.
+// PoolID is the direct swap pool for the fee token, OR any non-zero sentinel value
+// if the registration relies on a 2-hop route discovered via FeeSwapIntermediaryDenomList.
+// PoolID == 0 deletes the entry.
 func (k Keeper) setFeeToken(ctx sdk.Context, feeToken types.FeeToken) error {
 	prefixStore := k.GetFeeTokensStore(ctx)
 
@@ -201,4 +215,53 @@ func (k Keeper) SenderValidationSetFeeTokens(ctx sdk.Context, sender string, fee
 	}
 
 	return k.SetFeeTokens(ctx, feetokens)
+}
+
+// find2HopRoute searches for a 2-hop route from feeDenom to baseDenom using protorev,
+// iterating over the whitelisted intermediary denoms in params.FeeSwapIntermediaryDenomList.
+// This is the same discovery used by hooks.go build2HopsRoute / get2HopRoute, so a route
+// found here is the same route the epoch swap will use. If you change the iteration shape
+// (skip conditions, ordering, partial-success behaviour), mirror the change in build2HopsRoute
+// or the validator and the epoch swap will diverge.
+// Returns (hop1PoolID, hop2PoolID, intermediaryDenom, nil) on success.
+func (k Keeper) find2HopRoute(ctx sdk.Context, feeDenom, baseDenom string) (uint64, uint64, string, error) {
+	params := k.GetParams(ctx)
+	for _, intermediary := range params.FeeSwapIntermediaryDenomList {
+		if intermediary == feeDenom || intermediary == baseDenom {
+			continue
+		}
+		pool1, err := k.protorevKeeper.GetPoolForDenomPairNoOrder(ctx, feeDenom, intermediary)
+		if err != nil {
+			continue
+		}
+		pool2, err := k.protorevKeeper.GetPoolForDenomPairNoOrder(ctx, intermediary, baseDenom)
+		if err != nil {
+			continue
+		}
+		return pool1, pool2, intermediary, nil
+	}
+	return 0, 0, "", errorsmod.Wrapf(types.ErrNoValidRoute, "no 2-hop route from %s to %s", feeDenom, baseDenom)
+}
+
+// calc2HopSpotPrice computes a compounded spot price for a 2-hop route discovered via protorev.
+// Units: (intermediary/fee) * (base/intermediary) = base/fee, matching the direct-route return.
+func (k Keeper) calc2HopSpotPrice(ctx sdk.Context, feeDenom, baseDenom string) (osmomath.BigDec, error) {
+	pool1, pool2, intermediary, err := k.find2HopRoute(ctx, feeDenom, baseDenom)
+	if err != nil {
+		return osmomath.BigDec{}, err
+	}
+
+	// hop1Price: intermediary per one feeDenom.
+	hop1Price, err := k.poolManager.RouteCalculateSpotPrice(ctx, pool1, intermediary, feeDenom)
+	if err != nil {
+		return osmomath.BigDec{}, errorsmod.Wrapf(err, "first hop spot price %s -> %s via pool %d", feeDenom, intermediary, pool1)
+	}
+
+	// hop2Price: baseDenom per one intermediary.
+	hop2Price, err := k.poolManager.RouteCalculateSpotPrice(ctx, pool2, baseDenom, intermediary)
+	if err != nil {
+		return osmomath.BigDec{}, errorsmod.Wrapf(err, "second hop spot price %s -> %s via pool %d", intermediary, baseDenom, pool2)
+	}
+
+	return hop1Price.Mul(hop2Price), nil
 }

@@ -12,4 +12,5 @@ var (
 	ErrTooManyFeeCoins              = errorsmod.Register(ModuleName, 2, "too many fee coins. only accepts fees in one denom")
 	ErrInvalidFeeToken              = errorsmod.Register(ModuleName, 3, "invalid fee token")
 	ErrNotWhitelistedFeeTokenSetter = errorsmod.Register(ModuleName, 4, "not whitelisted fee token setter")
+	ErrNoValidRoute                 = errorsmod.Register(ModuleName, 5, "no valid direct or 2-hop route to base denom")
 )

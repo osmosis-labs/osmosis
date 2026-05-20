@@ -432,6 +432,7 @@ func (k Keeper) get2HopRoute(ctx sdk.Context, denomToSwapTo, coinDenom string) (
 // build2HopsRoute builds a 2-hops swap route given an intermediary denom and target denom.
 // It first finds a pool from the input coin to the intermediary denom, then from intermediary to target.
 // Returns the complete route, true, OR []route{}, false if no path is found.
+// Mirrored by feetokens.go find2HopRoute for the validation/spot-price side; keep both in lockstep.
 func (k Keeper) build2HopsRoute(ctx sdk.Context, inputDenom, intermediaryDenom, denomToSwapTo string) ([]poolmanagertypes.SwapAmountInRoute, bool) {
 	// Find pool for first hop: inputDenom -> intermediaryDenom
 	poolId1, err := k.protorevKeeper.GetPoolForDenomPairNoOrder(ctx, inputDenom, intermediaryDenom)
