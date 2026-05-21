@@ -3,6 +3,7 @@ package app
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	probabilistic "github.com/cardano-foundation/cardano-ibc-incubator/cosmos/cardano-probabilistic-light-client-v8"
 	"github.com/cosmos/cosmos-sdk/client"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
@@ -211,6 +212,7 @@ func appModules(
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)),
 		auction.NewAppModule(appCodec, *app.AuctionKeeper),
 		smartaccount.NewAppModule(appCodec, *app.SmartAccountKeeper),
+		probabilistic.NewAppModule(),
 	}
 }
 
@@ -305,6 +307,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		packetforwardtypes.ModuleName,
 		cosmwasmpooltypes.ModuleName,
 		auctiontypes.ModuleName,
+		probabilistic.ModuleName,
 	}
 }
 

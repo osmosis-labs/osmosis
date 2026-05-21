@@ -5,6 +5,7 @@ package keepers
 // Unclear to me how to use NewBasicManagerFromManager for this purpose though prior to app init
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
+	probabilistic "github.com/cardano-foundation/cardano-ibc-incubator/cosmos/cardano-probabilistic-light-client-v8"
 	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward"
 	transfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
@@ -132,4 +133,5 @@ var AppModuleBasics = module.NewBasicManager(
 	tendermint.AppModuleBasic{},
 	auction.AppModuleBasic{},
 	smartaccount.AppModuleBasic{},
+	probabilistic.AppModuleBasic{},
 )
