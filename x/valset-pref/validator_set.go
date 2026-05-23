@@ -104,7 +104,7 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 			return err
 		}
 
-		// in the last valset iteration we dont calculate it from shares using decimals and truncation,
+		// in the last valset iteration we don't calculate it from shares using decimals and truncation,
 		// we use what's remaining to get more accurate value
 		if len(existingSet.Preferences)-1 == i {
 			tokenAmt = coin.Amount.Sub(totalDelAmt).ToLegacyDec().TruncateInt()

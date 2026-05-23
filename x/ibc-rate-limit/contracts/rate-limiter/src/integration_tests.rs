@@ -443,7 +443,7 @@ fn test_execute_add_path() {
     };
 
     let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
-    // non gov cant invoke
+    // non gov can't invoke
     assert!(app
         .execute(Addr::unchecked("foobar"), cosmos_msg.clone())
         .is_err());
@@ -497,7 +497,7 @@ fn test_execute_remove_path() {
         denom: "denom".to_string(),
     };
     let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
-    // non gov cant invoke
+    // non gov can't invoke
     assert!(app
         .execute(Addr::unchecked("foobar"), cosmos_msg.clone())
         .is_err());
@@ -548,7 +548,7 @@ fn test_execute_reset_path_quota() {
         quota_id: "daily".to_string(),
     };
     let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
-    // non gov cant invoke
+    // non gov can't invoke
     assert!(app
         .execute(Addr::unchecked("foobar"), cosmos_msg.clone())
         .is_err());
@@ -610,7 +610,7 @@ fn test_execute_grant_and_revoke_role() {
         roles: vec![Roles::GrantRole],
     };
     let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
-    // non gov cant invoke
+    // non gov can't invoke
     assert!(app
         .execute(Addr::unchecked("foobar"), cosmos_msg.clone())
         .is_err());
@@ -707,7 +707,7 @@ fn test_execute_edit_path_quota() {
         },
     };
     let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
-    // non gov cant invoke
+    // non gov can't invoke
     assert!(app
         .execute(Addr::unchecked("foobar"), cosmos_msg.clone())
         .is_err());
@@ -754,7 +754,7 @@ fn test_execute_remove_message() {
         roles: vec![Roles::GrantRole],
     };
     let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
-    // non gov cant invoke
+    // non gov can't invoke
     assert!(app
         .execute(Addr::unchecked("foobar"), cosmos_msg.clone())
         .is_err());
@@ -769,7 +769,7 @@ fn test_execute_remove_message() {
     };
 
     let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
-    // non gov cant invoke as insufficient permissions
+    // non gov can't invoke as insufficient permissions
     assert!(app
         .execute(Addr::unchecked("foobar"), cosmos_msg.clone())
         .is_err());
@@ -833,7 +833,7 @@ fn test_execute_process_messages() {
     };
 
     let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
-    // non gov cant invoke
+    // non gov can't invoke
     assert!(app
         .execute(Addr::unchecked("foobar"), cosmos_msg.clone())
         .is_err());
@@ -848,7 +848,7 @@ fn test_execute_process_messages() {
     };
 
     let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
-    // non gov cant invoke as insufficient permissions
+    // non gov can't invoke as insufficient permissions
     assert!(app
         .execute(Addr::unchecked("foobar"), cosmos_msg.clone())
         .is_err());

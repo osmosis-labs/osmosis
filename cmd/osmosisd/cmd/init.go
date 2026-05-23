@@ -166,7 +166,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 					// Set chainID to osmosis-1 in the case of a blank chainID
 					chainID = "osmosis-1"
 
-					// We dont print the app state for mainnet nodes because it's massive
+					// We don't print the app state for mainnet nodes because it's massive
 					fmt.Println("Not printing app state for mainnet node due to verbosity")
 					toPrint = newPrintInfo(config.Moniker, chainID, nodeID, "", nil)
 				}

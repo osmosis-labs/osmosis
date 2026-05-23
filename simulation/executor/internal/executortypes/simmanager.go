@@ -105,7 +105,7 @@ func (m Manager) legacyActions(seed int64, cdc codec.JSONCodec) []simtypes.Actio
 		if simModule, ok := m.legacyModules[moduleName]; ok {
 			// UNFORKINGNOTE: Figure out how to call RandomizedParams and ProposalContents if we decide to revive simulator
 			//
-			// Printing so we dont need to uncomment more, just delete the prints later
+			// Printing so we don't need to uncomment more, just delete the prints later
 			// simState.LegacyParamChange = append(simState.LegacyParamChange, simModule.RandomizedParams(r)...)
 			// simState.LegacyProposalContents = append(simState.LegacyProposalContents, simModule.ProposalContents(simState)...)
 			fmt.Println("simState.LegacyParamChange", simModule, r)
