@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Get git diff
         uses: technote-space/get-diff-action@v6.1.2
         with:
@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: 🐿 Setup Golang
         uses: actions/setup-go@v6
         with:
@@ -62,19 +62,19 @@ jobs:
       - name: Split pkgs into 4 files
         run: |
           split -d -n l/4 pkgs.txt pkgs.txt.part.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: "${{ github.sha }}-00"
           path: ./pkgs.txt.part.00
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: "${{ github.sha }}-01"
           path: ./pkgs.txt.part.01
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: "${{ github.sha }}-02"
           path: ./pkgs.txt.part.02
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: "${{ github.sha }}-03"
           path: ./pkgs.txt.part.03
@@ -89,7 +89,7 @@ jobs:
         part: ["00", "01", "02", "03"]
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: 🐿 Setup Golang
         uses: actions/setup-go@v6
         with:
@@ -112,7 +112,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Set up QEMU
@@ -151,7 +151,7 @@ jobs:
           tar cvzf ./logs.tgz ./logs
       - name: Upload logs to GitHub
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: logs.tgz
           path: ./logs.tgz
