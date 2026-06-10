@@ -7,6 +7,8 @@ import (
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // AccountKeeper defines the contract required for account APIs.
@@ -28,15 +30,25 @@ type BankKeeper interface {
 	MintCoins(ctx context.Context, name string, amt sdk.Coins) error
 	BurnCoins(ctx context.Context, name string, amt sdk.Coins) error
 	AddSupplyOffset(ctx context.Context, denom string, offsetAmount osmomath.Int)
+	GetSupply(ctx context.Context, denom string) sdk.Coin
 	GetSupplyWithOffset(ctx context.Context, denom string) sdk.Coin
 }
 
-// CommunityPoolKeeper defines the contract needed to be fulfilled for distribution keeper.
-type CommunityPoolKeeper interface {
-	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
-}
+// CommunityPoolKeeper is an alias to the cosmos SDK distribution keeper pointer.
+// The mint module needs both FundCommunityPool (distribution of minted coins)
+// and read access to the FeePool (for restricted-supply accounting). FeePool is
+// a struct field on the concrete keeper, not a method, so it cannot be expressed
+// as a Go interface; aliasing the concrete pointer is the pragmatic contract.
+type CommunityPoolKeeper = *distrkeeper.Keeper
 
 // EpochKeeper defines the contract needed to be fulfilled for epochs keeper.
 type EpochKeeper interface {
 	GetEpochInfo(ctx sdk.Context, identifier string) epochstypes.EpochInfo
+}
+
+// StakingKeeper defines the contract needed to query staking information for
+// restricted-supply accounting (delegations held by restricted addresses).
+type StakingKeeper interface {
+	IterateDelegations(ctx context.Context, delegator sdk.AccAddress, fn func(int64, stakingtypes.DelegationI) bool) error
+	GetValidator(ctx context.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, err error)
 }
