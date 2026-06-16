@@ -43,7 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 * [#9676](https://github.com/osmosis-labs/osmosis/pull/9676) chore: bump cometbft version to v0.38.22
-* [#TBD](https://github.com/osmosis-labs/osmosis/pull/TBD) feat(mint): supply endpoints (burned/total/restricted/circulating) and switch the inflation endpoint denominator to circulating supply
+* [#9708](https://github.com/osmosis-labs/osmosis/pull/9708) feat(mint): supply endpoints (burned/total/restricted/circulating) and switch the inflation endpoint denominator to circulating supply
 
 ## v31.0.0
 
