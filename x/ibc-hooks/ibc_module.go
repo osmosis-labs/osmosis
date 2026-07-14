@@ -50,7 +50,10 @@ func (im IBCMiddleware) OnChanOpenInit(
 	if hook, ok := im.ICS4Middleware.Hooks.(OnChanOpenInitAfterHooks); ok {
 		hook.OnChanOpenInitAfterHook(ctx, order, connectionHops, portID, channelID, channelCap, counterparty, version, finalVersion, err)
 	}
-	return version, err
+	// Return the version negotiated by the underlying application, core IBC
+	// writes the returned version onto the channel, echoing the proposed one
+	// would discard the negotiation.
+	return finalVersion, err
 }
 
 // OnChanOpenTry implements the IBCMiddleware interface

@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 * [#9676](https://github.com/osmosis-labs/osmosis/pull/9676) chore: bump cometbft version to v0.38.22
+* [#9722](https://github.com/osmosis-labs/osmosis/pull/9722) fix: return the version negotiated by the underlying application from ibc-hooks `OnChanOpenInit`.
 
 ## v31.0.0
 
