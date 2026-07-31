@@ -7,6 +7,27 @@
   },
   "apis": [
     {
+      "url": "./tmp-swagger-gen/osmosis/concentratedliquidity/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "ConcentratedLiquidityParams",
+          "Pools": "ConcentratedLiquidityPools"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/osmosis/cosmwasmpool/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "CosmwasmPoolParams",
+          "Pools": "CosmwasmPoolPools"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/osmosis/downtimedetector/v1beta1/query.swagger.json"
+    },
+    {
       "url": "./tmp-swagger-gen/osmosis/epochs/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
@@ -19,6 +40,22 @@
       "operationIds": {
         "rename": {
           "Params": "GAMMParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/osmosis/gamm/v2/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "SpotPrice": "GAMMSpotPriceV2"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/osmosis/ibcratelimit/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "IBCRateLimitParams"
         }
       }
     },
@@ -56,6 +93,40 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/osmosis/poolmanager/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "PoolManagerParams",
+          "Pool": "PoolManagerPool",
+          "NumPools": "PoolManagerNumPools",
+          "SpotPrice": "PoolManagerSpotPrice",
+          "TotalLiquidity": "PoolManagerTotalLiquidity",
+          "TotalPoolLiquidity": "PoolManagerTotalPoolLiquidity",
+          "EstimateSwapExactAmountIn": "PoolManagerEstimateSwapExactAmountIn",
+          "EstimateSwapExactAmountOut": "PoolManagerEstimateSwapExactAmountOut"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/osmosis/poolmanager/v2/query.swagger.json"
+    },
+    {
+      "url": "./tmp-swagger-gen/osmosis/protorev/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "ProtoRevParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/osmosis/smartaccount/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "SmartAccountParams"
+        }
+      }
+    },
+    {
       "url": "./tmp-swagger-gen/osmosis/superfluid/query.swagger.json",
       "operationIds": {
         "rename": {
@@ -72,6 +143,14 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/osmosis/twap/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "TwapParams"
+        }
+      }
+    },
+    {
       "url": "./tmp-swagger-gen/osmosis/txfees/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
@@ -79,6 +158,9 @@
           "BaseDenom": "TxFeesBaseDenom"
         }
       }
+    },
+    {
+      "url": "./tmp-swagger-gen/osmosis/valsetpref/v1beta1/query.swagger.json"
     },
     {
       "url": "./tmp-swagger-gen/cosmos/auth/v1beta1/query.swagger.json",
@@ -145,10 +227,26 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/cosmos/gov/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "GovV1Params",
+          "Proposal": "GovV1Proposal",
+          "Proposals": "GovV1Proposals",
+          "Vote": "GovV1Vote",
+          "Votes": "GovV1Votes",
+          "Deposit": "GovV1Deposit",
+          "Deposits": "GovV1Deposits",
+          "TallyResult": "GovV1TallyResult"
+        }
+      }
+    },
+    {
       "url": "./tmp-swagger-gen/cosmos/mint/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
-          "Params": "CosmosMintParams"
+          "Params": "CosmosMintParams",
+          "Inflation": "CosmosMintInflation"
         }
       }
     },

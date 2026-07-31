@@ -36,14 +36,22 @@ proto-format:
 SWAGGER_DIR=./swagger-proto
 THIRD_PARTY_DIR=$(SWAGGER_DIR)/third_party
 
+# Proto sources for swagger generation are pinned to the versions the chain
+# builds against (keep in sync with go.mod). Pulling upstream main breaks
+# generation when upstream removes modules this chain still serves (e.g.
+# x/params) and documents query surfaces the deployed SDK does not have.
+SDK_PROTO_REPO=https://github.com/osmosis-labs/cosmos-sdk.git
+SDK_PROTO_REF=v0.50.14-v30-osmo
+IBC_PROTO_REF=v8.7.0
+
 proto-download-deps:
 	mkdir -p "$(THIRD_PARTY_DIR)/cosmos_tmp" && \
 	cd "$(THIRD_PARTY_DIR)/cosmos_tmp" && \
 	git init && \
-	git remote add origin "https://github.com/cosmos/cosmos-sdk.git" && \
+	git remote add origin "$(SDK_PROTO_REPO)" && \
 	git config core.sparseCheckout true && \
 	printf "proto\nthird_party\n" > .git/info/sparse-checkout && \
-	git pull origin main && \
+	git pull --depth 1 origin "$(SDK_PROTO_REF)" && \
 	rm -f ./proto/buf.* && \
 	mv ./proto/* ..
 	rm -rf "$(THIRD_PARTY_DIR)/cosmos_tmp"
@@ -54,7 +62,7 @@ proto-download-deps:
 	git remote add origin "https://github.com/cosmos/ibc-go.git" && \
 	git config core.sparseCheckout true && \
 	printf "proto\n" > .git/info/sparse-checkout && \
-	git pull origin main && \
+	git pull --depth 1 origin "$(IBC_PROTO_REF)" && \
 	rm -f ./proto/buf.* && \
 	mv ./proto/* ..
 	rm -rf "$(THIRD_PARTY_DIR)/ibc_tmp"
