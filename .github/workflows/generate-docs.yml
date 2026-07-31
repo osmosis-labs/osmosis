@@ -25,7 +25,12 @@ jobs:
 
       - name: Install Protoc-gen-swagger
         run: |
-          go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@latest
+          go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v1.16.0
+
+      - name: Install swagger-combine
+        run: |
+          yarn --cwd client/docs install --frozen-lockfile
+          echo "${{ github.workspace }}/client/docs/node_modules/.bin" >> $GITHUB_PATH
 
       - name: Install Statik
         run: |

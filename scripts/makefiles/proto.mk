@@ -37,12 +37,20 @@ SWAGGER_DIR=./swagger-proto
 THIRD_PARTY_DIR=$(SWAGGER_DIR)/third_party
 
 # Proto sources for swagger generation are pinned to the versions the chain
-# builds against (keep in sync with go.mod). Pulling upstream main breaks
+# builds against (keep in sync with go.mod). Pulling mutable branches breaks
 # generation when upstream removes modules this chain still serves (e.g.
-# x/params) and documents query surfaces the deployed SDK does not have.
+# x/params), documents query surfaces the deployed versions do not have, and
+# lets the committed output drift without any repo dependency change.
 SDK_PROTO_REPO=https://github.com/osmosis-labs/cosmos-sdk.git
 SDK_PROTO_REF=v0.50.14-v30-osmo
 IBC_PROTO_REF=v8.7.0
+WASMD_PROTO_REF=v0.53.3
+ICQ_PROTO_REF=modules/async-icq/v8.0.0
+BLOCK_SDK_PROTO_REF=v2.1.9-mempool
+COSMOS_PROTO_REF=v1.0.0-beta.5
+GOGOPROTO_REF=v1.7.0
+ICS23_REF=go/v0.11.0
+GOOGLEAPIS_REF=93c3926464cdc6bd9410c3be3726e2cd22951fff
 
 proto-download-deps:
 	mkdir -p "$(THIRD_PARTY_DIR)/cosmos_tmp" && \
@@ -67,26 +75,59 @@ proto-download-deps:
 	mv ./proto/* ..
 	rm -rf "$(THIRD_PARTY_DIR)/ibc_tmp"
 
+	mkdir -p "$(THIRD_PARTY_DIR)/wasmd_tmp" && \
+	cd "$(THIRD_PARTY_DIR)/wasmd_tmp" && \
+	git init && \
+	git remote add origin "https://github.com/CosmWasm/wasmd.git" && \
+	git config core.sparseCheckout true && \
+	printf "proto\n" > .git/info/sparse-checkout && \
+	git pull --depth 1 origin "$(WASMD_PROTO_REF)" && \
+	rm -f ./proto/buf.* && \
+	mv ./proto/* ..
+	rm -rf "$(THIRD_PARTY_DIR)/wasmd_tmp"
+
+	mkdir -p "$(THIRD_PARTY_DIR)/icq_tmp" && \
+	cd "$(THIRD_PARTY_DIR)/icq_tmp" && \
+	git init && \
+	git remote add origin "https://github.com/cosmos/ibc-apps.git" && \
+	git config core.sparseCheckout true && \
+	printf "modules/async-icq/proto\n" > .git/info/sparse-checkout && \
+	git pull --depth 1 origin "$(ICQ_PROTO_REF)" && \
+	rm -f ./modules/async-icq/proto/buf.* && \
+	mv ./modules/async-icq/proto/* ..
+	rm -rf "$(THIRD_PARTY_DIR)/icq_tmp"
+
+	mkdir -p "$(THIRD_PARTY_DIR)/block_sdk_tmp" && \
+	cd "$(THIRD_PARTY_DIR)/block_sdk_tmp" && \
+	git init && \
+	git remote add origin "https://github.com/osmosis-labs/block-sdk.git" && \
+	git config core.sparseCheckout true && \
+	printf "proto\n" > .git/info/sparse-checkout && \
+	git pull --depth 1 origin "$(BLOCK_SDK_PROTO_REF)" && \
+	rm -f ./proto/buf.* && \
+	mv ./proto/* ..
+	rm -rf "$(THIRD_PARTY_DIR)/block_sdk_tmp"
+
 	mkdir -p "$(THIRD_PARTY_DIR)/cosmos_proto_tmp" && \
 	cd "$(THIRD_PARTY_DIR)/cosmos_proto_tmp" && \
 	git init && \
 	git remote add origin "https://github.com/cosmos/cosmos-proto.git" && \
 	git config core.sparseCheckout true && \
 	printf "proto\n" > .git/info/sparse-checkout && \
-	git pull origin main && \
+	git pull --depth 1 origin "$(COSMOS_PROTO_REF)" && \
 	rm -f ./proto/buf.* && \
 	mv ./proto/* ..
 	rm -rf "$(THIRD_PARTY_DIR)/cosmos_proto_tmp"
 
 	mkdir -p "$(THIRD_PARTY_DIR)/gogoproto" && \
-	curl -SSL https://raw.githubusercontent.com/cosmos/gogoproto/main/gogoproto/gogo.proto > "$(THIRD_PARTY_DIR)/gogoproto/gogo.proto"
+	curl -sSL https://raw.githubusercontent.com/cosmos/gogoproto/$(GOGOPROTO_REF)/gogoproto/gogo.proto > "$(THIRD_PARTY_DIR)/gogoproto/gogo.proto"
 
 	mkdir -p "$(THIRD_PARTY_DIR)/google/api" && \
-	curl -sSL https://raw.githubusercontent.com/googleapis/googleapis/master/google/api/annotations.proto > "$(THIRD_PARTY_DIR)/google/api/annotations.proto"
-	curl -sSL https://raw.githubusercontent.com/googleapis/googleapis/master/google/api/http.proto > "$(THIRD_PARTY_DIR)/google/api/http.proto"
+	curl -sSL https://raw.githubusercontent.com/googleapis/googleapis/$(GOOGLEAPIS_REF)/google/api/annotations.proto > "$(THIRD_PARTY_DIR)/google/api/annotations.proto"
+	curl -sSL https://raw.githubusercontent.com/googleapis/googleapis/$(GOOGLEAPIS_REF)/google/api/http.proto > "$(THIRD_PARTY_DIR)/google/api/http.proto"
 
 	mkdir -p "$(THIRD_PARTY_DIR)/cosmos/ics23/v1" && \
-	curl -sSL https://raw.githubusercontent.com/cosmos/ics23/master/proto/cosmos/ics23/v1/proofs.proto > "$(THIRD_PARTY_DIR)/cosmos/ics23/v1/proofs.proto"
+	curl -sSL https://raw.githubusercontent.com/cosmos/ics23/$(ICS23_REF)/proto/cosmos/ics23/v1/proofs.proto > "$(THIRD_PARTY_DIR)/cosmos/ics23/v1/proofs.proto"
 
 
 docs:

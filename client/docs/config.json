@@ -163,6 +163,14 @@
       "url": "./tmp-swagger-gen/osmosis/valsetpref/v1beta1/query.swagger.json"
     },
     {
+      "url": "./tmp-swagger-gen/cosmwasm/wasm/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "WasmParams"
+        }
+      }
+    },
+    {
       "url": "./tmp-swagger-gen/cosmos/auth/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
@@ -336,6 +344,30 @@
       "operationIds": {
         "rename": {
           "Params": "ICAHostParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/ibc/lightclients/wasm/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Code": "WasmClientCode"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/icq/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "ICQParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/sdk/auction/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "AuctionParams"
         }
       }
     }
