@@ -37,7 +37,9 @@ jobs:
       - name: Display go version
         run: go version
       - name: Run find & replace script
-        run: ./scripts/replace_import_paths.sh ${{ inputs.version }}
+        env:
+          VERSION: ${{ inputs.version }}
+        run: ./scripts/replace_import_paths.sh "$VERSION"
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:

@@ -37,13 +37,17 @@ jobs:
         with:
           go-version-file: go.mod
       - name: Fetch branches and checkout target
+        env:
+          TARGET_BRANCH: ${{ inputs.target-branch }}
         run: |
-          git fetch origin ${{ inputs.target-branch }}
-          git checkout ${{ inputs.target-branch }}
+          git fetch origin "$TARGET_BRANCH"
+          git checkout "$TARGET_BRANCH"
 
       - name: Run script
+        env:
+          TARGET_BRANCH: ${{ inputs.target-branch }}
         run: |
-          LATEST_TARGET_COMMIT=$(git rev-parse ${{ inputs.target-branch }})
+          LATEST_TARGET_COMMIT=$(git rev-parse "$TARGET_BRANCH")
           bash ./scripts/update-go-mod.sh $LATEST_TARGET_COMMIT
 
       - name: Add Changes
@@ -54,6 +58,8 @@ jobs:
 
       - name: Commit and Push Changes
         if: ${{ steps.add_changes.outputs.ANY_CHANGES_ADDED != '' }}
+        env:
+          TARGET_BRANCH: ${{ inputs.target-branch }}
         run: |
-          git commit -m "Auto: update go.mod after push to ${{ inputs.target-branch }} that modified dependencies locally"
-          git push origin ${{ inputs.target-branch }}
+          git commit -m "Auto: update go.mod after push to ${TARGET_BRANCH} that modified dependencies locally"
+          git push origin "$TARGET_BRANCH"
