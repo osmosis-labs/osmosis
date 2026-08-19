@@ -1,8 +1,8 @@
 package types
 
 // RestrictedAddresses is the curated set of foundation / investor / strategic
-// wallet addresses (bech32) whose liquid balance and staked OSMO are excluded
-// from circulating supply.
+// wallet addresses (bech32) whose liquid, staked, and unbonding OSMO are
+// excluded from circulating supply.
 //
 // This list is intentionally a compiled-in constant rather than a governance
 // param: it changes rarely, and keeping it out of consensus state lets the
@@ -13,7 +13,12 @@ package types
 // the bech32 "osmo" prefix is configured by app params init (SetAddressPrefixes),
 // which is not guaranteed to have run when this package initialises in isolation
 // (e.g. in a unit test of the types package). Parsing therefore happens at query
-// time in the mint keeper, where the SDK config is sealed.
+// time in the mint keeper, after the app has configured the prefix.
+//
+// A malformed entry does NOT degrade gracefully: GetRestrictedSupply returns an
+// error for it, which fails the restricted-supply, circulating-supply, and
+// inflation queries until a corrected binary ships. TestRestrictedAddressesParse
+// guards every entry at CI time; any list change must keep that test passing.
 //
 // Composition: the foundation address (the strategic-reserve holder traceable
 // from the airdrop) plus the original genesis developer-rewards receiver set.

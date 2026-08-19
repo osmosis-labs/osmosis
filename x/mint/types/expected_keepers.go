@@ -7,8 +7,7 @@ import (
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // AccountKeeper defines the contract required for account APIs.
@@ -34,12 +33,15 @@ type BankKeeper interface {
 	GetSupplyWithOffset(ctx context.Context, denom string) sdk.Coin
 }
 
-// CommunityPoolKeeper is an alias to the cosmos SDK distribution keeper pointer.
-// The mint module needs both FundCommunityPool (distribution of minted coins)
-// and read access to the FeePool (for restricted-supply accounting). FeePool is
-// a struct field on the concrete keeper, not a method, so it cannot be expressed
-// as a Go interface; aliasing the concrete pointer is the pragmatic contract.
-type CommunityPoolKeeper = *distrkeeper.Keeper
+// CommunityPoolKeeper defines the distribution contract the mint module needs:
+// funding the community pool with minted coins, and reading the FeePool for
+// restricted-supply accounting. FeePool is a collections.Item field on the
+// concrete distribution keeper (not a method), so the read is exposed here as
+// GetFeePool and satisfied by a thin adapter at app wiring.
+type CommunityPoolKeeper interface {
+	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
+	GetFeePool(ctx context.Context) (distrtypes.FeePool, error)
+}
 
 // EpochKeeper defines the contract needed to be fulfilled for epochs keeper.
 type EpochKeeper interface {
@@ -49,6 +51,6 @@ type EpochKeeper interface {
 // StakingKeeper defines the contract needed to query staking information for
 // restricted-supply accounting (delegations held by restricted addresses).
 type StakingKeeper interface {
-	IterateDelegations(ctx context.Context, delegator sdk.AccAddress, fn func(int64, stakingtypes.DelegationI) bool) error
-	GetValidator(ctx context.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, err error)
+	GetDelegatorBonded(ctx context.Context, delegator sdk.AccAddress) (osmomath.Int, error)
+	GetDelegatorUnbonding(ctx context.Context, delegator sdk.AccAddress) (osmomath.Int, error)
 }

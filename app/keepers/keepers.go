@@ -1,6 +1,8 @@
 package keepers
 
 import (
+	"context"
+
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
@@ -510,7 +512,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GetSubspace(minttypes.ModuleName),
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
-		appKeepers.DistrKeeper,
+		mintCommunityPoolKeeper{appKeepers.DistrKeeper},
 		appKeepers.EpochsKeeper,
 		appKeepers.StakingKeeper,
 		authtypes.FeeCollectorName,
@@ -943,4 +945,16 @@ func KVStoreKeys() []string {
 		auctiontypes.StoreKey,
 		smartaccounttypes.StoreKey,
 	}
+}
+
+// mintCommunityPoolKeeper adapts the distribution keeper to the mint module's
+// CommunityPoolKeeper interface. FeePool is a collections.Item field on the
+// concrete distribution keeper, not a method, so the read is wrapped here;
+// FundCommunityPool is promoted from the embedded keeper.
+type mintCommunityPoolKeeper struct {
+	*distrkeeper.Keeper
+}
+
+func (m mintCommunityPoolKeeper) GetFeePool(ctx context.Context) (distrtypes.FeePool, error) {
+	return m.FeePool.Get(ctx)
 }

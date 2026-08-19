@@ -63,11 +63,21 @@ func (q Querier) TotalSupply(c context.Context, _ *types.QueryTotalSupplyRequest
 // RestrictedSupply returns the supply held in restricted addresses.
 func (q Querier) RestrictedSupply(c context.Context, _ *types.QueryRestrictedSupplyRequest) (*types.QueryRestrictedSupplyResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	return &types.QueryRestrictedSupplyResponse{RestrictedSupply: q.Keeper.GetRestrictedSupply(ctx)}, nil
+	restrictedSupply, err := q.Keeper.GetRestrictedSupply(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryRestrictedSupplyResponse{RestrictedSupply: restrictedSupply}, nil
 }
 
 // CirculatingSupply returns the circulating supply (minted - burned - restricted).
 func (q Querier) CirculatingSupply(c context.Context, _ *types.QueryCirculatingSupplyRequest) (*types.QueryCirculatingSupplyResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	return &types.QueryCirculatingSupplyResponse{CirculatingSupply: q.Keeper.GetCirculatingSupply(ctx)}, nil
+	circulatingSupply, err := q.Keeper.GetCirculatingSupply(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryCirculatingSupplyResponse{CirculatingSupply: circulatingSupply}, nil
 }

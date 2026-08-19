@@ -2,14 +2,56 @@ package keeper_test
 
 import (
 	"context"
+	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	mintkeeper "github.com/osmosis-labs/osmosis/v31/x/mint/keeper"
 	"github.com/osmosis-labs/osmosis/v31/x/mint/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v31/x/txfees/types"
 )
+
+type errorStakingKeeper struct {
+	getBondedErr    error
+	getUnbondingErr error
+}
+
+func (k errorStakingKeeper) GetDelegatorBonded(context.Context, sdk.AccAddress) (osmomath.Int, error) {
+	return osmomath.ZeroInt(), k.getBondedErr
+}
+
+func (k errorStakingKeeper) GetDelegatorUnbonding(context.Context, sdk.AccAddress) (osmomath.Int, error) {
+	return osmomath.ZeroInt(), k.getUnbondingErr
+}
+
+// stubCommunityPoolKeeper satisfies types.CommunityPoolKeeper with an empty
+// FeePool, for keeper constructions that exercise other error paths.
+type stubCommunityPoolKeeper struct{}
+
+func (stubCommunityPoolKeeper) FundCommunityPool(context.Context, sdk.Coins, sdk.AccAddress) error {
+	return nil
+}
+
+func (stubCommunityPoolKeeper) GetFeePool(context.Context) (distrtypes.FeePool, error) {
+	return distrtypes.FeePool{}, nil
+}
+
+func (s *KeeperTestSuite) mintKeeperWithStakingKeeper(stakingKeeper types.StakingKeeper) mintkeeper.Keeper {
+	return mintkeeper.NewKeeper(
+		s.App.GetKey(types.StoreKey),
+		s.App.GetSubspace(types.ModuleName),
+		s.App.AccountKeeper,
+		s.App.BankKeeper,
+		stubCommunityPoolKeeper{},
+		s.App.EpochsKeeper,
+		stakingKeeper,
+		authtypes.FeeCollectorName,
+	)
+}
 
 // mintDenom is the bond/mint denom used by the app test harness.
 func (s *KeeperTestSuite) mintDenom() string {
@@ -72,8 +114,10 @@ func (s *KeeperTestSuite) TestCirculatingSupplyIdentity() {
 	s.Require().NoError(err)
 
 	total := s.App.MintKeeper.GetTotalSupply(s.Ctx)
-	restricted := s.App.MintKeeper.GetRestrictedSupply(s.Ctx)
-	circulating := s.App.MintKeeper.GetCirculatingSupply(s.Ctx)
+	restricted, err := s.App.MintKeeper.GetRestrictedSupply(s.Ctx)
+	s.Require().NoError(err)
+	circulating, err := s.App.MintKeeper.GetCirculatingSupply(s.Ctx)
+	s.Require().NoError(err)
 
 	// Identity 1: circulating == total - restricted.
 	s.Require().Equal(total.Sub(restricted), circulating)
@@ -94,7 +138,8 @@ func (s *KeeperTestSuite) TestRestrictedSupplyIncludesDevVesting() {
 	s.Require().NotNil(devVestingAddr)
 	devVestingBalance := s.App.BankKeeper.GetBalance(s.Ctx, devVestingAddr, denom).Amount
 
-	restricted := s.App.MintKeeper.GetRestrictedSupply(s.Ctx)
+	restricted, err := s.App.MintKeeper.GetRestrictedSupply(s.Ctx)
+	s.Require().NoError(err)
 	// Restricted supply must be at least the dev-vesting balance (other
 	// components are >= 0).
 	s.Require().True(restricted.GTE(devVestingBalance),
@@ -122,8 +167,10 @@ func (s *KeeperTestSuite) TestDevVestingCountedExactlyOnce() {
 	s.Require().Equal(raw.Sub(devVestingBalance), withOffset,
 		"GetSupplyWithOffset should equal raw supply minus dev-vesting balance")
 
-	circulating := s.App.MintKeeper.GetCirculatingSupply(s.Ctx)
-	restricted := s.App.MintKeeper.GetRestrictedSupply(s.Ctx)
+	circulating, err := s.App.MintKeeper.GetCirculatingSupply(s.Ctx)
+	s.Require().NoError(err)
+	restricted, err := s.App.MintKeeper.GetRestrictedSupply(s.Ctx)
+	s.Require().NoError(err)
 	burned := s.App.MintKeeper.GetBurnedSupply(s.Ctx)
 
 	// The correct circulating equals raw - burned - restricted.
@@ -166,12 +213,14 @@ func (s *KeeperTestSuite) TestRestrictedSupplyIncludesStakedAmount() {
 	delegateAmt := osmomath.NewInt(7_000_000)
 	s.FundAcc(holder, sdk.NewCoins(sdk.NewCoin(denom, delegateAmt)))
 
-	restrictedBefore := s.App.MintKeeper.GetRestrictedSupply(s.Ctx)
+	restrictedBefore, err := s.App.MintKeeper.GetRestrictedSupply(s.Ctx)
+	s.Require().NoError(err)
 
 	_, err = s.App.StakingKeeper.Delegate(s.Ctx, holder, delegateAmt, stakingtypes.Unbonded, validator, true)
 	s.Require().NoError(err)
 
-	restrictedAfter := s.App.MintKeeper.GetRestrictedSupply(s.Ctx)
+	restrictedAfter, err := s.App.MintKeeper.GetRestrictedSupply(s.Ctx)
+	s.Require().NoError(err)
 
 	// Delegating moves the holder's liquid balance into staked, so the aggregate
 	// (balance + staked) restricted supply must be unchanged within rounding. A
@@ -194,6 +243,110 @@ func (s *KeeperTestSuite) TestRestrictedSupplyIncludesStakedAmount() {
 		"restricted must include the staked term, not just liquid balance")
 }
 
+// TestRestrictedSupplyIncludesUnbondingAmount asserts that starting an
+// unbonding does not move a restricted holder's OSMO into circulating supply
+// while the tokens remain locked in the staking unbonding pool.
+func (s *KeeperTestSuite) TestRestrictedSupplyIncludesUnbondingAmount() {
+	s.SetupTest()
+	denom := s.mintDenom()
+
+	valAddr := s.SetupValidator(stakingtypes.Bonded)
+	validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
+	s.Require().NoError(err)
+
+	holder := testAddressOne
+	params := s.App.MintKeeper.GetParams(s.Ctx)
+	params.WeightedDeveloperRewardsReceivers = []types.WeightedAddress{
+		{Address: holder.String(), Weight: osmomath.OneDec()},
+	}
+	s.App.MintKeeper.SetParams(s.Ctx, params)
+
+	delegateAmt := osmomath.NewInt(7_000_000)
+	s.FundAcc(holder, sdk.NewCoins(sdk.NewCoin(denom, delegateAmt)))
+	shares, err := s.App.StakingKeeper.Delegate(s.Ctx, holder, delegateAmt, stakingtypes.Unbonded, validator, true)
+	s.Require().NoError(err)
+
+	restrictedBefore, err := s.App.MintKeeper.GetRestrictedSupply(s.Ctx)
+	s.Require().NoError(err)
+
+	_, unbondingAmt, err := s.App.StakingKeeper.Undelegate(s.Ctx, holder, valAddr, shares)
+	s.Require().NoError(err)
+	s.Require().True(unbondingAmt.IsPositive())
+
+	restrictedAfter, err := s.App.MintKeeper.GetRestrictedSupply(s.Ctx)
+	s.Require().NoError(err)
+
+	// Moving tokens from an active delegation into the unbonding pool must not
+	// change whether they are restricted. Allow one uosmo for share conversion
+	// and truncation at each accounting boundary.
+	one := osmomath.OneInt()
+	s.Require().True(restrictedAfter.LTE(restrictedBefore.Add(one)),
+		"restricted should not increase on undelegate (before=%s after=%s)", restrictedBefore, restrictedAfter)
+	s.Require().True(restrictedAfter.GTE(restrictedBefore.Sub(one)),
+		"restricted must include unbonding tokens (before=%s after=%s)", restrictedBefore, restrictedAfter)
+}
+
+// TestRestrictedSupplyPropagatesStakingErrors asserts that partial staking
+// reads cannot be returned as successful restricted-supply results.
+func (s *KeeperTestSuite) TestRestrictedSupplyPropagatesStakingErrors() {
+	s.SetupTest()
+
+	bondedErr := errors.New("get bonded failed")
+	unbondingErr := errors.New("get unbonding failed")
+	testCases := []struct {
+		name          string
+		stakingKeeper errorStakingKeeper
+		expectedErr   error
+	}{
+		{
+			name: "bonded lookup",
+			stakingKeeper: errorStakingKeeper{
+				getBondedErr: bondedErr,
+			},
+			expectedErr: bondedErr,
+		},
+		{
+			name: "unbonding lookup",
+			stakingKeeper: errorStakingKeeper{
+				getUnbondingErr: unbondingErr,
+			},
+			expectedErr: unbondingErr,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			mintKeeper := s.mintKeeperWithStakingKeeper(tc.stakingKeeper)
+			_, err := mintKeeper.GetRestrictedSupply(s.Ctx)
+			s.Require().ErrorIs(err, tc.expectedErr)
+		})
+	}
+}
+
+// TestSupplyQueriesPropagateCommunityPoolError asserts that the supply and
+// inflation queries fail instead of treating an unreadable community pool as
+// zero restricted supply.
+func (s *KeeperTestSuite) TestSupplyQueriesPropagateCommunityPoolError() {
+	s.SetupTest()
+
+	err := s.App.DistrKeeper.FeePool.Remove(s.Ctx)
+	s.Require().NoError(err)
+
+	_, err = s.App.MintKeeper.GetRestrictedSupply(s.Ctx)
+	s.Require().ErrorContains(err, "failed to get community pool")
+	_, err = s.App.MintKeeper.GetCirculatingSupply(s.Ctx)
+	s.Require().ErrorContains(err, "failed to get community pool")
+	_, err = s.App.MintKeeper.GetInflation(s.Ctx)
+	s.Require().ErrorContains(err, "failed to get community pool")
+
+	_, err = s.queryClient.RestrictedSupply(context.Background(), &types.QueryRestrictedSupplyRequest{})
+	s.Require().ErrorContains(err, "failed to get community pool")
+	_, err = s.queryClient.CirculatingSupply(context.Background(), &types.QueryCirculatingSupplyRequest{})
+	s.Require().ErrorContains(err, "failed to get community pool")
+	_, err = s.queryClient.Inflation(context.Background(), &types.QueryInflationRequest{})
+	s.Require().ErrorContains(err, "failed to get community pool")
+}
+
 // TestSupplyQueryHandlers exercises the four gRPC handlers end to end through
 // the query client.
 func (s *KeeperTestSuite) TestSupplyQueryHandlers() {
@@ -209,11 +362,15 @@ func (s *KeeperTestSuite) TestSupplyQueryHandlers() {
 
 	restrictedRes, err := s.queryClient.RestrictedSupply(context.Background(), &types.QueryRestrictedSupplyRequest{})
 	s.Require().NoError(err)
-	s.Require().Equal(s.App.MintKeeper.GetRestrictedSupply(s.Ctx), restrictedRes.RestrictedSupply)
+	expectedRestricted, err := s.App.MintKeeper.GetRestrictedSupply(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(expectedRestricted, restrictedRes.RestrictedSupply)
 
 	circulatingRes, err := s.queryClient.CirculatingSupply(context.Background(), &types.QueryCirculatingSupplyRequest{})
 	s.Require().NoError(err)
-	s.Require().Equal(s.App.MintKeeper.GetCirculatingSupply(s.Ctx), circulatingRes.CirculatingSupply)
+	expectedCirculating, err := s.App.MintKeeper.GetCirculatingSupply(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(expectedCirculating, circulatingRes.CirculatingSupply)
 
 	// Handler identity check.
 	s.Require().Equal(
@@ -228,7 +385,8 @@ func (s *KeeperTestSuite) TestSupplyQueryHandlers() {
 func (s *KeeperTestSuite) TestInflationUsesCirculatingSupply() {
 	s.SetupTest()
 
-	circulating := s.App.MintKeeper.GetCirculatingSupply(s.Ctx)
+	circulating, err := s.App.MintKeeper.GetCirculatingSupply(s.Ctx)
+	s.Require().NoError(err)
 	s.Require().True(circulating.IsPositive())
 
 	minter := s.App.MintKeeper.GetMinter(s.Ctx)

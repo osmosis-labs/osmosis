@@ -16,9 +16,10 @@ const osmoBech32Prefix = "osmo"
 
 // TestRestrictedAddressesParse guards the compiled-in restricted address list:
 // under the chain's bech32 prefix, every entry must be valid. The curated list
-// is edited by hand, so this catches a malformed entry at CI time rather than
-// silently skipping it at query time (where GetRestrictedSupply tolerates a bad
-// entry by skipping it).
+// is edited by hand, and a malformed entry does not degrade gracefully at query
+// time: GetRestrictedSupply errors on it, taking the restricted-supply,
+// circulating-supply, and inflation endpoints down until a corrected binary
+// ships. This test is the pre-release guard that catches that at CI time.
 func TestRestrictedAddressesParse(t *testing.T) {
 	cfg := sdk.GetConfig()
 	cfg.SetBech32PrefixForAccount(osmoBech32Prefix, osmoBech32Prefix+"pub")

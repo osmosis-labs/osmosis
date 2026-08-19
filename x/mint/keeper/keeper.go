@@ -17,7 +17,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Keeper of the mint store.
@@ -179,8 +178,11 @@ func (k Keeper) GetInflation(ctx sdk.Context) (osmomath.Dec, error) {
 	params := k.GetParams(ctx)
 	communityPoolProportion := params.DistributionProportions.CommunityPool
 
-	// Get circulating supply of the mint denom
-	circulatingSupply := k.GetCirculatingSupply(ctx)
+	// Get circulating supply of the mint denom, reusing the params read above.
+	circulatingSupply, err := k.getCirculatingSupply(ctx, params)
+	if err != nil {
+		return osmomath.ZeroDec(), fmt.Errorf("failed to get circulating supply: %w", err)
+	}
 
 	// Calculate circulating provisions: epoch provisions * (1 - community pool proportion)
 	oneMinusCommunityPool := osmomath.OneDec().Sub(communityPoolProportion)
@@ -198,12 +200,20 @@ func (k Keeper) GetInflation(ctx sdk.Context) (osmomath.Dec, error) {
 	return osmomath.ZeroDec(), nil
 }
 
+// The exported supply getters below are thin wrappers over unexported variants
+// that take the mint params (or just the mint denom) as an argument. Params are
+// threaded through so that one query reads the params subspace exactly once,
+// instead of each nested getter re-reading it.
+
 // GetBurnedSupply returns the amount of mint-denom held in the null/burn
 // address (txfeestypes.DefaultNullAddress, the all-zero account). These coins
 // are permanently removed from circulation.
 func (k Keeper) GetBurnedSupply(ctx sdk.Context) osmomath.Int {
-	params := k.GetParams(ctx)
-	burned := k.bankKeeper.GetBalance(ctx, txfeestypes.DefaultNullAddress, params.MintDenom)
+	return k.getBurnedSupply(ctx, k.GetParams(ctx).MintDenom)
+}
+
+func (k Keeper) getBurnedSupply(ctx sdk.Context, mintDenom string) osmomath.Int {
+	burned := k.bankKeeper.GetBalance(ctx, txfeestypes.DefaultNullAddress, mintDenom)
 	return burned.Amount
 }
 
@@ -214,9 +224,12 @@ func (k Keeper) GetBurnedSupply(ctx sdk.Context) osmomath.Int {
 // netting out restricted holdings, matching the Coingecko/CMC total-supply
 // methodology.
 func (k Keeper) GetTotalSupply(ctx sdk.Context) osmomath.Int {
-	params := k.GetParams(ctx)
-	mintedSupply := k.bankKeeper.GetSupply(ctx, params.MintDenom)
-	burnedSupply := k.GetBurnedSupply(ctx)
+	return k.getTotalSupply(ctx, k.GetParams(ctx).MintDenom)
+}
+
+func (k Keeper) getTotalSupply(ctx sdk.Context, mintDenom string) osmomath.Int {
+	mintedSupply := k.bankKeeper.GetSupply(ctx, mintDenom)
+	burnedSupply := k.getBurnedSupply(ctx, mintDenom)
 	return mintedSupply.Amount.Sub(burnedSupply)
 }
 
@@ -228,21 +241,37 @@ func (k Keeper) GetTotalSupply(ctx sdk.Context) osmomath.Int {
 // restricted exactly once, so it nets to zero in circulating supply. Do NOT base
 // this on GetSupplyWithOffset: that already nets out developer vesting, which
 // combined with the restricted-supply subtraction would double-count it.
-func (k Keeper) GetCirculatingSupply(ctx sdk.Context) osmomath.Int {
-	return k.GetTotalSupply(ctx).Sub(k.GetRestrictedSupply(ctx))
+func (k Keeper) GetCirculatingSupply(ctx sdk.Context) (osmomath.Int, error) {
+	return k.getCirculatingSupply(ctx, k.GetParams(ctx))
+}
+
+func (k Keeper) getCirculatingSupply(ctx sdk.Context, params types.Params) (osmomath.Int, error) {
+	restrictedSupply, err := k.getRestrictedSupply(ctx, params)
+	if err != nil {
+		return osmomath.ZeroInt(), fmt.Errorf("failed to get restricted supply: %w", err)
+	}
+
+	return k.getTotalSupply(ctx, params.MintDenom).Sub(restrictedSupply), nil
 }
 
 // GetRestrictedSupply returns the amount of mint-denom held by known restricted
 // entities and therefore excluded from circulating supply:
 //   - the developer-vesting module account balance (still-unvested dev tokens);
 //   - the community pool;
-//   - the developer-vested reward receiver addresses (balance + staked);
-//   - the curated foundation/investor restricted addresses (balance + staked).
+//   - the developer-vested reward receiver addresses (balance + staked + unbonding);
+//   - the curated foundation/investor restricted addresses (balance + staked + unbonding).
 //
-// Liquid balances and staked (delegated) amounts are both counted, since staked
-// OSMO held by a restricted entity is not part of the public float.
-func (k Keeper) GetRestrictedSupply(ctx sdk.Context) osmomath.Int {
-	params := k.GetParams(ctx)
+// Liquid balances, bonded delegations, and unbonding amounts are counted.
+// OSMO a restricted address moves into other modules is NOT tracked: x/lockup
+// locks, superfluid positions, LP shares, and CL positions all leave the
+// address's bank/staking footprint and would be reported as circulating.
+// Restricted entities are expected to hold OSMO only liquid or (un)staked; if
+// one ever locks or deploys OSMO, this accounting needs a corresponding term.
+func (k Keeper) GetRestrictedSupply(ctx sdk.Context) (osmomath.Int, error) {
+	return k.getRestrictedSupply(ctx, k.GetParams(ctx))
+}
+
+func (k Keeper) getRestrictedSupply(ctx sdk.Context, params types.Params) (osmomath.Int, error) {
 	restrictedSupply := osmomath.ZeroInt()
 
 	// seen tracks addresses already counted so that an address appearing in both
@@ -250,27 +279,29 @@ func (k Keeper) GetRestrictedSupply(ctx sdk.Context) osmomath.Int {
 	// double-counted.
 	seen := make(map[string]struct{})
 
-	// 1. Developer vesting module account balance (unvested dev tokens).
+	// 1. Developer vesting module account balance (unvested dev tokens). Seed
+	// the dedup set with the module address: param validation does not stop
+	// governance from listing it as a rewards receiver, which would otherwise
+	// double-count it below.
 	devVestingAddr := k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)
 	if devVestingAddr != nil {
 		devVestingBalance := k.bankKeeper.GetBalance(ctx, devVestingAddr, params.MintDenom)
 		restrictedSupply = restrictedSupply.Add(devVestingBalance.Amount)
+		seen[devVestingAddr.String()] = struct{}{}
 	}
 
 	// 2. Community pool balance. Read from the distribution FeePool (the
 	// authoritative community-pool accounting), not the distribution module
 	// account balance. CommunityPool is DecCoins; truncate to Int (rounds down,
 	// so restricted is at most 1 uosmo under-counted per denom).
-	//
-	// The FeePool.Get error is deliberately swallowed: this is a read-only
-	// reporting query, so a failed read degrades the community-pool term to 0
-	// rather than erroring the whole endpoint.
-	if feePool, err := k.communityPoolKeeper.FeePool.Get(ctx); err == nil {
-		for _, coin := range feePool.GetCommunityPool() {
-			if coin.Denom == params.MintDenom {
-				restrictedSupply = restrictedSupply.Add(coin.Amount.TruncateInt())
-				break
-			}
+	feePool, err := k.communityPoolKeeper.GetFeePool(ctx)
+	if err != nil {
+		return osmomath.ZeroInt(), fmt.Errorf("failed to get community pool: %w", err)
+	}
+	for _, coin := range feePool.GetCommunityPool() {
+		if coin.Denom == params.MintDenom {
+			restrictedSupply = restrictedSupply.Add(coin.Amount.TruncateInt())
+			break
 		}
 	}
 
@@ -282,13 +313,17 @@ func (k Keeper) GetRestrictedSupply(ctx sdk.Context) osmomath.Int {
 		}
 		addr, err := sdk.AccAddressFromBech32(devAddr.Address)
 		if err != nil {
-			continue
+			return osmomath.ZeroInt(), fmt.Errorf("failed to parse developer rewards receiver %q: %w", devAddr.Address, err)
 		}
 		if _, ok := seen[addr.String()]; ok {
 			continue
 		}
 		seen[addr.String()] = struct{}{}
-		restrictedSupply = restrictedSupply.Add(k.addressHoldings(ctx, addr, params.MintDenom))
+		holdings, err := k.addressHoldings(ctx, addr, params.MintDenom)
+		if err != nil {
+			return osmomath.ZeroInt(), err
+		}
+		restrictedSupply = restrictedSupply.Add(holdings)
 	}
 
 	// 4. Curated foundation/investor/strategic restricted addresses (compiled-in
@@ -298,65 +333,45 @@ func (k Keeper) GetRestrictedSupply(ctx sdk.Context) osmomath.Int {
 	for _, addrStr := range types.RestrictedAddresses {
 		addr, err := sdk.AccAddressFromBech32(addrStr)
 		if err != nil {
-			continue
+			return osmomath.ZeroInt(), fmt.Errorf("failed to parse restricted address %q: %w", addrStr, err)
 		}
 		if _, ok := seen[addr.String()]; ok {
 			continue
 		}
 		seen[addr.String()] = struct{}{}
-		restrictedSupply = restrictedSupply.Add(k.addressHoldings(ctx, addr, params.MintDenom))
+		holdings, err := k.addressHoldings(ctx, addr, params.MintDenom)
+		if err != nil {
+			return osmomath.ZeroInt(), err
+		}
+		restrictedSupply = restrictedSupply.Add(holdings)
 	}
 
-	return restrictedSupply
+	return restrictedSupply, nil
 }
 
-// addressHoldings returns an address's liquid balance plus its staked (delegated)
-// amount in the given denom.
-func (k Keeper) addressHoldings(ctx sdk.Context, addr sdk.AccAddress, denom string) osmomath.Int {
-	balance := k.bankKeeper.GetBalance(ctx, addr, denom)
-	staked := k.getStakedAmount(ctx, addr)
-	return balance.Amount.Add(staked)
-}
-
-// getStakedAmount returns the total amount staked by a delegator, converting
-// delegation shares to tokens via each validator's current exchange rate. The
-// share-to-token conversion accounts for slashing, where 1 share is worth less
-// than 1 token.
+// addressHoldings returns an address's liquid balance plus its bonded (staked)
+// and unbonding amounts in the given denom.
 //
-// This counts only active delegations. Tokens mid-unbonding or mid-redelegation
-// held by a restricted address are not counted; that is a transient window and
-// negligible at supply-reporting granularity. The validator-not-found fallback
-// (raw shares) only ever over-counts restricted (shares >= tokens), i.e. it is
-// conservative for circulating supply.
-func (k Keeper) getStakedAmount(ctx sdk.Context, delegator sdk.AccAddress) osmomath.Int {
-	totalStaked := osmomath.ZeroInt()
-
-	err := k.stakingKeeper.IterateDelegations(ctx, delegator, func(_ int64, delegation stakingtypes.DelegationI) bool {
-		shares := delegation.GetShares()
-
-		valAddr, err := sdk.ValAddressFromBech32(delegation.GetValidatorAddr())
-		if err != nil {
-			return false // continue iteration
-		}
-
-		validator, err := k.stakingKeeper.GetValidator(ctx, valAddr)
-		if err != nil {
-			// Validator not found (e.g. fully unbonded/removed): fall back to
-			// shares as a token approximation. Such delegations are transient
-			// and negligible for supply reporting.
-			totalStaked = totalStaked.Add(shares.TruncateInt())
-			return false
-		}
-
-		tokens := validator.TokensFromShares(shares)
-		totalStaked = totalStaked.Add(tokens.TruncateInt())
-		return false
-	})
+// Bonded amounts come from the staking keeper's GetDelegatorBonded, which
+// converts delegation shares to tokens via each validator's current exchange
+// rate (accounting for slashing), accumulates truncated per-validator values,
+// and rounds once. It skips a delegation whose validator record is missing,
+// matching the SDK's own reporting convention; that state is structurally
+// unreachable (validators are not removed while they have delegations).
+// Unbonding amounts are slash-adjusted entry balances. Tokens mid-redelegation
+// remain represented by the destination delegation shares.
+func (k Keeper) addressHoldings(ctx sdk.Context, addr sdk.AccAddress, denom string) (osmomath.Int, error) {
+	balance := k.bankKeeper.GetBalance(ctx, addr, denom)
+	bonded, err := k.stakingKeeper.GetDelegatorBonded(ctx, addr)
 	if err != nil {
-		return osmomath.ZeroInt()
+		return osmomath.ZeroInt(), fmt.Errorf("failed to get bonded amount for %s: %w", addr, err)
+	}
+	unbonding, err := k.stakingKeeper.GetDelegatorUnbonding(ctx, addr)
+	if err != nil {
+		return osmomath.ZeroInt(), fmt.Errorf("failed to get unbonding amount for %s: %w", addr, err)
 	}
 
-	return totalStaked
+	return balance.Amount.Add(bonded).Add(unbonding), nil
 }
 
 // getLastReductionEpochNum returns last reduction epoch number.
