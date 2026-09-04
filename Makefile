@@ -118,12 +118,14 @@ ifeq (,$(findstring nostrip,$(OSMOSIS_BUILD_OPTIONS)))
   ldflags += -w -s
 endif
 ifeq ($(LINK_STATICALLY),true)
-	ldflags += -linkmode=external -extldflags "-Wl,-z,muldefs -static"
+  extldflags += -fuse-ld=bfd -Wl,-z,muldefs -static-pie -z noexecstack
+  ldflags += -linkmode=external -extldflags "$(extldflags)"
+  buildmode_flags += -buildmode=pie
 endif
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
 
-BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
+BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)' $(buildmode_flags)
 # check for nostrip option
 ifeq (,$(findstring nostrip,$(OSMOSIS_BUILD_OPTIONS)))
   BUILD_FLAGS += -trimpath
