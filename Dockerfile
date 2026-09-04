@@ -46,13 +46,14 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     GOWORK=off go build \
     -mod=readonly \
     -tags "netgo,ledger,muslc" \
+    -buildmode=pie \
     -ldflags \
     "-X github.com/cosmos/cosmos-sdk/version.Name="osmosis" \
     -X github.com/cosmos/cosmos-sdk/version.AppName="osmosisd" \
     -X github.com/cosmos/cosmos-sdk/version.Version=${GIT_VERSION} \
     -X github.com/cosmos/cosmos-sdk/version.Commit=${GIT_COMMIT} \
     -X github.com/cosmos/cosmos-sdk/version.BuildTags=${BUILD_TAGS} \
-    -w -s -linkmode=external -extldflags '-Wl,-z,muldefs -static'" \
+    -w -s -linkmode=external -extldflags '-fuse-ld=bfd -Wl,-z,muldefs -static-pie -z noexecstack'" \
     -trimpath \
     -o /osmosis/build/osmosisd \
     /osmosis/cmd/osmosisd/main.go
