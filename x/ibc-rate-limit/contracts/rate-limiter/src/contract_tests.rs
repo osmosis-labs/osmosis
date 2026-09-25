@@ -4,7 +4,7 @@ use crate::packet::Packet;
 use crate::state::rbac::Roles;
 use crate::{contract::*, test_msg_recv, test_msg_send, ContractError};
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-use cosmwasm_std::{from_binary, Addr, Attribute, MessageInfo, Uint256};
+use cosmwasm_std::{from_binary, from_slice, Addr, Attribute, MessageInfo, Uint256};
 use cw2::set_contract_version;
 
 use crate::blocking::{check_restricted_denoms, effective_restriction, NO_CHANNEL_ALLOWED};
@@ -257,8 +257,8 @@ fn query_state() {
     let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
     let value: Vec<RateLimit> = from_binary(&res).unwrap();
     assert_eq!(value[0].quota.name, "weekly");
-    assert_eq!(value[0].quota.max_percentage_send, 10);
-    assert_eq!(value[0].quota.max_percentage_recv, 10);
+    assert_eq!(value[0].quota.max_percentage_send, Some(10));
+    assert_eq!(value[0].quota.max_percentage_recv, Some(10));
     assert_eq!(value[0].quota.duration, RESET_TIME_WEEKLY);
     assert_eq!(value[0].flow.inflow, Uint256::from(0_u32));
     assert_eq!(value[0].flow.outflow, Uint256::from(0_u32));
@@ -297,8 +297,8 @@ fn query_state() {
     );
 }
 
-#[test] // Tests quota percentages are between [0,100]
-fn bad_quotas() {
+#[test] // Percentages above 100 are stored as given; the absolute bound is what keeps them safe
+fn percentages_above_100_are_kept() {
     let mut deps = mock_dependencies();
 
     let msg = InstantiateMsg {
@@ -307,11 +307,7 @@ fn bad_quotas() {
         paths: vec![PathMsg {
             channel_id: "any".to_string(),
             denom: "denom".to_string(),
-            quotas: vec![QuotaMsg {
-                name: "bad_quota".to_string(),
-                duration: 200,
-                send_recv: (5000, 101),
-            }],
+            quotas: vec![QuotaMsg::new("bad_quota", 200, 5000, 101)],
         }],
     };
     let info = mock_info(IBC_ADDR, &[]);
@@ -319,7 +315,7 @@ fn bad_quotas() {
     let env = mock_env();
     instantiate(deps.as_mut(), env.clone(), info, msg).unwrap();
 
-    // If a quota is higher than 100%, we set it to 100%
+    // Nothing is clamped: the stored quota is exactly what was submitted
     let query_msg = QueryMsg::GetQuotas {
         channel_id: "any".to_string(),
         denom: "denom".to_string(),
@@ -329,7 +325,7 @@ fn bad_quotas() {
     verify_query_response(
         &value[0],
         "bad_quota",
-        (100, 100),
+        (5000, 101),
         200,
         0_u32.into(),
         0_u32.into(),
@@ -1050,4 +1046,242 @@ fn recv_colliding_channel_prefix_consumes_foreign_denom_quota() {
     )
     .unwrap_err();
     assert!(matches!(err, ContractError::RateLimitExceded { .. }));
+}
+
+// Absolute bounds. A percentage of the channel value rounds to nothing on a low-supply asset
+// and scales with the very supply an attacker is inflating, so a quota can also carry an
+// absolute bound in base units. Percentages apply to the net flow; absolute bounds apply to
+// the gross flow.
+
+fn recv_denom(channel_value: u32, funds: u32) -> SudoMsg {
+    test_msg_recv!(
+        channel_id: format!("channel"),
+        denom: format!("denom"),
+        channel_value: channel_value.into(),
+        funds: funds.into()
+    )
+}
+
+fn send_denom(channel_value: u32, funds: u32) -> SudoMsg {
+    test_msg_send!(
+        channel_id: format!("channel"),
+        denom: format!("denom"),
+        channel_value: channel_value.into(),
+        funds: funds.into()
+    )
+}
+
+#[test] // A brand new bridged asset has no supply, so a percentage bound is zero. An absolute bound still admits transfers up to the cap
+fn absolute_only_quota_works_on_zero_supply_denom() {
+    let mut deps = mock_dependencies();
+    let quota = QuotaMsg::absolute(
+        "daily",
+        RESET_TIME_WEEKLY,
+        Some(Uint256::from(1_000_u32)),
+        Some(Uint256::from(500_u32)),
+    );
+    instantiate_any_denom(deps.as_mut(), vec![quota]).unwrap();
+
+    // 300 in against a channel value of zero passes the absolute bound
+    let res = sudo(deps.as_mut(), mock_env(), recv_denom(0, 300)).unwrap();
+    let Attribute { key, value } = &res.attributes[3];
+    assert_eq!(key, "daily_used_in");
+    assert_eq!(value, "300");
+    // the percentage and absolute bounds are reported separately, each against its own measure
+    assert_eq!(attr(&res, "daily_max_in"), "none");
+    assert_eq!(attr(&res, "daily_gross_in"), "300");
+    assert_eq!(attr(&res, "daily_max_absolute_in"), "500");
+
+    // 300 more takes the gross inflow to 600, over the 500 bound
+    let err = sudo(deps.as_mut(), mock_env(), recv_denom(0, 300)).unwrap_err();
+    assert!(matches!(err, ContractError::RateLimitExceded { bound, .. } if bound == "absolute"));
+}
+
+#[test] // When both bounds are set the transfer must satisfy both, and the error names the one that tripped
+fn both_bounds_apply() {
+    // 10% of 1000 is 100; absolute recv bound 50. The absolute bound trips.
+    let mut deps = mock_dependencies();
+    let quota = QuotaMsg::new("daily", RESET_TIME_WEEKLY, 10, 10)
+        .with_absolute(None, Some(Uint256::from(50_u32)));
+    instantiate_any_denom(deps.as_mut(), vec![quota]).unwrap();
+    let err = sudo(deps.as_mut(), mock_env(), recv_denom(1_000, 60)).unwrap_err();
+    assert!(matches!(err, ContractError::RateLimitExceded { bound, .. } if bound == "absolute"));
+
+    // 10% of 1000 is 100; absolute recv bound 500. The percentage bound trips.
+    let mut deps = mock_dependencies();
+    let quota = QuotaMsg::new("daily", RESET_TIME_WEEKLY, 10, 10)
+        .with_absolute(None, Some(Uint256::from(500_u32)));
+    instantiate_any_denom(deps.as_mut(), vec![quota]).unwrap();
+    let err = sudo(deps.as_mut(), mock_env(), recv_denom(1_000, 150)).unwrap_err();
+    assert!(matches!(err, ContractError::RateLimitExceded { bound, .. } if bound == "percentage"));
+
+    // 60 fits both bounds when the absolute one is 100
+    let mut deps = mock_dependencies();
+    let quota = QuotaMsg::new("daily", RESET_TIME_WEEKLY, 10, 10)
+        .with_absolute(None, Some(Uint256::from(100_u32)));
+    instantiate_any_denom(deps.as_mut(), vec![quota]).unwrap();
+    sudo(deps.as_mut(), mock_env(), recv_denom(1_000, 60)).unwrap();
+}
+
+#[test] // Sending real tokens out does not buy room under the absolute bound; it does under the percentage bound
+fn absolute_bound_is_gross_not_net() {
+    let mut deps = mock_dependencies();
+    let quota = QuotaMsg::new("daily", RESET_TIME_WEEKLY, 10, 10)
+        .with_absolute(None, Some(Uint256::from(100_u32)));
+    instantiate_any_denom(deps.as_mut(), vec![quota]).unwrap();
+
+    // 100 out, then 150 in. Net inflow is 50, under the 10% (100) bound, but the gross
+    // inflow is 150, over the absolute 100.
+    sudo(deps.as_mut(), mock_env(), send_denom(1_000, 100)).unwrap();
+    let err = sudo(deps.as_mut(), mock_env(), recv_denom(1_000, 150)).unwrap_err();
+    assert!(matches!(err, ContractError::RateLimitExceded { bound, .. } if bound == "absolute"));
+
+    // Attributes report both measures: net usage for the percentage bound, gross for the absolute
+    let mut deps = mock_dependencies();
+    let quota = QuotaMsg::new("daily", RESET_TIME_WEEKLY, 10, 10)
+        .with_absolute(None, Some(Uint256::from(100_u32)));
+    instantiate_any_denom(deps.as_mut(), vec![quota]).unwrap();
+    sudo(deps.as_mut(), mock_env(), send_denom(1_000, 100)).unwrap();
+    let res = sudo(deps.as_mut(), mock_env(), recv_denom(1_000, 60)).unwrap();
+    assert_eq!(attr(&res, "daily_used_in"), "0");
+    assert_eq!(attr(&res, "daily_max_in"), "100");
+    assert_eq!(attr(&res, "daily_gross_in"), "60");
+    assert_eq!(attr(&res, "daily_max_absolute_in"), "100");
+    assert_eq!(attr(&res, "daily_max_absolute_out"), "none");
+
+    // The same sequence with only a percentage bound is allowed: netting is deliberate there
+    let mut deps = mock_dependencies();
+    let quota = QuotaMsg::new("daily", RESET_TIME_WEEKLY, 10, 10);
+    instantiate_any_denom(deps.as_mut(), vec![quota]).unwrap();
+    sudo(deps.as_mut(), mock_env(), send_denom(1_000, 100)).unwrap();
+    sudo(deps.as_mut(), mock_env(), recv_denom(1_000, 150)).unwrap();
+}
+
+#[test] // State written by 0.1.x and every proposal JSON submitted so far keep deserializing and behaving the same
+fn legacy_state_and_messages_deserialize() {
+    // A RateLimit entry exactly as the previous revision stored it
+    let legacy_rate_limit = r#"{"quota":{"name":"weekly","max_percentage_send":10,"max_percentage_recv":10,"duration":604800,"channel_value":"1000"},"flow":{"inflow":"0","outflow":"0","period_end":"1571797419879305533"}}"#;
+    let limit: RateLimit = from_slice(legacy_rate_limit.as_bytes()).unwrap();
+    assert_eq!(limit.quota.max_percentage_send, Some(10));
+    assert_eq!(limit.quota.max_percentage_recv, Some(10));
+    assert_eq!(limit.quota.max_absolute_send, None);
+    assert_eq!(limit.quota.max_absolute_recv, None);
+    assert_eq!(limit.quota.channel_value, Some(Uint256::from(1_000_u32)));
+
+    // The proposal shape used since 2022
+    let legacy_quota_msg = r#"{"name":"DAY-1","duration":86400,"send_recv":[30,30]}"#;
+    let msg: QuotaMsg = from_slice(legacy_quota_msg.as_bytes()).unwrap();
+    assert_eq!(msg, QuotaMsg::new("DAY-1", 86400, 30, 30));
+
+    // The new shape: no send percentage, an absolute recv bound
+    let new_quota_msg = r#"{"name":"DAY-1","duration":86400,"send_recv":[100,null],"max_absolute_recv":"500000000000000"}"#;
+    let msg: QuotaMsg = from_slice(new_quota_msg.as_bytes()).unwrap();
+    assert_eq!(msg.send_recv, (Some(100), None));
+    assert_eq!(msg.max_absolute_send, None);
+    assert_eq!(
+        msg.max_absolute_recv,
+        Some(Uint256::from(500_000_000_000_000_u128))
+    );
+
+    // The legacy entry still enforces 10% of its cached channel value: 100 fits, 101 does not
+    let mut deps = mock_dependencies();
+    instantiate_any_denom(
+        deps.as_mut(),
+        vec![QuotaMsg::new("other", RESET_TIME_WEEKLY, 1, 1)],
+    )
+    .unwrap();
+    RATE_LIMIT_TRACKERS
+        .save(
+            deps.as_mut().storage,
+            ("any".to_string(), "denom".to_string()),
+            &vec![limit],
+        )
+        .unwrap();
+    sudo(deps.as_mut(), mock_env(), recv_denom(5_000, 100)).unwrap();
+    let err = sudo(deps.as_mut(), mock_env(), recv_denom(5_000, 1)).unwrap_err();
+    assert!(matches!(err, ContractError::RateLimitExceded { bound, .. } if bound == "percentage"));
+}
+
+#[test] // Editing a quota keeps the channel value cached for the running window and applies the new bounds to it
+fn edit_path_quota_adds_absolute_bounds_and_keeps_channel_value() {
+    let mut deps = mock_dependencies();
+    let quota = QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 50, 50);
+    instantiate_any_denom(deps.as_mut(), vec![quota]).unwrap();
+
+    // 300 out caches a channel value of 3300 for the window
+    sudo(deps.as_mut(), mock_env(), send_denom(3_300, 300)).unwrap();
+
+    let edit = ExecuteMsg::EditPathQuota {
+        channel_id: "any".to_string(),
+        denom: "denom".to_string(),
+        quota: QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 50, 50)
+            .with_absolute(Some(Uint256::from(350_u32)), Some(Uint256::from(350_u32))),
+    };
+    execute(deps.as_mut(), mock_env(), mock_info(GOV_ADDR, &[]), edit).unwrap();
+
+    let query_msg = QueryMsg::GetQuotas {
+        channel_id: "any".to_string(),
+        denom: "denom".to_string(),
+    };
+    let res = query(deps.as_ref(), mock_env(), query_msg).unwrap();
+    let value: Vec<RateLimit> = from_binary(&res).unwrap();
+    assert_eq!(value[0].quota.channel_value, Some(Uint256::from(3_300_u32)));
+    assert_eq!(
+        value[0].quota.max_absolute_send,
+        Some(Uint256::from(350_u32))
+    );
+    assert_eq!(value[0].quota.max_percentage_send, Some(50));
+    assert_eq!(value[0].flow.outflow, Uint256::from(300_u32));
+
+    // 300 already out this window: 100 more is under 50% of 3300 but over the absolute 350
+    let err = sudo(deps.as_mut(), mock_env(), send_denom(3_300, 100)).unwrap_err();
+    assert!(matches!(err, ContractError::RateLimitExceded { bound, .. } if bound == "absolute"));
+}
+
+#[test] // A quota that would bound nothing, or could not be addressed later, is rejected rather than stored
+fn invalid_quotas_are_rejected() {
+    let one = Some(Uint256::from(1_u32));
+    let cases = vec![
+        (
+            "no bound at all",
+            QuotaMsg::absolute("x", RESET_TIME_WEEKLY, None, None),
+        ),
+        (
+            "no send bound",
+            QuotaMsg::absolute("x", RESET_TIME_WEEKLY, None, one),
+        ),
+        (
+            "no recv bound",
+            QuotaMsg::absolute("x", RESET_TIME_WEEKLY, one, None),
+        ),
+        ("zero duration", QuotaMsg::new("x", 0, 1, 1)),
+        ("empty name", QuotaMsg::new("", RESET_TIME_WEEKLY, 1, 1)),
+    ];
+    for (case, quota) in cases {
+        let mut deps = mock_dependencies();
+        let err = instantiate_any_denom(deps.as_mut(), vec![quota]).unwrap_err();
+        assert!(matches!(err, ContractError::InvalidParameters(_)), "{case}");
+    }
+
+    // Duplicate names on one path
+    let mut deps = mock_dependencies();
+    let quotas = vec![
+        QuotaMsg::new("x", RESET_TIME_WEEKLY, 1, 1),
+        QuotaMsg::new("x", RESET_TIME_WEEKLY, 2, 2),
+    ];
+    let err = instantiate_any_denom(deps.as_mut(), quotas).unwrap_err();
+    assert!(matches!(err, ContractError::InvalidParameters(_)));
+
+    // A path with no quotas
+    let mut deps = mock_dependencies();
+    let err = instantiate_any_denom(deps.as_mut(), vec![]).unwrap_err();
+    assert!(matches!(err, ContractError::InvalidParameters(_)));
+
+    // Percentages above 100 are fine
+    let mut deps = mock_dependencies();
+    instantiate_any_denom(
+        deps.as_mut(),
+        vec![QuotaMsg::new("x", RESET_TIME_WEEKLY, 200, 10_000)],
+    )
+    .unwrap();
 }

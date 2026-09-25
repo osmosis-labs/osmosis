@@ -1,8 +1,12 @@
+use std::collections::BTreeSet;
+
 use crate::blocking::restriction_key;
 use crate::msg::{PathMsg, QuotaMsg};
 
 use crate::state::storage::{ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM, PENDING_SENDS};
-use crate::state::{flow::Flow, path::Path, rate_limit::RateLimit, storage::RATE_LIMIT_TRACKERS};
+use crate::state::{
+    flow::Flow, path::Path, quota::Quota, rate_limit::RateLimit, storage::RATE_LIMIT_TRACKERS,
+};
 use crate::ContractError;
 use cosmwasm_std::{DepsMut, Order, Response, StdResult, Timestamp};
 use cw_storage_plus::Bound;
@@ -13,20 +17,43 @@ pub fn add_new_paths(
     now: Timestamp,
 ) -> Result<(), ContractError> {
     for path_msg in path_msgs {
+        validate_path_quotas(&path_msg)?;
         let path = Path::new(path_msg.channel_id, path_msg.denom);
 
-        RATE_LIMIT_TRACKERS.save(
-            deps.storage,
-            path.into(),
-            &path_msg
-                .quotas
-                .iter()
-                .map(|q| RateLimit {
-                    quota: q.into(),
+        let limits = path_msg
+            .quotas
+            .iter()
+            .map(|q| -> Result<RateLimit, ContractError> {
+                Ok(RateLimit {
+                    quota: Quota::try_from(q)?,
                     flow: Flow::new(0_u128, 0_u128, now, q.duration),
                 })
-                .collect(),
-        )?
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        RATE_LIMIT_TRACKERS.save(deps.storage, path.into(), &limits)?
+    }
+    Ok(())
+}
+
+/// A path needs at least one quota, and ResetPathQuota and EditPathQuota
+/// address quotas by name, so names must be unique within the path.
+fn validate_path_quotas(path_msg: &PathMsg) -> Result<(), ContractError> {
+    if path_msg.quotas.is_empty() {
+        let reason = format!(
+            "path {}/{} has no quotas; use RemovePath to lift a rate limit",
+            path_msg.channel_id, path_msg.denom
+        );
+        return Err(ContractError::InvalidParameters(reason));
+    }
+    let mut names = BTreeSet::new();
+    for quota in &path_msg.quotas {
+        if !names.insert(quota.name.as_str()) {
+            let reason = format!(
+                "quota name {} is used more than once on {}/{}",
+                quota.name, path_msg.channel_id, path_msg.denom
+            );
+            return Err(ContractError::InvalidParameters(reason));
+        }
     }
     Ok(())
 }
@@ -125,17 +152,16 @@ pub fn edit_path_quota(
             }),
             Some(mut limits) => {
                 let mut matched = false;
-                limits.iter_mut().for_each(|limit| {
+                for limit in limits.iter_mut() {
                     if limit.quota.name.eq(&quota.name) {
-                        // cache the current channel_value
+                        // Keep the channel value cached for the current window;
+                        // the new bounds apply to it straight away.
                         let channel_value = limit.quota.channel_value;
-                        // update the quota
-                        limit.quota = From::from(&quota);
-                        // copy the channel_value
+                        limit.quota = Quota::try_from(&quota)?;
                         limit.quota.channel_value = channel_value;
                         matched = true;
                     }
-                });
+                }
                 // An edit that matches nothing must fail rather than pass silently
                 if !matched {
                     return Err(ContractError::QuotaNotFound {
@@ -313,11 +339,7 @@ mod tests {
         let msg = ExecuteMsg::AddPath {
             channel_id: "channel".to_string(),
             denom: "denom".to_string(),
-            quotas: vec![QuotaMsg {
-                name: "daily".to_string(),
-                duration: 1600,
-                send_recv: (3, 5),
-            }],
+            quotas: vec![QuotaMsg::new("daily", 1600, 3, 5)],
         };
         let info = mock_info(IBC_ADDR, &[]);
 
@@ -349,11 +371,7 @@ mod tests {
         let msg = ExecuteMsg::AddPath {
             channel_id: "channel2".to_string(),
             denom: "denom".to_string(),
-            quotas: vec![QuotaMsg {
-                name: "daily".to_string(),
-                duration: 1600,
-                send_recv: (3, 5),
-            }],
+            quotas: vec![QuotaMsg::new("daily", 1600, 3, 5)],
         };
         let info = mock_info(IBC_ADDR, &[]);
 
@@ -396,11 +414,7 @@ mod tests {
         let msg = ExecuteMsg::AddPath {
             channel_id: "channel2".to_string(),
             denom: "denom".to_string(),
-            quotas: vec![QuotaMsg {
-                name: "different".to_string(),
-                duration: 5000,
-                send_recv: (50, 30),
-            }],
+            quotas: vec![QuotaMsg::new("different", 5000, 50, 30)],
         };
         let info = mock_info(IBC_ADDR, &[]);
 

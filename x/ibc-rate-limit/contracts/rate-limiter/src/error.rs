@@ -9,12 +9,17 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
-    #[error("IBC Rate Limit exceeded for {channel}/{denom}. Tried to transfer {amount} which exceeds capacity on the '{quota_name}' quota ({used}/{max}). Try again after {reset:?}")]
+    // The leading "IBC Rate Limit exceeded for" is matched by the chain
+    // (x/ibc-rate-limit/rate_limit.go) to tell a quota rejection from any
+    // other contract failure. Keep it.
+    #[error("IBC Rate Limit exceeded for {channel}/{denom}. Tried to transfer {amount} which exceeds the {bound} capacity on the '{quota_name}' quota ({used}/{max}). Try again after {reset:?}")]
     RateLimitExceded {
         channel: String,
         denom: String,
         amount: Uint256,
         quota_name: String,
+        /// Which bound tripped: "percentage" (net flow) or "absolute" (gross flow)
+        bound: String,
         used: Uint256,
         max: Uint256,
         reset: Timestamp,

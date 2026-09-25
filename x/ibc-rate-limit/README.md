@@ -41,7 +41,7 @@ Rate limits aren't the end-all of safety controls, they're merely the simplest a
 We express rate limits in time-based periods.
 This means, we set rate limits for (say) 6-hour, daily, and weekly intervals.
 The rate limit for a given time period stores the relevant amount of assets at the start of the rate limit.
-Rate limits are then defined on percentage terms of the asset.
+Rate limits are then defined as a percentage of the asset's supply on Osmosis, an absolute amount in the asset's base units, or both. The percentage applies to the net flow; the absolute amount applies to the gross flow, so it cannot be gamed by first sending real assets out, and it does not scale with a supply an attacker is inflating.
 The time windows for rate limits are currently _not_ rolling, they have discrete start/end times.
 
 We allow setting separate rate limits for the inflow and outflow of assets.
@@ -161,7 +161,7 @@ The tracking contract uses the following concepts
 1. **RateLimit** - tracks the value flow transferred and the quota for a path.
 2. **Path** - is a (denom, channel) pair.
 3. **Flow** - tracks the value that has moved through a path during the current time window.
-4. **Quota** - is the percentage of the denom's total value that can be transferred through the path in a given period of time (duration)
+4. **Quota** - bounds how much of the denom can be transferred through the path in a given period of time (duration): a percentage of the denom's total value, an absolute amount in base units, or both. Percentages above 100 are allowed
 
 #### Messages
 

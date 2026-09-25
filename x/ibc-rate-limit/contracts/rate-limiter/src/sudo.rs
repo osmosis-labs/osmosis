@@ -153,26 +153,33 @@ fn add_rate_limit_attributes(
     response: Response,
     result: &RateLimit,
 ) -> Result<Response, ContractError> {
+    // The two bounds measure different things: the percentage bound is
+    // compared against the net flow, the absolute bound against the gross
+    // flow. Each is reported next to the figure it is compared against so a
+    // monitor can compute either utilisation without mixing them up.
     let (used_in, used_out) = result.flow.balance();
     let (max_in, max_out) = result.quota.capacity()?;
+    let name = &result.quota.name;
+    let or_none = |bound: Option<Uint256>| match bound {
+        Some(bound) => bound.to_string(),
+        None => "none".to_string(),
+    };
     // These attributes are only added during testing. That way we avoid
     // calculating these again on prod.
     Ok(response
+        .add_attribute(format!("{name}_used_in"), used_in.to_string())
+        .add_attribute(format!("{name}_used_out"), used_out.to_string())
+        .add_attribute(format!("{name}_max_in"), or_none(max_in.percentage))
+        .add_attribute(format!("{name}_max_out"), or_none(max_out.percentage))
+        .add_attribute(format!("{name}_gross_in"), result.flow.inflow.to_string())
+        .add_attribute(format!("{name}_gross_out"), result.flow.outflow.to_string())
+        .add_attribute(format!("{name}_max_absolute_in"), or_none(max_in.absolute))
         .add_attribute(
-            format!("{}_used_in", result.quota.name),
-            used_in.to_string(),
+            format!("{name}_max_absolute_out"),
+            or_none(max_out.absolute),
         )
         .add_attribute(
-            format!("{}_used_out", result.quota.name),
-            used_out.to_string(),
-        )
-        .add_attribute(format!("{}_max_in", result.quota.name), max_in.to_string())
-        .add_attribute(
-            format!("{}_max_out", result.quota.name),
-            max_out.to_string(),
-        )
-        .add_attribute(
-            format!("{}_period_end", result.quota.name),
+            format!("{name}_period_end"),
             result.flow.period_end.to_string(),
         ))
 }
