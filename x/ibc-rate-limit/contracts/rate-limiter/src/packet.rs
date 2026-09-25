@@ -77,7 +77,7 @@ pub struct QuerySupplyOfResponse {
 
 use std::str::FromStr; // Needed to parse the coin's String as Uint256
 
-fn hash_denom(denom: &str) -> String {
+pub(crate) fn hash_denom(denom: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(denom.as_bytes());
     let result = hasher.finalize();
@@ -118,6 +118,36 @@ impl Packet {
         }
         .query(&deps.querier)?;
         Uint256::from_str(&res.amount.unwrap_or_default().amount)
+    }
+
+    /// Identifies this packet by the content the chain passes unchanged
+    /// between the send authorisation and a later acknowledgement or timeout:
+    /// port, channel, sender, receiver, denom, amount and timeouts. The
+    /// sequence is left out because it is not assigned yet when the send is
+    /// authorised, and the destination because the chain does not fill it in
+    /// at that point either.
+    pub fn send_key(&self) -> String {
+        let mut hasher = Sha256::new();
+        for part in [
+            self.source_port.as_str(),
+            self.source_channel.as_str(),
+            self.data.sender.as_str(),
+            self.data.receiver.as_str(),
+            self.data.denom.as_str(),
+        ] {
+            hasher.update(part.as_bytes());
+            hasher.update([0u8]);
+        }
+        hasher.update(self.data.amount.to_string().as_bytes());
+        hasher.update([0u8]);
+        let timeouts = format!(
+            "{:?}/{:?}/{:?}",
+            self.timeout_height.revision_number,
+            self.timeout_height.revision_height,
+            self.timeout_timestamp
+        );
+        hasher.update(timeouts.as_bytes());
+        format!("{:x}", hasher.finalize())
     }
 
     pub fn get_funds(&self) -> Uint256 {

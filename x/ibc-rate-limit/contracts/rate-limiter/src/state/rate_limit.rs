@@ -49,10 +49,10 @@ impl RateLimit {
                 &path.denom,
                 funds,
                 direction,
-            ))
+            )?)
         }
 
-        let (max_in, max_out) = self.quota.capacity();
+        let (max_in, max_out) = self.quota.capacity()?;
         // Return the effects of applying the transfer or an error.
         match self.flow.exceeds(direction, max_in, max_out) {
             true => Err(ContractError::RateLimitExceded {
@@ -61,7 +61,10 @@ impl RateLimit {
                 amount: funds,
                 quota_name: self.quota.name.to_string(),
                 used: initial_flow,
-                max: self.quota.capacity_on(direction),
+                max: match direction {
+                    FlowType::In => max_in,
+                    FlowType::Out => max_out,
+                },
                 reset: self.flow.period_end,
             }),
             false => Ok(RateLimit {
@@ -82,17 +85,20 @@ fn calculate_channel_value(
     denom: &str,
     funds: Uint256,
     direction: &FlowType,
-) -> Uint256 {
+) -> Result<Uint256, ContractError> {
     match direction {
         FlowType::Out => {
             if denom.starts_with("ibc") {
-                channel_value + funds // Non-Native tokens get removed from the supply on send. Add that amount back
+                // Non-Native tokens get removed from the supply on send. Add that amount back
+                channel_value
+                    .checked_add(funds)
+                    .map_err(|e| ContractError::Overflow(e.to_string()))
             } else {
                 // The commented-out code in the golang calculate channel value is what we want, but we're currently using the whole supply temporarily for efficiency. see rate_limit.go/CalculateChannelValue(..)
                 //channel_value - funds // Native tokens increase escrow amount on send. Remove that amount here
-                channel_value
+                Ok(channel_value)
             }
         }
-        FlowType::In => channel_value,
+        FlowType::In => Ok(channel_value),
     }
 }

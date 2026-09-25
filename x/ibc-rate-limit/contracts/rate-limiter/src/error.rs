@@ -31,6 +31,9 @@ pub enum ContractError {
 
     #[error("Channel {channel} has been blocked for denom {denom}")]
     ChannelBlocked { channel: String, denom: String },
+
+    #[error("Arithmetic overflow: {0}")]
+    Overflow(String),
 }
 
 #[cfg(test)]

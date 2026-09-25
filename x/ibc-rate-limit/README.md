@@ -181,9 +181,9 @@ The contract specifies the following messages:
 
 Sudo messages can only be executed by the chain.
 
-* SendPacket - Increments the amount used out of the send quota and checks that the send is allowed. If it isn't, it will return a RateLimitExceeded error
+* SendPacket - Increments the amount used out of the send quota and checks that the send is allowed. If it isn't, it will return a RateLimitExceeded error. A send that was counted is remembered, keyed by the packet content and kept until the packet could no longer be re-sent, so that a later failure of the same packet can be settled. A second identical send while one is pending is counted but not remembered
 * RecvPacket - Increments the amount used out of the receive quota and checks that the receive is allowed. If it isn't, it will return a RateLimitExceeded error
-* UndoSend - If a send has failed, the undo message is used to remove its cost from the send quota
+* UndoSend - If a send has failed (error acknowledgement or timeout), removes its cost from each send quota that is still in the window the send was counted in, and settles the send's record. A window that did not count the send is never credited for it
 
 All of these messages receive the packet from the chain and extract the necessary information to process the packet and determine if it should be the rate limited. 
 

@@ -6,6 +6,7 @@ use cosmwasm_std::Addr;
 use cw_storage_plus::{Deque, Item, Map};
 
 use super::{
+    pending_send::PendingSend,
     rate_limit::RateLimit,
     rbac::{QueuedMessage, Roles},
 };
@@ -50,4 +51,25 @@ pub const RBAC_PERMISSIONS: Map<String, BTreeSet<Roles>> = Map::new("rbac");
 
 /// Accepted channels for restricted denom. This is a map of denom -> channels.
 /// If a denom is not in this map, it is unrestricted.
+///
+/// Since 0.2.0 the key is the denom as it exists on this chain (ibc/HASH for
+/// anything with a transfer/ path, see blocking::restriction_key). The 0.2.0
+/// migration moved the entries written earlier under packet-form keys.
 pub const ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM: Map<String, Vec<String>> = Map::new("acfd");
+
+/// Sends that passed a quota, keyed by (source channel, packet content key),
+/// so a failure can be refunded while the recorded windows are still active.
+/// The content key (Packet::send_key) is what the chain passes unchanged
+/// between the send and its acknowledgement. One record per key: a second
+/// identical send while a record is pending is counted but not recorded.
+/// Written on a counted send, removed by UndoSend, by eviction on later sends
+/// on the same channel, or by PurgeStaleSends, the latter two only once the
+/// record's retention (PendingSend::retain_until) has passed.
+pub const PENDING_SENDS: Map<(String, String), PendingSend> = Map::new("pending_sends");
+
+/// Index of PENDING_SENDS by (source channel, retain_until in nanoseconds,
+/// content key), so that the records whose retention ends first on a channel
+/// can be found first. Exactly one entry per record; maintained together with
+/// PENDING_SENDS.
+pub const PENDING_SENDS_BY_EXPIRY: Map<(String, u64, String), ()> =
+    Map::new("pending_sends_expiry");

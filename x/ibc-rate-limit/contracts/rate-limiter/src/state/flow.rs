@@ -100,7 +100,8 @@ impl Flow {
         }
     }
 
-    /// Updates the current flow reducing it by a transfer of value.
+    /// Updates the current flow reducing it by a transfer of value. Used to
+    /// refund a failed send that was counted in this same window.
     pub fn undo_flow(&mut self, direction: FlowType, value: Uint256) {
         match direction {
             FlowType::In => self.inflow = self.inflow.saturating_sub(value),
