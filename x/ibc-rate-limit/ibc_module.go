@@ -2,7 +2,7 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
-	"strings"
+	"errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
@@ -143,11 +143,15 @@ func (im *IBCModule) OnRecvPacket(
 
 	err := CheckAndUpdateRateLimits(ctx, im.ics4Middleware.ContractKeeper, "recv_packet", contract, packet)
 	if err != nil {
-		if strings.Contains(err.Error(), "rate limit exceeded") {
-			return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrRateLimitExceeded)
+		// CheckAndUpdateRateLimits already classified the failure as either
+		// ErrRateLimitExceeded or ErrContractError. The ack only carries the
+		// ABCI code, so the counterparty sees which of the two it was, and the
+		// full contract message goes into the emitted error event so that a
+		// contract fault is diagnosable from the receiving chain.
+		if errors.Is(err, types.ErrRateLimitExceeded) {
+			return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrRateLimitExceeded, err.Error())
 		}
-		fullError := errorsmod.Wrap(types.ErrContractError, err.Error())
-		return osmoutils.NewEmitErrorAcknowledgement(ctx, fullError)
+		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrContractError, err.Error())
 	}
 
 	// if this returns an Acknowledgement that isn't successful, all state changes are discarded

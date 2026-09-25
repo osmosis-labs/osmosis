@@ -2,6 +2,7 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
+	"strings"
 
 	errorsmod "cosmossdk.io/errors"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -37,10 +38,30 @@ func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.Permis
 	_, err = contractKeeper.Sudo(ctx, contractAddr, sendPacketMsg)
 
 	if err != nil {
-		return errorsmod.Wrap(types.ErrRateLimitExceeded, err.Error())
+		return wrapContractError(err)
 	}
 
 	return nil
+}
+
+// contractRateLimitExceededMarker is the start of the message the rate limiter
+// contract produces for its RateLimitExceded error variant (see
+// contracts/rate-limiter/src/error.rs). wasmd hands contract errors back as
+// strings, so this text is the only way to tell a genuine quota rejection from
+// any other contract failure. Keep the two in sync.
+const contractRateLimitExceededMarker = "IBC Rate Limit exceeded for"
+
+// wrapContractError maps an error returned by the rate limiter contract onto
+// the module's error types. Only a quota rejection becomes
+// ErrRateLimitExceeded; every other failure (a query the contract could not
+// run, a malformed packet, a bug) becomes ErrContractError so it is not
+// reported to users as a rate limit. The contract's own message is kept in
+// both cases.
+func wrapContractError(err error) error {
+	if strings.Contains(err.Error(), contractRateLimitExceededMarker) {
+		return errorsmod.Wrap(types.ErrRateLimitExceeded, err.Error())
+	}
+	return errorsmod.Wrap(types.ErrContractError, err.Error())
 }
 
 type UndoSendMsg struct {
