@@ -120,6 +120,20 @@ pub enum ExecuteMsg {
         count: Option<u64>,
         message_ids: Option<Vec<String>>,
     },
+    /// Permissionless. Removes tracker entries that hold no quotas, which
+    /// versions before 0.2.0 wrote for every (channel, denom) pair they saw.
+    /// Bounded, so state left behind can never make a call exceed its gas.
+    /// Returns the last key scanned so the next call can continue from it.
+    PurgeEmptyPaths {
+        start_after: Option<(String, String)>,
+        limit: u32,
+    },
+    /// Permissionless. Removes pending-send records whose windows have all
+    /// ended, since a refund can no longer change any active window.
+    PurgeStaleSends {
+        start_after: Option<(String, u64)>,
+        limit: u32,
+    },
 }
 
 #[cw_serde]
@@ -156,9 +170,17 @@ pub enum SudoMsg {
         #[cfg(test)]
         channel_value_mock: Option<Uint256>,
     },
-    UndoSend {
-        packet: Packet,
-    },
+    /// Sent by the chain right after a send passed SendPacket and the packet
+    /// was committed, carrying the real sequence. Records the window each quota
+    /// was in so a later failure can be refunded only while it is still active.
+    RecordSend { packet: Packet },
+    /// Sent by the chain when a send fails (error acknowledgement or timeout).
+    /// Refunds the send to each quota that is still in the window the send
+    /// was counted in; a send the chain never recorded keeps its cost.
+    UndoSend { packet: Packet },
+    /// Sent by the chain when a send is acknowledged successfully. Settles the
+    /// pending record; the send stays counted.
+    ConfirmSend { packet: Packet },
 }
 
 #[cw_serde]
@@ -182,16 +204,19 @@ impl ExecuteMsg {
             Self::RemoveMessage { .. } => Some(Roles::RemoveMessage),
             Self::SetTimelockDelay { .. } => Some(Roles::SetTimelockDelay),
             Self::ProcessMessages { .. } => None,
+            Self::PurgeEmptyPaths { .. } => None,
+            Self::PurgeStaleSends { .. } => None,
         }
     }
     /// Checks to see if the message type is able to skip queueing.
     ///
-    /// This is limited to the message type responsible for processing the queue
+    /// This is limited to the permissionless housekeeping messages
     pub fn skip_queue(&self) -> bool {
-        #[allow(clippy::match_like_matches_macro)]
-        match self {
-            Self::ProcessMessages { .. } => true,
-            _ => false,
-        }
+        matches!(
+            self,
+            Self::ProcessMessages { .. }
+                | Self::PurgeEmptyPaths { .. }
+                | Self::PurgeStaleSends { .. }
+        )
     }
 }

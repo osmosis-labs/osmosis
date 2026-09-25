@@ -100,6 +100,75 @@ func UndoSendRateLimit(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedK
 	return nil
 }
 
+type RecordSendMsg struct {
+	RecordSend UndoPacketMsg `json:"record_send"`
+}
+
+// RecordSendRateLimit tells the contract the sequence of a packet whose send it
+// has just authorised, so the contract can refund it later if it fails while
+// the quota window it was counted in is still active.
+func RecordSendRateLimit(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
+	contract string,
+	packet exported.PacketI,
+) error {
+	contractAddr, err := sdk.AccAddressFromBech32(contract)
+	if err != nil {
+		return err
+	}
+
+	unwrapped, err := unwrapPacket(packet)
+	if err != nil {
+		return err
+	}
+
+	msg := RecordSendMsg{RecordSend: UndoPacketMsg{Packet: unwrapped}}
+	asJson, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	_, err = contractKeeper.Sudo(ctx, contractAddr, asJson)
+	if err != nil {
+		return errorsmod.Wrap(types.ErrContractError, err.Error())
+	}
+
+	return nil
+}
+
+type ConfirmSendMsg struct {
+	ConfirmSend UndoPacketMsg `json:"confirm_send"`
+}
+
+// ConfirmSendRateLimit tells the contract that a sent packet was acknowledged
+// successfully so it can settle the record it keeps for a possible refund.
+func ConfirmSendRateLimit(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
+	contract string,
+	packet exported.PacketI,
+) error {
+	contractAddr, err := sdk.AccAddressFromBech32(contract)
+	if err != nil {
+		return err
+	}
+
+	unwrapped, err := unwrapPacket(packet)
+	if err != nil {
+		return err
+	}
+
+	msg := ConfirmSendMsg{ConfirmSend: UndoPacketMsg{Packet: unwrapped}}
+	asJson, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	_, err = contractKeeper.Sudo(ctx, contractAddr, asJson)
+	if err != nil {
+		return errorsmod.Wrap(types.ErrContractError, err.Error())
+	}
+
+	return nil
+}
+
 type SendPacketMsg struct {
 	SendPacket PacketMsg `json:"send_packet"`
 }

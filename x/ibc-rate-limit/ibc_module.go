@@ -187,6 +187,19 @@ func (im *IBCModule) OnAcknowledgementPacket(
 				),
 			)
 		}
+	} else {
+		err := im.ConfirmSentPacket(ctx, packet) // Settles the contract's refund record; the ack is handled regardless
+		if err != nil {
+			ctx.EventManager().EmitEvent(
+				sdk.NewEvent(
+					types.EventBadRevert,
+					sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+					sdk.NewAttribute(types.AttributeKeyFailureType, "confirmation"),
+					sdk.NewAttribute(types.AttributeKeyPacket, string(packet.GetData())),
+					sdk.NewAttribute(types.AttributeKeyAck, string(acknowledgement)),
+				),
+			)
+		}
 	}
 
 	return im.app.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
@@ -232,6 +245,25 @@ func (im *IBCModule) RevertSentPacket(
 		return err
 	}
 	return nil
+}
+
+// ConfirmSentPacket notifies the contract that a sent packet was received successfully
+func (im *IBCModule) ConfirmSentPacket(
+	ctx sdk.Context,
+	packet exported.PacketI,
+) error {
+	contract := im.ics4Middleware.GetContractAddress(ctx)
+	if contract == "" {
+		// The contract has not been configured. Continue as usual
+		return nil
+	}
+
+	return ConfirmSendRateLimit(
+		ctx,
+		im.ics4Middleware.ContractKeeper,
+		contract,
+		packet,
+	)
 }
 
 // SendPacket implements the ICS4 Wrapper interface

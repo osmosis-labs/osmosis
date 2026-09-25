@@ -1,9 +1,11 @@
+use crate::blocking::restriction_key;
 use crate::msg::{PathMsg, QuotaMsg};
 
-use crate::state::storage::ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM;
+use crate::state::storage::{ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM, PENDING_SENDS};
 use crate::state::{flow::Flow, path::Path, rate_limit::RateLimit, storage::RATE_LIMIT_TRACKERS};
 use crate::ContractError;
-use cosmwasm_std::{DepsMut, Response, Timestamp};
+use cosmwasm_std::{DepsMut, Order, Response, StdResult, Timestamp};
+use cw_storage_plus::Bound;
 
 pub fn add_new_paths(
     deps: &mut DepsMut,
@@ -36,12 +38,19 @@ pub fn try_add_path(
     quotas: Vec<QuotaMsg>,
     now: Timestamp,
 ) -> Result<Response, ContractError> {
+    // Adding a path that already exists replaces every quota on it and resets
+    // the flows. That is allowed, but the execution event must say so, because a
+    // proposal that meant to add a second quota would otherwise silently wipe
+    // the first.
+    let replaced = RATE_LIMIT_TRACKERS.has(deps.storage, Path::new(&channel_id, &denom).into());
+
     add_new_paths(deps, vec![PathMsg::new(&channel_id, &denom, quotas)], now)?;
 
     Ok(Response::new()
         .add_attribute("method", "try_add_channel")
         .add_attribute("channel_id", channel_id)
-        .add_attribute("denom", denom))
+        .add_attribute("denom", denom)
+        .add_attribute("replaced", replaced.to_string()))
 }
 
 pub fn try_remove_path(
@@ -74,12 +83,22 @@ pub fn try_reset_path_quota(
                 denom: denom.clone(),
             }),
             Some(mut limits) => {
-                // Q: What happens here if quote_id not found? seems like we return ok?
+                let mut matched = false;
                 limits.iter_mut().for_each(|limit| {
                     if limit.quota.name == quota_id.as_ref() {
-                        limit.flow.expire(now, limit.quota.duration)
+                        limit.flow.expire(now, limit.quota.duration);
+                        matched = true;
                     }
                 });
+                // A reset that matches nothing must fail rather than pass silently,
+                // otherwise a typo in a proposal looks like a successful reset.
+                if !matched {
+                    return Err(ContractError::QuotaNotFound {
+                        quota_id,
+                        channel_id: channel_id.clone(),
+                        denom: denom.clone(),
+                    });
+                }
                 Ok(limits)
             }
         }
@@ -105,18 +124,26 @@ pub fn edit_path_quota(
                 denom: denom.clone(),
             }),
             Some(mut limits) => {
+                let mut matched = false;
                 limits.iter_mut().for_each(|limit| {
                     if limit.quota.name.eq(&quota.name) {
-                        // TODO: is this the current way of handling channel_value when editing the quota?
-
                         // cache the current channel_value
                         let channel_value = limit.quota.channel_value;
                         // update the quota
                         limit.quota = From::from(&quota);
                         // copy the channel_value
                         limit.quota.channel_value = channel_value;
+                        matched = true;
                     }
                 });
+                // An edit that matches nothing must fail rather than pass silently
+                if !matched {
+                    return Err(ContractError::QuotaNotFound {
+                        quota_id: quota.name,
+                        channel_id: channel_id.clone(),
+                        denom: denom.clone(),
+                    });
+                }
                 Ok(limits)
             }
         }
@@ -129,16 +156,122 @@ pub fn set_denom_restrictions(
     denom: String,
     allowed_channels: Vec<String>,
 ) -> Result<Response, ContractError> {
-    ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM.save(deps.storage, denom, &allowed_channels)?;
-    Ok(Response::new().add_attribute("method", "set_denom_restrictions"))
+    // An empty list is not "block everywhere": check_restricted_denoms treats it
+    // as no restriction at all, so storing it would be a no-op that looks like a
+    // block. Lifting a restriction goes through UnsetDenomRestrictions.
+    if allowed_channels.is_empty() {
+        let reason = "allowed_channels is empty; use UnsetDenomRestrictions to lift a restriction";
+        return Err(ContractError::InvalidParameters(reason.to_string()));
+    }
+    // Store under the canonical key so the same token can never carry two
+    // entries. A legacy packet-form entry for this denom is removed with it,
+    // otherwise it would keep shadowing the new one.
+    let key = restriction_key(&denom);
+    if key != denom {
+        ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM.remove(deps.storage, denom);
+    }
+    ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM.save(deps.storage, key.clone(), &allowed_channels)?;
+    Ok(Response::new()
+        .add_attribute("method", "set_denom_restrictions")
+        .add_attribute("key", key))
 }
 
 pub fn unset_denom_restrictions(
     deps: &mut DepsMut,
     denom: String,
 ) -> Result<Response, ContractError> {
+    // Remove both spellings so no legacy packet-form entry survives
+    ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM.remove(deps.storage, restriction_key(&denom));
     ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM.remove(deps.storage, denom);
     Ok(Response::new().add_attribute("method", "unset_denom_restrictions"))
+}
+
+/// Upper bound on the entries one housekeeping call may scan and decode. The
+/// purge messages are permissionless, so the bound is the contract's, not the
+/// caller's; a limit above it is rejected rather than silently clamped.
+pub const MAX_PURGE_BATCH: u32 = 100;
+
+fn checked_batch_limit(limit: u32) -> Result<usize, ContractError> {
+    if limit == 0 || limit > MAX_PURGE_BATCH {
+        let reason = format!("limit must be between 1 and {MAX_PURGE_BATCH}");
+        return Err(ContractError::InvalidParameters(reason));
+    }
+    Ok(limit as usize)
+}
+
+/// Permissionless. Removes up to `limit` tracker entries, starting after
+/// `start_after`, whose quota vector is empty. Versions before 0.2.0 wrote one
+/// of those for every (channel, denom) pair they saw, and anyone could add
+/// more by sending a new denom, so the cleanup is bounded per call and never
+/// part of a migration. Reports the last key scanned for the next call.
+pub fn purge_empty_paths(
+    deps: &mut DepsMut,
+    start_after: Option<(String, String)>,
+    limit: u32,
+) -> Result<Response, ContractError> {
+    let limit = checked_batch_limit(limit)?;
+    let scanned: Vec<((String, String), bool)> = RATE_LIMIT_TRACKERS
+        .range(
+            deps.storage,
+            start_after.map(Bound::exclusive),
+            None,
+            Order::Ascending,
+        )
+        .take(limit)
+        .map(|item| item.map(|(key, limits)| (key, limits.is_empty())))
+        .collect::<StdResult<_>>()?;
+
+    let mut purged = 0_u32;
+    let mut last_key = "none".to_string();
+    for (key, empty) in scanned.iter() {
+        last_key = format!("{}/{}", key.0, key.1);
+        if *empty {
+            RATE_LIMIT_TRACKERS.remove(deps.storage, key.clone());
+            purged += 1;
+        }
+    }
+    Ok(Response::new()
+        .add_attribute("method", "purge_empty_paths")
+        .add_attribute("scanned", scanned.len().to_string())
+        .add_attribute("purged", purged.to_string())
+        .add_attribute("last_key", last_key))
+}
+
+/// Permissionless. Removes up to `limit` pending-send records, starting after
+/// `start_after`, whose windows have all ended. A refund for those could no
+/// longer change an active window, so the record only takes up space.
+pub fn purge_stale_sends(
+    deps: &mut DepsMut,
+    now: Timestamp,
+    start_after: Option<(String, u64)>,
+    limit: u32,
+) -> Result<Response, ContractError> {
+    let limit = checked_batch_limit(limit)?;
+    let scanned: Vec<((String, u64), bool)> = PENDING_SENDS
+        .range(
+            deps.storage,
+            start_after.map(Bound::exclusive),
+            None,
+            Order::Ascending,
+        )
+        .take(limit)
+        .map(|item| item.map(|(key, pending)| (key, pending.latest_period_end() < now)))
+        .collect::<StdResult<_>>()?;
+
+    let mut purged = 0_u32;
+    let mut last_key = "none".to_string();
+    for (key, stale) in scanned.iter() {
+        last_key = format!("{}/{}", key.0, key.1);
+        if *stale {
+            PENDING_SENDS.remove(deps.storage, key.clone());
+            purged += 1;
+        }
+    }
+    Ok(Response::new()
+        .add_attribute("method", "purge_stale_sends")
+        .add_attribute("scanned", scanned.len().to_string())
+        .add_attribute("purged", purged.to_string())
+        .add_attribute("last_key", last_key))
 }
 
 #[cfg(test)]
@@ -412,6 +545,101 @@ mod tests {
             denom: denom.clone(),
         };
         query(deps.as_ref(), mock_env(), query_msg).unwrap_err();
+    }
+
+    #[test]
+    fn test_set_denom_restrictions_rejects_empty_channel_list() {
+        let mut deps = mock_dependencies();
+        crate::rbac::grant_role(
+            &mut deps.as_mut(),
+            "executor".to_string(),
+            vec![Roles::ManageDenomRestrictions],
+        )
+        .unwrap();
+
+        let msg = ExecuteMsg::SetDenomRestrictions {
+            denom: "denom1".to_string(),
+            allowed_channels: vec![],
+        };
+        let err = execute(deps.as_mut(), mock_env(), mock_info("executor", &[]), msg).unwrap_err();
+        assert!(matches!(err, ContractError::InvalidParameters(_)));
+        assert!(ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM
+            .may_load(deps.as_ref().storage, "denom1".to_string())
+            .unwrap()
+            .is_none());
+    }
+
+    #[test]
+    fn test_reset_and_edit_unknown_quota_fail() {
+        let mut deps = mock_dependencies();
+        crate::rbac::grant_role(
+            &mut deps.as_mut(),
+            GOV_ADDR.to_string(),
+            vec![
+                Roles::AddRateLimit,
+                Roles::ResetPathQuota,
+                Roles::EditPathQuota,
+            ],
+        )
+        .unwrap();
+        let info = mock_info(GOV_ADDR, &[]);
+
+        let add = ExecuteMsg::AddPath {
+            channel_id: "channel".to_string(),
+            denom: "denom".to_string(),
+            quotas: vec![QuotaMsg::new("daily", 1600, 3, 5)],
+        };
+        execute(deps.as_mut(), mock_env(), info.clone(), add).unwrap();
+
+        // The path exists but no quota is called "weekly": both must fail, not pass silently
+        let reset = ExecuteMsg::ResetPathQuota {
+            channel_id: "channel".to_string(),
+            denom: "denom".to_string(),
+            quota_id: "weekly".to_string(),
+        };
+        let err = execute(deps.as_mut(), mock_env(), info.clone(), reset).unwrap_err();
+        assert!(matches!(err, ContractError::QuotaNotFound { .. }));
+
+        let edit = ExecuteMsg::EditPathQuota {
+            channel_id: "channel".to_string(),
+            denom: "denom".to_string(),
+            quota: QuotaMsg::new("weekly", 1600, 3, 5),
+        };
+        let err = execute(deps.as_mut(), mock_env(), info.clone(), edit).unwrap_err();
+        assert!(matches!(err, ContractError::QuotaNotFound { .. }));
+
+        // The matching name still works
+        let reset = ExecuteMsg::ResetPathQuota {
+            channel_id: "channel".to_string(),
+            denom: "denom".to_string(),
+            quota_id: "daily".to_string(),
+        };
+        execute(deps.as_mut(), mock_env(), info, reset).unwrap();
+    }
+
+    #[test]
+    fn test_add_path_reports_replacement() {
+        let mut deps = mock_dependencies();
+        crate::rbac::grant_role(
+            &mut deps.as_mut(),
+            GOV_ADDR.to_string(),
+            vec![Roles::AddRateLimit],
+        )
+        .unwrap();
+        let info = mock_info(GOV_ADDR, &[]);
+        let add = ExecuteMsg::AddPath {
+            channel_id: "channel".to_string(),
+            denom: "denom".to_string(),
+            quotas: vec![QuotaMsg::new("daily", 1600, 3, 5)],
+        };
+
+        let res = execute(deps.as_mut(), mock_env(), info.clone(), add.clone()).unwrap();
+        let replaced = res.attributes.iter().find(|a| a.key == "replaced").unwrap();
+        assert_eq!(replaced.value, "false");
+
+        let res = execute(deps.as_mut(), mock_env(), info, add).unwrap();
+        let replaced = res.attributes.iter().find(|a| a.key == "replaced").unwrap();
+        assert_eq!(replaced.value, "true");
     }
 
     #[test]

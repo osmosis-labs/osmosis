@@ -77,7 +77,7 @@ pub struct QuerySupplyOfResponse {
 
 use std::str::FromStr; // Needed to parse the coin's String as Uint256
 
-fn hash_denom(denom: &str) -> String {
+pub(crate) fn hash_denom(denom: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(denom.as_bytes());
     let result = hasher.finalize();

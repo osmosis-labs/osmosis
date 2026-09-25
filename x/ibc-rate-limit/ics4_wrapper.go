@@ -73,7 +73,9 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 	}
 
-	// setting 0 as a default so it can be properly parsed by cosmwasm
+	// Authorise and charge the quota before anything is committed. The
+	// contract does not know the sequence yet (it is only assigned by the
+	// inner send), so it is passed as 0 and associated afterwards.
 	fullPacket := channeltypes.Packet{
 		Sequence:           0,
 		SourcePort:         sourcePort,
@@ -90,7 +92,29 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 		return 0, errorsmod.Wrap(err, "rate limit SendPacket failed to authorize transfer")
 	}
 
-	return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
+	sequence, err := i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
+	if err != nil {
+		return 0, err
+	}
+
+	// Now that the sequence is known, let the contract associate it with the
+	// charge so a later failure of this packet can be refunded while its quota
+	// window is still active. If this fails the send stays charged and is
+	// simply not refundable, which is the conservative outcome, so it must not
+	// fail the transfer.
+	fullPacket.Sequence = sequence
+	if err := RecordSendRateLimit(ctx, i.ContractKeeper, contract, fullPacket); err != nil {
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventRecordSendFailed,
+				sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+				sdk.NewAttribute(types.AttributeKeyPacket, string(data)),
+				sdk.NewAttribute(types.AttributeKeyError, err.Error()),
+			),
+		)
+	}
+
+	return sequence, nil
 }
 
 func (i *ICS4Wrapper) WriteAcknowledgement(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI, ack exported.Acknowledgement) error {

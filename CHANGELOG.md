@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* fix: ibc-rate-limit contract hardening (0.2.0): a failed send is refunded only while its quota is still in the window it was counted in (closes a window-crossing bypass without letting failed sends exhaust the allowance; the ICS4 wrapper authorises first and then associates the committed packet's sequence with a `RecordSend` call, successful acks settle the record, stale records are evicted per send and by a capped permissionless purge; the migration moves denom restrictions to their canonical key), reset/edit of an unknown quota and an empty denom restriction now error instead of passing, `AddPath` reports `replaced`, denom restrictions are keyed by the onchain denom and reconcile legacy packet-form entries by intersection, unquoted paths no longer leave empty state (cleaned by the permissionless bounded `PurgeEmptyPaths`), checked capacity arithmetic
 * [#9742](https://github.com/osmosis-labs/osmosis/issues/9742) fix: ibc-rate-limit contract rejected inbound tokens whose denom trace channel shares a string prefix with the source channel (contract 0.2.0), and the Go middleware no longer reports every contract failure as `rate limit exceeded`
 * [#9676](https://github.com/osmosis-labs/osmosis/pull/9676) chore: bump cometbft version to v0.38.22
 

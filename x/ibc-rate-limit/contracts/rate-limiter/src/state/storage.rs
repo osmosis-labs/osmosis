@@ -6,6 +6,7 @@ use cosmwasm_std::Addr;
 use cw_storage_plus::{Deque, Item, Map};
 
 use super::{
+    pending_send::PendingSend,
     rate_limit::RateLimit,
     rbac::{QueuedMessage, Roles},
 };
@@ -50,4 +51,14 @@ pub const RBAC_PERMISSIONS: Map<String, BTreeSet<Roles>> = Map::new("rbac");
 
 /// Accepted channels for restricted denom. This is a map of denom -> channels.
 /// If a denom is not in this map, it is unrestricted.
+///
+/// Since 0.2.0 the key is the denom as it exists on this chain (ibc/HASH for
+/// anything with a transfer/ path, see blocking::restriction_key). Entries
+/// written earlier may sit under the packet-form key; lookups reconcile both.
 pub const ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM: Map<String, Vec<String>> = Map::new("acfd");
+
+/// Sends that passed a quota and are waiting for their acknowledgement, keyed
+/// by (source channel, packet sequence). Written only when the chain passes
+/// the real sequence, removed when the packet is acknowledged, refunded or
+/// purged as stale.
+pub const PENDING_SENDS: Map<(String, u64), PendingSend> = Map::new("pending_sends");

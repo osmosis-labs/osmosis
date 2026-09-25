@@ -7,11 +7,16 @@ use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 use cosmwasm_std::{from_binary, Addr, Attribute, MessageInfo, Uint256};
 use cw2::set_contract_version;
 
+use crate::blocking::{check_restricted_denoms, effective_restriction, NO_CHANNEL_ALLOWED};
 use crate::helpers::tests::verify_query_response;
-use crate::msg::{InstantiateMsg, MigrateMsg, PathMsg, QueryMsg, QuotaMsg, SudoMsg};
-use crate::state::flow::tests::RESET_TIME_WEEKLY;
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, PathMsg, QueryMsg, QuotaMsg, SudoMsg};
+use crate::packet::hash_denom;
+use crate::state::flow::{tests::RESET_TIME_WEEKLY, FlowType};
 use crate::state::rate_limit::RateLimit;
-use crate::state::storage::{GOVMODULE, IBCMODULE, RATE_LIMIT_TRACKERS, RBAC_PERMISSIONS};
+use crate::state::storage::{
+    ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM, GOVMODULE, IBCMODULE, PENDING_SENDS,
+    RATE_LIMIT_TRACKERS, RBAC_PERMISSIONS,
+};
 const IBC_ADDR: &str = "osmo1vz5e6tzdjlzy2f7pjvx0ecv96h8r4m2y92thdm";
 const GOV_ADDR: &str = "osmo1tzz5zf2u68t00un2j4lrrnkt2ztd46kfzfp58r";
 
@@ -332,58 +337,564 @@ fn bad_quotas() {
     );
 }
 
-#[test] // Tests that undo reverts a packet send without affecting expiration or channel value
-fn undo_send() {
-    let mut deps = mock_dependencies();
-
-    let quota = QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 10);
+fn instantiate_any_denom(
+    deps: cosmwasm_std::DepsMut,
+    quotas: Vec<QuotaMsg>,
+) -> Result<cosmwasm_std::Response, ContractError> {
     let msg = InstantiateMsg {
         gov_module: Addr::unchecked(GOV_ADDR),
         ibc_module: Addr::unchecked(IBC_ADDR),
         paths: vec![PathMsg {
             channel_id: "any".to_string(),
             denom: "denom".to_string(),
-            quotas: vec![quota],
+            quotas,
         }],
     };
-    let info = mock_info(GOV_ADDR, &[]);
-    let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+    instantiate(deps, mock_env(), mock_info(GOV_ADDR, &[]), msg)
+}
 
-    let send_msg = test_msg_send!(
+fn send_with_sequence(sequence: u64, funds: u32) -> SudoMsg {
+    let mut packet = Packet::mock(
+        "channel".to_string(),
+        "channel".to_string(),
+        "denom".to_string(),
+        funds.into(),
+    );
+    packet.sequence = sequence;
+    SudoMsg::SendPacket {
+        packet,
+        channel_value_mock: Some(3_300_u32.into()),
+    }
+}
+
+fn record_with_sequence(sequence: u64, funds: u32) -> SudoMsg {
+    let mut packet = Packet::mock(
+        "channel".to_string(),
+        "channel".to_string(),
+        "denom".to_string(),
+        funds.into(),
+    );
+    packet.sequence = sequence;
+    SudoMsg::RecordSend { packet }
+}
+
+fn undo_with_sequence(sequence: u64, funds: u32) -> SudoMsg {
+    let mut packet = Packet::mock(
+        "channel".to_string(),
+        "channel".to_string(),
+        "denom".to_string(),
+        funds.into(),
+    );
+    packet.sequence = sequence;
+    SudoMsg::UndoSend { packet }
+}
+
+fn attr(res: &cosmwasm_std::Response, key: &str) -> String {
+    res.attributes
+        .iter()
+        .find(|a| a.key == key)
+        .map(|a| a.value.clone())
+        .unwrap_or_default()
+}
+
+fn any_denom_outflow(storage: &dyn cosmwasm_std::Storage) -> Uint256 {
+    RATE_LIMIT_TRACKERS
+        .load(storage, ("any".to_string(), "denom".to_string()))
+        .unwrap()
+        .first()
+        .unwrap()
+        .flow
+        .outflow
+}
+
+#[test] // A failed send is refunded while the quota is still in the window the send was counted in
+fn undo_send_refunds_within_the_same_window() {
+    let mut deps = mock_dependencies();
+    instantiate_any_denom(
+        deps.as_mut(),
+        vec![QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 10)],
+    )
+    .unwrap();
+
+    sudo(deps.as_mut(), mock_env(), send_with_sequence(7, 300)).unwrap();
+    sudo(deps.as_mut(), mock_env(), record_with_sequence(7, 300)).unwrap();
+    assert_eq!(any_denom_outflow(&deps.storage), Uint256::from(300_u32));
+    assert!(PENDING_SENDS.has(&deps.storage, ("channel".to_string(), 7)));
+    let before = RATE_LIMIT_TRACKERS
+        .load(&deps.storage, ("any".to_string(), "denom".to_string()))
+        .unwrap();
+
+    let res = sudo(deps.as_mut(), mock_env(), undo_with_sequence(7, 300)).unwrap();
+    assert_eq!(attr(&res, "refunded"), "1");
+    assert_eq!(any_denom_outflow(&deps.storage), Uint256::from(0_u32));
+    assert!(!PENDING_SENDS.has(&deps.storage, ("channel".to_string(), 7)));
+
+    // The refund touches nothing but the flow
+    let after = RATE_LIMIT_TRACKERS
+        .load(&deps.storage, ("any".to_string(), "denom".to_string()))
+        .unwrap();
+    assert_eq!(after[0].flow.period_end, before[0].flow.period_end);
+    assert_eq!(after[0].quota.channel_value, before[0].quota.channel_value);
+
+    // and a second undo of the same packet is a no-op
+    let res = sudo(deps.as_mut(), mock_env(), undo_with_sequence(7, 300)).unwrap();
+    assert_eq!(attr(&res, "refunded"), "0");
+    assert_eq!(any_denom_outflow(&deps.storage), Uint256::from(0_u32));
+}
+
+#[test] // A send the chain did not record (sequence 0, as before the reordering upgrade) keeps its cost
+fn undo_send_without_record_keeps_the_cost() {
+    let mut deps = mock_dependencies();
+    instantiate_any_denom(
+        deps.as_mut(),
+        vec![QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 10)],
+    )
+    .unwrap();
+
+    sudo(deps.as_mut(), mock_env(), send_with_sequence(0, 300)).unwrap();
+    sudo(deps.as_mut(), mock_env(), record_with_sequence(0, 300)).unwrap();
+    assert!(!PENDING_SENDS.has(&deps.storage, ("channel".to_string(), 0)));
+
+    let res = sudo(deps.as_mut(), mock_env(), undo_with_sequence(0, 300)).unwrap();
+    assert_eq!(attr(&res, "refunded"), "0");
+    assert_eq!(any_denom_outflow(&deps.storage), Uint256::from(300_u32));
+    let err = sudo(deps.as_mut(), mock_env(), send_with_sequence(0, 300)).unwrap_err();
+    assert!(matches!(err, ContractError::RateLimitExceded { .. }));
+}
+
+#[test] // The attack the refund used to allow: a send from the previous window must not be refunded into the next
+fn undo_send_after_window_reset_does_not_refund() {
+    let mut deps = mock_dependencies();
+    instantiate_any_denom(
+        deps.as_mut(),
+        vec![QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 10)],
+    )
+    .unwrap();
+
+    // Window N: the full 300 out
+    sudo(deps.as_mut(), mock_env(), send_with_sequence(7, 300)).unwrap();
+    sudo(deps.as_mut(), mock_env(), record_with_sequence(7, 300)).unwrap();
+
+    // Window N+1: any transfer resets the flow
+    let mut later = mock_env();
+    later.block.time = later.block.time.plus_seconds(RESET_TIME_WEEKLY + 1);
+    sudo(deps.as_mut(), later.clone(), send_with_sequence(8, 1)).unwrap();
+    sudo(deps.as_mut(), later.clone(), record_with_sequence(8, 1)).unwrap();
+    assert_eq!(any_denom_outflow(&deps.storage), Uint256::from(1_u32));
+
+    // The error ack for the window-N send arrives now: no refund, record dropped
+    let res = sudo(deps.as_mut(), later.clone(), undo_with_sequence(7, 300)).unwrap();
+    assert_eq!(attr(&res, "refunded"), "0");
+    assert_eq!(any_denom_outflow(&deps.storage), Uint256::from(1_u32));
+    assert!(!PENDING_SENDS.has(&deps.storage, ("channel".to_string(), 7)));
+
+    // Window N+1 still has exactly its own allowance: 329 more fits (330 total), 330 more does not
+    sudo(deps.as_mut(), later.clone(), send_with_sequence(9, 329)).unwrap();
+    sudo(deps.as_mut(), later.clone(), record_with_sequence(9, 329)).unwrap();
+    let err = sudo(deps.as_mut(), later, send_with_sequence(10, 1)).unwrap_err();
+    assert!(matches!(err, ContractError::RateLimitExceded { .. }));
+}
+
+#[test] // A successful acknowledgement settles the record and the send stays counted
+fn confirm_send_settles_the_record() {
+    let mut deps = mock_dependencies();
+    instantiate_any_denom(
+        deps.as_mut(),
+        vec![QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 10)],
+    )
+    .unwrap();
+
+    sudo(deps.as_mut(), mock_env(), send_with_sequence(7, 300)).unwrap();
+    sudo(deps.as_mut(), mock_env(), record_with_sequence(7, 300)).unwrap();
+    let mut packet = Packet::mock(
+        "channel".to_string(),
+        "channel".to_string(),
+        "denom".to_string(),
+        300_u32.into(),
+    );
+    packet.sequence = 7;
+    let res = sudo(deps.as_mut(), mock_env(), SudoMsg::ConfirmSend { packet }).unwrap();
+    assert_eq!(attr(&res, "settled"), "true");
+    assert!(!PENDING_SENDS.has(&deps.storage, ("channel".to_string(), 7)));
+
+    // A late undo for the same packet cannot refund it any more
+    sudo(deps.as_mut(), mock_env(), undo_with_sequence(7, 300)).unwrap();
+    assert_eq!(any_denom_outflow(&deps.storage), Uint256::from(300_u32));
+}
+
+#[test] // Stale records can be purged by anyone once their windows have ended, and not before
+fn purge_stale_sends_is_bounded_and_permissionless() {
+    let mut deps = mock_dependencies();
+    instantiate_any_denom(
+        deps.as_mut(),
+        vec![QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 10)],
+    )
+    .unwrap();
+    sudo(deps.as_mut(), mock_env(), send_with_sequence(7, 100)).unwrap();
+    sudo(deps.as_mut(), mock_env(), record_with_sequence(7, 100)).unwrap();
+    sudo(deps.as_mut(), mock_env(), send_with_sequence(8, 100)).unwrap();
+    sudo(deps.as_mut(), mock_env(), record_with_sequence(8, 100)).unwrap();
+
+    let purge = ExecuteMsg::PurgeStaleSends {
+        start_after: None,
+        limit: 10,
+    };
+
+    // Windows still open: nothing to purge
+    let res = execute(
+        deps.as_mut(),
+        mock_env(),
+        mock_info("anyone", &[]),
+        purge.clone(),
+    )
+    .unwrap();
+    assert_eq!(attr(&res, "purged"), "0");
+    assert!(PENDING_SENDS.has(&deps.storage, ("channel".to_string(), 7)));
+
+    // Windows over: both records go, in bounded steps
+    let mut later = mock_env();
+    later.block.time = later.block.time.plus_seconds(RESET_TIME_WEEKLY + 1);
+    let one = ExecuteMsg::PurgeStaleSends {
+        start_after: None,
+        limit: 1,
+    };
+    let res = execute(deps.as_mut(), later.clone(), mock_info("anyone", &[]), one).unwrap();
+    assert_eq!(attr(&res, "purged"), "1");
+    assert_eq!(attr(&res, "last_key"), "channel/7");
+    let rest = ExecuteMsg::PurgeStaleSends {
+        start_after: Some(("channel".to_string(), 7)),
+        limit: 10,
+    };
+    let res = execute(deps.as_mut(), later, mock_info("anyone", &[]), rest).unwrap();
+    assert_eq!(attr(&res, "purged"), "1");
+    assert!(!PENDING_SENDS.has(&deps.storage, ("channel".to_string(), 7)));
+    assert!(!PENDING_SENDS.has(&deps.storage, ("channel".to_string(), 8)));
+}
+
+#[test] // Residue from older versions is removed by anyone, in bounded batches, never by the migration
+fn purge_empty_paths_is_bounded_and_permissionless() {
+    let mut deps = mock_dependencies();
+    instantiate_any_denom(
+        deps.as_mut(),
+        vec![QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 10)],
+    )
+    .unwrap();
+
+    // Residue as written by versions before 0.2.0
+    let residue = [
+        ("any", "ibc/AAAA"),
+        ("channel-0", "ibc/AAAA"),
+        ("channel-1", "uosmo"),
+    ];
+    for (channel, denom) in residue {
+        RATE_LIMIT_TRACKERS
+            .save(
+                deps.as_mut().storage,
+                (channel.to_string(), denom.to_string()),
+                &vec![],
+            )
+            .unwrap();
+    }
+
+    // Migration leaves it alone
+    let res = migrate(deps.as_mut(), mock_env(), MigrateMsg {}).unwrap();
+    assert_eq!(attr(&res, "purged_empty_paths"), "");
+    for (channel, denom) in residue {
+        let key = (channel.to_string(), denom.to_string());
+        assert!(RATE_LIMIT_TRACKERS.has(&deps.storage, key));
+    }
+
+    // First batch of two scans any/denom (kept) and any/ibc/AAAA (purged)
+    let first = ExecuteMsg::PurgeEmptyPaths {
+        start_after: None,
+        limit: 2,
+    };
+    let res = execute(deps.as_mut(), mock_env(), mock_info("anyone", &[]), first).unwrap();
+    assert_eq!(attr(&res, "scanned"), "2");
+    assert_eq!(attr(&res, "purged"), "1");
+    assert_eq!(attr(&res, "last_key"), "any/ibc/AAAA");
+
+    // Continue from the cursor: the remaining two go
+    let rest = ExecuteMsg::PurgeEmptyPaths {
+        start_after: Some(("any".to_string(), "ibc/AAAA".to_string())),
+        limit: 10,
+    };
+    let res = execute(deps.as_mut(), mock_env(), mock_info("anyone", &[]), rest).unwrap();
+    assert_eq!(attr(&res, "scanned"), "2");
+    assert_eq!(attr(&res, "purged"), "2");
+
+    for (channel, denom) in residue {
+        let key = (channel.to_string(), denom.to_string());
+        assert!(!RATE_LIMIT_TRACKERS.has(&deps.storage, key));
+    }
+    let kept = RATE_LIMIT_TRACKERS
+        .load(&deps.storage, ("any".to_string(), "denom".to_string()))
+        .unwrap();
+    assert_eq!(kept.len(), 1);
+
+    // A zero limit is rejected rather than silently doing nothing
+    let zero = ExecuteMsg::PurgeEmptyPaths {
+        start_after: None,
+        limit: 0,
+    };
+    let err = execute(deps.as_mut(), mock_env(), mock_info("anyone", &[]), zero).unwrap_err();
+    assert!(matches!(err, ContractError::InvalidParameters(_)));
+}
+
+#[test] // RecordSend writes nothing for an unquoted path or an unknown sequence
+fn record_send_records_only_charged_sends() {
+    let mut deps = mock_dependencies();
+    instantiate_any_denom(
+        deps.as_mut(),
+        vec![QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 10)],
+    )
+    .unwrap();
+
+    // Sequence 0 is what a chain that has not learned the sequence passes
+    let res = sudo(deps.as_mut(), mock_env(), record_with_sequence(0, 100)).unwrap();
+    assert_eq!(attr(&res, "recorded"), "false");
+    assert!(!PENDING_SENDS.has(&deps.storage, ("channel".to_string(), 0)));
+
+    // A denom with no quota anywhere charged nothing, so there is nothing to record
+    let mut packet = Packet::mock(
+        "channel".to_string(),
+        "channel".to_string(),
+        "other".to_string(),
+        100_u32.into(),
+    );
+    packet.sequence = 3;
+    let res = sudo(deps.as_mut(), mock_env(), SudoMsg::RecordSend { packet }).unwrap();
+    assert_eq!(attr(&res, "recorded"), "false");
+    assert!(!PENDING_SENDS.has(&deps.storage, ("channel".to_string(), 3)));
+
+    // A charged send is recorded with the quota's current window
+    sudo(deps.as_mut(), mock_env(), send_with_sequence(4, 100)).unwrap();
+    let res = sudo(deps.as_mut(), mock_env(), record_with_sequence(4, 100)).unwrap();
+    assert_eq!(attr(&res, "recorded"), "true");
+    let record = PENDING_SENDS
+        .load(&deps.storage, ("channel".to_string(), 4))
+        .unwrap();
+    assert_eq!(record.funds, Uint256::from(100_u32));
+    assert_eq!(record.any_windows.len(), 1);
+    assert_eq!(record.any_windows[0].0, "weekly");
+    assert!(record.channel_windows.is_empty());
+}
+
+#[test] // Each new record evicts the oldest stale records on its channel, so the map stays bounded by itself
+fn record_send_evicts_stale_records_on_the_channel() {
+    let mut deps = mock_dependencies();
+    instantiate_any_denom(
+        deps.as_mut(),
+        vec![QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 10)],
+    )
+    .unwrap();
+
+    // Window N: two recorded sends whose acks never arrive
+    for sequence in [7, 8] {
+        sudo(deps.as_mut(), mock_env(), send_with_sequence(sequence, 10)).unwrap();
+        sudo(
+            deps.as_mut(),
+            mock_env(),
+            record_with_sequence(sequence, 10),
+        )
+        .unwrap();
+    }
+    // Still inside the window: a new record evicts nothing
+    sudo(deps.as_mut(), mock_env(), send_with_sequence(9, 10)).unwrap();
+    let res = sudo(deps.as_mut(), mock_env(), record_with_sequence(9, 10)).unwrap();
+    assert_eq!(attr(&res, "evicted_stale"), "0");
+
+    // Window N+1: the first recorded send clears the three stale records
+    let mut later = mock_env();
+    later.block.time = later.block.time.plus_seconds(RESET_TIME_WEEKLY + 1);
+    sudo(deps.as_mut(), later.clone(), send_with_sequence(10, 10)).unwrap();
+    let res = sudo(deps.as_mut(), later, record_with_sequence(10, 10)).unwrap();
+    assert_eq!(attr(&res, "evicted_stale"), "3");
+    for sequence in [7_u64, 8, 9] {
+        assert!(!PENDING_SENDS.has(&deps.storage, ("channel".to_string(), sequence)));
+    }
+    assert!(PENDING_SENDS.has(&deps.storage, ("channel".to_string(), 10)));
+}
+
+#[test] // The housekeeping batch size is the contract's bound, not the caller's
+fn purge_batch_limit_is_capped() {
+    let mut deps = mock_dependencies();
+    instantiate_any_denom(
+        deps.as_mut(),
+        vec![QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 10)],
+    )
+    .unwrap();
+    let info = mock_info("anyone", &[]);
+
+    let at_cap = ExecuteMsg::PurgeEmptyPaths {
+        start_after: None,
+        limit: crate::execute::MAX_PURGE_BATCH,
+    };
+    execute(deps.as_mut(), mock_env(), info.clone(), at_cap).unwrap();
+
+    let over_cap = ExecuteMsg::PurgeEmptyPaths {
+        start_after: None,
+        limit: crate::execute::MAX_PURGE_BATCH + 1,
+    };
+    let err = execute(deps.as_mut(), mock_env(), info.clone(), over_cap).unwrap_err();
+    assert!(matches!(err, ContractError::InvalidParameters(_)));
+
+    let over_cap = ExecuteMsg::PurgeStaleSends {
+        start_after: None,
+        limit: crate::execute::MAX_PURGE_BATCH + 1,
+    };
+    let err = execute(deps.as_mut(), mock_env(), info, over_cap).unwrap_err();
+    assert!(matches!(err, ContractError::InvalidParameters(_)));
+}
+
+#[test] // Migration moves packet-form restriction entries to their canonical key and drops empty ones
+fn migrate_canonicalises_restrictions() {
+    let mut deps = mock_dependencies();
+    instantiate_any_denom(
+        deps.as_mut(),
+        vec![QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 10)],
+    )
+    .unwrap();
+
+    let moved_denom = "transfer/channel-6897/usat";
+    let merged_denom = "transfer/channel-1/uatom";
+    let conflicting_denom = "transfer/channel-2/ujuno";
+    let entries: [(String, Vec<&str>); 6] = [
+        // legacy entry with no canonical counterpart: moved
+        (moved_denom.to_string(), vec!["channel-6897"]),
+        // legacy empty entry: dropped
+        ("transfer/channel-3/ustars".to_string(), vec![]),
+        // legacy and canonical overlap: intersected under the canonical key
+        (merged_denom.to_string(), vec!["channel-1", "channel-9"]),
+        (hash_denom(merged_denom), vec!["channel-1", "channel-8"]),
+        // legacy and canonical disjoint: collapsed into one entry allowing no channel
+        (conflicting_denom.to_string(), vec!["channel-2"]),
+        (hash_denom(conflicting_denom), vec!["channel-5"]),
+    ];
+    for (key, channels) in entries {
+        let channels: Vec<String> = channels.into_iter().map(str::to_string).collect();
+        ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM
+            .save(deps.as_mut().storage, key, &channels)
+            .unwrap();
+    }
+
+    let res = migrate(deps.as_mut(), mock_env(), MigrateMsg {}).unwrap();
+    assert_eq!(attr(&res, "restrictions_moved"), "2");
+    assert_eq!(attr(&res, "restrictions_dropped"), "1");
+    assert_eq!(attr(&res, "restrictions_conflicting"), "1");
+
+    let storage = deps.as_ref().storage;
+    assert!(!ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM.has(storage, moved_denom.to_string()));
+    assert_eq!(
+        ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM
+            .load(storage, hash_denom(moved_denom))
+            .unwrap(),
+        vec!["channel-6897".to_string()]
+    );
+    let dropped = "transfer/channel-3/ustars".to_string();
+    assert!(!ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM.has(storage, dropped));
+    assert!(!ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM.has(storage, merged_denom.to_string()));
+    assert_eq!(
+        ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM
+            .load(storage, hash_denom(merged_denom))
+            .unwrap(),
+        vec!["channel-1".to_string()]
+    );
+    assert!(!ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM.has(storage, conflicting_denom.to_string()));
+    assert_eq!(
+        effective_restriction(storage, conflicting_denom).unwrap(),
+        Some(vec![NO_CHANNEL_ALLOWED.to_string()])
+    );
+    // which still blocks every channel either alias used to allow
+    for channel in ["channel-2", "channel-5"] {
+        let packet = Packet::mock(
+            channel.to_string(),
+            "dest".to_string(),
+            conflicting_denom.to_string(),
+            Uint256::from(1_u32),
+        );
+        let result = check_restricted_denoms(deps.as_ref(), &packet, &FlowType::Out);
+        assert!(
+            matches!(result, Err(ContractError::ChannelBlocked { .. })),
+            "{channel}"
+        );
+    }
+
+    // After the migration, management by hash acts on the whole restriction:
+    // unsetting the collapsed conflict lifts it completely
+    let unset = ExecuteMsg::UnsetDenomRestrictions {
+        denom: hash_denom(conflicting_denom),
+    };
+    execute(deps.as_mut(), mock_env(), mock_info(GOV_ADDR, &[]), unset).unwrap();
+    assert_eq!(
+        effective_restriction(deps.as_ref().storage, conflicting_denom).unwrap(),
+        None
+    );
+    let packet = Packet::mock(
+        "channel-2".to_string(),
+        "dest".to_string(),
+        conflicting_denom.to_string(),
+        Uint256::from(1_u32),
+    );
+    assert!(check_restricted_denoms(deps.as_ref(), &packet, &FlowType::Out).is_ok());
+
+    // and setting by hash replaces the moved entry for every spelling
+    let set = ExecuteMsg::SetDenomRestrictions {
+        denom: hash_denom(moved_denom),
+        allowed_channels: vec!["channel-77".to_string()],
+    };
+    execute(deps.as_mut(), mock_env(), mock_info(GOV_ADDR, &[]), set).unwrap();
+    assert_eq!(
+        effective_restriction(deps.as_ref().storage, moved_denom).unwrap(),
+        Some(vec!["channel-77".to_string()])
+    );
+    let unset = ExecuteMsg::UnsetDenomRestrictions {
+        denom: hash_denom(moved_denom),
+    };
+    execute(deps.as_mut(), mock_env(), mock_info(GOV_ADDR, &[]), unset).unwrap();
+    assert_eq!(
+        effective_restriction(deps.as_ref().storage, moved_denom).unwrap(),
+        None
+    );
+}
+
+#[test] // Packets on paths without quotas must not leave empty tracker entries behind
+fn unquoted_paths_leave_no_state() {
+    let mut deps = mock_dependencies();
+    let msg = InstantiateMsg {
+        gov_module: Addr::unchecked(GOV_ADDR),
+        ibc_module: Addr::unchecked(IBC_ADDR),
+        paths: vec![PathMsg {
+            channel_id: "any".to_string(),
+            denom: "denom".to_string(),
+            quotas: vec![QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 10)],
+        }],
+    };
+    instantiate(deps.as_mut(), mock_env(), mock_info(GOV_ADDR, &[]), msg).unwrap();
+
+    // Quota only on "any": the per-channel side must not be written
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
         channel_value: 3_300_u32.into(),
-        funds: 300_u32.into()
+        funds: 1_u32.into()
     );
-    let undo_msg = SudoMsg::UndoSend {
-        packet: Packet::mock(
-            "channel".to_string(),
-            "channel".to_string(),
-            "denom".to_string(),
-            300_u32.into(),
-        ),
-    };
+    sudo(deps.as_mut(), mock_env(), msg).unwrap();
+    let channel_denom = ("channel".to_string(), "denom".to_string());
+    assert!(!RATE_LIMIT_TRACKERS.has(&deps.storage, channel_denom));
 
-    sudo(deps.as_mut(), mock_env(), send_msg.clone()).unwrap();
-
-    let trackers = RATE_LIMIT_TRACKERS
-        .load(&deps.storage, ("any".to_string(), "denom".to_string()))
-        .unwrap();
-    assert_eq!(
-        trackers.first().unwrap().flow.outflow,
-        Uint256::from(300_u32)
+    // No quota anywhere: nothing is written for either side
+    let msg = test_msg_send!(
+        channel_id: format!("channel"),
+        denom: format!("other"),
+        channel_value: 3_300_u32.into(),
+        funds: 1_u32.into()
     );
-    let period_end = trackers.first().unwrap().flow.period_end;
-    let channel_value = trackers.first().unwrap().quota.channel_value;
-
-    sudo(deps.as_mut(), mock_env(), undo_msg.clone()).unwrap();
-
-    let trackers = RATE_LIMIT_TRACKERS
-        .load(&deps.storage, ("any".to_string(), "denom".to_string()))
-        .unwrap();
-    assert_eq!(trackers.first().unwrap().flow.outflow, Uint256::from(0_u32));
-    assert_eq!(trackers.first().unwrap().flow.period_end, period_end);
-    assert_eq!(trackers.first().unwrap().quota.channel_value, channel_value);
+    sudo(deps.as_mut(), mock_env(), msg).unwrap();
+    let channel_other = ("channel".to_string(), "other".to_string());
+    let any_other = ("any".to_string(), "other".to_string());
+    assert!(!RATE_LIMIT_TRACKERS.has(&deps.storage, channel_other));
+    assert!(!RATE_LIMIT_TRACKERS.has(&deps.storage, any_other));
 }
 
 #[test]

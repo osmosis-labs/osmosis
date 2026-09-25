@@ -182,8 +182,10 @@ The contract specifies the following messages:
 Sudo messages can only be executed by the chain.
 
 * SendPacket - Increments the amount used out of the send quota and checks that the send is allowed. If it isn't, it will return a RateLimitExceeded error
+* RecordSend - Sent right after a successful SendPacket once the packet's sequence is known. Records the quota windows the send was counted in so a later failure can be refunded while they are still active
 * RecvPacket - Increments the amount used out of the receive quota and checks that the receive is allowed. If it isn't, it will return a RateLimitExceeded error
-* UndoSend - If a send has failed, the undo message is used to remove its cost from the send quota
+* UndoSend - If a send has failed (error acknowledgement or timeout), removes its cost from each send quota that is still in the window the send was counted in. Refunding into a later window would enlarge that window's allowance, so a send is only refunded while its own windows are active; a send the chain did not record (sequence 0) keeps its cost
+* ConfirmSend - If a send was acknowledged successfully, settles the record kept for a possible refund
 
 All of these messages receive the packet from the chain and extract the necessary information to process the packet and determine if it should be the rate limited. 
 
