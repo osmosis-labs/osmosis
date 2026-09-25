@@ -135,7 +135,7 @@ impl Packet {
     fn receiver_chain_is_source(&self) -> bool {
         self.data
             .denom
-            .starts_with(&format!("transfer/{}", self.source_channel))
+            .starts_with(&format!("transfer/{}/", self.source_channel))
     }
 
     fn handle_denom_for_sends(&self) -> String {
@@ -287,6 +287,43 @@ pub mod tests {
             0_u128.into(),
         );
         assert_eq!(packet.local_denom(&FlowType::In), "factory/osmo1em6xs47hd82806f5cxgyufguxrrc7l0aqx7nzzptjuqgswczk8csavdxek/alloyed/allUSDT");
+    }
+
+    #[test]
+    fn receiver_chain_is_source_does_not_match_a_channel_id_prefix_collision() {
+        // Regression test for #9742: "channel-8" is a string-prefix of
+        // "channel-89", but must not be treated as a match unless it is
+        // followed by a "/". Without the trailing slash, a packet arriving
+        // from channel-8 with a denom trace from an unrelated channel-89
+        // was incorrectly classified as "returning home", which corrupted
+        // the resulting denom.
+        let denom = "transfer/channel-89/stuatom";
+        let packet = Packet::mock(
+            "channel-8".to_string(),   // from: counterparty (e.g. Injective)
+            "channel-122".to_string(), // to: osmosis
+            denom.to_string(),
+            0_u128.into(),
+        );
+        assert!(!packet.receiver_chain_is_source());
+        // Mirrors the same prefixing handle_denom_for_recvs does for tokens
+        // that come directly from the counterparty, so the fix must produce
+        // this hash and not an empty/incorrect denom.
+        let expected = hash_denom(&(format!("transfer/{}/", "channel-122") + denom));
+        assert_eq!(packet.local_denom(&FlowType::In), expected);
+    }
+
+    #[test]
+    fn receiver_chain_is_source_matches_the_full_channel_segment() {
+        // Positive case that the fix above must not break: a denom actually
+        // prefixed with "channel-8/" is still recognized as returning home.
+        let packet = Packet::mock(
+            "channel-8".to_string(),   // from: counterparty
+            "channel-122".to_string(), // to: osmosis
+            "transfer/channel-8/uosmo".to_string(),
+            0_u128.into(),
+        );
+        assert!(packet.receiver_chain_is_source());
+        assert_eq!(packet.local_denom(&FlowType::In), "uosmo");
     }
 
     // Let's assume we have two chains A and B (local and counterparty) connected in the following way:
