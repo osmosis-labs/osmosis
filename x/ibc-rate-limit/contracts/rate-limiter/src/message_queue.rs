@@ -196,11 +196,7 @@ mod tests {
         let foobar_test_msg = ExecuteMsg::AddPath {
             channel_id: "channel".to_string(),
             denom: "denom".to_string(),
-            quotas: vec![QuotaMsg {
-                name: "quota".to_string(),
-                duration: 5,
-                send_recv: (10, 10),
-            }],
+            quotas: vec![QuotaMsg::new("quota", 5, 10, 10)],
         };
         let foobarbaz_test_msg = ExecuteMsg::SetTimelockDelay {
             signer: "gov".to_string(),

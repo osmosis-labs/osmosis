@@ -1,10 +1,7 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, Uint256};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-
-#[cfg(test)]
-use cosmwasm_std::Uint256;
 
 use crate::{packet::Packet, state::rbac::Roles};
 
@@ -36,21 +33,62 @@ impl PathMsg {
 // QuotaMsg represents a rate limiting Quota when sent as a wasm msg.
 // Unknown fields are rejected: every field here is a bound, and a misspelled
 // one would otherwise be dropped and leave the quota looser than intended.
+//
+// Each direction (send, recv) needs at least one bound: a percentage of the
+// denom's channel value at the start of the window, an absolute amount in the
+// denom's base units, or both. When both are set a transfer must satisfy both.
+// Percentages above 100 are allowed only together with an absolute bound in
+// the same direction.
+//
+// `send_recv: [30, 30]` as written by every proposal so far still parses. A
+// `null` entry means no percentage bound in that direction, and the absolute
+// fields may be omitted.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct QuotaMsg {
     pub name: String,
     pub duration: u64,
-    pub send_recv: (u32, u32),
+    #[serde(default)]
+    pub send_recv: (Option<u32>, Option<u32>),
+    #[serde(default)]
+    pub max_absolute_send: Option<Uint256>,
+    #[serde(default)]
+    pub max_absolute_recv: Option<Uint256>,
 }
 
 impl QuotaMsg {
+    /// A quota bounded by percentages of the channel value in each direction
     pub fn new(name: &str, seconds: u64, send_percentage: u32, recv_percentage: u32) -> Self {
         QuotaMsg {
             name: name.to_string(),
             duration: seconds,
-            send_recv: (send_percentage, recv_percentage),
+            send_recv: (Some(send_percentage), Some(recv_percentage)),
+            max_absolute_send: None,
+            max_absolute_recv: None,
         }
+    }
+
+    /// A quota bounded only by absolute amounts, in the denom's base units
+    pub fn absolute(
+        name: &str,
+        seconds: u64,
+        max_send: Option<Uint256>,
+        max_recv: Option<Uint256>,
+    ) -> Self {
+        QuotaMsg {
+            name: name.to_string(),
+            duration: seconds,
+            send_recv: (None, None),
+            max_absolute_send: max_send,
+            max_absolute_recv: max_recv,
+        }
+    }
+
+    /// Adds absolute bounds, in the denom's base units, on top of the percentages
+    pub fn with_absolute(mut self, max_send: Option<Uint256>, max_recv: Option<Uint256>) -> Self {
+        self.max_absolute_send = max_send;
+        self.max_absolute_recv = max_recv;
+        self
     }
 }
 
