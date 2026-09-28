@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* chore: bump wasmd from v0.53.3 to v0.54.10 and wasmvm from v2.2.4 to v2.2.9. wasmd v0.54 splits WasmConfig into NodeConfig and VMConfig. wasmd v0.54.10 requires ibc-go v8.8.0 (state-breaking ICA ProtoJSON validation) and cosmos-sdk v0.50.15; the Osmosis SDK fork replace still supplies v0.50.14-v30-osmo.
 * [#9676](https://github.com/osmosis-labs/osmosis/pull/9676) chore: bump cometbft version to v0.38.22
 
 ## v31.0.0

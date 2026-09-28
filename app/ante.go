@@ -43,7 +43,7 @@ type BlockSDKAnteHandlerParams struct {
 // If you make a change here, make sure to make the same change in `ante_no_seq.go`.
 func NewAnteHandler(
 	appOpts servertypes.AppOptions,
-	wasmConfig wasmtypes.WasmConfig,
+	wasmConfig wasmtypes.NodeConfig,
 	txCounterStoreKey corestoretypes.KVStoreService,
 	accountKeeper ante.AccountKeeper,
 	smartAccountKeeper *smartaccountkeeper.Keeper,
