@@ -777,7 +777,7 @@ type MsgClient interface {
 	// validator-set. The unbonding logic will follow the `Undelegate` logic from
 	// the sdk.
 	UndelegateFromValidatorSet(ctx context.Context, in *MsgUndelegateFromValidatorSet, opts ...grpc.CallOption) (*MsgUndelegateFromValidatorSetResponse, error)
-	// UndelegateFromRebalancedValidatorSet undelegates the proivded amount from
+	// UndelegateFromRebalancedValidatorSet undelegates the provided amount from
 	// the validator set, but takes into consideration the current delegations
 	// to the user's validator set to determine the weights assigned to each.
 	UndelegateFromRebalancedValidatorSet(ctx context.Context, in *MsgUndelegateFromRebalancedValidatorSet, opts ...grpc.CallOption) (*MsgUndelegateFromRebalancedValidatorSetResponse, error)
@@ -875,7 +875,7 @@ type MsgServer interface {
 	// validator-set. The unbonding logic will follow the `Undelegate` logic from
 	// the sdk.
 	UndelegateFromValidatorSet(context.Context, *MsgUndelegateFromValidatorSet) (*MsgUndelegateFromValidatorSetResponse, error)
-	// UndelegateFromRebalancedValidatorSet undelegates the proivded amount from
+	// UndelegateFromRebalancedValidatorSet undelegates the provided amount from
 	// the validator set, but takes into consideration the current delegations
 	// to the user's validator set to determine the weights assigned to each.
 	UndelegateFromRebalancedValidatorSet(context.Context, *MsgUndelegateFromRebalancedValidatorSet) (*MsgUndelegateFromRebalancedValidatorSetResponse, error)

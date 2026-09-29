@@ -28,7 +28,7 @@ service Msg {
   rpc UndelegateFromValidatorSet(MsgUndelegateFromValidatorSet)
       returns (MsgUndelegateFromValidatorSetResponse);
 
-  // UndelegateFromRebalancedValidatorSet undelegates the proivded amount from
+  // UndelegateFromRebalancedValidatorSet undelegates the provided amount from
   // the validator set, but takes into consideration the current delegations
   // to the user's validator set to determine the weights assigned to each.
   rpc UndelegateFromRebalancedValidatorSet(
