@@ -955,6 +955,8 @@ func (s *KeeperTestSuite) TestCheckIfDenomsAreDistributable() {
 	}
 }
 
+// TestForceFinishGaugeAndSendUndistributed checks the transfer, accounting and reference updates of
+// ForceFinishGaugeAndSendUndistributed, and that invalid gauges are rejected without side effects.
 func (s *KeeperTestSuite) TestForceFinishGaugeAndSendUndistributed() {
 	rewardCoins := sdk.NewCoins(sdk.NewInt64Coin(defaultRewardDenom, 1000), sdk.NewInt64Coin(otherDenom, 500))
 	recipient := sdk.AccAddress([]byte("recovery_recipient__"))
@@ -1087,6 +1089,7 @@ func (s *KeeperTestSuite) TestForceFinishGaugeAndSendUndistributed() {
 	}
 }
 
+// gaugeIDs returns the IDs of the given gauges.
 func gaugeIDs(gauges []types.Gauge) []uint64 {
 	ids := make([]uint64, len(gauges))
 	for i, g := range gauges {

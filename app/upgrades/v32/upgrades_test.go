@@ -57,16 +57,20 @@ type UpgradeTestSuite struct {
 	preModule appmodule.HasPreBlocker
 }
 
+// TestUpgradeTestSuite runs the v32 upgrade test suite.
 func TestUpgradeTestSuite(t *testing.T) {
 	suite.Run(t, new(UpgradeTestSuite))
 }
 
+// SetupTest creates a fresh app and sets the block time after the gauges' start time.
 func (s *UpgradeTestSuite) SetupTest() {
 	s.Setup()
 	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
 	s.Ctx = s.Ctx.WithBlockTime(upgradeBlockTime)
 }
 
+// TestHuahuaRecovery runs the v32 upgrade on the mainnet gauge state and checks the recovered amounts,
+// the finished gauges and that unrelated gauges are untouched.
 func (s *UpgradeTestSuite) TestHuahuaRecovery() {
 	s.prepareMainnetHuahuaGauges()
 	controlGaugeID := s.createControlGauge()
@@ -246,33 +250,40 @@ func (s *UpgradeTestSuite) createControlGauge() uint64 {
 
 // The helpers below access the incentives store directly, mirroring the unexported keys of x/incentives/keeper.
 
+// incentivesStore returns the incentives module KV store.
 func (s *UpgradeTestSuite) incentivesStore() storetypes.KVStore {
 	return s.Ctx.KVStore(s.App.GetKey(incentivestypes.StoreKey))
 }
 
+// combineKeys joins two keys with the incentives key separator.
 func combineKeys(a, b []byte) []byte {
 	key := append(append([]byte{}, a...), incentivestypes.KeyIndexSeparator...)
 	return append(key, b...)
 }
 
+// gaugeStoreKey returns the store key of the gauge with the given ID.
 func gaugeStoreKey(id uint64) []byte {
 	return combineKeys(incentivestypes.KeyPrefixPeriodGauge, sdk.Uint64ToBigEndian(id))
 }
 
+// gaugeDenomStoreKey returns the store key of the gauge index for the given lock denom.
 func gaugeDenomStoreKey(denom string) []byte {
 	return combineKeys(incentivestypes.KeyPrefixGaugesByDenom, []byte(denom))
 }
 
+// setGaugeRaw overwrites a gauge in the store without touching its reference keys.
 func (s *UpgradeTestSuite) setGaugeRaw(gauge *incentivestypes.Gauge) {
 	bz, err := proto.Marshal(gauge)
 	s.Require().NoError(err)
 	s.incentivesStore().Set(gaugeStoreKey(gauge.Id), bz)
 }
 
+// removeDenomRef deletes the gauge index for the given lock denom.
 func (s *UpgradeTestSuite) removeDenomRef(denom string) {
 	s.incentivesStore().Delete(gaugeDenomStoreKey(denom))
 }
 
+// denomRefs returns the gauge IDs indexed under the given lock denom.
 func (s *UpgradeTestSuite) denomRefs(denom string) []uint64 {
 	ids := []uint64{}
 	if bz := s.incentivesStore().Get(gaugeDenomStoreKey(denom)); bz != nil {
@@ -281,6 +292,7 @@ func (s *UpgradeTestSuite) denomRefs(denom string) []uint64 {
 	return ids
 }
 
+// runUpgrade schedules the v32 plan and runs it through the upgrade module's PreBlock.
 func (s *UpgradeTestSuite) runUpgrade() {
 	s.Ctx = s.Ctx.WithBlockHeight(v32UpgradeHeight - 1)
 	plan := upgradetypes.Plan{Name: v32.UpgradeName, Height: v32UpgradeHeight}
@@ -295,6 +307,7 @@ func (s *UpgradeTestSuite) runUpgrade() {
 	})
 }
 
+// gaugeIDSet returns the IDs of the given gauges.
 func gaugeIDSet(gauges []incentivestypes.Gauge) []uint64 {
 	ids := make([]uint64, len(gauges))
 	for i, g := range gauges {

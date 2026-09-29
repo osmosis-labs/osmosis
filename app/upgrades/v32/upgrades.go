@@ -13,6 +13,8 @@ import (
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v31/x/incentives/keeper"
 )
 
+// CreateUpgradeHandler returns the v32 upgrade handler. After the module migrations it recovers the
+// HUAHUA held by gauges 1954-1959 (see HuahuaStuckGauges).
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
@@ -46,6 +48,10 @@ func CreateUpgradeHandler(
 
 // recoverHuahuaFromStuckGauges finishes the stuck HUAHUA gauges and sends their undistributed coins
 // to the recovery address. See HuahuaStuckGauges.
+//
+// All undistributed coins of each gauge are sent, not only HUAHUA. On mainnet these gauges hold only
+// HUAHUA, but MsgAddToGauge can add other denoms before the upgrade; once the gauge is finished those
+// coins could never be distributed or withdrawn, so they are sent along with the HUAHUA.
 func recoverHuahuaFromStuckGauges(ctx sdk.Context, incentivesKeeper *incentiveskeeper.Keeper) (sdk.Coins, error) {
 	recipient, err := sdk.AccAddressFromBech32(HuahuaRecoveryAddress)
 	if err != nil {

@@ -42,7 +42,8 @@ method tolerates a missing denom index.
   and holds HUAHUA. The recovery runs in a cache context: if any check fails, nothing is written,
   an error is logged, and **the upgrade continues** (the chain is never halted by this recovery).
   Anyone could add coins to these gauges before the upgrade (`MsgAddToGauge`), so amounts are not
-  hard-coded: whatever the gauges hold is recovered. Once finished, no one can add to them anymore.
+  hard-coded: whatever the gauges hold is recovered, including any non-HUAHUA coins added to them
+  (a finished gauge could never distribute those). Once finished, no one can add to them anymore.
 
 ## 1. Unit and upgrade tests
 
@@ -74,8 +75,19 @@ Regression: `go test ./x/incentives/... ./app/upgrades/...` passes.
 ./scripts/huahua-recovery/check_mainnet_state.sh            # LCD=... to use another endpoint
 ```
 
-This is read-only. It checks every precondition the handler relies on. Run it again just before the
+This is read-only. It checks every precondition the handler relies on, and prints a note if a gauge
+holds denoms other than HUAHUA (those are sent to the recipient as well). Run it again just before the
 upgrade height.
+
+After the upgrade, confirm that the recovery was applied. The handler does not halt the chain when it
+skips the recovery, it only logs `v32 upgrade: HUAHUA recovery skipped`, so this check is the on-chain
+confirmation:
+
+```bash
+./scripts/huahua-recovery/check_mainnet_state.sh --post-upgrade
+```
+
+It fails unless all six gauges are finished with `distributed_coins == coins` and none is still active.
 
 ## 3. Mainnet-fork upgrade test
 
