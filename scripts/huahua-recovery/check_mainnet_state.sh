@@ -15,6 +15,7 @@ HUAHUA="ibc/B9E0A1A524E98BB407D3CED8720EFEFD186002F90C1B1B7964811DD0CCC12228"
 RECIPIENT="osmo14fketv99hlrlk80mkggw643spsj3yyf7t2pjhr"
 declare -A DENOM=([1954]=GAMM605 [1955]=GAMM605 [1956]=GAMM605 [1957]=GAMM606 [1958]=GAMM606 [1959]=GAMM606)
 
+# fail prints the reason and exits with an error.
 fail() { echo "FAIL: $*"; exit 1; }
 
 if [[ "${1:-}" == "--post-upgrade" ]]; then
@@ -42,10 +43,12 @@ echo "Osmosis mainnet height $height"
 active=$(curl -sf "$LCD/osmosis/incentives/v1beta1/active_gauges?pagination.limit=100000" | jq -r '.data[].id')
 
 total=0
+recovery_total=0
 for id in 1954 1955 1956 1957 1958 1959; do
   g=$(curl -sf "$LCD/osmosis/incentives/v1beta1/gauge_by_id/$id" | jq .gauge)
   denom=$(jq -r .distribute_to.denom <<<"$g")
   amount=$(jq -r --arg d "$HUAHUA" '[.coins[] | select(.denom == $d) | .amount][0] // "0"' <<<"$g")
+  distributed=$(jq -r --arg d "$HUAHUA" '[.distributed_coins[]? | select(.denom == $d) | .amount][0] // "0"' <<<"$g")
   filled=$(jq -r .filled_epochs <<<"$g")
   paid_over=$(jq -r .num_epochs_paid_over <<<"$g")
   perpetual=$(jq -r .is_perpetual <<<"$g")
@@ -58,17 +61,19 @@ for id in 1954 1955 1956 1957 1958 1959; do
   (( filled < paid_over )) || fail "gauge $id is already finished"
   grep -qx "$id" <<<"$active" || fail "gauge $id is not in the active gauges"
 
-  echo "gauge $id: denom=$denom uhuahua=$amount filled=$filled/$paid_over active=yes"
+  echo "gauge $id: denom=$denom uhuahua=$amount distributed=$distributed filled=$filled/$paid_over active=yes"
   total=$(python3 -c "print($total + $amount)")
+  recovery_total=$(python3 -c "print($recovery_total + $amount - $distributed)")
 done
 
 echo "total uhuahua in gauges: $total ($(python3 -c "print($total / 10**6)") HUAHUA)"
-[[ "$total" == "6000000000000000" ]] || echo "NOTE: total differs from 6,000,000,000 HUAHUA (someone added to a gauge); the upgrade recovers whatever is there"
+echo "undistributed uhuahua to recover: $recovery_total ($(python3 -c "print($recovery_total / 10**6)") HUAHUA)"
+[[ "$recovery_total" == "6000000000000000" ]] || echo "NOTE: total differs from 6,000,000,000 HUAHUA (someone added to a gauge); the upgrade recovers whatever is there"
 
 module=$(curl -sf "$LCD/cosmos/auth/v1beta1/module_accounts/incentives" | jq -r .account.base_account.address)
 balance=$(curl -sf "$LCD/cosmos/bank/v1beta1/balances/$module/by_denom?denom=$HUAHUA" | jq -r .balance.amount)
 echo "incentives module ($module) uhuahua balance: $balance"
-python3 -c "import sys; sys.exit(0 if $balance >= $total else 1)" || fail "module balance below gauge total"
+python3 -c "import sys; sys.exit(0 if $balance >= $recovery_total else 1)" || fail "module balance below the amount to recover"
 
 recipient=$(curl -sf "$LCD/cosmos/bank/v1beta1/balances/$RECIPIENT/by_denom?denom=$HUAHUA" | jq -r .balance.amount)
 echo "recipient $RECIPIENT current uhuahua: $recipient"

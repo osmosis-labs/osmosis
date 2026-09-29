@@ -125,7 +125,8 @@ func (s *UpgradeTestSuite) TestHuahuaRecovery() {
 	s.Require().ErrorIs(err, incentivestypes.UnexpectedFinishedGaugeError{GaugeId: 1954})
 }
 
-// Anyone can add coins to an active gauge before the upgrade; that must not block the recovery.
+// TestHuahuaRecoveryWithExtraCoinsAdded checks that coins added to a gauge before the upgrade are
+// recovered too: anyone can add to an active gauge, and that must not block the recovery.
 func (s *UpgradeTestSuite) TestHuahuaRecoveryWithExtraCoinsAdded() {
 	s.prepareMainnetHuahuaGauges()
 
@@ -143,7 +144,8 @@ func (s *UpgradeTestSuite) TestHuahuaRecoveryWithExtraCoinsAdded() {
 	s.Require().Equal(osmomath.NewInt(5), s.App.BankKeeper.GetBalance(s.Ctx, recipient, "uosmo").Amount)
 }
 
-// If the state is not what we expect, the upgrade must not halt the chain nor apply a partial recovery.
+// TestHuahuaRecoverySkippedOnUnexpectedState checks that, when the gauges are not in the expected
+// state, the upgrade neither halts the chain nor applies a partial recovery.
 func (s *UpgradeTestSuite) TestHuahuaRecoverySkippedOnUnexpectedState() {
 	tests := map[string]func(){
 		"gauge distributes to an unexpected denom": func() {

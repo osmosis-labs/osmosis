@@ -35,8 +35,10 @@ RECIPIENT="osmo14fketv99hlrlk80mkggw643spsj3yyf7t2pjhr"
 GAUGES=(1954 1955 1956 1957 1958 1959)
 
 mkdir -p "$OUT"
+# log prints a message prefixed with the UTC time.
 log() { echo "[$(date -u +%H:%M:%S)] $*"; }
 
+# wait_for_api waits until the REST API answers incentives queries.
 wait_for_api() {
   for _ in $(seq 1 600); do
     if curl -sf "$API/osmosis/incentives/v1beta1/gauge_by_id/1954" >/dev/null 2>&1; then return 0; fi
@@ -45,6 +47,7 @@ wait_for_api() {
   log "API did not come up"; return 1
 }
 
+# wait_for_height_above waits until the chain height is greater than $1.
 wait_for_height_above() {
   local target=$1
   for _ in $(seq 1 900); do
@@ -55,6 +58,7 @@ wait_for_height_above() {
   log "chain did not pass height $target"; return 1
 }
 
+# stop_node stops the node with pid $1, with SIGINT first and SIGKILL after two minutes.
 stop_node() {
   local pid=$1
   kill -INT "$pid" 2>/dev/null || true
@@ -62,7 +66,7 @@ stop_node() {
   kill -KILL "$pid" 2>/dev/null || true
 }
 
-# Writes the state relevant to the recovery to $OUT/<label>.json.
+# capture_state writes the state relevant to the recovery to $OUT/<label>.json.
 capture_state() {
   local label=$1
   local file="$OUT/$label.json" module height
@@ -143,11 +147,13 @@ gauges = [str(i) for i in range(1954, 1960)]
 failures = []
 
 def check(cond, msg):
+    """Prints PASS/FAIL for one check and records failures."""
     print(("PASS  " if cond else "FAIL  ") + msg)
     if not cond:
         failures.append(msg)
 
 def amount(coins, denom):
+    """Returns the amount of denom in a list of coins."""
     return sum(int(c["amount"]) for c in coins if c["denom"] == denom)
 
 stuck = sum(amount(before["gauges"][g]["coins"], huahua) - amount(before["gauges"][g]["distributed_coins"], huahua) for g in gauges)
