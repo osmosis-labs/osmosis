@@ -16,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
 	"github.com/osmosis-labs/osmosis/v31/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v31/x/lockup/types"
@@ -486,4 +487,74 @@ func (k Keeper) checkIfDenomsAreDistributable(ctx sdk.Context, coins sdk.Coins) 
 		}
 	}
 	return nil
+}
+
+// ForceFinishGaugeAndSendUndistributed marks an active, non-perpetual gauge as fully distributed,
+// moves it to the finished gauges and sends all of its undistributed coins from the incentives
+// module account to the recipient.
+//
+// The gauge's DistributedCoins is set to its Coins and FilledEpochs to NumEpochsPaidOver, so that
+// the module-level accounting (GetModuleToDistributeCoins / GetModuleDistributedCoins) stays
+// consistent with the module account balance after the send.
+//
+// Unlike moveActiveGaugeToFinishedGauge, a missing denom reference is tolerated, since some
+// legacy gauges on mainnet are in the active set without one.
+//
+// WARNING: this bypasses the normal distribution logic. It is intended to be called only from
+// governance-approved upgrade handlers. It is not exposed through any message or query.
+func (k Keeper) ForceFinishGaugeAndSendUndistributed(ctx sdk.Context, gaugeID uint64, recipient sdk.AccAddress) (sdk.Coins, error) {
+	gauge, err := k.GetGaugeByID(ctx, gaugeID)
+	if err != nil {
+		return nil, err
+	}
+	if gauge.IsPerpetual {
+		return nil, fmt.Errorf("gauge %d is perpetual", gaugeID)
+	}
+	if gauge.DistributeTo.LockQueryType == lockuptypes.ByGroup {
+		return nil, fmt.Errorf("gauge %d is a group gauge", gaugeID)
+	}
+	timeKey := getTimeKey(gauge.StartTime)
+	activeKey := combineKeys(types.KeyPrefixActiveGauges, timeKey)
+	if !gauge.IsActiveGauge(ctx.BlockTime()) || findIndex(k.getGaugeRefs(ctx, activeKey), gauge.Id) < 0 {
+		return nil, fmt.Errorf("gauge %d is not active", gaugeID)
+	}
+
+	undistributed, hasNeg := gauge.Coins.SafeSub(gauge.DistributedCoins...)
+	if hasNeg {
+		return nil, fmt.Errorf("gauge %d has distributed coins %s exceeding its coins %s", gaugeID, gauge.DistributedCoins, gauge.Coins)
+	}
+
+	if !undistributed.IsZero() {
+		if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, recipient, undistributed); err != nil {
+			return nil, err
+		}
+	}
+
+	gauge.DistributedCoins = gauge.Coins
+	gauge.FilledEpochs = gauge.NumEpochsPaidOver
+	if err := k.setGauge(ctx, gauge); err != nil {
+		return nil, err
+	}
+
+	if err := k.deleteGaugeRefByKey(ctx, activeKey, gauge.Id); err != nil {
+		return nil, err
+	}
+	if err := k.addGaugeRefByKey(ctx, combineKeys(types.KeyPrefixFinishedGauges, timeKey), gauge.Id); err != nil {
+		return nil, err
+	}
+	if findIndex(k.getAllGaugeIDsByDenom(ctx, gauge.DistributeTo.Denom), gauge.Id) > -1 {
+		if err := k.deleteGaugeIDForDenom(ctx, gauge.Id, gauge.DistributeTo.Denom); err != nil {
+			return nil, err
+		}
+	}
+	k.hooks.AfterFinishDistribution(ctx, gauge.Id)
+
+	ctx.EventManager().EmitEvent(sdk.NewEvent(
+		types.TypeEvtForceFinishGauge,
+		sdk.NewAttribute(types.AttributeGaugeID, osmoutils.Uint64ToString(gauge.Id)),
+		sdk.NewAttribute(types.AttributeReceiver, recipient.String()),
+		sdk.NewAttribute(types.AttributeAmount, undistributed.String()),
+	))
+
+	return undistributed, nil
 }

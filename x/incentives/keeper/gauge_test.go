@@ -954,3 +954,143 @@ func (s *KeeperTestSuite) TestCheckIfDenomsAreDistributable() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestForceFinishGaugeAndSendUndistributed() {
+	rewardCoins := sdk.NewCoins(sdk.NewInt64Coin(defaultRewardDenom, 1000), sdk.NewInt64Coin(otherDenom, 500))
+	recipient := sdk.AccAddress([]byte("recovery_recipient__"))
+
+	tests := map[string]struct {
+		isPerpetual       bool
+		startTimeOffset   time.Duration
+		distributedCoins  sdk.Coins
+		removeDenomRef    bool
+		notInActiveSet    bool
+		forceFinishTwice  bool
+		gaugeIDOverride   uint64
+		expectedRecovered sdk.Coins
+		expectedErr       string
+	}{
+		"active gauge, nothing distributed: all coins recovered": {
+			expectedRecovered: rewardCoins,
+		},
+		"active gauge, partially distributed: only the remainder is recovered": {
+			distributedCoins:  sdk.NewCoins(sdk.NewInt64Coin(defaultRewardDenom, 400)),
+			expectedRecovered: sdk.NewCoins(sdk.NewInt64Coin(defaultRewardDenom, 600), sdk.NewInt64Coin(otherDenom, 500)),
+		},
+		"active gauge without denom reference (as gauges 1957-1959 on mainnet)": {
+			removeDenomRef:    true,
+			expectedRecovered: rewardCoins,
+		},
+		"error: perpetual gauge": {
+			isPerpetual: true,
+			expectedErr: "is perpetual",
+		},
+		"error: upcoming gauge": {
+			startTimeOffset: time.Hour,
+			expectedErr:     "is not active",
+		},
+		"error: start time reached but gauge not yet moved to the active set": {
+			notInActiveSet: true,
+			expectedErr:    "is not active",
+		},
+		"error: already finished gauge": {
+			forceFinishTwice: true,
+			expectedErr:      "is not active",
+		},
+		"error: gauge does not exist": {
+			gaugeIDOverride: 1000,
+			expectedErr:     types.GaugeNotFoundError{GaugeID: 1000}.Error(),
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			k := s.App.IncentivesKeeper
+
+			// Lock denom needs supply for the gauge to be created.
+			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewInt64Coin(defaultLPDenom, 10)))
+			distrTo := lockuptypes.QueryCondition{LockQueryType: lockuptypes.ByDuration, Denom: defaultLPDenom, Duration: defaultLockDuration}
+			startTime := s.Ctx.BlockTime().Add(tc.startTimeOffset)
+			gaugeID, createdGauge := s.CreateGauge(tc.isPerpetual, s.TestAccs[0], rewardCoins, distrTo, startTime, 10)
+			if tc.startTimeOffset == 0 && !tc.notInActiveSet {
+				// Gauges enter the active set at epoch end once their start time is reached.
+				s.Require().NoError(k.MoveUpcomingGaugeToActiveGauge(s.Ctx, *createdGauge))
+			}
+
+			if !tc.distributedCoins.Empty() {
+				// Simulate a previous distribution: the coins left the module and the gauge recorded it.
+				gauge, err := k.GetGaugeByID(s.Ctx, gaugeID)
+				s.Require().NoError(err)
+				gauge.DistributedCoins = tc.distributedCoins
+				gauge.FilledEpochs = 1
+				s.Require().NoError(k.SetGauge(s.Ctx, gauge))
+				s.Require().NoError(s.App.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, types.ModuleName, s.TestAccs[2], tc.distributedCoins))
+			}
+			if tc.removeDenomRef {
+				s.Require().NoError(k.DeleteGaugeRefByKey(s.Ctx, incentiveskeeper.GaugeDenomStoreKey(defaultLPDenom), gaugeID))
+			}
+			if tc.forceFinishTwice {
+				_, err := k.ForceFinishGaugeAndSendUndistributed(s.Ctx, gaugeID, recipient)
+				s.Require().NoError(err)
+			}
+			if tc.gaugeIDOverride != 0 {
+				gaugeID = tc.gaugeIDOverride
+			}
+
+			moduleAddr := s.App.AccountKeeper.GetModuleAddress(types.ModuleName)
+			moduleBalanceBefore := s.App.BankKeeper.GetAllBalances(s.Ctx, moduleAddr)
+			recipientBalanceBefore := s.App.BankKeeper.GetAllBalances(s.Ctx, recipient)
+			toDistributeBefore := k.GetModuleToDistributeCoins(s.Ctx)
+			distributedBefore := k.GetModuleDistributedCoins(s.Ctx)
+
+			recovered, err := k.ForceFinishGaugeAndSendUndistributed(s.Ctx, gaugeID, recipient)
+
+			if tc.expectedErr != "" {
+				s.Require().ErrorContains(err, tc.expectedErr)
+				s.Require().Equal(moduleBalanceBefore, s.App.BankKeeper.GetAllBalances(s.Ctx, moduleAddr))
+				s.Require().Equal(recipientBalanceBefore, s.App.BankKeeper.GetAllBalances(s.Ctx, recipient))
+				return
+			}
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedRecovered, recovered)
+
+			// Funds moved from the module account to the recipient.
+			s.Require().Equal(recipientBalanceBefore.Add(tc.expectedRecovered...), s.App.BankKeeper.GetAllBalances(s.Ctx, recipient))
+			s.Require().Equal(moduleBalanceBefore.Sub(tc.expectedRecovered...), s.App.BankKeeper.GetAllBalances(s.Ctx, moduleAddr))
+
+			// Module accounting stays consistent with the balance change.
+			s.Require().Equal(toDistributeBefore.Sub(tc.expectedRecovered...), k.GetModuleToDistributeCoins(s.Ctx))
+			s.Require().Equal(distributedBefore.Add(tc.expectedRecovered...), k.GetModuleDistributedCoins(s.Ctx))
+
+			// Gauge is marked as fully distributed and finished.
+			gauge, err := k.GetGaugeByID(s.Ctx, gaugeID)
+			s.Require().NoError(err)
+			s.Require().Equal(rewardCoins, gauge.Coins)
+			s.Require().Equal(rewardCoins, gauge.DistributedCoins)
+			s.Require().Equal(gauge.NumEpochsPaidOver, gauge.FilledEpochs)
+			s.Require().True(gauge.IsFinishedGauge(s.Ctx.BlockTime()))
+
+			// Refs: removed from active and denom index, present in finished.
+			s.Require().NotContains(gaugeIDs(k.GetActiveGauges(s.Ctx)), gaugeID)
+			s.Require().Contains(gaugeIDs(k.GetFinishedGauges(s.Ctx)), gaugeID)
+			s.Require().NotContains(k.GetAllGaugeIDsByDenom(s.Ctx, defaultLPDenom), gaugeID)
+
+			// Nobody can add rewards to the gauge anymore.
+			s.FundAcc(s.TestAccs[0], rewardCoins)
+			err = k.AddToGaugeRewards(s.Ctx, s.TestAccs[0], rewardCoins, gaugeID)
+			s.Require().ErrorIs(err, types.UnexpectedFinishedGaugeError{GaugeId: gaugeID})
+
+			// Recovery event emitted.
+			s.AssertEventEmitted(s.Ctx, types.TypeEvtForceFinishGauge, 1)
+		})
+	}
+}
+
+func gaugeIDs(gauges []types.Gauge) []uint64 {
+	ids := make([]uint64, len(gauges))
+	for i, g := range gauges {
+		ids[i] = g.Id
+	}
+	return ids
+}
