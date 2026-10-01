@@ -110,3 +110,8 @@ func (k Keeper) SkipSpamGaugeDistribute(ctx sdk.Context, locks []*lockuptypes.Pe
 func (k Keeper) CheckIfDenomsAreDistributable(ctx sdk.Context, coins sdk.Coins) error {
 	return k.checkIfDenomsAreDistributable(ctx, coins)
 }
+
+// GaugeDenomStoreKey returns the store key of the gauge index for the given lock denom.
+func GaugeDenomStoreKey(denom string) []byte {
+	return gaugeDenomStoreKey(denom)
+}
