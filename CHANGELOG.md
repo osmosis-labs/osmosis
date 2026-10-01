@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#9676](https://github.com/osmosis-labs/osmosis/pull/9676) chore: bump cometbft version to v0.38.22
 * [#9730](https://github.com/osmosis-labs/osmosis/pull/9730) docs: register missing module query services in swagger generation and pin proto sources to go.mod versions
+* [#9748](https://github.com/osmosis-labs/osmosis/pull/9748) chore: bump Go to 1.25.8 and update deps to fix security alerts
 
 ## v31.0.0
 
