@@ -679,7 +679,7 @@ func initAppConfig() (string, interface{}) {
 
 		OTELConfig osmosis.OTELConfig `mapstructure:"otel"`
 
-		WasmConfig wasmtypes.WasmConfig `mapstructure:"wasm"`
+		WasmConfig wasmtypes.NodeConfig `mapstructure:"wasm"`
 	}
 
 	DefaultOsmosisMempoolConfig := OsmosisMempoolConfig{
@@ -703,7 +703,7 @@ func initAppConfig() (string, interface{}) {
 
 	indexCfg := indexer.DefaultConfig
 
-	wasmCfg := wasmtypes.DefaultWasmConfig()
+	wasmCfg := wasmtypes.DefaultNodeConfig()
 
 	OsmosisAppCfg := CustomAppConfig{Config: *srvCfg, OsmosisMempoolConfig: memCfg, SidecarQueryServerConfig: sqsCfg, IndexerConfig: indexCfg, WasmConfig: wasmCfg}
 
