@@ -6,7 +6,7 @@ import (
 	"errors"
 	"time"
 
-	"cloud.google.com/go/pubsub"
+	"cloud.google.com/go/pubsub" //nolint:staticcheck // TODO: migrate to cloud.google.com/go/pubsub/v2
 
 	indexerdomain "github.com/osmosis-labs/osmosis/v31/ingest/indexer/domain"
 )
