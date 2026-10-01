@@ -252,7 +252,7 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDeno
 	tokenOutAmt := outAmtDec.TruncateInt()
 	if !tokenOutAmt.IsPositive() {
 		return sdk.Coin{}, errorsmod.Wrapf(types.ErrInvalidMathApprox,
-			fmt.Sprintf("token amount must be positive, got %v", tokenOutAmt))
+			"token amount must be positive, got %v", tokenOutAmt)
 	}
 	return sdk.NewCoin(tokenOutDenom, tokenOutAmt), nil
 }
