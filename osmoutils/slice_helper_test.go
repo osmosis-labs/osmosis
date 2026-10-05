@@ -78,19 +78,26 @@ func TestMergeSlices(t *testing.T) {
 
 func TestContainsDuplicateDeepEqual(t *testing.T) {
 	tests := []struct {
+		name  string
 		input []interface{}
 		want  bool
 	}{
-		{[]interface{}{[]int{1, 2, 3}, []int{4, 5, 6}}, false},
-		{[]interface{}{[]int{1, 2, 3}, []int{1, 2, 3}}, true},
-		{[]interface{}{[]string{"hello", "world"}, []string{"goodbye", "world"}}, false},
-		{[]interface{}{[]string{"hello", "world"}, []string{"hello", "world"}}, true},
-		{[]interface{}{[][]int{{1, 2}, {3, 4}}, [][]int{{1, 2}, {3, 4}}}, true},
+		{name: "different elements", input: []interface{}{[]int{1, 2, 3}, []int{4, 5, 6}}, want: false},
+		{name: "duplicate elements", input: []interface{}{[]int{1, 2, 3}, []int{1, 2, 3}}, want: true},
+		{name: "different strings", input: []interface{}{[]string{"hello", "world"}, []string{"goodbye", "world"}}, want: false},
+		{name: "duplicate strings", input: []interface{}{[]string{"hello", "world"}, []string{"hello", "world"}}, want: true},
+		{name: "duplicate nested slices", input: []interface{}{[][]int{{1, 2}, {3, 4}}, [][]int{{1, 2}, {3, 4}}}, want: true},
+		{name: "non-adjacent duplicate", input: []interface{}{[]int{1}, []int{2}, []int{1}}, want: true},
+		{name: "three unique elements", input: []interface{}{[]int{1}, []int{2}, []int{3}}, want: false},
+		{name: "duplicate first pair", input: []interface{}{[]int{1}, []int{1}, []int{2}}, want: true},
+		{name: "duplicate last pair", input: []interface{}{[]int{1}, []int{2}, []int{2}}, want: true},
 	}
 
 	for _, tt := range tests {
-		got := osmoutils.ContainsDuplicateDeepEqual(tt.input)
-		require.Equal(t, tt.want, got)
+		t.Run(tt.name, func(t *testing.T) {
+			got := osmoutils.ContainsDuplicateDeepEqual(tt.input)
+			require.Equal(t, tt.want, got)
+		})
 	}
 }
 
