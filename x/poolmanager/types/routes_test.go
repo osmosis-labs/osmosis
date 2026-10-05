@@ -191,6 +191,21 @@ func TestValidateSwapAmountInSplitRoute(t *testing.T) {
 			},
 			expectErr: ErrDuplicateRoutesNotAllowed,
 		},
+		{
+			name: "non-adjacent duplicate routes",
+			routes: []SwapAmountInSplitRoute{
+				defaultSingleRouteTwoHopsAmountIn,
+				{
+					Pools: []SwapAmountInRoute{{
+						PoolId:        fooBazPoolId,
+						TokenOutDenom: baz,
+					}},
+					TokenInAmount: twentyFiveBaseUnitsAmount,
+				},
+				defaultSingleRouteTwoHopsAmountIn,
+			},
+			expectErr: ErrDuplicateRoutesNotAllowed,
+		},
 	}
 
 	for _, tt := range tests {
@@ -269,6 +284,21 @@ func TestValidateSwapAmountOutSplitRoute(t *testing.T) {
 			name: "duplicate routes",
 			routes: []SwapAmountOutSplitRoute{
 				defaultSingleRouteTwoHopsAmountOut,
+				defaultSingleRouteTwoHopsAmountOut,
+			},
+			expectErr: ErrDuplicateRoutesNotAllowed,
+		},
+		{
+			name: "non-adjacent duplicate routes",
+			routes: []SwapAmountOutSplitRoute{
+				defaultSingleRouteTwoHopsAmountOut,
+				{
+					Pools: []SwapAmountOutRoute{{
+						PoolId:       fooBazPoolId,
+						TokenInDenom: foo,
+					}},
+					TokenOutAmount: twentyFiveBaseUnitsAmount,
+				},
 				defaultSingleRouteTwoHopsAmountOut,
 			},
 			expectErr: ErrDuplicateRoutesNotAllowed,

@@ -58,8 +58,10 @@ func ContainsDuplicate[T any](arr []T) bool {
 // Returns false if there are no deep equal duplicates.
 func ContainsDuplicateDeepEqual[T any](multihops []T) bool {
 	for i := 0; i < len(multihops)-1; i++ {
-		if reflect.DeepEqual(multihops[i], multihops[i+1]) {
-			return true
+		for j := i + 1; j < len(multihops); j++ {
+			if reflect.DeepEqual(multihops[i], multihops[j]) {
+				return true
+			}
 		}
 	}
 	return false
