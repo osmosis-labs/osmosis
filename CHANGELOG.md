@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* (bug fix) fix: detect non-adjacent duplicate split routes
 * [#9676](https://github.com/osmosis-labs/osmosis/pull/9676) chore: bump cometbft version to v0.38.22
 * [#9730](https://github.com/osmosis-labs/osmosis/pull/9730) docs: register missing module query services in swagger generation and pin proto sources to go.mod versions
 
