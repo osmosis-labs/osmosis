@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* [#9742](https://github.com/osmosis-labs/osmosis/issues/9742) fix: ibc-rate-limit contract rejected inbound tokens whose denom trace channel shares a string prefix with the source channel (contract 0.2.0)
 * [#9676](https://github.com/osmosis-labs/osmosis/pull/9676) chore: bump cometbft version to v0.38.22
 * [#9730](https://github.com/osmosis-labs/osmosis/pull/9730) docs: register missing module query services in swagger generation and pin proto sources to go.mod versions
 
