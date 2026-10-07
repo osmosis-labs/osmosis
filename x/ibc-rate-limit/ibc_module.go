@@ -2,7 +2,7 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
-	"strings"
+	"errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
@@ -143,11 +143,15 @@ func (im *IBCModule) OnRecvPacket(
 
 	err := CheckAndUpdateRateLimits(ctx, im.ics4Middleware.ContractKeeper, "recv_packet", contract, packet)
 	if err != nil {
-		if strings.Contains(err.Error(), "rate limit exceeded") {
-			return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrRateLimitExceeded)
+		// CheckAndUpdateRateLimits already classified the failure as either
+		// ErrRateLimitExceeded or ErrContractError. The ack only carries the
+		// ABCI code, so the counterparty sees which of the two it was, and the
+		// full contract message goes into the emitted error event so that a
+		// contract fault is diagnosable from the receiving chain.
+		if errors.Is(err, types.ErrRateLimitExceeded) {
+			return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrRateLimitExceeded, err.Error())
 		}
-		fullError := errorsmod.Wrap(types.ErrContractError, err.Error())
-		return osmoutils.NewEmitErrorAcknowledgement(ctx, fullError)
+		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrContractError, err.Error())
 	}
 
 	// if this returns an Acknowledgement that isn't successful, all state changes are discarded
@@ -180,6 +184,7 @@ func (im *IBCModule) OnAcknowledgementPacket(
 					sdk.NewAttribute(types.AttributeKeyFailureType, "acknowledgment"),
 					sdk.NewAttribute(types.AttributeKeyPacket, string(packet.GetData())),
 					sdk.NewAttribute(types.AttributeKeyAck, string(acknowledgement)),
+					sdk.NewAttribute(types.AttributeKeyError, err.Error()),
 				),
 			)
 		}
@@ -202,13 +207,17 @@ func (im *IBCModule) OnTimeoutPacket(
 				sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 				sdk.NewAttribute(types.AttributeKeyFailureType, "timeout"),
 				sdk.NewAttribute(types.AttributeKeyPacket, string(packet.GetData())),
+				sdk.NewAttribute(types.AttributeKeyError, err.Error()),
 			),
 		)
 	}
 	return im.app.OnTimeoutPacket(ctx, packet, relayer)
 }
 
-// RevertSentPacket Notifies the contract that a sent packet wasn't properly received
+// RevertSentPacket notifies the contract that a sent packet wasn't properly
+// received. The callers treat a failure as non-fatal, so the contract call
+// runs in a cache context: wasmd does not roll back a Sudo whose error the
+// caller swallows, and a partial write here could leave a refund half done.
 func (im *IBCModule) RevertSentPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
@@ -219,15 +228,14 @@ func (im *IBCModule) RevertSentPacket(
 		return nil
 	}
 
-	if err := UndoSendRateLimit(
-		ctx,
-		im.ics4Middleware.ContractKeeper,
-		contract,
-		packet,
-	); err != nil {
-		return err
-	}
-	return nil
+	return osmoutils.ApplyFuncIfNoError(ctx, func(ctx sdk.Context) error {
+		return UndoSendRateLimit(
+			ctx,
+			im.ics4Middleware.ContractKeeper,
+			contract,
+			packet,
+		)
+	})
 }
 
 // SendPacket implements the ICS4 Wrapper interface

@@ -5,4 +5,5 @@ const (
 	AttributeKeyPacket      = "packet"
 	AttributeKeyAck         = "acknowledgement"
 	AttributeKeyFailureType = "failure_type"
+	AttributeKeyError       = "error"
 )
