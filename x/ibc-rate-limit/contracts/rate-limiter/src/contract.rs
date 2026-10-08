@@ -3,6 +3,7 @@ use cosmwasm_std::entry_point;
 use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::{get_contract_version, set_contract_version};
 
+use crate::blocking::canonicalise_restrictions;
 use crate::error::ContractError;
 use crate::message_queue::{must_queue_message, queue_message};
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg, SudoMsg};
@@ -130,13 +131,30 @@ pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, C
         )?;
     }
 
+    // Versions before 0.2.0 wrote an empty tracker entry for every (channel,
+    // denom) pair they saw. That residue is harmless and its size is under
+    // the control of whoever sent the packets, so the migration deliberately
+    // leaves it alone: cleaning it is the permissionless, bounded
+    // PurgeEmptyPaths message, which cannot put this one-shot upgrade at risk.
+
+    // Denom restrictions, by contrast, are written by governance only (one
+    // entry on mainnet), so moving them to their canonical key here is bounded
+    // and leaves no legacy packet-form entry that an Unset by hash could miss.
+    let restrictions = canonicalise_restrictions(deps.storage)?;
+
     // update contract version
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
     Ok(Response::new()
         .add_attribute("method", "migrate")
         .add_attribute("version.old", contract_version.version)
-        .add_attribute("version.new", CONTRACT_VERSION))
+        .add_attribute("version.new", CONTRACT_VERSION)
+        .add_attribute("restrictions_moved", restrictions.moved.to_string())
+        .add_attribute("restrictions_dropped", restrictions.dropped.to_string())
+        .add_attribute(
+            "restrictions_conflicting",
+            restrictions.conflicting.to_string(),
+        ))
 }
 
 /// Processes `msg` and executes the corresponding message handler
@@ -198,6 +216,12 @@ pub(crate) fn match_execute(
         ExecuteMsg::ProcessMessages { count, message_ids } => {
             message_queue::process_message_queue(deps, env, count, message_ids)?;
             Ok(Response::new().add_attribute("method", "process_messages"))
+        }
+        ExecuteMsg::PurgeEmptyPaths { start_after, limit } => {
+            execute::purge_empty_paths(deps, start_after, limit)
+        }
+        ExecuteMsg::PurgeStaleSends { start_after, limit } => {
+            execute::purge_stale_sends(deps, env.block.time, start_after, limit)
         }
     }
 }

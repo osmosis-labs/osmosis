@@ -3,8 +3,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::msg::QuotaMsg;
-
-use super::flow::FlowType;
+use crate::ContractError;
 
 /// A Quota is the percentage of the denom's total value that can be transferred
 /// through the channel in a given period of time (duration)
@@ -27,23 +26,23 @@ impl Quota {
     /// total_value) in each direction based on the total value of the denom in
     /// the channel. The result tuple represents the max capacity when the
     /// transfer is in directions: (FlowType::In, FlowType::Out)
-    pub fn capacity(&self) -> (Uint256, Uint256) {
-        match self.channel_value {
-            Some(total_value) => (
-                total_value * Uint256::from(self.max_percentage_recv) / Uint256::from(100_u32),
-                total_value * Uint256::from(self.max_percentage_send) / Uint256::from(100_u32),
-            ),
-            None => (0_u32.into(), 0_u32.into()), // This should never happen, but ig the channel value is not set, we disallow any transfer
-        }
-    }
-
-    /// returns the capacity in a direction. This is used for displaying cleaner errors
-    pub fn capacity_on(&self, direction: &FlowType) -> Uint256 {
-        let (max_in, max_out) = self.capacity();
-        match direction {
-            FlowType::In => max_in,
-            FlowType::Out => max_out,
-        }
+    ///
+    /// The channel value is a bank supply, which is a 256-bit integer on the
+    /// chain, so the multiplication is checked rather than left to panic.
+    pub fn capacity(&self) -> Result<(Uint256, Uint256), ContractError> {
+        let Some(total_value) = self.channel_value else {
+            // This should never happen, but if the channel value is not set, we disallow any transfer
+            return Ok((Uint256::zero(), Uint256::zero()));
+        };
+        let capacity_for = |percentage: u32| {
+            total_value
+                .checked_multiply_ratio(percentage, 100_u32)
+                .map_err(|e| ContractError::Overflow(e.to_string()))
+        };
+        Ok((
+            capacity_for(self.max_percentage_recv)?,
+            capacity_for(self.max_percentage_send)?,
+        ))
     }
 }
 

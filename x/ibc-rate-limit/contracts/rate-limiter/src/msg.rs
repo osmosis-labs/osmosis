@@ -8,8 +8,11 @@ use cosmwasm_std::Uint256;
 
 use crate::{packet::Packet, state::rbac::Roles};
 
-// PathMsg contains a channel_id and denom to represent a unique identifier within ibc-go, and a list of rate limit quotas
+// PathMsg contains a channel_id and denom to represent a unique identifier within ibc-go, and a list of rate limit quotas.
+// Unknown fields are rejected so a misspelled key in a governance proposal fails
+// instead of silently configuring something other than what was intended.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct PathMsg {
     pub channel_id: String,
     pub denom: String,
@@ -30,8 +33,11 @@ impl PathMsg {
     }
 }
 
-// QuotaMsg represents a rate limiting Quota when sent as a wasm msg
+// QuotaMsg represents a rate limiting Quota when sent as a wasm msg.
+// Unknown fields are rejected: every field here is a bound, and a misspelled
+// one would otherwise be dropped and leave the quota looser than intended.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct QuotaMsg {
     pub name: String,
     pub duration: u64,
@@ -120,6 +126,22 @@ pub enum ExecuteMsg {
         count: Option<u64>,
         message_ids: Option<Vec<String>>,
     },
+    /// Permissionless. Removes tracker entries that hold no quotas, which
+    /// versions before 0.2.0 wrote for every (channel, denom) pair they saw.
+    /// Bounded, so state left behind can never make a call exceed its gas.
+    /// Returns the last key scanned so the next call can continue from it.
+    PurgeEmptyPaths {
+        start_after: Option<(String, String)>,
+        limit: u32,
+    },
+    /// Permissionless. Removes pending-send records whose retention has ended
+    /// (their windows are over and the packet could no longer be re-sent).
+    /// Walks the retention index; `start_after` is the `last_key` of the
+    /// previous call as (channel, retain_until in nanoseconds, content key).
+    PurgeStaleSends {
+        start_after: Option<(String, u64, String)>,
+        limit: u32,
+    },
 }
 
 #[cw_serde]
@@ -144,6 +166,10 @@ pub enum QueryMsg {
     GetDenomRestrictions { denom: String },
 }
 
+/// Messages only the chain sends. SendPacket is called before the packet is
+/// committed, so its sequence is 0 and the destination is not filled in;
+/// UndoSend carries the committed packet. The contract matches the two on the
+/// content that is the same in both (see Packet::send_key).
 #[cw_serde]
 pub enum SudoMsg {
     SendPacket {
@@ -156,9 +182,11 @@ pub enum SudoMsg {
         #[cfg(test)]
         channel_value_mock: Option<Uint256>,
     },
-    UndoSend {
-        packet: Packet,
-    },
+    /// Sent by the chain when a send fails (error acknowledgement or timeout).
+    /// Refunds the send to each quota that is still in the window the send
+    /// was counted in and settles its record; a packet with no record refunds
+    /// nothing.
+    UndoSend { packet: Packet },
 }
 
 #[cw_serde]
@@ -182,16 +210,19 @@ impl ExecuteMsg {
             Self::RemoveMessage { .. } => Some(Roles::RemoveMessage),
             Self::SetTimelockDelay { .. } => Some(Roles::SetTimelockDelay),
             Self::ProcessMessages { .. } => None,
+            Self::PurgeEmptyPaths { .. } => None,
+            Self::PurgeStaleSends { .. } => None,
         }
     }
     /// Checks to see if the message type is able to skip queueing.
     ///
-    /// This is limited to the message type responsible for processing the queue
+    /// This is limited to the permissionless housekeeping messages
     pub fn skip_queue(&self) -> bool {
-        #[allow(clippy::match_like_matches_macro)]
-        match self {
-            Self::ProcessMessages { .. } => true,
-            _ => false,
-        }
+        matches!(
+            self,
+            Self::ProcessMessages { .. }
+                | Self::PurgeEmptyPaths { .. }
+                | Self::PurgeStaleSends { .. }
+        )
     }
 }
