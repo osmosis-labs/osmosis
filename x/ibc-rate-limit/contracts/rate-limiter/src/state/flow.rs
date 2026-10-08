@@ -59,21 +59,22 @@ impl Flow {
         )
     }
 
-    /// checks if the flow, in the current state, has exceeded a max allowance
-    pub fn exceeds(&self, direction: &FlowType, max_inflow: Uint256, max_outflow: Uint256) -> bool {
-        let (balance_in, balance_out) = self.balance();
-        match direction {
-            FlowType::In => balance_in > max_inflow,
-            FlowType::Out => balance_out > max_outflow,
-        }
-    }
-
-    /// returns the balance in a direction. This is used for displaying cleaner errors
+    /// returns the net balance in a direction. Percentage bounds are compared
+    /// against this.
     pub fn balance_on(&self, direction: &FlowType) -> Uint256 {
         let (balance_in, balance_out) = self.balance();
         match direction {
             FlowType::In => balance_in,
             FlowType::Out => balance_out,
+        }
+    }
+
+    /// returns the gross value moved in a direction during the window, with
+    /// nothing netted off. Absolute bounds are compared against this.
+    pub fn gross_on(&self, direction: &FlowType) -> Uint256 {
+        match direction {
+            FlowType::In => self.inflow,
+            FlowType::Out => self.outflow,
         }
     }
 
