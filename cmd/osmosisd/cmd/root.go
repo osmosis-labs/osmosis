@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"bytes"
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -35,7 +36,7 @@ import (
 	"cosmossdk.io/log"
 	tmcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/crypto"
-	"github.com/cometbft/cometbft/libs/bytes"
+	tmbytes "github.com/cometbft/cometbft/libs/bytes"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/snapshot"
@@ -260,79 +261,155 @@ func loadAssetList(initClientCtx client.Context, cmd *cobra.Command, basedenomTo
 	return baseMap, baseMapRev
 }
 
+var (
+	// ibcMarker and factoryMarker are the prefixes identifying the denoms that
+	// customWriter rewrites to their human readable form.
+	ibcMarker     = []byte("ibc/")
+	factoryMarker = []byte("factory/")
+	denomMarkers  = [][]byte{ibcMarker, factoryMarker}
+)
+
+// ibcDenomLength is the length of an IBC denom: the "ibc/" prefix followed by
+// the 64 character hex hash of the denomination trace.
+const ibcDenomLength = len("ibc/") + 64
+
+// nonDenomChar matches the characters that cannot be part of a denom, and so
+// mark the end of a factory denom.
+var nonDenomChar = regexp.MustCompile("[^a-zA-Z0-9/-]")
+
 type customWriter struct {
 	originalOut io.Writer
 	baseMap     map[string]string
+
+	// pending holds bytes that were received but not written out yet, because
+	// they could still turn out to be part of a denom. io.Writer gives no
+	// guarantee that a token is handed over in a single call, so this state has
+	// to survive across Write calls for the output to depend only on the byte
+	// stream and not on how it happens to be chunked.
+	pending []byte
 }
 
 func (cw *customWriter) Write(p []byte) (n int, err error) {
-	// Convert byte slice to string.
-	s := string(p)
+	// Prepend whatever was left over from the previous call: the previous chunk
+	// may have ended in the middle of a denom, or of a denom marker.
+	buf := append(cw.pending, p...)
 
 	// Buffer to hold the new string.
-	var buf strings.Builder
+	var out strings.Builder
 
-	// Index where the current denom starts. -1 if we're not currently in a denom.
-	denomStart := -1
+	i := 0
+	for i < len(buf) {
+		// A denom marker starts here: rewrite the denom once it has been
+		// received in full, and hold back the rest until then.
+		if startsDenom(buf[i:]) {
+			denom := matchDenom(buf[i:])
+			if denom == nil {
+				break
+			}
+			out.WriteString(cw.humanReadable(string(denom)))
+			i += len(denom)
+			continue
+		}
 
-	// Counter for slashes encountered
-	slashCounter := 0
+		// The tail could still become the start of a denom, so it cannot be
+		// written out yet. Hold it back until more bytes arrive.
+		if isPartialDenomMarker(buf[i:]) {
+			break
+		}
 
-	re, err := regexp.Compile("[^a-zA-Z0-9/-]")
-	if err != nil {
-		return 0, err
+		out.WriteByte(buf[i])
+		i++
 	}
 
-	for i := 0; i < len(s); i++ {
-		if denomStart == -1 {
-			// If we're not currently in a denom, check if this character starts a new denom.
-			// Check for "ibc/" or "factory/" prefix.
-			if strings.HasPrefix(s[i:], "ibc/") || strings.HasPrefix(s[i:], "factory/") {
-				slashCounter = 0
-				denomStart = i
-				continue
-			}
-			// Write the character to the buffer.
-			buf.WriteByte(s[i])
-		} else {
-			// For factory denoms, we keep track of slashes to find the second slash.
+	if i == len(buf) {
+		cw.pending = cw.pending[:0]
+	} else {
+		cw.pending = append([]byte(nil), buf[i:]...)
+	}
+
+	// Report that every byte of p was accepted. The writer buffers, so the
+	// number of bytes handed to originalOut says nothing about how much of p
+	// was consumed, and reporting less than len(p) makes callers such as
+	// fmt.Fprintf fail with io.ErrShortWrite.
+	if _, err := cw.originalOut.Write([]byte(out.String())); err != nil {
+		return 0, err
+	}
+	return len(p), nil
+}
+
+// Flush writes out the bytes that were held back because they could still have
+// turned out to be a denom. It has to be called once the stream is complete,
+// otherwise that trailing output is never emitted.
+func (cw *customWriter) Flush() error {
+	pending := cw.pending
+	cw.pending = nil
+	if len(pending) == 0 {
+		return nil
+	}
+	_, err := cw.originalOut.Write([]byte(cw.humanReadable(string(pending))))
+	return err
+}
+
+// humanReadable returns the human readable name of denom, or denom itself if it
+// is not part of the asset list.
+func (cw *customWriter) humanReadable(denom string) string {
+	if replacement, ok := cw.baseMap[denom]; ok {
+		return replacement
+	}
+	return denom
+}
+
+// startsDenom reports whether s starts with one of the denom markers.
+func startsDenom(s []byte) bool {
+	for _, marker := range denomMarkers {
+		if bytes.HasPrefix(s, marker) {
+			return true
+		}
+	}
+	return false
+}
+
+// matchDenom returns the denom at the start of s, which must start with a denom
+// marker. It returns nil when the denom has not been received in full yet.
+func matchDenom(s []byte) []byte {
+	switch {
+	case bytes.HasPrefix(s, ibcMarker):
+		// IBC denoms have a fixed length, so they are complete as soon as the
+		// whole hash has been received.
+		if len(s) < ibcDenomLength {
+			return nil
+		}
+		return s[:ibcDenomLength]
+
+	case bytes.HasPrefix(s, factoryMarker):
+		// A factory denom ends at the first character that cannot be part of a
+		// denom, once the creator and subdenom separators have been seen.
+		slashCounter := 0
+		for i := 0; i < len(s); i++ {
 			if s[i] == '/' {
 				slashCounter++
 			}
-
-			// For "ibc/" we find the end by length, for "factory/" we find the end by second slash and regex.
-			if (strings.HasPrefix(s[denomStart:], "ibc/") && i-denomStart == 68) || (strings.HasPrefix(s[denomStart:], "factory/") && slashCounter == 2 && re.MatchString(string(s[i]))) {
-				// We've reached the end of the line containing the denom.
-				denom := s[denomStart:i]
-				if replacement, ok := cw.baseMap[denom]; ok {
-					// If the denom is in the map, write the replacement to the buffer.
-					buf.WriteString(replacement)
-				} else {
-					// If the denom is not in the map, write the original denom to the buffer.
-					buf.WriteString(denom)
-				}
-				// Write the new line character to the buffer.
-				buf.WriteByte(s[i])
-
-				// We're no longer in a denom.
-				denomStart = -1
-				slashCounter = 0
+			if slashCounter == 2 && nonDenomChar.MatchString(string(s[i])) {
+				return s[:i]
 			}
 		}
-	}
+		// The terminating character has not been received yet.
+		return nil
 
-	// If we're still in a denom at the end of the string, write the rest of the denom to the buffer.
-	if denomStart != -1 {
-		denom := s[denomStart:]
-		if replacement, ok := cw.baseMap[denom]; ok {
-			buf.WriteString(replacement)
-		} else {
-			buf.WriteString(denom)
+	default:
+		return nil
+	}
+}
+
+// isPartialDenomMarker reports whether s is a strict prefix of a denom marker,
+// meaning more bytes are needed to tell whether a denom starts here.
+func isPartialDenomMarker(s []byte) bool {
+	for _, marker := range denomMarkers {
+		if len(s) < len(marker) && bytes.HasPrefix(marker, s) {
+			return true
 		}
 	}
-
-	// Write the new string to the original output.
-	return cw.originalOut.Write([]byte(buf.String()))
+	return false
 }
 
 // NewRootCmd creates a new root command for simd. It is called once in the
@@ -372,6 +449,10 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	// gas, gas-price, gas-adjustment, and human-readable-denoms
 	SetCustomEnvVariablesFromClientToml(initClientCtx)
 	humanReadableDenomsInput, humanReadableDenomsOutput := GetHumanReadableDenomEnvVariables()
+
+	// denomWriter is set below when human readable denoms are enabled. It needs
+	// to be flushed once the command is done, see the PersistentPostRunE hook.
+	var denomWriter *customWriter
 
 	rootCmd := &cobra.Command{
 		Use:   "osmosisd",
@@ -418,7 +499,8 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 			// If enabled, CLI output will be parsed and human readable denominations will be used in place of ibc denoms.
 			if humanReadableDenomsOutput {
-				initClientCtx.Output = &customWriter{originalOut: os.Stdout, baseMap: assetMapRev}
+				denomWriter = &customWriter{originalOut: os.Stdout, baseMap: assetMapRev}
+				initClientCtx.Output = denomWriter
 			}
 
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
@@ -492,6 +574,16 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, tmcfg.DefaultConfig())
 		},
 		SilenceUsage: true,
+	}
+
+	// The denom writer holds back bytes that may still turn out to be a denom,
+	// so it has to be flushed once the command is done. Without this the tail
+	// of an output ending in a denom would never be written out.
+	rootCmd.PersistentPostRunE = func(cmd *cobra.Command, args []string) error {
+		if denomWriter == nil {
+			return nil
+		}
+		return denomWriter.Flush()
 	}
 
 	genAutoCompleteCmd(rootCmd)
@@ -1070,7 +1162,7 @@ func newTestnetApp(logger log.Logger, db cosmosdb.DB, traceStore io.Writer, appO
 		panic("app created from newApp is not of type osmosisApp")
 	}
 
-	newValAddr, ok := appOpts.Get(server.KeyNewValAddr).(bytes.HexBytes)
+	newValAddr, ok := appOpts.Get(server.KeyNewValAddr).(tmbytes.HexBytes)
 	if !ok {
 		panic("newValAddr is not of type bytes.HexBytes")
 	}
