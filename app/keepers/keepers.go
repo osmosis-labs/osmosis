@@ -1,6 +1,9 @@
 package keepers
 
 import (
+	"fmt"
+	"math"
+
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
@@ -8,6 +11,8 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	wasmvm "github.com/CosmWasm/wasmvm/v2"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -125,6 +130,19 @@ const (
 	AccountAddressPrefix = "osmo"
 )
 
+// noLimit disables a Wasm static validation limit.
+var noLimit uint32 = math.MaxUint32
+
+// wasmLimits keeps static Wasm validation identical to wasmvm v2.2.4.
+// cosmwasm-vm 2.2.10 (wasmvm v2.2.9) added per-function and total locals
+// limits. Enforcing them would reject code that was valid before, which is
+// state breaking, so they are disabled here. All other limits keep their
+// defaults, which did not change.
+var wasmLimits = wasmvmtypes.WasmLimits{
+	MaxFunctionLocals:      &noLimit,
+	MaxTotalFunctionLocals: &noLimit,
+}
+
 type AppKeepers struct {
 	// keepers, by order of initialization
 	// "Special" keepers
@@ -205,7 +223,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	maccPerms map[string][]string,
 	dataDir string,
 	wasmDir string,
-	wasmConfig wasmtypes.WasmConfig,
+	wasmConfig wasmtypes.NodeConfig,
 	wasmOpts []wasmkeeper.Option,
 	blockedAddress map[string]bool,
 	ibcWasmConfig ibcwasmtypes.WasmConfig,
@@ -315,13 +333,26 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.IBCHooksKeeper = hooksKeeper
 
-	// We are using a separate VM here
-	ibcWasmClientKeeper := ibcwasmkeeper.NewKeeperWithConfig(
+	// We are using a separate VM here. It mirrors ibcwasmkeeper.NewKeeperWithConfig,
+	// but sets wasmLimits so the 08-wasm VM validates code the same way as x/wasm.
+	ibcWasmVM, err := wasmvm.NewVMWithConfig(wasmvmtypes.VMConfig{
+		WasmLimits: wasmLimits,
+		Cache: wasmvmtypes.CacheOptions{
+			BaseDir:                  ibcWasmConfig.DataDir,
+			AvailableCapabilities:    ibcWasmConfig.SupportedCapabilities,
+			MemoryCacheSizeBytes:     wasmvmtypes.NewSizeMebi(ibcwasmtypes.MemoryCacheSize),
+			InstanceMemoryLimitBytes: wasmvmtypes.NewSizeMebi(ibcwasmtypes.ContractMemoryLimit),
+		},
+	}, ibcWasmConfig.ContractDebugMode)
+	if err != nil {
+		panic(fmt.Errorf("failed to instantiate new Wasm VM instance: %v", err))
+	}
+	ibcWasmClientKeeper := ibcwasmkeeper.NewKeeperWithVM(
 		appCodec,
 		runtime.NewKVStoreService(appKeepers.keys[ibcwasmtypes.StoreKey]),
 		appKeepers.IBCKeeper.ClientKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		ibcWasmConfig,
+		ibcWasmVM,
 		bApp.GRPCQueryRouter(),
 	)
 
@@ -596,6 +627,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		bApp.GRPCQueryRouter(),
 		wasmDir,
 		wasmConfig,
+		wasmtypes.VMConfig{WasmLimits: wasmLimits},
 		wasmCapabilities,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		wasmOpts...,
