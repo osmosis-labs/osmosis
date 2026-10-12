@@ -122,8 +122,24 @@ func (s *UpgradeTestSuite) TestSeizeFrozenAllBTCAddsToExistingSubDAOBalance() {
 	s.Require().Equal(sdk.NewCoin(v32.AllBTCDenom, existing.Add(expected)), s.App.BankKeeper.GetBalance(s.Ctx, subDAO, v32.AllBTCDenom))
 }
 
+func (s *UpgradeTestSuite) TestSkipsSeizureOnNonMainnetChain() {
+	s.setupUpgradeTestWithChainID("osmo-test-a")
+
+	exploiter := sdk.MustAccAddressFromBech32(v32.ExploiterAddress)
+	subDAO := sdk.MustAccAddressFromBech32(v32.LiquiditySubDAOAddress)
+
+	s.Require().NoError(s.runUpgrade())
+
+	s.Require().True(s.App.BankKeeper.GetBalance(s.Ctx, exploiter, v32.AllBTCDenom).IsZero())
+	s.Require().True(s.App.BankKeeper.GetBalance(s.Ctx, subDAO, v32.AllBTCDenom).IsZero())
+}
+
 func (s *UpgradeTestSuite) setupUpgradeTest() {
-	s.Setup()
+	s.setupUpgradeTestWithChainID(v32.MainnetChainID)
+}
+
+func (s *UpgradeTestSuite) setupUpgradeTestWithChainID(chainID string) {
+	s.SetupWithCustomChainId(chainID)
 	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
 }
 

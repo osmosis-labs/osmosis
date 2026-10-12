@@ -9,6 +9,10 @@ import (
 // UpgradeName defines the on-chain upgrade name for the Osmosis v32 upgrade.
 const UpgradeName = "v32"
 
+// MainnetChainID is the only chain the proposal 1044 seizure runs on. Other chains,
+// including the e2e and testnet chains, do not hold the exploiter's allBTC.
+const MainnetChainID = "osmosis-1"
+
 // Proposal 1044 seizes the allBTC frozen on the exploiter by v31.1.0 and sends
 // it to the Liquidity subDAO. The amount is the base-unit balance queried on
 // 2026-09-24 (22.65060846 allBTC). The proposal text rounds this to 22.650608.

@@ -28,8 +28,12 @@ func CreateUpgradeHandler(
 		}
 
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		if err := seizeFrozenAllBTC(sdkCtx, keepers); err != nil {
-			return nil, err
+		if sdkCtx.ChainID() == MainnetChainID {
+			if err := seizeFrozenAllBTC(sdkCtx, keepers); err != nil {
+				return nil, err
+			}
+		} else {
+			sdkCtx.Logger().Info("skipping proposal 1044 allBTC seizure on non-mainnet chain", "chain_id", sdkCtx.ChainID())
 		}
 
 		return migrations, nil
