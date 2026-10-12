@@ -31,6 +31,10 @@ const MaxPoolPointsPerBlock uint64 = 200
 // Max number of ticks we can move in a concentrated pool swap.
 const MaxTicksCrossed uint64 = 10
 
+// Max number of non-base-denom balances swapped to OSMO and burned per day epoch.
+// Bounds the work done in the epoch hook; denoms over the cap are picked up in later epochs.
+const MaxResidualSwapsPerEpoch int = 50
+
 // ---------------- Module Profit Splitting Constants ---------------- //
 
 // Year 1 (20% of total profit)
