@@ -48,7 +48,7 @@ func (q Querier) Inflation(c context.Context, _ *types.QueryInflationRequest) (*
 	return &types.QueryInflationResponse{Inflation: inflation}, nil
 }
 
-// MintedSupply returns the raw bank supply of the mint denom.
+// MintedSupply returns the bank supply plus the unvested developer-vesting balance.
 func (q Querier) MintedSupply(c context.Context, _ *types.QueryMintedSupplyRequest) (*types.QueryMintedSupplyResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	return &types.QueryMintedSupplyResponse{MintedSupply: q.Keeper.GetMintedSupply(ctx)}, nil

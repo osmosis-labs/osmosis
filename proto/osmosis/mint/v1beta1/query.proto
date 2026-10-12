@@ -25,9 +25,10 @@ service Query {
     option (google.api.http).get = "/osmosis/mint/v1beta1/inflation";
   }
 
-  // MintedSupply returns the raw bank supply of the mint denom. Unlike the
-  // bank supply query, it does not net out the developer vesting supply
-  // offset, and it still includes coins sent to the burn address.
+  // MintedSupply returns the minted supply of the mint denom: the bank supply
+  // (with offset) plus the unvested developer vesting balance. Superfluid
+  // synthetic OSMO stays excluded, and coins sent to the burn address are
+  // still included.
   rpc MintedSupply(QueryMintedSupplyRequest)
       returns (QueryMintedSupplyResponse) {
     option (google.api.http).get = "/osmosis/mint/v1beta1/minted_supply";
@@ -88,7 +89,8 @@ message QueryMintedSupplyRequest {}
 // QueryMintedSupplyResponse is the response type for the Query/MintedSupply
 // RPC method.
 message QueryMintedSupplyResponse {
-  // minted_supply is the raw bank supply of the mint denom.
+  // minted_supply is the bank supply (with offset) plus the unvested
+  // developer vesting balance.
   bytes minted_supply = 1 [
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false

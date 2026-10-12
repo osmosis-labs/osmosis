@@ -24,8 +24,10 @@ func (s *KeeperTestSuite) sendToBurnAddress(amt osmomath.Int) {
 	s.Require().NoError(err)
 }
 
-// TestGetMintedSupply asserts minted supply is the raw bank supply, i.e. the
-// bank supply-with-offset plus the unvested developer-vesting balance.
+// TestGetMintedSupply asserts minted supply is the bank supply-with-offset plus
+// the unvested developer-vesting balance, and that OSMO minted behind a
+// negative supply offset (as superfluid staking does for synthetic stake) is
+// not counted as minted.
 func (s *KeeperTestSuite) TestGetMintedSupply() {
 	s.SetupTest()
 	denom := s.mintDenom()
@@ -36,8 +38,17 @@ func (s *KeeperTestSuite) TestGetMintedSupply() {
 	withOffset := s.App.BankKeeper.GetSupplyWithOffset(s.Ctx, denom).Amount
 
 	minted := s.App.MintKeeper.GetMintedSupply(s.Ctx)
-	s.Require().Equal(s.App.BankKeeper.GetSupply(s.Ctx, denom).Amount, minted)
 	s.Require().Equal(withOffset.Add(devVestingBalance), minted)
+
+	// Mint synthetic OSMO and offset it, as superfluid delegation does. Raw
+	// bank supply rises, but minted supply must not.
+	syntheticAmt := osmomath.NewInt(3_000_000)
+	rawBefore := s.App.BankKeeper.GetSupply(s.Ctx, denom).Amount
+	s.MintCoins(sdk.NewCoins(sdk.NewCoin(denom, syntheticAmt)))
+	s.App.BankKeeper.AddSupplyOffset(s.Ctx, denom, syntheticAmt.Neg())
+
+	s.Require().Equal(rawBefore.Add(syntheticAmt), s.App.BankKeeper.GetSupply(s.Ctx, denom).Amount)
+	s.Require().Equal(minted, s.App.MintKeeper.GetMintedSupply(s.Ctx))
 }
 
 // TestGetBurnedSupply asserts burned supply equals the balance of the null

@@ -115,12 +115,12 @@ func GetCmdQueryInflation() *cobra.Command {
 	return cmd
 }
 
-// GetCmdQueryMintedSupply implements a command to return the raw bank supply
-// of the mint denom.
+// GetCmdQueryMintedSupply implements a command to return the minted supply
+// (bank supply plus the unvested developer-vesting balance).
 func GetCmdQueryMintedSupply() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "minted-supply",
-		Short: "Query the minted supply (raw bank supply, without the developer vesting offset)",
+		Short: "Query the minted supply (bank supply plus unvested developer vesting)",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)

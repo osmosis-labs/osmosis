@@ -309,7 +309,8 @@ var xxx_messageInfo_QueryMintedSupplyRequest proto.InternalMessageInfo
 // QueryMintedSupplyResponse is the response type for the Query/MintedSupply
 // RPC method.
 type QueryMintedSupplyResponse struct {
-	// minted_supply is the raw bank supply of the mint denom.
+	// minted_supply is the bank supply (with offset) plus the unvested
+	// developer vesting balance.
 	MintedSupply cosmossdk_io_math.Int `protobuf:"bytes,1,opt,name=minted_supply,json=mintedSupply,proto3,customtype=cosmossdk.io/math.Int" json:"minted_supply"`
 }
 
@@ -581,9 +582,10 @@ type QueryClient interface {
 	EpochProvisions(ctx context.Context, in *QueryEpochProvisionsRequest, opts ...grpc.CallOption) (*QueryEpochProvisionsResponse, error)
 	// Inflation returns the current minting inflation value.
 	Inflation(ctx context.Context, in *QueryInflationRequest, opts ...grpc.CallOption) (*QueryInflationResponse, error)
-	// MintedSupply returns the raw bank supply of the mint denom. Unlike the
-	// bank supply query, it does not net out the developer vesting supply
-	// offset, and it still includes coins sent to the burn address.
+	// MintedSupply returns the minted supply of the mint denom: the bank supply
+	// (with offset) plus the unvested developer vesting balance. Superfluid
+	// synthetic OSMO stays excluded, and coins sent to the burn address are
+	// still included.
 	MintedSupply(ctx context.Context, in *QueryMintedSupplyRequest, opts ...grpc.CallOption) (*QueryMintedSupplyResponse, error)
 	// BurnedSupply returns the total amount of burned tokens.
 	BurnedSupply(ctx context.Context, in *QueryBurnedRequest, opts ...grpc.CallOption) (*QueryBurnedResponse, error)
@@ -661,9 +663,10 @@ type QueryServer interface {
 	EpochProvisions(context.Context, *QueryEpochProvisionsRequest) (*QueryEpochProvisionsResponse, error)
 	// Inflation returns the current minting inflation value.
 	Inflation(context.Context, *QueryInflationRequest) (*QueryInflationResponse, error)
-	// MintedSupply returns the raw bank supply of the mint denom. Unlike the
-	// bank supply query, it does not net out the developer vesting supply
-	// offset, and it still includes coins sent to the burn address.
+	// MintedSupply returns the minted supply of the mint denom: the bank supply
+	// (with offset) plus the unvested developer vesting balance. Superfluid
+	// synthetic OSMO stays excluded, and coins sent to the burn address are
+	// still included.
 	MintedSupply(context.Context, *QueryMintedSupplyRequest) (*QueryMintedSupplyResponse, error)
 	// BurnedSupply returns the total amount of burned tokens.
 	BurnedSupply(context.Context, *QueryBurnedRequest) (*QueryBurnedResponse, error)

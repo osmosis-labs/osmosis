@@ -187,14 +187,25 @@ func (k Keeper) GetInflation(ctx sdk.Context) (osmomath.Dec, error) {
 	return osmomath.ZeroDec(), nil
 }
 
-// GetMintedSupply returns the raw bank supply of the mint denom (GetSupply).
+// GetMintedSupply returns the minted supply of the mint denom: the bank supply
+// with offset (what the bank supply query reports) plus the unvested
+// developer-vesting balance.
 //
-// Unlike GetSupplyWithOffset (what the bank supply query reports), this does
-// not net out the developer supply offset, so the unvested developer-vesting
-// balance is included. Coins sent to the burn address are also still included;
-// see GetBurnedSupply and GetTotalSupply.
+// The bank supply offset nets out two things: the unvested developer-vesting
+// balance, and the synthetic OSMO that superfluid staking mints against LP
+// shares. Only the developer-vesting part is real supply, so it is added back
+// here; superfluid synthetic OSMO stays excluded. For this reason the raw bank
+// supply (GetSupply) must not be used. Coins sent to the burn address are still
+// included; see GetBurnedSupply and GetTotalSupply.
 func (k Keeper) GetMintedSupply(ctx sdk.Context) osmomath.Int {
-	return k.bankKeeper.GetSupply(ctx, k.GetParams(ctx).MintDenom).Amount
+	return k.getMintedSupply(ctx, k.GetParams(ctx).MintDenom)
+}
+
+func (k Keeper) getMintedSupply(ctx sdk.Context, mintDenom string) osmomath.Int {
+	supplyWithOffset := k.bankKeeper.GetSupplyWithOffset(ctx, mintDenom).Amount
+	devVestingAddr := k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)
+	devVestingBalance := k.bankKeeper.GetBalance(ctx, devVestingAddr, mintDenom).Amount
+	return supplyWithOffset.Add(devVestingBalance)
 }
 
 // GetBurnedSupply returns the amount of mint-denom held in the null/burn
@@ -208,13 +219,12 @@ func (k Keeper) getBurnedSupply(ctx sdk.Context, mintDenom string) osmomath.Int 
 	return k.bankKeeper.GetBalance(ctx, txfeestypes.DefaultNullAddress, mintDenom).Amount
 }
 
-// GetTotalSupply returns the total supply of the mint denom: minted (raw bank
-// supply) minus burned. This matches the Coingecko/CMC total-supply
-// definition (onchain supply minus burned tokens).
+// GetTotalSupply returns the total supply of the mint denom: minted minus
+// burned. This matches the Coingecko/CMC total-supply definition (onchain
+// supply minus burned tokens).
 func (k Keeper) GetTotalSupply(ctx sdk.Context) osmomath.Int {
 	mintDenom := k.GetParams(ctx).MintDenom
-	minted := k.bankKeeper.GetSupply(ctx, mintDenom).Amount
-	return minted.Sub(k.getBurnedSupply(ctx, mintDenom))
+	return k.getMintedSupply(ctx, mintDenom).Sub(k.getBurnedSupply(ctx, mintDenom))
 }
 
 // getLastReductionEpochNum returns last reduction epoch number.
