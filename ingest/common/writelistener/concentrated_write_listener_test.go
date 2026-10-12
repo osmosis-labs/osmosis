@@ -5,11 +5,11 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v31/ingest/common/pooltracker"
-	"github.com/osmosis-labs/osmosis/v31/ingest/common/writelistener"
-	"github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/model"
-	concentratedtypes "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v32/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v32/ingest/common/pooltracker"
+	"github.com/osmosis-labs/osmosis/v32/ingest/common/writelistener"
+	"github.com/osmosis-labs/osmosis/v32/x/concentrated-liquidity/model"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v32/x/concentrated-liquidity/types"
 )
 
 type WriteListenerTestSuite struct {

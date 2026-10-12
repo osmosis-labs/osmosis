@@ -16,10 +16,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
-	"github.com/osmosis-labs/osmosis/v31/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v31/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
+	appparams "github.com/osmosis-labs/osmosis/v32/app/params"
+	"github.com/osmosis-labs/osmosis/v32/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v32/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v32/x/poolmanager/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 

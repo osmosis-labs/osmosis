@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v31/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v32/x/twap/types"
 )
 
 type (
