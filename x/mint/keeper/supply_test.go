@@ -66,17 +66,25 @@ func (s *KeeperTestSuite) TestGetBurnedSupply() {
 }
 
 // TestGetTotalSupply asserts total supply == minted - burned, and that sending
-// to the burn address lowers total supply without changing minted supply.
+// existing coins to the burn address lowers total supply without changing
+// minted supply.
 func (s *KeeperTestSuite) TestGetTotalSupply() {
 	s.SetupTest()
 
 	burnAmt := osmomath.NewInt(4_000_000)
-	s.sendToBurnAddress(burnAmt)
+	coins := sdk.NewCoins(sdk.NewCoin(s.mintDenom(), burnAmt))
+	s.FundAcc(testAddressOne, coins)
 
-	minted := s.App.MintKeeper.GetMintedSupply(s.Ctx)
-	burned := s.App.MintKeeper.GetBurnedSupply(s.Ctx)
-	s.Require().Equal(burnAmt, burned)
-	s.Require().Equal(minted.Sub(burned), s.App.MintKeeper.GetTotalSupply(s.Ctx))
+	mintedBefore := s.App.MintKeeper.GetMintedSupply(s.Ctx)
+	totalBefore := s.App.MintKeeper.GetTotalSupply(s.Ctx)
+	s.Require().Equal(mintedBefore.Sub(s.App.MintKeeper.GetBurnedSupply(s.Ctx)), totalBefore)
+
+	err := s.App.BankKeeper.SendCoins(s.Ctx, testAddressOne, txfeestypes.DefaultNullAddress, coins)
+	s.Require().NoError(err)
+
+	s.Require().Equal(mintedBefore, s.App.MintKeeper.GetMintedSupply(s.Ctx))
+	s.Require().Equal(totalBefore.Sub(burnAmt), s.App.MintKeeper.GetTotalSupply(s.Ctx))
+	s.Require().Equal(burnAmt, s.App.MintKeeper.GetBurnedSupply(s.Ctx))
 }
 
 // TestSupplyQueryHandlers exercises the supply gRPC handlers end to end through
