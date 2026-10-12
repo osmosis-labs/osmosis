@@ -73,6 +73,14 @@ func (h EpochHooks) CalculateAndDistributeProfits(ctx sdk.Context) error {
 	if err != nil {
 		return err
 	}
+
+	// Swap non-base denom balances to OSMO and burn them. This runs after profit distribution so the
+	// swapped OSMO is never counted as arb profit and does not pay the developer fee.
+	baseDenoms, err := h.k.GetAllBaseDenoms(ctx)
+	if err != nil {
+		return err
+	}
+	h.k.BurnResidualBalances(ctx, baseDenoms)
 	return nil
 }
 

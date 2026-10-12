@@ -43,6 +43,13 @@ type PoolManagerKeeper interface {
 		tokenIn sdk.Coin,
 		tokenOutMinAmount osmomath.Int) (tokenOutAmount osmomath.Int, err error)
 
+	RouteExactAmountInNoTakerFee(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		routes []poolmanagertypes.SwapAmountInRoute,
+		tokenIn sdk.Coin,
+		tokenOutMinAmount osmomath.Int) (tokenOutAmount osmomath.Int, err error)
+
 	MultihopEstimateOutGivenExactAmountInNoTakerFee(
 		ctx sdk.Context,
 		routes []poolmanagertypes.SwapAmountInRoute,
