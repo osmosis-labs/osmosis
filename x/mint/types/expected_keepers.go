@@ -7,7 +7,6 @@ import (
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // AccountKeeper defines the contract required for account APIs.
@@ -33,24 +32,12 @@ type BankKeeper interface {
 	GetSupplyWithOffset(ctx context.Context, denom string) sdk.Coin
 }
 
-// CommunityPoolKeeper defines the distribution contract the mint module needs:
-// funding the community pool with minted coins, and reading the FeePool for
-// restricted-supply accounting. FeePool is a collections.Item field on the
-// concrete distribution keeper (not a method), so the read is exposed here as
-// GetFeePool and satisfied by a thin adapter at app wiring.
+// CommunityPoolKeeper defines the contract needed to be fulfilled for distribution keeper.
 type CommunityPoolKeeper interface {
 	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
-	GetFeePool(ctx context.Context) (distrtypes.FeePool, error)
 }
 
 // EpochKeeper defines the contract needed to be fulfilled for epochs keeper.
 type EpochKeeper interface {
 	GetEpochInfo(ctx sdk.Context, identifier string) epochstypes.EpochInfo
-}
-
-// StakingKeeper defines the contract needed to query staking information for
-// restricted-supply accounting (delegations held by restricted addresses).
-type StakingKeeper interface {
-	GetDelegatorBonded(ctx context.Context, delegator sdk.AccAddress) (osmomath.Int, error)
-	GetDelegatorUnbonding(ctx context.Context, delegator sdk.AccAddress) (osmomath.Int, error)
 }

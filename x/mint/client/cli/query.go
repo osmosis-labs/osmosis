@@ -20,10 +20,9 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryParams(),
 		GetCmdQueryEpochProvisions(),
 		GetCmdQueryInflation(),
+		GetCmdQueryMintedSupply(),
 		GetCmdQueryBurnedSupply(),
 		GetCmdQueryTotalSupply(),
-		GetCmdQueryRestrictedSupply(),
-		GetCmdQueryCirculatingSupply(),
 	)
 
 	return cmd
@@ -116,6 +115,34 @@ func GetCmdQueryInflation() *cobra.Command {
 	return cmd
 }
 
+// GetCmdQueryMintedSupply implements a command to return the raw bank supply
+// of the mint denom.
+func GetCmdQueryMintedSupply() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "minted-supply",
+		Short: "Query the minted supply (raw bank supply, without the developer vesting offset)",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.MintedSupply(context.Background(), &types.QueryMintedSupplyRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintString(fmt.Sprintf("%s\n", res.MintedSupply))
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
 // GetCmdQueryBurnedSupply implements a command to return the amount of
 // mint-denom held in the burn address.
 func GetCmdQueryBurnedSupply() *cobra.Command {
@@ -164,62 +191,6 @@ func GetCmdQueryTotalSupply() *cobra.Command {
 			}
 
 			return clientCtx.PrintString(fmt.Sprintf("%s\n", res.TotalSupply))
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// GetCmdQueryRestrictedSupply implements a command to return the supply held in
-// restricted addresses.
-func GetCmdQueryRestrictedSupply() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "restricted-supply",
-		Short: "Query the supply held in restricted addresses",
-		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.RestrictedSupply(context.Background(), &types.QueryRestrictedSupplyRequest{})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintString(fmt.Sprintf("%s\n", res.RestrictedSupply))
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// GetCmdQueryCirculatingSupply implements a command to return the circulating
-// supply (minted - burned - restricted).
-func GetCmdQueryCirculatingSupply() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "circulating-supply",
-		Short: "Query the circulating supply (minted minus burned minus restricted)",
-		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.CirculatingSupply(context.Background(), &types.QueryCirculatingSupplyRequest{})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintString(fmt.Sprintf("%s\n", res.CirculatingSupply))
 		},
 	}
 

@@ -48,6 +48,12 @@ func (q Querier) Inflation(c context.Context, _ *types.QueryInflationRequest) (*
 	return &types.QueryInflationResponse{Inflation: inflation}, nil
 }
 
+// MintedSupply returns the raw bank supply of the mint denom.
+func (q Querier) MintedSupply(c context.Context, _ *types.QueryMintedSupplyRequest) (*types.QueryMintedSupplyResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	return &types.QueryMintedSupplyResponse{MintedSupply: q.Keeper.GetMintedSupply(ctx)}, nil
+}
+
 // BurnedSupply returns the amount of mint-denom held in the burn address.
 func (q Querier) BurnedSupply(c context.Context, _ *types.QueryBurnedRequest) (*types.QueryBurnedResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
@@ -58,26 +64,4 @@ func (q Querier) BurnedSupply(c context.Context, _ *types.QueryBurnedRequest) (*
 func (q Querier) TotalSupply(c context.Context, _ *types.QueryTotalSupplyRequest) (*types.QueryTotalSupplyResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	return &types.QueryTotalSupplyResponse{TotalSupply: q.Keeper.GetTotalSupply(ctx)}, nil
-}
-
-// RestrictedSupply returns the supply held in restricted addresses.
-func (q Querier) RestrictedSupply(c context.Context, _ *types.QueryRestrictedSupplyRequest) (*types.QueryRestrictedSupplyResponse, error) {
-	ctx := sdk.UnwrapSDKContext(c)
-	restrictedSupply, err := q.Keeper.GetRestrictedSupply(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.QueryRestrictedSupplyResponse{RestrictedSupply: restrictedSupply}, nil
-}
-
-// CirculatingSupply returns the circulating supply (minted - burned - restricted).
-func (q Querier) CirculatingSupply(c context.Context, _ *types.QueryCirculatingSupplyRequest) (*types.QueryCirculatingSupplyResponse, error) {
-	ctx := sdk.UnwrapSDKContext(c)
-	circulatingSupply, err := q.Keeper.GetCirculatingSupply(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.QueryCirculatingSupplyResponse{CirculatingSupply: circulatingSupply}, nil
 }

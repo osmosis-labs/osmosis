@@ -1,7 +1,6 @@
 package keepers
 
 import (
-	"context"
 	"fmt"
 	"math"
 
@@ -542,9 +541,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GetSubspace(minttypes.ModuleName),
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
-		mintCommunityPoolKeeper{appKeepers.DistrKeeper},
+		appKeepers.DistrKeeper,
 		appKeepers.EpochsKeeper,
-		appKeepers.StakingKeeper,
 		authtypes.FeeCollectorName,
 	)
 	appKeepers.MintKeeper = &mintKeeper
@@ -976,16 +974,4 @@ func KVStoreKeys() []string {
 		auctiontypes.StoreKey,
 		smartaccounttypes.StoreKey,
 	}
-}
-
-// mintCommunityPoolKeeper adapts the distribution keeper to the mint module's
-// CommunityPoolKeeper interface. FeePool is a collections.Item field on the
-// concrete distribution keeper, not a method, so the read is wrapped here;
-// FundCommunityPool is promoted from the embedded keeper.
-type mintCommunityPoolKeeper struct {
-	*distrkeeper.Keeper
-}
-
-func (m mintCommunityPoolKeeper) GetFeePool(ctx context.Context) (distrtypes.FeePool, error) {
-	return m.FeePool.Get(ctx)
 }
