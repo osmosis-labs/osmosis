@@ -5,5 +5,3 @@ crate
 exactIn
 amountIn
 AmountIn
-proivded
-propageted

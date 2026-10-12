@@ -316,7 +316,7 @@ func NewOsmosisApp(
 		SupportedCapabilities: []string{"iterator", "stargate", "abort"},
 		ContractDebugMode:     false,
 	}
-	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
+	wasmConfig, err := wasm.ReadNodeConfig(appOpts)
 	// Uncomment this for debugging contracts. In the future this could be made into a param passed by the tests
 	// wasmConfig.ContractDebugMode = true
 	if err != nil {
