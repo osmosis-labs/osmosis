@@ -4,9 +4,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v31/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v31/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v32/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v32/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v32/x/protorev/types"
 )
 
 // TestMsgSetHotRoutes tests the MsgSetHotRoutes message.

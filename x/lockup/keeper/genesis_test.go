@@ -12,9 +12,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmoapp "github.com/osmosis-labs/osmosis/v31/app"
-	"github.com/osmosis-labs/osmosis/v31/x/lockup"
-	"github.com/osmosis-labs/osmosis/v31/x/lockup/types"
+	osmoapp "github.com/osmosis-labs/osmosis/v32/app"
+	"github.com/osmosis-labs/osmosis/v32/x/lockup"
+	"github.com/osmosis-labs/osmosis/v32/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"

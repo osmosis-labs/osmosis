@@ -14,9 +14,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
-	v32 "github.com/osmosis-labs/osmosis/v31/app/upgrades/v32"
+	"github.com/osmosis-labs/osmosis/v32/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v32/app/params"
+	v32 "github.com/osmosis-labs/osmosis/v32/app/upgrades/v32"
 )
 
 const (
