@@ -47,3 +47,21 @@ func (q Querier) Inflation(c context.Context, _ *types.QueryInflationRequest) (*
 
 	return &types.QueryInflationResponse{Inflation: inflation}, nil
 }
+
+// MintedSupply returns the bank supply plus the unvested developer-vesting balance.
+func (q Querier) MintedSupply(c context.Context, _ *types.QueryMintedSupplyRequest) (*types.QueryMintedSupplyResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	return &types.QueryMintedSupplyResponse{MintedSupply: q.Keeper.GetMintedSupply(ctx)}, nil
+}
+
+// BurnedSupply returns the amount of mint-denom held in the burn address.
+func (q Querier) BurnedSupply(c context.Context, _ *types.QueryBurnedRequest) (*types.QueryBurnedResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	return &types.QueryBurnedResponse{Burned: q.Keeper.GetBurnedSupply(ctx)}, nil
+}
+
+// TotalSupply returns the total supply (minted - burned).
+func (q Querier) TotalSupply(c context.Context, _ *types.QueryTotalSupplyRequest) (*types.QueryTotalSupplyResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	return &types.QueryTotalSupplyResponse{TotalSupply: q.Keeper.GetTotalSupply(ctx)}, nil
+}
