@@ -17,6 +17,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
 	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
 	v32 "github.com/osmosis-labs/osmosis/v31/app/upgrades/v32"
+	protorevtypes "github.com/osmosis-labs/osmosis/v31/x/protorev/types"
 )
 
 const (
@@ -32,6 +33,34 @@ type UpgradeTestSuite struct {
 
 func TestUpgradeTestSuite(t *testing.T) {
 	suite.Run(t, new(UpgradeTestSuite))
+}
+
+func (s *UpgradeTestSuite) TestMoveProtorevNonBaseDenomsToSubDAO() {
+	// Non-mainnet chain ID so the allBTC seizure step is skipped and this test only covers the protorev sweep.
+	s.setupUpgradeTestWithChainID("osmo-test-a")
+
+	recipient := sdk.MustAccAddressFromBech32(v32.LiquiditySubDAOAddress)
+	protorevAddr := s.App.AccountKeeper.GetModuleAddress(protorevtypes.ModuleName)
+
+	baseDenoms, err := s.App.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().NotEmpty(baseDenoms)
+	baseDenom := baseDenoms[0].Denom
+
+	baseCoin := sdk.NewCoin(baseDenom, osmomath.NewInt(1_000))
+	stuckCoins := sdk.NewCoins(
+		sdk.NewCoin("ibc/STUCKA", osmomath.NewInt(5_000)),
+		sdk.NewCoin("ibc/STUCKB", osmomath.NewInt(7_000)),
+	)
+	s.FundModuleAcc(protorevtypes.ModuleName, stuckCoins.Add(baseCoin))
+
+	recipientBefore := s.App.BankKeeper.GetAllBalances(s.Ctx, recipient)
+
+	s.Require().NoError(s.runUpgrade())
+
+	// Base denom stays in protorev for the regular epoch distribution; everything else is gone.
+	s.Require().Equal(sdk.NewCoins(baseCoin), s.App.BankKeeper.GetAllBalances(s.Ctx, protorevAddr))
+	s.Require().Equal(recipientBefore.Add(stuckCoins...), s.App.BankKeeper.GetAllBalances(s.Ctx, recipient))
 }
 
 func (s *UpgradeTestSuite) TestSeizeFrozenAllBTC() {
