@@ -10,10 +10,25 @@ import (
 const UpgradeName = "v32"
 
 // LiquiditySubDAOAddress is the DAO DAO core contract of the liquidity sub-DAO.
-// Non-base-denom balances stuck in the protorev module account are sent here so the
+// Proposal 1044 allBTC and non-base-denom protorev balances are sent here so the
 // sub-DAO can swap them to OSMO and burn it.
 // https://daodao.zone/dao/osmo1rvq5cq2j35k7sqqz49e5e8zezl45fcywcawazh46qnc0g96d0d6sasqsgc
 const LiquiditySubDAOAddress = "osmo1rvq5cq2j35k7sqqz49e5e8zezl45fcywcawazh46qnc0g96d0d6sasqsgc"
+
+// MainnetChainID is the only chain the proposal 1044 seizure runs on. Other chains,
+// including the e2e and testnet chains, do not hold the exploiter's allBTC.
+const MainnetChainID = "osmosis-1"
+
+// Proposal 1044 seizes the allBTC frozen on the exploiter by v31.1.0 and sends
+// it to the Liquidity subDAO. The amount is the base-unit balance queried on
+// 2026-09-24 (22.65060846 allBTC). The proposal text rounds this to 22.650608.
+// The account's only other coin is 703055696 uosmo, which this upgrade leaves
+// in place.
+const (
+	ExploiterAddress              = "osmo1wq76r2mhqsa9yaygghuwyq4wy6dcsgf8vtzltn"
+	AllBTCDenom                   = "factory/osmo1z6r6qdknhgsc0zeracktgpcxf43j6sekq07nw8sxduc9lg0qjjlqfu25e3/alloyed/allBTC"
+	ExpectedExploiterAllBTCAmount = "2265060846"
+)
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
