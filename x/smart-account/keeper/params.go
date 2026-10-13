@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v31/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v32/x/smart-account/types"
 )
 
 // GetParams get all parameters as types.Params

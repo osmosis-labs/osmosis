@@ -9,13 +9,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v31/x/lockup"
-	"github.com/osmosis-labs/osmosis/v31/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v32/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v32/x/lockup"
+	"github.com/osmosis-labs/osmosis/v32/x/lockup/types"
 
 	"github.com/cometbft/cometbft/crypto/ed25519"
 
-	appParams "github.com/osmosis-labs/osmosis/v31/app/params"
+	appParams "github.com/osmosis-labs/osmosis/v32/app/params"
 )
 
 func TestMsgLockTokens(t *testing.T) {

@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v31/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v31/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v32/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v32/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v32/x/superfluid/types"
 )
 
 type KeeperTestSuite struct {
