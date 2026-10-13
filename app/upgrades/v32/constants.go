@@ -9,6 +9,12 @@ import (
 // UpgradeName defines the on-chain upgrade name for the Osmosis v32 upgrade.
 const UpgradeName = "v32"
 
+// LiquiditySubDAOAddress is the DAO DAO core contract of the liquidity sub-DAO.
+// Proposal 1044 allBTC and non-base-denom protorev balances are sent here so the
+// sub-DAO can swap them to OSMO and burn it.
+// https://daodao.zone/dao/osmo1rvq5cq2j35k7sqqz49e5e8zezl45fcywcawazh46qnc0g96d0d6sasqsgc
+const LiquiditySubDAOAddress = "osmo1rvq5cq2j35k7sqqz49e5e8zezl45fcywcawazh46qnc0g96d0d6sasqsgc"
+
 // MainnetChainID is the only chain the proposal 1044 seizure runs on. Other chains,
 // including the e2e and testnet chains, do not hold the exploiter's allBTC.
 const MainnetChainID = "osmosis-1"
@@ -20,7 +26,6 @@ const MainnetChainID = "osmosis-1"
 // in place.
 const (
 	ExploiterAddress              = "osmo1wq76r2mhqsa9yaygghuwyq4wy6dcsgf8vtzltn"
-	LiquiditySubDAOAddress        = "osmo1rvq5cq2j35k7sqqz49e5e8zezl45fcywcawazh46qnc0g96d0d6sasqsgc"
 	AllBTCDenom                   = "factory/osmo1z6r6qdknhgsc0zeracktgpcxf43j6sekq07nw8sxduc9lg0qjjlqfu25e3/alloyed/allBTC"
 	ExpectedExploiterAllBTCAmount = "2265060846"
 )
