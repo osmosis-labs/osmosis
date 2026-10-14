@@ -12,8 +12,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v31/x/txfees/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v32/x/poolmanager/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v32/x/txfees/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 

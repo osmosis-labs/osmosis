@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
-	"github.com/osmosis-labs/osmosis/v31/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v31/x/gamm/types"
+	appparams "github.com/osmosis-labs/osmosis/v32/app/params"
+	"github.com/osmosis-labs/osmosis/v32/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v32/x/gamm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

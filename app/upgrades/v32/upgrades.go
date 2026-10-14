@@ -10,9 +10,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v31/app/keepers"
-	"github.com/osmosis-labs/osmosis/v31/app/upgrades"
-	protorevtypes "github.com/osmosis-labs/osmosis/v31/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v32/app/keepers"
+	"github.com/osmosis-labs/osmosis/v32/app/upgrades"
+	protorevtypes "github.com/osmosis-labs/osmosis/v32/x/protorev/types"
 )
 
 func CreateUpgradeHandler(
