@@ -12,9 +12,9 @@ queue_rules:
       - label=A:automerge
     merge_conditions:
       - "#approved-reviews-by>=1"
-    commit_message_template: |
-      {{ title }} (#{{ number }})
-      {{ body }}
+    commit_message_format:
+      title: pr-title
+      body: pr-body
     merge_method: squash
 
 pull_request_rules:
@@ -227,9 +227,8 @@ pull_request_rules:
       backport:
         branches:
           - v31.x
-  - name:
-      automerge to the base branch with label automerge and branch protection
-      passing
+  - name: automerge to the base branch with label automerge and branch 
+      protection passing
     conditions: []
     actions:
       queue:
