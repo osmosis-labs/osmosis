@@ -33,8 +33,8 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	keepers "github.com/osmosis-labs/osmosis/v31/app/keepers"
-	"github.com/osmosis-labs/osmosis/v31/tests/e2e/util"
+	keepers "github.com/osmosis-labs/osmosis/v32/app/keepers"
+	"github.com/osmosis-labs/osmosis/v32/tests/e2e/util"
 )
 
 type internalNode struct {

@@ -14,12 +14,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmoapp "github.com/osmosis-labs/osmosis/v31/app"
-	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
+	osmoapp "github.com/osmosis-labs/osmosis/v32/app"
+	appparams "github.com/osmosis-labs/osmosis/v32/app/params"
 
-	"github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v31/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v31/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v32/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v32/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v32/x/lockup/types"
 )
 
 var (

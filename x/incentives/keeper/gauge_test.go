@@ -9,10 +9,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
-	incentiveskeeper "github.com/osmosis-labs/osmosis/v31/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v31/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v31/x/lockup/types"
+	appparams "github.com/osmosis-labs/osmosis/v32/app/params"
+	incentiveskeeper "github.com/osmosis-labs/osmosis/v32/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v32/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v32/x/lockup/types"
 )
 
 var _ = suite.TestingSuite(nil)

@@ -16,8 +16,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v31/app"
-	"github.com/osmosis-labs/osmosis/v31/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v32/app"
+	"github.com/osmosis-labs/osmosis/v32/x/smart-account/authenticator"
 )
 
 type SigVerifyAuthenticationSuite struct {
