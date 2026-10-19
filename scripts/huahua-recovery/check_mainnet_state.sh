@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Read-only checks of the v32 HUAHUA recovery (app/upgrades/v32) against live Osmosis state.
+# Read-only checks of the v33 HUAHUA recovery (app/upgrades/v33) against live Osmosis state.
 # Needs curl, jq and python3.
 #
 # Before the upgrade: checks that the gauges still match the handler's preconditions.
@@ -26,14 +26,14 @@ if [[ "${1:-}" == "--post-upgrade" ]]; then
     g=$(curl -sf "$LCD/osmosis/incentives/v1beta1/gauge_by_id/$id" | jq .gauge)
     filled=$(jq -r .filled_epochs <<<"$g")
     paid_over=$(jq -r .num_epochs_paid_over <<<"$g")
-    [[ "$filled" == "$paid_over" ]] || fail "gauge $id not finished (filled $filled/$paid_over): recovery was not applied, check the v32 upgrade logs"
+    [[ "$filled" == "$paid_over" ]] || fail "gauge $id not finished (filled $filled/$paid_over): recovery was not applied, check the v33 upgrade logs"
     [[ "$(jq -c .coins <<<"$g")" == "$(jq -c .distributed_coins <<<"$g")" ]] || fail "gauge $id: distributed_coins != coins"
     ! grep -qx "$id" <<<"$active" || fail "gauge $id is still in the active gauges"
     echo "gauge $id: finished ($filled/$paid_over), distributed_coins == coins, not active"
   done
   recipient=$(curl -sf "$LCD/cosmos/bank/v1beta1/balances/$RECIPIENT/by_denom?denom=$HUAHUA" | jq -r .balance.amount)
   echo "recipient $RECIPIENT uhuahua: $recipient"
-  echo "OK: v32 HUAHUA recovery applied"
+  echo "OK: v33 HUAHUA recovery applied"
   exit 0
 fi
 
@@ -78,4 +78,4 @@ python3 -c "import sys; sys.exit(0 if $balance >= $recovery_total else 1)" || fa
 recipient=$(curl -sf "$LCD/cosmos/bank/v1beta1/balances/$RECIPIENT/by_denom?denom=$HUAHUA" | jq -r .balance.amount)
 echo "recipient $RECIPIENT current uhuahua: $recipient"
 
-echo "OK: mainnet state matches the v32 HUAHUA recovery preconditions"
+echo "OK: mainnet state matches the v33 HUAHUA recovery preconditions"

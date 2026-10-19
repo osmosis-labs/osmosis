@@ -1,28 +1,28 @@
 #!/usr/bin/env bash
-# Runs the v32 upgrade handler on a copy of osmosis-1 mainnet state and checks the HUAHUA recovery.
+# Runs the v33 upgrade handler on a copy of osmosis-1 mainnet state and checks the HUAHUA recovery.
 #
 # Prerequisites:
 #   - NODE_HOME contains a recent osmosis-1 snapshot (data/, wasm/) plus config/ with the osmosis-1
 #     genesis. The node must not have peers configured: it should never talk to mainnet.
-#   - OLD_BIN is the osmosisd release currently running on mainnet (v31.x).
+#   - OLD_BIN is the osmosisd release currently running on mainnet (v32.x).
 #   - BIN is osmosisd built from this branch (make build).
 #   - The API server is enabled in app.toml and reachable at API.
 #
 # The script follows the same path as a real upgrade:
 #   1. starts OLD_BIN on the untouched snapshot and records the mainnet state,
-#   2. forks it into a single-validator chain with `OLD_BIN in-place-testnet --trigger-testnet-upgrade v32`;
-#      this schedules v32 ten blocks later, and OLD_BIN halts there with "UPGRADE "v32" NEEDED".
+#   2. forks it into a single-validator chain with `OLD_BIN in-place-testnet --trigger-testnet-upgrade v33`;
+#      this schedules v33 ten blocks later, and OLD_BIN halts there with "UPGRADE "v33" NEEDED".
 #      The state at the halt height is recorded as the pre-upgrade state,
-#   3. starts BIN, which runs the v32 upgrade handler, records the post-upgrade state and compares.
+#   3. starts BIN, which runs the v33 upgrade handler, records the post-upgrade state and compares.
 #
 # Usage:
-#   OLD_BIN=./osmosisd-v31 BIN=./build/osmosisd NODE_HOME=~/osmosis-fork/home \
+#   OLD_BIN=./osmosisd-v32 BIN=./build/osmosisd NODE_HOME=~/osmosis-fork/home \
 #   API=http://127.0.0.1:1317 RPC=http://127.0.0.1:26657 ./scripts/huahua-recovery/mainnet_fork_test.sh
 #
 # Set KEEP_RUNNING=1 to leave the forked chain running afterwards (for example to watch the next epoch).
 set -euo pipefail
 
-OLD_BIN="${OLD_BIN:?set OLD_BIN to the osmosisd release running on mainnet (v31.x)}"
+OLD_BIN="${OLD_BIN:?set OLD_BIN to the osmosisd release running on mainnet (v32.x)}"
 BIN="${BIN:?set BIN to the osmosisd binary built from this branch}"
 NODE_HOME="${NODE_HOME:?set NODE_HOME to the node home holding the mainnet snapshot}"
 API="${API:-http://127.0.0.1:1317}"
@@ -104,29 +104,29 @@ capture_state mainnet
 stop_node "$PID"
 
 # ---------------------------------------------------------------------------------------------
-log "2/3 forking mainnet state into a local chain with $("$OLD_BIN" version 2>&1) and scheduling v32"
+log "2/3 forking mainnet state into a local chain with $("$OLD_BIN" version 2>&1) and scheduling v33"
 if ! "$OLD_BIN" keys show forkval --keyring-backend test --home "$NODE_HOME" >/dev/null 2>&1; then
   "$OLD_BIN" keys add forkval --keyring-backend test --home "$NODE_HOME" > "$OUT/forkval-key.txt" 2>&1
 fi
 OPERATOR=$("$OLD_BIN" keys show forkval -a --keyring-backend test --home "$NODE_HOME")
 
 "$OLD_BIN" in-place-testnet localosmosis "$OPERATOR" --home "$NODE_HOME" \
-  --trigger-testnet-upgrade v32 --skip-confirmation > "$OUT/node-fork-v31.log" 2>&1 &
+  --trigger-testnet-upgrade v33 --skip-confirmation > "$OUT/node-fork-v32.log" 2>&1 &
 PID=$!
 for _ in $(seq 1 900); do
-  grep -q 'UPGRADE "v32" NEEDED' "$OUT/node-fork-v31.log" && break
+  grep -q 'UPGRADE "v33" NEEDED' "$OUT/node-fork-v32.log" && break
   kill -0 "$PID" 2>/dev/null || { log "old binary exited before reaching the upgrade height"; exit 1; }
   sleep 2
 done
-grep -o 'UPGRADE "v32" NEEDED at height: [0-9]*' "$OUT/node-fork-v31.log" | head -1
-UPGRADE_HEIGHT=$(grep -o 'UPGRADE "v32" NEEDED at height: [0-9]*' "$OUT/node-fork-v31.log" | head -1 | grep -o '[0-9]*$')
+grep -o 'UPGRADE "v33" NEEDED at height: [0-9]*' "$OUT/node-fork-v32.log" | head -1
+UPGRADE_HEIGHT=$(grep -o 'UPGRADE "v33" NEEDED at height: [0-9]*' "$OUT/node-fork-v32.log" | head -1 | grep -o '[0-9]*$')
 # The old binary halts but keeps serving queries on the last committed state (UPGRADE_HEIGHT - 1).
 wait_for_api
 capture_state before
 stop_node "$PID"
 
-log "starting $("$BIN" version 2>&1) (this branch) to run the v32 upgrade at height $UPGRADE_HEIGHT"
-"$BIN" start --home "$NODE_HOME" > "$OUT/node-fork-v32.log" 2>&1 &
+log "starting $("$BIN" version 2>&1) (this branch) to run the v33 upgrade at height $UPGRADE_HEIGHT"
+"$BIN" start --home "$NODE_HOME" > "$OUT/node-fork-v33.log" 2>&1 &
 FORK_PID=$!
 echo "$FORK_PID" > "$OUT/fork.pid"
 wait_for_height_above $((UPGRADE_HEIGHT + 1))
@@ -136,7 +136,7 @@ capture_state after
 # ---------------------------------------------------------------------------------------------
 log "3/3 checking the results"
 set +e
-grep -E "v32 upgrade: HUAHUA (recovered|recovery skipped)" "$OUT/node-fork-v32.log" | tail -1 | tee "$OUT/upgrade-log-line.txt"
+grep -E "v33 upgrade: HUAHUA (recovered|recovery skipped)" "$OUT/node-fork-v33.log" | tail -1 | tee "$OUT/upgrade-log-line.txt"
 
 python3 - "$OUT/mainnet.json" "$OUT/before.json" "$OUT/after.json" "$HUAHUA" <<'EOF' | tee "$OUT/result.txt"
 import json, sys
@@ -196,7 +196,7 @@ STATUS=${PIPESTATUS[0]}
 set -e
 
 if [[ "$KEEP_RUNNING" == "1" ]]; then
-  log "forked chain left running (pid $FORK_PID, log $OUT/node-fork-v32.log)"
+  log "forked chain left running (pid $FORK_PID, log $OUT/node-fork-v33.log)"
 else
   stop_node "$FORK_PID"
 fi

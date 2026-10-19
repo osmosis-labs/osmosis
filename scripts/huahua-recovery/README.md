@@ -1,4 +1,4 @@
-# v32 HUAHUA recovery: how to reproduce and verify
+# v33 HUAHUA recovery: how to reproduce and verify
 
 Governance [proposal 609](https://www.mintscan.io/osmosis/proposals/609) (passed on 2023-09-06:
 160.98M yes, 0.61M no, 0.0002M no-with-veto, 22.11M abstain) approved merging the code needed to
@@ -36,7 +36,7 @@ method tolerates a missing denom index.
      (`GetModuleToDistributeCoins` / `GetModuleDistributedCoins`) matches the balance change;
   3. moves the gauge from the active to the finished set and drops its denom index if present;
   4. emits a `force_finish_gauge` event.
-- `app/upgrades/v32`: calls it for gauges 1954-1959 with recipient
+- `app/upgrades/v33`: calls it for gauges 1954-1959 with recipient
   `osmo14fketv99hlrlk80mkggw643spsj3yyf7t2pjhr` (Chihuahua ecosystem fund).
   Before touching a gauge the handler checks that it distributes to the expected `GAMM60x` denom
   and holds HUAHUA. The recovery runs in a cache context: if any check fails, nothing is written,
@@ -49,12 +49,12 @@ method tolerates a missing denom index.
 
 ```bash
 go test ./x/incentives/keeper/ -run 'TestKeeperTestSuite/TestForceFinishGaugeAndSendUndistributed' -v -count=1
-go test ./app/upgrades/v32/ -v -count=1
+go test ./app/upgrades/v33/ -v -count=1
 ```
 
-`app/upgrades/v32/upgrades_test.go` writes gauges 1954-1959 into state exactly as on mainnet (IDs, denoms,
+`app/upgrades/v33/upgrades_test.go` writes gauges 1954-1959 into state exactly as on mainnet (IDs, denoms,
 durations, amounts, start time, missing `GAMM606` index, 14382 uhuahua dust in the module) plus
-an unrelated control gauge, runs the real v32 upgrade through the upgrade module's `PreBlock`, and checks:
+an unrelated control gauge, runs the real v33 upgrade through the upgrade module's `PreBlock`, and checks:
 
 - `TestHuahuaRecovery`: recipient +6,000,000,000 HUAHUA; dust and the control gauge's funds stay in
   the module; the six gauges are finished; the control gauge is unchanged; the next `Distribute`
@@ -80,7 +80,7 @@ holds denoms other than HUAHUA (those are sent to the recipient as well). Run it
 upgrade height.
 
 After the upgrade, confirm that the recovery was applied. The handler does not halt the chain when it
-skips the recovery, it only logs `v32 upgrade: HUAHUA recovery skipped`, so this check is the on-chain
+skips the recovery, it only logs `v33 upgrade: HUAHUA recovery skipped`, so this check is the on-chain
 confirmation:
 
 ```bash
@@ -93,7 +93,7 @@ It fails unless all six gauges are finished with `distributed_coins == coins` an
 
 `mainnet_fork_test.sh` runs the upgrade on a copy of mainnet state, following the same path as the real
 upgrade: the current release produces blocks until the upgrade height and halts, then the new binary
-takes over and runs the v32 handler.
+takes over and runs the v33 handler.
 
 Requirements: a recent osmosis-1 snapshot (about 55 GB extracted, for example from Polkachu), the
 current mainnet release binary and a binary built from this branch. The node must have no seeds or
@@ -108,18 +108,18 @@ curl -L https://snapshots.polkachu.com/genesis/osmosis/genesis.json -o ~/osmosis
 # in config.toml: seeds = "", persistent_peers = "", pex = false; in app.toml: [api] enable = true
 
 # binaries
-git clone --branch v31.x https://github.com/osmosis-labs/osmosis osmosis-v31 && (cd osmosis-v31 && make build)
+git clone --branch v32.x https://github.com/osmosis-labs/osmosis osmosis-v32 && (cd osmosis-v32 && make build)
 make build   # this branch
 
-OLD_BIN=osmosis-v31/build/osmosisd BIN=./build/osmosisd NODE_HOME=~/osmosis-fork/home \
+OLD_BIN=osmosis-v32/build/osmosisd BIN=./build/osmosisd NODE_HOME=~/osmosis-fork/home \
 API=http://127.0.0.1:1317 RPC=http://127.0.0.1:26657 ./scripts/huahua-recovery/mainnet_fork_test.sh
 ```
 
 The script:
 
 1. starts the old binary on the untouched snapshot and saves the mainnet state (`mainnet.json`);
-2. runs `in-place-testnet localosmosis <operator> --trigger-testnet-upgrade v32` with the old binary,
-   which schedules v32 ten blocks later and halts there with `UPGRADE "v32" NEEDED`; the halted node
+2. runs `in-place-testnet localosmosis <operator> --trigger-testnet-upgrade v33` with the old binary,
+   which schedules v33 ten blocks later and halts there with `UPGRADE "v33" NEEDED`; the halted node
    still answers queries, so the pre-upgrade state is saved (`before.json`);
 3. starts the new binary, which runs the upgrade, saves `after.json` and compares the three.
 
