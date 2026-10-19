@@ -5,11 +5,11 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
-	commondomain "github.com/osmosis-labs/osmosis/v31/ingest/common/domain"
-	commonmocks "github.com/osmosis-labs/osmosis/v31/ingest/common/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v31/ingest/sqs/domain/mocks"
-	"github.com/osmosis-labs/osmosis/v31/ingest/sqs/service/blockprocessor"
+	"github.com/osmosis-labs/osmosis/v32/app/apptesting"
+	commondomain "github.com/osmosis-labs/osmosis/v32/ingest/common/domain"
+	commonmocks "github.com/osmosis-labs/osmosis/v32/ingest/common/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v32/ingest/sqs/domain/mocks"
+	"github.com/osmosis-labs/osmosis/v32/ingest/sqs/service/blockprocessor"
 )
 
 type SQSBlockProcessorTestSuite struct {
