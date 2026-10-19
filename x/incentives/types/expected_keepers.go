@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cltypes "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v31/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
+	cltypes "github.com/osmosis-labs/osmosis/v32/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v32/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v32/x/poolmanager/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -22,6 +22,8 @@ type BankKeeper interface {
 	SendCoinsFromModuleToManyAccounts(ctx context.Context, senderModule string, recipientAddrs []sdk.AccAddress, amts []sdk.Coins) error
 
 	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+
+	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 }
 
 // LockupKeeper defines the expected interface needed to retrieve locks.

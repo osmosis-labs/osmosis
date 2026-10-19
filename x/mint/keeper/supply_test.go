@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v31/x/mint/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v31/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v32/x/mint/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v32/x/txfees/types"
 )
 
 // mintDenom is the bond/mint denom used by the app test harness.

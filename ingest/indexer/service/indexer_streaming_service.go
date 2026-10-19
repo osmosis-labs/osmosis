@@ -19,15 +19,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v31/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v32/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v32/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v32/x/poolmanager/types"
 
-	commondomain "github.com/osmosis-labs/osmosis/v31/ingest/common/domain"
-	commonservice "github.com/osmosis-labs/osmosis/v31/ingest/common/service"
-	"github.com/osmosis-labs/osmosis/v31/ingest/indexer/domain"
-	"github.com/osmosis-labs/osmosis/v31/ingest/indexer/service/blockprocessor"
-	sqsdomain "github.com/osmosis-labs/osmosis/v31/ingest/sqs/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v32/ingest/common/domain"
+	commonservice "github.com/osmosis-labs/osmosis/v32/ingest/common/service"
+	"github.com/osmosis-labs/osmosis/v32/ingest/indexer/domain"
+	"github.com/osmosis-labs/osmosis/v32/ingest/indexer/service/blockprocessor"
+	sqsdomain "github.com/osmosis-labs/osmosis/v32/ingest/sqs/domain"
 )
 
 var (
