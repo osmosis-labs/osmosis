@@ -1,6 +1,9 @@
 package keepers
 
 import (
+	"fmt"
+	"math"
+
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
@@ -8,6 +11,8 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	wasmvm "github.com/CosmWasm/wasmvm/v2"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -43,17 +48,17 @@ import (
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/keeper"
 	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
-	"github.com/osmosis-labs/osmosis/v31/x/cosmwasmpool"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v31/x/cosmwasmpool/types"
-	downtimedetector "github.com/osmosis-labs/osmosis/v31/x/downtime-detector"
-	downtimetypes "github.com/osmosis-labs/osmosis/v31/x/downtime-detector/types"
-	"github.com/osmosis-labs/osmosis/v31/x/gamm"
-	ibcratelimit "github.com/osmosis-labs/osmosis/v31/x/ibc-rate-limit"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v31/x/ibc-rate-limit/types"
-	"github.com/osmosis-labs/osmosis/v31/x/poolmanager"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v31/x/protorev"
+	appparams "github.com/osmosis-labs/osmosis/v32/app/params"
+	"github.com/osmosis-labs/osmosis/v32/x/cosmwasmpool"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v32/x/cosmwasmpool/types"
+	downtimedetector "github.com/osmosis-labs/osmosis/v32/x/downtime-detector"
+	downtimetypes "github.com/osmosis-labs/osmosis/v32/x/downtime-detector/types"
+	"github.com/osmosis-labs/osmosis/v32/x/gamm"
+	ibcratelimit "github.com/osmosis-labs/osmosis/v32/x/ibc-rate-limit"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v32/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v32/x/poolmanager"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v32/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v32/x/protorev"
 	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
@@ -79,39 +84,39 @@ import (
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 
-	"github.com/osmosis-labs/osmosis/v31/x/smart-account/authenticator"
-	smartaccountkeeper "github.com/osmosis-labs/osmosis/v31/x/smart-account/keeper"
-	smartaccounttypes "github.com/osmosis-labs/osmosis/v31/x/smart-account/types"
+	"github.com/osmosis-labs/osmosis/v32/x/smart-account/authenticator"
+	smartaccountkeeper "github.com/osmosis-labs/osmosis/v32/x/smart-account/keeper"
+	smartaccounttypes "github.com/osmosis-labs/osmosis/v32/x/smart-account/types"
 
-	_ "github.com/osmosis-labs/osmosis/v31/client/docs/statik"
-	owasm "github.com/osmosis-labs/osmosis/v31/wasmbinding"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v31/x/concentrated-liquidity/types"
-	gammkeeper "github.com/osmosis-labs/osmosis/v31/x/gamm/keeper"
-	gammtypes "github.com/osmosis-labs/osmosis/v31/x/gamm/types"
-	incentiveskeeper "github.com/osmosis-labs/osmosis/v31/x/incentives/keeper"
-	incentivestypes "github.com/osmosis-labs/osmosis/v31/x/incentives/types"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v31/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v31/x/lockup/types"
-	mintkeeper "github.com/osmosis-labs/osmosis/v31/x/mint/keeper"
-	minttypes "github.com/osmosis-labs/osmosis/v31/x/mint/types"
-	poolincentives "github.com/osmosis-labs/osmosis/v31/x/pool-incentives"
-	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v31/x/pool-incentives/keeper"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v31/x/pool-incentives/types"
-	protorevkeeper "github.com/osmosis-labs/osmosis/v31/x/protorev/keeper"
-	protorevtypes "github.com/osmosis-labs/osmosis/v31/x/protorev/types"
-	"github.com/osmosis-labs/osmosis/v31/x/superfluid"
-	superfluidkeeper "github.com/osmosis-labs/osmosis/v31/x/superfluid/keeper"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v31/x/superfluid/types"
-	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v31/x/tokenfactory/keeper"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v31/x/tokenfactory/types"
-	"github.com/osmosis-labs/osmosis/v31/x/twap"
-	twaptypes "github.com/osmosis-labs/osmosis/v31/x/twap/types"
-	"github.com/osmosis-labs/osmosis/v31/x/txfees"
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v31/x/txfees/keeper"
-	txfeestypes "github.com/osmosis-labs/osmosis/v31/x/txfees/types"
-	valsetpref "github.com/osmosis-labs/osmosis/v31/x/valset-pref"
-	valsetpreftypes "github.com/osmosis-labs/osmosis/v31/x/valset-pref/types"
+	_ "github.com/osmosis-labs/osmosis/v32/client/docs/statik"
+	owasm "github.com/osmosis-labs/osmosis/v32/wasmbinding"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v32/x/concentrated-liquidity"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v32/x/concentrated-liquidity/types"
+	gammkeeper "github.com/osmosis-labs/osmosis/v32/x/gamm/keeper"
+	gammtypes "github.com/osmosis-labs/osmosis/v32/x/gamm/types"
+	incentiveskeeper "github.com/osmosis-labs/osmosis/v32/x/incentives/keeper"
+	incentivestypes "github.com/osmosis-labs/osmosis/v32/x/incentives/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v32/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v32/x/lockup/types"
+	mintkeeper "github.com/osmosis-labs/osmosis/v32/x/mint/keeper"
+	minttypes "github.com/osmosis-labs/osmosis/v32/x/mint/types"
+	poolincentives "github.com/osmosis-labs/osmosis/v32/x/pool-incentives"
+	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v32/x/pool-incentives/keeper"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v32/x/pool-incentives/types"
+	protorevkeeper "github.com/osmosis-labs/osmosis/v32/x/protorev/keeper"
+	protorevtypes "github.com/osmosis-labs/osmosis/v32/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v32/x/superfluid"
+	superfluidkeeper "github.com/osmosis-labs/osmosis/v32/x/superfluid/keeper"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v32/x/superfluid/types"
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v32/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v32/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v32/x/twap"
+	twaptypes "github.com/osmosis-labs/osmosis/v32/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v32/x/txfees"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v32/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/v32/x/txfees/types"
+	valsetpref "github.com/osmosis-labs/osmosis/v32/x/valset-pref"
+	valsetpreftypes "github.com/osmosis-labs/osmosis/v32/x/valset-pref/types"
 	epochskeeper "github.com/osmosis-labs/osmosis/x/epochs/keeper"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
@@ -124,6 +129,19 @@ import (
 const (
 	AccountAddressPrefix = "osmo"
 )
+
+// noLimit disables a Wasm static validation limit.
+var noLimit uint32 = math.MaxUint32
+
+// wasmLimits keeps static Wasm validation identical to wasmvm v2.2.4.
+// cosmwasm-vm 2.2.10 (wasmvm v2.2.9) added per-function and total locals
+// limits. Enforcing them would reject code that was valid before, which is
+// state breaking, so they are disabled here. All other limits keep their
+// defaults, which did not change.
+var wasmLimits = wasmvmtypes.WasmLimits{
+	MaxFunctionLocals:      &noLimit,
+	MaxTotalFunctionLocals: &noLimit,
+}
 
 type AppKeepers struct {
 	// keepers, by order of initialization
@@ -205,7 +223,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	maccPerms map[string][]string,
 	dataDir string,
 	wasmDir string,
-	wasmConfig wasmtypes.WasmConfig,
+	wasmConfig wasmtypes.NodeConfig,
 	wasmOpts []wasmkeeper.Option,
 	blockedAddress map[string]bool,
 	ibcWasmConfig ibcwasmtypes.WasmConfig,
@@ -315,13 +333,26 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.IBCHooksKeeper = hooksKeeper
 
-	// We are using a separate VM here
-	ibcWasmClientKeeper := ibcwasmkeeper.NewKeeperWithConfig(
+	// We are using a separate VM here. It mirrors ibcwasmkeeper.NewKeeperWithConfig,
+	// but sets wasmLimits so the 08-wasm VM validates code the same way as x/wasm.
+	ibcWasmVM, err := wasmvm.NewVMWithConfig(wasmvmtypes.VMConfig{
+		WasmLimits: wasmLimits,
+		Cache: wasmvmtypes.CacheOptions{
+			BaseDir:                  ibcWasmConfig.DataDir,
+			AvailableCapabilities:    ibcWasmConfig.SupportedCapabilities,
+			MemoryCacheSizeBytes:     wasmvmtypes.NewSizeMebi(ibcwasmtypes.MemoryCacheSize),
+			InstanceMemoryLimitBytes: wasmvmtypes.NewSizeMebi(ibcwasmtypes.ContractMemoryLimit),
+		},
+	}, ibcWasmConfig.ContractDebugMode)
+	if err != nil {
+		panic(fmt.Errorf("failed to instantiate new Wasm VM instance: %v", err))
+	}
+	ibcWasmClientKeeper := ibcwasmkeeper.NewKeeperWithVM(
 		appCodec,
 		runtime.NewKVStoreService(appKeepers.keys[ibcwasmtypes.StoreKey]),
 		appKeepers.IBCKeeper.ClientKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		ibcWasmConfig,
+		ibcWasmVM,
 		bApp.GRPCQueryRouter(),
 	)
 
@@ -596,6 +627,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		bApp.GRPCQueryRouter(),
 		wasmDir,
 		wasmConfig,
+		wasmtypes.VMConfig{WasmLimits: wasmLimits},
 		wasmCapabilities,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		wasmOpts...,

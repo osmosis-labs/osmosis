@@ -750,8 +750,8 @@ var fileDescriptor_3fff1326c2fd6b4c = []byte{
 	0xf3, 0xe7, 0x3c, 0xda, 0x61, 0x90, 0x7c, 0x2d, 0x03, 0xa8, 0x15, 0x4a, 0xe5, 0xde, 0xc1, 0x71,
 	0x1e, 0x1c, 0x1e, 0xe7, 0xc1, 0xc7, 0xe3, 0x3c, 0x78, 0x71, 0x92, 0xcf, 0x1d, 0x9e, 0xe4, 0x73,
 	0xef, 0x4f, 0xf2, 0xb9, 0x87, 0x0b, 0xa1, 0x35, 0x2c, 0x1c, 0xcc, 0x59, 0xb8, 0xc6, 0x50, 0x70,
-	0x77, 0x9f, 0x2f, 0xa2, 0x5d, 0x71, 0x83, 0x9f, 0xf3, 0xae, 0xf0, 0xde, 0x6e, 0xae, 0xf5, 0x7a,
-	0x57, 0xf4, 0xf9, 0xef, 0x01, 0x00, 0x00, 0xff, 0xff, 0x5e, 0x88, 0x77, 0x04, 0x90, 0x0c, 0x00,
+	0x77, 0x9f, 0x2f, 0xa1, 0x5d, 0x71, 0x83, 0x9f, 0xf3, 0xae, 0xf0, 0xde, 0x6e, 0xae, 0xf5, 0x7a,
+	0x57, 0xf4, 0xf9, 0xef, 0x01, 0x00, 0x00, 0xff, 0xff, 0x32, 0xe3, 0x7f, 0xa1, 0x90, 0x0c, 0x00,
 	0x00,
 }
 
@@ -777,7 +777,7 @@ type MsgClient interface {
 	// validator-set. The unbonding logic will follow the `Undelegate` logic from
 	// the sdk.
 	UndelegateFromValidatorSet(ctx context.Context, in *MsgUndelegateFromValidatorSet, opts ...grpc.CallOption) (*MsgUndelegateFromValidatorSetResponse, error)
-	// UndelegateFromRebalancedValidatorSet undelegates the proivded amount from
+	// UndelegateFromRebalancedValidatorSet undelegates the provided amount from
 	// the validator set, but takes into consideration the current delegations
 	// to the user's validator set to determine the weights assigned to each.
 	UndelegateFromRebalancedValidatorSet(ctx context.Context, in *MsgUndelegateFromRebalancedValidatorSet, opts ...grpc.CallOption) (*MsgUndelegateFromRebalancedValidatorSetResponse, error)
@@ -875,7 +875,7 @@ type MsgServer interface {
 	// validator-set. The unbonding logic will follow the `Undelegate` logic from
 	// the sdk.
 	UndelegateFromValidatorSet(context.Context, *MsgUndelegateFromValidatorSet) (*MsgUndelegateFromValidatorSetResponse, error)
-	// UndelegateFromRebalancedValidatorSet undelegates the proivded amount from
+	// UndelegateFromRebalancedValidatorSet undelegates the provided amount from
 	// the validator set, but takes into consideration the current delegations
 	// to the user's validator set to determine the weights assigned to each.
 	UndelegateFromRebalancedValidatorSet(context.Context, *MsgUndelegateFromRebalancedValidatorSet) (*MsgUndelegateFromRebalancedValidatorSetResponse, error)
