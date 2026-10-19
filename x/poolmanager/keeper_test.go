@@ -11,11 +11,11 @@ import (
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
-	"github.com/osmosis-labs/osmosis/v31/x/gamm/pool-models/balancer"
-	poolmanager "github.com/osmosis-labs/osmosis/v31/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v32/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v32/app/params"
+	"github.com/osmosis-labs/osmosis/v32/x/gamm/pool-models/balancer"
+	poolmanager "github.com/osmosis-labs/osmosis/v32/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v32/x/poolmanager/types"
 )
 
 type KeeperTestSuite struct {

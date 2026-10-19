@@ -42,6 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* [#9760](https://github.com/osmosis-labs/osmosis/pull/9760) feat(upgrade): v32 upgrade moves non-base-denom balances stuck in the protorev module account to the liquidity sub-DAO, which swaps them to OSMO and burns it
+* [#9744](https://github.com/osmosis-labs/osmosis/pull/9744) feat: seize proposal 1044 allBTC in the v32 upgrade. Move 22.65060846 allBTC from the exploiter to the Liquidity subDAO on osmosis-1 only (skipped on other chains). A shortfall aborts the upgrade; any surplus and the account's OSMO stay on the exploiter.
+* chore: bump wasmd from v0.53.3 to v0.54.10 and wasmvm from v2.2.4 to v2.2.9. wasmd v0.54 splits WasmConfig into NodeConfig and VMConfig. wasmd v0.54.10 requires ibc-go v8.8.0 (state-breaking ICA ProtoJSON validation) and cosmos-sdk v0.50.15; the Osmosis SDK fork replace still supplies v0.50.14-v30-osmo.
 * [#9676](https://github.com/osmosis-labs/osmosis/pull/9676) chore: bump cometbft version to v0.38.22
 * [#9730](https://github.com/osmosis-labs/osmosis/pull/9730) docs: register missing module query services in swagger generation and pin proto sources to go.mod versions
 * [#9748](https://github.com/osmosis-labs/osmosis/pull/9748) chore: bump Go to 1.25.8 and update deps to fix security alerts
