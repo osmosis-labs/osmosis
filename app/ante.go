@@ -13,18 +13,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 
-	osmoante "github.com/osmosis-labs/osmosis/v31/ante"
-	v9 "github.com/osmosis-labs/osmosis/v31/app/upgrades/v9"
+	osmoante "github.com/osmosis-labs/osmosis/v32/ante"
+	v9 "github.com/osmosis-labs/osmosis/v32/app/upgrades/v9"
 
 	corestoretypes "cosmossdk.io/core/store"
 
-	smartaccountante "github.com/osmosis-labs/osmosis/v31/x/smart-account/ante"
-	smartaccountkeeper "github.com/osmosis-labs/osmosis/v31/x/smart-account/keeper"
+	smartaccountante "github.com/osmosis-labs/osmosis/v32/x/smart-account/ante"
+	smartaccountkeeper "github.com/osmosis-labs/osmosis/v32/x/smart-account/keeper"
 
 	auctionkeeper "github.com/skip-mev/block-sdk/v2/x/auction/keeper"
 
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v31/x/txfees/keeper"
-	txfeestypes "github.com/osmosis-labs/osmosis/v31/x/txfees/types"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v32/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/v32/x/txfees/types"
 
 	auctionante "github.com/skip-mev/block-sdk/v2/x/auction/ante"
 )
@@ -43,7 +43,7 @@ type BlockSDKAnteHandlerParams struct {
 // If you make a change here, make sure to make the same change in `ante_no_seq.go`.
 func NewAnteHandler(
 	appOpts servertypes.AppOptions,
-	wasmConfig wasmtypes.WasmConfig,
+	wasmConfig wasmtypes.NodeConfig,
 	txCounterStoreKey corestoretypes.KVStoreService,
 	accountKeeper ante.AccountKeeper,
 	smartAccountKeeper *smartaccountkeeper.Keeper,

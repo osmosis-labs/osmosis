@@ -1,9 +1,9 @@
 package blockprocessor
 
 import (
-	commondomain "github.com/osmosis-labs/osmosis/v31/ingest/common/domain"
-	commonservice "github.com/osmosis-labs/osmosis/v31/ingest/common/service"
-	"github.com/osmosis-labs/osmosis/v31/ingest/indexer/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v32/ingest/common/domain"
+	commonservice "github.com/osmosis-labs/osmosis/v32/ingest/common/service"
+	"github.com/osmosis-labs/osmosis/v32/ingest/indexer/domain"
 )
 
 // NewBlockProcessor creates a new block process strategy.

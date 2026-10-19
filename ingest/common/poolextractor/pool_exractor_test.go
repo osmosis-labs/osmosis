@@ -5,10 +5,10 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
-	commondomain "github.com/osmosis-labs/osmosis/v31/ingest/common/domain"
-	"github.com/osmosis-labs/osmosis/v31/ingest/common/poolextractor"
-	"github.com/osmosis-labs/osmosis/v31/ingest/common/pooltracker"
+	"github.com/osmosis-labs/osmosis/v32/app/apptesting"
+	commondomain "github.com/osmosis-labs/osmosis/v32/ingest/common/domain"
+	"github.com/osmosis-labs/osmosis/v32/ingest/common/poolextractor"
+	"github.com/osmosis-labs/osmosis/v32/ingest/common/pooltracker"
 )
 
 type PoolExtractorTestSuite struct {

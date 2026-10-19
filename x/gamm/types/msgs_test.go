@@ -8,13 +8,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v31/x/gamm"
-	"github.com/osmosis-labs/osmosis/v31/x/gamm/pool-models/stableswap"
-	gammtypes "github.com/osmosis-labs/osmosis/v31/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v32/x/gamm"
+	"github.com/osmosis-labs/osmosis/v32/x/gamm/pool-models/stableswap"
+	gammtypes "github.com/osmosis-labs/osmosis/v32/x/gamm/types"
 
-	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v31/app/params"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v32/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v32/app/params"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v32/x/poolmanager/types"
 )
 
 func TestMsgSwapExactAmountIn(t *testing.T) {

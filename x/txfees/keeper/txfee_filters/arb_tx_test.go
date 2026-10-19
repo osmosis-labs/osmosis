@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v31/app/apptesting"
-	appparams "github.com/osmosis-labs/osmosis/v31/app/params"
-	"github.com/osmosis-labs/osmosis/v31/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v31/x/txfees/keeper/txfee_filters"
+	"github.com/osmosis-labs/osmosis/v32/app/apptesting"
+	appparams "github.com/osmosis-labs/osmosis/v32/app/params"
+	"github.com/osmosis-labs/osmosis/v32/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v32/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v32/x/txfees/keeper/txfee_filters"
 )
 
 type KeeperTestSuite struct {

@@ -8,7 +8,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v31/x/smart-account/authenticator"
+	"github.com/osmosis-labs/osmosis/v32/x/smart-account/authenticator"
 )
 
 var _ authenticator.Authenticator = &StatefulAuthenticator{}

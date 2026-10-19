@@ -8,8 +8,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	lockuptypes "github.com/osmosis-labs/osmosis/v31/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v31/x/poolmanager/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v32/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v32/x/poolmanager/types"
 )
 
 type AccountKeeper interface {

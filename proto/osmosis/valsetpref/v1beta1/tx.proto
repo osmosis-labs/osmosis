@@ -8,7 +8,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/valsetpref/v1beta1/state.proto";
 import "cosmos/msg/v1/msg.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v31/x/valset-pref/types";
+option go_package = "github.com/osmosis-labs/osmosis/v32/x/valset-pref/types";
 
 // Msg defines the valset-pref module's gRPC message service.
 service Msg {
@@ -28,7 +28,7 @@ service Msg {
   rpc UndelegateFromValidatorSet(MsgUndelegateFromValidatorSet)
       returns (MsgUndelegateFromValidatorSetResponse);
 
-  // UndelegateFromRebalancedValidatorSet undelegates the proivded amount from
+  // UndelegateFromRebalancedValidatorSet undelegates the provided amount from
   // the validator set, but takes into consideration the current delegations
   // to the user's validator set to determine the weights assigned to each.
   rpc UndelegateFromRebalancedValidatorSet(

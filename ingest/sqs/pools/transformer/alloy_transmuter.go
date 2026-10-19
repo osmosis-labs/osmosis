@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sqscosmwasmpool "github.com/osmosis-labs/osmosis/v31/ingest/types/cosmwasmpool"
+	sqscosmwasmpool "github.com/osmosis-labs/osmosis/v32/ingest/types/cosmwasmpool"
 
-	commondomain "github.com/osmosis-labs/osmosis/v31/ingest/common/domain"
+	commondomain "github.com/osmosis-labs/osmosis/v32/ingest/common/domain"
 )
 
 const (
