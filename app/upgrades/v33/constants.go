@@ -45,3 +45,28 @@ var HuahuaStuckGauges = []struct {
 	{1958, "GAMM606"},
 	{1959, "GAMM606"},
 }
+
+// Native WBTC to allBTC migration, approved by governance in proposal TODO(prop): fill in the
+// proposal number and link before merging.
+//
+// Every user account's spendable native WBTC is deposited into the allBTC alloy transmuter on its
+// behalf (join_pool), which mints the same normalized amount of allBTC back to the account. Module
+// accounts (including GAMM and CL pools) and wasm contracts (including cosmwasm pools) are skipped,
+// since they track their own balances.
+const (
+	// MainnetChainID is the only chain the WBTC migration runs on.
+	MainnetChainID = "osmosis-1"
+
+	// WBTCDenom is native WBTC, issued on Osmosis through tokenfactory.
+	WBTCDenom = "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+
+	// AllBTCTransmuterAddress is the alloy transmuter contract that mints allBTC.
+	AllBTCTransmuterAddress = "osmo1z6r6qdknhgsc0zeracktgpcxf43j6sekq07nw8sxduc9lg0qjjlqfu25e3"
+
+	// AllBTCDenom is the alloyed denom minted by AllBTCTransmuterAddress.
+	AllBTCDenom = "factory/" + AllBTCTransmuterAddress + "/alloyed/allBTC"
+
+	// MaxWBTCHoldersToMigrate bounds the migration loop. If the chain has more WBTC holders than this,
+	// the whole migration is skipped. Confirm against the mainnet DenomOwners count before release.
+	MaxWBTCHoldersToMigrate = 100_000
+)

@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 * [#9760](https://github.com/osmosis-labs/osmosis/pull/9760) feat(upgrade): v32 upgrade moves non-base-denom balances stuck in the protorev module account to the liquidity sub-DAO, which swaps them to OSMO and burns it
+* feat(v33): migrate native WBTC held by user accounts to allBTC on osmosis-1 by joining the allBTC alloy transmuter on each holder's behalf. Module accounts and contracts are skipped; a failed join is rolled back and logged without halting the upgrade. TODO(prop): governance proposal number.
 * [#9746](https://github.com/osmosis-labs/osmosis/pull/9746) feat(v33): recover 6B HUAHUA stuck in misconfigured gauges 1954-1959 to the Chihuahua ecosystem fund, as approved by governance proposal 609
 * [#9744](https://github.com/osmosis-labs/osmosis/pull/9744) feat: seize proposal 1044 allBTC in the v32 upgrade. Move 22.65060846 allBTC from the exploiter to the Liquidity subDAO on osmosis-1 only (skipped on other chains). A shortfall aborts the upgrade; any surplus and the account's OSMO stay on the exploiter.
 * chore: bump wasmd from v0.53.3 to v0.54.10 and wasmvm from v2.2.4 to v2.2.9. wasmd v0.54 splits WasmConfig into NodeConfig and VMConfig. wasmd v0.54.10 requires ibc-go v8.8.0 (state-breaking ICA ProtoJSON validation) and cosmos-sdk v0.50.15; the Osmosis SDK fork replace still supplies v0.50.14-v30-osmo.
