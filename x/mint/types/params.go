@@ -62,8 +62,8 @@ func DefaultParams() Params {
 		DistributionProportions: DistributionProportions{
 			Staking:          osmomath.NewDecWithPrec(4, 1), // 0.4
 			PoolIncentives:   osmomath.NewDecWithPrec(3, 1), // 0.3
-			DeveloperRewards: osmomath.NewDecWithPrec(2, 1), // 0.2
-			CommunityPool:    osmomath.NewDecWithPrec(1, 1), // 0.1
+			DeveloperRewards: osmomath.ZeroDec(),            // deprecated, must be 0
+			CommunityPool:    osmomath.NewDecWithPrec(3, 1), // 0.3
 		},
 		WeightedDeveloperRewardsReceivers:    []WeightedAddress{},
 		MintingRewardsDistributionStartEpoch: 0,
@@ -119,18 +119,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyDeveloperRewardsReceiver, &p.WeightedDeveloperRewardsReceivers, validateWeightedDeveloperRewardsReceivers),
 		paramtypes.NewParamSetPair(KeyMintingRewardsDistributionStartEpoch, &p.MintingRewardsDistributionStartEpoch, validateMintingRewardsDistributionStartEpoch),
 	}
-}
-
-// GetInflationProportion returns the inflation proportion of epoch
-// provisions.osmomath.Dec
-func (p Params) GetInflationProportion() osmomath.Dec {
-	return osmomath.OneDec().Sub(p.GetDeveloperVestingProportion())
-}
-
-// GetDeveloperVestingProportion returns the developer vesting proportion of epoch
-// provisions.osmomath.Dec
-func (p Params) GetDeveloperVestingProportion() osmomath.Dec {
-	return p.DistributionProportions.DeveloperRewards
 }
 
 func validateMintDenom(i interface{}) error {
@@ -206,8 +194,9 @@ func validateDistributionProportions(i interface{}) error {
 		return errors.New("pool incentives distribution ratio should not be negative")
 	}
 
-	if v.DeveloperRewards.IsNegative() {
-		return errors.New("developer rewards distribution ratio should not be negative")
+	// Developer vesting is no longer part of mint distribution.
+	if !v.DeveloperRewards.IsZero() {
+		return errors.New("developer rewards distribution ratio is deprecated and must be zero")
 	}
 
 	if v.CommunityPool.IsNegative() {
