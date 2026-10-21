@@ -9,9 +9,10 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
-    // Keep the leading "IBC Rate Limit exceeded for" stable: the chain-side
-    // middleware will match it to tell a quota rejection from any other
-    // contract failure (today it reports every contract error the same way).
+    // Keep the leading "IBC Rate Limit exceeded for" stable, so that the chain
+    // can tell a quota rejection from any other contract failure by its text.
+    // The middleware on the current chain reports every contract error the
+    // same way; the classification is chain-side work still to come.
     #[error("IBC Rate Limit exceeded for {channel}/{denom}. Tried to transfer {amount} which exceeds the {bound} capacity on the '{quota_name}' quota ({used}/{max}). Try again after {reset:?}")]
     RateLimitExceded {
         channel: String,
