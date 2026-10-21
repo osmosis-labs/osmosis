@@ -2097,6 +2097,8 @@ fn invalid_quotas_are_rejected() {
         ),
         ("zero duration", QuotaMsg::new("x", 0, 1, 1)),
         ("empty name", QuotaMsg::new("", RESET_TIME_WEEKLY, 1, 1)),
+        // rejected before any window end is computed from it
+        ("absurd duration", QuotaMsg::new("x", u64::MAX, 1, 1)),
         // wasmd rejects attribute keys that start with "_" (after trimming), and
         // the name prefixes every per-quota attribute key
         (

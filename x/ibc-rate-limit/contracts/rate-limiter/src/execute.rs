@@ -40,12 +40,12 @@ pub fn add_new_paths(
             .quotas
             .iter()
             .map(|q| -> Result<RateLimit, ContractError> {
-                let mut flow = Flow::new(0_u128, 0_u128, now, q.duration);
+                // Validate first: the window end is computed from the duration,
+                // and an unchecked one could overflow the timestamp arithmetic
+                let quota = Quota::try_from(q)?;
+                let mut flow = Flow::new(0_u128, 0_u128, now, quota.duration);
                 flow.generation = generation;
-                Ok(RateLimit {
-                    quota: Quota::try_from(q)?,
-                    flow,
-                })
+                Ok(RateLimit { quota, flow })
             })
             .collect::<Result<Vec<_>, _>>()?;
         RATE_LIMIT_TRACKERS.save(deps.storage, path.into(), &limits)?
