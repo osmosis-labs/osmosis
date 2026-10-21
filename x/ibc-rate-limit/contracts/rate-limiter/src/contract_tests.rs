@@ -729,8 +729,18 @@ fn refunded_send_does_not_change_receive_allowance() {
     assert!(matches!(err, ContractError::RateLimitExceded { .. }));
 }
 
-#[test] // Only one record exists per packet content; a second identical send is counted but not refundable
-fn identical_pending_send_is_not_recorded_twice() {
+/// A receive of `funds` on the quoted path, as the chain would report it
+fn recv_denom(funds: u32) -> SudoMsg {
+    test_msg_recv!(
+        channel_id: format!("channel"),
+        denom: format!("denom"),
+        channel_value: 3_300_u32.into(),
+        funds: funds.into()
+    )
+}
+
+#[test] // Identical sends in one window share a record and each failure is refunded, so failed sends never turn into receive capacity
+fn identical_pending_sends_share_one_record_and_are_each_refunded() {
     let mut deps = mock_dependencies();
     instantiate_any_denom(
         deps.as_mut(),
@@ -740,26 +750,42 @@ fn identical_pending_send_is_not_recorded_twice() {
 
     let res = sudo(deps.as_mut(), mock_env(), send_tagged(7, 100)).unwrap();
     assert_eq!(attr(&res, "recorded"), "true");
+    assert_eq!(attr(&res, "pending_count"), "1");
     let res = sudo(deps.as_mut(), mock_env(), send_tagged(7, 100)).unwrap();
-    assert_eq!(attr(&res, "recorded"), "false");
+    assert_eq!(attr(&res, "recorded"), "true");
+    assert_eq!(attr(&res, "pending_count"), "2");
     assert_eq!(any_denom_outflow(&deps.storage), Uint256::from(200_u32));
     assert_eq!(pending_records(&deps.storage, 7, 100), 1);
     assert_eq!(index_entries(&deps.storage), 1);
 
-    // The one acknowledgement that can be matched settles the one record
+    // Each failure settles one of the two
     let res = sudo(deps.as_mut(), mock_env(), undo_tagged(7, 100)).unwrap();
     assert_eq!(attr(&res, "refunded"), "1");
+    assert_eq!(attr(&res, "pending_count"), "1");
     assert_eq!(any_denom_outflow(&deps.storage), Uint256::from(100_u32));
+    assert_eq!(pending_records(&deps.storage, 7, 100), 1);
+    assert_eq!(index_entries(&deps.storage), 1);
+
+    let res = sudo(deps.as_mut(), mock_env(), undo_tagged(7, 100)).unwrap();
+    assert_eq!(attr(&res, "refunded"), "1");
+    assert_eq!(attr(&res, "pending_count"), "0");
+    assert_eq!(any_denom_outflow(&deps.storage), Uint256::zero());
+    assert_eq!(pending_records(&deps.storage, 7, 100), 0);
     assert_eq!(index_entries(&deps.storage), 0);
 
-    // and the second send's failure refunds nothing
+    // A third failure of that content cannot exist, and refunds nothing
     let res = sudo(deps.as_mut(), mock_env(), undo_tagged(7, 100)).unwrap();
     assert_eq!(attr(&res, "refunded"), "0");
-    assert_eq!(any_denom_outflow(&deps.storage), Uint256::from(100_u32));
+    assert_eq!(any_denom_outflow(&deps.storage), Uint256::zero());
+
+    // The receive allowance is exactly the quota: 10% of 3,300, nothing more
+    sudo(deps.as_mut(), mock_env(), recv_denom(330)).unwrap();
+    let err = sudo(deps.as_mut(), mock_env(), recv_denom(1)).unwrap_err();
+    assert!(matches!(err, ContractError::RateLimitExceded { .. }));
 }
 
-#[test] // A send whose timeout is already behind block time can only come from a lagging client; it is counted but never recorded
-fn send_with_a_past_timeout_is_not_recorded() {
+#[test] // A send whose timeout is already behind block time (the chain checks it against the counterparty client, which trails) is recorded and refunded like any other
+fn send_with_a_past_timeout_is_recorded_and_refundable() {
     let mut deps = mock_dependencies();
     instantiate_any_denom(
         deps.as_mut(),
@@ -767,7 +793,7 @@ fn send_with_a_past_timeout_is_not_recorded() {
     )
     .unwrap();
 
-    // Timeout exactly at block time and one second before it: counted, not recorded
+    // Timeout exactly at block time and one second before it
     for behind in [0_u64, 1] {
         let mut stale = Packet::mock(
             "channel".to_string(),
@@ -785,28 +811,37 @@ fn send_with_a_past_timeout_is_not_recorded() {
             },
         )
         .unwrap();
-        assert_eq!(attr(&res, "recorded"), "false");
-        assert!(!PENDING_SENDS.has(&deps.storage, ("channel".to_string(), stale.send_key())));
+        assert_eq!(attr(&res, "recorded"), "true");
+        let record = PENDING_SENDS
+            .load(&deps.storage, ("channel".to_string(), stale.send_key()))
+            .unwrap();
+        assert_eq!(
+            record.retain_until,
+            mock_env()
+                .block
+                .time
+                .plus_seconds(RESET_TIME_WEEKLY + crate::state::pending_send::TIMEOUT_SKEW_SECONDS)
+        );
 
-        // so its later timeout settles nothing, in this window or any other
+        // Its timeout is refunded in the window that counted it
         let res = sudo(
             deps.as_mut(),
             mock_env(),
             SudoMsg::UndoSend { packet: stale },
         )
         .unwrap();
-        assert_eq!(attr(&res, "refunded"), "0");
+        assert_eq!(attr(&res, "refunded"), "1");
+        assert_eq!(any_denom_outflow(&deps.storage), Uint256::zero());
     }
-    assert_eq!(any_denom_outflow(&deps.storage), Uint256::from(200_u32));
     assert_eq!(index_entries(&deps.storage), 0);
 
-    // One second ahead is a normal send and is recorded
-    let res = sudo(deps.as_mut(), mock_env(), send_tagged(1, 100)).unwrap();
-    assert_eq!(attr(&res, "recorded"), "true");
-    assert_eq!(pending_records(&deps.storage, 1, 100), 1);
+    // so the receive allowance is still exactly the quota
+    sudo(deps.as_mut(), mock_env(), recv_denom(330)).unwrap();
+    let err = sudo(deps.as_mut(), mock_env(), recv_denom(1)).unwrap_err();
+    assert!(matches!(err, ContractError::RateLimitExceded { .. }));
 }
 
-#[test] // A send is remembered until an identical packet could no longer be sent, so an old failure cannot settle a newer identical send
+#[test] // While a send is pending, an identical one that would be counted in a later window is refused, so an old failure cannot settle a newer identical send
 fn old_failure_cannot_settle_a_newer_identical_send() {
     let mut deps = mock_dependencies();
     instantiate_any_denom(
@@ -826,17 +861,22 @@ fn old_failure_cannot_settle_a_newer_identical_send() {
     assert_eq!(attr(&res, "recorded"), "true");
 
     // Window N+1: the identical packet again. The old record is still
-    // retained, so this one is not recorded
+    // retained and belongs to window N, so this one is refused before it is
+    // counted: nothing changes in state
     let mut later = mock_env();
     later.block.time = later.block.time.plus_seconds(RESET_TIME_WEEKLY + 1);
     let newer = SudoMsg::SendPacket {
         packet: packet_with_timeout(300, two_weeks, 0),
         channel_value_mock: Some(3_300_u32.into()),
     };
-    let res = sudo(deps.as_mut(), later.clone(), newer).unwrap();
-    assert_eq!(attr(&res, "recorded"), "false");
-    assert_eq!(attr(&res, "evicted_stale"), "0");
+    let err = sudo(deps.as_mut(), later.clone(), newer).unwrap_err();
+    assert!(matches!(err, ContractError::DuplicatePendingSend { .. }));
     assert_eq!(any_denom_outflow(&deps.storage), Uint256::from(300_u32));
+    assert_eq!(index_entries(&deps.storage), 1);
+
+    // A different send opens window N+1
+    sudo(deps.as_mut(), later.clone(), send_tagged(9, 30)).unwrap();
+    assert_eq!(any_denom_outflow(&deps.storage), Uint256::from(30_u32));
 
     // The old packet's failure arrives now: it settles the old record, whose
     // window is over, and window N+1 keeps exactly its own allowance
@@ -845,10 +885,10 @@ fn old_failure_cannot_settle_a_newer_identical_send() {
     };
     let res = sudo(deps.as_mut(), later.clone(), undo).unwrap();
     assert_eq!(attr(&res, "refunded"), "0");
-    assert_eq!(any_denom_outflow(&deps.storage), Uint256::from(300_u32));
-    assert_eq!(index_entries(&deps.storage), 0);
-    sudo(deps.as_mut(), later.clone(), send_tagged(9, 30)).unwrap();
-    let err = sudo(deps.as_mut(), later, send_tagged(10, 1)).unwrap_err();
+    assert_eq!(any_denom_outflow(&deps.storage), Uint256::from(30_u32));
+    assert_eq!(index_entries(&deps.storage), 1);
+    sudo(deps.as_mut(), later.clone(), send_tagged(10, 300)).unwrap();
+    let err = sudo(deps.as_mut(), later, send_tagged(11, 1)).unwrap_err();
     assert!(matches!(err, ContractError::RateLimitExceded { .. }));
 }
 

@@ -26,12 +26,14 @@ pub const MAX_RETENTION_SECONDS: u64 = 30 * 24 * 60 * 60;
 ///
 /// Records are keyed by packet content (Packet::send_key), which is not a
 /// unique identity: the same content can be sent again as long as the
-/// packet's timeout has not passed on the counterparty. A record is therefore
-/// retained until both its windows have ended and the packet's timeout has
-/// passed by the clock-skew margin, and only one record exists per content
-/// key at a time. That way an acknowledgement always settles the oldest send
-/// with that content, and a later identical send can neither claim nor shadow
-/// an earlier one.
+/// packet's timeout has not passed on the counterparty. One record exists per
+/// content key; identical sends counted in the same windows share it and
+/// `count` says how many are outstanding, so that every one of them can be
+/// refunded if it fails. A record is retained until both its windows have
+/// ended and the packet's timeout has passed by the clock-skew margin, and an
+/// identical send that would be counted in a different window while the
+/// record is retained is rejected, so a settlement can never credit a window
+/// other than the one that was charged.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PendingSend {
     pub funds: Uint256,
@@ -41,6 +43,14 @@ pub struct PendingSend {
     pub any_windows: Vec<(String, Timestamp)>,
     /// When the record may be removed without settlement, see `retention_end`
     pub retain_until: Timestamp,
+    /// How many identical sends this record stands for. Each settlement
+    /// refunds `funds` once and lowers it by one; the record goes at zero.
+    #[serde(default = "one")]
+    pub count: u32,
+}
+
+fn one() -> u32 {
+    1
 }
 
 impl PendingSend {

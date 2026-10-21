@@ -85,6 +85,14 @@ pub(crate) fn hash_denom(denom: &str) -> String {
     format!("ibc/{}", hash.to_uppercase())
 }
 
+/// Mock packets get a timeout ten minutes past the mock block time, each one
+/// a nanosecond apart, so that two mock packets never share a content key by
+/// accident. Real wallets set a fresh timeout on every transfer in the same way.
+#[cfg(test)]
+static MOCK_PACKETS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+#[cfg(test)]
+const MOCK_TIMEOUT_BASE_NANOS: u64 = 1_571_797_419_879_305_533 + 600 * 1_000_000_000;
+
 impl Packet {
     pub fn mock(
         source_channel: String,
@@ -92,6 +100,13 @@ impl Packet {
         denom: String,
         funds: Uint256,
     ) -> Packet {
+        #[cfg(test)]
+        let timeout_timestamp = Some(
+            MOCK_TIMEOUT_BASE_NANOS
+                + MOCK_PACKETS.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
+        );
+        #[cfg(not(test))]
+        let timeout_timestamp = None;
         Packet {
             sequence: 0,
             source_port: "transfer".to_string(),
@@ -108,7 +123,7 @@ impl Packet {
                 revision_number: None,
                 revision_height: None,
             },
-            timeout_timestamp: None,
+            timeout_timestamp,
         }
     }
 

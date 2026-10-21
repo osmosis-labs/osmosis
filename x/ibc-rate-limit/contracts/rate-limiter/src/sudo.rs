@@ -43,6 +43,12 @@ pub fn process_packet(
         return Ok(not_configured_response(path));
     }
 
+    // A send identical to one still pending from an earlier window is refused
+    // before anything is counted or queried (see record_pending_send).
+    if matches!(direction, FlowType::Out) {
+        reject_cross_window_duplicate(deps.storage, now, &packet, &trackers, &any_trackers)?;
+    }
+
     #[cfg(test)]
     // When testing we override the channel value with the mock since we can't get it from the chain
     let channel_value = match channel_value_mock {
@@ -71,11 +77,60 @@ pub fn process_packet(
     // A send that was counted is remembered under its packet content, so that
     // the acknowledgement or timeout the chain reports later can settle it
     // (see undo_send). Receives need no record: nothing is undone for them.
-    let (recorded, evicted) =
+    let (pending_count, evicted) =
         record_pending_send(deps.storage, now, &packet, &trackers, &any_trackers)?;
     Ok(response
-        .add_attribute("recorded", recorded.to_string())
+        .add_attribute("recorded", "true")
+        .add_attribute("pending_count", pending_count.to_string())
         .add_attribute("evicted_stale", evicted.to_string()))
+}
+
+/// The window each tracker will be in once a transfer at `now` is applied:
+/// the current one, or a fresh one when the current one has ended, exactly
+/// as Flow::apply_transfer resets it.
+fn upcoming_windows(trackers: &[RateLimit], now: Timestamp) -> Vec<(String, Timestamp)> {
+    trackers
+        .iter()
+        .map(|limit| {
+            let period_end = if limit.flow.is_expired(now) {
+                now.plus_seconds(limit.quota.duration)
+            } else {
+                limit.flow.period_end
+            };
+            (limit.quota.name.clone(), period_end)
+        })
+        .collect()
+}
+
+/// Refuses a send whose content matches a retained record from different
+/// windows. Such a send could not share the record (its refund would land in
+/// the wrong window) and must not be counted without one (an unrefundable
+/// charge would be netted off as receive capacity), so it is rejected before
+/// any state changes. It can only happen when an identical packet with the
+/// same, still valid timeout is sent again after a window has rolled over.
+fn reject_cross_window_duplicate(
+    storage: &dyn Storage,
+    now: Timestamp,
+    packet: &Packet,
+    trackers: &[RateLimit],
+    any_trackers: &[RateLimit],
+) -> Result<(), ContractError> {
+    let key = (packet.source_channel.clone(), packet.send_key());
+    let Some(existing) = PENDING_SENDS.may_load(storage, key)? else {
+        return Ok(());
+    };
+    if existing.is_expired(now) {
+        return Ok(());
+    }
+    let same_windows = existing.channel_windows == upcoming_windows(trackers, now)
+        && existing.any_windows == upcoming_windows(any_trackers, now);
+    if same_windows {
+        return Ok(());
+    }
+    Err(ContractError::DuplicatePendingSend {
+        channel: packet.source_channel.clone(),
+        denom: packet.data.denom.clone(),
+    })
 }
 
 /// Loads the rate limits configured for a path and for the "any" channel of
@@ -226,19 +281,19 @@ const STALE_EVICTIONS_PER_RECORD: usize = 5;
 // in, so the later settlement can tell whether those windows are still the
 // active ones.
 //
-// Only one record exists per content key. A second identical send while a
-// record is pending is counted like any other send but not recorded, so it
-// cannot be refunded; an acknowledgement for that content always settles the
-// oldest send. The record is retained until the packet's timeout has passed
-// by a clock-skew margin (PendingSend::retention_end), so as long as the
-// counterparty's light client on this chain keeps within that margin of block
-// time, a later identical send is never recorded while an earlier one might
-// still be acknowledged. The chain accepts a send whenever its timeout is
-// ahead of that client's latest timestamp, not of block time, so a send whose
-// timeout is already behind block time is not recorded at all: it can only
-// come from a lagging client, and an identical packet shares its timeout, so
-// neither can ever be delivered. Not recording it keeps a timeout relayed
-// later from settling anything but its own window's charge.
+// Every counted send is recorded, because percentage bounds net the two
+// directions: a charge that could never be refunded would be netted off as
+// receive capacity once the tokens came back. One record exists per content
+// key; identical sends counted in the same windows share it and raise its
+// count, and each settlement refunds one of them. An identical send that
+// would be counted in different windows while the record is retained is
+// refused before anything is counted (reject_cross_window_duplicate). The
+// record is retained until the packet's timeout has passed by a clock-skew
+// margin (PendingSend::retention_end). The chain accepts a send whenever its
+// timeout is ahead of the counterparty light client's latest timestamp, which
+// trails block time, so a send whose timeout is already behind block time is
+// possible and is recorded like any other; its timeout is refunded in its own
+// window or not at all.
 //
 // Cost per record: roughly 200 bytes of key and value plus about 50 bytes per
 // quota on the path, plus a small index entry. Records are removed by
@@ -247,27 +302,54 @@ const STALE_EVICTIONS_PER_RECORD: usize = 5;
 // deletes the packet commitment on a success ack, so no later acknowledgement
 // or timeout can reach UndoSend for it.
 //
-// Returns whether the send was recorded and how many expired records were
-// evicted.
+// Returns how many identical sends the record now stands for and how many
+// expired records were evicted.
 fn record_pending_send(
     storage: &mut dyn Storage,
     now: Timestamp,
     packet: &Packet,
     trackers: &[RateLimit],
     any_trackers: &[RateLimit],
-) -> Result<(bool, usize), ContractError> {
+) -> Result<(u32, usize), ContractError> {
     let channel = packet.source_channel.clone();
     let send_key = packet.send_key();
     let key = (channel.clone(), send_key.clone());
-    let timeout_already_passed =
-        matches!(packet.timeout_timestamp, Some(timeout) if timeout > 0 && timeout <= now.nanos());
-    if timeout_already_passed || PENDING_SENDS.has(storage, key.clone()) {
-        let evicted = evict_stale_sends(storage, &channel, now)?;
-        return Ok((false, evicted));
-    }
+    let evicted = evict_stale_sends(storage, &channel, now)?;
 
     let channel_windows = windows_of(trackers);
     let any_windows = windows_of(any_trackers);
+    match PENDING_SENDS.may_load(storage, key.clone())? {
+        Some(existing) if !existing.is_expired(now) => {
+            // reject_cross_window_duplicate ran before the transfer was
+            // counted, so the windows match; a mismatch here would be a bug,
+            // and the transfer must then fail rather than go unrecorded.
+            if existing.channel_windows != channel_windows || existing.any_windows != any_windows {
+                return Err(ContractError::DuplicatePendingSend {
+                    channel,
+                    denom: packet.data.denom.clone(),
+                });
+            }
+            let record = PendingSend {
+                count: existing.count.saturating_add(1),
+                ..existing
+            };
+            PENDING_SENDS.save(storage, key, &record)?;
+            return Ok((record.count, evicted));
+        }
+        Some(expired) => {
+            // Retention ended but eviction had not reached it yet
+            PENDING_SENDS_BY_EXPIRY.remove(
+                storage,
+                (
+                    channel.clone(),
+                    expired.retain_until.nanos(),
+                    send_key.clone(),
+                ),
+            );
+        }
+        None => {}
+    }
+
     let latest_period_end = channel_windows
         .iter()
         .chain(any_windows.iter())
@@ -279,14 +361,13 @@ fn record_pending_send(
         channel_windows,
         any_windows,
         retain_until: PendingSend::retention_end(latest_period_end, packet),
+        count: 1,
     };
     let retain_until = record.retain_until.nanos();
 
     PENDING_SENDS.save(storage, key, &record)?;
-    PENDING_SENDS_BY_EXPIRY.save(storage, (channel.clone(), retain_until, send_key), &())?;
-
-    let evicted = evict_stale_sends(storage, &channel, now)?;
-    Ok((true, evicted))
+    PENDING_SENDS_BY_EXPIRY.save(storage, (channel, retain_until, send_key), &())?;
+    Ok((1, evicted))
 }
 
 /// Removes up to STALE_EVICTIONS_PER_RECORD of the records on `channel` whose
@@ -304,9 +385,12 @@ fn evict_stale_sends(
         .collect::<StdResult<_>>()?;
     let mut evicted = 0;
     for (retain_until, send_key) in oldest {
-        if retain_until < now.nanos() {
-            evicted += remove_stale_record(storage, channel, retain_until, &send_key, now)?;
+        // The index is ordered by retention end, so the first entry that has
+        // not expired means none after it has either
+        if retain_until >= now.nanos() {
+            break;
         }
+        evicted += remove_stale_record(storage, channel, retain_until, &send_key, now)?;
     }
     Ok(evicted)
 }
@@ -342,8 +426,9 @@ pub(crate) fn remove_stale_record(
 // timeout). The send's cost is refunded to each quota it was counted against,
 // but only while that quota is still in the window the send was counted in.
 // A window that did not count the send is never credited for it, so a refund
-// can only ever restore what the same window charged. The record is settled
-// either way; a packet with no record refunds nothing.
+// can only ever restore what the same window charged. One of the identical
+// sends the record stands for is settled either way; a packet with no record
+// refunds nothing.
 pub fn undo_send(deps: DepsMut, packet: Packet) -> Result<Response, ContractError> {
     let (channel_id, denom) = packet.path_data(&FlowType::Out); // Sends have direction out.
     let send_key = packet.send_key();
@@ -354,9 +439,8 @@ pub fn undo_send(deps: DepsMut, packet: Packet) -> Result<Response, ContractErro
         .add_attribute("denom", denom.clone());
 
     let Some(pending) = PENDING_SENDS.may_load(deps.storage, key.clone())? else {
-        // Nothing recorded for this packet: it was never counted, it was a
-        // second identical send, or its record was already settled or
-        // expired. Nothing to refund.
+        // Nothing recorded for this packet: it was never counted, or its
+        // record was already settled or expired. Nothing to refund.
         return Ok(response.add_attribute("refunded", "0"));
     };
 
@@ -375,20 +459,31 @@ pub fn undo_send(deps: DepsMut, packet: Packet) -> Result<Response, ContractErro
         RATE_LIMIT_TRACKERS.save(deps.storage, any_path.into(), &any_trackers)?;
     }
 
-    // Settle the record last. The chain swallows an error from this call
-    // without rolling the contract's writes back, so nothing that can fail
-    // may run between removing the record and crediting the refund.
-    PENDING_SENDS.remove(deps.storage, key);
-    PENDING_SENDS_BY_EXPIRY.remove(
-        deps.storage,
-        (
-            packet.source_channel.clone(),
-            pending.retain_until.nanos(),
-            send_key,
-        ),
-    );
+    // Settle the record last. The chain today swallows an error from this
+    // call without rolling the contract's writes back, so nothing that can
+    // fail may run between settling the record and crediting the refund.
+    let remaining = pending.count.saturating_sub(1);
+    if remaining > 0 {
+        let record = PendingSend {
+            count: remaining,
+            ..pending
+        };
+        PENDING_SENDS.save(deps.storage, key, &record)?;
+    } else {
+        PENDING_SENDS.remove(deps.storage, key);
+        PENDING_SENDS_BY_EXPIRY.remove(
+            deps.storage,
+            (
+                packet.source_channel.clone(),
+                pending.retain_until.nanos(),
+                send_key,
+            ),
+        );
+    }
 
-    Ok(response.add_attribute("refunded", (refunded_channel + refunded_any).to_string()))
+    Ok(response
+        .add_attribute("refunded", (refunded_channel + refunded_any).to_string())
+        .add_attribute("pending_count", remaining.to_string()))
 }
 
 /// Refunds `funds` to every tracker whose quota is still in the window the
