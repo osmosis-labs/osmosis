@@ -8,10 +8,14 @@ use crate::packet::Packet;
 /// that a packet's timeout timestamp has passed.
 pub const TIMEOUT_SKEW_SECONDS: u64 = 60 * 60;
 
-/// How long a record is kept past its last window end when the packet has no
-/// timeout timestamp (height-only timeout), since the contract cannot tell
-/// when a counterparty height will be reached.
-pub const HEIGHT_TIMEOUT_RETENTION_SECONDS: u64 = 30 * 24 * 60 * 60;
+/// Longest a record is kept past its last window end, whatever the packet's
+/// timeout says. It applies when the packet has no timeout timestamp
+/// (height-only timeout), since the contract cannot tell when a counterparty
+/// height will be reached, and it caps the retention of a timestamp far in
+/// the future, which would otherwise make the record permanent. Past the cap
+/// the same residual applies in both cases: an identical packet could still
+/// be sent, and the earlier failure would settle it.
+pub const MAX_RETENTION_SECONDS: u64 = 30 * 24 * 60 * 60;
 
 /// A send that passed the rate limit and has not been settled yet.
 ///
@@ -22,11 +26,12 @@ pub const HEIGHT_TIMEOUT_RETENTION_SECONDS: u64 = 30 * 24 * 60 * 60;
 ///
 /// Records are keyed by packet content (Packet::send_key), which is not a
 /// unique identity: the same content can be sent again as long as the
-/// packet's timeout has not passed. A record is therefore retained until both
-/// its windows have ended and the packet could no longer be re-sent, and only
-/// one record exists per content key at a time. That way an acknowledgement
-/// always settles the oldest send with that content, and a later identical
-/// send can neither claim nor shadow an earlier one.
+/// packet's timeout has not passed on the counterparty. A record is therefore
+/// retained until both its windows have ended and the packet's timeout has
+/// passed by the clock-skew margin, and only one record exists per content
+/// key at a time. That way an acknowledgement always settles the oldest send
+/// with that content, and a later identical send can neither claim nor shadow
+/// an earlier one.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PendingSend {
     pub funds: Uint256,
@@ -40,10 +45,12 @@ pub struct PendingSend {
 
 impl PendingSend {
     /// When a record for `packet` may be dropped unsettled: after the last
-    /// window it was counted in has ended, and after an identical packet could
-    /// no longer be sent. With a timeout timestamp that is the timestamp plus
-    /// clock skew; with a height-only timeout it is a fixed long retention.
+    /// window it was counted in has ended, and after the packet's timeout
+    /// timestamp has passed, each plus the clock-skew margin, but never more
+    /// than MAX_RETENTION_SECONDS past the window end. A height-only timeout
+    /// gets the maximum.
     pub fn retention_end(latest_period_end: Timestamp, packet: &Packet) -> Timestamp {
+        let cap = saturating_plus_seconds(latest_period_end, MAX_RETENTION_SECONDS);
         match packet.timeout_timestamp {
             Some(timeout) if timeout > 0 => {
                 let timeout = Timestamp::from_nanos(timeout);
@@ -52,9 +59,14 @@ impl PendingSend {
                 } else {
                     latest_period_end
                 };
-                saturating_plus_seconds(latest, TIMEOUT_SKEW_SECONDS)
+                let until = saturating_plus_seconds(latest, TIMEOUT_SKEW_SECONDS);
+                if until > cap {
+                    cap
+                } else {
+                    until
+                }
             }
-            _ => saturating_plus_seconds(latest_period_end, HEIGHT_TIMEOUT_RETENTION_SECONDS),
+            _ => cap,
         }
     }
 

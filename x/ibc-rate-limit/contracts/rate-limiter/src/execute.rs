@@ -70,7 +70,12 @@ pub fn try_add_path(
     // the flows. That is allowed, but the execution event must say so, because a
     // proposal that meant to add a second quota would otherwise silently wipe
     // the first.
-    let replaced = RATE_LIMIT_TRACKERS.has(deps.storage, Path::new(&channel_id, &denom).into());
+    // Versions before 0.2.0 left an empty entry for every path they saw, and
+    // an empty entry holds no quota to replace.
+    let replaced = RATE_LIMIT_TRACKERS
+        .may_load(deps.storage, Path::new(&channel_id, &denom).into())?
+        .map(|limits| !limits.is_empty())
+        .unwrap_or(false);
 
     add_new_paths(deps, vec![PathMsg::new(&channel_id, &denom, quotas)], now)?;
 
@@ -311,7 +316,9 @@ mod tests {
     use crate::state::rbac::Roles;
     use crate::state::{
         rate_limit::RateLimit,
-        storage::{ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM, GOVMODULE, IBCMODULE},
+        storage::{
+            ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM, GOVMODULE, IBCMODULE, RATE_LIMIT_TRACKERS,
+        },
     };
     use crate::ContractError;
 
@@ -646,6 +653,16 @@ mod tests {
             denom: "denom".to_string(),
             quotas: vec![QuotaMsg::new("daily", 1600, 3, 5)],
         };
+
+        // An empty tracker entry, as versions before 0.2.0 left behind for every
+        // path they saw, holds nothing to replace
+        RATE_LIMIT_TRACKERS
+            .save(
+                deps.as_mut().storage,
+                ("channel".to_string(), "denom".to_string()),
+                &vec![],
+            )
+            .unwrap();
 
         let res = execute(deps.as_mut(), mock_env(), info.clone(), add.clone()).unwrap();
         let replaced = res.attributes.iter().find(|a| a.key == "replaced").unwrap();
