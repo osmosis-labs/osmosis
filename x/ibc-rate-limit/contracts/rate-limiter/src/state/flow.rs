@@ -38,6 +38,11 @@ pub struct Flow {
     /// 0.2.0, which read as 0.
     #[serde(default)]
     pub generation: u64,
+    /// When the current window began. Absent from entries written before
+    /// 0.2.0 whose window has not been reset since, which is how the
+    /// contract tells that such a window predates the 0.2.0 migration.
+    #[serde(default)]
+    pub started_at: Option<Timestamp>,
 }
 
 impl Flow {
@@ -52,6 +57,7 @@ impl Flow {
             outflow: outflow.into(),
             period_end: now.plus_seconds(duration),
             generation: 0,
+            started_at: Some(now),
         }
     }
 
@@ -99,6 +105,7 @@ impl Flow {
         self.inflow = Uint256::zero();
         self.outflow = Uint256::zero();
         self.generation = self.generation.saturating_add(1);
+        self.started_at = Some(now);
         self.period_end = now.plus_seconds(duration);
     }
 
