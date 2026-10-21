@@ -261,9 +261,8 @@ pub mod tests {
 
     #[test]
     fn send_non_native() {
-        // The transfer module "unhashes" the denom from
-        // ibc/09E4864A262249507925831FBAD69DAD08F66FAAA0640714E765912A0751289A
-        // to port/channel/denom before passing it along to the contrace
+        // The transfer module "unhashes" the denom from ibc/HASH to
+        // port/channel/denom before passing it along to the contract
         let packet = Packet::mock(
             "channel-17".to_string(),
             "channel-42".to_string(),
@@ -272,7 +271,7 @@ pub mod tests {
         );
         assert_eq!(
             packet.local_denom(&FlowType::Out),
-            "ibc/09E4864A262249507925831FBAD69DAD08F66FAAA0640714E765912A0751289A"
+            hash_denom("transfer/channel-17/ujuno")
         );
     }
 
@@ -287,7 +286,7 @@ pub mod tests {
         );
         assert_eq!(
             packet.local_denom(&FlowType::In),
-            "ibc/09E4864A262249507925831FBAD69DAD08F66FAAA0640714E765912A0751289A"
+            hash_denom("transfer/channel-17/ujuno")
         );
     }
 
