@@ -1,4 +1,4 @@
-certifi==2024.7.4
+certifi==2026.10.19
 charset-normalizer==3.2.0
 idna==3.7
 requests==2.32.0
