@@ -44,8 +44,8 @@ jobs:
             1. Backport these changes to the previous Osmosis version's branch.
             2. Run the script inside a Docker container to update genesis and configs for pre-upgrade Osmosis.
             3. Merge the backported changes.
-            4. The image will be built and uploaded to Docker Hub [here](https://hub.docker.com/r/osmolabs/osmosis-e2e-init-chain/tags).
-            5. Grab the latest image and update it in the PR to the main branch replacing the `previousVersionInitTag` in the `osmosis/tests/e2e/containers/config.go`
+            4. Branches with the GHCR publishing workflows upload the image to [GitHub Packages](https://github.com/orgs/osmosis-labs/packages/container/osmosis-e2e-init-chain/versions). Older branches may still publish to Docker Hub.
+            5. Update `previousVersionInitRepository` and `previousVersionInitTag` in `tests/e2e/containers/config.go` on the main branch to match the published image's registry and tag.
 
             Please let us know if you need any help.
           mode: upsert

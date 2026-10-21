@@ -207,17 +207,17 @@ release:
     As an alternative to installing and running osmosisd on your system, you may run osmosisd in a Docker container.
     The following Docker images are available in our registry:
 
-    | Image Name                                   | Base                                 | Description                       |
-    |----------------------------------------------|--------------------------------------|-----------------------------------|
-    | `osmolabs/osmosis:{{ .Version }}`            | `distroless/static-debian11`         | Default image based on Distroless |
-    | `osmolabs/osmosis:{{ .Version }}-distroless` | `distroless/static-debian11`         | Distroless image (same as above)  |
-    | `osmolabs/osmosis:{{ .Version }}-nonroot`    | `distroless/static-debian11:nonroot` | Distroless non-root image         |
-    | `osmolabs/osmosis:{{ .Version }}-alpine`     | `alpine`                             | Alpine image                      |
+    | Image Name                                               | Base                                 | Description                       |
+    |----------------------------------------------------------|--------------------------------------|-----------------------------------|
+    | `ghcr.io/osmosis-labs/osmosis:{{ .Version }}`            | `distroless/static-debian11`         | Default image based on Distroless |
+    | `ghcr.io/osmosis-labs/osmosis:{{ .Version }}-distroless` | `distroless/static-debian11`         | Distroless image (same as above)  |
+    | `ghcr.io/osmosis-labs/osmosis:{{ .Version }}-nonroot`    | `distroless/static-debian11:nonroot` | Distroless non-root image         |
+    | `ghcr.io/osmosis-labs/osmosis:{{ .Version }}-alpine`     | `alpine`                             | Alpine image                      |
 
     Example run:
 
     ```bash
-    docker run osmolabs/osmosis:{{ .Version }} version
+    docker run ghcr.io/osmosis-labs/osmosis:{{ .Version }} version
     # v{{ .Version }}
     ````
 
