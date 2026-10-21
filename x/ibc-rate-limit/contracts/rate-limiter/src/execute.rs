@@ -21,13 +21,27 @@ pub fn add_new_paths(
         validate_path_quotas(&path_msg)?;
         let path = Path::new(path_msg.channel_id, path_msg.denom);
 
+        // A replaced path starts new windows, which must not be mistaken for
+        // the windows the previous quotas were in even when they end at the
+        // same time, so the new flows continue the previous generation count.
+        let generation = RATE_LIMIT_TRACKERS
+            .may_load(deps.storage, path.clone().into())?
+            .unwrap_or_default()
+            .iter()
+            .map(|limit| limit.flow.generation)
+            .max()
+            .map(|previous| previous.saturating_add(1))
+            .unwrap_or(0);
+
         let limits = path_msg
             .quotas
             .iter()
             .map(|q| -> Result<RateLimit, ContractError> {
+                let mut flow = Flow::new(0_u128, 0_u128, now, q.duration);
+                flow.generation = generation;
                 Ok(RateLimit {
                     quota: Quota::try_from(q)?,
-                    flow: Flow::new(0_u128, 0_u128, now, q.duration),
+                    flow,
                 })
             })
             .collect::<Result<Vec<_>, _>>()?;

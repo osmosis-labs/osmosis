@@ -87,7 +87,7 @@ pub(crate) fn hash_denom(denom: &str) -> String {
 
 /// Mock packets get a timeout ten minutes past the mock block time, each one
 /// a nanosecond apart, so that two mock packets never share a content key by
-/// accident. Real wallets set a fresh timeout on every transfer in the same way.
+/// accident, as wallets that derive the timeout from the clock do.
 #[cfg(test)]
 static MOCK_PACKETS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 #[cfg(test)]
