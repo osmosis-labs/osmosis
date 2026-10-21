@@ -8,14 +8,15 @@ use crate::packet::Packet;
 /// that a packet's timeout timestamp has passed.
 pub const TIMEOUT_SKEW_SECONDS: u64 = 60 * 60;
 
-/// Longest a record is kept past its last window end, whatever the packet's
-/// timeout says. It applies when the packet has no timeout timestamp
-/// (height-only timeout), since the contract cannot tell when a counterparty
-/// height will be reached, and it caps the retention of a timestamp far in
-/// the future, which would otherwise make the record permanent. Past the cap
-/// the same residual applies in both cases: an identical packet could still
-/// be sent, and the earlier failure would settle it.
-pub const MAX_RETENTION_SECONDS: u64 = 30 * 24 * 60 * 60;
+/// How long a record is kept past its last window end when the packet has no
+/// timeout timestamp (height-only timeout), since the contract cannot tell
+/// when a counterparty height will be reached.
+pub const HEIGHT_TIMEOUT_RETENTION_SECONDS: u64 = 30 * 24 * 60 * 60;
+
+/// A window a send was counted in: the quota's name, the window's end and
+/// the flow's generation at the time. The generation is `None` for records
+/// written before it was stored, which then match on name and end alone.
+pub type WindowId = (String, Timestamp, Option<u64>);
 
 /// A send that passed the rate limit and has not been settled yet.
 ///
@@ -47,6 +48,13 @@ pub struct PendingSend {
     /// refunds `funds` once and lowers it by one; the record goes at zero.
     #[serde(default = "one")]
     pub count: u32,
+    /// The flow generation of each entry in `channel_windows`, in order.
+    /// Empty on records written before generations were stored.
+    #[serde(default)]
+    pub channel_generations: Vec<u64>,
+    /// The flow generation of each entry in `any_windows`, in order.
+    #[serde(default)]
+    pub any_generations: Vec<u64>,
 }
 
 fn one() -> u32 {
@@ -56,11 +64,12 @@ fn one() -> u32 {
 impl PendingSend {
     /// When a record for `packet` may be dropped unsettled: after the last
     /// window it was counted in has ended, and after the packet's timeout
-    /// timestamp has passed, each plus the clock-skew margin, but never more
-    /// than MAX_RETENTION_SECONDS past the window end. A height-only timeout
-    /// gets the maximum.
+    /// timestamp has passed, each plus the clock-skew margin. A height-only
+    /// timeout gets a fixed long retention instead. A timeout far in the
+    /// future keeps the record for as long, which is also how long the chain
+    /// keeps the packet commitment for the same packet; dropping it earlier
+    /// would let a failure relayed later settle a newer identical send.
     pub fn retention_end(latest_period_end: Timestamp, packet: &Packet) -> Timestamp {
-        let cap = saturating_plus_seconds(latest_period_end, MAX_RETENTION_SECONDS);
         match packet.timeout_timestamp {
             Some(timeout) if timeout > 0 => {
                 let timeout = Timestamp::from_nanos(timeout);
@@ -69,14 +78,9 @@ impl PendingSend {
                 } else {
                     latest_period_end
                 };
-                let until = saturating_plus_seconds(latest, TIMEOUT_SKEW_SECONDS);
-                if until > cap {
-                    cap
-                } else {
-                    until
-                }
+                saturating_plus_seconds(latest, TIMEOUT_SKEW_SECONDS)
             }
-            _ => cap,
+            _ => saturating_plus_seconds(latest_period_end, HEIGHT_TIMEOUT_RETENTION_SECONDS),
         }
     }
 
@@ -84,6 +88,41 @@ impl PendingSend {
     pub fn is_expired(&self, now: Timestamp) -> bool {
         self.retain_until < now
     }
+
+    /// The windows on the (channel, denom) path this record was counted in
+    pub fn channel_ids(&self) -> Vec<WindowId> {
+        zip_ids(&self.channel_windows, &self.channel_generations)
+    }
+
+    /// The windows on the ("any", denom) path this record was counted in
+    pub fn any_ids(&self) -> Vec<WindowId> {
+        zip_ids(&self.any_windows, &self.any_generations)
+    }
+}
+
+fn zip_ids(windows: &[(String, Timestamp)], generations: &[u64]) -> Vec<WindowId> {
+    windows
+        .iter()
+        .enumerate()
+        .map(|(i, (name, period_end))| (name.clone(), *period_end, generations.get(i).copied()))
+        .collect()
+}
+
+/// Splits window ids into the two vectors a record stores them as
+pub fn split_ids(ids: Vec<(String, Timestamp, u64)>) -> (Vec<(String, Timestamp)>, Vec<u64>) {
+    ids.into_iter()
+        .map(|(name, period_end, generation)| ((name, period_end), generation))
+        .unzip()
+}
+
+/// Whether recorded windows and the windows a transfer would be counted in
+/// are the same, entry by entry. A recorded entry without a generation
+/// matches on name and end alone.
+pub fn same_windows(recorded: &[WindowId], upcoming: &[(String, Timestamp, u64)]) -> bool {
+    recorded.len() == upcoming.len()
+        && recorded.iter().zip(upcoming).all(|(r, u)| {
+            r.0 == u.0 && r.1 == u.1 && r.2.map_or(true, |generation| generation == u.2)
+        })
 }
 
 /// `Timestamp::plus_seconds` aborts on overflow; a far-future timeout is

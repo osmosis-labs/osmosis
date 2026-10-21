@@ -2,7 +2,7 @@
 
 use std::collections::BTreeSet;
 
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, Timestamp};
 use cw_storage_plus::{Deque, Item, Map};
 
 use super::{
@@ -60,12 +60,18 @@ pub const ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM: Map<String, Vec<String>> = Map
 /// Sends that passed a quota, keyed by (source channel, packet content key),
 /// so a failure can be refunded while the recorded windows are still active.
 /// The content key (Packet::send_key) is what the chain passes unchanged
-/// between the send and its acknowledgement. One record per key: a second
-/// identical send while a record is pending is counted but not recorded.
-/// Written on a counted send, removed by UndoSend, by eviction on later sends
-/// on the same channel, or by PurgeStaleSends, the latter two only once the
-/// record's retention (PendingSend::retain_until) has passed.
+/// between the send and its acknowledgement. One record per key, counting the
+/// identical sends it stands for. Written on a counted send, settled by
+/// UndoSend, removed by eviction on later sends on the same channel or by
+/// PurgeStaleSends, the latter two only once the record's retention
+/// (PendingSend::retain_until) has passed.
 pub const PENDING_SENDS: Map<(String, String), PendingSend> = Map::new("pending_sends");
+
+/// Block time of the migration to 0.2.0. Sends counted before it have no
+/// pending-send record, so a failure of one of them is refunded the way
+/// earlier versions did, to the quota's current window, but only while that
+/// window began before the migration and so may still hold the charge.
+pub const MIGRATED_AT: Item<Timestamp> = Item::new("migrated_at");
 
 /// Index of PENDING_SENDS by (source channel, retain_until in nanoseconds,
 /// content key), so that the records whose retention ends first on a channel

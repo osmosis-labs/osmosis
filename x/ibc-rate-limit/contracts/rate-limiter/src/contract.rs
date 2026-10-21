@@ -12,7 +12,7 @@ use crate::state::rbac::Roles;
 use crate::state::storage::RBAC_PERMISSIONS;
 use crate::state::{
     flow::FlowType,
-    storage::{GOVMODULE, IBCMODULE},
+    storage::{GOVMODULE, IBCMODULE, MIGRATED_AT},
 };
 use crate::{execute, message_queue, query, rbac, sudo};
 
@@ -116,8 +116,13 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
+pub fn migrate(deps: DepsMut, env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
     let contract_version = get_contract_version(deps.storage)?;
+
+    // Sends counted before this point have no pending-send record. Their
+    // failures are still refunded to the window that counted them, as long as
+    // that window began before now (see undo_send).
+    MIGRATED_AT.save(deps.storage, &env.block.time)?;
 
     // check contract version, and apply version specific migrations
     if contract_version.version.eq("0.1.0") {

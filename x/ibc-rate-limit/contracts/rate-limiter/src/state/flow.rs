@@ -31,6 +31,13 @@ pub struct Flow {
     pub inflow: Uint256,
     pub outflow: Uint256,
     pub period_end: Timestamp,
+    /// Counts the windows this flow has been through. A window is identified
+    /// by its end together with this number, so that a window a reset or a
+    /// path replacement starts in the same block as a natural one, with the
+    /// same end, is still told apart. Absent from entries written before
+    /// 0.2.0, which read as 0.
+    #[serde(default)]
+    pub generation: u64,
 }
 
 impl Flow {
@@ -44,6 +51,7 @@ impl Flow {
             inflow: inflow.into(),
             outflow: outflow.into(),
             period_end: now.plus_seconds(duration),
+            generation: 0,
         }
     }
 
@@ -89,6 +97,7 @@ impl Flow {
     pub fn expire(&mut self, now: Timestamp, duration: u64) {
         self.inflow = Uint256::zero();
         self.outflow = Uint256::zero();
+        self.generation = self.generation.saturating_add(1);
         self.period_end = now.plus_seconds(duration);
     }
 

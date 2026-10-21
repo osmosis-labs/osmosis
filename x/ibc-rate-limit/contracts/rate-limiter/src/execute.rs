@@ -16,15 +16,31 @@ pub fn add_new_paths(
     for path_msg in path_msgs {
         let path = Path::new(path_msg.channel_id, path_msg.denom);
 
+        // A replaced path starts new windows, which must not be mistaken for
+        // the windows the previous quotas were in even when they end at the
+        // same time, so the new flows continue the previous generation count.
+        let generation = RATE_LIMIT_TRACKERS
+            .may_load(deps.storage, path.clone().into())?
+            .unwrap_or_default()
+            .iter()
+            .map(|limit| limit.flow.generation)
+            .max()
+            .map(|previous| previous.saturating_add(1))
+            .unwrap_or(0);
+
         RATE_LIMIT_TRACKERS.save(
             deps.storage,
             path.into(),
             &path_msg
                 .quotas
                 .iter()
-                .map(|q| RateLimit {
-                    quota: q.into(),
-                    flow: Flow::new(0_u128, 0_u128, now, q.duration),
+                .map(|q| {
+                    let mut flow = Flow::new(0_u128, 0_u128, now, q.duration);
+                    flow.generation = generation;
+                    RateLimit {
+                        quota: q.into(),
+                        flow,
+                    }
                 })
                 .collect(),
         )?

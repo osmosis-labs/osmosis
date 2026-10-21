@@ -6,9 +6,9 @@ use crate::{
     state::{
         flow::FlowType,
         path::Path,
-        pending_send::PendingSend,
+        pending_send::{same_windows, split_ids, PendingSend, WindowId},
         rate_limit::RateLimit,
-        storage::{PENDING_SENDS, PENDING_SENDS_BY_EXPIRY, RATE_LIMIT_TRACKERS},
+        storage::{MIGRATED_AT, PENDING_SENDS, PENDING_SENDS_BY_EXPIRY, RATE_LIMIT_TRACKERS},
     },
     ContractError,
 };
@@ -87,17 +87,20 @@ pub fn process_packet(
 
 /// The window each tracker will be in once a transfer at `now` is applied:
 /// the current one, or a fresh one when the current one has ended, exactly
-/// as Flow::apply_transfer resets it.
-fn upcoming_windows(trackers: &[RateLimit], now: Timestamp) -> Vec<(String, Timestamp)> {
+/// as Flow::apply_transfer resets it (which also advances the generation).
+fn upcoming_window_ids(trackers: &[RateLimit], now: Timestamp) -> Vec<(String, Timestamp, u64)> {
     trackers
         .iter()
         .map(|limit| {
-            let period_end = if limit.flow.is_expired(now) {
-                now.plus_seconds(limit.quota.duration)
+            let (period_end, generation) = if limit.flow.is_expired(now) {
+                (
+                    now.plus_seconds(limit.quota.duration),
+                    limit.flow.generation.saturating_add(1),
+                )
             } else {
-                limit.flow.period_end
+                (limit.flow.period_end, limit.flow.generation)
             };
-            (limit.quota.name.clone(), period_end)
+            (limit.quota.name.clone(), period_end, generation)
         })
         .collect()
 }
@@ -107,7 +110,8 @@ fn upcoming_windows(trackers: &[RateLimit], now: Timestamp) -> Vec<(String, Time
 /// the wrong window) and must not be counted without one (an unrefundable
 /// charge would be netted off as receive capacity), so it is rejected before
 /// any state changes. It can only happen when an identical packet with the
-/// same, still valid timeout is sent again after a window has rolled over.
+/// same, still valid timeout is sent again after a window has rolled over,
+/// and lasts as long as the earlier record is retained.
 fn reject_cross_window_duplicate(
     storage: &dyn Storage,
     now: Timestamp,
@@ -122,9 +126,9 @@ fn reject_cross_window_duplicate(
     if existing.is_expired(now) {
         return Ok(());
     }
-    let same_windows = existing.channel_windows == upcoming_windows(trackers, now)
-        && existing.any_windows == upcoming_windows(any_trackers, now);
-    if same_windows {
+    if same_windows(&existing.channel_ids(), &upcoming_window_ids(trackers, now))
+        && same_windows(&existing.any_ids(), &upcoming_window_ids(any_trackers, now))
+    {
         return Ok(());
     }
     Err(ContractError::DuplicatePendingSend {
@@ -158,11 +162,17 @@ fn not_configured_response(path: &Path) -> Response {
         .add_attribute("quota", "none")
 }
 
-/// The (quota name, window end) pairs of a set of trackers after a transfer
-fn windows_of(trackers: &[RateLimit]) -> Vec<(String, Timestamp)> {
+/// The (quota name, window end, generation) of each tracker after a transfer
+fn window_ids(trackers: &[RateLimit]) -> Vec<(String, Timestamp, u64)> {
     trackers
         .iter()
-        .map(|limit| (limit.quota.name.clone(), limit.flow.period_end))
+        .map(|limit| {
+            (
+                limit.quota.name.clone(),
+                limit.flow.period_end,
+                limit.flow.generation,
+            )
+        })
         .collect()
 }
 
@@ -316,14 +326,16 @@ fn record_pending_send(
     let key = (channel.clone(), send_key.clone());
     let evicted = evict_stale_sends(storage, &channel, now)?;
 
-    let channel_windows = windows_of(trackers);
-    let any_windows = windows_of(any_trackers);
+    let channel_ids = window_ids(trackers);
+    let any_ids = window_ids(any_trackers);
     match PENDING_SENDS.may_load(storage, key.clone())? {
         Some(existing) if !existing.is_expired(now) => {
             // reject_cross_window_duplicate ran before the transfer was
             // counted, so the windows match; a mismatch here would be a bug,
             // and the transfer must then fail rather than go unrecorded.
-            if existing.channel_windows != channel_windows || existing.any_windows != any_windows {
+            if !same_windows(&existing.channel_ids(), &channel_ids)
+                || !same_windows(&existing.any_ids(), &any_ids)
+            {
                 return Err(ContractError::DuplicatePendingSend {
                     channel,
                     denom: packet.data.denom.clone(),
@@ -350,18 +362,22 @@ fn record_pending_send(
         None => {}
     }
 
-    let latest_period_end = channel_windows
+    let latest_period_end = channel_ids
         .iter()
-        .chain(any_windows.iter())
-        .map(|(_, period_end)| *period_end)
+        .chain(any_ids.iter())
+        .map(|(_, period_end, _)| *period_end)
         .max()
         .unwrap_or_else(|| Timestamp::from_nanos(0));
+    let (channel_windows, channel_generations) = split_ids(channel_ids);
+    let (any_windows, any_generations) = split_ids(any_ids);
     let record = PendingSend {
         funds: packet.get_funds(),
         channel_windows,
         any_windows,
         retain_until: PendingSend::retention_end(latest_period_end, packet),
         count: 1,
+        channel_generations,
+        any_generations,
     };
     let retain_until = record.retain_until.nanos();
 
@@ -377,19 +393,17 @@ fn evict_stale_sends(
     channel: &str,
     now: Timestamp,
 ) -> Result<usize, ContractError> {
-    let oldest: Vec<(u64, String)> = PENDING_SENDS_BY_EXPIRY
+    // The index is ordered by retention end, so the first entry that has not
+    // expired means none after it has either, and the read stops there
+    let expired: Vec<(u64, String)> = PENDING_SENDS_BY_EXPIRY
         .sub_prefix(channel.to_string())
         .range(storage, None, None, Order::Ascending)
         .take(STALE_EVICTIONS_PER_RECORD)
         .map(|item| item.map(|(key, _)| key))
+        .take_while(|item| !matches!(item, Ok((retain_until, _)) if *retain_until >= now.nanos()))
         .collect::<StdResult<_>>()?;
     let mut evicted = 0;
-    for (retain_until, send_key) in oldest {
-        // The index is ordered by retention end, so the first entry that has
-        // not expired means none after it has either
-        if retain_until >= now.nanos() {
-            break;
-        }
+    for (retain_until, send_key) in expired {
         evicted += remove_stale_record(storage, channel, retain_until, &send_key, now)?;
     }
     Ok(evicted)
@@ -438,19 +452,24 @@ pub fn undo_send(deps: DepsMut, packet: Packet) -> Result<Response, ContractErro
         .add_attribute("channel_id", channel_id.clone())
         .add_attribute("denom", denom.clone());
 
-    let Some(pending) = PENDING_SENDS.may_load(deps.storage, key.clone())? else {
-        // Nothing recorded for this packet: it was never counted, or its
-        // record was already settled or expired. Nothing to refund.
-        return Ok(response.add_attribute("refunded", "0"));
-    };
-
     let path = Path::new(channel_id, denom.clone());
     let any_path = Path::new("any", denom);
+
+    let Some(pending) = PENDING_SENDS.may_load(deps.storage, key.clone())? else {
+        // Nothing recorded for this packet: it was counted before the
+        // migration to 0.2.0, or its record was already settled or expired.
+        // Only the former can still hold a charge in an active window, so
+        // that case is refunded the way earlier versions did.
+        let refunded = refund_legacy_send(deps.storage, &path, &any_path, packet.get_funds())?;
+        return Ok(response
+            .add_attribute("refunded", refunded.to_string())
+            .add_attribute("pending_count", "0"));
+    };
+
     let (mut trackers, mut any_trackers) = load_trackers(deps.storage, &path)?;
 
-    let refunded_channel =
-        refund_same_window(&mut trackers, &pending.channel_windows, pending.funds);
-    let refunded_any = refund_same_window(&mut any_trackers, &pending.any_windows, pending.funds);
+    let refunded_channel = refund_same_window(&mut trackers, &pending.channel_ids(), pending.funds);
+    let refunded_any = refund_same_window(&mut any_trackers, &pending.any_ids(), pending.funds);
 
     if refunded_channel > 0 {
         RATE_LIMIT_TRACKERS.save(deps.storage, path.into(), &trackers)?;
@@ -486,17 +505,56 @@ pub fn undo_send(deps: DepsMut, packet: Packet) -> Result<Response, ContractErro
         .add_attribute("pending_count", remaining.to_string()))
 }
 
+/// Versions before 0.2.0 kept no pending-send records and refunded every
+/// failed send to the quota's current window. A send counted before the
+/// migration therefore has no record, and its failure is still refunded that
+/// way, but only to a window that began before the migration and so may hold
+/// the charge. Once every window has rolled over since, nothing is refunded
+/// without a record. Returns how many trackers were refunded.
+fn refund_legacy_send(
+    storage: &mut dyn Storage,
+    path: &Path,
+    any_path: &Path,
+    funds: Uint256,
+) -> Result<usize, ContractError> {
+    let Some(migrated_at) = MIGRATED_AT.may_load(storage)? else {
+        return Ok(0);
+    };
+    let (mut trackers, mut any_trackers) = load_trackers(storage, path)?;
+    let began_before_migration = |limit: &RateLimit| {
+        let window_start = limit
+            .flow
+            .period_end
+            .nanos()
+            .saturating_sub(limit.quota.duration.saturating_mul(1_000_000_000));
+        window_start <= migrated_at.nanos()
+    };
+    let mut refunded = 0;
+    for (limits, path) in [(&mut trackers, path), (&mut any_trackers, any_path)] {
+        let mut touched = 0;
+        for limit in limits.iter_mut() {
+            if began_before_migration(limit) {
+                limit.flow.undo_flow(FlowType::Out, funds);
+                touched += 1;
+            }
+        }
+        if touched > 0 {
+            RATE_LIMIT_TRACKERS.save(storage, path.clone().into(), limits)?;
+            refunded += touched;
+        }
+    }
+    Ok(refunded)
+}
+
 /// Refunds `funds` to every tracker whose quota is still in the window the
 /// send was recorded against. Returns how many trackers were refunded.
-fn refund_same_window(
-    trackers: &mut [RateLimit],
-    windows: &[(String, Timestamp)],
-    funds: Uint256,
-) -> usize {
+fn refund_same_window(trackers: &mut [RateLimit], windows: &[WindowId], funds: Uint256) -> usize {
     let mut refunded = 0;
     for limit in trackers.iter_mut() {
-        let same_window = |(name, period_end): &(String, Timestamp)| {
-            *name == limit.quota.name && *period_end == limit.flow.period_end
+        let same_window = |(name, period_end, generation): &WindowId| {
+            *name == limit.quota.name
+                && *period_end == limit.flow.period_end
+                && generation.map_or(true, |generation| generation == limit.flow.generation)
         };
         if windows.iter().any(same_window) {
             limit.flow.undo_flow(FlowType::Out, funds);
