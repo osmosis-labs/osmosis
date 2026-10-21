@@ -4,12 +4,14 @@ use crate::blocking::restriction_key;
 use crate::msg::{PathMsg, QuotaMsg};
 use crate::sudo::remove_stale_record;
 
-use crate::state::storage::{ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM, PENDING_SENDS_BY_EXPIRY};
+use crate::state::storage::{
+    ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM, PENDING_SENDS_BY_EXPIRY, REMOVED_PATH_GENERATION,
+};
 use crate::state::{
     flow::Flow, path::Path, quota::Quota, rate_limit::RateLimit, storage::RATE_LIMIT_TRACKERS,
 };
 use crate::ContractError;
-use cosmwasm_std::{DepsMut, Order, Response, StdResult, Timestamp};
+use cosmwasm_std::{DepsMut, Order, Response, StdResult, Timestamp, Uint64};
 use cw_storage_plus::Bound;
 
 pub fn add_new_paths(
@@ -23,18 +25,25 @@ pub fn add_new_paths(
 
         // A replaced path starts new windows, which must not be mistaken for
         // the windows the previous quotas were in even when they end at the
-        // same time, so the new flows continue the previous generation count.
-        // A path that was removed and added again has no previous count to
-        // continue, so new paths start from the block time instead, which no
-        // earlier path's count can have reached.
-        let generation = RATE_LIMIT_TRACKERS
-            .may_load(deps.storage, path.clone().into())?
+        // same time, so the new flows continue the previous generation count,
+        // or the count a removed path had reached (RemovePath keeps it for
+        // this). A path never seen before starts from the block time.
+        let key: (String, String) = path.clone().into();
+        let previous = RATE_LIMIT_TRACKERS
+            .may_load(deps.storage, key.clone())?
             .unwrap_or_default()
             .iter()
-            .map(|limit| limit.flow.generation.saturating_add(1))
+            .map(|limit| limit.flow.generation.u64())
+            .max();
+        let removed = REMOVED_PATH_GENERATION.may_load(deps.storage, key.clone())?;
+        let generation = previous
+            .into_iter()
+            .chain(removed)
+            .map(|g| g.saturating_add(1))
             .max()
             .unwrap_or(0)
             .max(now.nanos());
+        REMOVED_PATH_GENERATION.remove(deps.storage, key);
 
         let limits = path_msg
             .quotas
@@ -44,7 +53,7 @@ pub fn add_new_paths(
                 // and an unchecked one could overflow the timestamp arithmetic
                 let quota = Quota::try_from(q)?;
                 let mut flow = Flow::new(0_u128, 0_u128, now, quota.duration);
-                flow.generation = generation;
+                flow.generation = Uint64::new(generation);
                 Ok(RateLimit { quota, flow })
             })
             .collect::<Result<Vec<_>, _>>()?;
@@ -108,8 +117,19 @@ pub fn try_remove_path(
     channel_id: String,
     denom: String,
 ) -> Result<Response, ContractError> {
-    let path = Path::new(&channel_id, &denom);
-    RATE_LIMIT_TRACKERS.remove(deps.storage, path.into());
+    let key: (String, String) = Path::new(&channel_id, &denom).into();
+    // Keep the generation count the path reached, so that adding it again
+    // cannot reuse one of its window identities
+    let reached = RATE_LIMIT_TRACKERS
+        .may_load(deps.storage, key.clone())?
+        .unwrap_or_default()
+        .iter()
+        .map(|limit| limit.flow.generation.u64())
+        .max();
+    if let Some(reached) = reached {
+        REMOVED_PATH_GENERATION.save(deps.storage, key.clone(), &reached)?;
+    }
+    RATE_LIMIT_TRACKERS.remove(deps.storage, key);
     Ok(Response::new()
         .add_attribute("method", "try_remove_channel")
         .add_attribute("denom", denom)

@@ -43,8 +43,8 @@ pub type WindowId = (String, Timestamp, Option<u64>);
 /// refunded if it fails. A record is retained until both its windows have
 /// ended and the packet's timeout has passed by the clock-skew margin, and an
 /// identical send that would be counted in a different window while the
-/// record is retained is rejected, so a settlement can never credit a window
-/// other than the one that was charged.
+/// record is retained is rejected, so within the retention bounds a
+/// settlement cannot credit a window other than the one that was charged.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PendingSend {
     pub funds: Uint256,

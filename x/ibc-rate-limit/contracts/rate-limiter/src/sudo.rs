@@ -95,10 +95,10 @@ fn upcoming_window_ids(trackers: &[RateLimit], now: Timestamp) -> Vec<(String, T
             let (period_end, generation) = if limit.flow.is_expired(now) {
                 (
                     now.plus_seconds(limit.quota.duration),
-                    limit.flow.generation.saturating_add(1),
+                    limit.flow.generation.u64().saturating_add(1),
                 )
             } else {
-                (limit.flow.period_end, limit.flow.generation)
+                (limit.flow.period_end, limit.flow.generation.u64())
             };
             (limit.quota.name.clone(), period_end, generation)
         })
@@ -170,7 +170,7 @@ fn window_ids(trackers: &[RateLimit]) -> Vec<(String, Timestamp, u64)> {
             (
                 limit.quota.name.clone(),
                 limit.flow.period_end,
-                limit.flow.generation,
+                limit.flow.generation.u64(),
             )
         })
         .collect()
@@ -306,7 +306,7 @@ const STALE_EVICTIONS_PER_RECORD: usize = 5;
 // would be counted in different windows while the record is retained is
 // refused before anything is counted (reject_cross_window_duplicate). The
 // record is retained until the packet's timeout has passed by a clock-skew
-// margin (PendingSend::retention_end). The chain accepts a send whenever its
+// margin, within the retention bounds (PendingSend::retention_end). The chain accepts a send whenever its
 // timeout is ahead of the counterparty light client's latest timestamp, which
 // trails block time, so a send whose timeout is already behind block time is
 // possible and is recorded like any other; its timeout is refunded in its own
@@ -571,7 +571,7 @@ fn refund_same_window(trackers: &mut [RateLimit], windows: &[WindowId], funds: U
             *name == limit.quota.name
                 && *period_end == limit.flow.period_end
                 && match generation {
-                    Some(generation) => *generation == limit.flow.generation,
+                    Some(generation) => *generation == limit.flow.generation.u64(),
                     None => true,
                 }
         };
