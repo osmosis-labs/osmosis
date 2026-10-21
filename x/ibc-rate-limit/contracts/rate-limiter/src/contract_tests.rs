@@ -729,7 +729,7 @@ fn refunded_send_does_not_change_receive_allowance() {
 }
 
 /// A receive of `funds` on the quoted path, as the chain would report it
-fn recv_denom(funds: u32) -> SudoMsg {
+fn recv_quoted(funds: u32) -> SudoMsg {
     test_msg_recv!(
         channel_id: format!("channel"),
         denom: format!("denom"),
@@ -778,8 +778,8 @@ fn identical_pending_sends_share_one_record_and_are_each_refunded() {
     assert_eq!(any_denom_outflow(&deps.storage), Uint256::zero());
 
     // The receive allowance is exactly the quota: 10% of 3,300, nothing more
-    sudo(deps.as_mut(), mock_env(), recv_denom(330)).unwrap();
-    let err = sudo(deps.as_mut(), mock_env(), recv_denom(1)).unwrap_err();
+    sudo(deps.as_mut(), mock_env(), recv_quoted(330)).unwrap();
+    let err = sudo(deps.as_mut(), mock_env(), recv_quoted(1)).unwrap_err();
     assert!(matches!(err, ContractError::RateLimitExceded { .. }));
 }
 
@@ -835,8 +835,8 @@ fn send_with_a_past_timeout_is_recorded_and_refundable() {
     assert_eq!(index_entries(&deps.storage), 0);
 
     // so the receive allowance is still exactly the quota
-    sudo(deps.as_mut(), mock_env(), recv_denom(330)).unwrap();
-    let err = sudo(deps.as_mut(), mock_env(), recv_denom(1)).unwrap_err();
+    sudo(deps.as_mut(), mock_env(), recv_quoted(330)).unwrap();
+    let err = sudo(deps.as_mut(), mock_env(), recv_quoted(1)).unwrap_err();
     assert!(matches!(err, ContractError::RateLimitExceded { .. }));
 }
 
