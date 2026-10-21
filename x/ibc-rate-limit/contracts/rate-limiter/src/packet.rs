@@ -243,7 +243,7 @@ impl Packet {
 /// `gamm/pool/N`), but never an IBC channel id in second position, which is
 /// what distinguishes a trace whatever port it was sent from. A channel id is
 /// `channel-` followed by a number, as ibc-go issues them.
-fn is_denom_trace(denom: &str) -> bool {
+pub(crate) fn is_denom_trace(denom: &str) -> bool {
     let mut parts = denom.splitn(3, '/');
     let port = parts.next().unwrap_or_default();
     let channel_is_ibc = matches!(parts.next(), Some(channel) if is_channel_id(channel));

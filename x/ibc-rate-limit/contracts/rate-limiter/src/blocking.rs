@@ -1,7 +1,7 @@
 use cosmwasm_std::{Deps, Order, StdResult, Storage};
 
 use crate::{
-    packet::{hash_denom, Packet},
+    packet::{hash_denom, is_denom_trace, Packet},
     state::{flow::FlowType, storage::ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM},
     ContractError,
 };
@@ -14,11 +14,12 @@ use crate::{
 pub const NO_CHANNEL_ALLOWED: &str = "no-channel";
 
 /// The key a denom's restriction is stored under: the denom as it exists on
-/// this chain. A packet-form denom (transfer/<channel>/<base>) becomes its
-/// ibc/HASH; anything else is used as-is. Both spellings of the same token
-/// therefore resolve to one key, so an entry can never be shadowed by its alias.
+/// this chain. A packet-form denom (an IBC trace, `<port>/<channel>/<base>`,
+/// whatever the port) becomes its ibc/HASH; anything else is used as-is. Both
+/// spellings of the same token therefore resolve to one key, so an entry can
+/// never be shadowed by its alias.
 pub fn restriction_key(denom: &str) -> String {
-    if denom.starts_with("transfer/") {
+    if is_denom_trace(denom) {
         hash_denom(denom)
     } else {
         denom.to_string()
@@ -249,6 +250,44 @@ mod tests {
             Uint256::from(100u128),
         );
         assert!(check_restricted_denoms(deps.as_ref(), &packet, &FlowType::Out).is_ok());
+    }
+
+    #[test]
+    fn test_restriction_key_covers_vouchers_from_other_ports() {
+        // A voucher from a counterparty contract's own IBC port is an IBC trace
+        // too, so a restriction set under its ibc/HASH applies to the packet
+        let mut deps = mock_dependencies();
+        let packet_denom = "wasm.juno1contract/channel-3/cw20:juno1token";
+        assert_eq!(restriction_key(packet_denom), hash_denom(packet_denom));
+        assert_eq!(
+            restriction_key("factory/osmo1abc/alloyed/allBTC"),
+            "factory/osmo1abc/alloyed/allBTC"
+        );
+
+        ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM
+            .save(
+                deps.as_mut().storage,
+                hash_denom(packet_denom),
+                &vec!["channel-3".to_string()],
+            )
+            .unwrap();
+        let blocked = Packet::mock(
+            "channel-0".to_string(),
+            "dest".to_string(),
+            packet_denom.to_string(),
+            Uint256::from(1u128),
+        );
+        assert!(matches!(
+            check_restricted_denoms(deps.as_ref(), &blocked, &FlowType::Out),
+            Err(ContractError::ChannelBlocked { .. })
+        ));
+        let allowed = Packet::mock(
+            "channel-3".to_string(),
+            "dest".to_string(),
+            packet_denom.to_string(),
+            Uint256::from(1u128),
+        );
+        assert!(check_restricted_denoms(deps.as_ref(), &allowed, &FlowType::Out).is_ok());
     }
 
     #[test]

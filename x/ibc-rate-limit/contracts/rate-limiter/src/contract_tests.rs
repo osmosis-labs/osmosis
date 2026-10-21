@@ -452,7 +452,7 @@ fn any_denom_window(storage: &dyn cosmwasm_std::Storage) -> (Timestamp, u64) {
         .first()
         .unwrap()
         .flow;
-    (flow.period_end, flow.generation)
+    (flow.period_end, flow.generation.u64())
 }
 
 #[test] // A failed send is refunded while the quota is still in the window the send was counted in
@@ -684,20 +684,50 @@ fn undo_send_does_not_refund_into_a_same_block_replacement_window() {
     assert_eq!(attr(&res, "refunded"), "1");
     assert_eq!(any_denom_outflow(&deps.storage), Uint256::zero());
 
-    // A path removed and added again in the same block starts over at the
-    // block time, which the removed path's count had already passed
+    // A path removed and added again in the same block continues the count
+    // the removed path had reached, so none of its window identities return
     sudo(deps.as_mut(), mock_env(), send_tagged(10, 40)).unwrap();
     let remove = ExecuteMsg::RemovePath {
         channel_id: "any".to_string(),
         denom: "denom".to_string(),
     };
-    execute(deps.as_mut(), mock_env(), mock_info(GOV_ADDR, &[]), remove).unwrap();
-    execute(deps.as_mut(), mock_env(), mock_info(GOV_ADDR, &[]), add).unwrap();
-    assert_eq!(any_denom_window(&deps.storage), (window_end, first));
+    execute(
+        deps.as_mut(),
+        mock_env(),
+        mock_info(GOV_ADDR, &[]),
+        remove.clone(),
+    )
+    .unwrap();
+    execute(
+        deps.as_mut(),
+        mock_env(),
+        mock_info(GOV_ADDR, &[]),
+        add.clone(),
+    )
+    .unwrap();
+    assert_eq!(any_denom_window(&deps.storage), (window_end, first + 3));
     sudo(deps.as_mut(), mock_env(), send_tagged(11, 20)).unwrap();
     let res = sudo(deps.as_mut(), mock_env(), undo_tagged(10, 40)).unwrap();
     assert_eq!(attr(&res, "refunded"), "0");
     assert_eq!(any_denom_outflow(&deps.storage), Uint256::from(20_u32));
+
+    // The same when the path is created, used, removed and re-added within
+    // one block without any reset in between
+    let mut fresh = mock_dependencies();
+    instantiate_any_denom(
+        fresh.as_mut(),
+        vec![QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 10)],
+    )
+    .unwrap();
+    assert_eq!(any_denom_window(&fresh.storage), (window_end, first));
+    sudo(fresh.as_mut(), mock_env(), send_tagged(12, 100)).unwrap();
+    execute(fresh.as_mut(), mock_env(), mock_info(GOV_ADDR, &[]), remove).unwrap();
+    execute(fresh.as_mut(), mock_env(), mock_info(GOV_ADDR, &[]), add).unwrap();
+    assert_eq!(any_denom_window(&fresh.storage), (window_end, first + 1));
+    sudo(fresh.as_mut(), mock_env(), send_tagged(13, 50)).unwrap();
+    let res = sudo(fresh.as_mut(), mock_env(), undo_tagged(12, 100)).unwrap();
+    assert_eq!(attr(&res, "refunded"), "0");
+    assert_eq!(any_denom_outflow(&fresh.storage), Uint256::from(50_u32));
 }
 
 #[test] // Sends counted before the migration have no record; their failures are refunded the old way, but only into a window that began before the migration
@@ -717,7 +747,7 @@ fn legacy_sends_are_refunded_until_their_window_has_rolled_over() {
         .load(&deps.storage, path.clone())
         .unwrap();
     limits[0].flow.outflow = Uint256::from(300_u32);
-    limits[0].flow.generation = 0;
+    limits[0].flow.generation = cosmwasm_std::Uint64::zero();
     limits[0].flow.started_at = None;
     RATE_LIMIT_TRACKERS
         .save(deps.as_mut().storage, path.clone(), &limits)

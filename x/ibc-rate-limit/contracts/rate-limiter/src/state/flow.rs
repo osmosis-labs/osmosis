@@ -1,4 +1,4 @@
-use cosmwasm_std::{Timestamp, Uint256};
+use cosmwasm_std::{Timestamp, Uint256, Uint64};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -35,9 +35,10 @@ pub struct Flow {
     /// by its end together with this number, so that a window a reset or a
     /// path replacement starts in the same block as a natural one, with the
     /// same end, is still told apart. Absent from entries written before
-    /// 0.2.0, which read as 0.
+    /// 0.2.0, which read as 0. Serialised as a string, since it is seeded from
+    /// a nanosecond timestamp and would lose precision as a JSON number.
     #[serde(default)]
-    pub generation: u64,
+    pub generation: Uint64,
     /// When the current window began. Absent from entries written before
     /// 0.2.0 whose window has not been reset since, which is how the
     /// contract tells that such a window predates the 0.2.0 migration.
@@ -56,7 +57,7 @@ impl Flow {
             inflow: inflow.into(),
             outflow: outflow.into(),
             period_end: now.plus_seconds(duration),
-            generation: 0,
+            generation: Uint64::zero(),
             started_at: Some(now),
         }
     }
@@ -103,7 +104,7 @@ impl Flow {
     pub fn expire(&mut self, now: Timestamp, duration: u64) {
         self.inflow = Uint256::zero();
         self.outflow = Uint256::zero();
-        self.generation = self.generation.saturating_add(1);
+        self.generation = Uint64::new(self.generation.u64().saturating_add(1));
         self.started_at = Some(now);
         self.period_end = now.plus_seconds(duration);
     }

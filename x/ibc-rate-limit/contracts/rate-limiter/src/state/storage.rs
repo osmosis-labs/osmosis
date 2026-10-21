@@ -67,6 +67,11 @@ pub const ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM: Map<String, Vec<String>> = Map
 /// (PendingSend::retain_until) has passed.
 pub const PENDING_SENDS: Map<(String, String), PendingSend> = Map::new("pending_sends");
 
+/// The highest window generation a removed path had reached, kept until the
+/// path is added again so that its new windows continue the count rather than
+/// restart it. Written by RemovePath, consumed by AddPath; governance-only.
+pub const REMOVED_PATH_GENERATION: Map<(String, String), u64> = Map::new("removed_generation");
+
 /// Block time of the migration to 0.2.0. Sends counted before it have no
 /// pending-send record, so a failure of one of them is refunded the way
 /// earlier versions did, to the quota's current window, but only while that
