@@ -361,6 +361,19 @@ pub mod tests {
             hash_denom("transfer/channel-17/cw20:juno1token")
         );
 
+        // A voucher this chain wrapped from such a port, returning home, is unwrapped
+        // one hop and looked up under the hash of what remains
+        let packet = Packet::mock(
+            "channel-42".to_string(),
+            "channel-17".to_string(),
+            "transfer/channel-42/wasm.juno1contract/channel-3/cw20:juno1token".to_string(),
+            0_u128.into(),
+        );
+        assert_eq!(
+            packet.local_denom(&FlowType::In),
+            hash_denom("wasm.juno1contract/channel-3/cw20:juno1token")
+        );
+
         // A trace that begins with another port is still a trace and is looked up
         // under its ibc/ hash (the transfer module itself only ever hands this
         // chain's own port in first position; other ports reach the limiter from
