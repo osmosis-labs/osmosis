@@ -41,7 +41,7 @@ Rate limits aren't the end-all of safety controls, they're merely the simplest a
 We express rate limits in time-based periods.
 This means, we set rate limits for (say) 6-hour, daily, and weekly intervals.
 The rate limit for a given time period stores the relevant amount of assets at the start of the rate limit.
-Rate limits are then defined as a percentage of the asset's supply on Osmosis, an absolute amount in the asset's base units, or both. The percentage applies to the net flow; the absolute amount applies to the gross flow, so it cannot be gamed by first sending real assets out, and it does not scale with a supply an attacker is inflating.
+Rate limits are then defined as a percentage of the asset's supply on Osmosis, an absolute amount in the asset's base units, or both. The percentage applies to the net flow; the absolute amount applies to the gross flow in each direction and does not depend on the asset's supply.
 The time windows for rate limits are currently _not_ rolling, they have discrete start/end times.
 
 We allow setting separate rate limits for the inflow and outflow of assets.

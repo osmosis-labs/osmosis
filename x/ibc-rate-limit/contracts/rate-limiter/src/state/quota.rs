@@ -14,7 +14,7 @@ use super::flow::FlowType;
 ///   cached at the start of the window), applied to the net flow so that
 ///   round trips do not consume quota, and
 /// * an absolute amount in the denom's base units, applied to the gross flow
-///   so that sending real tokens out first cannot buy room to bring more in.
+///   in that direction, independent of flow the other way.
 ///
 /// A transfer must satisfy every bound that is set. The absolute bound exists
 /// because a percentage is only as reliable as the supply it is measured

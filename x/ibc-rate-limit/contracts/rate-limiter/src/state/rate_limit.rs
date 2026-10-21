@@ -67,7 +67,7 @@ impl RateLimit {
 
         // The percentage bound applies to the net flow so that round trips do
         // not consume quota. The absolute bound applies to the gross flow so
-        // that sending real tokens out first cannot buy room to bring more in.
+        // that it is independent of flow the other way.
         if let Some(max) = capacity.percentage {
             if self.flow.balance_on(direction) > max {
                 return Err(exceeded("percentage", initial_net, max));
