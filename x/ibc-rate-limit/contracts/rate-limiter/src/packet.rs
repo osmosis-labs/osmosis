@@ -196,12 +196,20 @@ impl Packet {
 /// which this chain holds as `ibc/HASH`, rather than a denom native to this
 /// chain. Native denoms may contain slashes too (`factory/{creator}/{sub}`,
 /// `gamm/pool/N`), but never an IBC channel id in second position, which is
-/// what distinguishes a trace whatever port it was sent from.
+/// what distinguishes a trace whatever port it was sent from. A channel id is
+/// `channel-` followed by a number, as ibc-go issues them.
 fn is_denom_trace(denom: &str) -> bool {
     let mut parts = denom.splitn(3, '/');
     let port = parts.next().unwrap_or_default();
-    let channel_is_ibc = matches!(parts.next(), Some(channel) if channel.starts_with("channel-"));
+    let channel_is_ibc = matches!(parts.next(), Some(channel) if is_channel_id(channel));
     !port.is_empty() && channel_is_ibc && parts.next().is_some()
+}
+
+fn is_channel_id(candidate: &str) -> bool {
+    match candidate.strip_prefix("channel-") {
+        Some(number) => !number.is_empty() && number.bytes().all(|b| b.is_ascii_digit()),
+        None => false,
+    }
 }
 
 // Helpers
@@ -243,8 +251,8 @@ pub mod tests {
     #[test]
     fn send_native() {
         let packet = Packet::mock(
-            "channel-17-local".to_string(),
-            "channel-42-counterparty".to_string(),
+            "channel-17".to_string(),
+            "channel-42".to_string(),
             "uosmo".to_string(),
             0_u128.into(),
         );
@@ -257,9 +265,9 @@ pub mod tests {
         // ibc/09E4864A262249507925831FBAD69DAD08F66FAAA0640714E765912A0751289A
         // to port/channel/denom before passing it along to the contrace
         let packet = Packet::mock(
-            "channel-17-local".to_string(),
-            "channel-42-counterparty".to_string(),
-            "transfer/channel-17-local/ujuno".to_string(),
+            "channel-17".to_string(),
+            "channel-42".to_string(),
+            "transfer/channel-17/ujuno".to_string(),
             0_u128.into(),
         );
         assert_eq!(
@@ -272,9 +280,9 @@ pub mod tests {
     fn receive_non_native() {
         // The counterparty chain sends their own native token to us
         let packet = Packet::mock(
-            "channel-42-counterparty".to_string(), // The counterparty's channel is the source here
-            "channel-17-local".to_string(),        // Our channel is the dest channel
-            "ujuno".to_string(),                   // This is unwrapped. It is our job to wrap it
+            "channel-42".to_string(), // The counterparty's channel is the source here
+            "channel-17".to_string(), // Our channel is the dest channel
+            "ujuno".to_string(),      // This is unwrapped. It is our job to wrap it
             0_u128.into(),
         );
         assert_eq!(
@@ -287,9 +295,9 @@ pub mod tests {
     fn receive_native() {
         // The counterparty chain sends us back our native token that they had wrapped
         let packet = Packet::mock(
-            "channel-42-counterparty".to_string(), // The counterparty's channel is the source here
-            "channel-17-local".to_string(),        // Our channel is the dest channel
-            "transfer/channel-42-counterparty/uosmo".to_string(),
+            "channel-42".to_string(), // The counterparty's channel is the source here
+            "channel-17".to_string(), // Our channel is the dest channel
+            "transfer/channel-42/uosmo".to_string(),
             0_u128.into(),
         );
         assert_eq!(packet.local_denom(&FlowType::In), "uosmo");
@@ -299,9 +307,9 @@ pub mod tests {
     fn receive_tokenfactory_token() {
         // The counterparty chain sends us back our native token that they had wrapped
         let packet = Packet::mock(
-            "channel-42-counterparty".to_string(), // The counterparty's channel is the source here
-            "channel-17-local".to_string(),        // Our channel is the dest channel
-            "transfer/channel-42-counterparty/factory/osmo1em6xs47hd82806f5cxgyufguxrrc7l0aqx7nzzptjuqgswczk8csavdxek/alloyed/allUSDT".to_string(),
+            "channel-42".to_string(), // The counterparty's channel is the source here
+            "channel-17".to_string(),        // Our channel is the dest channel
+            "transfer/channel-42/factory/osmo1em6xs47hd82806f5cxgyufguxrrc7l0aqx7nzzptjuqgswczk8csavdxek/alloyed/allUSDT".to_string(),
             0_u128.into(),
         );
         assert_eq!(packet.local_denom(&FlowType::In), "factory/osmo1em6xs47hd82806f5cxgyufguxrrc7l0aqx7nzzptjuqgswczk8csavdxek/alloyed/allUSDT");
@@ -321,6 +329,10 @@ pub mod tests {
         ));
         assert!(!is_denom_trace("transfer/channel-0"));
         assert!(!is_denom_trace("/channel-0/uatom"));
+        // only a real channel id in second position makes a trace
+        assert!(!is_denom_trace("custom/channel-backup/token"));
+        assert!(!is_denom_trace("custom/channel-/token"));
+        assert!(!is_denom_trace("custom/channel-1a/token"));
     }
 
     #[test]
@@ -328,9 +340,9 @@ pub mod tests {
         // A contract on the counterparty with its own IBC port returns our native
         // token: ibc-go unescrows uosmo, and so must the quota lookup
         let mut packet = Packet::mock(
-            "channel-42-counterparty".to_string(),
-            "channel-17-local".to_string(),
-            "wasm.juno1contract/channel-42-counterparty/uosmo".to_string(),
+            "channel-42".to_string(),
+            "channel-17".to_string(),
+            "wasm.juno1contract/channel-42/uosmo".to_string(),
             0_u128.into(),
         );
         packet.source_port = "wasm.juno1contract".to_string();
@@ -339,27 +351,27 @@ pub mod tests {
         // and a token of theirs arriving over that port is prefixed with our
         // port and channel, as ibc-go does
         let mut packet = Packet::mock(
-            "channel-42-counterparty".to_string(),
-            "channel-17-local".to_string(),
+            "channel-42".to_string(),
+            "channel-17".to_string(),
             "cw20:juno1token".to_string(),
             0_u128.into(),
         );
         packet.source_port = "wasm.juno1contract".to_string();
         assert_eq!(
             packet.local_denom(&FlowType::In),
-            hash_denom("transfer/channel-17-local/cw20:juno1token")
+            hash_denom("transfer/channel-17/cw20:juno1token")
         );
 
         // A voucher of theirs sent back out is looked up under its ibc/ hash
         let packet = Packet::mock(
-            "channel-17-local".to_string(),
-            "channel-42-counterparty".to_string(),
-            "wasm.juno1contract/channel-42-counterparty/cw20:juno1token".to_string(),
+            "channel-17".to_string(),
+            "channel-42".to_string(),
+            "wasm.juno1contract/channel-42/cw20:juno1token".to_string(),
             0_u128.into(),
         );
         assert_eq!(
             packet.local_denom(&FlowType::Out),
-            hash_denom("wasm.juno1contract/channel-42-counterparty/cw20:juno1token")
+            hash_denom("wasm.juno1contract/channel-42/cw20:juno1token")
         );
     }
 
@@ -368,9 +380,9 @@ pub mod tests {
         // A native denom with slashes that is not a tokenfactory denom must still be
         // recognised as native when it returns (the old split-on-slash heuristic hashed it)
         let packet = Packet::mock(
-            "channel-42-counterparty".to_string(),
-            "channel-17-local".to_string(),
-            "transfer/channel-42-counterparty/gamm/pool/1".to_string(),
+            "channel-42".to_string(),
+            "channel-17".to_string(),
+            "transfer/channel-42/gamm/pool/1".to_string(),
             0_u128.into(),
         );
         assert_eq!(packet.local_denom(&FlowType::In), "gamm/pool/1");
@@ -446,7 +458,7 @@ pub mod tests {
 
     // Let's assume we have two chains A and B (local and counterparty) connected in the following way:
     //
-    // Chain A <---> channel-17-local <---> channel-42-counterparty <---> Chain B
+    // Chain A <---> channel-17 <---> channel-42 <---> Chain B
     //
     // The following tests should pass
     //
