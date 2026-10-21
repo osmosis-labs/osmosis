@@ -361,7 +361,10 @@ pub mod tests {
             hash_denom("transfer/channel-17/cw20:juno1token")
         );
 
-        // A voucher of theirs sent back out is looked up under its ibc/ hash
+        // A trace that begins with another port is still a trace and is looked up
+        // under its ibc/ hash (the transfer module itself only ever hands this
+        // chain's own port in first position; other ports reach the limiter from
+        // contracts with their own IBC port)
         let packet = Packet::mock(
             "channel-17".to_string(),
             "channel-42".to_string(),

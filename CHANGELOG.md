@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-* [#9742](https://github.com/osmosis-labs/osmosis/issues/9742) fix: ibc-rate-limit contract rejected inbound tokens whose denom trace channel shares a string prefix with the source channel (contract 0.2.0)
+* [#9753](https://github.com/osmosis-labs/osmosis/pull/9753) fix: ibc-rate-limit contract rejected inbound tokens whose denom trace channel shares a string prefix with the source channel; returning tokens are now identified by the packet's counterparty port and channel, as ibc-go does, rather than by assuming the `transfer` port, and a denom counts as an IBC trace only when its second segment is a channel id (rate limiter contract 0.2.0, deployed by governance migration, not part of a chain release)
 * [#9760](https://github.com/osmosis-labs/osmosis/pull/9760) feat(upgrade): v32 upgrade moves non-base-denom balances stuck in the protorev module account to the liquidity sub-DAO, which swaps them to OSMO and burns it
 * [#9744](https://github.com/osmosis-labs/osmosis/pull/9744) feat: seize proposal 1044 allBTC in the v32 upgrade. Move 22.65060846 allBTC from the exploiter to the Liquidity subDAO on osmosis-1 only (skipped on other chains). A shortfall aborts the upgrade; any surplus and the account's OSMO stay on the exploiter.
 * chore: bump wasmd from v0.53.3 to v0.54.10 and wasmvm from v2.2.4 to v2.2.9. wasmd v0.54 splits WasmConfig into NodeConfig and VMConfig. wasmd v0.54.10 requires ibc-go v8.8.0 (state-breaking ICA ProtoJSON validation) and cosmos-sdk v0.50.15; the Osmosis SDK fork replace still supplies v0.50.14-v30-osmo.
