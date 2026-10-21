@@ -341,10 +341,12 @@ fn record_pending_send(
                     denom: packet.data.denom.clone(),
                 });
             }
-            let record = PendingSend {
-                count: existing.count.saturating_add(1),
-                ..existing
-            };
+            // A count that cannot grow must fail the transfer rather than
+            // leave a counted send unrecorded
+            let count = existing.count.checked_add(1).ok_or_else(|| {
+                ContractError::Overflow("too many identical sends pending".to_string())
+            })?;
+            let record = PendingSend { count, ..existing };
             PENDING_SENDS.save(storage, key, &record)?;
             return Ok((record.count, evicted));
         }
@@ -554,7 +556,10 @@ fn refund_same_window(trackers: &mut [RateLimit], windows: &[WindowId], funds: U
         let same_window = |(name, period_end, generation): &WindowId| {
             *name == limit.quota.name
                 && *period_end == limit.flow.period_end
-                && generation.map_or(true, |generation| generation == limit.flow.generation)
+                && match generation {
+                    Some(generation) => *generation == limit.flow.generation,
+                    None => true,
+                }
         };
         if windows.iter().any(same_window) {
             limit.flow.undo_flow(FlowType::Out, funds);

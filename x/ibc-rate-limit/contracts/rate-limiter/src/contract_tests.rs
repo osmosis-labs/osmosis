@@ -444,6 +444,17 @@ fn any_denom_outflow(storage: &dyn cosmwasm_std::Storage) -> Uint256 {
         .outflow
 }
 
+/// The (window end, generation) of the first quota on the "any"/denom path
+fn any_denom_window(storage: &dyn cosmwasm_std::Storage) -> (Timestamp, u64) {
+    let flow = RATE_LIMIT_TRACKERS
+        .load(storage, ("any".to_string(), "denom".to_string()))
+        .unwrap()
+        .first()
+        .unwrap()
+        .flow;
+    (flow.period_end, flow.generation)
+}
+
 #[test] // A failed send is refunded while the quota is still in the window the send was counted in
 fn undo_send_refunds_within_the_same_window() {
     let mut deps = mock_dependencies();
@@ -972,13 +983,17 @@ fn old_failure_cannot_settle_a_newer_identical_send() {
     // counted: nothing changes in state
     let mut later = mock_env();
     later.block.time = later.block.time.plus_seconds(RESET_TIME_WEEKLY + 1);
+    // No channel value mock: the mock querier cannot answer a SupplyOf query,
+    // so this only fails the intended way if the refusal comes before the query
+    let window_before = any_denom_window(&deps.storage);
     let newer = SudoMsg::SendPacket {
         packet: packet_with_timeout(300, two_weeks, 0),
-        channel_value_mock: Some(3_300_u32.into()),
+        channel_value_mock: None,
     };
     let err = sudo(deps.as_mut(), later.clone(), newer).unwrap_err();
     assert!(matches!(err, ContractError::DuplicatePendingSend { .. }));
     assert_eq!(any_denom_outflow(&deps.storage), Uint256::from(300_u32));
+    assert_eq!(any_denom_window(&deps.storage), window_before);
     assert_eq!(index_entries(&deps.storage), 1);
 
     // A different send opens window N+1
@@ -997,6 +1012,128 @@ fn old_failure_cannot_settle_a_newer_identical_send() {
     sudo(deps.as_mut(), later.clone(), send_tagged(10, 300)).unwrap();
     let err = sudo(deps.as_mut(), later, send_tagged(11, 1)).unwrap_err();
     assert!(matches!(err, ContractError::RateLimitExceded { .. }));
+}
+
+#[test] // A shared record whose window has rolled over settles its remaining sends without crediting the new window, and keeps refusing identical sends until it is gone
+fn shared_record_settles_without_crediting_a_later_window() {
+    let mut deps = mock_dependencies();
+    instantiate_any_denom(
+        deps.as_mut(),
+        vec![QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 10)],
+    )
+    .unwrap();
+
+    // Two identical sends in window N share one record
+    let two_weeks = 2 * RESET_TIME_WEEKLY;
+    for _ in 0..2 {
+        let send = SudoMsg::SendPacket {
+            packet: packet_with_timeout(100, two_weeks, 0),
+            channel_value_mock: Some(3_300_u32.into()),
+        };
+        sudo(deps.as_mut(), mock_env(), send).unwrap();
+    }
+    let key = (
+        "channel".to_string(),
+        packet_with_timeout(100, two_weeks, 0).send_key(),
+    );
+    assert_eq!(
+        PENDING_SENDS
+            .load(&deps.storage, key.clone())
+            .unwrap()
+            .count,
+        2
+    );
+
+    // Window N+1 opens with a different send
+    let mut later = mock_env();
+    later.block.time = later.block.time.plus_seconds(RESET_TIME_WEEKLY + 1);
+    sudo(deps.as_mut(), later.clone(), send_tagged(9, 30)).unwrap();
+    assert_eq!(any_denom_outflow(&deps.storage), Uint256::from(30_u32));
+
+    // The first failure settles one of the two without touching window N+1
+    let undo = SudoMsg::UndoSend {
+        packet: packet_with_timeout(100, two_weeks, 7),
+    };
+    let res = sudo(deps.as_mut(), later.clone(), undo.clone()).unwrap();
+    assert_eq!(attr(&res, "refunded"), "0");
+    assert_eq!(attr(&res, "pending_count"), "1");
+    assert_eq!(any_denom_outflow(&deps.storage), Uint256::from(30_u32));
+    assert_eq!(
+        PENDING_SENDS
+            .load(&deps.storage, key.clone())
+            .unwrap()
+            .count,
+        1
+    );
+
+    // While the record stands, the identical send is still refused
+    let again = SudoMsg::SendPacket {
+        packet: packet_with_timeout(100, two_weeks, 0),
+        channel_value_mock: Some(3_300_u32.into()),
+    };
+    let err = sudo(deps.as_mut(), later.clone(), again).unwrap_err();
+    assert!(matches!(err, ContractError::DuplicatePendingSend { .. }));
+
+    // The second failure removes the record; window N+1 is still untouched
+    let res = sudo(deps.as_mut(), later, undo).unwrap();
+    assert_eq!(attr(&res, "refunded"), "0");
+    assert_eq!(attr(&res, "pending_count"), "0");
+    assert_eq!(any_denom_outflow(&deps.storage), Uint256::from(30_u32));
+    assert!(!PENDING_SENDS.has(&deps.storage, key));
+    assert_eq!(index_entries(&deps.storage), 1);
+}
+
+#[test] // An expired record that eviction has not reached yet is replaced, index entry and all, when its content is sent again
+fn expired_record_is_replaced_when_its_content_is_sent_again() {
+    let mut deps = mock_dependencies();
+    instantiate_any_denom(
+        deps.as_mut(),
+        vec![QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 10)],
+    )
+    .unwrap();
+
+    // Six records with the same retention; eviction clears five per send in
+    // index order, so the one whose key sorts last is still there afterwards
+    let tags: Vec<u64> = (1..=6).collect();
+    for tag in &tags {
+        sudo(deps.as_mut(), mock_env(), send_tagged(*tag, 10)).unwrap();
+    }
+    assert_eq!(index_entries(&deps.storage), 6);
+    let last = *tags
+        .iter()
+        .max_by_key(|tag| send_key_of(**tag, 10))
+        .unwrap();
+    let key = ("channel".to_string(), send_key_of(last, 10));
+    let old_retention = PENDING_SENDS
+        .load(&deps.storage, key.clone())
+        .unwrap()
+        .retain_until;
+
+    // After retention, sending that content again finds its expired record:
+    // the stale entry goes and a fresh record with a new retention replaces it
+    let later = after_retention(RESET_TIME_WEEKLY);
+    let packet = tagged_packet(last, 10, 0, "omitted");
+    let send = SudoMsg::SendPacket {
+        packet: packet.clone(),
+        channel_value_mock: Some(3_300_u32.into()),
+    };
+    let res = sudo(deps.as_mut(), later, send).unwrap();
+    assert_eq!(attr(&res, "evicted_stale"), "5");
+    assert_eq!(attr(&res, "pending_count"), "1");
+    let record = PENDING_SENDS
+        .load(&deps.storage, ("channel".to_string(), packet.send_key()))
+        .unwrap();
+    assert_eq!(record.count, 1);
+    assert!(record.retain_until > old_retention);
+    assert_eq!(index_entries(&deps.storage), 1);
+    assert!(!PENDING_SENDS_BY_EXPIRY.has(
+        &deps.storage,
+        (
+            "channel".to_string(),
+            old_retention.nanos(),
+            packet.send_key()
+        )
+    ));
 }
 
 #[test] // A record with a height-only timeout is kept for the long retention, one with a timestamp until the timestamp has passed, however far off that is

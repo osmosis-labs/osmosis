@@ -46,6 +46,8 @@ pub struct PendingSend {
     pub retain_until: Timestamp,
     /// How many identical sends this record stands for. Each settlement
     /// refunds `funds` once and lowers it by one; the record goes at zero.
+    /// Records written by the first 0.2.0 build (on the testnet) lack this
+    /// field and the generations below.
     #[serde(default = "one")]
     pub count: u32,
     /// The flow generation of each entry in `channel_windows`, in order.
@@ -121,7 +123,12 @@ pub fn split_ids(ids: Vec<(String, Timestamp, u64)>) -> (Vec<(String, Timestamp)
 pub fn same_windows(recorded: &[WindowId], upcoming: &[(String, Timestamp, u64)]) -> bool {
     recorded.len() == upcoming.len()
         && recorded.iter().zip(upcoming).all(|(r, u)| {
-            r.0 == u.0 && r.1 == u.1 && r.2.map_or(true, |generation| generation == u.2)
+            r.0 == u.0
+                && r.1 == u.1
+                && match r.2 {
+                    Some(generation) => generation == u.2,
+                    None => true,
+                }
         })
 }
 
