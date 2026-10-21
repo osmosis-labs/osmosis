@@ -354,8 +354,10 @@ fn instantiate_any_denom(
 }
 
 /// A packet on "channel" whose content differs from any other tag's. The tag
-/// doubles as a (tiny, long past) timeout timestamp, so records of these
-/// packets are retained only for the clock-skew margin past their window.
+/// is the number of seconds past the mock block time at which the packet
+/// times out, so the timeout is in the (near) future, as a wallet would set
+/// it, and records of these packets are retained only for the clock-skew
+/// margin past their window.
 fn tagged_packet(tag: u64, funds: u32, sequence: u64, destination: &str) -> Packet {
     let mut packet = Packet::mock(
         "channel".to_string(),
@@ -364,7 +366,7 @@ fn tagged_packet(tag: u64, funds: u32, sequence: u64, destination: &str) -> Pack
         funds.into(),
     );
     packet.sequence = sequence;
-    packet.timeout_timestamp = Some(tag);
+    packet.timeout_timestamp = Some(mock_env().block.time.plus_seconds(tag).nanos());
     packet
 }
 
@@ -756,6 +758,54 @@ fn identical_pending_send_is_not_recorded_twice() {
     assert_eq!(any_denom_outflow(&deps.storage), Uint256::from(100_u32));
 }
 
+#[test] // A send whose timeout is already behind block time can only come from a lagging client; it is counted but never recorded
+fn send_with_a_past_timeout_is_not_recorded() {
+    let mut deps = mock_dependencies();
+    instantiate_any_denom(
+        deps.as_mut(),
+        vec![QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 10)],
+    )
+    .unwrap();
+
+    // Timeout exactly at block time and one second before it: counted, not recorded
+    for behind in [0_u64, 1] {
+        let mut stale = Packet::mock(
+            "channel".to_string(),
+            "omitted".to_string(),
+            "denom".to_string(),
+            100_u32.into(),
+        );
+        stale.timeout_timestamp = Some(mock_env().block.time.minus_seconds(behind).nanos());
+        let res = sudo(
+            deps.as_mut(),
+            mock_env(),
+            SudoMsg::SendPacket {
+                packet: stale.clone(),
+                channel_value_mock: Some(3_300_u32.into()),
+            },
+        )
+        .unwrap();
+        assert_eq!(attr(&res, "recorded"), "false");
+        assert!(!PENDING_SENDS.has(&deps.storage, ("channel".to_string(), stale.send_key())));
+
+        // so its later timeout settles nothing, in this window or any other
+        let res = sudo(
+            deps.as_mut(),
+            mock_env(),
+            SudoMsg::UndoSend { packet: stale },
+        )
+        .unwrap();
+        assert_eq!(attr(&res, "refunded"), "0");
+    }
+    assert_eq!(any_denom_outflow(&deps.storage), Uint256::from(200_u32));
+    assert_eq!(index_entries(&deps.storage), 0);
+
+    // One second ahead is a normal send and is recorded
+    let res = sudo(deps.as_mut(), mock_env(), send_tagged(1, 100)).unwrap();
+    assert_eq!(attr(&res, "recorded"), "true");
+    assert_eq!(pending_records(&deps.storage, 1, 100), 1);
+}
+
 #[test] // A send is remembered until an identical packet could no longer be sent, so an old failure cannot settle a newer identical send
 fn old_failure_cannot_settle_a_newer_identical_send() {
     let mut deps = mock_dependencies();
@@ -802,9 +852,9 @@ fn old_failure_cannot_settle_a_newer_identical_send() {
     assert!(matches!(err, ContractError::RateLimitExceded { .. }));
 }
 
-#[test] // A record with a height-only timeout is kept for the long retention, one with a timestamp until the timestamp has passed
+#[test] // A record with a height-only timeout is kept for the maximum retention, one with a timestamp until the timestamp has passed, and never longer than the maximum
 fn retention_follows_the_packet_timeout() {
-    use crate::state::pending_send::{HEIGHT_TIMEOUT_RETENTION_SECONDS, TIMEOUT_SKEW_SECONDS};
+    use crate::state::pending_send::{MAX_RETENTION_SECONDS, TIMEOUT_SKEW_SECONDS};
     let mut deps = mock_dependencies();
     instantiate_any_denom(
         deps.as_mut(),
@@ -836,7 +886,7 @@ fn retention_follows_the_packet_timeout() {
         mock_env()
             .block
             .time
-            .plus_seconds(RESET_TIME_WEEKLY + HEIGHT_TIMEOUT_RETENTION_SECONDS)
+            .plus_seconds(RESET_TIME_WEEKLY + MAX_RETENTION_SECONDS)
     );
 
     // Timestamp timeout beyond the window end: retained until it has passed
@@ -860,9 +910,12 @@ fn retention_follows_the_packet_timeout() {
             .plus_seconds(3 * RESET_TIME_WEEKLY + TIMEOUT_SKEW_SECONDS)
     );
 
-    // A far-future timestamp cannot overflow the retention arithmetic
+    // A far-future timestamp cannot overflow the retention arithmetic, and it
+    // cannot make the record permanent either: retention is capped at the
+    // maximum past the window end, the same as a height-only timeout
     let mut absurd = packet_with_timeout(30, 0, 0);
     absurd.timeout_timestamp = Some(u64::MAX);
+    let absurd_key = ("channel".to_string(), absurd.send_key());
     sudo(
         deps.as_mut(),
         mock_env(),
@@ -872,8 +925,18 @@ fn retention_follows_the_packet_timeout() {
         },
     )
     .unwrap();
+    let record = PENDING_SENDS
+        .load(&deps.storage, absurd_key.clone())
+        .unwrap();
+    assert_eq!(
+        record.retain_until,
+        mock_env()
+            .block
+            .time
+            .plus_seconds(RESET_TIME_WEEKLY + MAX_RETENTION_SECONDS)
+    );
 
-    // Neither of the first two is purgeable a day after the window ends
+    // None of the three is purgeable a day after the window ends
     let mut later = mock_env();
     later.block.time = later.block.time.plus_seconds(RESET_TIME_WEEKLY + 86_400);
     let purge = ExecuteMsg::PurgeStaleSends {
@@ -888,8 +951,22 @@ fn retention_follows_the_packet_timeout() {
     )
     .unwrap();
     assert_eq!(attr(&res, "purged"), "0");
-    assert!(PENDING_SENDS.has(&deps.storage, key));
-    assert!(PENDING_SENDS.has(&deps.storage, far_key));
+    assert!(PENDING_SENDS.has(&deps.storage, key.clone()));
+    assert!(PENDING_SENDS.has(&deps.storage, far_key.clone()));
+    assert!(PENDING_SENDS.has(&deps.storage, absurd_key.clone()));
+
+    // Once the maximum retention has passed, all three go
+    let mut much_later = mock_env();
+    much_later.block.time = much_later
+        .block
+        .time
+        .plus_seconds(RESET_TIME_WEEKLY + MAX_RETENTION_SECONDS + 1);
+    let res = execute(deps.as_mut(), much_later, mock_info("anyone", &[]), purge).unwrap();
+    assert_eq!(attr(&res, "purged"), "3");
+    assert!(!PENDING_SENDS.has(&deps.storage, key));
+    assert!(!PENDING_SENDS.has(&deps.storage, far_key));
+    assert!(!PENDING_SENDS.has(&deps.storage, absurd_key));
+    assert_eq!(index_entries(&deps.storage), 0);
 }
 
 #[test] // The record key ignores what the chain cannot know at send time and nothing else
@@ -1056,23 +1133,36 @@ fn send_packet_evicts_stale_records_on_the_channel() {
     assert_eq!(attr(&res, "evicted_stale"), "0");
     assert_eq!(index_entries(&deps.storage), 3);
 
-    // Window over, retention not: still nothing
+    // Window over, retention not: still nothing. Later sends carry a timeout
+    // ahead of their own block time, as a wallet would set it
     let mut just_after = mock_env();
     just_after.block.time = just_after.block.time.plus_seconds(RESET_TIME_WEEKLY + 1);
-    let res = sudo(deps.as_mut(), just_after, send_tagged(11, 10)).unwrap();
+    let fourth = packet_with_timeout(10, RESET_TIME_WEEKLY + 600, 0);
+    let send = SudoMsg::SendPacket {
+        packet: fourth.clone(),
+        channel_value_mock: Some(3_300_u32.into()),
+    };
+    let res = sudo(deps.as_mut(), just_after, send).unwrap();
     assert_eq!(attr(&res, "evicted_stale"), "0");
     assert_eq!(index_entries(&deps.storage), 4);
 
     // Retention over: the next counted send clears the three old records (the
     // fourth was counted in the new window and stays)
     let later = after_retention(RESET_TIME_WEEKLY);
-    let res = sudo(deps.as_mut(), later, send_tagged(10, 10)).unwrap();
+    let fifth = packet_with_timeout(10, 2 * RESET_TIME_WEEKLY, 0);
+    let send = SudoMsg::SendPacket {
+        packet: fifth.clone(),
+        channel_value_mock: Some(3_300_u32.into()),
+    };
+    let res = sudo(deps.as_mut(), later, send).unwrap();
+    assert_eq!(attr(&res, "recorded"), "true");
     assert_eq!(attr(&res, "evicted_stale"), "3");
     for tag in [7_u64, 8, 9] {
         assert_eq!(pending_records(&deps.storage, tag, 10), 0);
     }
-    assert_eq!(pending_records(&deps.storage, 10, 10), 1);
-    assert_eq!(pending_records(&deps.storage, 11, 10), 1);
+    let channel = "channel".to_string();
+    assert!(PENDING_SENDS.has(&deps.storage, (channel.clone(), fourth.send_key())));
+    assert!(PENDING_SENDS.has(&deps.storage, (channel, fifth.send_key())));
     assert_eq!(index_entries(&deps.storage), 2);
 }
 

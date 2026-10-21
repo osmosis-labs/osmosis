@@ -229,9 +229,16 @@ const STALE_EVICTIONS_PER_RECORD: usize = 5;
 // Only one record exists per content key. A second identical send while a
 // record is pending is counted like any other send but not recorded, so it
 // cannot be refunded; an acknowledgement for that content always settles the
-// oldest send. The record is retained until an identical packet could no
-// longer be sent (PendingSend::retention_end), so a later identical send can
-// never be recorded while an earlier one might still be acknowledged.
+// oldest send. The record is retained until the packet's timeout has passed
+// by a clock-skew margin (PendingSend::retention_end), so as long as the
+// counterparty's light client on this chain keeps within that margin of block
+// time, a later identical send is never recorded while an earlier one might
+// still be acknowledged. The chain accepts a send whenever its timeout is
+// ahead of that client's latest timestamp, not of block time, so a send whose
+// timeout is already behind block time is not recorded at all: it can only
+// come from a lagging client, and an identical packet shares its timeout, so
+// neither can ever be delivered. Not recording it keeps a timeout relayed
+// later from settling anything but its own window's charge.
 //
 // Cost per record: roughly 200 bytes of key and value plus about 50 bytes per
 // quota on the path, plus a small index entry. Records are removed by
@@ -252,7 +259,9 @@ fn record_pending_send(
     let channel = packet.source_channel.clone();
     let send_key = packet.send_key();
     let key = (channel.clone(), send_key.clone());
-    if PENDING_SENDS.has(storage, key.clone()) {
+    let timeout_already_passed =
+        matches!(packet.timeout_timestamp, Some(timeout) if timeout > 0 && timeout <= now.nanos());
+    if timeout_already_passed || PENDING_SENDS.has(storage, key.clone()) {
         let evicted = evict_stale_sends(storage, &channel, now)?;
         return Ok((false, evicted));
     }
@@ -350,15 +359,6 @@ pub fn undo_send(deps: DepsMut, packet: Packet) -> Result<Response, ContractErro
         // expired. Nothing to refund.
         return Ok(response.add_attribute("refunded", "0"));
     };
-    PENDING_SENDS.remove(deps.storage, key);
-    PENDING_SENDS_BY_EXPIRY.remove(
-        deps.storage,
-        (
-            packet.source_channel.clone(),
-            pending.retain_until.nanos(),
-            send_key,
-        ),
-    );
 
     let path = Path::new(channel_id, denom.clone());
     let any_path = Path::new("any", denom);
@@ -374,6 +374,19 @@ pub fn undo_send(deps: DepsMut, packet: Packet) -> Result<Response, ContractErro
     if refunded_any > 0 {
         RATE_LIMIT_TRACKERS.save(deps.storage, any_path.into(), &any_trackers)?;
     }
+
+    // Settle the record last. The chain swallows an error from this call
+    // without rolling the contract's writes back, so nothing that can fail
+    // may run between removing the record and crediting the refund.
+    PENDING_SENDS.remove(deps.storage, key);
+    PENDING_SENDS_BY_EXPIRY.remove(
+        deps.storage,
+        (
+            packet.source_channel.clone(),
+            pending.retain_until.nanos(),
+            send_key,
+        ),
+    );
 
     Ok(response.add_attribute("refunded", (refunded_channel + refunded_any).to_string()))
 }
