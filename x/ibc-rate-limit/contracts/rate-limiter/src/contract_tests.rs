@@ -1709,11 +1709,47 @@ fn invalid_quotas_are_rejected() {
         ),
         ("zero duration", QuotaMsg::new("x", 0, 1, 1)),
         ("empty name", QuotaMsg::new("", RESET_TIME_WEEKLY, 1, 1)),
+        // wasmd rejects attribute keys that start with "_" (after trimming), and
+        // the name prefixes every per-quota attribute key
+        (
+            "name starting with underscore",
+            QuotaMsg::new("_daily", RESET_TIME_WEEKLY, 1, 1),
+        ),
+        ("blank name", QuotaMsg::new(" ", RESET_TIME_WEEKLY, 1, 1)),
+        (
+            "name with a space",
+            QuotaMsg::new("per day", RESET_TIME_WEEKLY, 1, 1),
+        ),
+        (
+            "name with a trailing tab",
+            QuotaMsg::new("daily\t", RESET_TIME_WEEKLY, 1, 1),
+        ),
+        (
+            "name with a non-ASCII character",
+            QuotaMsg::new("täglich", RESET_TIME_WEEKLY, 1, 1),
+        ),
     ];
     for (case, quota) in cases {
         let mut deps = mock_dependencies();
         let err = instantiate_any_denom(deps.as_mut(), vec![quota]).unwrap_err();
         assert!(matches!(err, ContractError::InvalidParameters(_)), "{case}");
+    }
+
+    // The names every proposal has used so far, and underscores inside a name, are fine
+    for name in [
+        "daily",
+        "ETH-DAY-1",
+        "USDC.inj-WEEK-2",
+        "BTC.int3",
+        "every-six-months",
+        "weekly_2",
+    ] {
+        let mut deps = mock_dependencies();
+        instantiate_any_denom(
+            deps.as_mut(),
+            vec![QuotaMsg::new(name, RESET_TIME_WEEKLY, 1, 1)],
+        )
+        .unwrap();
     }
 
     // Duplicate names on one path

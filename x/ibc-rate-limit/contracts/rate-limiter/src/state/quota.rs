@@ -98,6 +98,34 @@ impl Quota {
 /// and turns that abort into a named error.
 pub const MAX_QUOTA_DURATION_SECONDS: u64 = 10 * 365 * 24 * 60 * 60;
 
+/// A quota name must be usable as it is: it is matched byte for byte by
+/// ResetPathQuota and EditPathQuota, and it prefixes the per-quota attribute
+/// keys (`{name}_used_in`, ...) on every transfer the quota counts. wasmd
+/// trims attribute keys and rejects any key that starts with `_`, and a
+/// contract response it rejects fails the whole transfer, so a name that
+/// passed here but produced such a key would block its path until the quota
+/// was replaced. Printable ASCII without whitespace, not starting with `_`;
+/// every name governance has used so far (`ETH-DAY-1`, `USDC.inj-WEEK-2`,
+/// `BTC.int3`, ...) qualifies.
+pub fn validate_quota_name(name: &str) -> Result<(), ContractError> {
+    let invalid = ContractError::InvalidParameters;
+    if name.is_empty() {
+        return Err(invalid("quota name must not be empty".to_string()));
+    }
+    if name.starts_with('_') {
+        let reason = format!("quota name {name} must not start with an underscore");
+        return Err(invalid(reason));
+    }
+    let allowed = |c: char| c.is_ascii_graphic();
+    if !name.chars().all(allowed) {
+        let reason = format!(
+            "quota name {name:?} may only contain printable ASCII characters without whitespace"
+        );
+        return Err(invalid(reason));
+    }
+    Ok(())
+}
+
 impl TryFrom<&QuotaMsg> for Quota {
     type Error = ContractError;
 
@@ -106,9 +134,7 @@ impl TryFrom<&QuotaMsg> for Quota {
     /// no-op, and so are the shapes that would make it unaddressable later.
     fn try_from(msg: &QuotaMsg) -> Result<Self, Self::Error> {
         let invalid = ContractError::InvalidParameters;
-        if msg.name.is_empty() {
-            return Err(invalid("quota name must not be empty".to_string()));
-        }
+        validate_quota_name(&msg.name)?;
         if msg.duration == 0 {
             let reason = format!("quota {}: duration must be greater than zero", msg.name);
             return Err(invalid(reason));
