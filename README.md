@@ -55,6 +55,31 @@ running an Osmosis node!
 The contributing guide for Osmosis explains the branching structure, how
 to use the SDK fork, and how to make / test updates to SDK branches.
 
+## Container Images
+
+Release and development workflows publish images to GitHub Container Registry:
+
+- `ghcr.io/osmosis-labs/osmosis`
+- `ghcr.io/osmosis-labs/osmosis-cosmovisor`
+- `ghcr.io/osmosis-labs/osmosis-dev`
+- `ghcr.io/osmosis-labs/osmosis-dev-cosmovisor`
+- `ghcr.io/osmosis-labs/osmosis-e2e-init-chain`
+
+Release tags keep their version and variant suffixes, for example
+`ghcr.io/osmosis-labs/osmosis:32.0.0-alpine`. The publishing workflows authenticate
+with the repository's `GITHUB_TOKEN` and grant `contents: read` and
+`packages: write`; Docker Hub credentials are no longer required.
+
+After the first publish, a package administrator must set each new package's
+visibility to public to allow anonymous pulls. If a package already exists,
+ensure this repository has write access under the package's Actions settings.
+See [GitHub's container registry documentation](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
+
+Historical images remain on Docker Hub. E2E's pinned pre-upgrade images and the
+legacy upgrade-handler generator still use those images. When selecting a new
+pre-upgrade image published to GHCR, update both its repository and tag in
+`tests/e2e/containers/config.go`.
+
 ## LocalOsmosis
 
 LocalOsmosis is a containerized local Osmosis testnet used for trying out new features locally. 
