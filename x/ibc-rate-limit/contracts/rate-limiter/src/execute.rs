@@ -19,14 +19,17 @@ pub fn add_new_paths(
         // A replaced path starts new windows, which must not be mistaken for
         // the windows the previous quotas were in even when they end at the
         // same time, so the new flows continue the previous generation count.
+        // A path that was removed and added again has no previous count to
+        // continue, so new paths start from the block time instead, which no
+        // earlier path's count can have reached.
         let generation = RATE_LIMIT_TRACKERS
             .may_load(deps.storage, path.clone().into())?
             .unwrap_or_default()
             .iter()
-            .map(|limit| limit.flow.generation)
+            .map(|limit| limit.flow.generation.saturating_add(1))
             .max()
-            .map(|previous| previous.saturating_add(1))
-            .unwrap_or(0);
+            .unwrap_or(0)
+            .max(now.nanos());
 
         RATE_LIMIT_TRACKERS.save(
             deps.storage,
@@ -260,7 +263,7 @@ pub fn purge_empty_paths(
 }
 
 /// Permissionless. Removes up to `limit` pending-send records, starting after
-/// `start_after`, whose windows have all ended. A refund for those could no
+/// `start_after`, whose retention has ended. A refund for those could no
 /// longer change an active window, so the record only takes up space.
 pub fn purge_stale_sends(
     deps: &mut DepsMut,

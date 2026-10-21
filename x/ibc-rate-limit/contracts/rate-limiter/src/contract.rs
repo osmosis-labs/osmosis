@@ -95,7 +95,7 @@ pub fn sudo(deps: DepsMut, env: Env, msg: SudoMsg) -> Result<Response, ContractE
             #[cfg(test)]
             channel_value_mock,
         ),
-        SudoMsg::UndoSend { packet } => sudo::undo_send(deps, packet),
+        SudoMsg::UndoSend { packet } => sudo::undo_send(deps, env.block.time, packet),
     }
 }
 
@@ -119,10 +119,15 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 pub fn migrate(deps: DepsMut, env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
     let contract_version = get_contract_version(deps.storage)?;
 
-    // Sends counted before this point have no pending-send record. Their
-    // failures are still refunded to the window that counted them, as long as
-    // that window began before now (see undo_send).
-    MIGRATED_AT.save(deps.storage, &env.block.time)?;
+    // Sends counted before the first migration to a version with pending-send
+    // records have none. Their failures are still refunded to the quota's
+    // current window, as earlier versions did, as long as that window began
+    // before the migration (see undo_send). A later migration must not move
+    // this mark, or windows that began after it would be treated the same way.
+    if contract_version.version.starts_with("0.1.") && MIGRATED_AT.may_load(deps.storage)?.is_none()
+    {
+        MIGRATED_AT.save(deps.storage, &env.block.time)?;
+    }
 
     // check contract version, and apply version specific migrations
     if contract_version.version.eq("0.1.0") {

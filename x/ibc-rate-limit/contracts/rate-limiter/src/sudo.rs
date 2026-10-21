@@ -443,9 +443,12 @@ pub(crate) fn remove_stale_record(
 // but only while that quota is still in the window the send was counted in.
 // A window that did not count the send is never credited for it, so a refund
 // can only ever restore what the same window charged. One of the identical
-// sends the record stands for is settled either way; a packet with no record
-// refunds nothing.
-pub fn undo_send(deps: DepsMut, packet: Packet) -> Result<Response, ContractError> {
+// sends the record stands for is settled either way. A packet with no record
+// refunds nothing, except that a send counted before the migration to this
+// version, which has no record, is refunded the way earlier versions did
+// while the window that may hold its charge is still the one begun before
+// the migration (see refund_legacy_send).
+pub fn undo_send(deps: DepsMut, now: Timestamp, packet: Packet) -> Result<Response, ContractError> {
     let (channel_id, denom) = packet.path_data(&FlowType::Out); // Sends have direction out.
     let send_key = packet.send_key();
     let key = (packet.source_channel.clone(), send_key.clone());
@@ -462,7 +465,7 @@ pub fn undo_send(deps: DepsMut, packet: Packet) -> Result<Response, ContractErro
         // migration to 0.2.0, or its record was already settled or expired.
         // Only the former can still hold a charge in an active window, so
         // that case is refunded the way earlier versions did.
-        let refunded = refund_legacy_send(deps.storage, &path, &any_path, packet.get_funds())?;
+        let refunded = refund_legacy_send(deps.storage, now, &path, &any_path, packet.get_funds())?;
         return Ok(response
             .add_attribute("refunded", refunded.to_string())
             .add_attribute("pending_count", "0"));
@@ -510,11 +513,14 @@ pub fn undo_send(deps: DepsMut, packet: Packet) -> Result<Response, ContractErro
 /// Versions before 0.2.0 kept no pending-send records and refunded every
 /// failed send to the quota's current window. A send counted before the
 /// migration therefore has no record, and its failure is still refunded that
-/// way, but only to a window that began before the migration and so may hold
-/// the charge. Once every window has rolled over since, nothing is refunded
-/// without a record. Returns how many trackers were refunded.
+/// way, but only to a window that began before the migration (a flow with no
+/// `started_at` yet, or one started strictly before the migration) and that
+/// has not ended, so may hold the charge. Once every window has rolled over
+/// since, nothing is refunded without a record. Returns how many trackers
+/// were refunded.
 fn refund_legacy_send(
     storage: &mut dyn Storage,
+    now: Timestamp,
     path: &Path,
     any_path: &Path,
     funds: Uint256,
@@ -523,19 +529,20 @@ fn refund_legacy_send(
         return Ok(0);
     };
     let (mut trackers, mut any_trackers) = load_trackers(storage, path)?;
-    let began_before_migration = |limit: &RateLimit| {
-        let window_start = limit
-            .flow
-            .period_end
-            .nanos()
-            .saturating_sub(limit.quota.duration.saturating_mul(1_000_000_000));
-        window_start <= migrated_at.nanos()
+    // A window started in the migration block itself (by a governance message
+    // in the same proposal, or lazily by a transfer) cannot hold a charge from
+    // before it, so only windows begun strictly earlier qualify
+    let began_before_migration = |limit: &RateLimit| match limit.flow.started_at {
+        Some(started_at) => started_at < migrated_at,
+        None => true,
     };
     let mut refunded = 0;
     for (limits, path) in [(&mut trackers, path), (&mut any_trackers, any_path)] {
         let mut touched = 0;
         for limit in limits.iter_mut() {
-            if began_before_migration(limit) {
+            // An ended window is reset before its next use, so crediting it
+            // would change nothing and must not be reported as a refund
+            if began_before_migration(limit) && !limit.flow.is_expired(now) {
                 limit.flow.undo_flow(FlowType::Out, funds);
                 touched += 1;
             }

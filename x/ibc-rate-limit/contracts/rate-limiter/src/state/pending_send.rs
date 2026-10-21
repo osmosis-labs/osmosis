@@ -10,8 +10,18 @@ pub const TIMEOUT_SKEW_SECONDS: u64 = 60 * 60;
 
 /// How long a record is kept past its last window end when the packet has no
 /// timeout timestamp (height-only timeout), since the contract cannot tell
-/// when a counterparty height will be reached.
-pub const HEIGHT_TIMEOUT_RETENTION_SECONDS: u64 = 30 * 24 * 60 * 60;
+/// when a counterparty height will be reached. Long enough that holding a
+/// packet's acknowledgement back for the whole period, to have it settle a
+/// later identical send once the record is gone, means locking the sent
+/// amount up for a year.
+pub const HEIGHT_TIMEOUT_RETENTION_SECONDS: u64 = 365 * 24 * 60 * 60;
+
+/// Outer bound on any record's retention past its last window end, so that
+/// a timeout timestamp far in the future cannot make a record permanent. The
+/// same reasoning as for the height-only retention applies: a failure held
+/// back this long to settle a later identical send costs its sender ten
+/// years of locked capital.
+pub const MAX_RETENTION_SECONDS: u64 = 10 * 365 * 24 * 60 * 60;
 
 /// A window a send was counted in: the quota's name, the window's end and
 /// the flow's generation at the time. The generation is `None` for records
@@ -68,11 +78,12 @@ impl PendingSend {
     /// window it was counted in has ended, and after the packet's timeout
     /// timestamp has passed, each plus the clock-skew margin. A height-only
     /// timeout gets a fixed long retention instead. A timeout far in the
-    /// future keeps the record for as long, which is also how long the chain
-    /// keeps the packet commitment for the same packet; dropping it earlier
-    /// would let a failure relayed later settle a newer identical send.
+    /// future keeps the record for as long, up to the outer bound, because a
+    /// failure relayed after the record is gone would settle a newer
+    /// identical send; an acknowledgement can be relayed at any time.
     pub fn retention_end(latest_period_end: Timestamp, packet: &Packet) -> Timestamp {
-        match packet.timeout_timestamp {
+        let cap = saturating_plus_seconds(latest_period_end, MAX_RETENTION_SECONDS);
+        let until = match packet.timeout_timestamp {
             Some(timeout) if timeout > 0 => {
                 let timeout = Timestamp::from_nanos(timeout);
                 let latest = if timeout > latest_period_end {
@@ -83,6 +94,11 @@ impl PendingSend {
                 saturating_plus_seconds(latest, TIMEOUT_SKEW_SECONDS)
             }
             _ => saturating_plus_seconds(latest_period_end, HEIGHT_TIMEOUT_RETENTION_SECONDS),
+        };
+        if until > cap {
+            cap
+        } else {
+            until
         }
     }
 
