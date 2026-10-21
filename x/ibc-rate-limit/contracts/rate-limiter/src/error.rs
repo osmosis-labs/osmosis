@@ -39,6 +39,9 @@ pub enum ContractError {
 
     #[error("Arithmetic overflow: {0}")]
     Overflow(String),
+
+    #[error("A transfer of {denom} identical to one still pending on {channel} from an earlier quota window cannot be counted until that one settles; change the amount or the timeout")]
+    DuplicatePendingSend { channel: String, denom: String },
 }
 
 #[cfg(test)]
