@@ -204,7 +204,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 		err    error
 	)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute) //nolint:usetesting // keep exec independent of test context cancellation
 	defer cancel()
 
 	if m.isDebugLogEnabled {
@@ -302,8 +302,8 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 
 	// If the success condition is not met, log the failure and stop the test suite.
 	if !successConditionMet {
-		t.Logf(fmt.Sprintf("success condition (%s) command %s was not met.\nstdout:\n %s\nstderr:\n %s\n \nerror: %v\n", // nolint:staticcheck,SA1006
-			success, command, outBuf.String(), errBuf.String(), lastErr))
+		t.Logf("success condition (%s) command %s was not met.\nstdout:\n %s\nstderr:\n %s\n \nerror: %v\n",
+			success, command, outBuf.String(), errBuf.String(), lastErr)
 		t.FailNow()
 	}
 
@@ -331,7 +331,7 @@ func (m *Manager) ExecQueryTxHash(t *testing.T, containerName, txHash string, re
 		command = []string{"osmosisd", "query", "tx", txHash}
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute) //nolint:usetesting // keep exec independent of test context cancellation
 	defer cancel()
 
 	if m.isDebugLogEnabled {
