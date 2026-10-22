@@ -41,11 +41,11 @@ Rate limits aren't the end-all of safety controls, they're merely the simplest a
 We express rate limits in time-based periods.
 This means, we set rate limits for (say) 6-hour, daily, and weekly intervals.
 The rate limit for a given time period stores the relevant amount of assets at the start of the rate limit.
-Rate limits are then defined on percentage terms of the asset.
+Rate limits are then defined as a percentage of the asset's supply on Osmosis, an absolute amount in the asset's base units, or both. The percentage applies to the net flow; the absolute amount applies to the gross flow in each direction and does not depend on the asset's supply.
 The time windows for rate limits are currently _not_ rolling, they have discrete start/end times.
 
 We allow setting separate rate limits for the inflow and outflow of assets.
-We do all of our rate limits based on the _net flow_ of assets on a channel pair. This prevents DOS issues, of someone repeatedly sending assets back and forth, to trigger rate limits and break liveness.
+Percentage limits are evaluated on the _net flow_ of assets on a channel pair, which prevents DOS issues of someone repeatedly sending assets back and forth to trigger rate limits and break liveness. Absolute limits are evaluated on the gross flow in each direction, so they cannot be offset by flow the other way. That is what makes them a hard ceiling for an asset whose supply can be inflated elsewhere, and it is also why they can be consumed by legitimate round trips: a holder of a fraction of the bound can use it up by cycling tokens out and back, closing the path for everyone until the window resets or the quota is reset. Size absolute bounds well above an asset's normal gross volume per window, expect a tight bound to be reached first by legitimate bursts, and rely on `ResetPathQuota` (held by the rate-limit subDAO) to reopen a path when that happens. Keep the percentage limit for the liveness-friendly bound and use the absolute limit as the backstop.
 
 We currently envision creating two kinds of rate limits:
 
@@ -161,7 +161,7 @@ The tracking contract uses the following concepts
 1. **RateLimit** - tracks the value flow transferred and the quota for a path.
 2. **Path** - is a (denom, channel) pair.
 3. **Flow** - tracks the value that has moved through a path during the current time window.
-4. **Quota** - is the percentage of the denom's total value that can be transferred through the path in a given period of time (duration)
+4. **Quota** - bounds how much of the denom can be transferred through the path in a given period of time (duration): a percentage of the denom's total value, an absolute amount in base units, or both. A percentage above 100 is allowed only together with an absolute bound in the same direction
 
 #### Messages
 
