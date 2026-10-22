@@ -45,7 +45,7 @@ Rate limits are then defined as a percentage of the asset's supply on Osmosis, a
 The time windows for rate limits are currently _not_ rolling, they have discrete start/end times.
 
 We allow setting separate rate limits for the inflow and outflow of assets.
-We do all of our rate limits based on the _net flow_ of assets on a channel pair. This prevents DOS issues, of someone repeatedly sending assets back and forth, to trigger rate limits and break liveness.
+Percentage limits are evaluated on the _net flow_ of assets on a channel pair, which prevents DOS issues of someone repeatedly sending assets back and forth to trigger rate limits and break liveness. Absolute limits are evaluated on the gross flow in each direction, so they cannot be offset by flow the other way.
 
 We currently envision creating two kinds of rate limits:
 
