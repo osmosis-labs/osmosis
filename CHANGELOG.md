@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#9746](https://github.com/osmosis-labs/osmosis/pull/9746) feat(v33): recover 6B HUAHUA stuck in misconfigured gauges 1954-1959 to the Chihuahua ecosystem fund, as approved by governance proposal 609
 * [#9708](https://github.com/osmosis-labs/osmosis/pull/9708) feat(mint): add minted, burned and total supply query endpoints
 * [#9748](https://github.com/osmosis-labs/osmosis/pull/9748) chore: bump Go to 1.25.8 and update deps to fix security alerts
+* [#9779](https://github.com/osmosis-labs/osmosis/pull/9779) chore: check the Go patch version in `make build` and remove the unused proto Dockerfile
 
 ## v32.0.0
 
