@@ -1,4 +1,4 @@
-use cosmwasm_std::{Timestamp, Uint256};
+use cosmwasm_std::{Timestamp, Uint256, Uint64};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -31,6 +31,19 @@ pub struct Flow {
     pub inflow: Uint256,
     pub outflow: Uint256,
     pub period_end: Timestamp,
+    /// Counts the windows this flow has been through. A window is identified
+    /// by its end together with this number, so that a window a reset or a
+    /// path replacement starts in the same block as a natural one, with the
+    /// same end, is still told apart. Absent from entries written before
+    /// 0.2.0, which read as 0. Serialised as a string, since it is seeded from
+    /// a nanosecond timestamp and would lose precision as a JSON number.
+    #[serde(default)]
+    pub generation: Uint64,
+    /// When the current window began. Absent from entries written before
+    /// 0.2.0 whose window has not been reset since, which is how the
+    /// contract tells that such a window predates the 0.2.0 migration.
+    #[serde(default)]
+    pub started_at: Option<Timestamp>,
 }
 
 impl Flow {
@@ -44,6 +57,8 @@ impl Flow {
             inflow: inflow.into(),
             outflow: outflow.into(),
             period_end: now.plus_seconds(duration),
+            generation: Uint64::zero(),
+            started_at: Some(now),
         }
     }
 
@@ -89,6 +104,8 @@ impl Flow {
     pub fn expire(&mut self, now: Timestamp, duration: u64) {
         self.inflow = Uint256::zero();
         self.outflow = Uint256::zero();
+        self.generation = Uint64::new(self.generation.u64().saturating_add(1));
+        self.started_at = Some(now);
         self.period_end = now.plus_seconds(duration);
     }
 
@@ -100,7 +117,8 @@ impl Flow {
         }
     }
 
-    /// Updates the current flow reducing it by a transfer of value.
+    /// Updates the current flow reducing it by a transfer of value. Used to
+    /// refund a failed send that was counted in this same window.
     pub fn undo_flow(&mut self, direction: FlowType, value: Uint256) {
         match direction {
             FlowType::In => self.inflow = self.inflow.saturating_sub(value),

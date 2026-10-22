@@ -77,13 +77,21 @@ pub struct QuerySupplyOfResponse {
 
 use std::str::FromStr; // Needed to parse the coin's String as Uint256
 
-fn hash_denom(denom: &str) -> String {
+pub(crate) fn hash_denom(denom: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(denom.as_bytes());
     let result = hasher.finalize();
     let hash = hex::encode(result);
     format!("ibc/{}", hash.to_uppercase())
 }
+
+/// Mock packets get a timeout ten minutes past the mock block time, each one
+/// a nanosecond apart, so that two mock packets never share a content key by
+/// accident, as wallets that derive the timeout from the clock do.
+#[cfg(test)]
+static MOCK_PACKETS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+#[cfg(test)]
+const MOCK_TIMEOUT_BASE_NANOS: u64 = 1_571_797_419_879_305_533 + 600 * 1_000_000_000;
 
 impl Packet {
     pub fn mock(
@@ -92,6 +100,13 @@ impl Packet {
         denom: String,
         funds: Uint256,
     ) -> Packet {
+        #[cfg(test)]
+        let timeout_timestamp = Some(
+            MOCK_TIMEOUT_BASE_NANOS
+                + MOCK_PACKETS.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
+        );
+        #[cfg(not(test))]
+        let timeout_timestamp = None;
         Packet {
             sequence: 0,
             source_port: "transfer".to_string(),
@@ -108,7 +123,7 @@ impl Packet {
                 revision_number: None,
                 revision_height: None,
             },
-            timeout_timestamp: None,
+            timeout_timestamp,
         }
     }
 
@@ -118,6 +133,36 @@ impl Packet {
         }
         .query(&deps.querier)?;
         Uint256::from_str(&res.amount.unwrap_or_default().amount)
+    }
+
+    /// Identifies this packet by the content the chain passes unchanged
+    /// between the send authorisation and a later acknowledgement or timeout:
+    /// port, channel, sender, receiver, denom, amount and timeouts. The
+    /// sequence is left out because it is not assigned yet when the send is
+    /// authorised, and the destination because the chain does not fill it in
+    /// at that point either.
+    pub fn send_key(&self) -> String {
+        let mut hasher = Sha256::new();
+        for part in [
+            self.source_port.as_str(),
+            self.source_channel.as_str(),
+            self.data.sender.as_str(),
+            self.data.receiver.as_str(),
+            self.data.denom.as_str(),
+        ] {
+            hasher.update(part.as_bytes());
+            hasher.update([0u8]);
+        }
+        hasher.update(self.data.amount.to_string().as_bytes());
+        hasher.update([0u8]);
+        let timeouts = format!(
+            "{:?}/{:?}/{:?}",
+            self.timeout_height.revision_number,
+            self.timeout_height.revision_height,
+            self.timeout_timestamp
+        );
+        hasher.update(timeouts.as_bytes());
+        format!("{:x}", hasher.finalize())
     }
 
     pub fn get_funds(&self) -> Uint256 {
@@ -198,7 +243,7 @@ impl Packet {
 /// `gamm/pool/N`), but never an IBC channel id in second position, which is
 /// what distinguishes a trace whatever port it was sent from. A channel id is
 /// `channel-` followed by a number, as ibc-go issues them.
-fn is_denom_trace(denom: &str) -> bool {
+pub(crate) fn is_denom_trace(denom: &str) -> bool {
     let mut parts = denom.splitn(3, '/');
     let port = parts.next().unwrap_or_default();
     let channel_is_ibc = matches!(parts.next(), Some(channel) if is_channel_id(channel));
