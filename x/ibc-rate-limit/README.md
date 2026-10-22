@@ -45,7 +45,7 @@ Rate limits are then defined as a percentage of the asset's supply on Osmosis, a
 The time windows for rate limits are currently _not_ rolling, they have discrete start/end times.
 
 We allow setting separate rate limits for the inflow and outflow of assets.
-Percentage limits are evaluated on the _net flow_ of assets on a channel pair, which prevents DOS issues of someone repeatedly sending assets back and forth to trigger rate limits and break liveness. Absolute limits are evaluated on the gross flow in each direction, so they cannot be offset by flow the other way.
+Percentage limits are evaluated on the _net flow_ of assets on a channel pair, which prevents DOS issues of someone repeatedly sending assets back and forth to trigger rate limits and break liveness. Absolute limits are evaluated on the gross flow in each direction, so they cannot be offset by flow the other way. That is what makes them a hard ceiling for an asset whose supply can be inflated elsewhere, and it is also why they can be consumed by legitimate round trips: a holder of a fraction of the bound can use it up by cycling tokens out and back, closing the path for everyone until the window resets or the quota is reset. Size absolute bounds well above an asset's normal gross volume per window, expect a tight bound to be reached first by legitimate bursts, and rely on `ResetPathQuota` (held by the rate-limit subDAO) to reopen a path when that happens. Keep the percentage limit for the liveness-friendly bound and use the absolute limit as the backstop.
 
 We currently envision creating two kinds of rate limits:
 
