@@ -22,8 +22,8 @@ var customGenesis = types.NewGenesisState(
 		types.DistributionProportions{
 			Staking:          osmomath.NewDecWithPrec(25, 2),
 			PoolIncentives:   osmomath.NewDecWithPrec(25, 2),
-			DeveloperRewards: osmomath.NewDecWithPrec(25, 2),
-			CommunityPool:    osmomath.NewDecWithPrec(25, 2),
+			DeveloperRewards: osmomath.ZeroDec(),
+			CommunityPool:    osmomath.NewDecWithPrec(50, 2),
 		},
 		[]types.WeightedAddress{
 			{

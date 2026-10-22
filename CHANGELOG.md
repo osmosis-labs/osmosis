@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* [#9772](https://github.com/osmosis-labs/osmosis/pull/9772) feat(mint): remove developer rewards from mint distribution. Mint no longer over-mints the developer share, burns it and pays it out of the developer vesting module account; it splits the minted coin between staking, pool incentives and the community pool only. `distribution_proportions.developer_rewards` (must be zero) and `weighted_developer_rewards_receivers` are deprecated. The v33 upgrade scales epoch provisions by `1 - developer_rewards` and rescales the remaining proportions so per-epoch OSMO issuance is unchanged. The developer vesting module account balance is left untouched.
 * [#9760](https://github.com/osmosis-labs/osmosis/pull/9760) feat(upgrade): v32 upgrade moves non-base-denom balances stuck in the protorev module account to the liquidity sub-DAO, which swaps them to OSMO and burns it
 * [#9746](https://github.com/osmosis-labs/osmosis/pull/9746) feat(v33): recover 6B HUAHUA stuck in misconfigured gauges 1954-1959 to the Chihuahua ecosystem fund, as approved by governance proposal 609
 * [#9744](https://github.com/osmosis-labs/osmosis/pull/9744) feat: seize proposal 1044 allBTC in the v32 upgrade. Move 22.65060846 allBTC from the exploiter to the Liquidity subDAO on osmosis-1 only (skipped on other chains). A shortfall aborts the upgrade; any surplus and the account's OSMO stay on the exploiter.
