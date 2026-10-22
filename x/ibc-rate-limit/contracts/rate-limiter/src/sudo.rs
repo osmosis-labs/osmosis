@@ -1,4 +1,4 @@
-use cosmwasm_std::{DepsMut, Response, Timestamp, Uint256};
+use cosmwasm_std::{DepsMut, Response, Storage, Timestamp, Uint256};
 
 use crate::{
     blocking::check_restricted_denoms,
@@ -28,6 +28,15 @@ pub fn process_packet(
     let path = &Path::new(channel_id, denom);
     let funds = packet.get_funds();
 
+    // Look for quotas before touching the chain. The channel value is a bank
+    // SupplyOf query, and most paths have no quota at all, so this avoids a
+    // stargate query on every unquoted transfer and means a failing supply
+    // query can only ever affect a path that is actually rate limited.
+    let (trackers, any_trackers) = load_trackers(deps.storage, path)?;
+    if trackers.is_empty() && any_trackers.is_empty() {
+        return Ok(not_configured_response(path));
+    }
+
     #[cfg(test)]
     // When testing we override the channel value with the mock since we can't get it from the chain
     let channel_value = match channel_value_mock {
@@ -39,6 +48,31 @@ pub fn process_packet(
     let channel_value = packet.channel_value(deps.as_ref(), &direction)?;
 
     try_transfer(deps, path, channel_value, funds, direction, now)
+}
+
+/// Loads the rate limits configured for a path and for the "any" channel of
+/// its denom. Missing entries come back as empty vectors.
+fn load_trackers(
+    storage: &dyn Storage,
+    path: &Path,
+) -> Result<(Vec<RateLimit>, Vec<RateLimit>), ContractError> {
+    let any_path = Path::new("any", path.denom.clone());
+    let any_trackers = RATE_LIMIT_TRACKERS
+        .may_load(storage, any_path.into())?
+        .unwrap_or_default();
+    let trackers = RATE_LIMIT_TRACKERS
+        .may_load(storage, path.into())?
+        .unwrap_or_default();
+    Ok((trackers, any_trackers))
+}
+
+/// The response for a packet on a path with no quota configured. Everything is allowed.
+fn not_configured_response(path: &Path) -> Response {
+    Response::new()
+        .add_attribute("method", "try_transfer")
+        .add_attribute("channel_id", path.channel.to_string())
+        .add_attribute("denom", path.denom.to_string())
+        .add_attribute("quota", "none")
 }
 
 /// This function checks the rate limit and, if successful, stores the updated data about the value
@@ -57,25 +91,12 @@ pub fn try_transfer(
 ) -> Result<Response, ContractError> {
     // Sudo call. Only go modules should be allowed to access this
 
-    // Fetch potential trackers for "any" channel of the required token
     let any_path = Path::new("any", path.denom.clone());
-    let mut any_trackers = RATE_LIMIT_TRACKERS
-        .may_load(deps.storage, any_path.clone().into())?
-        .unwrap_or_default();
-    // Fetch trackers for the requested path
-    let mut trackers = RATE_LIMIT_TRACKERS
-        .may_load(deps.storage, path.into())?
-        .unwrap_or_default();
+    let (mut trackers, mut any_trackers) = load_trackers(deps.storage, path)?;
 
-    let not_configured = trackers.is_empty() && any_trackers.is_empty();
-
-    if not_configured {
+    if trackers.is_empty() && any_trackers.is_empty() {
         // No Quota configured for the current path. Allowing all messages.
-        return Ok(Response::new()
-            .add_attribute("method", "try_transfer")
-            .add_attribute("channel_id", path.channel.to_string())
-            .add_attribute("denom", path.denom.to_string())
-            .add_attribute("quota", "none"));
+        return Ok(not_configured_response(path));
     }
 
     // If any of the RateLimits fails, allow_transfer() will return

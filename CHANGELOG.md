@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* [#9753](https://github.com/osmosis-labs/osmosis/pull/9753) fix: ibc-rate-limit contract rejected inbound tokens whose denom trace channel shares a string prefix with the source channel; returning tokens are now identified by the packet's counterparty port and channel, as ibc-go does, rather than by assuming the `transfer` port, and a denom counts as an IBC trace only when its second segment is a channel id (rate limiter contract 0.2.0, deployed by governance migration, not part of a chain release)
 * [#9760](https://github.com/osmosis-labs/osmosis/pull/9760) feat(upgrade): v32 upgrade moves non-base-denom balances stuck in the protorev module account to the liquidity sub-DAO, which swaps them to OSMO and burns it
 * [#9746](https://github.com/osmosis-labs/osmosis/pull/9746) feat(v33): recover 6B HUAHUA stuck in misconfigured gauges 1954-1959 to the Chihuahua ecosystem fund, as approved by governance proposal 609
 * [#9744](https://github.com/osmosis-labs/osmosis/pull/9744) feat: seize proposal 1044 allBTC in the v32 upgrade. Move 22.65060846 allBTC from the exploiter to the Liquidity subDAO on osmosis-1 only (skipped on other chains). A shortfall aborts the upgrade; any surplus and the account's OSMO stay on the exploiter.

@@ -132,14 +132,8 @@ impl Packet {
         }
     }
 
-    fn receiver_chain_is_source(&self) -> bool {
-        self.data
-            .denom
-            .starts_with(&format!("transfer/{}", self.source_channel))
-    }
-
     fn handle_denom_for_sends(&self) -> String {
-        if !self.data.denom.starts_with("transfer/") {
+        if !is_denom_trace(&self.data.denom) {
             // For native tokens we just use what's on the packet
             return self.data.denom.clone();
         }
@@ -148,29 +142,41 @@ impl Packet {
     }
 
     fn handle_denom_for_recvs(&self) -> String {
-        if self.receiver_chain_is_source() {
-            // These are tokens that have been sent to the counterparty and are returning
-            let unprefixed = self
-                .data
-                .denom
-                .strip_prefix(&format!("transfer/{}/", self.source_channel))
-                .unwrap_or_default();
-            let split: Vec<&str> = unprefixed.split('/').collect();
-            if split[0] == unprefixed || split[0] == "factory" {
-                // This is a native token or a tokenfactory token. Return the unprefixed token
-                unprefixed.to_string()
-            } else {
-                // This is a non-native that was sent to the counterparty.
-                // We need to hash it.
+        // A token is returning to this chain only when its trace starts with the
+        // counterparty's port and channel followed by a slash, which is what ibc-go's
+        // ReceiverChainIsSource compares against. The slash is load-bearing: without
+        // it a source of channel-8 would also claim traces from channel-80 through
+        // channel-89 and channel-800 onwards, which belong to other chains. The port
+        // is the counterparty's, not necessarily "transfer" (a CosmWasm contract with
+        // its own IBC port speaks ICS-20 from a "wasm.<address>" port). Doing the
+        // strip once and branching on its result means the classification and the
+        // unprefixing can never disagree.
+        let voucher_prefix = format!("{}/{}/", self.source_port, self.source_channel);
+        match self.data.denom.strip_prefix(&voucher_prefix) {
+            Some(unprefixed) => {
+                // These are tokens that have been sent to the counterparty and are returning.
+                // ibc-go's rule: if what remains still carries a port/channel prefix it is a
+                // voucher this chain had already wrapped, so it lives here as ibc/HASH.
+                // Anything else is a native denom (uosmo, factory/..., gamm/pool/N, ...)
+                // and is used as-is.
                 // The ibc-go implementation checks that the denom has been built correctly. We
                 // don't need to do that here because if it hasn't, the transfer module will catch it.
-                hash_denom(unprefixed)
+                if is_denom_trace(unprefixed) {
+                    hash_denom(unprefixed)
+                } else {
+                    unprefixed.to_string()
+                }
             }
-        } else {
-            // Tokens that come directly from the counterparty.
-            // Since the sender didn't prefix them, we need to do it here.
-            let prefixed = format!("transfer/{}/", self.destination_channel) + &self.data.denom;
-            hash_denom(&prefixed)
+            None => {
+                // Tokens that come directly from the counterparty (or from further away).
+                // Since the sender didn't prefix them, we need to do it here, with this
+                // chain's port and channel as ibc-go does.
+                let prefixed = format!(
+                    "{}/{}/{}",
+                    self.destination_port, self.destination_channel, self.data.denom
+                );
+                hash_denom(&prefixed)
+            }
         }
     }
 
@@ -183,6 +189,26 @@ impl Packet {
 
     pub fn path_data(&self, direction: &FlowType) -> (String, String) {
         (self.local_channel(direction), self.local_denom(direction))
+    }
+}
+
+/// Whether a packet denom is an IBC denom trace (`{port}/{channel}/{base}`),
+/// which this chain holds as `ibc/HASH`, rather than a denom native to this
+/// chain. Native denoms may contain slashes too (`factory/{creator}/{sub}`,
+/// `gamm/pool/N`), but never an IBC channel id in second position, which is
+/// what distinguishes a trace whatever port it was sent from. A channel id is
+/// `channel-` followed by a number, as ibc-go issues them.
+fn is_denom_trace(denom: &str) -> bool {
+    let mut parts = denom.splitn(3, '/');
+    let port = parts.next().unwrap_or_default();
+    let channel_is_ibc = matches!(parts.next(), Some(channel) if is_channel_id(channel));
+    !port.is_empty() && channel_is_ibc && parts.next().is_some()
+}
+
+fn is_channel_id(candidate: &str) -> bool {
+    match candidate.strip_prefix("channel-") {
+        Some(number) => !number.is_empty() && number.bytes().all(|b| b.is_ascii_digit()),
+        None => false,
     }
 }
 
@@ -225,8 +251,8 @@ pub mod tests {
     #[test]
     fn send_native() {
         let packet = Packet::mock(
-            "channel-17-local".to_string(),
-            "channel-42-counterparty".to_string(),
+            "channel-17".to_string(),
+            "channel-42".to_string(),
             "uosmo".to_string(),
             0_u128.into(),
         );
@@ -235,18 +261,17 @@ pub mod tests {
 
     #[test]
     fn send_non_native() {
-        // The transfer module "unhashes" the denom from
-        // ibc/09E4864A262249507925831FBAD69DAD08F66FAAA0640714E765912A0751289A
-        // to port/channel/denom before passing it along to the contrace
+        // The transfer module "unhashes" the denom from ibc/HASH to
+        // port/channel/denom before passing it along to the contract
         let packet = Packet::mock(
-            "channel-17-local".to_string(),
-            "channel-42-counterparty".to_string(),
-            "transfer/channel-17-local/ujuno".to_string(),
+            "channel-17".to_string(),
+            "channel-42".to_string(),
+            "transfer/channel-17/ujuno".to_string(),
             0_u128.into(),
         );
         assert_eq!(
             packet.local_denom(&FlowType::Out),
-            "ibc/09E4864A262249507925831FBAD69DAD08F66FAAA0640714E765912A0751289A"
+            hash_denom("transfer/channel-17/ujuno")
         );
     }
 
@@ -254,14 +279,14 @@ pub mod tests {
     fn receive_non_native() {
         // The counterparty chain sends their own native token to us
         let packet = Packet::mock(
-            "channel-42-counterparty".to_string(), // The counterparty's channel is the source here
-            "channel-17-local".to_string(),        // Our channel is the dest channel
-            "ujuno".to_string(),                   // This is unwrapped. It is our job to wrap it
+            "channel-42".to_string(), // The counterparty's channel is the source here
+            "channel-17".to_string(), // Our channel is the dest channel
+            "ujuno".to_string(),      // This is unwrapped. It is our job to wrap it
             0_u128.into(),
         );
         assert_eq!(
             packet.local_denom(&FlowType::In),
-            "ibc/09E4864A262249507925831FBAD69DAD08F66FAAA0640714E765912A0751289A"
+            hash_denom("transfer/channel-17/ujuno")
         );
     }
 
@@ -269,9 +294,9 @@ pub mod tests {
     fn receive_native() {
         // The counterparty chain sends us back our native token that they had wrapped
         let packet = Packet::mock(
-            "channel-42-counterparty".to_string(), // The counterparty's channel is the source here
-            "channel-17-local".to_string(),        // Our channel is the dest channel
-            "transfer/channel-42-counterparty/uosmo".to_string(),
+            "channel-42".to_string(), // The counterparty's channel is the source here
+            "channel-17".to_string(), // Our channel is the dest channel
+            "transfer/channel-42/uosmo".to_string(),
             0_u128.into(),
         );
         assert_eq!(packet.local_denom(&FlowType::In), "uosmo");
@@ -281,17 +306,174 @@ pub mod tests {
     fn receive_tokenfactory_token() {
         // The counterparty chain sends us back our native token that they had wrapped
         let packet = Packet::mock(
-            "channel-42-counterparty".to_string(), // The counterparty's channel is the source here
-            "channel-17-local".to_string(),        // Our channel is the dest channel
-            "transfer/channel-42-counterparty/factory/osmo1em6xs47hd82806f5cxgyufguxrrc7l0aqx7nzzptjuqgswczk8csavdxek/alloyed/allUSDT".to_string(),
+            "channel-42".to_string(), // The counterparty's channel is the source here
+            "channel-17".to_string(),        // Our channel is the dest channel
+            "transfer/channel-42/factory/osmo1em6xs47hd82806f5cxgyufguxrrc7l0aqx7nzzptjuqgswczk8csavdxek/alloyed/allUSDT".to_string(),
             0_u128.into(),
         );
         assert_eq!(packet.local_denom(&FlowType::In), "factory/osmo1em6xs47hd82806f5cxgyufguxrrc7l0aqx7nzzptjuqgswczk8csavdxek/alloyed/allUSDT");
     }
 
+    #[test]
+    fn denom_traces_are_told_from_native_denoms_with_slashes() {
+        assert!(is_denom_trace("transfer/channel-0/uatom"));
+        assert!(is_denom_trace(
+            "transfer/channel-8/transfer/channel-89/stuatom"
+        ));
+        assert!(is_denom_trace("wasm.juno1abc/channel-3/cw20:juno1xyz"));
+        assert!(!is_denom_trace("uosmo"));
+        assert!(!is_denom_trace("gamm/pool/1"));
+        assert!(!is_denom_trace(
+            "factory/osmo1em6xs47hd82806f5cxgyufguxrrc7l0aqx7nzzptjuqgswczk8csavdxek/alloyed/allUSDT"
+        ));
+        assert!(!is_denom_trace("transfer/channel-0"));
+        assert!(!is_denom_trace("/channel-0/uatom"));
+        // only a real channel id in second position makes a trace
+        assert!(!is_denom_trace("custom/channel-backup/token"));
+        assert!(!is_denom_trace("custom/channel-/token"));
+        assert!(!is_denom_trace("custom/channel-1a/token"));
+    }
+
+    #[test]
+    fn counterparty_port_is_part_of_the_voucher_prefix() {
+        // A contract on the counterparty with its own IBC port returns our native
+        // token: ibc-go unescrows uosmo, and so must the quota lookup
+        let mut packet = Packet::mock(
+            "channel-42".to_string(),
+            "channel-17".to_string(),
+            "wasm.juno1contract/channel-42/uosmo".to_string(),
+            0_u128.into(),
+        );
+        packet.source_port = "wasm.juno1contract".to_string();
+        assert_eq!(packet.local_denom(&FlowType::In), "uosmo");
+
+        // and a token of theirs arriving over that port is prefixed with our
+        // port and channel, as ibc-go does
+        let mut packet = Packet::mock(
+            "channel-42".to_string(),
+            "channel-17".to_string(),
+            "cw20:juno1token".to_string(),
+            0_u128.into(),
+        );
+        packet.source_port = "wasm.juno1contract".to_string();
+        assert_eq!(
+            packet.local_denom(&FlowType::In),
+            hash_denom("transfer/channel-17/cw20:juno1token")
+        );
+
+        // A voucher this chain wrapped from such a port, returning home, is unwrapped
+        // one hop and looked up under the hash of what remains
+        let packet = Packet::mock(
+            "channel-42".to_string(),
+            "channel-17".to_string(),
+            "transfer/channel-42/wasm.juno1contract/channel-3/cw20:juno1token".to_string(),
+            0_u128.into(),
+        );
+        assert_eq!(
+            packet.local_denom(&FlowType::In),
+            hash_denom("wasm.juno1contract/channel-3/cw20:juno1token")
+        );
+
+        // A trace that begins with another port is still a trace and is looked up
+        // under its ibc/ hash (the transfer module itself only ever hands this
+        // chain's own port in first position; other ports reach the limiter from
+        // contracts with their own IBC port)
+        let packet = Packet::mock(
+            "channel-17".to_string(),
+            "channel-42".to_string(),
+            "wasm.juno1contract/channel-42/cw20:juno1token".to_string(),
+            0_u128.into(),
+        );
+        assert_eq!(
+            packet.local_denom(&FlowType::Out),
+            hash_denom("wasm.juno1contract/channel-42/cw20:juno1token")
+        );
+    }
+
+    #[test]
+    fn receive_native_lp_share() {
+        // A native denom with slashes that is not a tokenfactory denom must still be
+        // recognised as native when it returns (the old split-on-slash heuristic hashed it)
+        let packet = Packet::mock(
+            "channel-42".to_string(),
+            "channel-17".to_string(),
+            "transfer/channel-42/gamm/pool/1".to_string(),
+            0_u128.into(),
+        );
+        assert_eq!(packet.local_denom(&FlowType::In), "gamm/pool/1");
+    }
+
+    // Regression tests for the prefix collision reported in osmosis-labs/osmosis#9742.
+    //
+    // Injective's channel to Osmosis is channel-8 and Osmosis' side is channel-122.
+    // Stride's stATOM lives on Injective as transfer/channel-89/stuatom. "channel-8"
+    // is a string prefix of "channel-89", so a check without the trailing slash
+    // misclassified the packet as an Osmosis-native token returning home.
+    const INJECTIVE_TO_OSMOSIS: &str = "channel-8";
+    const OSMOSIS_FROM_INJECTIVE: &str = "channel-122";
+    const STATOM_ON_INJECTIVE_TRACE: &str = "transfer/channel-89/stuatom";
+
+    #[test]
+    fn receive_colliding_channel_prefix_is_foreign() {
+        let packet = Packet::mock(
+            INJECTIVE_TO_OSMOSIS.to_string(),
+            OSMOSIS_FROM_INJECTIVE.to_string(),
+            STATOM_ON_INJECTIVE_TRACE.to_string(),
+            1_000_000_u128.into(),
+        );
+        // Osmosis must prefix its own channel and hash the full two-hop trace
+        let expected = hash_denom(&format!(
+            "transfer/{}/{}",
+            OSMOSIS_FROM_INJECTIVE, STATOM_ON_INJECTIVE_TRACE
+        ));
+        assert_eq!(packet.local_denom(&FlowType::In), expected);
+        assert!(!packet.local_denom(&FlowType::In).is_empty());
+    }
+
+    #[test]
+    fn receive_exact_channel_prefix_is_returning_native() {
+        // The same source channel with a genuinely returning native token still unwraps
+        let packet = Packet::mock(
+            INJECTIVE_TO_OSMOSIS.to_string(),
+            OSMOSIS_FROM_INJECTIVE.to_string(),
+            format!("transfer/{}/uosmo", INJECTIVE_TO_OSMOSIS),
+            0_u128.into(),
+        );
+        assert_eq!(packet.local_denom(&FlowType::In), "uosmo");
+
+        // and a returning tokenfactory denom is untouched
+        let alloyed =
+            "factory/osmo1z6r6qdknhgsc0zeracktgpcxf43j6sekq07nw8sxduc9lg0qjjlqfu25e3/alloyed/allBTC";
+        let packet = Packet::mock(
+            INJECTIVE_TO_OSMOSIS.to_string(),
+            OSMOSIS_FROM_INJECTIVE.to_string(),
+            format!("transfer/{}/{}", INJECTIVE_TO_OSMOSIS, alloyed),
+            0_u128.into(),
+        );
+        assert_eq!(packet.local_denom(&FlowType::In), alloyed);
+    }
+
+    #[test]
+    fn receive_exact_channel_prefix_returning_voucher_is_hashed() {
+        // A voucher Osmosis had wrapped (ATOM from the Hub) returning from Injective
+        let packet = Packet::mock(
+            INJECTIVE_TO_OSMOSIS.to_string(),
+            OSMOSIS_FROM_INJECTIVE.to_string(),
+            format!(
+                "transfer/{}/{}",
+                INJECTIVE_TO_OSMOSIS, WRAPPED_ATOM_ON_OSMOSIS_TRACE
+            ),
+            0_u128.into(),
+        );
+        assert_eq!(
+            packet.local_denom(&FlowType::In),
+            WRAPPED_ATOM_ON_OSMOSIS_HASH
+        );
+    }
+
     // Let's assume we have two chains A and B (local and counterparty) connected in the following way:
     //
-    // Chain A <---> channel-17-local <---> channel-42-counterparty <---> Chain B
+    // Chain A <---> channel-17 <---> channel-42 <---> Chain B
     //
     // The following tests should pass
     //

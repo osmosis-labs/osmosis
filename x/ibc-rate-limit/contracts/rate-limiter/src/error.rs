@@ -32,3 +32,22 @@ pub enum ContractError {
     #[error("Channel {channel} has been blocked for denom {denom}")]
     ChannelBlocked { channel: String, denom: String },
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test] // The chain-side middleware keys on this prefix to tell a quota rejection from any other contract failure; keep it stable
+    fn rate_limit_exceeded_message_keeps_the_marker_the_chain_matches() {
+        let err = ContractError::RateLimitExceded {
+            channel: "channel-0".to_string(),
+            denom: "uosmo".to_string(),
+            amount: Uint256::from(1_u32),
+            quota_name: "daily".to_string(),
+            used: Uint256::zero(),
+            max: Uint256::zero(),
+            reset: Timestamp::from_seconds(0),
+        };
+        assert!(err.to_string().starts_with("IBC Rate Limit exceeded for"));
+    }
+}
