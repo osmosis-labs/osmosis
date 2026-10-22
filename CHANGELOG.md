@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* [#9770](https://github.com/osmosis-labs/osmosis/pull/9770) fix(state-breaking): reject non-adjacent duplicate split routes. Duplicate detection now uses a keyed hash set in x/poolmanager (linear time) instead of osmoutils pairwise DeepEqual, so it does not depend on the osmoutils version and stays cheap in ValidateBasic.
 * [#9760](https://github.com/osmosis-labs/osmosis/pull/9760) feat(upgrade): v32 upgrade moves non-base-denom balances stuck in the protorev module account to the liquidity sub-DAO, which swaps them to OSMO and burns it
 * [#9746](https://github.com/osmosis-labs/osmosis/pull/9746) feat(v33): recover 6B HUAHUA stuck in misconfigured gauges 1954-1959 to the Chihuahua ecosystem fund, as approved by governance proposal 609
 * [#9744](https://github.com/osmosis-labs/osmosis/pull/9744) feat: seize proposal 1044 allBTC in the v32 upgrade. Move 22.65060846 allBTC from the exploiter to the Liquidity subDAO on osmosis-1 only (skipped on other chains). A shortfall aborts the upgrade; any surplus and the account's OSMO stay on the exploiter.

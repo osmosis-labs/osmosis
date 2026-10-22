@@ -2,6 +2,7 @@ package types
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -191,6 +192,21 @@ func TestValidateSwapAmountInSplitRoute(t *testing.T) {
 			},
 			expectErr: ErrDuplicateRoutesNotAllowed,
 		},
+		{
+			name: "non-adjacent duplicate routes",
+			routes: []SwapAmountInSplitRoute{
+				defaultSingleRouteTwoHopsAmountIn,
+				{
+					Pools: []SwapAmountInRoute{{
+						PoolId:        fooBazPoolId,
+						TokenOutDenom: baz,
+					}},
+					TokenInAmount: twentyFiveBaseUnitsAmount,
+				},
+				defaultSingleRouteTwoHopsAmountIn,
+			},
+			expectErr: ErrDuplicateRoutesNotAllowed,
+		},
 	}
 
 	for _, tt := range tests {
@@ -273,6 +289,21 @@ func TestValidateSwapAmountOutSplitRoute(t *testing.T) {
 			},
 			expectErr: ErrDuplicateRoutesNotAllowed,
 		},
+		{
+			name: "non-adjacent duplicate routes",
+			routes: []SwapAmountOutSplitRoute{
+				defaultSingleRouteTwoHopsAmountOut,
+				{
+					Pools: []SwapAmountOutRoute{{
+						PoolId:       fooBazPoolId,
+						TokenInDenom: foo,
+					}},
+					TokenOutAmount: twentyFiveBaseUnitsAmount,
+				},
+				defaultSingleRouteTwoHopsAmountOut,
+			},
+			expectErr: ErrDuplicateRoutesNotAllowed,
+		},
 	}
 
 	for _, tt := range tests {
@@ -350,4 +381,68 @@ func TestIntermediateDenoms(t *testing.T) {
 			require.Equal(t, tc.expectedDenoms, actualIntermediateDenoms)
 		})
 	}
+}
+
+func TestRoutesKey(t *testing.T) {
+	inA := SwapAmountInRoutes{{PoolId: fooBarPoolId, TokenOutDenom: bar}}
+	inAB := SwapAmountInRoutes{{PoolId: fooBarPoolId, TokenOutDenom: bar}, {PoolId: barBazPoolId, TokenOutDenom: baz}}
+	inBA := SwapAmountInRoutes{{PoolId: barBazPoolId, TokenOutDenom: baz}, {PoolId: fooBarPoolId, TokenOutDenom: bar}}
+
+	require.Equal(t, inAB.Key(), SwapAmountInRoutes{{PoolId: fooBarPoolId, TokenOutDenom: bar}, {PoolId: barBazPoolId, TokenOutDenom: baz}}.Key())
+	require.NotEqual(t, inA.Key(), inAB.Key(), "prefix route must have a distinct key")
+	require.NotEqual(t, inAB.Key(), inBA.Key(), "hop order must be part of the key")
+
+	// Length prefixing keeps keys distinct when denom bytes could be read as part of an adjacent field.
+	split1 := SwapAmountInRoutes{{PoolId: 1, TokenOutDenom: "abc/def"}}
+	split2 := SwapAmountInRoutes{{PoolId: 1, TokenOutDenom: "abc"}, {PoolId: 1, TokenOutDenom: "def"}}
+	require.NotEqual(t, split1.Key(), split2.Key())
+
+	outAB := SwapAmountOutRoutes{{PoolId: fooBarPoolId, TokenInDenom: foo}, {PoolId: barBazPoolId, TokenInDenom: bar}}
+	outBA := SwapAmountOutRoutes{{PoolId: barBazPoolId, TokenInDenom: bar}, {PoolId: fooBarPoolId, TokenInDenom: foo}}
+	require.NotEqual(t, outAB.Key(), outBA.Key())
+}
+
+func TestContainsDuplicateRoute(t *testing.T) {
+	a := SwapAmountInRoutes{{PoolId: fooBarPoolId, TokenOutDenom: bar}}
+	b := SwapAmountInRoutes{{PoolId: fooBazPoolId, TokenOutDenom: baz}}
+	c := SwapAmountInRoutes{{PoolId: fooUosmoPoolId, TokenOutDenom: uosmo}}
+
+	tests := []struct {
+		name   string
+		routes []SwapAmountInRoutes
+		want   bool
+	}{
+		{name: "empty", routes: nil, want: false},
+		{name: "single", routes: []SwapAmountInRoutes{a}, want: false},
+		{name: "unique", routes: []SwapAmountInRoutes{a, b, c}, want: false},
+		{name: "adjacent duplicate", routes: []SwapAmountInRoutes{a, a, b}, want: true},
+		{name: "non-adjacent duplicate", routes: []SwapAmountInRoutes{a, b, a}, want: true},
+		{name: "duplicate last pair", routes: []SwapAmountInRoutes{a, b, b}, want: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, containsDuplicateRoute(tt.routes))
+		})
+	}
+}
+
+// TestValidateSplitRouteLargeInput guards against reintroducing quadratic duplicate
+// detection, which runs in ValidateBasic before any gas is charged.
+func TestValidateSplitRouteLargeInput(t *testing.T) {
+	const numRoutes = 50_000
+	routes := make([]SwapAmountInSplitRoute, numRoutes)
+	for i := range routes {
+		routes[i] = SwapAmountInSplitRoute{
+			Pools:         []SwapAmountInRoute{{PoolId: uint64(i + 1), TokenOutDenom: uosmo}},
+			TokenInAmount: osmomath.OneInt(),
+		}
+	}
+
+	start := time.Now()
+	require.NoError(t, ValidateSwapAmountInSplitRoute(routes))
+	require.Less(t, time.Since(start), 2*time.Second)
+
+	routes[numRoutes-1] = routes[0]
+	require.ErrorIs(t, ValidateSwapAmountInSplitRoute(routes), ErrDuplicateRoutesNotAllowed)
 }
