@@ -2,3 +2,7 @@ networks/cosmoshub-3/cosmoshub3_for_zero_height.json filter=lfs diff=lfs merge=l
 networks/cosmoshub-3/snapshot.json filter=lfs diff=lfs merge=lfs -text
 networks/osmosis-1/genesis.json filter=lfs diff=lfs merge=lfs -text
 networks/osmosis-1/pregenesis.json filter=lfs diff=lfs merge=lfs -text
+
+# Generated renderer includes upstream license comments and string literals.
+client/docs/static/openapi/index.html linguist-generated=true -whitespace
+client/docs/statik/statik.go linguist-generated=true

@@ -27,10 +27,20 @@ jobs:
         run: |
           go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v1.16.0
 
-      - name: Install swagger-combine
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: yarn
+          cache-dependency-path: client/docs/yarn.lock
+
+      - name: Install documentation dependencies
         run: |
           yarn --cwd client/docs install --frozen-lockfile
           echo "${{ github.workspace }}/client/docs/node_modules/.bin" >> $GITHUB_PATH
+
+      - name: Validate documentation tooling
+        run: yarn --cwd client/docs test
 
       - name: Install Statik
         run: |

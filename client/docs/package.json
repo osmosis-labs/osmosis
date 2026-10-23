@@ -6,16 +6,32 @@
   "scripts": {
     "combine": "swagger-combine ./config.json -o static/swagger/swagger.yaml -f yaml --continueOnConflictingPaths --includeDefinitions",
     "convert": "swagger2openapi static/swagger/swagger.yaml --outfile static/openapi/openapi.yaml --yaml",
-    "build": "redoc-cli bundle static/openapi/openapi.yaml --output ./static/openapi/index.html"
+    "build": "node build-docs.mjs",
+    "test": "node --test build-docs.test.mjs"
   },
   "dependencies": {
-    "redoc-cli": "^0.13.21",
+    "@redocly/cli": "2.33.2",
+    "redoc": "2.5.4",
+    "core-js": "^3.51.0",
+    "mobx": "^6.16.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "styled-components": "6.4.2",
     "swagger-combine": "^1.4.0",
     "swagger2openapi": "^7.0.3"
   },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  },
+  "engines": {
+    "node": "^22.13.0 || >=24.0.0"
+  },
   "resolutions": {
-    "redoc-cli/redoc": "^2.4.0",
-    "redoc-cli/react": "^18.3.1",
-    "redoc-cli/react-dom": "^18.3.1"
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "redoc": "2.5.4",
+    "dompurify": "^3.4.17",
+    "undici": "^6.28.1",
+    "@faker-js/faker": "^10.5.0"
   }
 }
