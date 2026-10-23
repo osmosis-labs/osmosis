@@ -38,15 +38,6 @@ type createBalancerPoolInputs struct {
 	SmoothWeightChangeParams smoothWeightChangeParamsInputs `json:"lbp-params"`
 }
 
-type createStableswapPoolInputs struct {
-	InitialDeposit          string `json:"initial-deposit"`
-	SwapFee                 string `json:"swap-fee"`
-	ExitFee                 string `json:"exit-fee"`
-	FutureGovernor          string `json:"future-governor"`
-	ScalingFactorController string `json:"scaling-factor-controller"`
-	ScalingFactors          string `json:"scaling-factors"`
-}
-
 type smoothWeightChangeParamsInputs struct {
 	StartTime         string `json:"start-time"`
 	Duration          string `json:"duration"`
@@ -74,22 +65,6 @@ func FlagSetMultihopSwapRoutes() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 	fs.String(FlagSwapRoutePoolIds, "", "swap route pool id")
 	fs.String(FlagSwapRouteDenoms, "", "swap route amount")
-	return fs
-}
-
-func FlagSetQuerySwapRoutes() *flag.FlagSet {
-	fs := flag.NewFlagSet("", flag.ContinueOnError)
-
-	fs.StringArray(FlagSwapRoutePoolIds, []string{""}, "swap route pool id")
-	fs.StringArray(FlagSwapRouteDenoms, []string{""}, "swap route amount")
-	return fs
-}
-
-func FlagSetSwapAmountOutRoutes() *flag.FlagSet {
-	fs := flag.NewFlagSet("", flag.ContinueOnError)
-
-	fs.StringArray(FlagSwapRoutePoolIds, []string{""}, "swap route pool ids")
-	fs.StringArray(FlagSwapRouteDenoms, []string{""}, "swap route denoms")
 	return fs
 }
 

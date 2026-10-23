@@ -1,9 +1,5 @@
 package accum
 
-import "github.com/osmosis-labs/osmosis/osmomath"
-
-var one = osmomath.OneDec()
-
 // validate returns nil if Options are valid.
 // Error otherwise. Note, that, currently,
 // options do not contain any fields. We
