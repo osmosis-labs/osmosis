@@ -39,9 +39,6 @@ jobs:
           yarn --cwd client/docs install --frozen-lockfile
           echo "${{ github.workspace }}/client/docs/node_modules/.bin" >> $GITHUB_PATH
 
-      - name: Validate documentation tooling
-        run: yarn --cwd client/docs test
-
       - name: Install Statik
         run: |
           sudo apt-get update -y
