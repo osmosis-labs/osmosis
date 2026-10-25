@@ -18,16 +18,15 @@ import (
 type Keeper struct {
 	storeKey storetypes.StoreKey
 
-	gammKeeper           types.PoolModuleI
-	concentratedKeeper   types.ConcentratedI
-	cosmwasmpoolKeeper   types.PoolModuleI
-	poolIncentivesKeeper types.PoolIncentivesKeeperI
-	bankKeeper           types.BankI
-	accountKeeper        types.AccountI
-	communityPoolKeeper  types.CommunityPoolI
-	stakingKeeper        types.StakingKeeper
-	protorevKeeper       types.ProtorevKeeper
-	wasmKeeper           types.WasmKeeper
+	gammKeeper          types.PoolModuleI
+	concentratedKeeper  types.ConcentratedI
+	cosmwasmpoolKeeper  types.PoolModuleI
+	bankKeeper          types.BankI
+	accountKeeper       types.AccountI
+	communityPoolKeeper types.CommunityPoolI
+	stakingKeeper       types.StakingKeeper
+	protorevKeeper      types.ProtorevKeeper
+	wasmKeeper          types.WasmKeeper
 
 	// routes is a map to get the pool module by id.
 	routes map[types.PoolType]types.PoolModuleI
@@ -213,11 +212,6 @@ func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 func (k Keeper) SetNextPoolId(ctx sdk.Context, poolId uint64) {
 	store := ctx.KVStore(k.storeKey)
 	osmoutils.MustSet(store, types.KeyNextGlobalPoolId, &gogotypes.UInt64Value{Value: poolId})
-}
-
-// SetPoolIncentivesKeeper sets pool incentives keeper
-func (k *Keeper) SetPoolIncentivesKeeper(poolIncentivesKeeper types.PoolIncentivesKeeperI) {
-	k.poolIncentivesKeeper = poolIncentivesKeeper
 }
 
 // SetStakingKeeper sets staking keeper

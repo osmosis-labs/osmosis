@@ -10,7 +10,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v32/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v32/x/pool-incentives/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v32/x/txfees/types"
 
 	storetypes "cosmossdk.io/store/types"
@@ -132,20 +131,15 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 		return err
 	}
 
-	// allocate pool allocation ratio to pool-incentives module account.
-	poolIncentivesAmount, err := k.distributeToModule(ctx, poolincentivestypes.ModuleName, mintedCoin, proportions.PoolIncentives)
-	if err != nil {
-		return err
-	}
-
 	// allocate dev rewards to respective accounts from developer vesting module account.
 	devRewardAmount, err := k.distributeDeveloperRewards(ctx, mintedCoin, proportions.DeveloperRewards, params.WeightedDeveloperRewardsReceivers)
 	if err != nil {
 		return err
 	}
 
-	// subtract from original provision to ensure no coins left over after the allocations
-	communityPoolAmount := mintedCoin.Amount.Sub(stakingIncentivesAmount).Sub(poolIncentivesAmount).Sub(devRewardAmount)
+	// subtract from original provision to ensure no coins left over after the allocations.
+	// The pool incentives proportion is validated to be zero; any remainder goes to the community pool.
+	communityPoolAmount := mintedCoin.Amount.Sub(stakingIncentivesAmount).Sub(devRewardAmount)
 	err = k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(params.MintDenom, communityPoolAmount)), k.accountKeeper.GetModuleAddress(types.ModuleName))
 	if err != nil {
 		return err

@@ -20,34 +20,32 @@ type Keeper struct {
 	listeners  types.ConcentratedLiquidityListeners
 
 	// keepers
-	poolmanagerKeeper    types.PoolManagerKeeper
-	accountKeeper        types.AccountKeeper
-	bankKeeper           types.BankKeeper
-	gammKeeper           types.GAMMKeeper
-	poolIncentivesKeeper types.PoolIncentivesKeeper
-	incentivesKeeper     types.IncentivesKeeper
-	lockupKeeper         types.LockupKeeper
-	communityPoolKeeper  types.CommunityPoolKeeper
-	contractKeeper       types.ContractKeeper
+	poolmanagerKeeper   types.PoolManagerKeeper
+	accountKeeper       types.AccountKeeper
+	bankKeeper          types.BankKeeper
+	gammKeeper          types.GAMMKeeper
+	incentivesKeeper    types.IncentivesKeeper
+	lockupKeeper        types.LockupKeeper
+	communityPoolKeeper types.CommunityPoolKeeper
+	contractKeeper      types.ContractKeeper
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, gammKeeper types.GAMMKeeper, poolIncentivesKeeper types.PoolIncentivesKeeper, incentivesKeeper types.IncentivesKeeper, lockupKeeper types.LockupKeeper, communityPoolKeeper types.CommunityPoolKeeper, contractKeeper types.ContractKeeper, paramSpace paramtypes.Subspace) *Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, gammKeeper types.GAMMKeeper, incentivesKeeper types.IncentivesKeeper, lockupKeeper types.LockupKeeper, communityPoolKeeper types.CommunityPoolKeeper, contractKeeper types.ContractKeeper, paramSpace paramtypes.Subspace) *Keeper {
 	// ParamSubspace must be initialized within app/keepers/keepers.go
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 	return &Keeper{
-		storeKey:             storeKey,
-		paramSpace:           paramSpace,
-		cdc:                  cdc,
-		accountKeeper:        accountKeeper,
-		bankKeeper:           bankKeeper,
-		gammKeeper:           gammKeeper,
-		poolIncentivesKeeper: poolIncentivesKeeper,
-		incentivesKeeper:     incentivesKeeper,
-		lockupKeeper:         lockupKeeper,
-		communityPoolKeeper:  communityPoolKeeper,
-		contractKeeper:       contractKeeper,
+		storeKey:            storeKey,
+		paramSpace:          paramSpace,
+		cdc:                 cdc,
+		accountKeeper:       accountKeeper,
+		bankKeeper:          bankKeeper,
+		gammKeeper:          gammKeeper,
+		incentivesKeeper:    incentivesKeeper,
+		lockupKeeper:        lockupKeeper,
+		communityPoolKeeper: communityPoolKeeper,
+		contractKeeper:      contractKeeper,
 	}
 }
 
@@ -75,11 +73,6 @@ func (k *Keeper) SetPoolManagerKeeper(poolmanagerKeeper types.PoolManagerKeeper)
 // Set the gamm keeper.
 func (k *Keeper) SetGammKeeper(gammKeeper types.GAMMKeeper) {
 	k.gammKeeper = gammKeeper
-}
-
-// Set the pool incentives keeper.
-func (k *Keeper) SetPoolIncentivesKeeper(poolIncentivesKeeper types.PoolIncentivesKeeper) {
-	k.poolIncentivesKeeper = poolIncentivesKeeper
 }
 
 // Set the incentives keeper.

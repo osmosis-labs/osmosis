@@ -302,8 +302,7 @@ func (s *UpgradeTestSuite) runCreateGroupsForIncentivePairsTest(migrationInfo []
 	s.Require().NoError(err)
 
 	// Configure distribution records for each test individually (overwrites previous distribution records).
-	err = s.App.PoolIncentivesKeeper.ReplaceDistrRecords(s.Ctx, distributionRecords...)
-	s.Require().NoError(err)
+	s.ReplacePoolIncentivesDistrRecords(distributionRecords...)
 
 	cacheCtx, write := s.Ctx.CacheContext()
 	err = v20.CreateGroupsForIncentivePairs(cacheCtx, &s.App.AppKeepers)

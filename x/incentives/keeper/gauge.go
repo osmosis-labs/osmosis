@@ -493,16 +493,60 @@ func (k Keeper) checkIfDenomsAreDistributable(ctx sdk.Context, coins sdk.Coins) 
 // moves it to the finished gauges and sends all of its undistributed coins from the incentives
 // module account to the recipient.
 //
-// The gauge's DistributedCoins is set to its Coins and FilledEpochs to NumEpochsPaidOver, so that
-// the module-level accounting (GetModuleToDistributeCoins / GetModuleDistributedCoins) stays
-// consistent with the module account balance after the send.
-//
-// Unlike moveActiveGaugeToFinishedGauge, a missing denom reference is tolerated, since some
-// legacy gauges on mainnet are in the active set without one.
-//
 // WARNING: this bypasses the normal distribution logic. It is intended to be called only from
 // governance-approved upgrade handlers. It is not exposed through any message or query.
 func (k Keeper) ForceFinishGaugeAndSendUndistributed(ctx sdk.Context, gaugeID uint64, recipient sdk.AccAddress) (sdk.Coins, error) {
+	undistributed, err := k.forceFinishGauge(ctx, gaugeID)
+	if err != nil {
+		return nil, err
+	}
+
+	if !undistributed.IsZero() {
+		if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, recipient, undistributed); err != nil {
+			return nil, err
+		}
+	}
+
+	emitForceFinishGaugeEvent(ctx, gaugeID, recipient.String(), undistributed)
+	return undistributed, nil
+}
+
+// ForceFinishGaugesToCommunityPool force finishes each of the given active, non-perpetual gauges like
+// ForceFinishGaugeAndSendUndistributed, and funds the community pool with their undistributed coins
+// in a single transfer. Returns the total amount sent.
+//
+// WARNING: this bypasses the normal distribution logic. It is intended to be called only from
+// governance-approved upgrade handlers. It is not exposed through any message or query.
+func (k Keeper) ForceFinishGaugesToCommunityPool(ctx sdk.Context, gaugeIDs []uint64) (sdk.Coins, error) {
+	total := sdk.NewCoins()
+	for _, gaugeID := range gaugeIDs {
+		undistributed, err := k.forceFinishGauge(ctx, gaugeID)
+		if err != nil {
+			return nil, err
+		}
+		total = total.Add(undistributed...)
+		emitForceFinishGaugeEvent(ctx, gaugeID, types.CommunityPoolReceiver, undistributed)
+	}
+
+	if !total.IsZero() {
+		if err := k.ck.FundCommunityPool(ctx, total, k.ak.GetModuleAddress(types.ModuleName)); err != nil {
+			return nil, err
+		}
+	}
+	return total, nil
+}
+
+// forceFinishGauge marks an active, non-perpetual gauge as fully distributed and moves it to the
+// finished gauges. It returns the gauge's undistributed coins, which remain in the incentives module
+// account and must be sent by the caller.
+//
+// The gauge's DistributedCoins is set to its Coins and FilledEpochs to NumEpochsPaidOver, so that
+// the module-level accounting (GetModuleToDistributeCoins / GetModuleDistributedCoins) stays
+// consistent with the module account balance after the caller's send.
+//
+// Unlike moveActiveGaugeToFinishedGauge, a missing denom reference is tolerated, since some
+// legacy gauges on mainnet are in the active set without one.
+func (k Keeper) forceFinishGauge(ctx sdk.Context, gaugeID uint64) (sdk.Coins, error) {
 	gauge, err := k.GetGaugeByID(ctx, gaugeID)
 	if err != nil {
 		return nil, err
@@ -524,12 +568,6 @@ func (k Keeper) ForceFinishGaugeAndSendUndistributed(ctx sdk.Context, gaugeID ui
 		return nil, fmt.Errorf("gauge %d has distributed coins %s exceeding its coins %s", gaugeID, gauge.DistributedCoins, gauge.Coins)
 	}
 
-	if !undistributed.IsZero() {
-		if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, recipient, undistributed); err != nil {
-			return nil, err
-		}
-	}
-
 	gauge.DistributedCoins = gauge.Coins
 	gauge.FilledEpochs = gauge.NumEpochsPaidOver
 	if err := k.setGauge(ctx, gauge); err != nil {
@@ -548,13 +586,14 @@ func (k Keeper) ForceFinishGaugeAndSendUndistributed(ctx sdk.Context, gaugeID ui
 		}
 	}
 	k.hooks.AfterFinishDistribution(ctx, gauge.Id)
+	return undistributed, nil
+}
 
+func emitForceFinishGaugeEvent(ctx sdk.Context, gaugeID uint64, receiver string, amount sdk.Coins) {
 	ctx.EventManager().EmitEvent(sdk.NewEvent(
 		types.TypeEvtForceFinishGauge,
-		sdk.NewAttribute(types.AttributeGaugeID, osmoutils.Uint64ToString(gauge.Id)),
-		sdk.NewAttribute(types.AttributeReceiver, recipient.String()),
-		sdk.NewAttribute(types.AttributeAmount, undistributed.String()),
+		sdk.NewAttribute(types.AttributeGaugeID, osmoutils.Uint64ToString(gaugeID)),
+		sdk.NewAttribute(types.AttributeReceiver, receiver),
+		sdk.NewAttribute(types.AttributeAmount, amount.String()),
 	))
-
-	return undistributed, nil
 }

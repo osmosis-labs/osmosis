@@ -102,10 +102,6 @@ type ConcentratedI interface {
 	GetWhitelistedAddresses(ctx sdk.Context) []string
 }
 
-type PoolIncentivesKeeperI interface {
-	IsPoolIncentivized(ctx sdk.Context, poolId uint64) (bool, error)
-}
-
 type MultihopRoute interface {
 	Length() int
 	PoolIds() []uint64

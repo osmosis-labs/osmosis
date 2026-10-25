@@ -384,8 +384,8 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.MintParams.DistributionProportions = minttypes.DistributionProportions{
 		Staking:          osmomath.MustNewDecFromStr("0.25"), // 25%
 		DeveloperRewards: osmomath.MustNewDecFromStr("0.25"), // 25%
-		PoolIncentives:   osmomath.MustNewDecFromStr("0.45"), // 45%
-		CommunityPool:    osmomath.MustNewDecFromStr("0.05"), // 5%
+		PoolIncentives:   osmomath.ZeroDec(),
+		CommunityPool:    osmomath.MustNewDecFromStr("0.50"), // 50%
 	}
 	genParams.MintParams.MintingRewardsDistributionStartEpoch = 1
 	genParams.MintParams.WeightedDeveloperRewardsReceivers = []minttypes.WeightedAddress{
