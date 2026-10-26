@@ -1,8 +1,8 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "Osmosis - gRPC Gateway docs",
-    "description": "A REST interface for state queries, legacy transactions",
+    "title": "Osmosis REST API",
+    "description": "gRPC Gateway endpoints for querying chain state, grouped by protobuf package.",
     "version": "1.0.0"
   },
   "apis": [
@@ -13,6 +13,12 @@
           "Params": "ConcentratedLiquidityParams",
           "Pools": "ConcentratedLiquidityPools"
         }
+      },
+      "tags": {
+        "rename": {
+          "Query": "osmosis.concentratedliquidity.v1beta1",
+          "Service": "osmosis.concentratedliquidity.v1beta1"
+        }
       }
     },
     {
@@ -22,16 +28,34 @@
           "Params": "CosmwasmPoolParams",
           "Pools": "CosmwasmPoolPools"
         }
+      },
+      "tags": {
+        "rename": {
+          "Query": "osmosis.cosmwasmpool.v1beta1",
+          "Service": "osmosis.cosmwasmpool.v1beta1"
+        }
       }
     },
     {
-      "url": "./tmp-swagger-gen/osmosis/downtimedetector/v1beta1/query.swagger.json"
+      "url": "./tmp-swagger-gen/osmosis/downtimedetector/v1beta1/query.swagger.json",
+      "tags": {
+        "rename": {
+          "Query": "osmosis.downtimedetector.v1beta1",
+          "Service": "osmosis.downtimedetector.v1beta1"
+        }
+      }
     },
     {
       "url": "./tmp-swagger-gen/osmosis/epochs/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "EpochsParams"
+        }
+      },
+      "tags": {
+        "rename": {
+          "Query": "osmosis.epochs.v1beta1",
+          "Service": "osmosis.epochs.v1beta1"
         }
       }
     },
@@ -41,6 +65,12 @@
         "rename": {
           "Params": "GAMMParams"
         }
+      },
+      "tags": {
+        "rename": {
+          "Query": "osmosis.gamm.v1beta1",
+          "Service": "osmosis.gamm.v1beta1"
+        }
       }
     },
     {
@@ -48,6 +78,12 @@
       "operationIds": {
         "rename": {
           "SpotPrice": "GAMMSpotPriceV2"
+        }
+      },
+      "tags": {
+        "rename": {
+          "Query": "osmosis.gamm.v2",
+          "Service": "osmosis.gamm.v2"
         }
       }
     },
@@ -57,6 +93,12 @@
         "rename": {
           "Params": "IBCRateLimitParams"
         }
+      },
+      "tags": {
+        "rename": {
+          "Query": "osmosis.ibcratelimit.v1beta1",
+          "Service": "osmosis.ibcratelimit.v1beta1"
+        }
       }
     },
     {
@@ -64,6 +106,12 @@
       "operationIds": {
         "rename": {
           "Params": "IncentivesParams"
+        }
+      },
+      "tags": {
+        "rename": {
+          "Query": "osmosis.incentives",
+          "Service": "osmosis.incentives"
         }
       }
     },
@@ -73,13 +121,26 @@
         "rename": {
           "Params": "LockupParams"
         }
+      },
+      "tags": {
+        "rename": {
+          "Query": "osmosis.lockup",
+          "Service": "osmosis.lockup"
+        }
       }
     },
     {
       "url": "./tmp-swagger-gen/osmosis/mint/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
-          "Params": "MintParams"
+          "Params": "MintParams",
+          "TotalSupply": "MintTotalSupply"
+        }
+      },
+      "tags": {
+        "rename": {
+          "Query": "osmosis.mint.v1beta1",
+          "Service": "osmosis.mint.v1beta1"
         }
       }
     },
@@ -89,6 +150,12 @@
         "rename": {
           "LockableDurations": "PoolLockableDurations",
           "Params": "PoolIncentivesParams"
+        }
+      },
+      "tags": {
+        "rename": {
+          "Query": "osmosis.poolincentives.v1beta1",
+          "Service": "osmosis.poolincentives.v1beta1"
         }
       }
     },
@@ -105,16 +172,34 @@
           "EstimateSwapExactAmountIn": "PoolManagerEstimateSwapExactAmountIn",
           "EstimateSwapExactAmountOut": "PoolManagerEstimateSwapExactAmountOut"
         }
+      },
+      "tags": {
+        "rename": {
+          "Query": "osmosis.poolmanager.v1beta1",
+          "Service": "osmosis.poolmanager.v1beta1"
+        }
       }
     },
     {
-      "url": "./tmp-swagger-gen/osmosis/poolmanager/v2/query.swagger.json"
+      "url": "./tmp-swagger-gen/osmosis/poolmanager/v2/query.swagger.json",
+      "tags": {
+        "rename": {
+          "Query": "osmosis.poolmanager.v2",
+          "Service": "osmosis.poolmanager.v2"
+        }
+      }
     },
     {
       "url": "./tmp-swagger-gen/osmosis/protorev/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "ProtoRevParams"
+        }
+      },
+      "tags": {
+        "rename": {
+          "Query": "osmosis.protorev.v1beta1",
+          "Service": "osmosis.protorev.v1beta1"
         }
       }
     },
@@ -124,6 +209,12 @@
         "rename": {
           "Params": "SmartAccountParams"
         }
+      },
+      "tags": {
+        "rename": {
+          "Query": "osmosis.smartaccount.v1beta1",
+          "Service": "osmosis.smartaccount.v1beta1"
+        }
       }
     },
     {
@@ -131,6 +222,12 @@
       "operationIds": {
         "rename": {
           "Params": "SuperfluidParams"
+        }
+      },
+      "tags": {
+        "rename": {
+          "Query": "osmosis.superfluid",
+          "Service": "osmosis.superfluid"
         }
       }
     },
@@ -140,6 +237,12 @@
         "rename": {
           "Params": "TokenfactoryParams"
         }
+      },
+      "tags": {
+        "rename": {
+          "Query": "osmosis.tokenfactory.v1beta1",
+          "Service": "osmosis.tokenfactory.v1beta1"
+        }
       }
     },
     {
@@ -147,6 +250,12 @@
       "operationIds": {
         "rename": {
           "Params": "TwapParams"
+        }
+      },
+      "tags": {
+        "rename": {
+          "Query": "osmosis.twap.v1beta1",
+          "Service": "osmosis.twap.v1beta1"
         }
       }
     },
@@ -157,16 +266,34 @@
           "Params": "TxFeesParams",
           "BaseDenom": "TxFeesBaseDenom"
         }
+      },
+      "tags": {
+        "rename": {
+          "Query": "osmosis.txfees.v1beta1",
+          "Service": "osmosis.txfees.v1beta1"
+        }
       }
     },
     {
-      "url": "./tmp-swagger-gen/osmosis/valsetpref/v1beta1/query.swagger.json"
+      "url": "./tmp-swagger-gen/osmosis/valsetpref/v1beta1/query.swagger.json",
+      "tags": {
+        "rename": {
+          "Query": "osmosis.valsetpref.v1beta1",
+          "Service": "osmosis.valsetpref.v1beta1"
+        }
+      }
     },
     {
       "url": "./tmp-swagger-gen/cosmwasm/wasm/v1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "WasmParams"
+        }
+      },
+      "tags": {
+        "rename": {
+          "Query": "cosmwasm.wasm.v1",
+          "Service": "cosmwasm.wasm.v1"
         }
       }
     },
@@ -176,6 +303,12 @@
         "rename": {
           "Params": "AuthParams"
         }
+      },
+      "tags": {
+        "rename": {
+          "Query": "cosmos.auth.v1beta1",
+          "Service": "cosmos.auth.v1beta1"
+        }
       }
     },
     {
@@ -183,6 +316,12 @@
       "operationIds": {
         "rename": {
           "Params": "AuthzParams"
+        }
+      },
+      "tags": {
+        "rename": {
+          "Query": "cosmos.authz.v1beta1",
+          "Service": "cosmos.authz.v1beta1"
         }
       }
     },
@@ -192,16 +331,34 @@
         "rename": {
           "Params": "BankParams"
         }
+      },
+      "tags": {
+        "rename": {
+          "Query": "cosmos.bank.v1beta1",
+          "Service": "cosmos.bank.v1beta1"
+        }
       }
     },
     {
-      "url": "./tmp-swagger-gen/cosmos/base/node/v1beta1/query.swagger.json"
+      "url": "./tmp-swagger-gen/cosmos/base/node/v1beta1/query.swagger.json",
+      "tags": {
+        "rename": {
+          "Query": "cosmos.base.node.v1beta1",
+          "Service": "cosmos.base.node.v1beta1"
+        }
+      }
     },
     {
       "url": "./tmp-swagger-gen/cosmos/base/tendermint/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "BaseParams"
+        }
+      },
+      "tags": {
+        "rename": {
+          "Query": "cosmos.base.tendermint.v1beta1",
+          "Service": "cosmos.base.tendermint.v1beta1"
         }
       }
     },
@@ -211,6 +368,12 @@
         "rename": {
           "Params": "ConsensusParams"
         }
+      },
+      "tags": {
+        "rename": {
+          "Query": "cosmos.consensus.v1",
+          "Service": "cosmos.consensus.v1"
+        }
       }
     },
     {
@@ -218,6 +381,12 @@
       "operationIds": {
         "rename": {
           "Params": "DistributionParams"
+        }
+      },
+      "tags": {
+        "rename": {
+          "Query": "cosmos.distribution.v1beta1",
+          "Service": "cosmos.distribution.v1beta1"
         }
       }
     },
@@ -227,6 +396,12 @@
         "rename": {
           "Params": "EvidenceParams"
         }
+      },
+      "tags": {
+        "rename": {
+          "Query": "cosmos.evidence.v1beta1",
+          "Service": "cosmos.evidence.v1beta1"
+        }
       }
     },
     {
@@ -235,6 +410,12 @@
         "rename": {
           "Params": "FeegrantParams"
         }
+      },
+      "tags": {
+        "rename": {
+          "Query": "cosmos.feegrant.v1beta1",
+          "Service": "cosmos.feegrant.v1beta1"
+        }
       }
     },
     {
@@ -242,6 +423,12 @@
       "operationIds": {
         "rename": {
           "Params": "GovParams"
+        }
+      },
+      "tags": {
+        "rename": {
+          "Query": "cosmos.gov.v1beta1",
+          "Service": "cosmos.gov.v1beta1"
         }
       }
     },
@@ -258,6 +445,12 @@
           "Deposits": "GovV1Deposits",
           "TallyResult": "GovV1TallyResult"
         }
+      },
+      "tags": {
+        "rename": {
+          "Query": "cosmos.gov.v1",
+          "Service": "cosmos.gov.v1"
+        }
       }
     },
     {
@@ -267,6 +460,12 @@
           "Params": "CosmosMintParams",
           "Inflation": "CosmosMintInflation"
         }
+      },
+      "tags": {
+        "rename": {
+          "Query": "cosmos.mint.v1beta1",
+          "Service": "cosmos.mint.v1beta1"
+        }
       }
     },
     {
@@ -275,6 +474,12 @@
         "rename": {
           "Params": "Params"
         }
+      },
+      "tags": {
+        "rename": {
+          "Query": "cosmos.params.v1beta1",
+          "Service": "cosmos.params.v1beta1"
+        }
       }
     },
     {
@@ -282,6 +487,12 @@
       "operationIds": {
         "rename": {
           "Params": "SlashingParams"
+        }
+      },
+      "tags": {
+        "rename": {
+          "Query": "cosmos.slashing.v1beta1",
+          "Service": "cosmos.slashing.v1beta1"
         }
       }
     },
@@ -293,12 +504,24 @@
           "Pool": "StakingPool",
           "DelegatorValidators": "StakingDelegatorValidators"
         }
+      },
+      "tags": {
+        "rename": {
+          "Query": "cosmos.staking.v1beta1",
+          "Service": "cosmos.staking.v1beta1"
+        }
       }
     },
     {
       "url": "./tmp-swagger-gen/cosmos/tx/v1beta1/service.swagger.json",
       "dereference": {
         "circular": "ignore"
+      },
+      "tags": {
+        "rename": {
+          "Query": "cosmos.tx.v1beta1",
+          "Service": "cosmos.tx.v1beta1"
+        }
       }
     },
     {
@@ -306,6 +529,12 @@
       "operationIds": {
         "rename": {
           "Params": "UpgradeParams"
+        }
+      },
+      "tags": {
+        "rename": {
+          "Query": "cosmos.upgrade.v1beta1",
+          "Service": "cosmos.upgrade.v1beta1"
         }
       }
     },
@@ -315,19 +544,43 @@
         "rename": {
           "UpgradedConsensusState": "IBCUpgradedConsensusState"
         }
+      },
+      "tags": {
+        "rename": {
+          "Query": "ibc.core.client.v1",
+          "Service": "ibc.core.client.v1"
+        }
       }
     },
     {
-      "url": "./tmp-swagger-gen/ibc/core/connection/v1/query.swagger.json"
+      "url": "./tmp-swagger-gen/ibc/core/connection/v1/query.swagger.json",
+      "tags": {
+        "rename": {
+          "Query": "ibc.core.connection.v1",
+          "Service": "ibc.core.connection.v1"
+        }
+      }
     },
     {
-      "url": "./tmp-swagger-gen/ibc/core/channel/v1/query.swagger.json"
+      "url": "./tmp-swagger-gen/ibc/core/channel/v1/query.swagger.json",
+      "tags": {
+        "rename": {
+          "Query": "ibc.core.channel.v1",
+          "Service": "ibc.core.channel.v1"
+        }
+      }
     },
     {
       "url": "./tmp-swagger-gen/ibc/applications/transfer/v1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "TransferParams"
+        }
+      },
+      "tags": {
+        "rename": {
+          "Query": "ibc.applications.transfer.v1",
+          "Service": "ibc.applications.transfer.v1"
         }
       }
     },
@@ -337,6 +590,12 @@
         "rename": {
           "Params": "ICAControllerParams"
         }
+      },
+      "tags": {
+        "rename": {
+          "Query": "ibc.applications.interchain_accounts.controller.v1",
+          "Service": "ibc.applications.interchain_accounts.controller.v1"
+        }
       }
     },
     {
@@ -344,6 +603,12 @@
       "operationIds": {
         "rename": {
           "Params": "ICAHostParams"
+        }
+      },
+      "tags": {
+        "rename": {
+          "Query": "ibc.applications.interchain_accounts.host.v1",
+          "Service": "ibc.applications.interchain_accounts.host.v1"
         }
       }
     },
@@ -353,6 +618,12 @@
         "rename": {
           "Code": "WasmClientCode"
         }
+      },
+      "tags": {
+        "rename": {
+          "Query": "ibc.lightclients.wasm.v1",
+          "Service": "ibc.lightclients.wasm.v1"
+        }
       }
     },
     {
@@ -361,6 +632,12 @@
         "rename": {
           "Params": "ICQParams"
         }
+      },
+      "tags": {
+        "rename": {
+          "Query": "icq.v1",
+          "Service": "icq.v1"
+        }
       }
     },
     {
@@ -368,6 +645,12 @@
       "operationIds": {
         "rename": {
           "Params": "AuctionParams"
+        }
+      },
+      "tags": {
+        "rename": {
+          "Query": "sdk.auction.v1",
+          "Service": "sdk.auction.v1"
         }
       }
     }

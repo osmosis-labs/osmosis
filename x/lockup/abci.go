@@ -8,10 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// BeginBlocker is called on every block.
-func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
-}
-
 var (
 	numLocksToDelete = 1_000
 )

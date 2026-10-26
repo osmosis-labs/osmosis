@@ -54,11 +54,13 @@ GO_MAJOR_MINOR := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f
 GO_MODULE := $(shell cat go.mod | grep "module " | cut -d ' ' -f 2)
 GO_MAJOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1)
 GO_MINOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f2)
+GO_PATCH_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f3)
 # minimum supported Go version
 GO_MINIMUM_MAJOR_VERSION = $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f2 | cut -d'.' -f1)
 GO_MINIMUM_MINOR_VERSION = $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f2 | cut -d'.' -f2)
+GO_MINIMUM_PATCH_VERSION = $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f2 | cut -d'.' -f3)
 # message to be printed if Go does not meet the minimum required version
-GO_VERSION_ERR_MSG = "ERROR: Go version $(GO_MINIMUM_MAJOR_VERSION).$(GO_MINIMUM_MINOR_VERSION)+ is required"
+GO_VERSION_ERR_MSG = "ERROR: Go version $(GO_VERSION)+ is required"
 
 export GO111MODULE = on
 
