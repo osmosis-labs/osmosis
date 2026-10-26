@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#9748](https://github.com/osmosis-labs/osmosis/pull/9748) chore: bump Go to 1.25.8 and update deps to fix security alerts
 * [#9779](https://github.com/osmosis-labs/osmosis/pull/9779) chore: check the Go patch version in `make build` and remove the unused proto Dockerfile
 * [#9783](https://github.com/osmosis-labs/osmosis/pull/9783) chore(docs): drop the stale Redoc page at `/static/openapi/` and its npm dependencies; group Swagger UI endpoints by protobuf package
+* [#9782](https://github.com/osmosis-labs/osmosis/pull/9782) chore(deps): bump klauspost/compress to v1.18.7, moby/sys/user to v0.4.1 and aws-sdk-go-v2 S3 to v1.97.3 in the root module, and edwards25519 to v1.1.1 and jose2go to v1.7.0 in osmoutils, x/epochs and x/ibc-hooks, to fix security alerts
 
 ## v32.0.0
 
