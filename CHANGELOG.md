@@ -51,7 +51,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#9779](https://github.com/osmosis-labs/osmosis/pull/9779) chore: check the Go patch version in `make build` and remove the unused proto Dockerfile
 * [#9783](https://github.com/osmosis-labs/osmosis/pull/9783) chore(docs): drop the stale Redoc page at `/static/openapi/` and its npm dependencies; group Swagger UI endpoints by protobuf package
 * [#9782](https://github.com/osmosis-labs/osmosis/pull/9782) chore(deps): bump klauspost/compress to v1.18.7, moby/sys/user to v0.4.1 and aws-sdk-go-v2 S3 to v1.97.3 in the root module, and edwards25519 to v1.1.1 and jose2go to v1.7.0 in osmoutils, x/epochs and x/ibc-hooks, to fix security alerts
+
 ## v32.0.0
+
 * [#9760](https://github.com/osmosis-labs/osmosis/pull/9760) feat(upgrade): v32 upgrade moves non-base-denom balances stuck in the protorev module account to the liquidity sub-DAO, which swaps them to OSMO and burns it
 * [#9744](https://github.com/osmosis-labs/osmosis/pull/9744) feat: seize proposal 1044 allBTC in the v32 upgrade. Move 22.65060846 allBTC from the exploiter to the Liquidity subDAO on osmosis-1 only (skipped on other chains). A shortfall aborts the upgrade; any surplus and the account's OSMO stay on the exploiter.
 * chore: bump wasmd from v0.53.3 to v0.54.10 and wasmvm from v2.2.4 to v2.2.9. wasmd v0.54 splits WasmConfig into NodeConfig and VMConfig. wasmd v0.54.10 requires ibc-go v8.8.0 (state-breaking ICA ProtoJSON validation) and cosmos-sdk v0.50.15; the Osmosis SDK fork replace still supplies v0.50.14-v30-osmo.
