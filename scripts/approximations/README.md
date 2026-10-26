@@ -67,5 +67,5 @@ For headless execution, set `MPLBACKEND=Agg`.
 
 `pyproject.toml` replaces `requirements.txt`; commit `uv.lock` when changing
 dependencies. To update a pin, run `uv add --project scripts/approximations
-'package==version'`, rerun the tests, and commit both files. Use `--locked` in CI
-to reject stale lockfiles.
+'package==version'`, rerun the tests, and commit both files. The `--locked` flag
+rejects stale lockfiles.

@@ -26,5 +26,5 @@ hard-coded releases stopped at v25) have been removed. Make registry changes in
 Use the single-release binary-JSON command above for a specific tag.
 
 To update a dependency, run `uv add --project scripts/release 'package==version'`,
-rerun the tests, and commit both `pyproject.toml` and `uv.lock`. CI uses `--locked`
-to reject stale lockfiles.
+rerun the tests, and commit both `pyproject.toml` and `uv.lock`. The `--locked`
+flag rejects stale lockfiles.
