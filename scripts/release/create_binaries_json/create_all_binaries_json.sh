@@ -1,4 +1,7 @@
 #!/bin/bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 tags=(
     "v3.1.0" 
@@ -25,11 +28,11 @@ tags=(
 
 echo "## Upgrade binaries"
 
-for tag in ${tags[@]}; do
+for tag in "${tags[@]}"; do
     echo
     echo "### ${tag}"
     echo
     echo '```json'
-    python create_binaries_json.py --tag $tag
+    uv run --project "$SCRIPT_DIR/.." --locked python "$SCRIPT_DIR/create_binaries_json.py" --tag "$tag"
     echo '```'
 done

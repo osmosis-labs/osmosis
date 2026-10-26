@@ -1,0 +1,35 @@
+name: Python helper scripts
+
+on:
+  pull_request:
+    paths:
+      - scripts/approximations/**
+      - scripts/release/**
+      - .github/workflows/python-scripts.yml
+  push:
+    branches: [main]
+    paths:
+      - scripts/approximations/**
+      - scripts/release/**
+      - .github/workflows/python-scripts.yml
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: [scripts/approximations, scripts/release]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7
+        with:
+          version: "0.11.7"
+      - name: Install locked dependencies
+        run: uv sync --project "${{ matrix.project }}" --locked
+      - name: Run offline tests
+        env:
+          MPLBACKEND: Agg
+        run: uv run --project "${{ matrix.project }}" --locked python -m unittest discover -s "${{ matrix.project }}" -p '*_test.py'

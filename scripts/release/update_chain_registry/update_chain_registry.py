@@ -13,8 +13,8 @@
 #   --upgrade_height HEIGHT   Required. The blockchain height at which the upgrade will happen (e.g., 11317300).
 #   --debug                   Optional. Enable debug mode for more verbose output. Defaults to False.
 
-# Example:
-#   python update_chain_registry.py --upgrade_version v19.0.0 --upgrade_height 11317300
+# Example (from scripts/release; see README.md):
+#   uv run --locked python update_chain_registry/update_chain_registry.py --upgrade_version v19.0.0 --upgrade_height 11317300
 
 import requests
 import json
