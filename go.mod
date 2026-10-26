@@ -60,7 +60,6 @@ require (
 	go.opentelemetry.io/otel v1.45.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.45.0
 	go.opentelemetry.io/otel/sdk v1.45.0
-	go.uber.org/multierr v1.11.0
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	google.golang.org/genproto/googleapis/api v0.0.0-20260803160001-6ac0973c030d
 	google.golang.org/grpc v1.83.2
