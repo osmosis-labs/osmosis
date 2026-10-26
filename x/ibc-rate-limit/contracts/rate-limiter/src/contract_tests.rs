@@ -452,3 +452,91 @@ fn proper_migrate_for_v0_1_0() {
         assert!(permissions.contains(&permission));
     }
 }
+
+// Regression tests for osmosis-labs/osmosis#9742.
+//
+// Injective's channel to Osmosis is channel-8, Osmosis' side is channel-122, and Stride's
+// stATOM lives on Injective as transfer/channel-89/stuatom. "channel-8" is a string prefix
+// of "channel-89", so a prefix check without the trailing slash treated the packet as an
+// Osmosis-native token returning home, stripped nothing, and asked the chain for the supply
+// of an empty denom. Every such packet was rejected as "rate limit exceeded".
+const INJECTIVE_TO_OSMOSIS: &str = "channel-8";
+const OSMOSIS_FROM_INJECTIVE: &str = "channel-122";
+const STATOM_ON_INJECTIVE_TRACE: &str = "transfer/channel-89/stuatom";
+// sha256("transfer/channel-122/transfer/channel-89/stuatom")
+const STATOM_VIA_INJECTIVE_ON_OSMOSIS: &str =
+    "ibc/F65724D2AE4A14F5BC149FC12C984D53D2307D95EC57BBA1CE52F94EB670EF60";
+
+fn statom_via_injective_recv(channel_value_mock: Option<Uint256>, funds: u128) -> SudoMsg {
+    SudoMsg::RecvPacket {
+        packet: Packet::mock(
+            INJECTIVE_TO_OSMOSIS.to_string(),
+            OSMOSIS_FROM_INJECTIVE.to_string(),
+            STATOM_ON_INJECTIVE_TRACE.to_string(),
+            funds.into(),
+        ),
+        channel_value_mock,
+    }
+}
+
+#[test] // A colliding-prefix packet on a path with no quota passes, and the contract never asks the chain for a supply
+fn recv_colliding_channel_prefix_without_quota_is_allowed() {
+    let mut deps = mock_dependencies();
+    let msg = InstantiateMsg {
+        gov_module: Addr::unchecked(GOV_ADDR),
+        ibc_module: Addr::unchecked(IBC_ADDR),
+        paths: vec![],
+    };
+    instantiate(deps.as_mut(), mock_env(), mock_info(GOV_ADDR, &[]), msg).unwrap();
+
+    // No channel value mock: the mock querier cannot answer a SupplyOf query, so this only
+    // succeeds if the contract checks for quotas before querying the channel value.
+    let res = sudo(
+        deps.as_mut(),
+        mock_env(),
+        statom_via_injective_recv(None, 1_000_000),
+    )
+    .unwrap();
+
+    let denom = res.attributes.iter().find(|a| a.key == "denom").unwrap();
+    assert_eq!(denom.value, STATOM_VIA_INJECTIVE_ON_OSMOSIS);
+    assert!(res
+        .attributes
+        .iter()
+        .any(|a| a.key == "quota" && a.value == "none"));
+}
+
+#[test] // A colliding-prefix packet is accounted against the quota of the denom it actually becomes on Osmosis
+fn recv_colliding_channel_prefix_consumes_foreign_denom_quota() {
+    let mut deps = mock_dependencies();
+    let quota = QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 10);
+    let msg = InstantiateMsg {
+        gov_module: Addr::unchecked(GOV_ADDR),
+        ibc_module: Addr::unchecked(IBC_ADDR),
+        paths: vec![PathMsg {
+            channel_id: "any".to_string(),
+            denom: STATOM_VIA_INJECTIVE_ON_OSMOSIS.to_string(),
+            quotas: vec![quota],
+        }],
+    };
+    instantiate(deps.as_mut(), mock_env(), mock_info(GOV_ADDR, &[]), msg).unwrap();
+
+    // 10% of a 1000 supply is 100. The first 100 fits, the next 100 does not.
+    let res = sudo(
+        deps.as_mut(),
+        mock_env(),
+        statom_via_injective_recv(Some(1_000_u32.into()), 100),
+    )
+    .unwrap();
+    let Attribute { key, value } = &res.attributes[3];
+    assert_eq!(key, "weekly_used_in");
+    assert_eq!(value, "100");
+
+    let err = sudo(
+        deps.as_mut(),
+        mock_env(),
+        statom_via_injective_recv(Some(1_000_u32.into()), 100),
+    )
+    .unwrap_err();
+    assert!(matches!(err, ContractError::RateLimitExceded { .. }));
+}

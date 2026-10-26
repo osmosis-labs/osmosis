@@ -42,9 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* [#9753](https://github.com/osmosis-labs/osmosis/pull/9753) fix: ibc-rate-limit contract rejected inbound tokens whose denom trace channel shares a string prefix with the source channel; returning tokens are now identified by the packet's counterparty port and channel, as ibc-go does, rather than by assuming the `transfer` port, and a denom counts as an IBC trace only when its second segment is a channel id (rate limiter contract 0.2.0, deployed by governance migration, not part of a chain release)
 * [#9781](https://github.com/osmosis-labs/osmosis/pull/9781) chore: remove unused helpers, orphaned simulation packages, and dormant poolmanager stableswap CLI code
 * [#9781](https://github.com/osmosis-labs/osmosis/pull/9781) fix(cli): register the tokenfactory `denom-before-send-hook` and concentrated-liquidity `total-liquidity` query commands
-
 * [#9746](https://github.com/osmosis-labs/osmosis/pull/9746) feat(v33): recover 6B HUAHUA stuck in misconfigured gauges 1954-1959 to the Chihuahua ecosystem fund, as approved by governance proposal 609
 * [#9708](https://github.com/osmosis-labs/osmosis/pull/9708) feat(mint): add minted, burned and total supply query endpoints
 * [#9748](https://github.com/osmosis-labs/osmosis/pull/9748) chore: bump Go to 1.25.8 and update deps to fix security alerts
