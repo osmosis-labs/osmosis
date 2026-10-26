@@ -2,10 +2,11 @@ package types
 
 // Incentive module event types.
 const (
-	TypeEvtCreateGauge  = "create_gauge"
-	TypeEvtAddToGauge   = "add_to_gauge"
-	TypeEvtCreateGroup  = "create_group"
-	TypeEvtDistribution = "distribution"
+	TypeEvtCreateGauge      = "create_gauge"
+	TypeEvtAddToGauge       = "add_to_gauge"
+	TypeEvtCreateGroup      = "create_group"
+	TypeEvtDistribution     = "distribution"
+	TypeEvtForceFinishGauge = "force_finish_gauge"
 
 	AttributeGaugeID     = "gauge_id"
 	AttributeGroupID     = "group_id"
