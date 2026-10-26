@@ -1,15 +1,9 @@
 package cli
 
 import (
-
-	// "strings"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
-
-	// "github.com/cosmos/cosmos-sdk/client/flags"
-	// sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v32/x/tokenfactory/types"
@@ -24,6 +18,7 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdAllBeforeSendHooks)
 
 	cmd.AddCommand(
+		GetCmdDenomBeforeSendHook(),
 		osmocli.GetParams[*types.QueryParamsRequest](
 			types.ModuleName, types.NewQueryClient),
 	)
@@ -55,7 +50,7 @@ func GetCmdAllBeforeSendHooks() (*osmocli.QueryDescriptor, *types.QueryAllBefore
 	}, &types.QueryAllBeforeSendHooksAddressesRequest{}
 }
 
-// GetCmdDenomAuthorityMetadata returns the authority metadata for a queried denom
+// GetCmdDenomBeforeSendHook returns the before-send hook for a queried denom.
 func GetCmdDenomBeforeSendHook() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "denom-before-send-hook [denom] [flags]",
