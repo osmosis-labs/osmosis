@@ -31,6 +31,12 @@ pub enum ContractError {
 
     #[error("Channel {channel} has been blocked for denom {denom}")]
     ChannelBlocked { channel: String, denom: String },
+
+    #[error("Arithmetic overflow: {0}")]
+    Overflow(String),
+
+    #[error("A transfer of {denom} identical to one counted on {channel} in an earlier quota window cannot be counted while the record of that one is retained; change the amount or the timeout")]
+    DuplicatePendingSend { channel: String, denom: String },
 }
 
 #[cfg(test)]

@@ -736,7 +736,7 @@ func (suite *MiddlewareTestSuite) TestUnsetRateLimitingContract() {
 	paramSpace.SetParamSet(suite.chainA.GetContext(), &params)
 }
 
-// Test rate limits are reverted if a "send" fails
+// Test that a packet that is not ICS20 passes through the rate limiter untouched
 func (suite *MiddlewareTestSuite) TestNonICS20() {
 	suite.initializeEscrow()
 	// Setup contract
