@@ -1,6 +1,8 @@
 package v33
 
 import (
+	"time"
+
 	"github.com/osmosis-labs/osmosis/v32/app/upgrades"
 
 	store "cosmossdk.io/store/types"
@@ -17,6 +19,10 @@ var Upgrade = upgrades.Upgrade{
 		Deleted: []string{},
 	},
 }
+
+// StaleGaugeStartCutoff is the start time before which an active, non-perpetual gauge that never
+// distributed is considered stale and is pruned by the upgrade. See pruneStaleGauges.
+var StaleGaugeStartCutoff = time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 
 // HUAHUA recovery, approved by governance in proposal 609
 // (https://www.mintscan.io/osmosis/proposals/609).

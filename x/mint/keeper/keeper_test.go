@@ -20,7 +20,6 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v32/app/params"
 	"github.com/osmosis-labs/osmosis/v32/x/mint/keeper"
 	"github.com/osmosis-labs/osmosis/v32/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v32/x/pool-incentives/types"
 )
 
 type KeeperTestSuite struct {
@@ -223,7 +222,6 @@ func (s *KeeperTestSuite) TestDistributeMintedCoin() {
 
 			expectedCommunityPoolAmount := mintAmount.Mul((params.DistributionProportions.CommunityPool))
 			expectedDevRewardsAmount := mintAmount.Mul(params.DistributionProportions.DeveloperRewards)
-			expectedPoolIncentivesAmount := mintAmount.Mul(params.DistributionProportions.PoolIncentives)
 			expectedStakingAmount := tc.mintCoin.Amount.ToLegacyDec().Mul(params.DistributionProportions.Staking)
 
 			// distributions go to community pool because nil dev reward addresses.
@@ -248,10 +246,6 @@ func (s *KeeperTestSuite) TestDistributeMintedCoin() {
 			s.Require().Equal(
 				expectedStakingAmount,
 				feeCollectorBalanceAmount)
-
-			// validate pool incentives distributions.
-			actualPoolIncentivesBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(poolincentivestypes.ModuleName), sdk.DefaultBondDenom).Amount.ToLegacyDec()
-			s.Require().Equal(expectedPoolIncentivesAmount, actualPoolIncentivesBalance)
 
 			// validate distributions to community pool.
 			actualCommunityPoolBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distributiontypes.ModuleName), sdk.DefaultBondDenom).Amount.ToLegacyDec()
@@ -333,24 +327,24 @@ func (s *KeeperTestSuite) TestDistributeToModule() {
 		expectedError bool
 		expectPanic   bool
 	}{
-		"pre-mint == distribute - poolincentives module osmomath.NewInt(nt - success": {
+		"pre-mint == distribute - fee collector - success": {
 			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(100)),
 
-			recepientModule: poolincentivestypes.ModuleName,
+			recepientModule: authtypes.FeeCollectorName,
 			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(100)),
 			proportion:      osmomath.NewDec(1),
 		},
 		"pre-mint > distribute - developer vesting modulosmomath.NewInt(rds - success": {
 			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(101)),
 
-			recepientModule: poolincentivestypes.ModuleName,
+			recepientModule: authtypes.FeeCollectorName,
 			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(100)),
 			proportion:      osmomath.NewDecWithPrec(2, 1).Quo(osmomath.NewDecWithPrec(3, 1)),
 		},
 		"pre-mint < distribute (0) - error": {
 			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(0)),
 
-			recepientModule: poolincentivestypes.ModuleName,
+			recepientModule: authtypes.FeeCollectorName,
 			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(100)),
 			proportion:      osmomath.NewDecWithPrec(2, 1).Quo(osmomath.NewDecWithPrec(3, 1)),
 
@@ -359,7 +353,7 @@ func (s *KeeperTestSuite) TestDistributeToModule() {
 		"denom does not exist - error": {
 			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(100)),
 
-			recepientModule: poolincentivestypes.ModuleName,
+			recepientModule: authtypes.FeeCollectorName,
 			mintedCoin:      sdk.NewCoin(denomDoesNotExist, osmomath.NewInt(100)),
 			proportion:      osmomath.NewDec(1),
 
@@ -377,7 +371,7 @@ func (s *KeeperTestSuite) TestDistributeToModule() {
 		"proportion greater than 1 - error": {
 			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(300)),
 
-			recepientModule: poolincentivestypes.ModuleName,
+			recepientModule: authtypes.FeeCollectorName,
 			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(100)),
 			proportion:      osmomath.NewDec(2),
 

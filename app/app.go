@@ -163,7 +163,6 @@ import (
 	cwpoolclient "github.com/osmosis-labs/osmosis/v32/x/cosmwasmpool/client"
 	gammclient "github.com/osmosis-labs/osmosis/v32/x/gamm/client"
 	incentivesclient "github.com/osmosis-labs/osmosis/v32/x/incentives/client"
-	poolincentivesclient "github.com/osmosis-labs/osmosis/v32/x/pool-incentives/client"
 	poolmanagerclient "github.com/osmosis-labs/osmosis/v32/x/poolmanager/client"
 	superfluidclient "github.com/osmosis-labs/osmosis/v32/x/superfluid/client"
 	txfeesclient "github.com/osmosis-labs/osmosis/v32/x/txfees/client"
@@ -520,8 +519,6 @@ func NewOsmosisApp(
 			"gov": gov.NewAppModuleBasic(
 				[]govclient.ProposalHandler{
 					paramsclient.ProposalHandler,
-					poolincentivesclient.UpdatePoolIncentivesHandler,
-					poolincentivesclient.ReplacePoolIncentivesHandler,
 					superfluidclient.SetSuperfluidAssetsProposalHandler,
 					superfluidclient.RemoveSuperfluidAssetsProposalHandler,
 					superfluidclient.UpdateUnpoolWhitelistProposalHandler,

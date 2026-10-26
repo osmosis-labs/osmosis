@@ -61,9 +61,9 @@ func DefaultParams() Params {
 		ReductionFactor:         osmomath.NewDecWithPrec(5, 1), // 0.5
 		DistributionProportions: DistributionProportions{
 			Staking:          osmomath.NewDecWithPrec(4, 1), // 0.4
-			PoolIncentives:   osmomath.NewDecWithPrec(3, 1), // 0.3
+			PoolIncentives:   osmomath.ZeroDec(),
 			DeveloperRewards: osmomath.NewDecWithPrec(2, 1), // 0.2
-			CommunityPool:    osmomath.NewDecWithPrec(1, 1), // 0.1
+			CommunityPool:    osmomath.NewDecWithPrec(4, 1), // 0.4
 		},
 		WeightedDeveloperRewardsReceivers:    []WeightedAddress{},
 		MintingRewardsDistributionStartEpoch: 0,
@@ -202,8 +202,9 @@ func validateDistributionProportions(i interface{}) error {
 		return errors.New("staking distribution ratio should not be negative")
 	}
 
-	if v.PoolIncentives.IsNegative() {
-		return errors.New("pool incentives distribution ratio should not be negative")
+	// Minted coins are no longer allocated to pool incentives.
+	if !v.PoolIncentives.IsZero() {
+		return errors.New("pool incentives distribution ratio must be zero")
 	}
 
 	if v.DeveloperRewards.IsNegative() {

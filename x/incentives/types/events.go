@@ -13,4 +13,7 @@ const (
 	AttributeLockedDenom = "denom"
 	AttributeReceiver    = "receiver"
 	AttributeAmount      = "amount"
+
+	// CommunityPoolReceiver is the receiver attribute value of coins sent to the community pool.
+	CommunityPoolReceiver = "community_pool"
 )

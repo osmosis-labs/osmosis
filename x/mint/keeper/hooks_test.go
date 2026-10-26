@@ -34,9 +34,9 @@ var (
 	defaultReductionFactor         = osmomath.NewDec(2).Quo(osmomath.NewDec(3))
 	defaultDistributionProportions = types.DistributionProportions{
 		Staking:          osmomath.NewDecWithPrec(25, 2),
-		PoolIncentives:   osmomath.NewDecWithPrec(45, 2),
+		PoolIncentives:   osmomath.ZeroDec(),
 		DeveloperRewards: osmomath.NewDecWithPrec(25, 2),
-		CommunityPool:    osmomath.NewDecWithPrec(0o5, 2),
+		CommunityPool:    osmomath.NewDecWithPrec(50, 2),
 	}
 )
 
@@ -294,9 +294,9 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 			reductionFactor:         defaultReductionFactor,
 			distributionProportions: types.DistributionProportions{
 				Staking:          osmomath.NewDecWithPrec(11, 2),
-				PoolIncentives:   osmomath.NewDecWithPrec(22, 2),
+				PoolIncentives:   osmomath.ZeroDec(),
 				DeveloperRewards: osmomath.NewDecWithPrec(33, 2),
-				CommunityPool:    osmomath.NewDecWithPrec(34, 2),
+				CommunityPool:    osmomath.NewDecWithPrec(56, 2),
 			},
 			weightedAddresses: testWeightedAddresses,
 			mintStartEpoch:    defaultMintingRewardsDistributionStartEpoch,
@@ -458,9 +458,9 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParameters()
 		ReductionFactor:         defaultReductionFactor,
 		DistributionProportions: types.DistributionProportions{
 			Staking:          osmomath.NewDecWithPrec(25, 2),
-			PoolIncentives:   osmomath.NewDecWithPrec(45, 2),
+			PoolIncentives:   osmomath.ZeroDec(),
 			DeveloperRewards: osmomath.NewDecWithPrec(25, 2),
-			CommunityPool:    osmomath.NewDecWithPrec(0o5, 2),
+			CommunityPool:    osmomath.NewDecWithPrec(50, 2),
 		},
 		WeightedDeveloperRewardsReceivers: []types.WeightedAddress{
 			{

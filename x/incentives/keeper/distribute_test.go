@@ -15,7 +15,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v32/x/incentives/types"
 	incentivetypes "github.com/osmosis-labs/osmosis/v32/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v32/x/lockup/types"
-	poolincentivetypes "github.com/osmosis-labs/osmosis/v32/x/pool-incentives/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v32/x/poolmanager/types"
 )
 
@@ -1185,21 +1184,19 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalCLGauge() {
 	s.SetupTest()
 	const (
 		defaultExternalGaugeValue int64 = 1_000_000
-		defaultInternalGaugeValue int64 = 750_000
 		numEpochsPaidOverGaugeTwo int64 = 2
 	)
 	var (
 		epochInfo = s.App.IncentivesKeeper.GetEpochInfo(s.Ctx)
 
 		requiredBalances         = sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(10_000_000)), sdk.NewCoin("usdc", osmomath.NewInt(10_000_000)))
-		internalGaugeCoins       = sdk.NewCoins(sdk.NewCoin("stake", osmomath.NewInt(defaultInternalGaugeValue)))                                                                                                                    // distributed full sum at epoch
 		externalGaugeCoins       = sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(defaultExternalGaugeValue)), sdk.NewCoin("usdc", osmomath.NewInt(defaultExternalGaugeValue)))                                                     // distributed full sum at epoch
 		halfOfExternalGaugeCoins = sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(defaultExternalGaugeValue/numEpochsPaidOverGaugeTwo)), sdk.NewCoin("usdc", osmomath.NewInt(defaultExternalGaugeValue/numEpochsPaidOverGaugeTwo))) // distributed at each epoch for non-perp gauge with numEpoch = 2
 	)
 
 	// Since this test creates or adds to a gauge, we need to ensure a route exists in protorev hot routes.
 	// The pool doesn't need to actually exist for this test, so we can just ensure the denom pair has some entry.
-	for _, coin := range append(externalGaugeCoins, internalGaugeCoins...) {
+	for _, coin := range externalGaugeCoins {
 		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, appparams.BaseCoinUnit, coin.Denom, 9999)
 	}
 
@@ -1231,12 +1228,8 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalCLGauge() {
 	clPoolExternalGaugeIdPool2 := s.CreateNoLockExternalGauges(clPoolId2.GetId(), externalGaugeCoins, s.TestAccs[2], uint64(numEpochsPaidOverGaugeTwo))
 	clPoolExternalGaugeIdPool3 := s.CreateNoLockExternalGauges(clPoolId3.GetId(), externalGaugeCoins, s.TestAccs[2], uint64(1))
 
-	// 4. Create Distribution records to incentivize internal CL no-lock gauges
-	// Note: We only internally incentivize ClPoolId1 and ClPoolId2
-	s.IncentivizeInternalGauge([]uint64{clPoolId1.GetId(), clPoolId2.GetId()}, epochInfo.Duration, false)
-
-	// 5. let epoch 1 pass
-	// Note: we only distribute external incentive in epoch 1.
+	// 4. let epoch 1 pass
+	// Note: internal gauges are no longer funded by mint, so only external incentives are distributed.
 	// ******************** EPOCH 1 *********************
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(epochInfo.Duration))
 	s.App.EpochsKeeper.AfterEpochEnd(s.Ctx, epochInfo.GetIdentifier(), 1)
@@ -1257,16 +1250,17 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalCLGauge() {
 	s.ValidateDistributedGauge(clPoolExternalGaugeIdPool2, 1, halfOfExternalGaugeCoins)
 	s.ValidateDistributedGauge(clPoolExternalGaugeIdPool3, 1, externalGaugeCoins)
 
-	s.ValidateDistributedGauge(clPoolInternalGaugeId1, 1, sdk.Coins(nil))
-	s.ValidateDistributedGauge(clPoolInternalGaugeId2, 1, sdk.Coins(nil))
-	s.ValidateDistributedGauge(clPoolInternalGaugeId3, 1, sdk.Coins(nil))
+	// Internal gauges hold no coins, so they are skipped as idle perpetual gauges.
+	s.ValidateDistributedGauge(clPoolInternalGaugeId1, 0, sdk.Coins(nil))
+	s.ValidateDistributedGauge(clPoolInternalGaugeId2, 0, sdk.Coins(nil))
+	s.ValidateDistributedGauge(clPoolInternalGaugeId3, 0, sdk.Coins(nil))
 
 	// check if incentives record got created.
-	// Note: ClPool1 will receive full 1Musdc, 1Meth in this epoch.
 	s.Require().Equal(2, len(clPool1IncentiveRecordsAtEpoch1))
 	s.Require().Equal(2, len(clPool2IncentiveRecordsAtEpoch1))
 	s.Require().Equal(2, len(clPool3IncentiveRecordsAtEpoch1))
 
+	// Note: ClPool1 will receive full 1Musdc, 1Meth in this epoch.
 	s.ValidateIncentiveRecord(clPoolId1.GetId(), externalGaugeCoins[0], clPool1IncentiveRecordsAtEpoch1[0])
 	s.ValidateIncentiveRecord(clPoolId1.GetId(), externalGaugeCoins[1], clPool1IncentiveRecordsAtEpoch1[1])
 
@@ -1279,13 +1273,8 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalCLGauge() {
 	s.ValidateIncentiveRecord(clPoolId3.GetId(), externalGaugeCoins[0], clPool3IncentiveRecordsAtEpoch1[0])
 	s.ValidateIncentiveRecord(clPoolId3.GetId(), externalGaugeCoins[1], clPool3IncentiveRecordsAtEpoch1[1])
 
-	// 6. Remove distribution records for internal incentives using HandleReplacePoolIncentivesProposal
-	s.IncentivizeInternalGauge([]uint64{clPoolId1.GetId(), clPoolId2.GetId()}, epochInfo.Duration, true)
-
-	// 7. let epoch 2 pass
-	// Note: we distribute internal incentive in epoch 2.
-	// This is because at epoch 1 we first need to mint the tokens and distribute everything to the distr records. As a result,
-	// internal gauges only get updated by epoch 2 and not one
+	// 5. let epoch 2 pass
+	// Note: only the second half of clPoolExternalGaugeIdPool2 is distributed in this epoch.
 	// ******************** EPOCH 2 *********************
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(epochInfo.Duration))
 	s.App.EpochsKeeper.AfterEpochEnd(s.Ctx, epochInfo.GetIdentifier(), 2)
@@ -1299,36 +1288,26 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalCLGauge() {
 	clPool3IncentiveRecordsAtEpoch2, err := s.App.ConcentratedLiquidityKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolId3.GetId())
 	s.Require().NoError(err)
 
-	s.ValidateDistributedGauge(clPoolExternalGaugeIdPool1, 2, externalGaugeCoins)
+	// Perpetual gauges 1 and 3 were fully distributed in epoch 1, so they are skipped as idle.
+	s.ValidateDistributedGauge(clPoolExternalGaugeIdPool1, 1, externalGaugeCoins)
 	s.ValidateDistributedGauge(clPoolExternalGaugeIdPool2, 2, externalGaugeCoins)
-	s.ValidateDistributedGauge(clPoolExternalGaugeIdPool3, 2, externalGaugeCoins)
+	s.ValidateDistributedGauge(clPoolExternalGaugeIdPool3, 1, externalGaugeCoins)
 
-	s.ValidateDistributedGauge(clPoolInternalGaugeId1, 2, internalGaugeCoins)
-	s.ValidateDistributedGauge(clPoolInternalGaugeId2, 2, internalGaugeCoins)
-	s.ValidateDistributedGauge(clPoolInternalGaugeId3, 2, sdk.Coins(nil))
+	s.ValidateDistributedGauge(clPoolInternalGaugeId1, 0, sdk.Coins(nil))
+	s.ValidateDistributedGauge(clPoolInternalGaugeId2, 0, sdk.Coins(nil))
+	s.ValidateDistributedGauge(clPoolInternalGaugeId3, 0, sdk.Coins(nil))
 
-	// check if incentives record got created.
-	s.Require().Equal(3, len(clPool1IncentiveRecordsAtEpoch2))
-	s.Require().Equal(5, len(clPool2IncentiveRecordsAtEpoch2))
-	s.Require().Equal(2, len(clPool3IncentiveRecordsAtEpoch2))
-
-	// Note: ClPool1 will receive 1Musdc, 1Meth (from epoch1) as external incentive, 750Kstake as internal incentive.
-	s.ValidateIncentiveRecord(clPoolId1.GetId(), externalGaugeCoins[0], clPool1IncentiveRecordsAtEpoch2[0])
-	s.ValidateIncentiveRecord(clPoolId1.GetId(), externalGaugeCoins[1], clPool1IncentiveRecordsAtEpoch2[1])
-	s.ValidateIncentiveRecord(clPoolId1.GetId(), internalGaugeCoins[0], clPool1IncentiveRecordsAtEpoch2[2])
-
-	// Note: ClPool2 will receive 500kusdc, 500keth (from epoch1) as external incentive, 500kusdc, 500keth (from epoch 2) as external incentive and 750Kstake as internal incentive.
-	s.ValidateIncentiveRecord(clPoolId2.GetId(), halfOfExternalGaugeCoins[1], clPool2IncentiveRecordsAtEpoch2[0]) // new record
-	s.ValidateIncentiveRecord(clPoolId2.GetId(), halfOfExternalGaugeCoins[0], clPool2IncentiveRecordsAtEpoch2[1]) // new record
-	s.ValidateIncentiveRecord(clPoolId2.GetId(), halfOfExternalGaugeCoins[1], clPool2IncentiveRecordsAtEpoch2[2]) // new record
-	s.ValidateIncentiveRecord(clPoolId2.GetId(), internalGaugeCoins[0], clPool2IncentiveRecordsAtEpoch2[3])       // old record
-	s.ValidateIncentiveRecord(clPoolId2.GetId(), halfOfExternalGaugeCoins[0], clPool2IncentiveRecordsAtEpoch2[4]) // old record
-
-	// all incentive for ClPoolId3 have already been distributed in epoch1. There is nothing left to distribute.
+	// ClPool2 receives a second 500kusdc, 500keth record; ClPool1 and ClPool3 receive nothing.
+	s.Require().Equal(clPool1IncentiveRecordsAtEpoch1, clPool1IncentiveRecordsAtEpoch2)
 	s.Require().Equal(clPool3IncentiveRecordsAtEpoch1, clPool3IncentiveRecordsAtEpoch2)
+	s.Require().Equal(4, len(clPool2IncentiveRecordsAtEpoch2))
+	for _, record := range clPool2IncentiveRecordsAtEpoch2 {
+		denom := record.GetIncentiveRecordBody().RemainingCoin.Denom
+		s.ValidateIncentiveRecord(clPoolId2.GetId(), sdk.NewCoin(denom, halfOfExternalGaugeCoins.AmountOf(denom)), record)
+	}
 
-	// 8. let epoch 3 pass
-	// Note: All internal and external incentives have been distributed already.
+	// 6. let epoch 3 pass
+	// Note: All external incentives have been distributed already.
 	// Therefore we shouldn't distribute anything in this epoch.
 	// ******************** EPOCH 3 *********************
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(epochInfo.Duration))
@@ -1340,16 +1319,15 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalCLGauge() {
 	clPool2IncentiveRecordsAtEpoch3, err := s.App.ConcentratedLiquidityKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolId2.GetId())
 	s.Require().NoError(err)
 
-	s.ValidateDistributedGauge(clPoolExternalGaugeIdPool1, 3, externalGaugeCoins)
+	s.ValidateDistributedGauge(clPoolExternalGaugeIdPool1, 1, externalGaugeCoins)
 	s.ValidateDistributedGauge(clPoolExternalGaugeIdPool2, 2, externalGaugeCoins) // reason why this is 2 is because it is a non-perp gauge and it has finished distribution.
-	s.ValidateDistributedGauge(clPoolInternalGaugeId1, 3, internalGaugeCoins)
-	s.ValidateDistributedGauge(clPoolInternalGaugeId2, 3, internalGaugeCoins)
+	s.ValidateDistributedGauge(clPoolInternalGaugeId1, 0, sdk.Coins(nil))
+	s.ValidateDistributedGauge(clPoolInternalGaugeId2, 0, sdk.Coins(nil))
 
 	// Since there is no incentive distributed in this epoch, the incentive Record for ClPool1 and ClPool2 after Epoch3
 	// should be the same as the one from after Epoch2.
 	s.Require().Equal(clPool1IncentiveRecordsAtEpoch2, clPool1IncentiveRecordsAtEpoch3)
 	s.Require().Equal(clPool2IncentiveRecordsAtEpoch2, clPool2IncentiveRecordsAtEpoch3)
-
 }
 
 func (s *KeeperTestSuite) CreateNoLockExternalGauges(clPoolId uint64, externalGaugeCoins sdk.Coins, gaugeCreator sdk.AccAddress, numEpochsPaidOver uint64) uint64 {
@@ -1372,37 +1350,6 @@ func (s *KeeperTestSuite) CreateNoLockExternalGauges(clPoolId uint64, externalGa
 	s.Require().NoError(err)
 
 	return clPoolExternalGaugeId
-}
-
-func (s *KeeperTestSuite) IncentivizeInternalGauge(poolIds []uint64, epochDuration time.Duration, removeDistrRecord bool) {
-	var weight osmomath.Int
-	if !removeDistrRecord {
-		weight = osmomath.NewInt(100)
-	} else {
-		weight = osmomath.ZeroInt()
-	}
-
-	var gaugeIds []uint64
-	var poolIncentiveRecords []poolincentivetypes.DistrRecord
-	for _, poolId := range poolIds {
-		gaugeIdForPoolId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, poolId, epochDuration)
-		s.Require().NoError(err)
-
-		gaugeIds = append(gaugeIds, gaugeIdForPoolId)
-		poolIncentiveRecords = append(poolIncentiveRecords, poolincentivetypes.DistrRecord{
-			GaugeId: gaugeIdForPoolId,
-			Weight:  weight,
-		})
-	}
-
-	// incentivize both CL pools to receive internal incentives
-	err := s.App.PoolIncentivesKeeper.HandleReplacePoolIncentivesProposal(s.Ctx, &poolincentivetypes.ReplacePoolIncentivesProposal{
-		Title:       "",
-		Description: "",
-		Records:     poolIncentiveRecords,
-	},
-	)
-	s.Require().NoError(err)
 }
 
 func (s *KeeperTestSuite) WithBaseCaseDifferentCoins(baseCase GroupCreationFields, newCoins sdk.Coins) GroupCreationFields {
