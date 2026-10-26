@@ -1,3 +1,5 @@
+# Legacy helper: the source chain.schema.json was removed from this repository.
+# The current chain-registry schema requires a separate migration; see ../README.md.
 # Usage: update_chain_registry.py [OPTIONS]
 
 # Description:
@@ -63,8 +65,7 @@ def checksums_to_binaries_json(checksums):
             try:
                 _, tag, platform, arch = filename.split('-')
             except ValueError:
-                print(f"Error: Expected binary name in the form: osmosisd-X.Y.Z-platform-architecture, but got {filename}")
-                sys.exit(1)
+                raise ValueError(f"Expected binary name in the form: osmosisd-X.Y.Z-platform-architecture, but got {filename}")
             _, tag, platform, arch,  = filename.split('-')
             # exclude universal binaries and windows binaries
             if arch == 'all' or platform == 'windows':
@@ -88,10 +89,10 @@ def create_version_info(version, height):
     ibc_go_version = get_package_version(go_mod, "github.com/cosmos/ibc-go/v8")
 
     if DEBUG:
-        print(f"Cosmos SDK version  {cosmos_sdk_version}")
-        print(f"CosmWasm version    {cosmwasm_version}")
-        print(f"Tendermint version  {tendermint_version}")
-        print(f"IBC Go version      {ibc_go_version}")
+        print(f"Cosmos SDK version  {cosmos_sdk_version}", file=sys.stderr)
+        print(f"CosmWasm version    {cosmwasm_version}", file=sys.stderr)
+        print(f"Tendermint version  {tendermint_version}", file=sys.stderr)
+        print(f"IBC Go version      {ibc_go_version}", file=sys.stderr)
 
     version_info = {
         "name": version.split('.')[0],
@@ -131,27 +132,27 @@ def update_codebase(codebase, version, height):
     curr_compatible_versions = codebase["compatible_versions"]
 
     if DEBUG:
-        print(f"New version: {version}")
-        print(f"Current version: {curr_recommended_version}")
-        print(f"Current compatible versions: {curr_compatible_versions}")
+        print(f"New version: {version}", file=sys.stderr)
+        print(f"Current version: {curr_recommended_version}", file=sys.stderr)
+        print(f"Current compatible versions: {curr_compatible_versions}", file=sys.stderr)
 
     if compare_versions(version, curr_recommended_version) < 0:
         if DEBUG:
             # I should still handle this case as it could be
             # a minor release for a previous major version
-            print("New version is older than recommended version")
-            print("Skipping update")
+            print("New version is older than recommended version", file=sys.stderr)
+            print("Skipping update", file=sys.stderr)
         return
     elif compare_versions(version, curr_recommended_version) == 0:
         if DEBUG:
-            print("New version is equal than recommended version")
-            print("Skipping update")
+            print("New version is equal than recommended version", file=sys.stderr)
+            print("Skipping update", file=sys.stderr)
         return
     else:
 
         if same_major(version, curr_recommended_version):
             if DEBUG:
-                print(f"Minor release from {version} to {curr_recommended_version}")
+                print(f"Minor release from {version} to {curr_recommended_version}", file=sys.stderr)
 
             version_info = create_version_info(version, height)
             version_info["compatible_versions"].extend(codebase["compatible_versions"])
@@ -173,7 +174,7 @@ def update_codebase(codebase, version, height):
 
         else:
             if DEBUG:
-                print(f"Major release from {version} to {curr_recommended_version}")
+                print(f"Major release from {version} to {curr_recommended_version}", file=sys.stderr)
 
             version_info = create_version_info(version, height)
 
@@ -208,14 +209,14 @@ def main():
 
     # Validate the tag format
     if args.upgrade_version and not validate_tag(args.upgrade_version):
-        print("Error: The provided version does not follow the 'vX.Y.Z' format.")
+        print("Error: The provided version does not follow the 'vX.Y.Z' format.", file=sys.stderr)
         sys.exit(1)
 
     DEBUG = args.debug
 
     try:
         if DEBUG:
-            print(f"Fetching chain json from {chain_json_url}...")
+            print(f"Fetching chain json from {chain_json_url}...", file=sys.stderr)
         chain_json = fetch_data(chain_json_url, "json")
 
         updated_codebase = update_codebase(chain_json["codebase"], args.upgrade_version, args.upgrade_height)
@@ -224,10 +225,12 @@ def main():
             chain_json["codebase"] = updated_codebase
             print(json.dumps(chain_json, indent=2))
         else:
-            print("Couldn't update codebase")
+            print("Couldn't update codebase: version is not newer than the current recommendation", file=sys.stderr)
+            sys.exit(1)
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred: {e}", file=sys.stderr)
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

@@ -13,9 +13,11 @@ fi
 UPGRADE_VERSION="$1"
 UPGRADE_HEIGHT="$2"
 
-# Replace the registry only after the command succeeds, including environment setup.
+# Legacy helper; see ../README.md for the unavailable source/schema limitation.
+# Replace the registry only after the command succeeds and produces valid JSON.
 OUTPUT="$(mktemp "$SCRIPT_DIR/../../../chain.schema.json.XXXXXX")"
 trap 'rm -f "$OUTPUT"' EXIT
 uv run --project "$SCRIPT_DIR/.." --locked python "$SCRIPT_DIR/update_chain_registry.py" \
     --upgrade_version "$UPGRADE_VERSION" --upgrade_height "$UPGRADE_HEIGHT" > "$OUTPUT"
-cat "$OUTPUT" > "$SCRIPT_DIR/../../../chain.schema.json"
+uv run --project "$SCRIPT_DIR/.." --locked python -m json.tool "$OUTPUT" > /dev/null
+mv -f -- "$OUTPUT" "$SCRIPT_DIR/../../../chain.schema.json"
