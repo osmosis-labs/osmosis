@@ -3,7 +3,7 @@ name = "osmosis-release-scripts"
 version = "0.0.0"
 requires-python = ">=3.10"
 dependencies = [
-    "certifi==2024.7.4",
+    "certifi==2026.10.18",
     "charset-normalizer==3.2.0",
     "idna==3.15",
     "requests==2.33.0",
