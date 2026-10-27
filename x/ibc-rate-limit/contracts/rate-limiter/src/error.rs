@@ -9,12 +9,18 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
-    #[error("IBC Rate Limit exceeded for {channel}/{denom}. Tried to transfer {amount} which exceeds capacity on the '{quota_name}' quota ({used}/{max}). Try again after {reset:?}")]
+    // Keep the leading "IBC Rate Limit exceeded for" stable, so that the chain
+    // can tell a quota rejection from any other contract failure by its text.
+    // The middleware on the current chain reports every contract error the
+    // same way; the classification is chain-side work still to come.
+    #[error("IBC Rate Limit exceeded for {channel}/{denom}. Tried to transfer {amount} which exceeds the {bound} capacity on the '{quota_name}' quota ({used}/{max}). Try again after {reset:?}")]
     RateLimitExceded {
         channel: String,
         denom: String,
         amount: Uint256,
         quota_name: String,
+        /// Which bound tripped: "percentage" (net flow) or "absolute" (gross flow)
+        bound: String,
         used: Uint256,
         max: Uint256,
         reset: Timestamp,
@@ -50,6 +56,7 @@ mod tests {
             denom: "uosmo".to_string(),
             amount: Uint256::from(1_u32),
             quota_name: "daily".to_string(),
+            bound: "percentage".to_string(),
             used: Uint256::zero(),
             max: Uint256::zero(),
             reset: Timestamp::from_seconds(0),
