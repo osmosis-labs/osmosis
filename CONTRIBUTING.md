@@ -361,7 +361,7 @@ There are several steps that go into a major release
 
   - [Add v10 upgrade boilerplate #1649](https://github.com/osmosis-labs/osmosis/pull/1649/files)
 
-- Update chain JSON schema's recommended versions in `chain.schema.json` located in the root directory.
+- Update Osmosis's recommended version and release metadata in the external [chain registry](https://github.com/cosmos/chain-registry/tree/master/osmosis).
 
 ## Patch and Minor Releases
 
