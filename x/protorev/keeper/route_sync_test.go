@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -121,8 +122,19 @@ func TestUpdatePoolsPreservesTieBreakingAndRoutesOnError(t *testing.T) {
 	require.Zero(t, writes.deletes)
 }
 
-// This isolates persistence of the observed route table, excluding pool scans,
-// contract queries, and swap execution. It is not a mainnet epoch replay.
+// rewritePoolRoutesLegacy reproduces the persistent writes from before the
+// optimization, without any later route-cache revision bookkeeping.
+func rewritePoolRoutesLegacy(k Keeper, ctx sdk.Context, base string, routes map[string]LiquidityPoolStruct) {
+	key := append(types.KeyPrefixDenomPairToPool, types.GetKeyPrefixDenomPairToPool(base, "")...)
+	k.DeleteAllEntriesForKeyPrefix(ctx, key)
+	for denom, pool := range routes {
+		store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDenomPairToPool)
+		store.Set(types.GetKeyPrefixDenomPairToPool(base, denom), sdk.Uint64ToBigEndian(pool.PoolId))
+	}
+}
+
+// This isolates cache merge costs for unchanged observed routes. It excludes
+// IAVL commits, pool scans, contract queries, and swap execution.
 func BenchmarkEpochRoutePersistence(b *testing.B) {
 	workload := epochdata.Load(b)
 	for _, delta := range []bool{false, true} {
@@ -148,13 +160,89 @@ func BenchmarkEpochRoutePersistence(b *testing.B) {
 					if delta {
 						k.syncHighestLiquidityPools(cacheCtx, base, routes)
 					} else {
-						k.DeleteAllPoolsForBaseDenom(cacheCtx, base)
-						for denom, pool := range routes {
-							k.SetPoolForDenomPair(cacheCtx, base, denom, pool.PoolId)
-						}
+						rewritePoolRoutesLegacy(k, cacheCtx, base, routes)
 					}
 				}
 				write()
+			}
+		})
+	}
+}
+
+func committedRouteContext(tb testing.TB) (Keeper, testutil.TestContext) {
+	tb.Helper()
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	tkey := storetypes.NewTransientStoreKey(types.TransientStoreKey)
+	return Keeper{storeKey: key, transientKey: tkey}, testutil.DefaultContextWithDB(tb, key, tkey)
+}
+
+func seedRecordedRoutes(tb testing.TB, k Keeper, ctx sdk.Context) map[string]map[string]LiquidityPoolStruct {
+	tb.Helper()
+	selected := make(map[string]map[string]LiquidityPoolStruct)
+	for _, route := range epochdata.Load(tb).Routes {
+		if selected[route.Base] == nil {
+			selected[route.Base] = make(map[string]LiquidityPoolStruct)
+		}
+		selected[route.Base][route.Quote] = LiquidityPoolStruct{PoolId: route.PoolID}
+		k.SetPoolForDenomPair(ctx, route.Base, route.Quote, route.PoolID)
+	}
+	return selected
+}
+
+func TestRouteRefreshRequiresCoordinatedUpgrade(t *testing.T) {
+	legacy, old := committedRouteContext(t)
+	optimized, next := committedRouteContext(t)
+	selected := seedRecordedRoutes(t, legacy, old.Ctx)
+	seedRecordedRoutes(t, optimized, next.Ctx)
+	require.Equal(t, old.CMS.Commit().Hash, next.CMS.Commit().Hash)
+
+	oldCtx, oldWrite := old.Ctx.CacheContext()
+	newCtx, newWrite := next.Ctx.CacheContext()
+	for base, routes := range selected {
+		rewritePoolRoutesLegacy(legacy, oldCtx, base, routes)
+		optimized.syncHighestLiquidityPools(newCtx, base, routes)
+	}
+	oldWrite()
+	newWrite()
+	for base, routes := range selected {
+		for denom, pool := range routes {
+			oldID, err := legacy.GetPoolForDenomPair(old.Ctx, base, denom)
+			require.NoError(t, err)
+			newID, err := optimized.GetPoolForDenomPair(next.Ctx, base, denom)
+			require.NoError(t, err)
+			require.Equal(t, pool.PoolId, oldID)
+			require.Equal(t, oldID, newID)
+		}
+	}
+	require.NotEqual(t, old.CMS.Commit().Hash, next.CMS.Commit().Hash,
+		"equal route values can have different IAVL node versions; a coordinated upgrade is required")
+}
+
+// BenchmarkEpochRouteCommit adds actual IAVL commits to the unchanged-route
+// workload. It still excludes the rest of the daily epoch.
+func BenchmarkEpochRouteCommit(b *testing.B) {
+	for _, delta := range []bool{false, true} {
+		name := "rewrite_all"
+		if delta {
+			name = "deltas"
+		}
+		b.Run(name, func(b *testing.B) {
+			k, tc := committedRouteContext(b)
+			selected := seedRecordedRoutes(b, k, tc.Ctx)
+			tc.CMS.Commit()
+			b.ReportAllocs()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				ctx, write := tc.Ctx.CacheContext()
+				for base, routes := range selected {
+					if delta {
+						k.syncHighestLiquidityPools(ctx, base, routes)
+					} else {
+						rewritePoolRoutesLegacy(k, ctx, base, routes)
+					}
+				}
+				write()
+				tc.CMS.Commit()
 			}
 		})
 	}

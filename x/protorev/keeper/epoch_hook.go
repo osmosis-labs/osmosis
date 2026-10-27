@@ -107,6 +107,8 @@ func (k Keeper) CurrentBaseDenomProfits(ctx sdk.Context) (sdk.Coins, error) {
 
 // UpdatePools recomputes the highest liquidity pools and only writes routes whose
 // selected pool changed. Routes without an eligible pool are removed.
+// Changing IAVL write patterns changes committed hashes even for equal values;
+// this optimization must activate in the coordinated v33 upgrade.
 func (k Keeper) UpdatePools(ctx sdk.Context) error {
 	// baseDenomPools maps each base denom to a map of the highest liquidity pools paired with that base denom
 	// ex. {osmo -> {atom : 100, weth : 200}}
