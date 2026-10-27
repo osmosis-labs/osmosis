@@ -1,6 +1,10 @@
 package keeper
 
 import (
+	"bytes"
+	"sort"
+
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -101,7 +105,10 @@ func (k Keeper) CurrentBaseDenomProfits(ctx sdk.Context) (sdk.Coins, error) {
 	return protorevBalanceBaseDenoms.Sort(), nil
 }
 
-// UpdatePools first deletes all of the pools paired with any base denom in the store and then adds the highest liquidity pools that match to the store
+// UpdatePools recomputes the highest liquidity pools and only writes routes whose
+// selected pool changed. Routes without an eligible pool are removed.
+// Changing IAVL write patterns changes committed hashes even for equal values;
+// this optimization must activate in the coordinated v33 upgrade.
 func (k Keeper) UpdatePools(ctx sdk.Context) error {
 	// baseDenomPools maps each base denom to a map of the highest liquidity pools paired with that base denom
 	// ex. {osmo -> {atom : 100, weth : 200}}
@@ -111,9 +118,8 @@ func (k Keeper) UpdatePools(ctx sdk.Context) error {
 		return err
 	}
 
-	// Delete any pools that currently exist in the store + initialize baseDenomPools
+	// Keep the existing routes until all pool liquidity has been read successfully.
 	for _, baseDenom := range baseDenoms {
-		k.DeleteAllPoolsForBaseDenom(ctx, baseDenom.Denom)
 		baseDenomPools[baseDenom.Denom] = make(map[string]LiquidityPoolStruct)
 	}
 
@@ -122,14 +128,56 @@ func (k Keeper) UpdatePools(ctx sdk.Context) error {
 		return err
 	}
 
-	// Update the pools in the store
-	for baseDenom, pools := range baseDenomPools {
-		for denom, pool := range pools {
-			k.SetPoolForDenomPair(ctx, baseDenom, denom, pool.PoolId)
-		}
+	for _, baseDenom := range baseDenoms {
+		k.syncHighestLiquidityPools(ctx, baseDenom.Denom, baseDenomPools[baseDenom.Denom])
 	}
 
 	return nil
+}
+
+// syncHighestLiquidityPools leaves unchanged route entries untouched. Iterators
+// are closed before applying any writes to their key range.
+func (k Keeper) syncHighestLiquidityPools(ctx sdk.Context, baseDenom string, pools map[string]LiquidityPoolStruct) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDenomPairToPool)
+	store = prefix.NewStore(store, types.GetKeyPrefixDenomPairToPool(baseDenom, ""))
+	seen := make(map[string]struct{}, len(pools))
+	var obsolete [][]byte
+	type update struct {
+		denom string
+		value []byte
+	}
+	var updates []update
+	iterator := store.Iterator(nil, nil)
+	for ; iterator.Valid(); iterator.Next() {
+		denom := string(iterator.Key())
+		pool, exists := pools[denom]
+		if !exists {
+			obsolete = append(obsolete, append([]byte(nil), iterator.Key()...))
+			continue
+		}
+		seen[denom] = struct{}{}
+		value := sdk.Uint64ToBigEndian(pool.PoolId)
+		if !bytes.Equal(iterator.Value(), value) {
+			updates = append(updates, update{denom, value})
+		}
+	}
+	iterator.Close()
+	for _, key := range obsolete {
+		store.Delete(key)
+	}
+	for _, entry := range updates {
+		store.Set([]byte(entry.denom), entry.value)
+	}
+	var added []string
+	for denom := range pools {
+		if _, exists := seen[denom]; !exists {
+			added = append(added, denom)
+		}
+	}
+	sort.Strings(added)
+	for _, denom := range added {
+		store.Set([]byte(denom), sdk.Uint64ToBigEndian(pools[denom].PoolId))
+	}
 }
 
 // UpdateHighestLiquidityPools updates the baseDenomPools map (passed in by reference) with the

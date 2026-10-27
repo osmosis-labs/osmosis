@@ -42,6 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* [#9794](https://github.com/osmosis-labs/osmosis/pull/9794) perf(protorev)!: preserve unchanged highest-liquidity route entries during the daily refresh; requires the coordinated v33 upgrade because IAVL hashes change
+
 * [#9792](https://github.com/osmosis-labs/osmosis/pull/9792) perf(incentives)!: apply idle perpetual gauge filtering in shared distribution so superfluid also skips unnecessary lock lookups and gauge writes; skipped gauges no longer increment `filled_epochs`
 
 * [#9781](https://github.com/osmosis-labs/osmosis/pull/9781) chore: remove unused helpers, orphaned simulation packages, and dormant poolmanager stableswap CLI code
