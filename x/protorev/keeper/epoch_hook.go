@@ -176,6 +176,9 @@ func (k Keeper) syncHighestLiquidityPools(ctx sdk.Context, baseDenom string, poo
 	for _, denom := range added {
 		store.Set([]byte(denom), sdk.Uint64ToBigEndian(pools[denom].PoolId))
 	}
+	if len(obsolete)+len(updates)+len(added) > 0 {
+		k.bumpPoolRoutesRevision(ctx)
+	}
 }
 
 // UpdateHighestLiquidityPools updates the baseDenomPools map (passed in by reference) with the

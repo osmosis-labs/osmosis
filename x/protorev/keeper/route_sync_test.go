@@ -39,10 +39,11 @@ func (m routeWriteMultiStore) GetKVStore(key storetypes.StoreKey) storetypes.KVS
 func routeSyncContext(tb testing.TB) (Keeper, sdk.Context, *routeWriteStore) {
 	tb.Helper()
 	key := storetypes.NewKVStoreKey(types.StoreKey)
-	tc := testutil.DefaultContextWithDB(tb, key, storetypes.NewTransientStoreKey(types.TransientStoreKey))
+	tkey := storetypes.NewTransientStoreKey(types.TransientStoreKey)
+	tc := testutil.DefaultContextWithDB(tb, key, tkey)
 	counted := &routeWriteStore{KVStore: tc.CMS.GetKVStore(key)}
 	ctx := tc.Ctx.WithMultiStore(routeWriteMultiStore{MultiStore: tc.CMS, key: key, store: counted})
-	return Keeper{storeKey: key}, ctx, counted
+	return Keeper{storeKey: key, transientKey: tkey}, ctx, counted
 }
 
 func TestSyncHighestLiquidityPools(t *testing.T) {
@@ -55,9 +56,11 @@ func TestSyncHighestLiquidityPools(t *testing.T) {
 		"unchanged": {PoolId: 1}, "changed": {PoolId: 20}, "added": {PoolId: 30},
 	}
 	writes.sets, writes.deletes = 0, 0
+	revision := k.GetPoolRoutesRevision(ctx)
 	k.syncHighestLiquidityPools(ctx, "uosmo", desired)
 	require.Equal(t, 2, writes.sets)
 	require.Equal(t, 1, writes.deletes)
+	require.Greater(t, k.GetPoolRoutesRevision(ctx), revision)
 	for denom, pool := range desired {
 		actual, err := k.GetPoolForDenomPair(ctx, "uosmo", denom)
 		require.NoError(t, err)
@@ -69,9 +72,11 @@ func TestSyncHighestLiquidityPools(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, uint64(4), actual)
 	writes.sets, writes.deletes = 0, 0
+	revision = k.GetPoolRoutesRevision(ctx)
 	k.syncHighestLiquidityPools(ctx, "uosmo", desired)
 	require.Zero(t, writes.sets, "unchanged routes must not be rewritten")
 	require.Zero(t, writes.deletes)
+	require.Equal(t, revision, k.GetPoolRoutesRevision(ctx))
 	k.syncHighestLiquidityPools(ctx, "uosmo", nil)
 	require.Equal(t, len(desired), writes.deletes)
 }

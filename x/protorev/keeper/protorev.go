@@ -190,12 +190,28 @@ func (k Keeper) SetPoolForDenomPair(ctx sdk.Context, baseDenom, denomToMatch str
 	key := types.GetKeyPrefixDenomPairToPool(baseDenom, denomToMatch)
 
 	store.Set(key, sdk.Uint64ToBigEndian(poolId))
+	k.bumpPoolRoutesRevision(ctx)
+}
+
+// GetPoolRoutesRevision changes whenever route mappings are written in this block.
+// It is transient so caches can observe updates without adding persistent state.
+func (k Keeper) GetPoolRoutesRevision(ctx sdk.Context) uint64 {
+	value := ctx.TransientStore(k.transientKey).Get(types.KeyPoolRoutesRevision)
+	if len(value) == 0 {
+		return 0
+	}
+	return sdk.BigEndianToUint64(value)
+}
+
+func (k Keeper) bumpPoolRoutesRevision(ctx sdk.Context) {
+	ctx.TransientStore(k.transientKey).Set(types.KeyPoolRoutesRevision, sdk.Uint64ToBigEndian(k.GetPoolRoutesRevision(ctx)+1))
 }
 
 // DeleteAllPoolsForBaseDenom deletes all the pools for the given base denom
 func (k Keeper) DeleteAllPoolsForBaseDenom(ctx sdk.Context, baseDenom string) {
 	key := append(types.KeyPrefixDenomPairToPool, types.GetKeyPrefixDenomPairToPool(baseDenom, "")...)
 	k.DeleteAllEntriesForKeyPrefix(ctx, key)
+	k.bumpPoolRoutesRevision(ctx)
 }
 
 // SetSwapsToBackrun sets the swaps to backrun, updated via hooks

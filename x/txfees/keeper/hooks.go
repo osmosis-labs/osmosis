@@ -37,12 +37,13 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 // - All resulting parameter denom tokens get sent to the community pool.
 // - Any non-native tokens that did not have associated pool stay in the balance of community pool fee collector.
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	routes := newFeeRouteResolver(k)
 	defaultFeesDenom, _ := k.GetBaseDenom(ctx)
 
 	nonNativefeeTokenCollectorAddress := k.accountKeeper.GetModuleAddress(txfeestypes.NonNativeTxFeeCollectorName)
 
 	// Non-native fee token collector for staking rewards get swapped entirely into base denom.
-	k.swapNonNativeFeeToDenom(ctx, defaultFeesDenom, nonNativefeeTokenCollectorAddress)
+	k.swapNonNativeFeeToDenomWithRoutes(ctx, defaultFeesDenom, nonNativefeeTokenCollectorAddress, routes)
 
 	// Now that the rewards have been swapped, transfer any base denom existing in the non-native tx fee collector to the smoothing buffer for gradual distribution to stakers
 	baseDenomCoins := sdk.NewCoins(k.bankKeeper.GetBalance(ctx, nonNativefeeTokenCollectorAddress, defaultFeesDenom))
@@ -58,7 +59,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	k.clearTakerFeeShareAccumulators(ctx)
 
 	// Distribute and track the taker fees.
-	k.calculateDistributeAndTrackTakerFees(ctx, defaultFeesDenom)
+	k.calculateDistributeAndTrackTakerFees(ctx, defaultFeesDenom, routes)
 
 	// Distribute smoothed staking rewards from buffer to fee collector (only on daily epoch)
 	if epochIdentifier == dayEpochIdentifier {
@@ -105,7 +106,7 @@ func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumbe
 //   - For Community Pool: Sent to `non_native_fee_collector_community_pool` module account, swapped to `CommunityPoolDenomToSwapNonWhitelistedAssetsTo`, then sent to community pool
 //   - For Stakers: Sent to `non_native_fee_collector_stakers` module account, swapped to OSMO, then sent to auth module account, which distributes it to stakers
 //   - The sub-module accounts here are used so that, if a swap fails, the tokens that fail to swap are not grouped back into the wrong taker fee category in the next epoch
-func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFeesDenom string) {
+func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFeesDenom string, routes *feeRouteResolver) {
 	// First deal with the native tokens in the taker fee collector.
 	takerFeeModuleAccount := k.accountKeeper.GetModuleAddress(txfeestypes.TakerFeeCollectorName)
 	osmoFromTakerFeeModuleAccount := k.bankKeeper.GetBalance(ctx, takerFeeModuleAccount, defaultFeesDenom)
@@ -222,7 +223,7 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 	// Swap the non-native, non-whitelisted taker fees slated for community pool into the denom specified in the pool manager params.
 	takerFeeCommunityPoolModuleAccount := k.accountKeeper.GetModuleAddress(txfeestypes.TakerFeeCommunityPoolName)
 	denomToSwapTo := poolManagerParams.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo
-	totalCoinOut := k.swapNonNativeFeeToDenom(ctx, denomToSwapTo, takerFeeCommunityPoolModuleAccount)
+	totalCoinOut := k.swapNonNativeFeeToDenomWithRoutes(ctx, denomToSwapTo, takerFeeCommunityPoolModuleAccount, routes)
 	// Now that the non whitelisted assets have been swapped, fund the community pool with the denom we swapped to.
 	if totalCoinOut.Amount.GT(osmomath.ZeroInt()) {
 		applyFuncIfNoErrorAndLog(ctx, func(cacheCtx sdk.Context) error {
@@ -244,7 +245,7 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 
 	// Swap the non-native taker fees slated for burn into OSMO.
 	takerFeeBurnModuleAccount := k.accountKeeper.GetModuleAddress(txfeestypes.TakerFeeBurnName)
-	totalCoinOutForBurn := k.swapNonNativeFeeToDenom(ctx, defaultFeesDenom, takerFeeBurnModuleAccount)
+	totalCoinOutForBurn := k.swapNonNativeFeeToDenomWithRoutes(ctx, defaultFeesDenom, takerFeeBurnModuleAccount, routes)
 	// Now that the non-native assets have been swapped to OSMO, burn them by sending to the null address.
 	if totalCoinOutForBurn.Amount.GT(osmomath.ZeroInt()) {
 		applyFuncIfNoErrorAndLog(ctx, func(cacheCtx sdk.Context) error {
@@ -268,7 +269,7 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 
 	// Swap the taker fees slated for staking rewards into the base denom.
 	takerFeeStakersModuleAccount := k.accountKeeper.GetModuleAddress(txfeestypes.TakerFeeStakersName)
-	totalCoinOut = k.swapNonNativeFeeToDenom(ctx, defaultFeesDenom, takerFeeStakersModuleAccount)
+	totalCoinOut = k.swapNonNativeFeeToDenomWithRoutes(ctx, defaultFeesDenom, takerFeeStakersModuleAccount, routes)
 	if totalCoinOut.Amount.GT(osmomath.ZeroInt()) {
 		// Now that the assets have been swapped, transfer any base denom existing in the taker fee module account to the smoothing buffer for gradual distribution to stakers
 		applyFuncIfNoErrorAndLog(ctx, func(cacheCtx sdk.Context) error {
@@ -287,6 +288,10 @@ func (k Keeper) calculateDistributeAndTrackTakerFees(ctx sdk.Context, defaultFee
 // CONTRACT: a pool must exist between each denom in the balance and denomToSwapTo. If doesn't exist. Silently skip swap.
 // CONTRACT: protorev must be configured to have a pool for the given denom pair. Otherwise, the denom will be skipped.
 func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, feeCollectorAddress sdk.AccAddress) sdk.Coin {
+	return k.swapNonNativeFeeToDenomWithRoutes(ctx, denomToSwapTo, feeCollectorAddress, newFeeRouteResolver(k))
+}
+
+func (k Keeper) swapNonNativeFeeToDenomWithRoutes(ctx sdk.Context, denomToSwapTo string, feeCollectorAddress sdk.AccAddress, routes *feeRouteResolver) sdk.Coin {
 	coinsToSwap := k.bankKeeper.GetAllBalances(ctx, feeCollectorAddress)
 	totalCoinOut := sdk.NewCoin(denomToSwapTo, osmomath.ZeroInt())
 	coinsNotSwapped := []string{}
@@ -301,37 +306,27 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 			continue
 		}
 
-		var route []poolmanagertypes.SwapAmountInRoute
-		var routeType string // For telemetry tracking
+		route, routeType, err := routes.resolve(ctx, denomToSwapTo, coin.Denom)
+		if err != nil {
+			telemetry.IncrCounterWithLabels([]string{txfeestypes.TakerFeeNoSkipRouteMetricName}, 1, []metrics.Label{
+				{
+					Name:  "base_denom",
+					Value: denomToSwapTo,
+				},
+				{
+					Name:  "match_denom",
+					Value: coin.Denom,
+				},
+				{
+					Name:  "err",
+					Value: fmt.Sprintf("no single hop route: %v, no 2-hop routes found via intermediary denoms", err),
+				},
+			})
 
-		// First, try to find a direct single hop route
-		route, err := k.getDirectRoute(ctx, denomToSwapTo, coin.Denom)
-		if err == nil {
-			routeType = "single_hop"
-		} else {
-			// No direct route found, try 2-hop routes using intermediary denoms as intermediaries
-			route, routeType, err = k.get2HopRoute(ctx, denomToSwapTo, coin.Denom)
-			if err != nil {
-				telemetry.IncrCounterWithLabels([]string{txfeestypes.TakerFeeNoSkipRouteMetricName}, 1, []metrics.Label{
-					{
-						Name:  "base_denom",
-						Value: denomToSwapTo,
-					},
-					{
-						Name:  "match_denom",
-						Value: coin.Denom,
-					},
-					{
-						Name:  "err",
-						Value: fmt.Sprintf("no single hop route: %v, no 2-hop routes found via intermediary denoms", err),
-					},
-				})
-
-				// The route either doesn't exist or is disabled in protorev.
-				// It will just accrue in the non-native fee collector account.
-				// Skip this denom and move on to the next one.
-				continue
-			}
+			// The route either doesn't exist or is disabled in protorev.
+			// It will just accrue in the non-native fee collector account.
+			// Skip this denom and move on to the next one.
+			continue
 		}
 
 		// Do the swap of this fee token denom to base denom.
@@ -407,11 +402,7 @@ func (k Keeper) getDirectRoute(ctx sdk.Context, denomToSwapTo, coinDenom string)
 }
 
 // 2-hop routes using any asset in params.FeeSwapIntermediaryDenomList as an intermediary
-func (k Keeper) get2HopRoute(ctx sdk.Context, denomToSwapTo, coinDenom string) ([]poolmanagertypes.SwapAmountInRoute, string, error) {
-	// No direct route found, try
-	params := k.GetParams(ctx)
-	intermediaryDenoms := params.FeeSwapIntermediaryDenomList
-
+func (k Keeper) get2HopRoute(ctx sdk.Context, denomToSwapTo, coinDenom string, intermediaryDenoms []string) ([]poolmanagertypes.SwapAmountInRoute, string, error) {
 	// Try each intermediary denom until we find a valid 2-hop route
 	for _, intermediaryDenom := range intermediaryDenoms {
 		if intermediaryDenom == coinDenom || intermediaryDenom == denomToSwapTo {

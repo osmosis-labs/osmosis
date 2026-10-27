@@ -41,9 +41,13 @@ const (
 	prefixcyclicArbTracker
 	prefixcyclicArbTrackerStartHeight
 	prefixBaseDenoms
+	prefixPoolRoutesRevision
 )
 
 var (
+	// KeyPoolRoutesRevision is a transient counter for invalidating route lookup caches.
+	KeyPoolRoutesRevision = []byte{prefixPoolRoutesRevision}
+
 	// -------------- Keys for trading stores -------------- //
 	// KeyPrefixTokenPairRoutes is the prefix for the TokenPairArbRoutes store
 	KeyPrefixTokenPairRoutes = []byte{prefixTokenPairRoutes}

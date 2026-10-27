@@ -99,6 +99,7 @@ type TxFeesKeeper interface {
 
 type ProtorevKeeper interface {
 	GetPoolForDenomPairNoOrder(ctx sdk.Context, baseDenom, denomToMatch string) (uint64, error)
+	GetPoolRoutesRevision(ctx sdk.Context) uint64
 }
 
 type DistributionKeeper interface {

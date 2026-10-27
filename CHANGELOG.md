@@ -42,6 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* perf(txfees): reuse epoch-local route lookups across fee collectors, invalidating cached routes and misses when ProtoRev routing changes
+
 * perf(protorev): preserve unchanged highest-liquidity route entries during the daily refresh
 
 * perf(incentives)!: apply idle perpetual gauge filtering in shared distribution so superfluid also skips unnecessary lock lookups and gauge writes; skipped gauges no longer increment `filled_epochs`
