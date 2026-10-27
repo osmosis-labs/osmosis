@@ -935,6 +935,7 @@ func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cac
 
 // Distribute distributes coins from an array of gauges to all eligible locks and pools in the case of "NoLock" gauges.
 // Skips any group gauges as they are handled separately in AllocateAcrossGauges()
+// Skips idle perpetual gauges before looking up locks, including gauges distributed by superfluid.
 // CONTRACT: gauges must be active.
 func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, error) {
 	distrInfo := newDistributionInfo()
@@ -953,6 +954,10 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 	}
 
 	for _, gauge := range gauges {
+		if isIdlePerpetualGauge(gauge) {
+			continue
+		}
+
 		var gaugeDistributedCoins sdk.Coins
 		filteredLocks := k.getDistributeToBaseLocks(ctx, gauge, locksByDenomCache, &scratchSlice)
 		// send based on synthetic lockup coins if it's distributing to synthetic lockups
