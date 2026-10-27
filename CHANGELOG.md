@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-* perf(incentives)!: apply idle perpetual gauge filtering in shared distribution so superfluid also skips unnecessary lock lookups and gauge writes; skipped gauges no longer increment `filled_epochs`
+* [#9792](https://github.com/osmosis-labs/osmosis/pull/9792) perf(incentives)!: apply idle perpetual gauge filtering in shared distribution so superfluid also skips unnecessary lock lookups and gauge writes; skipped gauges no longer increment `filled_epochs`
 
 * [#9781](https://github.com/osmosis-labs/osmosis/pull/9781) chore: remove unused helpers, orphaned simulation packages, and dormant poolmanager stableswap CLI code
 * [#9781](https://github.com/osmosis-labs/osmosis/pull/9781) fix(cli): register the tokenfactory `denom-before-send-hook` and concentrated-liquidity `total-liquidity` query commands

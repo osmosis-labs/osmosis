@@ -80,3 +80,38 @@ func (s *KeeperTestSuite) TestDistribute_SkipsIdlePerpetualGauges() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestDistribute_SyntheticDustAccumulatesAcrossEpochs() {
+	k := s.App.IncentivesKeeper
+	k.SetParam(s.Ctx, types.KeyMinValueForDistr, sdk.NewInt64Coin(otherDenom, 1))
+	owners := s.SetupUserSyntheticLocks([]userLocks{oneSyntheticLockupUser})
+	gaugeID, gauge := s.CreateGauge(true, s.TestAccs[0], sdk.NewCoins(sdk.NewInt64Coin(otherDenom, 60)), lockuptypes.QueryCondition{
+		LockQueryType: lockuptypes.ByDuration,
+		Denom:         defaultLPSyntheticDenom,
+		Duration:      defaultLockDuration,
+	}, s.Ctx.BlockTime(), 1)
+	s.Require().NoError(k.MoveUpcomingGaugeToActiveGauge(s.Ctx, *gauge))
+	before := s.App.BankKeeper.GetBalance(s.Ctx, owners[0], otherDenom)
+	for epoch, added := range []int64{0, 40, 1} {
+		if added > 0 {
+			s.AddToGauge(sdk.NewCoins(sdk.NewInt64Coin(otherDenom, added)), gaugeID)
+		}
+		current, err := k.GetGaugeByID(s.Ctx, gaugeID)
+		s.Require().NoError(err)
+		paid, err := k.Distribute(s.Ctx, []types.Gauge{*current})
+		s.Require().NoError(err)
+		current, err = k.GetGaugeByID(s.Ctx, gaugeID)
+		s.Require().NoError(err)
+		if epoch < 2 {
+			s.Require().True(paid.Empty(), "60 and 100 units must remain as undistributed dust")
+			s.Require().Zero(current.FilledEpochs)
+			s.Require().True(current.DistributedCoins.Empty())
+		} else {
+			s.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin(otherDenom, 101)), paid)
+			s.Require().Equal(uint64(1), current.FilledEpochs)
+			s.Require().Equal(current.Coins, current.DistributedCoins)
+			s.Require().Equal(before.Amount.AddRaw(101), s.App.BankKeeper.GetBalance(s.Ctx, owners[0], otherDenom).Amount)
+		}
+		s.Require().Contains(gaugeIDs(k.GetActiveGauges(s.Ctx)), gaugeID)
+	}
+}
