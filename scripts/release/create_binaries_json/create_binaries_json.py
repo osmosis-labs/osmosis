@@ -1,12 +1,12 @@
 """
-Usage:
+Usage (run via uv; see scripts/release/README.md):
 This script generates a JSON object containing binary download URLs and their corresponding checksums 
 for a given release tag of osmosis-labs/osmosis or from a provided checksum URL.
 The binary JSON is compatible with cosmovisor and with the chain registry.
 
-You can run this script with the following commands:
+From scripts/release, run this script with the following commands:
 
-❯ python create_binaries_json.py --checksums_url https://github.com/osmosis-labs/osmosis/releases/download/v16.1.1/sha256sum.txt
+❯ uv run --locked python create_binaries_json/create_binaries_json.py --checksums_url https://github.com/osmosis-labs/osmosis/releases/download/v16.1.1/sha256sum.txt
 
 Output:
 {
@@ -31,7 +31,7 @@ fa6699a763487fe6699c8720a2a9be4e26a4f45aafaec87aa0c3aced4cbdd155  osmosisd-16.1.
 
 (From: https://github.com/osmosis-labs/osmosis/releases/download/v16.1.1/sha256sum.txt)
 
-❯ python create_binaries_json.py --tag v16.1.1
+❯ uv run --locked python create_binaries_json/create_binaries_json.py --tag v16.1.1
 
 Output:
 {

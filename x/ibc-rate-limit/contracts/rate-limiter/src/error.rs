@@ -9,12 +9,18 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
-    #[error("IBC Rate Limit exceeded for {channel}/{denom}. Tried to transfer {amount} which exceeds capacity on the '{quota_name}' quota ({used}/{max}). Try again after {reset:?}")]
+    // Keep the leading "IBC Rate Limit exceeded for" stable, so that the chain
+    // can tell a quota rejection from any other contract failure by its text.
+    // The middleware on the current chain reports every contract error the
+    // same way; the classification is chain-side work still to come.
+    #[error("IBC Rate Limit exceeded for {channel}/{denom}. Tried to transfer {amount} which exceeds the {bound} capacity on the '{quota_name}' quota ({used}/{max}). Try again after {reset:?}")]
     RateLimitExceded {
         channel: String,
         denom: String,
         amount: Uint256,
         quota_name: String,
+        /// Which bound tripped: "percentage" (net flow) or "absolute" (gross flow)
+        bound: String,
         used: Uint256,
         max: Uint256,
         reset: Timestamp,
@@ -31,4 +37,30 @@ pub enum ContractError {
 
     #[error("Channel {channel} has been blocked for denom {denom}")]
     ChannelBlocked { channel: String, denom: String },
+
+    #[error("Arithmetic overflow: {0}")]
+    Overflow(String),
+
+    #[error("A transfer of {denom} identical to one counted on {channel} in an earlier quota window cannot be counted while the record of that one is retained; change the amount or the timeout")]
+    DuplicatePendingSend { channel: String, denom: String },
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test] // The chain-side middleware keys on this prefix to tell a quota rejection from any other contract failure; keep it stable
+    fn rate_limit_exceeded_message_keeps_the_marker_the_chain_matches() {
+        let err = ContractError::RateLimitExceded {
+            channel: "channel-0".to_string(),
+            denom: "uosmo".to_string(),
+            amount: Uint256::from(1_u32),
+            quota_name: "daily".to_string(),
+            bound: "percentage".to_string(),
+            used: Uint256::zero(),
+            max: Uint256::zero(),
+            reset: Timestamp::from_seconds(0),
+        };
+        assert!(err.to_string().starts_with("IBC Rate Limit exceeded for"));
+    }
 }

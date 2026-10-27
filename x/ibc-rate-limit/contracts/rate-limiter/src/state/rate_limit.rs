@@ -36,7 +36,8 @@ impl RateLimit {
     ) -> Result<Self, ContractError> {
         // Flow used before this transaction is applied.
         // This is used to make error messages more informative
-        let initial_flow = self.flow.balance_on(direction);
+        let initial_net = self.flow.balance_on(direction);
+        let initial_gross = self.flow.gross_on(direction);
 
         // Apply the transfer. From here on, we will updated the flow with the new transfer
         // and check if  it exceeds the quota at the current time
@@ -49,26 +50,40 @@ impl RateLimit {
                 &path.denom,
                 funds,
                 direction,
-            ))
+            )?)
         }
 
-        let (max_in, max_out) = self.quota.capacity();
-        // Return the effects of applying the transfer or an error.
-        match self.flow.exceeds(direction, max_in, max_out) {
-            true => Err(ContractError::RateLimitExceded {
-                channel: path.channel.to_string(),
-                denom: path.denom.to_string(),
-                amount: funds,
-                quota_name: self.quota.name.to_string(),
-                used: initial_flow,
-                max: self.quota.capacity_on(direction),
-                reset: self.flow.period_end,
-            }),
-            false => Ok(RateLimit {
-                quota: self.quota.clone(), // Cloning here because self.quota.name (String) does not allow us to implement Copy
-                flow: self.flow, // We can Copy flow, so this is slightly more efficient than cloning the whole RateLimit
-            }),
+        let capacity = self.quota.capacity_on(direction)?;
+        let exceeded = |bound: &str, used: Uint256, max: Uint256| ContractError::RateLimitExceded {
+            channel: path.channel.to_string(),
+            denom: path.denom.to_string(),
+            amount: funds,
+            quota_name: self.quota.name.to_string(),
+            bound: bound.to_string(),
+            used,
+            max,
+            reset: self.flow.period_end,
+        };
+
+        // The percentage bound applies to the net flow so that round trips do
+        // not consume quota. The absolute bound applies to the gross flow so
+        // that it is independent of flow the other way.
+        if let Some(max) = capacity.percentage {
+            if self.flow.balance_on(direction) > max {
+                return Err(exceeded("percentage", initial_net, max));
+            }
         }
+        if let Some(max) = capacity.absolute {
+            if self.flow.gross_on(direction) > max {
+                return Err(exceeded("absolute", initial_gross, max));
+            }
+        }
+
+        // Return the effects of applying the transfer.
+        Ok(RateLimit {
+            quota: self.quota.clone(), // Cloning here because self.quota.name (String) does not allow us to implement Copy
+            flow: self.flow, // We can Copy flow, so this is slightly more efficient than cloning the whole RateLimit
+        })
     }
 }
 
@@ -82,17 +97,20 @@ fn calculate_channel_value(
     denom: &str,
     funds: Uint256,
     direction: &FlowType,
-) -> Uint256 {
+) -> Result<Uint256, ContractError> {
     match direction {
         FlowType::Out => {
             if denom.starts_with("ibc") {
-                channel_value + funds // Non-Native tokens get removed from the supply on send. Add that amount back
+                // Non-Native tokens get removed from the supply on send. Add that amount back
+                channel_value
+                    .checked_add(funds)
+                    .map_err(|e| ContractError::Overflow(e.to_string()))
             } else {
                 // The commented-out code in the golang calculate channel value is what we want, but we're currently using the whole supply temporarily for efficiency. see rate_limit.go/CalculateChannelValue(..)
                 //channel_value - funds // Native tokens increase escrow amount on send. Remove that amount here
-                channel_value
+                Ok(channel_value)
             }
         }
-        FlowType::In => channel_value,
+        FlowType::In => Ok(channel_value),
     }
 }
