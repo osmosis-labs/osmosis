@@ -78,3 +78,33 @@ const (
 	// maxWBTCIssuerMembers bounds the merchant list read from the WBTC issuer.
 	maxWBTCIssuerMembers = 100
 )
+
+// Noble USDC to allUSDC migration, approved by governance in proposal TODO(prop): fill in the
+// proposal number and link before merging.
+//
+// The spendable Noble USDC of every account that has a public key, apart from the accounts in
+// nobleUSDCExcludedBech32, is deposited into the allUSDC alloy transmuter on its behalf (join_pool),
+// which mints the same amount of allUSDC back to the account. Accounts without a public key are
+// skipped, same as the WBTC migration. Noble USDC is an IBC voucher: there is no tokenfactory
+// issuer, so there are no merchants or a custodian to exclude.
+const (
+	// NobleUSDCDenom is Noble USDC on Osmosis, an IBC voucher. It has no tokenfactory issuer.
+	NobleUSDCDenom = "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4"
+
+	// AllUSDCTransmuterAddress is the alloy transmuter contract that mints allUSDC (code 996,
+	// cosmwasm pool 3497).
+	AllUSDCTransmuterAddress = "osmo147h5x9pcj7lm0cttlaefx6sqq5vdfnmwfcqxkmjd7exqm9gc7grqhr75m0"
+
+	// AllUSDCDenom is the alloyed denom minted by AllUSDCTransmuterAddress.
+	AllUSDCDenom = "factory/" + AllUSDCTransmuterAddress + "/alloyed/allUSDC"
+
+	// MaxNobleUSDCHoldersToMigrate bounds the migration loop. If the chain has more Noble USDC
+	// holders than this, the whole migration is skipped. osmosis-1 listed 31,516 indexed holders
+	// in October 2026. Revalidate against the final cmd/alloy-holder-scan before merge: indexed
+	// plus unindexed holders must stay under this cap.
+	MaxNobleUSDCHoldersToMigrate = 40_000
+)
+
+// nobleUSDCExcludedBech32 is the explicit list of accounts whose Noble USDC is not migrated.
+// TODO(ops): exchanges, market makers, and bridge-solver wallets must be decided before merge.
+var nobleUSDCExcludedBech32 = []string{}
