@@ -1,8 +1,10 @@
 package v33
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
-import "github.com/osmosis-labs/osmosis/v32/app/keepers"
+	"github.com/osmosis-labs/osmosis/v32/app/keepers"
+)
 
 // CollectHolders exposes collectHolders so tests can exercise the holder cap without creating
 // MaxWBTCHoldersToMigrate accounts.
