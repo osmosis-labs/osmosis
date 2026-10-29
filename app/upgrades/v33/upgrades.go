@@ -9,12 +9,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 
 	"github.com/osmosis-labs/osmosis/v32/app/keepers"
+	appparams "github.com/osmosis-labs/osmosis/v32/app/params"
 	"github.com/osmosis-labs/osmosis/v32/app/upgrades"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v32/x/incentives/keeper"
 )
 
 // CreateUpgradeHandler returns the v33 upgrade handler. After the module migrations it recovers the
-// HUAHUA held by gauges 1954-1959 (see HuahuaStuckGauges).
+// HUAHUA held by gauges 1954-1959 (see HuahuaStuckGauges) and moves OSMO to the burn address.
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
@@ -30,6 +31,11 @@ func CreateUpgradeHandler(
 		}
 
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		if sdkCtx.ChainID() == MainnetChainID {
+			if err := moveOsmoToBurnAddress(sdkCtx, keepers); err != nil {
+				return nil, err
+			}
+		}
 
 		// The recovery is not critical to the chain, so a failure is logged instead of halting the upgrade.
 		// It runs in a cache context so that it is applied either entirely or not at all.
@@ -44,6 +50,30 @@ func CreateUpgradeHandler(
 
 		return migrations, nil
 	}
+}
+
+// moveOsmoToBurnAddress sends each source account's entire uosmo balance at upgrade
+// time. Other denoms remain in the source accounts. Empty balances are skipped.
+func moveOsmoToBurnAddress(ctx sdk.Context, keepers *keepers.AppKeepers) error {
+	to, err := sdk.AccAddressFromBech32(OsmoBurnAddress)
+	if err != nil {
+		return fmt.Errorf("v33 OSMO burn recipient: %w", err)
+	}
+	for _, source := range OsmoBurnSourceAddresses {
+		from, err := sdk.AccAddressFromBech32(source)
+		if err != nil {
+			return fmt.Errorf("v33 OSMO burn source %s: %w", source, err)
+		}
+		balance := keepers.BankKeeper.GetBalance(ctx, from, appparams.BaseCoinUnit)
+		if balance.IsZero() {
+			continue
+		}
+		if err := keepers.BankKeeper.SendCoins(ctx, from, to, sdk.NewCoins(balance)); err != nil {
+			return fmt.Errorf("v33 moving OSMO from %s to burn address: %w", source, err)
+		}
+		ctx.Logger().Info("v33 upgrade: OSMO moved to burn address", "from", source, "to", OsmoBurnAddress, "amount", balance.String())
+	}
+	return nil
 }
 
 // recoverHuahuaFromStuckGauges finishes the stuck HUAHUA gauges and sends their undistributed coins

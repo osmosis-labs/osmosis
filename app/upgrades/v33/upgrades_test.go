@@ -67,6 +67,53 @@ func (s *UpgradeTestSuite) SetupTest() {
 	s.Ctx = s.Ctx.WithBlockTime(upgradeBlockTime)
 }
 
+func (s *UpgradeTestSuite) TestOsmoBurnTransfer() {
+	for _, tc := range []struct {
+		name    string
+		chainID string
+		amounts [2]int64
+		move    bool
+	}{
+		{"mainnet balance", v33.MainnetChainID, [2]int64{123_456_789, 987_654_321}, true},
+		{"empty mainnet balance", v33.MainnetChainID, [2]int64{}, true},
+		{"empty first source", v33.MainnetChainID, [2]int64{0, 123_456_789}, true},
+		{"empty second source", v33.MainnetChainID, [2]int64{123_456_789, 0}, true},
+		{"other chain", "osmo-test-a", [2]int64{123_456_789, 987_654_321}, false},
+	} {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			s.Ctx = s.Ctx.WithChainID(tc.chainID)
+			to := sdk.MustAccAddressFromBech32(v33.OsmoBurnAddress)
+			for i, source := range v33.OsmoBurnSourceAddresses {
+				from := sdk.MustAccAddressFromBech32(source)
+				s.FundAcc(from, sdk.NewCoins(sdk.NewInt64Coin("uion", 42)))
+				if tc.amounts[i] > 0 {
+					s.FundAcc(from, sdk.NewCoins(sdk.NewInt64Coin("uosmo", tc.amounts[i])))
+				}
+			}
+			s.FundAcc(to, sdk.NewCoins(sdk.NewInt64Coin("uosmo", 7)))
+			supplyBefore := s.App.BankKeeper.GetSupply(s.Ctx, "uosmo")
+
+			s.runUpgrade()
+
+			totalMoved := int64(0)
+			for i, source := range v33.OsmoBurnSourceAddresses {
+				from := sdk.MustAccAddressFromBech32(source)
+				moved := int64(0)
+				if tc.move {
+					moved = tc.amounts[i]
+				}
+				totalMoved += moved
+				s.Require().Equal(osmomath.NewInt(tc.amounts[i]-moved), s.App.BankKeeper.GetBalance(s.Ctx, from, "uosmo").Amount)
+				s.Require().Equal(osmomath.NewInt(42), s.App.BankKeeper.GetBalance(s.Ctx, from, "uion").Amount)
+			}
+			s.Require().Equal(osmomath.NewInt(7+totalMoved), s.App.BankKeeper.GetBalance(s.Ctx, to, "uosmo").Amount)
+			// Sending to the null address preserves bank supply; it is not BurnCoins.
+			s.Require().Equal(supplyBefore, s.App.BankKeeper.GetSupply(s.Ctx, "uosmo"))
+		})
+	}
+}
+
 // TestHuahuaRecovery runs the v33 upgrade on the mainnet gauge state and checks the recovered amounts,
 // the finished gauges and that unrelated gauges are untouched.
 func (s *UpgradeTestSuite) TestHuahuaRecovery() {
