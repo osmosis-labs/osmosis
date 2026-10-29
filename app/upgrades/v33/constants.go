@@ -17,7 +17,11 @@ const (
 
 // OsmoBurnSourceAddresses are the accounts whose OSMO is moved at the v33 upgrade.
 var OsmoBurnSourceAddresses = [...]string{
+	// Levana sub-DAO, burn approved by governance in proposal 1003
+	// (https://www.mintscan.io/osmosis/proposals/1003).
 	"osmo1qzm2kyesqqpu4d7uaskkf023t4husm6vaan2gkc2xru0xcvzx23qq5f5c7",
+	// NeutrOsmosis sub-DAO, burn approved by governance in proposal 1050
+	// (https://www.mintscan.io/osmosis/proposals/1050).
 	"osmo128laly00yvpr69usz6s9n7j8f8sx6780npyauyt9ku46mpwx2n5qsxapq6",
 }
 

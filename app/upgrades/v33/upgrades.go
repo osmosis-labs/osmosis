@@ -35,6 +35,8 @@ func CreateUpgradeHandler(
 			if err := moveOsmoToBurnAddress(sdkCtx, keepers); err != nil {
 				return nil, err
 			}
+		} else {
+			sdkCtx.Logger().Info("skipping v33 OSMO burn transfer on non-mainnet chain", "chain_id", sdkCtx.ChainID())
 		}
 
 		// The recovery is not critical to the chain, so a failure is logged instead of halting the upgrade.

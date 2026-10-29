@@ -68,6 +68,9 @@ func (s *UpgradeTestSuite) SetupTest() {
 }
 
 func (s *UpgradeTestSuite) TestOsmoBurnTransfer() {
+	// The recipient must be the 20-byte null address, independently of the upgrade constant.
+	s.Require().Equal(sdk.AccAddress(make([]byte, 20)).String(), v33.OsmoBurnAddress)
+
 	for _, tc := range []struct {
 		name    string
 		chainID string
