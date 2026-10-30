@@ -1,0 +1,4 @@
+# TODO(scan): generate this list with cmd/alloy-holder-scan from a mainnet export before merge.
+# Noble USDC holders missing from the bank denom index on osmosis-1.
+# Denom: ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4
+# One address per line. This placeholder lists none.

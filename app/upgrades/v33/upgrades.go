@@ -15,7 +15,11 @@ import (
 
 // CreateUpgradeHandler returns the v33 upgrade handler. After the module migrations it recovers the
 // HUAHUA held by gauges 1954-1959 (see HuahuaStuckGauges) and, on mainnet, migrates native WBTC
-// holders to allBTC (see MigrateWBTCToAllBTC).
+// holders to allBTC and Noble USDC holders to allUSDC (see MigrateToAlloy). Each alloy migration
+// is independent: one migration's error does not skip the other, and neither halts the upgrade.
+//
+// On mainnet the Noble USDC pools are migrated first (see MigrateNobleUSDCPools), so that the Noble
+// USDC and WBTC withdrawn to LPs from drained pools are converted together with their wallets.
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
@@ -44,9 +48,10 @@ func CreateUpgradeHandler(
 		}
 
 		if sdkCtx.ChainID() == MainnetChainID {
-			migrateWBTCAndLog(sdkCtx, keepers)
+			migrateNobleUSDCPoolsAndLog(sdkCtx, keepers)
+			runMainnetAlloyMigrations(sdkCtx, keepers)
 		} else {
-			sdkCtx.Logger().Info("v33 upgrade: skipping WBTC to allBTC migration on non-mainnet chain", "chain_id", sdkCtx.ChainID())
+			sdkCtx.Logger().Info("v33 upgrade: skipping alloy migrations on non-mainnet chain", "chain_id", sdkCtx.ChainID())
 		}
 
 		return migrations, nil
