@@ -3787,3 +3787,42 @@ func (s *KeeperTestSuite) calculateExpectedTokens(tokenInDenom string, testMaxTi
 	}
 	return currentTotal
 }
+
+// TestExactAmountOut_UnfilledAtPriceLimit tests that requesting more than a full range pool can provide
+// returns an error instead of an amount in for a partial fill, for both the estimate and the actual swap.
+func (s *KeeperTestSuite) TestExactAmountOut_UnfilledAtPriceLimit() {
+	tests := map[string]struct {
+		tokenOutDenom  string
+		tokenInDenom   string
+		tokenOutAmount osmomath.Int
+		expectErr      bool
+	}{
+		"ofz: half of pool balance": {tokenOutDenom: ETH, tokenInDenom: USDC, tokenOutAmount: apptesting.DefaultCoinAmount.QuoRaw(2)},
+		"ofz: pool balance + 1":     {tokenOutDenom: ETH, tokenInDenom: USDC, tokenOutAmount: apptesting.DefaultCoinAmount.AddRaw(1), expectErr: true},
+		"ofz: 100x pool balance":    {tokenOutDenom: ETH, tokenInDenom: USDC, tokenOutAmount: apptesting.DefaultCoinAmount.MulRaw(100), expectErr: true},
+		"zfo: half of pool balance": {tokenOutDenom: USDC, tokenInDenom: ETH, tokenOutAmount: apptesting.DefaultCoinAmount.QuoRaw(2)},
+		"zfo: pool balance + 1":     {tokenOutDenom: USDC, tokenInDenom: ETH, tokenOutAmount: apptesting.DefaultCoinAmount.AddRaw(1), expectErr: true},
+		"zfo: 100x pool balance":    {tokenOutDenom: USDC, tokenInDenom: ETH, tokenOutAmount: apptesting.DefaultCoinAmount.MulRaw(100), expectErr: true},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			pool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(ETH, USDC)
+			tokenOut := sdk.NewCoin(tc.tokenOutDenom, tc.tokenOutAmount)
+			tokenInMax := apptesting.DefaultCoinAmount.Mul(apptesting.DefaultCoinAmount).Mul(apptesting.DefaultCoinAmount)
+
+			_, calcErr := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOut(s.Ctx, pool, tokenOut, tc.tokenInDenom, osmomath.ZeroDec())
+			_, swapErr := s.App.ConcentratedLiquidityKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool, tc.tokenInDenom, tokenInMax, tokenOut, osmomath.ZeroDec())
+
+			if tc.expectErr {
+				s.Require().ErrorAs(calcErr, &types.UnableToFulfillExactOutError{})
+				s.Require().ErrorAs(swapErr, &types.UnableToFulfillExactOutError{})
+				return
+			}
+			s.Require().NoError(calcErr)
+			// the swap itself fails on insufficient funds, but must not fail on the exact out check
+			s.Require().NotErrorAs(swapErr, &types.UnableToFulfillExactOutError{})
+		})
+	}
+}
