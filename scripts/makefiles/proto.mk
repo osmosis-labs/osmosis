@@ -41,6 +41,8 @@ THIRD_PARTY_DIR=$(SWAGGER_DIR)/third_party
 # generation when upstream removes modules this chain still serves (e.g.
 # x/params), documents query surfaces the deployed versions do not have, and
 # lets the committed output drift without any repo dependency change.
+# Refs are fetched and checked out rather than pulled: `git pull` cannot
+# fast-forward a fresh branch onto an annotated tag (COSMOS_PROTO_REF is one).
 SDK_PROTO_REPO=https://github.com/osmosis-labs/cosmos-sdk.git
 SDK_PROTO_REF=v0.50.14-v30-osmo
 IBC_PROTO_REF=v8.7.0
@@ -59,7 +61,8 @@ proto-download-deps:
 	git remote add origin "$(SDK_PROTO_REPO)" && \
 	git config core.sparseCheckout true && \
 	printf "proto\nthird_party\n" > .git/info/sparse-checkout && \
-	git pull --depth 1 origin "$(SDK_PROTO_REF)" && \
+	git fetch --depth 1 origin "$(SDK_PROTO_REF)" && \
+	git checkout FETCH_HEAD && \
 	rm -f ./proto/buf.* && \
 	mv ./proto/* ..
 	rm -rf "$(THIRD_PARTY_DIR)/cosmos_tmp"
@@ -70,7 +73,8 @@ proto-download-deps:
 	git remote add origin "https://github.com/cosmos/ibc-go.git" && \
 	git config core.sparseCheckout true && \
 	printf "proto\n" > .git/info/sparse-checkout && \
-	git pull --depth 1 origin "$(IBC_PROTO_REF)" && \
+	git fetch --depth 1 origin "$(IBC_PROTO_REF)" && \
+	git checkout FETCH_HEAD && \
 	rm -f ./proto/buf.* && \
 	mv ./proto/* ..
 	rm -rf "$(THIRD_PARTY_DIR)/ibc_tmp"
@@ -81,7 +85,8 @@ proto-download-deps:
 	git remote add origin "https://github.com/CosmWasm/wasmd.git" && \
 	git config core.sparseCheckout true && \
 	printf "proto\n" > .git/info/sparse-checkout && \
-	git pull --depth 1 origin "$(WASMD_PROTO_REF)" && \
+	git fetch --depth 1 origin "$(WASMD_PROTO_REF)" && \
+	git checkout FETCH_HEAD && \
 	rm -f ./proto/buf.* && \
 	mv ./proto/* ..
 	rm -rf "$(THIRD_PARTY_DIR)/wasmd_tmp"
@@ -92,7 +97,8 @@ proto-download-deps:
 	git remote add origin "https://github.com/cosmos/ibc-apps.git" && \
 	git config core.sparseCheckout true && \
 	printf "modules/async-icq/proto\n" > .git/info/sparse-checkout && \
-	git pull --depth 1 origin "$(ICQ_PROTO_REF)" && \
+	git fetch --depth 1 origin "$(ICQ_PROTO_REF)" && \
+	git checkout FETCH_HEAD && \
 	rm -f ./modules/async-icq/proto/buf.* && \
 	mv ./modules/async-icq/proto/* ..
 	rm -rf "$(THIRD_PARTY_DIR)/icq_tmp"
@@ -103,7 +109,8 @@ proto-download-deps:
 	git remote add origin "https://github.com/osmosis-labs/block-sdk.git" && \
 	git config core.sparseCheckout true && \
 	printf "proto\n" > .git/info/sparse-checkout && \
-	git pull --depth 1 origin "$(BLOCK_SDK_PROTO_REF)" && \
+	git fetch --depth 1 origin "$(BLOCK_SDK_PROTO_REF)" && \
+	git checkout FETCH_HEAD && \
 	rm -f ./proto/buf.* && \
 	mv ./proto/* ..
 	rm -rf "$(THIRD_PARTY_DIR)/block_sdk_tmp"
@@ -114,7 +121,8 @@ proto-download-deps:
 	git remote add origin "https://github.com/cosmos/cosmos-proto.git" && \
 	git config core.sparseCheckout true && \
 	printf "proto\n" > .git/info/sparse-checkout && \
-	git pull --depth 1 origin "$(COSMOS_PROTO_REF)" && \
+	git fetch --depth 1 origin "$(COSMOS_PROTO_REF)" && \
+	git checkout FETCH_HEAD && \
 	rm -f ./proto/buf.* && \
 	mv ./proto/* ..
 	rm -rf "$(THIRD_PARTY_DIR)/cosmos_proto_tmp"
