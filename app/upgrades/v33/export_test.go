@@ -29,3 +29,6 @@ func SetAlloyMigrationBuildersForTest(builders []AlloyMigrationBuilder) func() {
 func MainnetNobleUSDCMigration(ctx sdk.Context, keepers *keepers.AppKeepers) (AlloyMigration, error) {
 	return mainnetNobleUSDCMigration(ctx, keepers)
 }
+
+// MainnetNobleUSDCPoolMigration exposes the production pool migration config.
+var MainnetNobleUSDCPoolMigration = mainnetNobleUSDCPoolMigration
