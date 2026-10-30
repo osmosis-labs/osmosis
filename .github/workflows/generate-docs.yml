@@ -1,9 +1,26 @@
 name: Update Docs
 
+# The swagger spec only changes when the protos, the pinned proto
+# dependencies or the generation scripts change, so regenerate on those
+# pushes to main instead of on a timer.
 on:
-  schedule:
-    - cron: "0 0 * * 1"
+  push:
+    branches:
+      - main
+    paths:
+      - "proto/**"
+      - "scripts/makefiles/proto.mk"
+      - "scripts/generate-docs.sh"
+      - "client/docs/config.json"
+      - "client/docs/yarn.lock"
+      - ".github/workflows/generate-docs.yml"
   workflow_dispatch:
+
+# Runs for back-to-back pushes all write docs-update-branch, so cancel the
+# older one and let the newest main win.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
 
 jobs:
   update-docs:
