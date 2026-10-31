@@ -119,6 +119,7 @@ require (
 	google.golang.org/grpc v1.83.2 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gotest.tools/v3 v3.5.2 // indirect
 	nhooyr.io/websocket v1.8.10 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
