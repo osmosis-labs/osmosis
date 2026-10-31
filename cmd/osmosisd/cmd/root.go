@@ -1146,29 +1146,60 @@ Outputs:
 				return nil
 			}
 
-			// Try to fetch the asset list from the URL
-			resp, err := http.Get(assetListURL)
-			if err != nil {
-				return err
-			}
-			defer resp.Body.Close()
-
-			// Create a new file
-			out, err := os.Create(fileName)
-			if err != nil {
-				return err
-			}
-			defer out.Close()
-
-			// Copy the response body to the new file
-			_, err = io.Copy(out, resp.Body)
-			return err
+			return downloadAssetList(assetListURL, fileName)
 		},
 	}
 
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 
 	return cmd
+}
+
+func downloadAssetList(assetListURL, fileName string) error {
+	resp, err := http.Get(assetListURL)
+	if err != nil {
+		return fmt.Errorf("failed to download asset list: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to download asset list: HTTP status %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read asset list response body: %w", err)
+	}
+	if !json.Valid(body) {
+		return fmt.Errorf("failed to download asset list: response is not valid JSON")
+	}
+
+	// Write to a temporary file in the destination directory so a failed download
+	// cannot truncate the existing asset list. Keeping it in the same directory
+	// also makes the final rename atomic on the destination filesystem.
+	tempFile, err := os.CreateTemp(filepath.Dir(fileName), ".asset-list-*.tmp")
+	if err != nil {
+		return fmt.Errorf("failed to create temporary asset list file: %w", err)
+	}
+	tempName := tempFile.Name()
+	defer os.Remove(tempName)
+
+	if _, err := tempFile.Write(body); err != nil {
+		_ = tempFile.Close()
+		return fmt.Errorf("failed to write temporary asset list file: %w", err)
+	}
+	if err := tempFile.Chmod(0644); err != nil {
+		_ = tempFile.Close()
+		return fmt.Errorf("failed to set asset list file permissions: %w", err)
+	}
+	if err := tempFile.Close(); err != nil {
+		return fmt.Errorf("failed to close temporary asset list file: %w", err)
+	}
+	if err := os.Rename(tempName, fileName); err != nil {
+		return fmt.Errorf("failed to replace asset list: %w", err)
+	}
+
+	return nil
 }
 
 func genAutoCompleteCmd(rootCmd *cobra.Command) {
