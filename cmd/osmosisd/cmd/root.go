@@ -1167,16 +1167,19 @@ Outputs:
 				return fmt.Errorf("fetching %s: %s", assetListURL, resp.Status)
 			}
 
-			// Create a new file
-			out, err := os.Create(fileName)
+			// Keep only the fields the CLI reads; the frontend list also carries logos and metadata.
+			var assetList AssetList
+			if err := json.NewDecoder(resp.Body).Decode(&assetList); err != nil {
+				return fmt.Errorf("parsing %s: %w", assetListURL, err)
+			}
+			if !hasUsableAsset(assetList.Assets) {
+				return fmt.Errorf("%s has no usable assets", assetListURL)
+			}
+			trimmed, err := json.MarshalIndent(assetList, "", "  ")
 			if err != nil {
 				return err
 			}
-			defer out.Close()
-
-			// Copy the response body to the new file
-			_, err = io.Copy(out, resp.Body)
-			return err
+			return os.WriteFile(fileName, append(trimmed, '\n'), 0o644)
 		},
 	}
 
