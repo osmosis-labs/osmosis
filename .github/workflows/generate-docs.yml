@@ -74,10 +74,13 @@ jobs:
         run: |
           make docs
 
+      # A PR opened with GITHUB_TOKEN doesn't trigger other workflows, so it
+      # would get no CI runs. COMMIT_TO_BRANCH is the token the other
+      # PR-opening workflows use.
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.COMMIT_TO_BRANCH }}
           commit-message: Update docs
           title: "Update docs"
           body: "Update docs"
