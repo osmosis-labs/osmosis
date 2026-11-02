@@ -17,7 +17,7 @@ require (
 	github.com/spf13/cast v1.10.0
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/pflag v1.0.10
-	github.com/stretchr/testify v1.11.1
+	github.com/stretchr/testify v1.12.1
 	golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c
 )
 
@@ -136,7 +136,6 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/petermattis/goid v0.0.0-20250813065127-a731cc31b4fe // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.23.2 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.66.1 // indirect
@@ -168,7 +167,7 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.45.0 // indirect
 	go.opentelemetry.io/otel/trace v1.45.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
-	go.yaml.in/yaml/v3 v3.0.4 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/arch v0.17.0 // indirect
 	golang.org/x/crypto v0.55.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
@@ -181,8 +180,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260803160001-6ac0973c030d // indirect
 	google.golang.org/grpc v1.83.2 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gotest.tools/v3 v3.5.1 // indirect
+	gotest.tools/v3 v3.5.2 // indirect
 	nhooyr.io/websocket v1.8.10 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
