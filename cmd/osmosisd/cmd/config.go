@@ -174,7 +174,7 @@ node = "{{ .Node }}"
 broadcast-mode = "{{ .BroadcastMode }}"
 
 # Human-readable denoms: Input
-# If enabled, when using CLI, user can input asset symbols as shown in the Osmosis frontend (atom, usdc, usdc.axl, etc.) instead of their full denoms.
+# If enabled, when using CLI, user can input asset symbols as shown in the Osmosis frontend (atom, usdc, eth.axl, etc.) instead of their full denoms.
 # Note, this will also change the coin's value to it's base value if the input or flag is a coin.
 # Only an amount followed by a symbol is converted. Anything else, including base units such as uatom, is passed through unchanged.
 # Example:

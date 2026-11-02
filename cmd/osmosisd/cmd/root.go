@@ -236,7 +236,7 @@ func buildAssetMaps(assets []Asset, basedenomToIBC, IBCtoBasedenom bool) (map[st
 	baseMapRev := make(map[string]string)
 
 	if basedenomToIBC {
-		// Symbols are the ones shown in the frontend, so "usdc" is allUSDC and "usdc.axl" is the Axelar variant.
+		// Symbols are the ones shown in the frontend, so "usdc" is allUSDC and "eth.axl" is the Axelar variant of ETH.
 		// A value given in a symbol is multiplied by 10^decimals to get the amount in coinMinimalDenom.
 		// A symbol claimed by more than one asset is left out rather than resolved to either of them,
 		// so the input is passed through unchanged and the user has to give the full denom.
