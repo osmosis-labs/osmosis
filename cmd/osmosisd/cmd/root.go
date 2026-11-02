@@ -83,24 +83,13 @@ import (
 type AssetList struct {
 	Assets []Asset `json:"assets"`
 }
+
+// Asset is an entry of the frontend asset list (osmosis-labs/assetlists <chain>/generated/frontend/assetlist.json).
 type Asset struct {
-	DenomUnits []DenomUnit `json:"denom_units"`
-	Symbol     string      `json:"symbol"`
-	Base       string      `json:"base"`
-	Traces     []Trace     `json:"traces"`
-}
-
-type DenomUnit struct {
-	Denom    string   `json:"denom"`
-	Exponent uint64   `json:"exponent"`
-	Aliases  []string `json:"aliases"`
-}
-
-type Trace struct {
-	Type         string `json:"type"`
-	Counterparty struct {
-		BaseDenom string `json:"base_denom"`
-	} `json:"counterparty"`
+	Symbol           string `json:"symbol"`
+	CoinMinimalDenom string `json:"coinMinimalDenom"`
+	SourceDenom      string `json:"sourceDenom"`
+	Decimals         uint64 `json:"decimals"`
 }
 
 type DenomUnitMap struct {
@@ -213,47 +202,77 @@ func loadAssetList(initClientCtx client.Context, cmd *cobra.Command, basedenomTo
 		defer localFile.Close()
 		byteValue, _ := io.ReadAll(localFile)
 		err = json.Unmarshal(byteValue, &assetList)
-		if err != nil {
+		// A manual list written by an older osmosisd is in the chain registry format, which has no
+		// coinMinimalDenom, so none of its assets can be used.
+		if err != nil || !hasUsableAsset(assetList.Assets) {
+			fmt.Fprintf(os.Stderr, "Asset list %s is unreadable or in an outdated format, so denoms are not converted. Run `osmosisd update-asset-list` to refresh it.\n", fileName)
 			return nil, nil
 		}
 	}
 
+	baseMap, baseMapRev := buildAssetMaps(assetList.Assets, basedenomToIBC, IBCtoBasedenom)
+	return baseMap, baseMapRev
+}
+
+func hasUsableAsset(assets []Asset) bool {
+	for _, asset := range assets {
+		if asset.CoinMinimalDenom != "" {
+			return true
+		}
+	}
+	return false
+}
+
+// buildAssetMaps returns the symbol to denom map used to convert CLI input, and the denom to
+// base unit name map used to rewrite CLI output.
+func buildAssetMaps(assets []Asset, basedenomToIBC, IBCtoBasedenom bool) (map[string]DenomUnitMap, map[string]string) {
 	baseMap := make(map[string]DenomUnitMap)
 	baseMapRev := make(map[string]string)
 
 	if basedenomToIBC {
-		for _, asset := range assetList.Assets {
-			// Each asset has a list of denom units. A majority of them have 2 entries, one being the base 0 exponent denom and the other being a larger exponent denom.
-			// An example for tether:
-			// * Exponent 0: uusdt
-			// * Exponent 6: usdt
-			// This implies that if a usdt value is given, in order to convert it to it's base denom (uusdt), we need to multiply the provided value by 10^6.
-			for i, denomUnit := range asset.DenomUnits {
-				DenomUnitMap := DenomUnitMap{
-					Base:     asset.Base,
-					Exponent: asset.DenomUnits[i].Exponent,
-				}
-				// The 0 exponent denom is the base denom.
-				if asset.DenomUnits[i].Exponent == 0 {
-					// To make everyone's life harder, some assets have multiple base denom aliases. For example, the asset list has the following base aliases for the asset "luna":
-					// * uluna
-					// * microluna
-					for _, alias := range denomUnit.Aliases {
-						baseMap[strings.ToLower(alias)] = DenomUnitMap
-					}
-				} else {
-					// Otherwise we just store the denom alias for that exponent.
-					baseMap[strings.ToLower(denomUnit.Denom)] = DenomUnitMap
-				}
+		// Symbols are the ones shown in the frontend, so "usdc" is allUSDC and "usdc.axl" is the Axelar variant.
+		// A value given in a symbol is multiplied by 10^decimals to get the amount in coinMinimalDenom.
+		// A symbol claimed by more than one asset is left out rather than resolved to either of them,
+		// so the input is passed through unchanged and the user has to give the full denom.
+		ambiguous := make(map[string]bool)
+		for _, asset := range assets {
+			if asset.Symbol == "" || asset.CoinMinimalDenom == "" {
+				continue
+			}
+			key := strings.ToLower(asset.Symbol)
+			if _, seen := baseMap[key]; seen || ambiguous[key] {
+				delete(baseMap, key)
+				ambiguous[key] = true
+				continue
+			}
+			baseMap[key] = DenomUnitMap{
+				Base:     asset.CoinMinimalDenom,
+				Exponent: asset.Decimals,
 			}
 		}
 	}
 	if IBCtoBasedenom {
-		// We just store a link from the first base denom alias to the IBC denom. This is just used for display purposes on the terminal's output.
-		for _, asset := range assetList.Assets {
-			if len(asset.DenomUnits) > 0 && asset.DenomUnits[0].Exponent == 0 && len(asset.DenomUnits[0].Aliases) > 0 {
-				baseDenom := asset.DenomUnits[0].Aliases[0]
-				baseMapRev[asset.Base] = strings.ToLower(baseDenom)
+		// Output amounts stay in base units, so the replacement has to be a base unit name as well.
+		// sourceDenom is the asset's base denom on its origin chain (uatom for ATOM). It is only used
+		// when no other asset shares it, so two different assets never print under the same name.
+		// It is also skipped when it looks like a denom on Osmosis (ibc/..., factory/...) or reads as a
+		// symbol (inj), since copying either back into a command would name a different asset or
+		// scale the base amount a second time.
+		sourceDenomCount := make(map[string]int)
+		symbols := make(map[string]bool)
+		for _, asset := range assets {
+			sourceDenomCount[asset.SourceDenom]++
+			symbols[strings.ToLower(asset.Symbol)] = true
+		}
+		for _, asset := range assets {
+			if asset.CoinMinimalDenom == "" || asset.SourceDenom == "" || asset.SourceDenom == asset.CoinMinimalDenom {
+				continue
+			}
+			if strings.Contains(asset.SourceDenom, "/") || symbols[strings.ToLower(asset.SourceDenom)] {
+				continue
+			}
+			if sourceDenomCount[asset.SourceDenom] == 1 {
+				baseMapRev[asset.CoinMinimalDenom] = asset.SourceDenom
 			}
 		}
 	}
@@ -446,12 +465,9 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 								continue
 							}
 							argArray[i] = transformedCoin
-						} else {
-							if _, ok := assetMap[lowerCaseArg]; ok {
-								// In this case, we just need to replace the denom with the base denom
-								argArray[i] = assetMap[lowerCaseArg].Base
-							}
 						}
+						// A bare symbol is not replaced, since symbols such as "test", "auto" and "block" are also
+						// ordinary argument and flag values (key names, --gas auto, --broadcast-mode block).
 					}
 					args[i] = strings.Join(argArray, ",")
 				}
@@ -474,11 +490,6 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 								continue
 							}
 							lowerCaseFlagValueArray[i] = transformedCoin
-						} else {
-							if _, ok := assetMap[lowerCaseFlagValue]; ok {
-								// Otherwise, we just need to replace the denom with the base denom
-								lowerCaseFlagValueArray[i] = assetMap[lowerCaseFlagValue].Base
-							}
 						}
 					}
 					newLowerCaseFlagValue := strings.Join(lowerCaseFlagValueArray, ",")
@@ -1137,10 +1148,10 @@ Outputs:
 			}
 
 			if chainID == mainnetId {
-				assetListURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmosis-1/osmosis-1.assetlist.json"
+				assetListURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmosis-1/generated/frontend/assetlist.json"
 				fileName = filepath.Join(homeDir, "config", "osmosis-1-assetlist-manual.json")
 			} else if chainID == testnetId {
-				assetListURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmo-test-5/osmo-test-5.assetlist.json"
+				assetListURL = "https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmo-test-5/generated/frontend/assetlist.json"
 				fileName = filepath.Join(homeDir, "config", "osmo-test-5-assetlist-manual.json")
 			} else {
 				return nil
@@ -1152,6 +1163,9 @@ Outputs:
 				return err
 			}
 			defer resp.Body.Close()
+			if resp.StatusCode != http.StatusOK {
+				return fmt.Errorf("fetching %s: %s", assetListURL, resp.Status)
+			}
 
 			// Create a new file
 			out, err := os.Create(fileName)

@@ -30,10 +30,10 @@ function http_get() {
 
 # Download mainnet asset list
 http_get \
-	"https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmosis-1/osmosis-1.assetlist.json" \
+	"https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmosis-1/generated/frontend/assetlist.json" \
 	./cmd/osmosisd/cmd/osmosis-1-assetlist.json
 
 # Download testnet asset list
 http_get \
-	"https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmo-test-5/osmo-test-5.assetlist.json" \
+	"https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmo-test-5/generated/frontend/assetlist.json" \
 	./cmd/osmosisd/cmd/osmo-test-5-assetlist.json
