@@ -30,6 +30,7 @@ func TestBuildAssetMaps(t *testing.T) {
 		{Symbol: "OLD", Decimals: 6},
 		{Symbol: "PSTAKE", CoinMinimalDenom: "ibc/PSTAKE", SourceDenom: "ibc/A6E3AF63", Decimals: 18},
 		{Symbol: "INJ", CoinMinimalDenom: "ibc/INJ", SourceDenom: "inj", Decimals: 18},
+		{Symbol: "BTC.int3", CoinMinimalDenom: "ibc/BTCINT3", SourceDenom: "ibc/BTCINT3", Decimals: 8},
 	}
 	baseMap, baseMapRev := buildAssetMaps(assets, true, true)
 
@@ -40,6 +41,14 @@ func TestBuildAssetMaps(t *testing.T) {
 	coin, err = transformCoinValueToBaseInt("2", "eth.axl", baseMap)
 	require.NoError(t, err)
 	require.Equal(t, "2000000000000000000ibc/AXLETH", coin)
+
+	// A symbol containing digits is parsed and converted; a denom with a slash is never matched.
+	match := coinArgRegex.FindStringSubmatch("2.5btc.int3")
+	require.Equal(t, []string{"2.5btc.int3", "2.5", "btc.int3"}, match)
+	coin, err = transformCoinValueToBaseInt(match[1], match[2], baseMap)
+	require.NoError(t, err)
+	require.Equal(t, "250000000ibc/BTCINT3", coin)
+	require.Nil(t, coinArgRegex.FindStringSubmatch("100ibc/abc"))
 
 	// A symbol shared by two assets and an entry without a denom are never converted.
 	_, err = transformCoinValueToBaseInt("1", "dup", baseMap)

@@ -80,6 +80,12 @@ import (
 	osmosis "github.com/osmosis-labs/osmosis/v32/app"
 )
 
+// coinArgRegex matches a lowercased CLI value that is an amount followed by a symbol ("1.5usdc",
+// "2btc.int3"). The symbol must start with a letter so it can't be confused with the amount; it may
+// then contain digits, dots and dashes, as frontend symbols do. Denoms with a slash (ibc/..., factory/...)
+// never match and are passed through.
+var coinArgRegex = regexp.MustCompile(`^([\d.]+)([a-z][a-z0-9.\-]*)$`)
+
 type AssetList struct {
 	Assets []Asset `json:"assets"`
 }
@@ -451,11 +457,9 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 				for i, arg := range args {
 					argArray := strings.Split(arg, ",")
 
-					re := regexp.MustCompile(`^([\d.]+)(\D+)$`)
-
 					for i, singleArg := range argArray {
 						lowerCaseArg := strings.ToLower(singleArg)
-						match := re.FindStringSubmatch(lowerCaseArg)
+						match := coinArgRegex.FindStringSubmatch(lowerCaseArg)
 						if len(match) == 3 {
 							value, denom := match[1], match[2]
 							// If the index has a length of 3 then it has a number and a denom (this is a coin object)
@@ -477,10 +481,8 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 					lowerCaseFlagValue := strings.ToLower(flag.Value.String())
 					lowerCaseFlagValueArray := strings.Split(lowerCaseFlagValue, ",")
 
-					re := regexp.MustCompile(`^([\d.]+)(\D+)$`)
-
 					for i, lowerCaseFlagValue := range lowerCaseFlagValueArray {
-						match := re.FindStringSubmatch(lowerCaseFlagValue)
+						match := coinArgRegex.FindStringSubmatch(lowerCaseFlagValue)
 						if len(match) == 3 {
 							value, denom := match[1], match[2]
 							// If the index has a length of 3 then it has a number and a denom (this is a coin object)
