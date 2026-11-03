@@ -8,13 +8,11 @@ import (
 )
 
 type (
-	ErrInvalidRatio                  = invalidRatioError
-	ErrInsufficientDevVestingBalance = insufficientDevVestingBalanceError
+	ErrInvalidRatio = invalidRatioError
 )
 
 const (
-	EmptyWeightedAddressReceiver = emptyWeightedAddressReceiver
-	DeveloperVestingAmount       = developerVestingAmount
+	DeveloperVestingAmount = developerVestingAmount
 )
 
 var GetProportions = getProportions
@@ -25,10 +23,6 @@ func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.
 
 func (k Keeper) DistributeToModule(ctx sdk.Context, recipientModule string, mintedCoin sdk.Coin, proportion osmomath.Dec) (osmomath.Int, error) {
 	return k.distributeToModule(ctx, recipientModule, mintedCoin, proportion)
-}
-
-func (k Keeper) DistributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.Coin, developerRewardsProportion osmomath.Dec, developerRewardsReceivers []types.WeightedAddress) (osmomath.Int, error) {
-	return k.distributeDeveloperRewards(ctx, totalMintedCoin, developerRewardsProportion, developerRewardsReceivers)
 }
 
 func (k Keeper) GetLastReductionEpochNum(ctx sdk.Context) int64 {
