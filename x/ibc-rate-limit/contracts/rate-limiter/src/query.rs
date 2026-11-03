@@ -1,9 +1,7 @@
+use crate::blocking::effective_restriction;
 use crate::state::{
     path::Path,
-    storage::{
-        ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM, MESSAGE_QUEUE, RATE_LIMIT_TRACKERS,
-        RBAC_PERMISSIONS,
-    },
+    storage::{MESSAGE_QUEUE, RATE_LIMIT_TRACKERS, RBAC_PERMISSIONS},
 };
 use cosmwasm_std::{to_binary, Binary, StdResult};
 use cosmwasm_std::{Order::Ascending, StdError, Storage};
@@ -55,8 +53,15 @@ pub fn get_queued_message(storage: &dyn Storage, id: String) -> StdResult<Binary
     )
 }
 
+/// Returns the channels a denom is restricted to, exactly as
+/// check_restricted_denoms would apply them on a send. Accepts the packet-form
+/// denom (transfer/<channel>/<base>) or the ibc/HASH form; both resolve to
+/// the same canonical key.
 pub fn get_denom_restrictions(storage: &dyn Storage, denom: String) -> StdResult<Binary> {
-    to_binary(&ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM.load(storage, denom)?)
+    match effective_restriction(storage, &denom)? {
+        Some(channels) => to_binary(&channels),
+        None => Err(StdError::not_found(format!("restrictions for {denom}"))),
+    }
 }
 
 #[cfg(test)]

@@ -21,7 +21,7 @@ build-help:
 	@echo "  reproducible-arm64               Build reproducible arm64 binary"
 
 build-check-version:
-	@echo "Go version: $(GO_MAJOR_VERSION).$(GO_MINOR_VERSION)"
+	@echo "Go version: $(GO_MAJOR_VERSION).$(GO_MINOR_VERSION).$(GO_PATCH_VERSION)"
 	@if [ $(GO_MAJOR_VERSION) -gt $(GO_MINIMUM_MAJOR_VERSION) ]; then \
 		echo "Go version is sufficient"; \
 		exit 0; \
@@ -29,6 +29,9 @@ build-check-version:
 		echo '$(GO_VERSION_ERR_MSG)'; \
 		exit 1; \
 	elif [ $(GO_MINOR_VERSION) -lt $(GO_MINIMUM_MINOR_VERSION) ]; then \
+		echo '$(GO_VERSION_ERR_MSG)'; \
+		exit 1; \
+	elif [ $(GO_MINOR_VERSION) -eq $(GO_MINIMUM_MINOR_VERSION) ] && [ 0$(GO_PATCH_VERSION) -lt 0$(GO_MINIMUM_PATCH_VERSION) ]; then \
 		echo '$(GO_VERSION_ERR_MSG)'; \
 		exit 1; \
 	fi

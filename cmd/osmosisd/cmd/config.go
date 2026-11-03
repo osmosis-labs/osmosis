@@ -174,12 +174,11 @@ node = "{{ .Node }}"
 broadcast-mode = "{{ .BroadcastMode }}"
 
 # Human-readable denoms: Input
-# If enabled, when using CLI, user can input 0 exponent denoms (atom, scrt, avax, wbtc, etc.) instead of their ibc equivalents.
+# If enabled, when using CLI, user can input asset symbols as shown in the Osmosis frontend (atom, usdc, eth.axl, etc.) instead of their full denoms.
 # Note, this will also change the coin's value to it's base value if the input or flag is a coin.
+# Only an amount followed by a symbol is converted. Anything else, including base units such as uatom, is passed through unchanged.
 # Example:
 #  		* 10.45atom input will automatically change to 10450000ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
-#  		* uakt will change to ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4
-#		* 12000000uscrt will change to 12000000ibc/0954E1C28EB7AF5B72D24F3BC2B47BBB2FDF91BDDFD57B74B99E133AED40972A
 # This feature isn't stable yet, and outputs will change in subsequent releases
 human-readable-denoms-input = {{ .HumanReadableDenomsInput }}
 

@@ -51,8 +51,8 @@ pub mod tests {
         period_end: Timestamp,
     ) {
         assert_eq!(value.quota.name, quota_name);
-        assert_eq!(value.quota.max_percentage_send, send_recv.0);
-        assert_eq!(value.quota.max_percentage_recv, send_recv.1);
+        assert_eq!(value.quota.max_percentage_send, Some(send_recv.0));
+        assert_eq!(value.quota.max_percentage_recv, Some(send_recv.1));
         assert_eq!(value.quota.duration, duration);
         assert_eq!(value.flow.inflow, inflow);
         assert_eq!(value.flow.outflow, outflow);

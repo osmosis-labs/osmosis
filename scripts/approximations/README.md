@@ -45,21 +45,27 @@ the approximation, and the number of terms to be used. For the full parameter li
 
 ## Usage
 
-Assuming that you are in the root of the repository and have Sympy installed:
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/). From the
+repository root:
 
 ```bash
-# Create a virtual environment.
-python3 -m venv ~/approx-venv
+# Install the locked environment (uv downloads Python 3.11 if needed).
+uv sync --project scripts/approximations --locked
 
-# Start the environment
-source ~/approx-venv/bin/activate
+# Run the script without activating a virtual environment.
+uv run --project scripts/approximations --locked python scripts/approximations/main.py
 
-# Install dependencies in the virtual environment.
-pip install -r scripts/approximations/requirements.txt
-
-# Run the script.
-python3 scripts/approximations/main.py
-
-# Run tests
-python3 scripts/approximations/rational_test.py
+# Run tests, including headless plotting checks.
+uv run --project scripts/approximations --locked python -m unittest discover -s scripts/approximations -p '*_test.py'
 ```
+
+Python is restricted to 3.11 because the pinned NumPy and Matplotlib versions
+predate Python 3.12, while Pillow requires 3.11 or newer. The unused PyQt5 pins
+have been removed; Matplotlib uses its available default backend. Interactive
+plots require a working GUI backend (for example, Tk installed with Python).
+For headless execution, set `MPLBACKEND=Agg`.
+
+`pyproject.toml` replaces `requirements.txt`; commit `uv.lock` when changing
+dependencies. To update a pin, run `uv add --project scripts/approximations
+'package==version'`, rerun the tests, and commit both files. The `--locked` flag
+rejects stale lockfiles.

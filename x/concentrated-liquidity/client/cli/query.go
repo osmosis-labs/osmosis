@@ -13,6 +13,7 @@ import (
 func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdPools)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetTotalLiquidity)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetUserPositions)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetPositionById)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetClaimableSpreadRewards)
@@ -100,9 +101,9 @@ func GetCFMMPoolIdLinkFromConcentratedPoolId() (*osmocli.QueryDescriptor, *query
 func GetTotalLiquidity() (*osmocli.QueryDescriptor, *queryproto.GetTotalLiquidityRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "total-liquidity",
-		Short: "Query total liquidity across all concentrated pool",
+		Short: "Query total liquidity across all concentrated pools",
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} total-liquidity 1`,
+{{.CommandPrefix}} total-liquidity`,
 	}, &queryproto.GetTotalLiquidityRequest{}
 }
 

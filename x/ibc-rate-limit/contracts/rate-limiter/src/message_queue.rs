@@ -1,4 +1,4 @@
-use cosmwasm_std::{DepsMut, Env, MessageInfo, Response, Storage};
+use cosmwasm_std::{DepsMut, Env, MessageInfo, Response, StdError, Storage};
 
 use crate::{
     error::ContractError,
@@ -72,7 +72,10 @@ pub fn queue_message(
     info: MessageInfo,
 ) -> Result<String, ContractError> {
     let timelock_delay = TIMELOCK_DELAY.load(deps.storage, info.sender.to_string())?;
-    let message_id = format!("{}_{}", env.block.height, env.transaction.unwrap().index);
+    let transaction = env.transaction.ok_or_else(|| {
+        StdError::generic_err("messages can only be queued from within a transaction")
+    })?;
+    let message_id = format!("{}_{}", env.block.height, transaction.index);
     MESSAGE_QUEUE.push_back(
         deps.storage,
         &QueuedMessage {
@@ -193,11 +196,7 @@ mod tests {
         let foobar_test_msg = ExecuteMsg::AddPath {
             channel_id: "channel".to_string(),
             denom: "denom".to_string(),
-            quotas: vec![QuotaMsg {
-                name: "quota".to_string(),
-                duration: 5,
-                send_recv: (10, 10),
-            }],
+            quotas: vec![QuotaMsg::new("quota", 5, 10, 10)],
         };
         let foobarbaz_test_msg = ExecuteMsg::SetTimelockDelay {
             signer: "gov".to_string(),

@@ -1,18 +1,18 @@
-# This workflow pushes new docker images to osmolabs/osmosis-dev and osmolabs/osmosis-e2e-init-chain on these events:
+# This workflow pushes new docker images to ghcr.io/osmosis-labs/osmosis-dev and ghcr.io/osmosis-labs/osmosis-e2e-init-chain on these events:
 #
 # 1. Every new tag containing a release candidate (e.g. `v1.2.3-rc4`).
-#     `osmolabs/osmosis-dev:1.2.3-rc4` is pushed.
+#     `ghcr.io/osmosis-labs/osmosis-dev:1.2.3-rc4` is pushed.
 # 2. Every new commit to the main branch
-#     `osmolabs/osmosis-dev:main-{SHORT_SHA}-$(date +%s)` is pushed.
+#     `ghcr.io/osmosis-labs/osmosis-dev:main-{SHORT_SHA}-$(date +%s)` is pushed.
 # 3. Every new commit to a development branch vN.x (e.g. `v1.x`)
-#     `osmolabs/osmosis-dev-v1.x:{SHORT_SHA}-$(date +%s)` is pushed.
+#     `ghcr.io/osmosis-labs/osmosis-dev:v1.x-{SHORT_SHA}-$(date +%s)` is pushed.
 #
 # Note: $(date +%s) is used to sort the tags in the docker registry.
 #
-# All the images above have support for linux/amd64 (not linux/arm64).
+# All the images above have support for linux/amd64 and linux/arm64.
 # All the images are based on an alpine image for easy debugging.
 
-name: Push Dev and E2E Images to Docker
+name: Publish Dev and E2E Images to GHCR
 
 on:
   workflow_dispatch:
@@ -31,14 +31,17 @@ on:
 
 env:
   RUNNER_BASE_IMAGE_ALPINE: alpine:3.20
-  OSMOSIS_DEV_IMAGE_REPOSITORY: osmolabs/osmosis-dev
-  OSMOSIS_INIT_CHAIN_IMAGE_REPOSITORY: osmolabs/osmosis-e2e-init-chain
-  OSMOSIS_DEV_IMAGE_COSMOVISOR_REPOSITORY: osmolabs/osmosis-dev-cosmovisor
+  OSMOSIS_DEV_IMAGE_REPOSITORY: ghcr.io/osmosis-labs/osmosis-dev
+  OSMOSIS_INIT_CHAIN_IMAGE_REPOSITORY: ghcr.io/osmosis-labs/osmosis-e2e-init-chain
+  OSMOSIS_DEV_IMAGE_COSMOVISOR_REPOSITORY: ghcr.io/osmosis-labs/osmosis-dev-cosmovisor
   COSMOVISOR_VERSION: v1.5.0
 
 jobs:
   push-docker-images:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       -
         name: Check out repo
@@ -53,11 +56,12 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       -
-        name: Login to DockerHub
+        name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       -
         name: Find go version
         run: |
@@ -86,6 +90,8 @@ jobs:
           file: Dockerfile
           context: .
           push: true
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
           platforms: linux/amd64,linux/arm64
           build-args: |
             GO_VERSION=${{ env.GO_VERSION }}
@@ -101,6 +107,8 @@ jobs:
           file: tests/e2e/initialization/init.Dockerfile
           context: .
           push: true
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
           platforms: linux/amd64,linux/arm64
           build-args: |
             E2E_SCRIPT_NAME=chain
@@ -113,6 +121,8 @@ jobs:
           file: Dockerfile.cosmovisor
           context: .
           push: true
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
           platforms: linux/amd64,linux/arm64
           build-args: |
             GO_VERSION=${{ env.GO_VERSION }}

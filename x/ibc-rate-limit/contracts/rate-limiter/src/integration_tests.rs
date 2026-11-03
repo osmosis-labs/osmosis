@@ -124,6 +124,7 @@ fn expiration() {
             denom: "denom".to_string(),
             amount: Uint256::from_u128(300),
             quota_name: "weekly".to_string(),
+            bound: "percentage".to_string(),
             used: Uint256::from_u128(300),
             max: Uint256::from_u128(300),
             reset: Timestamp::from_nanos(1572402219879305533),
@@ -700,11 +701,7 @@ fn test_execute_edit_path_quota() {
     let management_msg = ExecuteMsg::EditPathQuota {
         channel_id: "any".to_string(),
         denom: "denom".to_string(),
-        quota: QuotaMsg {
-            send_recv: (81, 58),
-            name: "monthly".to_string(),
-            duration: RESET_TIME_MONTHLY,
-        },
+        quota: QuotaMsg::new("monthly", RESET_TIME_MONTHLY, 81, 58),
     };
     let cosmos_msg = cw_rate_limit_contract.call(management_msg).unwrap();
     // non gov cant invoke
@@ -729,8 +726,8 @@ fn test_execute_edit_path_quota() {
         .iter()
         .find(|rate_limit| rate_limit.quota.name.eq("monthly"))
         .unwrap();
-    assert_eq!(monthly_quota.quota.max_percentage_send, 81);
-    assert_eq!(monthly_quota.quota.max_percentage_recv, 58);
+    assert_eq!(monthly_quota.quota.max_percentage_send, Some(81));
+    assert_eq!(monthly_quota.quota.max_percentage_recv, Some(58));
 }
 #[test]
 fn test_execute_remove_message() {

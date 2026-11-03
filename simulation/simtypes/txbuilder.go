@@ -18,11 +18,6 @@ import (
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-//nolint:deadcode,unused
-func noopTxBuilder() func(ctx sdk.Context, msg sdk.Msg) (sdk.Tx, error) {
-	return func(sdk.Context, sdk.Msg) (sdk.Tx, error) { return nil, errors.New("unimplemented") }
-}
-
 // TODO: Comeback and clean this up to not suck
 func (sim *SimCtx) defaultTxBuilder(
 	ctx sdk.Context,

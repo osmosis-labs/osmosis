@@ -10,6 +10,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v32/app/keepers"
+	appparams "github.com/osmosis-labs/osmosis/v32/app/params"
 	"github.com/osmosis-labs/osmosis/v32/app/upgrades"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v32/x/incentives/keeper"
 	mintkeeper "github.com/osmosis-labs/osmosis/v32/x/mint/keeper"
@@ -17,8 +18,8 @@ import (
 )
 
 // CreateUpgradeHandler returns the v33 upgrade handler. After the module migrations it removes the
-// developer rewards share from mint distribution and recovers the HUAHUA held by gauges 1954-1959
-// (see HuahuaStuckGauges).
+// developer rewards share from mint distribution, recovers the HUAHUA held by gauges 1954-1959
+// (see HuahuaStuckGauges) and moves OSMO to the burn address.
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
@@ -34,6 +35,13 @@ func CreateUpgradeHandler(
 		}
 
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		if sdkCtx.ChainID() == MainnetChainID {
+			if err := moveOsmoToBurnAddress(sdkCtx, keepers); err != nil {
+				return nil, err
+			}
+		} else {
+			sdkCtx.Logger().Info("skipping v33 OSMO burn transfer on non-mainnet chain", "chain_id", sdkCtx.ChainID())
+		}
 
 		// Removing the developer rewards share changes the mint schedule, so a failure halts the upgrade.
 		if err := removeDeveloperRewardsFromMint(sdkCtx, keepers.MintKeeper); err != nil {
@@ -53,6 +61,30 @@ func CreateUpgradeHandler(
 
 		return migrations, nil
 	}
+}
+
+// moveOsmoToBurnAddress sends each source account's entire uosmo balance at upgrade
+// time. Other denoms remain in the source accounts. Empty balances are skipped.
+func moveOsmoToBurnAddress(ctx sdk.Context, keepers *keepers.AppKeepers) error {
+	to, err := sdk.AccAddressFromBech32(OsmoBurnAddress)
+	if err != nil {
+		return fmt.Errorf("v33 OSMO burn recipient: %w", err)
+	}
+	for _, source := range OsmoBurnSourceAddresses {
+		from, err := sdk.AccAddressFromBech32(source)
+		if err != nil {
+			return fmt.Errorf("v33 OSMO burn source %s: %w", source, err)
+		}
+		balance := keepers.BankKeeper.GetBalance(ctx, from, appparams.BaseCoinUnit)
+		if balance.IsZero() {
+			continue
+		}
+		if err := keepers.BankKeeper.SendCoins(ctx, from, to, sdk.NewCoins(balance)); err != nil {
+			return fmt.Errorf("v33 moving OSMO from %s to burn address: %w", source, err)
+		}
+		ctx.Logger().Info("v33 upgrade: OSMO moved to burn address", "from", source, "to", OsmoBurnAddress, "amount", balance.String())
+	}
+	return nil
 }
 
 // recoverHuahuaFromStuckGauges finishes the stuck HUAHUA gauges and sends their undistributed coins

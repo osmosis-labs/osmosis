@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -26,7 +25,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v32/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v32/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v32/x/poolmanager/types"
 )
 
@@ -382,61 +380,6 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 		}
 
 		msg.PoolParams.SmoothWeightChangeParams = &smoothWeightParams
-	}
-
-	return txf, msg, nil
-}
-
-// Apologies to whoever has to touch this next, this code is horrendous
-func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	flags, err := parseCreateStableswapPoolFlags(fs)
-	if err != nil {
-		return txf, nil, fmt.Errorf("failed to parse pool: %w", err)
-	}
-
-	deposit, err := ParseCoinsNoSort(flags.InitialDeposit)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	spreadFactor, err := osmomath.NewDecFromStr(flags.SwapFee)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	exitFee, err := osmomath.NewDecFromStr(flags.ExitFee)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	poolParams := &stableswap.PoolParams{
-		SwapFee: spreadFactor,
-		ExitFee: exitFee,
-	}
-
-	scalingFactors := []uint64{}
-	trimmedSfString := strings.Trim(flags.ScalingFactors, "[] {}")
-	if len(trimmedSfString) > 0 {
-		ints := strings.Split(trimmedSfString, ",")
-		for _, i := range ints {
-			u, err := strconv.ParseUint(i, 10, 64)
-			if err != nil {
-				return txf, nil, err
-			}
-			scalingFactors = append(scalingFactors, u)
-		}
-		if len(scalingFactors) != len(deposit) {
-			return txf, nil, fmt.Errorf("number of scaling factors doesn't match number of assets")
-		}
-	}
-
-	msg := &stableswap.MsgCreateStableswapPool{
-		Sender:                  clientCtx.GetFromAddress().String(),
-		PoolParams:              poolParams,
-		InitialPoolLiquidity:    deposit,
-		ScalingFactors:          scalingFactors,
-		ScalingFactorController: flags.ScalingFactorController,
-		FuturePoolGovernor:      flags.FutureGovernor,
 	}
 
 	return txf, msg, nil

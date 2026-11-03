@@ -29,9 +29,6 @@ const (
 
 	maxDecBitLen = maxBitLen + BigDecimalPrecisionBits
 
-	// max number of iterations in ApproxRoot function
-	maxApproxRootIterations = 100
-
 	// max number of iterations in Log2 function
 	maxLog2Iterations = 300
 )
@@ -40,18 +37,15 @@ var (
 	defaultBigDecPrecisionReuse = new(big.Int).Exp(big.NewInt(10), big.NewInt(BigDecPrecision), nil)
 	precisionReuseSDKDec        = new(big.Int).Exp(big.NewInt(10), big.NewInt(DecPrecision), nil)
 
-	bigDecDecPrecision           = new(big.Int).Mul(defaultBigDecPrecisionReuse, precisionReuseSDKDec)
 	squaredPrecisionReuse        = new(big.Int).Mul(defaultBigDecPrecisionReuse, defaultBigDecPrecisionReuse)
 	bigDecDecPrecisionFactorDiff = new(big.Int).Exp(big.NewInt(10), big.NewInt(BigDecPrecision-DecPrecision), nil)
 
-	tenTimesPrecision   = new(big.Int).Exp(big.NewInt(10), big.NewInt(BigDecPrecision+1), nil)
 	fivePrecision       = new(big.Int).Quo(defaultBigDecPrecisionReuse, big.NewInt(2))
 	fivePrecisionSDKDec = new(big.Int).Quo(precisionReuseSDKDec, big.NewInt(2))
 
 	precisionMultipliers []*big.Int
 	zeroInt              = big.NewInt(0)
 	oneInt               = big.NewInt(1)
-	fiveInt              = big.NewInt(5)
 	tenInt               = big.NewInt(10)
 
 	// log_2(e)
@@ -803,13 +797,6 @@ func chopPrecisionAndRoundSdkDec(d *big.Int) *big.Int {
 		}
 		return quo.Add(quo, oneInt)
 	}
-}
-
-// chopPrecisionAndRoundUpDec removes DecPrecision amount of rightmost digits and rounds up.
-// Non-mutative.
-func chopPrecisionAndRoundUpDec(d *big.Int) *big.Int {
-	copy := new(big.Int).Set(d)
-	return chopPrecisionAndRoundUpMut(copy, precisionReuseSDKDec)
 }
 
 func incBasedOnRem(rem *big.Int, d *big.Int) *big.Int {

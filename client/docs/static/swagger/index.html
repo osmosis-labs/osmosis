@@ -1,60 +1,84 @@
-<!-- HTML for static distribution bundle build -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>Swagger UI</title>
-    <link rel="stylesheet" type="text/css" href="swagger-ui.css" >
-    <link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32" />
-    <link rel="icon" type="image/png" href="favicon-16x16.png" sizes="16x16" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Osmosis REST API</title>
+    <link rel="stylesheet" type="text/css" href="swagger-ui.css">
+    <link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="favicon-16x16.png" sizes="16x16">
     <style>
-      html
-      {
-        box-sizing: border-box;
-        overflow: -moz-scrollbars-vertical;
-        overflow-y: scroll;
-      }
+      html { box-sizing: border-box; overflow-y: scroll; }
+      *, *::before, *::after { box-sizing: inherit; }
+      body { margin: 0; background: #fafafa; }
 
-      *,
-      *:before,
-      *:after
-      {
-        box-sizing: inherit;
+      .site-header {
+        background: #1f1a3d;
+        color: #fff;
+        font-family: sans-serif;
       }
+      .site-header .inner {
+        max-width: 1460px;
+        margin: 0 auto;
+        padding: 14px 20px;
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+      }
+      .site-header .name { font-size: 20px; font-weight: 700; }
+      .site-header .sub { font-size: 14px; color: #c9c2f2; }
+      .site-header a {
+        margin-left: auto;
+        font-size: 14px;
+        color: #c9c2f2;
+        text-decoration: none;
+      }
+      .site-header a:hover { color: #fff; }
 
-      body
-      {
-        margin:0;
-        background: #fafafa;
+      /* Endpoints are grouped by protobuf package; keep the group headings compact. */
+      .swagger-ui .info { margin: 32px 0 16px; }
+      .swagger-ui .opblock-tag { font-family: monospace; font-size: 18px; }
+      .swagger-ui .filter-container .operation-filter-input { border-color: #b9b2e0; }
+
+      /* Swagger UI is desktop-first; keep long package names and paths inside the viewport. */
+      @media (max-width: 640px) {
+        .site-header .inner { padding: 12px 16px; flex-wrap: wrap; }
+        .swagger-ui .wrapper { padding: 0 16px; }
+        .swagger-ui .info .title { font-size: 26px; }
+        .swagger-ui .filter-container .operation-filter-input { width: 100%; }
+        .swagger-ui .opblock-tag { font-size: 15px; overflow-wrap: anywhere; }
+        .swagger-ui .opblock .opblock-summary { flex-wrap: wrap; }
+        .swagger-ui .opblock .opblock-summary-path { max-width: 100%; overflow-wrap: anywhere; }
+        .swagger-ui .opblock .opblock-summary-description { flex-basis: 100%; }
       }
     </style>
   </head>
 
   <body>
+    <header class="site-header">
+      <div class="inner">
+        <span class="name">Osmosis</span>
+        <span class="sub">REST API</span>
+        <a href="swagger.yaml" download>Download spec</a>
+      </div>
+    </header>
     <div id="swagger-ui"></div>
 
-    <script src="swagger-ui-bundle.js"> </script>
-    <script src="swagger-ui-standalone-preset.js"> </script>
+    <script src="swagger-ui-bundle.js"></script>
     <script>
-    window.onload = function() {
-
-      // Build a system
-      const ui = SwaggerUIBundle({
-        url: "./swagger.yaml",
-        dom_id: '#swagger-ui',
-        deepLinking: true,
-        presets: [
-          SwaggerUIBundle.presets.apis,
-          SwaggerUIStandalonePreset
-        ],
-        plugins: [
-          SwaggerUIBundle.plugins.DownloadUrl
-        ],
-        layout: "StandaloneLayout"
-      })
-
-      window.ui = ui
-    }
-  </script>
+      window.onload = function () {
+        window.ui = SwaggerUIBundle({
+          url: "swagger.yaml",
+          dom_id: "#swagger-ui",
+          layout: "BaseLayout",
+          deepLinking: true,
+          // ~50 packages and 300+ endpoints: start collapsed and searchable.
+          docExpansion: "none",
+          filter: true,
+          defaultModelsExpandDepth: -1,
+          displayRequestDuration: true,
+        });
+      };
+    </script>
   </body>
 </html>

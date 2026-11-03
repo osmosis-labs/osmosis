@@ -159,7 +159,7 @@ func (server msgServer) ExtendLockup(goCtx context.Context, msg *types.MsgExtend
 
 	err = server.keeper.ExtendLockup(ctx, msg.ID, owner, msg.Duration)
 	if err != nil {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	lock, err := server.keeper.GetLockByID(ctx, msg.ID)

@@ -173,7 +173,7 @@ func (n *NodeConfig) WithdrawPosition(from, liquidityOut string, positionId uint
 func (n *NodeConfig) InstantiateWasmContract(codeId, initMsg, from string) {
 	n.LogActionF("instantiating wasm contract %s with %s", codeId, initMsg)
 	cmd := []string{"osmosisd", "tx", "wasm", "instantiate", codeId, initMsg, fmt.Sprintf("--from=%s", from), "--no-admin", "--label=contract"}
-	n.LogActionF(strings.Join(cmd, " "))
+	n.LogActionF("%s", strings.Join(cmd, " "))
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully initialized")
@@ -182,7 +182,7 @@ func (n *NodeConfig) InstantiateWasmContract(codeId, initMsg, from string) {
 func (n *NodeConfig) WasmExecute(contract, execMsg, from string) {
 	n.LogActionF("executing %s on wasm contract %s from %s", execMsg, contract, from)
 	cmd := []string{"osmosisd", "tx", "wasm", "execute", contract, execMsg, fmt.Sprintf("--from=%s", from)}
-	n.LogActionF(strings.Join(cmd, " "))
+	n.LogActionF("%s", strings.Join(cmd, " "))
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully executed")
