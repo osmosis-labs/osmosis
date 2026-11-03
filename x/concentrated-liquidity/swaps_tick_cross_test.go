@@ -1282,6 +1282,20 @@ func (s *KeeperTestSuite) TestSwaps_Contiguous_Initialized_TickSpacingOne() {
 					amountInFromRounding, updatedNextCurSqrtPrice := estimateAmountInFromRounding(isZeroForOne, nextSqrtPrice, liqBigDec, osmomath.BigDecFromDec(amountOutDifference))
 					amountInToPreFund := amountIn.Add(amountInFromRounding)
 
+					// Swapping to the min/max tick drains the full range position. Rounding the amount out up
+					// requests slightly more than the pool can provide, which must error instead of partially filling.
+					if expectedSwapEndTick == types.MinCurrentTick || expectedSwapEndTick == types.MaxTick {
+						tokenOutDenom := pool.GetToken0()
+						if isZeroForOne {
+							tokenOutDenom = pool.GetToken1()
+						}
+						pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+						s.Require().NoError(err)
+						_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool, tokenInDenom, defaultTokenInMaxAmount, sdk.NewCoin(tokenOutDenom, amountOutRoundedUp), osmomath.ZeroDec())
+						s.Require().ErrorAs(err, &types.UnableToFulfillExactOutError{})
+						return
+					}
+
 					// Perform the swap in the desired direction.
 					if isZeroForOne {
 						amountOutCoin := sdk.NewCoin(pool.GetToken1(), amountOutRoundedUp)

@@ -676,6 +676,13 @@ func (k Keeper) computeInAmtGivenOut(
 		return SwapResult{}, PoolUpdates{}, fmt.Errorf("over charged problem swap in given out by %s", swapState.amountSpecifiedRemaining)
 	}
 
+	// The loop exits early when the sqrt price limit is reached. A caller-provided limit may intentionally
+	// stop the swap early, but reaching the min/max sqrt price means the pool cannot fill the exact amount out.
+	// Reporting that partial fill as success would return an amount in for less than the caller asked for.
+	if swapState.amountSpecifiedRemaining.GT(smallestDec) && (sqrtPriceLimit.Equal(types.MinSqrtPriceBigDec) || sqrtPriceLimit.Equal(types.MaxSqrtPriceBigDec)) {
+		return SwapResult{}, PoolUpdates{}, types.UnableToFulfillExactOutError{PoolId: poolId, DesiredTokenOut: desiredTokenOut, AmountRemaining: swapState.amountSpecifiedRemaining}
+	}
+
 	// Add spread reward growth per share to the pool-global spread reward accumulator.
 	if updateAccumulators {
 		spreadRewardAccumulator.AddToAccumulator(sdk.NewDecCoins(sdk.NewDecCoinFromDec(tokenInDenom, swapState.globalSpreadRewardGrowthPerUnitLiquidity)))

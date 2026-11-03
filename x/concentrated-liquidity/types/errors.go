@@ -853,6 +853,16 @@ func (e SwapNoProgressError) Error() string {
 	return fmt.Sprintf("ran out of iterations during swap. Possibly entered an infinite loop. Pool id (%d), user provided coin (%s)", e.PoolId, e.UserProvidedCoin)
 }
 
+type UnableToFulfillExactOutError struct {
+	PoolId          uint64
+	DesiredTokenOut sdk.Coin
+	AmountRemaining osmomath.Dec
+}
+
+func (e UnableToFulfillExactOutError) Error() string {
+	return fmt.Sprintf("insufficient liquidity in pool (%d) to fulfill exact amount out (%s), unfilled amount (%s)", e.PoolId, e.DesiredTokenOut, e.AmountRemaining)
+}
+
 type SwapNoProgressWithConsumptionError struct {
 	ComputedSqrtPrice osmomath.BigDec
 	AmountIn          osmomath.Dec
