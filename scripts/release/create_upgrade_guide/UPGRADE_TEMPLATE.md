@@ -43,7 +43,7 @@ If you have not previously configured Cosmovisor, follow this section; otherwise
 
 Cosmovisor is strongly recommended for validators to minimize downtime during upgrades. It automates the binary replacement process according to on-chain `SoftwareUpgrade` proposals.
 
-Documentation for Cosmovisor can be found [here](https://docs.cosmos.network/main/tooling/cosmovisor).
+Documentation for Cosmovisor can be found [here](https://docs.cosmos.network/sdk/v0.50/build/tooling/cosmovisor).
 
 #### Installation Steps
 
