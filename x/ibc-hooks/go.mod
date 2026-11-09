@@ -19,7 +19,7 @@ require (
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.19
 	github.com/spf13/cobra v1.10.1
 	google.golang.org/grpc v1.83.2
-	google.golang.org/protobuf v1.36.11
+	google.golang.org/protobuf v1.36.12
 )
 
 require (
