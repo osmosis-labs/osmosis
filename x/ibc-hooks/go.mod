@@ -197,7 +197,7 @@ require (
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
-	github.com/spf13/pflag v1.0.10 // indirect
+	github.com/spf13/pflag v1.1.0 // indirect
 	github.com/spf13/viper v1.21.0 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.7.0 // indirect
 	github.com/stretchr/testify v1.12.1 // indirect
