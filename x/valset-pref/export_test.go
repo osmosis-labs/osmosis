@@ -25,3 +25,7 @@ func (k Keeper) GetValsetRatios(ctx sdk.Context, delegator sdk.AccAddress,
 func (k Keeper) FormatToValPrefArr(ctx sdk.Context, delegations []stakingtypes.Delegation) ([]types.ValidatorPreference, error) {
 	return k.formatToValPrefArr(ctx, delegations)
 }
+
+func SortValRatiosDesc(ctx sdk.Context, valSetRatio []ValRatio) {
+	sortValRatiosDesc(ctx, valSetRatio)
+}

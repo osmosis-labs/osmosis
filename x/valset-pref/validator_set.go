@@ -22,6 +22,33 @@ type valSet struct {
 	Amount  osmomath.Dec
 }
 
+// DeterministicValRatioSortHeight is the osmosis-1 height from which validators are ordered by VRatio
+// with a stable sort. Before this height, sort.Slice was used. sort.Slice does not guarantee an order
+// for equal elements, and Go 1.24 changed the order it produces for ties. Nodes built with different
+// Go versions undelegated in different orders, wrote unbonding queue entries in different orders, and
+// halted the chain at height 74,955,153 (the split came from the single tx in block 74,955,152).
+const DeterministicValRatioSortHeight = 74_955_152
+
+// sortValRatiosDesc sorts valSetRatio in descending order of VRatio, in place.
+//
+// From DeterministicValRatioSortHeight onward, the sort is stable: equal VRatios keep their input
+// order, which is the store's iteration order of the delegator's delegations or preferences. That
+// result is defined by the spec, so it is the same for every Go version and sort implementation.
+//
+// Below that height, sort.Slice is kept so historical blocks replay unchanged. Its tie order depends
+// on the Go version the binary was built with, so replaying those blocks needs a build with the same
+// toolchain as the official release binaries.
+func sortValRatiosDesc(ctx sdk.Context, valSetRatio []ValRatio) {
+	less := func(i, j int) bool {
+		return valSetRatio[i].VRatio.GT(valSetRatio[j].VRatio)
+	}
+	if ctx.BlockHeight() >= DeterministicValRatioSortHeight {
+		sort.SliceStable(valSetRatio, less)
+		return
+	}
+	sort.Slice(valSetRatio, less)
+}
+
 type ValRatio struct {
 	ValAddr       sdk.ValAddress
 	Weight        osmomath.Dec
@@ -155,9 +182,7 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	}
 
 	// Step 3: Sort validators in descending order of VRatio.
-	sort.Slice(valSetRatio, func(i, j int) bool {
-		return valSetRatio[i].VRatio.GT(valSetRatio[j].VRatio)
-	})
+	sortValRatiosDesc(ctx, valSetRatio)
 
 	totalUnDelAmt := osmomath.NewInt(0)
 	var amountToUnDelegate osmomath.Int
@@ -268,9 +293,7 @@ func (k Keeper) UndelegateFromRebalancedValidatorSet(ctx sdk.Context, delegatorA
 	}
 
 	// Step 3: Sort validators in descending order of VRatio.
-	sort.Slice(valSetRatio, func(i, j int) bool {
-		return valSetRatio[i].VRatio.GT(valSetRatio[j].VRatio)
-	})
+	sortValRatiosDesc(ctx, valSetRatio)
 
 	totalUnDelAmt := osmomath.NewInt(0)
 	var amountToUnDelegate osmomath.Int
