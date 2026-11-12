@@ -1,0 +1,4 @@
+# TEST VALUES for a local chain (private keys are sha256 of "recoverylock-test-listed-<i>"). Replace with the real list at release time.
+osmo1p8v4sd70qvvg737wthgeuafc7hh20uf5yhkxqw
+osmo1udx7a8ujgc6h95qt9cpxdrcu4t5nkz8sk6nqus
+osmo19pl7sv85wc6hhrn9rtgu3p96yczdwft573z3j6

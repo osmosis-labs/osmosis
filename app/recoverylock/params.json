@@ -1,0 +1,18 @@
+{
+ "recovery_address": "osmo1ksdgkxhjctrgxrz6lw232f92fq7sr3hplcxk65",
+ "fee_payers": [
+  "osmo1j03vl40hflp3vqnww596qt0vxp9arzzwdrp4cc",
+  "osmo14a2cwlzs3xhkaysy6j98yp2c6fgnr8wx5du62q",
+  "osmo1qpwtnpt5fj8fgt9t62ymeunr2hax4f5g2evd6t",
+  "osmo10zqegayvn827uccv6yzrhxwh9sq2h4jpr6gw2y",
+  "osmo1wz6rx30vj0t6yr8as4axrd3zjpln8kcz3wxdky",
+  "osmo16n6yq5e8wz47cywl0ezj22r4xw5yypw7632gtf",
+  "osmo10swdqw97ntnv0wz3hmeujgaxhccn3g7g7yuvpg",
+  "osmo1v03vs0xrdkqpmz2s0s25092dzckeqdh9zk0cat"
+ ],
+ "activation_height": 1000000000,
+ "expiry_time": 4102444800,
+ "list_sha256": "27786f20c6c4ed068aaa675907be1409f1b904f99d4418d4e0680c5845e0e2f8",
+ "list_count": 3,
+ "test_values": true
+}
