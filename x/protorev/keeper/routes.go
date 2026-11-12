@@ -240,19 +240,11 @@ func (k Keeper) CalculateRoutePoolPoints(ctx sdk.Context, route poolmanagertypes
 		case poolmanagertypes.Concentrated:
 			totalWeight += infoByPoolType.Concentrated.Weight
 		case poolmanagertypes.CosmWasm:
-			weight, ok := uint64(0), false
 			pool, err := k.poolmanagerKeeper.GetPool(ctx, poolId)
 			if err != nil {
 				return 0, err
 			}
-			poolAddrString := pool.GetAddress().String()
-			for _, weightMap := range infoByPoolType.Cosmwasm.WeightMaps {
-				if weightMap.ContractAddress == poolAddrString {
-					weight = weightMap.Weight
-					ok = true
-					break
-				}
-			}
+			weight, ok := cosmwasmPoolWeight(infoByPoolType.Cosmwasm, pool)
 			if !ok {
 				return 0, fmt.Errorf("cosmwasm pool %d does not have a weight", poolId)
 			}
@@ -274,6 +266,41 @@ func (k Keeper) CalculateRoutePoolPoints(ctx sdk.Context, route poolmanagertypes
 	}
 
 	return totalWeight, nil
+}
+
+// cosmwasmPoolWeight returns the pool point weight of a cosmwasm pool. An entry for the pool's contract
+// address in WeightMaps takes precedence over an entry for its code id in CodeIdWeights. It returns false
+// if the pool has no weight, or if its contract entry has a weight of 0 (the pool is excluded).
+func cosmwasmPoolWeight(info types.CosmwasmPoolInfo, pool poolmanagertypes.PoolI) (uint64, bool) {
+	poolAddrString := pool.GetAddress().String()
+	for _, weightMap := range info.WeightMaps {
+		if weightMap.ContractAddress == poolAddrString {
+			return weightMap.Weight, weightMap.Weight != 0
+		}
+	}
+
+	codeIdPool, ok := pool.(interface{ GetCodeId() uint64 })
+	if !ok {
+		return 0, false
+	}
+	codeId := codeIdPool.GetCodeId()
+	for _, codeIdWeight := range info.CodeIdWeights {
+		if codeIdWeight.CodeId == codeId {
+			return codeIdWeight.Weight, codeIdWeight.Weight != 0
+		}
+	}
+
+	return 0, false
+}
+
+// isRoutablePool returns whether routes through the pool can be assigned pool points. Only cosmwasm
+// pools can lack a weight; the weights of the other pool types are validated to be non-zero.
+func isRoutablePool(info types.InfoByPoolType, pool poolmanagertypes.PoolI) bool {
+	if pool.GetType() != poolmanagertypes.CosmWasm {
+		return true
+	}
+	_, ok := cosmwasmPoolWeight(info.Cosmwasm, pool)
+	return ok
 }
 
 // IsValidPool checks if the pool is active and exists

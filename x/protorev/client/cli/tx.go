@@ -163,8 +163,14 @@ func CmdSetInfoByPoolType() *osmocli.TxCliDesc {
 				"weight_maps" : [
 					{"contract_address" : "cosmos123...", "weight" : 1}
 				],
+				"code_id_weights" : [
+					{"code_id" : 1, "weight" : 1}
+				],
 			},
 		}
+		A cosmwasm pool's weight is its contract address entry in weight_maps if there is one,
+		otherwise the entry for its contract's code id in code_id_weights. A weight_maps weight
+		of 0 excludes that pool. Cosmwasm pools with no weight are not routed through.
 		`,
 		Example:          fmt.Sprintf(`$ %s tx protorev set-info-by-pool-type pool_info.json --from mykey`, version.AppName),
 		NumArgs:          1,

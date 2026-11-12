@@ -213,6 +213,8 @@ type PoolWeights struct {
 }
 ```
 
+CosmWasm pools are weighted through `CosmwasmPoolInfo`. A pool's weight is the `weight_maps` entry for its contract address if there is one, otherwise the `code_id_weights` entry for the code id its contract runs. A `weight_maps` weight of 0 excludes that pool, for example an empty pool on a weighted code id. A CosmWasm pool with no weight is not routed through.
+
 ### GenesisState
 
 There is only one configurable parameter for the genesis state —> whether protorev is enabled or not.
@@ -237,7 +239,7 @@ There are two primary methods for route generation: **Highest Liquidity Pools** 
 
 The highest liquidity pool method will always create cyclic arbitrage routes that have three pools. The routes that are created will always start and end with one of the denominations that are stored in BaseDenoms. The pool swapped against that the `postHandler` processes will always be the 2nd pool in the three-pool cyclic arbitrage route. 
 
-**Highest Liquidity Pools:** Updated via the daily epoch, the module iterates through all the pools and stores the highest liquidity pool for every asset that pairs with any of the base denominations the module stores (for example, the osmo/juno key will have a single pool id stored, that pool id having the most liquidity out of all the osmo/juno pools). New base denominations can be added or removed on an as needed basis by the admin account. A base denomination is just another way of describing the denomination we want to use for cyclic arbitrage. This store is then used to create routes at runtime after analyzing a swap. This store is updated through the `epoch` hook and when the admin account submits a `MsgSetBaseDenoms` tx.
+**Highest Liquidity Pools:** Updated via the daily epoch, the module iterates through all the pools and stores the highest liquidity pool for every asset that pairs with any of the base denominations the module stores (for example, the osmo/juno key will have a single pool id stored, that pool id having the most liquidity out of all the osmo/juno pools). New base denominations can be added or removed on an as needed basis by the admin account. A base denomination is just another way of describing the denomination we want to use for cyclic arbitrage. This store is then used to create routes at runtime after analyzing a swap. This store is updated through the `epoch` hook and when the admin account submits a `MsgSetBaseDenoms` tx. CosmWasm pools without a weight (see below) are skipped, so the store holds the highest liquidity pool that routes can be built through. A weight change therefore reaches this store at the next update.
 
 The simplest way to conceptualize how the route is generated is by the following example. Assume we have two base denominations that `x/protorev` is currently tracking.
 
