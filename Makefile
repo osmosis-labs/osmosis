@@ -62,6 +62,14 @@ GO_VERSION_ERR_MSG = "ERROR: Go version $(GO_MINIMUM_MAJOR_VERSION).$(GO_MINIMUM
 
 export GO111MODULE = on
 
+# Go toolchain used to build osmosisd from source.
+# It must be the same Go version the release binaries are built with.
+# A different Go version can produce a binary that computes a different
+# app hash, and that halts the chain.
+# The go command downloads this version by itself if it is not installed.
+GO_TOOLCHAIN_VERSION := 1.26.10
+build install build-install-with-autocomplete: export GOTOOLCHAIN := go$(GO_TOOLCHAIN_VERSION)
+
 # process build tags
 
 build_tags = netgo
