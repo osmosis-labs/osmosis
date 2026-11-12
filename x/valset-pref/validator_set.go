@@ -22,12 +22,16 @@ type valSet struct {
 	Amount  osmomath.Dec
 }
 
-// DeterministicValRatioSortHeight is the osmosis-1 height from which validators are ordered by VRatio
-// with a stable sort. Before this height, sort.Slice was used. sort.Slice does not guarantee an order
-// for equal elements, and Go 1.24 changed the order it produces for ties. Nodes built with different
-// Go versions undelegated in different orders, wrote unbonding queue entries in different orders, and
-// halted the chain at height 74,955,153 (the split came from the single tx in block 74,955,152).
-const DeterministicValRatioSortHeight = 74_955_152
+// DeterministicValRatioSortHeight is the first osmosis-1 height at which validators are ordered by
+// VRatio with a stable sort. Before this height, sort.Slice was used. sort.Slice does not guarantee
+// an order for equal elements, and Go 1.24 changed the order it produces for ties. v32.0.0 nodes
+// built with Go 1.23 and with Go 1.24+ undelegated tied validators in different orders, wrote
+// unbonding queue entries in different orders, and split on the app hash of block 74,955,152
+// (a single MsgUndelegateFromRebalancedValidatorSet), halting the chain at 74,955,153.
+//
+// Block 74,955,152 itself stays on sort.Slice, so a binary built with Go 1.24+ reproduces the
+// state the official v32.0.0 release binaries (Go 1.26) committed for it.
+const DeterministicValRatioSortHeight = 74_955_153
 
 // sortValRatiosDesc sorts valSetRatio in descending order of VRatio, in place.
 //
@@ -36,8 +40,8 @@ const DeterministicValRatioSortHeight = 74_955_152
 // result is defined by the spec, so it is the same for every Go version and sort implementation.
 //
 // Below that height, sort.Slice is kept so historical blocks replay unchanged. Its tie order depends
-// on the Go version the binary was built with, so replaying those blocks needs a build with the same
-// toolchain as the official release binaries.
+// on the Go version the binary was built with: binaries must be built with Go 1.24 or later, matching
+// the official release binaries (go.mod enforces this).
 func sortValRatiosDesc(ctx sdk.Context, valSetRatio []ValRatio) {
 	less := func(i, j int) bool {
 		return valSetRatio[i].VRatio.GT(valSetRatio[j].VRatio)
