@@ -32,6 +32,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 		panic(err)
 	}
 
+	// Configure the pool info for genesis. This must be set before the pools are updated, since only pools
+	// that routes can be built through are stored.
+	k.SetInfoByPoolType(ctx, genState.InfoByPoolType)
+
 	// Update the pools on genesis.
 	if err := k.UpdatePools(ctx); err != nil {
 		panic(err)
@@ -76,9 +80,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 
 	// Set the number of pool points that have been consumed in the current block.
 	k.SetPointCountForBlock(ctx, genState.PointCountForBlock)
-
-	// Configure the pool info for genesis.
-	k.SetInfoByPoolType(ctx, genState.InfoByPoolType)
 
 	// Set the profits that have been collected by Protorev.
 	for _, coin := range genState.Profits {

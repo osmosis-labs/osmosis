@@ -11,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v32/app/apptesting"
 	appparams "github.com/osmosis-labs/osmosis/v32/app/params"
+	"github.com/osmosis-labs/osmosis/v32/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v32/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v32/x/protorev/types"
 )
@@ -185,6 +186,43 @@ func (s *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 			s.Require().Equal(tc.inputBaseDenomPools, tc.expectedBaseDenomPools)
 		})
 	}
+}
+
+// TestUpdateHighestLiquidityPoolsCosmwasmWeight tests that a cosmwasm pool without a weight is not stored as the highest
+// liquidity pool for a pair, even when it is deeper than a routable pool, and that it is once its code id has a weight.
+func (s *KeeperTestSuite) TestUpdateHighestLiquidityPoolsCosmwasmWeight() {
+	s.SetupPoolsTest()
+
+	// A balancer pool with a liquidity value of 100,000,000
+	s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("epochCw", osmomath.NewInt(10000)), sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000))))
+	balancerPoolId := s.createGAMMPool(
+		[]balancer.PoolAsset{
+			{Token: sdk.NewCoin("epochCw", osmomath.NewInt(10000)), Weight: osmomath.NewInt(1)},
+			{Token: sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10000)), Weight: osmomath.NewInt(1)},
+		},
+		osmomath.NewDecWithPrec(2, 3),
+		osmomath.NewDecWithPrec(0, 2),
+	)
+
+	// A deeper cosmwasm pool for the same pair, not covered by the weights set in the setup
+	cwFunds := sdk.NewCoins(sdk.NewCoin("epochCw", osmomath.NewInt(1000000000000)), sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(1000000000000)))
+	s.FundAcc(s.TestAccs[0], cwFunds)
+	cwPool := s.PrepareCustomTransmuterPool(s.TestAccs[0], []string{"epochCw", appparams.BaseCoinUnit})
+	s.JoinTransmuterPool(s.TestAccs[0], cwPool.GetId(), cwFunds)
+
+	highestLiquidityPoolId := func() uint64 {
+		baseDenomPools := map[string]map[string]keeper.LiquidityPoolStruct{"epochCw": {}}
+		s.Require().NoError(s.App.ProtoRevKeeper.UpdateHighestLiquidityPools(s.Ctx, baseDenomPools))
+		return baseDenomPools["epochCw"][appparams.BaseCoinUnit].PoolId
+	}
+
+	s.Require().Equal(balancerPoolId, highestLiquidityPoolId())
+
+	poolInfo := s.App.ProtoRevKeeper.GetInfoByPoolType(s.Ctx)
+	poolInfo.Cosmwasm.CodeIdWeights = []types.CodeIdWeight{{CodeId: cwPool.GetCodeId(), Weight: 4}}
+	s.App.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, poolInfo)
+
+	s.Require().Equal(cwPool.GetId(), highestLiquidityPoolId())
 }
 
 func contains(baseDenoms []types.BaseDenom, denomToMatch string) bool {
