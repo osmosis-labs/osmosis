@@ -14,6 +14,7 @@ import (
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 
 	osmoante "github.com/osmosis-labs/osmosis/v32/ante"
+	"github.com/osmosis-labs/osmosis/v32/app/recoverylock/sdk50"
 	v9 "github.com/osmosis-labs/osmosis/v32/app/upgrades/v9"
 
 	corestoretypes "cosmossdk.io/core/store"
@@ -55,6 +56,7 @@ func NewAnteHandler(
 	channelKeeper *ibckeeper.Keeper,
 	blockSDKParams BlockSDKAnteHandlerParams,
 	appCodec codec.Codec,
+	recoveryLock *sdk50.Lock,
 ) sdk.AnteHandler {
 	mempoolFeeOptions := txfeestypes.NewMempoolFeeOptions(appOpts)
 	mempoolFeeDecorator := txfeeskeeper.NewMempoolFeeDecorator(*txFeesKeeper, mempoolFeeOptions)
@@ -104,6 +106,10 @@ func NewAnteHandler(
 		wasmkeeper.NewCountTXDecorator(txCounterStoreKey),
 		ante.NewExtensionOptionsDecorator(nil),
 		v9.MsgFilterDecorator{},
+		// Recovery lock: before any fee deduction and before the smart account
+		// circuit breaker, so both signature paths are covered and a rejected
+		// transaction costs nothing.
+		sdk50.Decorator{L: recoveryLock},
 		// Use Mempool Fee Decorator from our txfees module instead of default one from auth
 		// https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/middleware/fee.go#L34
 		mempoolFeeDecorator,

@@ -1,6 +1,9 @@
 package keepers
 
 import (
+	"github.com/osmosis-labs/osmosis/v32/app/recoverylock"
+	"github.com/osmosis-labs/osmosis/v32/app/recoverylock/sdk50"
+
 	"fmt"
 	"math"
 
@@ -163,6 +166,7 @@ type AppKeepers struct {
 	// "Normal" keepers
 	AccountKeeper                *authkeeper.AccountKeeper
 	BankKeeper                   *bankkeeper.BaseKeeper
+	RecoveryLock                 *sdk50.Lock
 	AuthzKeeper                  *authzkeeper.Keeper
 	StakingKeeper                *stakingkeeper.Keeper
 	DistrKeeper                  *distrkeeper.Keeper
@@ -250,6 +254,17 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.BankKeeper = &bankKeeper
 
+	// Recovery lock: built right after the bank keeper because the staking
+	// keeper and the message routers below need it. The distribution keeper is
+	// created later, so the lock reads it through LazyDistr.
+	lockAddrCodec := addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix())
+	lockDistr := &recoverylock.LazyDistr{}
+	recoveryLock := sdk50.New(recoverylock.MustConfig(lockAddrCodec, blockedAddress, bApp.Logger()), appCodec, lockAddrCodec, lockDistr, bApp.LastBlockHeight)
+	recoverylock.RegisterRules(recoveryLock)
+	appKeepers.BankKeeper.AppendSendRestriction(recoveryLock.SendRestriction())
+	appKeepers.RecoveryLock = recoveryLock
+	lockRouter := sdk50.Router{Inner: bApp.MsgServiceRouter(), L: recoveryLock}
+
 	// Initialize authenticators
 	appKeepers.AuthenticatorManager = authenticator.NewAuthenticatorManager()
 	appKeepers.AuthenticatorManager.InitializeAuthenticators([]authenticator.Authenticator{
@@ -274,7 +289,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	authzKeeper := authzkeeper.NewKeeper(
 		runtime.NewKVStoreService(appKeepers.keys[authzkeeper.StoreKey]),
 		appCodec,
-		bApp.MsgServiceRouter(),
+		lockRouter,
 		appKeepers.AccountKeeper,
 	)
 	appKeepers.AuthzKeeper = &authzKeeper
@@ -283,7 +298,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appCodec,
 		runtime.NewKVStoreService(appKeepers.keys[stakingtypes.StoreKey]),
 		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
+		sdk50.StakingBank{BankKeeper: appKeepers.BankKeeper, L: recoveryLock},
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
 		addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
@@ -299,6 +314,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	appKeepers.DistrKeeper = &distrKeeper
+	lockDistr.K = appKeepers.DistrKeeper
 
 	appKeepers.DowntimeKeeper = downtimedetector.NewKeeper(
 		appKeepers.keys[downtimetypes.StoreKey],
@@ -368,7 +384,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.AccountKeeper,
 		appKeepers.ScopedICAHostKeeper,
-		bApp.MsgServiceRouter(),
+		lockRouter,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	icaHostKeeper.WithQueryRouter(bApp.GRPCQueryRouter())
@@ -533,6 +549,10 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.PoolIncentivesKeeper,
 		appKeepers.ProtoRevKeeper,
 	)
+	// Recovery lock: while the lock is active, lock rewards of a listed owner
+	// go to the owner unless the receiver is the owner or the recovery address
+	// (set before the keeper is handed to other keepers).
+	appKeepers.IncentivesKeeper.SetRewardReceiverFunc(recoverylock.LockRewardReceiver(appKeepers.RecoveryLock))
 	appKeepers.ConcentratedLiquidityKeeper.SetIncentivesKeeper(appKeepers.IncentivesKeeper)
 	appKeepers.GAMMKeeper.SetIncentivesKeeper(appKeepers.IncentivesKeeper)
 
@@ -623,7 +643,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.ScopedWasmKeeper,
 		appKeepers.TransferKeeper,
-		bApp.MsgServiceRouter(),
+		lockRouter,
 		bApp.GRPCQueryRouter(),
 		wasmDir,
 		wasmConfig,
@@ -868,6 +888,9 @@ func (appKeepers *AppKeepers) SetupHooks() {
 
 	appKeepers.StakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(
+			// Recovery lock first: resets an unsafe withdraw address of a listed
+			// delegator before the distribution hook pays rewards.
+			sdk50.StakingHooks{L: appKeepers.RecoveryLock, D: appKeepers.DistrKeeper},
 			appKeepers.DistrKeeper.Hooks(),
 			appKeepers.SlashingKeeper.Hooks(),
 			appKeepers.SuperfluidKeeper.Hooks(),
