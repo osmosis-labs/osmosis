@@ -662,7 +662,7 @@ func (k Keeper) writeDurationValuesToAccumTree(ctx sdk.Context, denom string, du
 	for duration := range durationValueMap {
 		durations = append(durations, duration)
 	}
-	sort.Slice(durations, func(i, j int) bool { return durations[i] < durations[j] })
+	sort.SliceStable(durations, func(i, j int) bool { return durations[i] < durations[j] })
 	// now that we have a sorted list of durations for this denom,
 	// add them all to accumulation store
 	msg := fmt.Sprintf("Setting accumulation entries for locks for %s, there are %d distinct durations",
@@ -726,7 +726,7 @@ func (k Keeper) InitializeAllSyntheticLocks(ctx sdk.Context, syntheticLocks []ty
 		for duration := range curDurationMap {
 			durations = append(durations, duration)
 		}
-		sort.Slice(durations, func(i, j int) bool { return durations[i] < durations[j] })
+		sort.SliceStable(durations, func(i, j int) bool { return durations[i] < durations[j] })
 		// now that we have a sorted list of durations for this denom,
 		// add them all to accumulation store
 		msg := fmt.Sprintf("Setting accumulation entries for locks for %s, there are %d distinct durations",
