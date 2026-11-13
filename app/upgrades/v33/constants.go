@@ -10,6 +10,7 @@ import (
 const UpgradeName = "v33"
 
 const (
+	// MainnetChainID is the chain on which the OSMO burn and WBTC migration run.
 	MainnetChainID = "osmosis-1"
 	// OsmoBurnAddress is the null address used to burn OSMO.
 	OsmoBurnAddress = "osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030"
@@ -61,3 +62,34 @@ var HuahuaStuckGauges = []struct {
 	{1958, "GAMM606"},
 	{1959, "GAMM606"},
 }
+
+// Native WBTC to allBTC migration, approved by governance in proposal TODO(prop): fill in the
+// proposal number and link before merging.
+//
+// The spendable native WBTC of every account that has a public key, apart from the WBTC issuer's
+// merchants and custodian, is deposited into the allBTC alloy transmuter on its behalf (join_pool),
+// which mints the same amount of allBTC back to the account. Accounts without a public key are
+// skipped: they are protocol accounts (module accounts, pools, contracts, IBC escrows, CL spread
+// reward and incentive addresses, ICA host accounts) whose WBTC balance is owed to someone else.
+//
+// WBTC is already above the transmuter's 0.75 WBTC static limiter, which would reject every deposit.
+// The gov module, the transmuter's admin, lifts the WBTC limiters for the deposits, and their
+// configured bounds are restored once the deposits are done.
+const (
+
+	// WBTCDenom is native WBTC, issued on Osmosis through tokenfactory.
+	WBTCDenom = "factory/" + WBTCIssuerAddress + "/wbtc"
+
+	// WBTCIssuerAddress is the WBTC controller contract. Its merchants and custodian hold WBTC that
+	// backs mints and burns, so they are not migrated.
+	WBTCIssuerAddress = "osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743"
+
+	// AllBTCTransmuterAddress is the alloy transmuter contract that mints allBTC.
+	AllBTCTransmuterAddress = "osmo1z6r6qdknhgsc0zeracktgpcxf43j6sekq07nw8sxduc9lg0qjjlqfu25e3"
+
+	// AllBTCDenom is the alloyed denom minted by AllBTCTransmuterAddress.
+	AllBTCDenom = "factory/" + AllBTCTransmuterAddress + "/alloyed/allBTC"
+
+	// maxWBTCIssuerMembers bounds the merchant list read from the WBTC issuer.
+	maxWBTCIssuerMembers = 100
+)

@@ -15,7 +15,8 @@ import (
 )
 
 // CreateUpgradeHandler returns the v33 upgrade handler. After the module migrations it recovers the
-// HUAHUA held by gauges 1954-1959 (see HuahuaStuckGauges) and moves OSMO to the burn address.
+// HUAHUA held by gauges 1954-1959 (see HuahuaStuckGauges) and, on mainnet, moves OSMO to the
+// burn address and migrates native WBTC holders to allBTC (see MigrateWBTCToAllBTC).
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
@@ -48,6 +49,12 @@ func CreateUpgradeHandler(
 		} else {
 			write()
 			sdkCtx.Logger().Info("v33 upgrade: HUAHUA recovered", "amount", recovered.String(), "recipient", HuahuaRecoveryAddress)
+		}
+
+		if sdkCtx.ChainID() == MainnetChainID {
+			migrateWBTCAndLog(sdkCtx, keepers)
+		} else {
+			sdkCtx.Logger().Info("v33 upgrade: skipping WBTC to allBTC migration on non-mainnet chain", "chain_id", sdkCtx.ChainID())
 		}
 
 		return migrations, nil
