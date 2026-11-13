@@ -1,3 +1,4 @@
+
 package grpc
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
@@ -69,3 +70,4 @@ func (q Querier) ArithmeticTwap(grpcCtx context.Context,
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.ArithmeticTwap(ctx, *req)
 }
+

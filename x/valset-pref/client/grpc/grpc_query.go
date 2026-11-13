@@ -1,3 +1,4 @@
+
 package grpc
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
@@ -29,3 +30,4 @@ func (q Querier) UserValidatorPreferences(grpcCtx context.Context,
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.UserValidatorPreferences(ctx, *req)
 }
+

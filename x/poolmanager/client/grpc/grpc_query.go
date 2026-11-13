@@ -1,3 +1,4 @@
+
 package grpc
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
@@ -259,3 +260,4 @@ func (q Querier) AllPools(grpcCtx context.Context,
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.AllPools(ctx, *req)
 }
+
