@@ -118,7 +118,6 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 	poolData := make([]genesis.PoolData, 0, len(pools))
 
 	for _, poolI := range pools {
-		poolI := poolI
 		any, err := codectypes.NewAnyWithValue(poolI)
 		if err != nil {
 			panic(err)

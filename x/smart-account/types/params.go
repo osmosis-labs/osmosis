@@ -58,7 +58,7 @@ func (p Params) Validate() error {
 }
 
 // Validate Default Gas Reduction
-func validateMaximumUnauthenticatedGas(i interface{}) error {
+func validateMaximumUnauthenticatedGas(i any) error {
 	// Convert the given parameter to a uint64.
 	_, ok := i.(uint64)
 	if !ok {
@@ -68,7 +68,7 @@ func validateMaximumUnauthenticatedGas(i interface{}) error {
 	return nil
 }
 
-func validateIsSmartAccountActive(i interface{}) error {
+func validateIsSmartAccountActive(i any) error {
 	// Convert the given parameter to a bool.
 	_, ok := i.(bool)
 	if !ok {
@@ -78,7 +78,7 @@ func validateIsSmartAccountActive(i interface{}) error {
 	return nil
 }
 
-func validateCircuitBreakerControllers(i interface{}) error {
+func validateCircuitBreakerControllers(i any) error {
 	// Convert the given parameter to a []string.
 	controllers, ok := i.([]string)
 	if !ok {

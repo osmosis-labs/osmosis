@@ -8,9 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	numLocksToDelete = 1_000
-)
+var numLocksToDelete = 1_000
 
 // Called every block to automatically unlock matured locks.
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {

@@ -34,7 +34,6 @@ func TestCWPoolGovSuite(t *testing.T) {
 // 5. Invalid byte code uploaded - error.
 // 6. For success cases, tests that relevant event is emitted.
 func (s *CWPoolGovSuite) TestUploadCodeIdAndWhitelist() {
-
 	// Note that setup is done once and the state is shared between the test cases.
 	s.Setup()
 
@@ -80,7 +79,6 @@ func (s *CWPoolGovSuite) TestUploadCodeIdAndWhitelist() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		s.Run(tc.name, func() {
 			// Reset the event manager for each test case.
 			s.Ctx = s.Ctx.WithEventManager(sdk.NewEventManager())
@@ -253,7 +251,6 @@ func (s *CWPoolGovSuite) TestMigrateCosmwasmPools() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		s.Run(tc.name, func() {
 			s.Setup()
 

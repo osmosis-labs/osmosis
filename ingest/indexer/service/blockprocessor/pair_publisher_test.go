@@ -112,7 +112,6 @@ func (s *PairPublisherTestSuite) TestPublishPoolPairs() {
 			s.Require().NoError(err)
 			s.Require().Equal(test.expectedNumPublishPairCalls, publisherMock.NumPublishPairCalls)
 			s.Require().Equal(test.expectedNumPublishPairCallsWithCreation, publisherMock.NumPublishPairCallsWithCreation)
-
 		})
 	}
 }

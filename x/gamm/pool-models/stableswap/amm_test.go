@@ -517,7 +517,7 @@ func solveCfmmDirect(xReserve, yReserve, yIn osmomath.BigDec) osmomath.BigDec {
 	// With these, the final equation becomes: x' = (term1 - term2) / (6^(2/3))
 
 	// let scaled_y4_quo_k = (2 / sqrt(27)) * (y^4 / k)
-	scaled_y4_quo_k := (y4.Quo(k)).Mul(osmomath.NewBigDec(2).Quo(twentySevenRootTwo))
+	scaled_y4_quo_k := y4.Quo(k).Mul(osmomath.NewBigDec(2).Quo(twentySevenRootTwo))
 	scaled_y4_quo_k2 := scaled_y4_quo_k.Mul(scaled_y4_quo_k)
 
 	// let sqrt_term = sqrt(1 + scaled_y4_quo_k2)
@@ -527,7 +527,7 @@ func solveCfmmDirect(xReserve, yReserve, yIn osmomath.BigDec) osmomath.BigDec {
 	}
 
 	// let common_factor = [y^2 * 9k) * (sqrt_term + 1)]^(1/3)
-	common_factor, err := ApproxRoot(y2.MulInt64(9).Mul(k).Mul((sqrt_term.Add(osmomath.OneBigDec()))), 3)
+	common_factor, err := ApproxRoot(y2.MulInt64(9).Mul(k).Mul(sqrt_term.Add(osmomath.OneBigDec())), 3)
 	if err != nil {
 		panic(err)
 	}
@@ -538,7 +538,7 @@ func solveCfmmDirect(xReserve, yReserve, yIn osmomath.BigDec) osmomath.BigDec {
 	term2 := twoCubeRootThree.Mul(y3).Quo(common_factor)
 
 	// finally, x' = (term1 - term2) / (6^(2/3))
-	x_new := (term1.Sub(term2)).Quo(cubeRootSixSquared)
+	x_new := term1.Sub(term2).Quo(cubeRootSixSquared)
 
 	// find amount of x to output using initial and final xReserve values
 	xOut := xReserve.Sub(x_new)
@@ -664,10 +664,10 @@ func solveCFMMMultiDirect(xReserve, yReserve, wSumSquares, yIn osmomath.BigDec) 
 	// With these, the final equation becomes: x' = term1 - term2
 
 	// let sqrt_term = sqrt(729 k^2 y^4 + 108 y^3 (w y + y^3)^3)
-	wypy3 := (wSumSquares.Mul(y_new)).Add(y3)
+	wypy3 := wSumSquares.Mul(y_new).Add(y3)
 	wypy3pow3 := wypy3.Mul(wypy3).Mul(wypy3)
 
-	sqrt_term, err := ApproxRoot((k2.Mul(y4).MulInt64(729)).Add(y3.MulInt64(108).Mul(wypy3pow3)), 2)
+	sqrt_term, err := ApproxRoot(k2.Mul(y4).MulInt64(729).Add(y3.MulInt64(108).Mul(wypy3pow3)), 2)
 	if err != nil {
 		panic(err)
 	}
@@ -682,7 +682,7 @@ func solveCFMMMultiDirect(xReserve, yReserve, wSumSquares, yIn osmomath.BigDec) 
 	term1 := cube_root_term.Quo(cubeRootTwo.MulInt64(3).Mul(y_new))
 
 	// let term2 = cube_root_term * (2^(1/3) (w y + y^3))
-	term2 := (cubeRootTwo.Mul(wypy3)).Quo(cube_root_term)
+	term2 := cubeRootTwo.Mul(wypy3).Quo(cube_root_term)
 
 	// finally, let x' = term1 - term2
 	x_new := term1.Sub(term2)
@@ -879,7 +879,7 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 	r := rand.New(rand.NewSource(12345))
 	coinMax := osmomath.NewInt(10).ToLegacyDec().Power(30).TruncateInt()
 	for c := 2; c < 5; c++ {
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			coins := sdk.NewCoins()
 			scalingFactors := []uint64{}
 			for j := 0; j < c; j++ {

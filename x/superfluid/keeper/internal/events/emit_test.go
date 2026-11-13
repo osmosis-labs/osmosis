@@ -133,7 +133,6 @@ func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidDelegateEvent() {
 
 	for name, tc := range testcases {
 		suite.Run(name, func() {
-
 			hasNoEventManager := tc.ctx.EventManager() == nil
 
 			// System under test.

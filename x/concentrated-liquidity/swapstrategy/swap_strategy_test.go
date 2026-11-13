@@ -222,7 +222,6 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		suite.Run(name, func() {
 			sut := swapstrategy.New(tc.zeroForOne, osmomath.ZeroBigDec(), suite.App.GetKey(types.ModuleName), osmomath.ZeroDec())
 			sqrtPriceNextOutGivenIn, amountInOutGivenIn, amountOutOutGivenIn, _ := sut.ComputeSwapWithinBucketOutGivenIn(osmomath.BigDecFromDec(tc.sqrtPriceCurrent), osmomath.BigDecFromDec(tc.sqrtPriceTarget), tc.liquidity, tc.amountIn)

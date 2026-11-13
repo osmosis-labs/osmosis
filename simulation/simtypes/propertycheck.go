@@ -2,11 +2,11 @@ package simtypes
 
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
-type SimCallbackFn func(sim *SimCtx, ctx sdk.Context, value interface{}) error
+type SimCallbackFn func(sim *SimCtx, ctx sdk.Context, value any) error
 
 type PubSubManager interface {
 	Subscribe(key string, subName string, callback SimCallbackFn)
-	Publish(sim *SimCtx, ctx sdk.Context, key string, value interface{}) error
+	Publish(sim *SimCtx, ctx sdk.Context, key string, value any) error
 }
 
 type PropertyCheck interface {
@@ -16,5 +16,5 @@ type PropertyCheck interface {
 	// * Pre-Action execute
 	// * Block end (can make listener execute every Nth block end)
 	SubscriptionKeys() []string
-	Check(sim *SimCtx, ctx sdk.Context, key string, value interface{}) error
+	Check(sim *SimCtx, ctx sdk.Context, key string, value any) error
 }

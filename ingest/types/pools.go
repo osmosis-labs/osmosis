@@ -59,8 +59,8 @@ type SQSPool struct {
 type PoolWrapper struct {
 	ChainModel poolmanagertypes.PoolI                   `json:"underlying_pool"`
 	SQSModel   SQSPool                                  `json:"sqs_model"`
-	APRData    passthroughdomain.PoolAPRDataStatusWrap  `json:"apr_data,omitempty"`
-	FeesData   passthroughdomain.PoolFeesDataStatusWrap `json:"fees_data,omitempty"`
+	APRData    passthroughdomain.PoolAPRDataStatusWrap  `json:"apr_data"`
+	FeesData   passthroughdomain.PoolFeesDataStatusWrap `json:"fees_data"`
 	TickModel  *TickModel                               `json:"tick_model,omitempty"`
 }
 

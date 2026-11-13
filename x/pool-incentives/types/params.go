@@ -42,7 +42,7 @@ func (p Params) String() string {
 	return string(out)
 }
 
-func validateMintedDenom(i interface{}) error {
+func validateMintedDenom(i any) error {
 	v, ok := i.(string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

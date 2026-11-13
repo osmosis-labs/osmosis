@@ -136,7 +136,6 @@ func TestUpdateIntermediaryPoolAssetsLiquidity(t *testing.T) {
 
 func TestCalcSingleAssetJoin(t *testing.T) {
 	for _, tc := range calcSingleAssetJoinTestCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			pool := createTestPool(t, tc.spreadFactor, osmomath.MustNewDecFromStr("0"), tc.poolAssets...)
 
@@ -342,8 +341,6 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
 			pool := createTestPool(t, tc.spreadFactor, osmomath.ZeroDec(), tc.poolAssets...)
 

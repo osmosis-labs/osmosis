@@ -47,7 +47,6 @@ func (s *KeeperTestSuite) TestGaugeIds() {
 			err: false,
 		},
 	} {
-		tc := tc
 		s.Run(tc.desc, func() {
 			s.SetupTest()
 			queryClient := s.queryClient
@@ -95,7 +94,6 @@ func (s *KeeperTestSuite) TestDistrInfo() {
 			expectedRecordLength: 3,
 		},
 	} {
-		tc := tc
 		s.Run(tc.desc, func() {
 			s.SetupTest()
 			keeper := s.App.PoolIncentivesKeeper
@@ -109,7 +107,7 @@ func (s *KeeperTestSuite) TestDistrInfo() {
 				s.Require().Equal(3, len(lockableDurations))
 
 				var distRecord []types.DistrRecord
-				for i := 0; i < len(lockableDurations); i++ {
+				for i := range lockableDurations {
 					gaugeId, err := keeper.GetPoolGaugeId(s.Ctx, poolId, lockableDurations[i])
 					s.Require().NoError(err)
 					distRecord = append(distRecord, types.DistrRecord{
@@ -187,7 +185,6 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 			expectedRecordLength:     6, // three for gamm pool, one for cl pool, one for group gauge pointing to gamm pool, one for group gauge pointing to cl pool
 		},
 	} {
-		tc := tc
 		s.Run(tc.desc, func() {
 			s.SetupTest()
 			keeper := s.App.PoolIncentivesKeeper

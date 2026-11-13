@@ -493,8 +493,6 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 	}
 
 	for _, tc := range testCase {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			// This erases previously created pools.
 			s.SetupTest()
@@ -770,8 +768,6 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 	}
 
 	for _, tc := range testCase {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			s.SetupTest()
 

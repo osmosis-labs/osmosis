@@ -421,7 +421,7 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (
 	}
 
 	var poolAssets []balancer.PoolAsset
-	for i := 0; i < len(poolAssetCoins); i++ {
+	for i := range poolAssetCoins {
 		if poolAssetCoins[i].Denom != deposit[i].Denom {
 			return nil, errors.New("deposit tokens and token weights should have same denom order")
 		}
@@ -460,7 +460,7 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (
 		}
 
 		var targetPoolAssets []balancer.PoolAsset
-		for i := 0; i < len(targetPoolAssetCoins); i++ {
+		for i := range targetPoolAssetCoins {
 			if targetPoolAssetCoins[i].Denom != poolAssetCoins[i].Denom {
 				return nil, errors.New("initial pool weights and target pool weights should have same denom order")
 			}
@@ -518,8 +518,8 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, fs *flag.FlagSet)
 	scalingFactors := []uint64{}
 	trimmedSfString := strings.Trim(flags.ScalingFactors, "[] {}")
 	if len(trimmedSfString) > 0 {
-		ints := strings.Split(trimmedSfString, ",")
-		for _, i := range ints {
+		ints := strings.SplitSeq(trimmedSfString, ",")
+		for i := range ints {
 			u, err := strconv.ParseUint(i, 10, 64)
 			if err != nil {
 				return nil, err
@@ -556,7 +556,7 @@ func stringArrayCoinsParser(flagName string, fs *flag.FlagSet) (sdk.Coins, error
 	}
 
 	coins := sdk.Coins{}
-	for i := 0; i < len(amountsArr); i++ {
+	for i := range amountsArr {
 		parsed, err := sdk.ParseCoinsNormalized(amountsArr[i])
 		if err != nil {
 			return nil, err

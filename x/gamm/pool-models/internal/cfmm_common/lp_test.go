@@ -135,7 +135,7 @@ func TestCalcExitPool(t *testing.T) {
 			require.NoError(t, err, "test: %v", test.name)
 
 			// exitCoins = ( (1 - exitFee) * exitingShares / poolTotalShares ) * poolTotalLiquidity
-			expExitCoins := mulCoins(test.pool.GetTotalPoolLiquidity(emptyContext), (osmomath.OneDec().Sub(exitFee)).MulInt(test.exitingShares).QuoInt(test.pool.GetTotalShares()))
+			expExitCoins := mulCoins(test.pool.GetTotalPoolLiquidity(emptyContext), osmomath.OneDec().Sub(exitFee).MulInt(test.exitingShares).QuoInt(test.pool.GetTotalShares()))
 			require.Equal(t, expExitCoins.Sort().String(), exitCoins.Sort().String(), "test: %v", test.name)
 		}
 	}

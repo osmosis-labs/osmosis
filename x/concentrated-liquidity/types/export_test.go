@@ -1,9 +1,9 @@
 package types
 
-func ValidateTicks(i interface{}) error {
+func ValidateTicks(i any) error {
 	return validateTicks(i)
 }
 
-func ValidateBalancerSharesDiscount(i interface{}) error {
+func ValidateBalancerSharesDiscount(i any) error {
 	return validateBalancerSharesDiscount(i)
 }

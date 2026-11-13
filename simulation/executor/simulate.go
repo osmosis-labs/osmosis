@@ -291,7 +291,7 @@ func (simState *simState) runQueuedOperations(simCtx *simtypes.SimCtx, ctx sdk.C
 		opMsg.LogEvent(simState.eventStats.Tally)
 
 		if !simState.config.Lean || opMsg.OK {
-			simState.logWriter.AddEntry((QueuedMsgEntry(int64(height), opMsg)))
+			simState.logWriter.AddEntry(QueuedMsgEntry(int64(height), opMsg))
 		}
 
 		if err != nil {

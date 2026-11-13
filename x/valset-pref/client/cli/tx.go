@@ -21,7 +21,7 @@ func GetTxCmd() *cobra.Command {
 	osmocli.AddTxCmd(txCmd, NewDelValSetCmd)
 	// TODO: Uncomment when undelegate is implemented
 	// https://github.com/osmosis-labs/osmosis/issues/6686
-	//osmocli.AddTxCmd(txCmd, NewUnDelValSetCmd)
+	// osmocli.AddTxCmd(txCmd, NewUnDelValSetCmd)
 	osmocli.AddTxCmd(txCmd, NewUndelRebalancedValSetCmd)
 	osmocli.AddTxCmd(txCmd, NewReDelValSetCmd)
 	osmocli.AddTxCmd(txCmd, NewWithRewValSetCmd)

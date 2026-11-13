@@ -20,7 +20,7 @@ func GetSelectActionFn(actions []simtypes.ActionsWithMetadata) selectActionFn {
 	return func(r *rand.Rand) simtypes.ActionsWithMetadata {
 		x := r.Intn(totalOpFrequency)
 		// TODO: Change to an accum list approach
-		for i := 0; i < len(actions); i++ {
+		for i := range actions {
 			if x <= mapFrequencyFromString(actions[i].Frequency()) {
 				return actions[i]
 			}
@@ -54,7 +54,9 @@ func (a weightedOperationAction) WithFrequency(w simtypes.Frequency) simtypes.Ac
 	a.frequency = w
 	return a
 }
+
 func (a weightedOperationAction) Name() string { return fmt.Sprintf("%s: weighted_op", a.moduleName) }
+
 func (a weightedOperationAction) Frequency() simtypes.Frequency {
 	return mapFrequencyFromInt(a.op.Weight())
 }

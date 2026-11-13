@@ -3,6 +3,7 @@ package poolmanager_test
 import (
 	"errors"
 	"reflect"
+	"slices"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -60,9 +61,9 @@ var (
 	pointThreeFivePercent   = osmomath.MustNewDecFromStr("0.0035")
 	defaultTakerFee         = osmomath.ZeroDec()
 	defaultSwapAmount       = osmomath.NewInt(1000000)
-	gammKeeperType          = reflect.TypeOf(&gamm.Keeper{})
-	concentratedKeeperType  = reflect.TypeOf(&cl.Keeper{})
-	cosmwasmKeeperType      = reflect.TypeOf(&cwpool.Keeper{})
+	gammKeeperType          = reflect.TypeFor[*gamm.Keeper]()
+	concentratedKeeperType  = reflect.TypeFor[*cl.Keeper]()
+	cosmwasmKeeperType      = reflect.TypeFor[*cwpool.Keeper]()
 	zeroTakerFeeDistr       = expectedTakerFees{
 		communityPoolQuoteAssets:    sdk.NewCoins(),
 		communityPoolNonQuoteAssets: sdk.NewCoins(),
@@ -418,7 +419,6 @@ func (s *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
 			poolmanagerKeeper := s.App.PoolManagerKeeper
@@ -695,10 +695,10 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 			tokenIn:           sdk.NewCoin(FOO, osmomath.NewInt(100000)),
 			tokenOutMinAmount: osmomath.NewInt(1),
 		},
-		//TODO:
-		//change values in and out to be different with each swap module type
-		//tests for stable-swap pools
-		//edge cases:
+		// TODO:
+		// change values in and out to be different with each swap module type
+		// tests for stable-swap pools
+		// edge cases:
 		//  * invalid route length
 		//  * pool does not exist
 		//  * swap errors
@@ -1353,8 +1353,8 @@ func (s *KeeperTestSuite) makeGaugesIncentivized(incentivizedGauges []uint64) {
 func (s *KeeperTestSuite) calcInGivenOutAmountAsSeparateSwaps(routes []types.SwapAmountOutRoute, tokenOut sdk.Coin) sdk.Coin {
 	cacheCtx, _ := s.Ctx.CacheContext()
 	nextTokenOut := tokenOut
-	for i := len(routes) - 1; i >= 0; i-- {
-		hop := routes[i]
+	for _, hop := range slices.Backward(routes) {
+
 		hopPool, err := s.App.PoolManagerKeeper.GetPool(cacheCtx, hop.PoolId)
 		s.Require().NoError(err)
 		updatedPoolSpreadFactor := hopPool.GetSpreadFactor(cacheCtx)
@@ -2193,7 +2193,6 @@ func (s *KeeperTestSuite) TestEstimateTradeBasedOnPriceImpact() {
 		},
 	}
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
 			poolmanagerKeeper := s.App.PoolManagerKeeper
@@ -2790,7 +2789,6 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 	s.PrepareConcentratedPool()
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
 			k := s.App.PoolManagerKeeper
@@ -3095,7 +3093,6 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 	s.PrepareConcentratedPool()
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
 			k := s.App.PoolManagerKeeper
@@ -3218,7 +3215,6 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		s.Run(tc.name, func() {
 			s.SetupTest()
 
@@ -3704,7 +3700,6 @@ func (s *KeeperTestSuite) TestTakerFee() {
 	s.PrepareConcentratedPool()
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
 			k := s.App.PoolManagerKeeper

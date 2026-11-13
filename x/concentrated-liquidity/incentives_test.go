@@ -291,7 +291,6 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulators() {
 	}
 	s.runMultipleAuthorizedUptimes(func() {
 		for name, tc := range tests {
-			tc := tc
 			s.Run(name, func() {
 				s.SetupTest()
 				clKeeper := s.App.ConcentratedLiquidityKeeper
@@ -353,7 +352,6 @@ func (s *KeeperTestSuite) TestGetUptimeAccumulatorName() {
 
 	s.runMultipleAuthorizedUptimes(func() {
 		for name, tc := range tests {
-			tc := tc
 			s.Run(name, func() {
 				s.SetupTest()
 
@@ -445,7 +443,6 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulatorValues() {
 
 	s.runMultipleAuthorizedUptimes(func() {
 		for name, tc := range tests {
-			tc := tc
 			s.Run(name, func() {
 				s.SetupTest()
 				clKeeper := s.App.ConcentratedLiquidityKeeper
@@ -726,7 +723,6 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 
 	s.runMultipleAuthorizedUptimes(func() {
 		for name, tc := range tests {
-			tc := tc
 			s.Run(name, func() {
 				s.SetupTest()
 				s.Ctx = s.Ctx.WithBlockTime(defaultStartTime.Add(tc.timeElapsed))
@@ -917,7 +913,6 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 
 	s.runMultipleAuthorizedUptimes(func() {
 		for name, tc := range tests {
-			tc := tc
 			s.Run(name, func() {
 				s.SetupTest()
 				clKeeper := s.App.ConcentratedLiquidityKeeper
@@ -1075,8 +1070,6 @@ func (s *KeeperTestSuite) TestGetInitialUptimeGrowthOppositeDirectionOfLastTrave
 
 	s.runMultipleAuthorizedUptimes(func() {
 		for name, tc := range tests {
-			tc := tc
-
 			s.Run(name, func() {
 				s.SetupTest()
 				clKeeper := s.App.ConcentratedLiquidityKeeper
@@ -2343,8 +2336,8 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 				// Ensure balances are updated by the correct amounts
 				// Note that we expect the forfeited incentives to remain in the pool incentives balance since they are
 				// redeposited, so we only expect the diff in incentives balance to be the amount successfully claimed.
-				s.Require().Equal(tc.expectedIncentivesClaimed.String(), (incentivesBalanceBeforeCollect.Sub(incentivesBalanceAfterCollect...)).String())
-				s.Require().Equal(tc.expectedIncentivesClaimed.String(), (ownerBalancerAfterCollect.Sub(ownerBalancerBeforeCollect...)).String())
+				s.Require().Equal(tc.expectedIncentivesClaimed.String(), incentivesBalanceBeforeCollect.Sub(incentivesBalanceAfterCollect...).String())
+				s.Require().Equal(tc.expectedIncentivesClaimed.String(), ownerBalancerAfterCollect.Sub(ownerBalancerBeforeCollect...).String())
 			})
 		}
 	})
@@ -2564,7 +2557,6 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 
 	s.runMultipleAuthorizedUptimes(func() {
 		for name, tc := range tests {
-			tc := tc
 			s.Run(name, func() {
 				s.SetupTest()
 
@@ -2730,7 +2722,6 @@ func (s *KeeperTestSuite) TestUpdateAccumAndClaimRewards() {
 	}
 	s.runMultipleAuthorizedUptimes(func() {
 		for name, tc := range tests {
-			tc := tc
 			s.Run(name, func() {
 				s.SetupTest()
 				poolSpreadRewardsAccumulator := s.prepareSpreadRewardsAccumulator()
@@ -2876,7 +2867,6 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 
 	s.runMultipleAuthorizedUptimes(func() {
 		for name, tc := range tests {
-			tc := tc
 			s.Run(name, func() {
 				s.SetupTest()
 				clPool := s.PrepareConcentratedPool()
@@ -3127,7 +3117,6 @@ func (s *KeeperTestSuite) TestPrepareClaimAllIncentivesForPosition() {
 			for i, uptimeAccumDiffPostClaim := range uptimeAccumsDiffPostClaim {
 				s.Require().Equal(expectedForfeitedIncentives[i].Amount, uptimeAccumDiffPostClaim.Amount)
 			}
-
 		})
 	}
 }
@@ -3296,7 +3285,6 @@ func (s *KeeperTestSuite) TestGetAllIncentiveRecordsForUptime() {
 	}
 	s.runMultipleAuthorizedUptimes(func() {
 		for name, tc := range tests {
-			tc := tc
 			s.Run(name, func() {
 				// --- Setup test env ---
 
@@ -3368,7 +3356,6 @@ func (s *KeeperTestSuite) TestFindUptimeIndex() {
 	}
 	s.runMultipleAuthorizedUptimes(func() {
 		for name, tc := range tests {
-			tc := tc
 			s.Run(name, func() {
 				retrievedUptimeIndex, err := cl.FindUptimeIndex(tc.requestedUptime)
 
@@ -3409,7 +3396,6 @@ func (s *KeeperTestSuite) TestGetLargestAuthorizedAndSupportedUptimes() {
 
 	s.runMultipleAuthorizedUptimes(func() {
 		for name, tc := range tests {
-			tc := tc
 			s.Run(name, func() {
 				s.SetupTest()
 
@@ -3471,7 +3457,6 @@ func (s *KeeperTestSuite) TestMoveRewardsToNewPositionAndDeleteOldAcc() {
 
 	s.runMultipleAuthorizedUptimes(func() {
 		for name, tc := range tests {
-			tc := tc
 			s.Run(name, func() {
 				s.SetupTest()
 
@@ -3591,7 +3576,6 @@ func (s *KeeperTestSuite) TestGetIncentiveRecordSerialized() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-
 			s.SetupTest()
 			k := s.App.ConcentratedLiquidityKeeper
 
@@ -3721,7 +3705,6 @@ func (s *KeeperTestSuite) TestScaledUpTotalIncentiveAmount() {
 // This test shows that it is possible to compute the total incentives to emit without overflow.
 // An error is returned if overflow occurs but no panic.
 func (s *KeeperTestSuite) TestComputeTotalIncentivesToEmit() {
-
 	oneHundredYearsSecs := osmomath.NewDec(int64((time.Hour * 24 * 365 * 100).Seconds()))
 
 	totalIncentiveAmount, err := cl.ComputeTotalIncentivesToEmit(oneHundredYearsSecs, osmomath.NewDec(1))

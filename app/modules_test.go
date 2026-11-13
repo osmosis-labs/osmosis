@@ -15,7 +15,7 @@ func TestOrderEndBlockers_Determinism(t *testing.T) {
 	db := dbm.NewMemDB()
 	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, sims.EmptyAppOptions{}, EmptyWasmOpts, baseapp.SetChainID("osmosis-1"))
 
-	for i := 0; i < 1000; i++ {
+	for range 1000 {
 		a := OrderEndBlockers(app.mm.ModuleNames())
 		b := OrderEndBlockers(app.mm.ModuleNames())
 		require.True(t, reflect.DeepEqual(a, b))

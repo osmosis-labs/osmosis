@@ -49,10 +49,10 @@ func benchmarkResetLogic(b *testing.B, numLockups int) {
 
 	// setup accounts with balances
 	addrs := []sdk.AccAddress{}
-	for i := 0; i < numAccts; i++ {
+	for range numAccts {
 		addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 		coins := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000)}
-		for j := 0; j < numDenoms; j++ {
+		for j := range numDenoms {
 			coins = coins.Add(sdk.NewInt64Coin(fmt.Sprintf("token%d", j), r.Int63n(100000000)))
 		}
 		_ = testutil.FundAccount(ctx, app.BankKeeper, addr, coins)
@@ -66,7 +66,7 @@ func benchmarkResetLogic(b *testing.B, numLockups int) {
 
 	locks := make([]lockuptypes.PeriodLock, numLockups)
 	// setup lockups
-	for i := 0; i < numLockups; i++ {
+	for i := range numLockups {
 		addr := addrs[r.Int()%numAccts]
 		simCoins := sdk.NewCoins(sdk.NewCoin(denom, osmomath.NewInt(r.Int63n(100))))
 		duration := time.Duration(r.Intn(1*60*60*24*7)) * time.Second

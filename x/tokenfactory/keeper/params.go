@@ -18,6 +18,6 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 }
 
 // SetParam sets a specific tokenfactory module's parameter with the provided parameter.
-func (k Keeper) SetParam(ctx sdk.Context, key []byte, value interface{}) {
+func (k Keeper) SetParam(ctx sdk.Context, key []byte, value any) {
 	k.paramSpace.Set(ctx, key, value)
 }

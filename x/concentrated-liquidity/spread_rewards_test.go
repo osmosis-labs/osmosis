@@ -62,7 +62,6 @@ func (s *KeeperTestSuite) TestCreateAndGetSpreadRewardAccumulator() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
 			clKeeper := s.App.ConcentratedLiquidityKeeper
@@ -202,7 +201,6 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionSpreadRewardAccumulator() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		s.Run(tc.name, func() {
 			// System under test
 			err := clKeeper.InitOrUpdatePositionSpreadRewardAccumulator(s.Ctx, tc.positionFields.poolId, tc.positionFields.lowerTick, tc.positionFields.upperTick, tc.positionFields.positionId, tc.positionFields.liquidity)
@@ -534,7 +532,6 @@ func (s *KeeperTestSuite) TestGetInitialSpreadRewardGrowthOppositeDirectionOfLas
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
 			pool := s.preparePoolAndDefaultPosition()
@@ -1287,7 +1284,6 @@ func (s *KeeperTestSuite) TestUpdatePosValueToInitValuePlusGrowthOutside() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		s.Run(tc.name, func() {
 			// Setup test env.
 			s.SetupTest()
@@ -1571,7 +1567,7 @@ func (s *KeeperTestSuite) swapAndTrackXTimesInARow(poolId uint64, coinIn sdk.Coi
 	// Swap numSwaps times, recording the tick activated after and swap and spread rewards we expect to collect based on the amount in
 	totalTokenIn = sdk.NewCoin(coinIn.Denom, osmomath.ZeroInt())
 	totalTokenOut = sdk.NewCoin(coinOutDenom, osmomath.ZeroInt())
-	for i := 0; i < numSwaps; i++ {
+	for range numSwaps {
 		coinIn, coinOut, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, s.TestAccs[4], clPool, coinIn, coinOutDenom, clPool.GetSpreadFactor(s.Ctx), priceLimit)
 		s.Require().NoError(err)
 		spreadReward := coinIn.Amount.ToLegacyDec().Mul(clPool.GetSpreadFactor(s.Ctx))

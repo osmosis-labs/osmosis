@@ -121,8 +121,6 @@ func (s *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			s.SetupTest()
 
@@ -327,7 +325,6 @@ func (s *KeeperTestSuite) TestHandleUnpoolWhiteListChange() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
 

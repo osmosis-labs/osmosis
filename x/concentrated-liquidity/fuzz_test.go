@@ -52,7 +52,7 @@ func (s *KeeperTestSuite) TestFuzz_GivenSeed() {
 func fuzz(t *testing.T, numSwaps int, numPositions int, numIterations int) {
 	seed := time.Now().Unix()
 
-	for i := 0; i < numIterations; i++ {
+	for i := range numIterations {
 		i := i
 
 		currentSeed := seed + int64(i)
@@ -68,7 +68,7 @@ func fuzz(t *testing.T, numSwaps int, numPositions int, numIterations int) {
 			// a global in the wasm light client.
 			// See https://github.com/cosmos/ibc-go/blob/modules/light-clients/08-wasm/v0.1.0%2Bibc-go-v7.3-wasmvm-v1.5/modules/light-clients/08-wasm/internal/ibcwasm/wasm.go#L15-L17
 			// Once we move to ibc v8 we can make these tests run in parallel again.
-			//t.Parallel()
+			// t.Parallel()
 
 			currentSuite.individualFuzz(r, i, numSwaps, numPositions)
 		})
@@ -108,7 +108,7 @@ type fuzzState struct {
 
 func (s *KeeperTestSuite) fuzzTestWithSeed(r *rand.Rand, poolId uint64, numSwaps int, numPositions int) {
 	// Add 1000 random positions
-	for i := 0; i < initialNumPositions; i++ {
+	for range initialNumPositions {
 		s.addRandomPositonMinMaxOneSpacing(r, poolId)
 	}
 	s.assertWithdrawAllInvariant()
@@ -120,7 +120,7 @@ func (s *KeeperTestSuite) fuzzTestWithSeed(r *rand.Rand, poolId uint64, numSwaps
 	completedSwaps := 0
 	completedPositions := 0
 	targetActions := numSwaps + numPositions
-	for i := 0; i < targetActions; i++ {
+	for range targetActions {
 		fmt.Printf("\n\n\n>>>>>>>>>>>>>> Begin Action\n")
 
 		doSwap := s.selectAction(r, numSwaps, numPositions, completedSwaps, completedPositions)
@@ -474,7 +474,6 @@ func (s *KeeperTestSuite) addOrRemoveLiquidity(r *rand.Rand, poolId uint64) {
 	} else {
 		s.removeRandomPosition(r)
 	}
-
 }
 
 // if true add position, if false remove position

@@ -1,5 +1,3 @@
 package types
 
-var (
-	BeforeSendHookGasLimit = uint64(500_000)
-)
+var BeforeSendHookGasLimit = uint64(500_000)

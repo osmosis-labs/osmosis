@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -243,7 +244,7 @@ func init() {
 func initReusablePackageInjections() {
 	// Inject ClawbackVestingAccount account type into osmoutils
 	osmoutils.OsmoUtilsExtraAccountTypes = map[reflect.Type]struct{}{
-		reflect.TypeOf(&vestingtypes.ClawbackVestingAccount{}): {},
+		reflect.TypeFor[*vestingtypes.ClawbackVestingAccount](): {},
 	}
 }
 
@@ -1302,9 +1303,7 @@ func RegisterSwaggerAPI(ctx client.Context, rtr *mux.Router) {
 // GetMaccPerms returns a copy of the module account permissions.
 func GetMaccPerms() map[string][]string {
 	dupMaccPerms := make(map[string][]string)
-	for k, v := range maccPerms {
-		dupMaccPerms[k] = v
-	}
+	maps.Copy(dupMaccPerms, maccPerms)
 
 	return dupMaccPerms
 }

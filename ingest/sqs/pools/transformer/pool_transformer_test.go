@@ -590,8 +590,6 @@ func (s *PoolTransformerTestSuite) TestComputeUOSMOPoolLiquidityCap() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			s.Setup()
 			// Create OSMO / USDC pool and set the protorev route
@@ -663,8 +661,6 @@ func (s *PoolTransformerTestSuite) TestComputeUSDCPoolLiquidityCapFromUOSMO() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			s.Setup()
 
@@ -757,7 +753,6 @@ func (s *PoolTransformerTestSuite) TestFilterBalances() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		s.Run(tc.name, func() {
 			result := poolstransformer.FilterBalances(tc.balances, tc.poolMap)
 
@@ -839,7 +834,6 @@ func (s *PoolTransformerTestSuite) validatePoolConversion(expectedPool poolmanag
 }
 
 func (s *PoolTransformerTestSuite) initializePoolIngester(defaultUSDCUOSMOPoolID uint64) *poolstransformer.PoolTransformer {
-
 	sqsKeepers := commondomain.PoolExtractorKeepers{
 		GammKeeper:         s.App.GAMMKeeper,
 		ConcentratedKeeper: s.App.ConcentratedLiquidityKeeper,
@@ -886,7 +880,6 @@ func (s *PoolTransformerTestSuite) TestGetPoolDenomsMap() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			result := poolstransformer.GetPoolDenomsMap(tt.input)
 

@@ -22,7 +22,6 @@ func TestPoolExtractorTestSuite(t *testing.T) {
 // TestExtractor tests that the appropriate pools are extracted
 // when calling ExtractAll and ExtractChanged methods of the extractor.
 func (s *PoolExtractorTestSuite) TestExtractor() {
-
 	s.Setup()
 
 	// Initialized chain pools

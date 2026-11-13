@@ -50,11 +50,11 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	}
 }
 
-func validateCodeIdWhitelist(value interface{}) error {
+func validateCodeIdWhitelist(value any) error {
 	return nil
 }
 
-func validatePoolMigrationLimit(value interface{}) error {
+func validatePoolMigrationLimit(value any) error {
 	poolMigrationLimit, ok := value.(uint64)
 	if !ok {
 		return errors.New("invalid type for pool migration limit")

@@ -17,9 +17,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 )
 
-var (
-	ErrNoValuesInRange = errors.New("No values in range")
-)
+var ErrNoValuesInRange = errors.New("No values in range")
 
 func GatherAllKeysFromStore(storeObj storetypes.KVStore) []string {
 	iterator := storeObj.Iterator(nil, nil)

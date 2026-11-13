@@ -9,12 +9,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v32/x/incentives/types"
 )
 
-var (
-	defaultGroups = []types.CreateGroup{
-		{PoolIds: []uint64{1, 2, 3}},
-		{PoolIds: []uint64{4, 5, 6}},
-	}
-)
+var defaultGroups = []types.CreateGroup{
+	{PoolIds: []uint64{1, 2, 3}},
+	{PoolIds: []uint64{4, 5, 6}},
+}
 
 func TestCreateGroupsProposal_MarshalUnmarshal(t *testing.T) {
 	tests := []struct {

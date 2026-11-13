@@ -148,7 +148,7 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route RouteMetaData, rema
 
 	// Binary search to find the max profit
 	for iteration := 0; curLeft.LT(curRight) && iteration < types.MaxIterations; iteration++ {
-		curMid := (curLeft.Add(curRight)).Quo(twoInt)
+		curMid := curLeft.Add(curRight).Quo(twoInt)
 		curMidPlusOne := curMid.Add(oneInt)
 
 		// Short circuit profit searching if there is an error in the GAMM module

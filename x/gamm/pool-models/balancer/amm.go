@@ -187,7 +187,7 @@ func updateIntermediaryPoolAssetsLiquidity(liquidity sdk.Coins, poolAssetsByDeno
 // feeRatio returns the fee ratio that is defined as follows:
 // 1 - ((1 - normalizedTokenWeightOut) * spreadFactor)
 func feeRatio(normalizedWeight, spreadFactor osmomath.Dec) osmomath.Dec {
-	return osmomath.OneDec().Sub((osmomath.OneDec().Sub(normalizedWeight)).Mul(spreadFactor))
+	return osmomath.OneDec().Sub(osmomath.OneDec().Sub(normalizedWeight).Mul(spreadFactor))
 }
 
 // calcSingleAssetInGivenPoolSharesOut returns token amount in with fee included

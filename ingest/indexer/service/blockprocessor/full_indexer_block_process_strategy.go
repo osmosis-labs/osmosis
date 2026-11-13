@@ -79,7 +79,6 @@ func (f *fullIndexerBlockProcessStrategy) publishAllSupplies(ctx sdk.Context) {
 			Denom:  coin.Denom,
 			Supply: coin.Amount,
 		})
-
 		// Skip any error silently but log it.
 		if err != nil {
 			// TODO: alert
@@ -95,7 +94,6 @@ func (f *fullIndexerBlockProcessStrategy) publishAllSupplies(ctx sdk.Context) {
 				Denom:        coin.Denom,
 				SupplyOffset: supplyOffset,
 			})
-
 			// Skip any error silently but log it.
 			if err != nil {
 				// TODO: alert

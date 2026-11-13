@@ -79,7 +79,6 @@ func (s *PoolModuleSuite) TestInitializePool() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.Setup()
 			cosmwasmPoolKeeper := s.App.CosmwasmPoolKeeper
@@ -149,7 +148,6 @@ func (s *PoolModuleSuite) TestGetPoolDenoms() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.Setup()
 			cosmwasmPoolKeeper := s.App.CosmwasmPoolKeeper
@@ -221,7 +219,6 @@ func (s *PoolModuleSuite) TestCalcOutAmtGivenIn_SwapOutAmtGivenIn() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.Setup()
 
@@ -347,7 +344,6 @@ func (s *PoolModuleSuite) TestCalcInAmtGivenOut_SwapInAmtGivenOut() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.Setup()
 
@@ -442,7 +438,6 @@ func (s *PoolModuleSuite) TestGetTotalPoolLiquidity() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.Setup()
 
@@ -490,8 +485,7 @@ func (s *PoolModuleSuite) TestSudoGasLimit() {
 	type CountMsg struct {
 		Amount int64 `json:"amount"`
 	}
-	type CountMsgResponse struct {
-	}
+	type CountMsgResponse struct{}
 	type CountSudoMsg struct {
 		Count CountMsg `json:"count"`
 	}

@@ -18,7 +18,8 @@ func (k Keeper) ValidateLockForForceUnlock(ctx sdk.Context, lockID uint64, deleg
 }
 
 func (k Keeper) GetValsetRatios(ctx sdk.Context, delegator sdk.AccAddress,
-	prefs []types.ValidatorPreference, undelegateAmt osmomath.Int) ([]ValRatio, map[string]stakingtypes.Validator, osmomath.Dec, error) {
+	prefs []types.ValidatorPreference, undelegateAmt osmomath.Int,
+) ([]ValRatio, map[string]stakingtypes.Validator, osmomath.Dec, error) {
 	return k.getValsetRatios(ctx, delegator, prefs, undelegateAmt)
 }
 

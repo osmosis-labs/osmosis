@@ -69,7 +69,8 @@ func TestFormatModuleRouteKey(t *testing.T) {
 	cases := []struct {
 		id                 uint64
 		expectedSansPrefix string
-	}{0: {id: 0, expectedSansPrefix: "0"},
+	}{
+		0: {id: 0, expectedSansPrefix: "0"},
 		1: {id: 1, expectedSansPrefix: "1"},
 		2: {id: 12, expectedSansPrefix: "12"},
 		3: {id: 122, expectedSansPrefix: "122"},

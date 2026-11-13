@@ -118,7 +118,6 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 	}
 
 	for _, test := range tests {
-		test := test
 		s.Run(test.name, func() {
 			// Init suite for each test.
 			s.SetupTest()

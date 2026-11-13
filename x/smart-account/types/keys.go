@@ -57,7 +57,7 @@ func KeyAccountAuthenticatorsPrefixId() []byte {
 }
 
 // BuildKey creates a key by concatenating the provided elements with the key separator.
-func BuildKey(elements ...interface{}) []byte {
+func BuildKey(elements ...any) []byte {
 	strElements := make([]string, len(elements))
 	for i, element := range elements {
 		strElements[i] = fmt.Sprint(element)

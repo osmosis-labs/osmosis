@@ -330,6 +330,7 @@ func (app *OsmosisApp) GetBankKeeper() simtypes.BankKeeper {
 func (app *OsmosisApp) GetStakingKeeper() ibctestingtypes.StakingKeeper {
 	return *app.AppKeepers.StakingKeeper // Dereferencing the pointer
 }
+
 func (app *OsmosisApp) GetSDKStakingKeeper() stakingkeeper.Keeper {
 	return *app.AppKeepers.StakingKeeper // Dereferencing the pointer
 }

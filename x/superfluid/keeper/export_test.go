@@ -48,7 +48,8 @@ func (k Keeper) DistributeSuperfluidGauges(ctx sdk.Context) {
 }
 
 func (k Keeper) ConvertLockToStake(ctx sdk.Context, sender sdk.AccAddress, valAddr string, lockId uint64,
-	minAmtToStake osmomath.Int) (totalAmtConverted osmomath.Int, err error) {
+	minAmtToStake osmomath.Int,
+) (totalAmtConverted osmomath.Int, err error) {
 	return k.convertLockToStake(ctx, sender, valAddr, lockId, minAmtToStake)
 }
 
@@ -61,7 +62,8 @@ func (k Keeper) ConvertGammSharesToOsmoAndStake(
 }
 
 func (k Keeper) ConvertUnlockedToStake(ctx sdk.Context, sender sdk.AccAddress, valAddr string, sharesToStake sdk.Coin,
-	minAmtToStake osmomath.Int) (totalAmtConverted osmomath.Int, err error) {
+	minAmtToStake osmomath.Int,
+) (totalAmtConverted osmomath.Int, err error) {
 	return k.convertUnlockedToStake(ctx, sender, valAddr, sharesToStake, minAmtToStake)
 }
 

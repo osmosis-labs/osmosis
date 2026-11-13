@@ -5,10 +5,12 @@ import (
 	"math/big"
 )
 
-var smallestDec = SmallestDec()
-var tenTo18 = big.NewInt(1e18)
-var tenTo36 = big.NewInt(0).Mul(tenTo18, tenTo18)
-var oneBigInt = big.NewInt(1)
+var (
+	smallestDec = SmallestDec()
+	tenTo18     = big.NewInt(1e18)
+	tenTo36     = big.NewInt(0).Mul(tenTo18, tenTo18)
+	oneBigInt   = big.NewInt(1)
+)
 
 // Returns square root of d
 // returns an error if one of the following conditions is met:

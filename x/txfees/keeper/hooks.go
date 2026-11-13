@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -502,12 +503,7 @@ func (k Keeper) clearTakerFeeShareAccumulators(ctx sdk.Context) {
 // isDenomWhitelisted checks if the denom provided exists in the list of community pool denom whitelist.
 // If it does, it returns true, otherwise false.
 func isDenomWhitelisted(denom string, communityPoolDenomWhitelist []string) bool {
-	for _, communityPoolDenom := range communityPoolDenomWhitelist {
-		if denom == communityPoolDenom {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(communityPoolDenomWhitelist, denom)
 }
 
 func applyFuncIfNoErrorAndLog[S fmt.Stringer](ctx sdk.Context, f func(sdk.Context) error, metricName string, coins S) {

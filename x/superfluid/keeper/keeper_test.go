@@ -94,7 +94,7 @@ func (s *KeeperTestSuite) SetupDefaultPool() {
 // CreateRandomAccounts is a function return a list of randomly generated AccAddresses
 func CreateRandomAccounts(numAccts int) []sdk.AccAddress {
 	testAddrs := make([]sdk.AccAddress, numAccts)
-	for i := 0; i < numAccts; i++ {
+	for i := range numAccts {
 		pk := ed25519.GenPrivKey().PubKey()
 		testAddrs[i] = sdk.AccAddress(pk.Address())
 	}

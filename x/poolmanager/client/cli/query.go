@@ -113,6 +113,7 @@ func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *queryproto.SpotPriceRequest) 
 `,
 	}, &queryproto.SpotPriceRequest{}
 }
+
 func GetCmdListPoolsByDenom() (*osmocli.QueryDescriptor, *queryproto.ListPoolsByDenomRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "list-pools-by-denom",

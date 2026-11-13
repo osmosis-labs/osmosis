@@ -201,7 +201,6 @@ func SignAndDeliver(
 		accSeqs,
 		priv...,
 	)
-
 	if err != nil {
 		return nil, err
 	}

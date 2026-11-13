@@ -103,7 +103,7 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 	// loop through the reading and unmarshaling of the init file a total of maxRetries or until error is nil
 	// without this, test attempts to unmarshal file before docker container is finished writing
 	var initializedChain initialization.Chain
-	for i := 0; i < config.MaxRetries; i++ {
+	for i := range config.MaxRetries {
 		initializedChainBytes, _ := os.ReadFile(fileName)
 		err = json.Unmarshal(initializedChainBytes, &initializedChain)
 		if err == nil {
@@ -262,7 +262,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	wg.Add(6)
 
-	var errCh = make(chan error, 2)
+	errCh := make(chan error, 2)
 
 	// Chain A
 

@@ -15,9 +15,7 @@ func init() {
 	govtypesv1.RegisterProposalType(ProposalTypeCreateGroups)
 }
 
-var (
-	_ govtypesv1.Content = &CreateGroupsProposal{}
-)
+var _ govtypesv1.Content = &CreateGroupsProposal{}
 
 // NewCreateGroupsProposal returns a new instance of a group creation proposal struct.
 func NewCreateGroupsProposal(title, description string, groups []CreateGroup) govtypesv1.Content {

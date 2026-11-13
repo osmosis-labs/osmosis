@@ -89,9 +89,7 @@ type SwapStrategy interface {
 	ZeroForOne() bool
 }
 
-var (
-	oneDec = osmomath.OneDec()
-)
+var oneDec = osmomath.OneDec()
 
 // New returns a swap strategy based on the provided zeroForOne parameter
 // with sqrtPriceLimit for the maximum square root price until which to perform

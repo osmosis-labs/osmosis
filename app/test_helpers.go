@@ -128,7 +128,7 @@ func SetupWithCustomHome(isCheckTx bool, dir string, t ...*testing.T) *OsmosisAp
 type DebugAppOptions struct{}
 
 // Get implements AppOptions
-func (ao DebugAppOptions) Get(o string) interface{} {
+func (ao DebugAppOptions) Get(o string) any {
 	if o == cosmoserver.FlagTrace {
 		return true
 	}

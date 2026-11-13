@@ -645,7 +645,8 @@ func (k Keeper) IterateDelegations(context context.Context, delegator sdk.AccAdd
 // - If valAddr not provided and valset delegation is not possible, refer back to original lock's superfluid validator if it was a superfluid lock
 // - Else: error
 func (k Keeper) UnbondConvertAndStake(ctx sdk.Context, lockID uint64, sender, valAddr string,
-	minAmtToStake osmomath.Int, sharesToConvert sdk.Coin) (totalAmtConverted osmomath.Int, err error) {
+	minAmtToStake osmomath.Int, sharesToConvert sdk.Coin,
+) (totalAmtConverted osmomath.Int, err error) {
 	senderAddr, err := sdk.AccAddressFromBech32(sender)
 	if err != nil {
 		return osmomath.Int{}, err
@@ -730,7 +731,8 @@ func (k Keeper) forceUnlockAndExitBalancerPool(ctx sdk.Context, sender sdk.AccAd
 // convertLockToStake handles locks that are superfluid bonded, superfluid unbonding, vanilla locked(unlocking) locks.
 // Deletes all associated state, converts the lock itself to staking delegation by going through exit pool and swap.
 func (k Keeper) convertLockToStake(ctx sdk.Context, sender sdk.AccAddress, valAddr string, lockId uint64,
-	minAmtToStake osmomath.Int) (totalAmtConverted osmomath.Int, err error) {
+	minAmtToStake osmomath.Int,
+) (totalAmtConverted osmomath.Int, err error) {
 	lock, err := k.lk.GetLockByID(ctx, lockId)
 	if err != nil {
 		return osmomath.Int{}, err
@@ -781,7 +783,8 @@ func (k Keeper) convertLockToStake(ctx sdk.Context, sender sdk.AccAddress, valAd
 // convertUnlockedToStake converts liquid gamm shares to staking delegation.
 // minAmtToStake works as slippage bound for the conversion process.
 func (k Keeper) convertUnlockedToStake(ctx sdk.Context, sender sdk.AccAddress, valAddr string, sharesToStake sdk.Coin,
-	minAmtToStake osmomath.Int) (totalAmtConverted osmomath.Int, err error) {
+	minAmtToStake osmomath.Int,
+) (totalAmtConverted osmomath.Int, err error) {
 	if !strings.HasPrefix(sharesToStake.Denom, gammtypes.GAMMTokenPrefix) {
 		return osmomath.Int{}, types.SharesToMigrateDenomPrefixError{Denom: sharesToStake.Denom, ExpectedDenomPrefix: gammtypes.GAMMTokenPrefix}
 	}

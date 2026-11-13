@@ -673,7 +673,7 @@ func getHomeEnvironment() string {
 
 // initAppConfig helps to override default appConfig template and configs.
 // return "", nil if no custom configuration is required for the application.
-func initAppConfig() (string, interface{}) {
+func initAppConfig() (string, any) {
 	type OsmosisMempoolConfig struct {
 		MaxGasWantedPerTx         string `mapstructure:"max-gas-wanted-per-tx"`
 		MinGasPriceForArbitrageTx string `mapstructure:"arbitrage-min-gas-fee"`
@@ -1347,5 +1347,6 @@ func autoCliOpts(initClientCtx client.Context, tempApp *osmosis.OsmosisApp) auto
 		AddressCodec:          authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
 		ConsensusAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
-		ClientCtx:             initClientCtx}
+		ClientCtx:             initClientCtx,
+	}
 }

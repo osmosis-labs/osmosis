@@ -92,6 +92,7 @@ func (sim SimCtx) BankKeeper() BankKeeper {
 func (sim SimCtx) SDKStakingKeeper() stakingkeeper.Keeper {
 	return sim.app.GetSDKStakingKeeper()
 }
+
 func (sim SimCtx) StakingKeeper() ibctestingtypes.StakingKeeper {
 	return sim.app.GetStakingKeeper()
 }

@@ -2,6 +2,7 @@ package types
 
 import (
 	fmt "fmt"
+	"slices"
 	"time"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -95,7 +96,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 
 // validateTicks validates that the given parameter is a slice of strings that can be converted to unsigned 64-bit integers.
 // If the parameter is not of the correct type or any of the strings cannot be converted, an error is returned.
-func validateTicks(i interface{}) error {
+func validateTicks(i any) error {
 	// Convert the given parameter to a slice of uint64s.
 	authorizedTickSpacing, ok := i.([]uint64)
 	if !ok {
@@ -133,7 +134,7 @@ func validateTicks(i interface{}) error {
 
 // validateSpreadFactors validates that the given parameter is a slice of strings that can be converted to osmomath.Decs.
 // If the parameter is not of the correct type or any of the strings cannot be converted, an error is returned.
-func validateSpreadFactors(i interface{}) error {
+func validateSpreadFactors(i any) error {
 	// Convert the given parameter to a slice of osmomath.Decs.
 	_, ok := i.([]osmomath.Dec)
 	if !ok {
@@ -144,7 +145,7 @@ func validateSpreadFactors(i interface{}) error {
 }
 
 // validateIsPermissionLessPoolCreationEnabled validates that the given parameter is a bool.
-func validateIsPermissionLessPoolCreationEnabled(i interface{}) error {
+func validateIsPermissionLessPoolCreationEnabled(i any) error {
 	_, ok := i.(bool)
 	if !ok {
 		return fmt.Errorf("invalid parameter type for is permissionless pool creation enabled flag: %T", i)
@@ -154,7 +155,7 @@ func validateIsPermissionLessPoolCreationEnabled(i interface{}) error {
 }
 
 // validateBalancerSharesDiscount validates that the given parameter is a osmomath.Dec. Returns error if the parameter is not of the correct type.
-func validateBalancerSharesDiscount(i interface{}) error {
+func validateBalancerSharesDiscount(i any) error {
 	// Convert the given parameter to osmomath.Dec.
 	balancerSharesRewardDiscount, ok := i.(osmomath.Dec)
 
@@ -183,7 +184,7 @@ func validateBalancerSharesDiscount(i interface{}) error {
 // - An error if given type is not duration slice.
 // - An error if given slice is empty.
 // - An error if any of the uptimes are invalid (i.e. not part of the list of supported uptimes).
-func validateAuthorizedUptimes(i interface{}) error {
+func validateAuthorizedUptimes(i any) error {
 	authorizedUptimes, ok := i.([]time.Duration)
 
 	if !ok {
@@ -196,15 +197,7 @@ func validateAuthorizedUptimes(i interface{}) error {
 
 	// Check if each passed in uptime is in the list of supported uptimes
 	for _, uptime := range authorizedUptimes {
-		supported := false
-		for _, supportedUptime := range SupportedUptimes {
-			if uptime == supportedUptime {
-				supported = true
-
-				// We break here to save on iterations
-				break
-			}
-		}
+		supported := slices.Contains(SupportedUptimes, uptime)
 
 		if !supported {
 			return UptimeNotSupportedError{Uptime: uptime}
@@ -215,7 +208,7 @@ func validateAuthorizedUptimes(i interface{}) error {
 }
 
 // validateHookGasLimit validates that the hook gas limit is of type uint64.
-func validateHookGasLimit(i interface{}) error {
+func validateHookGasLimit(i any) error {
 	_, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type for hook gas limit: %T", i)

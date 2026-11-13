@@ -858,7 +858,7 @@ func (s *TestSuite) TestGeometricTwapToNow_BalancerPool_Randomized() {
 
 	maxUint64 := ^uint(0)
 
-	for i := 0; i < retries; i++ {
+	for range retries {
 		elapsedTimeMs := sdkrand.RandIntBetween(r, 1, int(maxUint64>>1))
 		weightA := osmomath.NewInt(int64(sdkrand.RandIntBetween(r, 1, 1000)))
 		tokenASupply := osmomath.NewInt(int64(sdkrand.RandIntBetween(r, 10_000, 1_000_000_000_000_000_000)))

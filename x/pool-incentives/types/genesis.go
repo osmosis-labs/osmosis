@@ -62,7 +62,7 @@ func ValidateGenesis(data *GenesisState) error {
 }
 
 // validateLockableDurations ensures the provided lockable duration is a valid parameter.
-func validateLockableDurations(i interface{}) error {
+func validateLockableDurations(i any) error {
 	_, ok := i.([]time.Duration)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

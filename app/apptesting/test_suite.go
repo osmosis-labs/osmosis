@@ -396,7 +396,7 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 // SetupMultipleValidators setups "numValidator" validators and returns their address in string
 func (s *KeeperTestHelper) SetupMultipleValidators(numValidator int) []string {
 	valAddrs := []string{}
-	for i := 0; i < numValidator; i++ {
+	for range numValidator {
 		valAddr := s.SetupValidator(stakingtypes.Bonded)
 		valAddrs = append(valAddrs, valAddr.String())
 	}
@@ -646,7 +646,7 @@ func SkipIfWSL(t *testing.T) {
 // CreateRandomAccounts is a function return a list of randomly generated AccAddresses
 func CreateRandomAccounts(numAccts int) []sdk.AccAddress {
 	testAddrs := make([]sdk.AccAddress, numAccts)
-	for i := 0; i < numAccts; i++ {
+	for i := range numAccts {
 		pk := ed25519.GenPrivKey().PubKey()
 		testAddrs[i] = sdk.AccAddress(pk.Address())
 	}
@@ -710,7 +710,7 @@ func (s *KeeperTestHelper) SetupVolumeForPools(poolIDs []uint64, volumesForEachP
 	s.Require().NoError(err)
 
 	s.Require().Equal(len(poolIDs), len(volumesForEachPool))
-	for i := 0; i < len(poolIDs); i++ {
+	for i := range poolIDs {
 		currentPoolID := poolIDs[i]
 
 		currentVolume := volumesForEachPool[i]

@@ -21,15 +21,13 @@ type (
 	Decoder = jsoniter.Decoder
 )
 
-var (
-	jsonLib = jsoniter.ConfigCompatibleWithStandardLibrary
-)
+var jsonLib = jsoniter.ConfigCompatibleWithStandardLibrary
 
-func Marshal(v interface{}) ([]byte, error) {
+func Marshal(v any) ([]byte, error) {
 	return jsonLib.Marshal(v)
 }
 
-func Unmarshal(data []byte, v interface{}) error {
+func Unmarshal(data []byte, v any) error {
 	return jsonLib.Unmarshal(data, v)
 }
 

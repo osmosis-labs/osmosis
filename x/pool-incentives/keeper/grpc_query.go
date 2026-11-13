@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"slices"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -186,13 +187,7 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 				return nil, status.Error(codes.Internal, err.Error())
 			}
 			// Ensure the gauge's duration matches one of the lockable durations.
-			matchFound := false
-			for _, duration := range lockableDurations {
-				if gauge.DistributeTo.Duration == duration {
-					matchFound = true
-					break
-				}
-			}
+			matchFound := slices.Contains(lockableDurations, gauge.DistributeTo.Duration)
 			if !matchFound {
 				return nil, types.IncentiveRecordContainsNonLockableDurationError{GaugeId: gauge.Id, Duration: gauge.DistributeTo.Duration, LockableDurations: lockableDurations}
 			}

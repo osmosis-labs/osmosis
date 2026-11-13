@@ -9,16 +9,18 @@ import (
 	"github.com/osmosis-labs/osmosis/v32/x/concentrated-liquidity/types/genesis"
 )
 
-var tenDec = osmomath.NewDec(10)
-var negTenDec = osmomath.NewDec(-10)
-var twentyDec = osmomath.NewDec(20)
-var negTwentyDec = osmomath.NewDec(-20)
-var fortyDec = osmomath.NewDec(40)
-var negFortyDec = osmomath.NewDec(-40)
-var fiftyDec = osmomath.NewDec(50)
-var negFiftyDec = osmomath.NewDec(-50)
-var sixtyDec = osmomath.NewDec(60)
-var hundredDec = osmomath.NewDec(100)
+var (
+	tenDec       = osmomath.NewDec(10)
+	negTenDec    = osmomath.NewDec(-10)
+	twentyDec    = osmomath.NewDec(20)
+	negTwentyDec = osmomath.NewDec(-20)
+	fortyDec     = osmomath.NewDec(40)
+	negFortyDec  = osmomath.NewDec(-40)
+	fiftyDec     = osmomath.NewDec(50)
+	negFiftyDec  = osmomath.NewDec(-50)
+	sixtyDec     = osmomath.NewDec(60)
+	hundredDec   = osmomath.NewDec(100)
+)
 
 // This test validates GetTickLiquidityForFullRange query by force-setting the tick and their net liquidity
 // values as well as the current pool tick.
@@ -559,12 +561,10 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			boundTick:       osmomath.NewInt(-15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
-
 					LiquidityNet: negTwentyDec,
 					TickIndex:    10,
 				},
 				{
-
 					LiquidityNet: twentyDec,
 					TickIndex:    -10,
 				},
@@ -699,7 +699,6 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 	}
 
 	for _, test := range tests {
-		test := test
 		if test.poolId == 0 {
 			test.poolId = defaultPoolId
 		}
@@ -982,7 +981,6 @@ func (s *KeeperTestSuite) TestGetNumNextInitializedTicks() {
 	}
 
 	for _, test := range tests {
-		test := test
 		if test.poolId == 0 {
 			test.poolId = defaultPoolId
 		}

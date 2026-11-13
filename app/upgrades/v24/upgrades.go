@@ -2,7 +2,7 @@ package v24
 
 import (
 	"context"
-	"sort"
+	"slices"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -115,9 +115,7 @@ func migrateMainnetPools(ctx sdk.Context, concentratedKeeper concentratedliquidi
 	}
 
 	// Sort for determinism
-	sort.Slice(poolIDsToMigrate, func(i, j int) bool {
-		return poolIDsToMigrate[i] < poolIDsToMigrate[j]
-	})
+	slices.Sort(poolIDsToMigrate)
 
 	// Migrate concentrated pools
 	thresholdId, err := concentratedKeeper.GetIncentivePoolIDMigrationThreshold(ctx)

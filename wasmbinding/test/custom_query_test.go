@@ -55,7 +55,6 @@ func TestQueryFullDenom(t *testing.T) {
 
 	expected := fmt.Sprintf("factory/%s/ustart", reflect.String())
 	require.EqualValues(t, expected, resp.Denom)
-
 }
 
 type ReflectQuery struct {
@@ -70,7 +69,7 @@ type ChainResponse struct {
 	Data []byte `json:"data"`
 }
 
-func queryCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contract sdk.AccAddress, request bindings.OsmosisQuery, response interface{}) {
+func queryCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contract sdk.AccAddress, request bindings.OsmosisQuery, response any) {
 	t.Helper()
 
 	msgBz, err := json.Marshal(request)

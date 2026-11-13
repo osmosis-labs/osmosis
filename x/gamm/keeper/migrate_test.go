@@ -427,7 +427,6 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 	}
 
 	for _, test := range tests {
-		test := test
 		s.Run(test.name, func() {
 			s.SetupTest()
 			keeper := s.App.GAMMKeeper
@@ -445,11 +444,11 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 			// Our testing environment is as follows:
 			// Balancer pool IDs: 1, 2
 			// Concentrated pool IDs: 3, 4
-			for i := 0; i < 2; i++ {
+			for range 2 {
 				poolCoins := sdk.NewCoins(defaultBalancerCoin0, defaultBalancerCoin1)
 				s.PrepareBalancerPoolWithCoins(poolCoins...)
 			}
-			for i := 0; i < 2; i++ {
+			for range 2 {
 				s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, defaultTickSpacing, osmomath.ZeroDec())
 			}
 			// Four asset balancer pool ID if created: 5
@@ -704,11 +703,11 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 			// Our testing environment is as follows:
 			// Balancer pool IDs: 1, 2, 3, 4
 			// Concentrated pool IDs: 5, 6, 7, 8
-			for i := 0; i < 4; i++ {
+			for range 4 {
 				poolCoins := sdk.NewCoins(defaultBalancerCoin0, defaultBalancerCoin1)
 				s.PrepareBalancerPoolWithCoins(poolCoins...)
 			}
-			for i := 0; i < 4; i++ {
+			for range 4 {
 				s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, defaultTickSpacing, osmomath.ZeroDec())
 			}
 			// Four asset balancer pool ID if created: 9
@@ -779,7 +778,6 @@ func (s *KeeperTestSuite) TestGetLinkedConcentratedPoolID() {
 	}
 
 	for _, test := range tests {
-		test := test
 		s.Run(test.name, func() {
 			s.SetupTest()
 			keeper := s.App.GAMMKeeper
@@ -845,7 +843,6 @@ func (s *KeeperTestSuite) TestGetLinkedBalancerPoolID() {
 	}
 
 	for _, test := range tests {
-		test := test
 		s.Run(test.name, func() {
 			s.SetupTest()
 			keeper := s.App.GAMMKeeper
@@ -891,7 +888,6 @@ func (s *KeeperTestSuite) TestGetAllMigrationInfo() {
 	}
 
 	for _, test := range tests {
-		test := test
 		s.Run(test.name, func() {
 			s.SetupTest()
 			keeper := s.App.GAMMKeeper
@@ -947,7 +943,6 @@ func (s *KeeperTestSuite) TestCreateConcentratedPoolFromCFMM() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
 
@@ -1035,7 +1030,6 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
 

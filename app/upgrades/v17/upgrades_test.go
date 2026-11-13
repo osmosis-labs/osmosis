@@ -86,7 +86,7 @@ func assertTwapFlipped(s *UpgradeTestSuite, pre, post types.TwapRecord) {
 	s.Require().Equal(pre.P1LastSpotPrice, post.P0LastSpotPrice)
 }
 
-func assertEqual(s *UpgradeTestSuite, pre, post interface{}) {
+func assertEqual(s *UpgradeTestSuite, pre, post any) {
 	s.Require().Equal(pre, post)
 }
 

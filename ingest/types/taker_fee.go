@@ -18,8 +18,10 @@ type DenomPair struct {
 // Sorting is no longer performed since bi-directional taker fee is supported.
 type TakerFeeMap map[DenomPair]osmomath.Dec
 
-var _ json.Marshaler = &TakerFeeMap{}
-var _ json.Unmarshaler = &TakerFeeMap{}
+var (
+	_ json.Marshaler   = &TakerFeeMap{}
+	_ json.Unmarshaler = &TakerFeeMap{}
+)
 
 // MarshalJSON implements json.Marshaler.
 func (tfm TakerFeeMap) MarshalJSON() ([]byte, error) {
@@ -47,7 +49,7 @@ func (tfm TakerFeeMap) UnmarshalJSON(data []byte) error {
 			return fmt.Errorf("invalid key format: %s", keyString)
 		}
 		denomPair := DenomPair{Denom0: parts[0], Denom1: parts[1]}
-		(tfm)[denomPair] = value
+		tfm[denomPair] = value
 	}
 
 	return nil

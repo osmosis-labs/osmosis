@@ -6,10 +6,8 @@ import (
 	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v32/x/tokenfactory/keeper"
 )
 
-var (
-	// AuthorizedQuoteDenoms = authorizedQuoteDenoms
-	AuthorizedUptimes = authorizedUptimes
-)
+// AuthorizedQuoteDenoms = authorizedQuoteDenoms
+var AuthorizedUptimes = authorizedUptimes
 
 func UpdateTokenFactoryParams(ctx sdk.Context, tokenFactoryKeeper *tokenfactorykeeper.Keeper) {
 	updateTokenFactoryParams(ctx, tokenFactoryKeeper)
