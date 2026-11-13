@@ -155,7 +155,7 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	}
 
 	// Step 3: Sort validators in descending order of VRatio.
-	sort.Slice(valSetRatio, func(i, j int) bool {
+	sort.SliceStable(valSetRatio, func(i, j int) bool {
 		return valSetRatio[i].VRatio.GT(valSetRatio[j].VRatio)
 	})
 
@@ -268,7 +268,7 @@ func (k Keeper) UndelegateFromRebalancedValidatorSet(ctx sdk.Context, delegatorA
 	}
 
 	// Step 3: Sort validators in descending order of VRatio.
-	sort.Slice(valSetRatio, func(i, j int) bool {
+	sort.SliceStable(valSetRatio, func(i, j int) bool {
 		return valSetRatio[i].VRatio.GT(valSetRatio[j].VRatio)
 	})
 
@@ -588,12 +588,12 @@ func (k Keeper) IsValidatorSetEqual(newPreferences, existingPreferences []types.
 	}
 
 	// sort the new validator-set
-	sort.Slice(newPreferences, func(i, j int) bool {
+	sort.SliceStable(newPreferences, func(i, j int) bool {
 		return newPreferences[i].ValOperAddress < newPreferences[j].ValOperAddress
 	})
 
 	// sort the existing validator-set
-	sort.Slice(existingPreferences, func(i, j int) bool {
+	sort.SliceStable(existingPreferences, func(i, j int) bool {
 		return existingPreferences[i].ValOperAddress < existingPreferences[j].ValOperAddress
 	})
 

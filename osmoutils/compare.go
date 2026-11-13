@@ -105,7 +105,7 @@ func DisjointArrays(a, b []uint64) []uint64 {
 		return []uint64{}
 	}
 
-	sort.Slice(result, func(i, j int) bool { return result[i] < result[j] })
+	sort.SliceStable(result, func(i, j int) bool { return result[i] < result[j] })
 
 	return result
 }
