@@ -3,11 +3,11 @@ package v33
 import (
 	_ "embed"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -27,6 +27,9 @@ var wbtcUnindexedHolders string
 type WBTCMigration struct {
 	// Transmuter is the alloy transmuter that WBTC is deposited into.
 	Transmuter string
+	// Admin is the admin of Transmuter. The migration lifts the WBTC limiters as this account while
+	// it deposits, and restores them afterwards (see MigrateWBTCToAllBTC).
+	Admin sdk.AccAddress
 	// WBTCDenom is the denom migrated.
 	WBTCDenom string
 	// AlloyedDenom is the denom Transmuter mints. Each holder must receive exactly the amount of
@@ -70,9 +73,10 @@ func migrateWBTCAndLog(ctx sdk.Context, keepers *keepers.AppKeepers) {
 }
 
 // mainnetWBTCMigration returns the osmosis-1 migration: the issuer's merchants and custodian are
-// excluded, and the holders missing from the denom index are added.
+// excluded, the holders missing from the denom index are added, and the transmuter's limiters are
+// lifted as the gov module, which is the allBTC transmuter's admin.
 func mainnetWBTCMigration(ctx sdk.Context, keepers *keepers.AppKeepers) (WBTCMigration, error) {
-	unindexed, err := parseAddresses(wbtcUnindexedHolders, MaxWBTCHoldersToMigrate)
+	unindexed, err := parseAddresses(wbtcUnindexedHolders)
 	if err != nil {
 		return WBTCMigration{}, fmt.Errorf("unindexed WBTC holders: %w", err)
 	}
@@ -82,6 +86,7 @@ func mainnetWBTCMigration(ctx sdk.Context, keepers *keepers.AppKeepers) (WBTCMig
 	}
 	return WBTCMigration{
 		Transmuter:       AllBTCTransmuterAddress,
+		Admin:            keepers.AccountKeeper.GetModuleAddress(govtypes.ModuleName),
 		WBTCDenom:        WBTCDenom,
 		AlloyedDenom:     AllBTCDenom,
 		Excluded:         excluded,
@@ -95,22 +100,59 @@ func mainnetWBTCMigration(ctx sdk.Context, keepers *keepers.AppKeepers) (WBTCMig
 // isUserAccount). Each deposit runs in its own cache context: a failed deposit is logged and rolled
 // back without affecting the others.
 //
-// An error is returned, with no state changed, if the transmuter does not accept WBTC or there are
-// more than MaxWBTCHoldersToMigrate holders.
+// The transmuter's limiters reject a deposit that pushes WBTC's weight in the pool past their bound.
+// On osmosis-1 WBTC is already above its static limiter, so every deposit would fail. The migration
+// therefore lifts the WBTC limiters as m.Admin before depositing and restores their configured bounds
+// afterwards. Limiters of the other assets are left alone: depositing WBTC only lowers their weight,
+// and the transmuter only enforces a limiter when the weight rises. Lifting, depositing and restoring
+// are applied together or not at all, so the limiters are never left lifted.
+//
+// An error is returned, with no state changed, if the transmuter fails pre-flight (it does not
+// accept WBTC, m.Admin is not its admin, or a WBTC limiter has an unknown type), or the limiters cannot be lifted or
+// restored.
 func MigrateWBTCToAllBTC(ctx sdk.Context, keepers *keepers.AppKeepers, m WBTCMigration) (WBTCMigrationResult, error) {
-	result := WBTCMigrationResult{Total: osmomath.ZeroInt()}
+	noResult := WBTCMigrationResult{Total: osmomath.ZeroInt()}
 	transmuterAddr, err := sdk.AccAddressFromBech32(m.Transmuter)
 	if err != nil {
-		return result, fmt.Errorf("transmuter address: %w", err)
+		return noResult, fmt.Errorf("transmuter address: %w", err)
 	}
 	if err := checkTransmuterAcceptsDenom(ctx, keepers, transmuterAddr, m.WBTCDenom); err != nil {
-		return result, err
+		return noResult, err
+	}
+	if err := checkTransmuterAdmin(ctx, keepers, transmuterAddr, m.Admin); err != nil {
+		return noResult, err
+	}
+	limiters, err := denomLimiters(ctx, keepers, transmuterAddr, m.WBTCDenom)
+	if err != nil {
+		return noResult, err
 	}
 	// Collect the holders before changing any balance, since every deposit updates the denom index.
-	holders, err := collectHolders(ctx, keepers, m.WBTCDenom, m.UnindexedHolders, MaxWBTCHoldersToMigrate)
+	holders, err := collectHolders(ctx, keepers, m.WBTCDenom, m.UnindexedHolders)
 	if err != nil {
-		return result, err
+		return noResult, err
 	}
+
+	var result WBTCMigrationResult
+	err = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+		if err := setLimiterBounds(cacheCtx, keepers, transmuterAddr, m.Admin, m.WBTCDenom, limiters, true); err != nil {
+			return fmt.Errorf("lifting %s limiters: %w", m.WBTCDenom, err)
+		}
+		result = depositHolders(cacheCtx, keepers, m, transmuterAddr, holders)
+		if err := setLimiterBounds(cacheCtx, keepers, transmuterAddr, m.Admin, m.WBTCDenom, limiters, false); err != nil {
+			return fmt.Errorf("restoring %s limiters: %w", m.WBTCDenom, err)
+		}
+		return nil
+	})
+	if err != nil {
+		return noResult, err
+	}
+	return result, nil
+}
+
+// depositHolders deposits the spendable WBTC of every user account among holders into the
+// transmuter. See MigrateWBTCToAllBTC.
+func depositHolders(ctx sdk.Context, keepers *keepers.AppKeepers, m WBTCMigration, transmuter sdk.AccAddress, holders []sdk.AccAddress) WBTCMigrationResult {
+	result := WBTCMigrationResult{Total: osmomath.ZeroInt()}
 	excluded := make(map[string]struct{}, len(m.Excluded))
 	for _, addr := range m.Excluded {
 		excluded[string(addr)] = struct{}{}
@@ -127,7 +169,7 @@ func MigrateWBTCToAllBTC(ctx sdk.Context, keepers *keepers.AppKeepers, m WBTCMig
 			continue
 		}
 		err := osmoutils.ApplyFuncIfNoErrorLogToDebug(ctx, func(cacheCtx sdk.Context) error {
-			return joinAsHolder(cacheCtx, keepers, transmuterAddr, holder, coin, m.AlloyedDenom)
+			return joinAsHolder(cacheCtx, keepers, transmuter, holder, coin, m.AlloyedDenom)
 		})
 		if err != nil {
 			ctx.Logger().Error("v33 upgrade: WBTC migration failed for account", "address", holder.String(), "amount", coin.String(), "error", err)
@@ -137,7 +179,102 @@ func MigrateWBTCToAllBTC(ctx sdk.Context, keepers *keepers.AppKeepers, m WBTCMig
 		result.Migrated++
 		result.Total = result.Total.Add(coin.Amount)
 	}
-	return result, nil
+	return result
+}
+
+// liftedLimiterBound is the bound a limiter is set to while the migration deposits. A weight is at
+// most 1, so a static limiter with an upper limit of 1 never rejects a deposit, and neither does a
+// change limiter with a boundary offset of 1, whose bound is its moving average plus the offset.
+const liftedLimiterBound = "1"
+
+// transmuterLimiter is a limiter the transmuter enforces on one denom. Exactly one of
+// StaticUpperLimit and ChangeBoundaryOffset is set, depending on the limiter's type.
+type transmuterLimiter struct {
+	Label                string
+	StaticUpperLimit     string
+	ChangeBoundaryOffset string
+}
+
+// checkTransmuterAdmin returns an error unless admin is the transmuter's admin, the only account
+// allowed to change its limiters.
+func checkTransmuterAdmin(ctx sdk.Context, keepers *keepers.AppKeepers, transmuter, admin sdk.AccAddress) error {
+	var resp struct {
+		Admin string `json:"admin"`
+	}
+	if err := querySmart(ctx, keepers, transmuter, `{"get_admin": {}}`, &resp); err != nil {
+		return err
+	}
+	if resp.Admin != admin.String() {
+		return fmt.Errorf("transmuter %s has admin %q, expected %s", transmuter, resp.Admin, admin)
+	}
+	return nil
+}
+
+// denomLimiters returns the limiters the transmuter enforces on denom. It returns an error if one of
+// them is neither a static nor a change limiter, since it could not be lifted.
+func denomLimiters(ctx sdk.Context, keepers *keepers.AppKeepers, transmuter sdk.AccAddress, denom string) ([]transmuterLimiter, error) {
+	// Each entry is [[denom, label], {"<limiter type>": {...}}].
+	var resp struct {
+		Limiters [][2]json.RawMessage `json:"limiters"`
+	}
+	if err := querySmart(ctx, keepers, transmuter, `{"list_limiters": {}}`, &resp); err != nil {
+		return nil, err
+	}
+
+	var limiters []transmuterLimiter
+	for _, entry := range resp.Limiters {
+		var key [2]string
+		if err := json.Unmarshal(entry[0], &key); err != nil {
+			return nil, fmt.Errorf("decoding limiter key %s: %w", entry[0], err)
+		}
+		if key[0] != denom {
+			continue
+		}
+		var params struct {
+			Static *struct {
+				UpperLimit string `json:"upper_limit"`
+			} `json:"static_limiter"`
+			Change *struct {
+				BoundaryOffset string `json:"boundary_offset"`
+			} `json:"change_limiter"`
+		}
+		if err := json.Unmarshal(entry[1], &params); err != nil {
+			return nil, fmt.Errorf("decoding limiter %q of %s: %w", key[1], denom, err)
+		}
+		limiter := transmuterLimiter{Label: key[1]}
+		switch {
+		case params.Static != nil && params.Static.UpperLimit != "":
+			limiter.StaticUpperLimit = params.Static.UpperLimit
+		case params.Change != nil && params.Change.BoundaryOffset != "":
+			limiter.ChangeBoundaryOffset = params.Change.BoundaryOffset
+		default:
+			return nil, fmt.Errorf("limiter %q of %s has an unknown type: %s", key[1], denom, entry[1])
+		}
+		limiters = append(limiters, limiter)
+	}
+	return limiters, nil
+}
+
+// setLimiterBounds sets the bound of each of denom's limiters, executed as the transmuter's admin:
+// liftedLimiterBound if lift is set, otherwise the limiter's configured bound.
+func setLimiterBounds(ctx sdk.Context, keepers *keepers.AppKeepers, transmuter, admin sdk.AccAddress, denom string, limiters []transmuterLimiter, lift bool) error {
+	for _, limiter := range limiters {
+		method, field, bound := "set_static_limiter_upper_limit", "upper_limit", limiter.StaticUpperLimit
+		if limiter.StaticUpperLimit == "" {
+			method, field, bound = "set_change_limiter_boundary_offset", "boundary_offset", limiter.ChangeBoundaryOffset
+		}
+		if lift {
+			bound = liftedLimiterBound
+		}
+		bz, err := json.Marshal(map[string]map[string]string{method: {"denom": denom, "label": limiter.Label, field: bound}})
+		if err != nil {
+			return err
+		}
+		if _, err := keepers.ContractKeeper.Execute(ctx, transmuter, admin, bz, nil); err != nil {
+			return fmt.Errorf("%s for limiter %q: %w", method, limiter.Label, err)
+		}
+	}
+	return nil
 }
 
 // checkTransmuterAcceptsDenom returns an error unless transmuter is a contract that lists denom in
@@ -210,20 +347,18 @@ func querySmart(ctx sdk.Context, keepers *keepers.AppKeepers, contract sdk.AccAd
 
 // collectHolders returns the addresses with a balance of denom: those in the bank denom index, in
 // address order, followed by the addresses of unindexed that are not in the index and still hold
-// denom. It returns an error if there are more than maxHolders.
-func collectHolders(ctx sdk.Context, keepers *keepers.AppKeepers, denom string, unindexed []sdk.AccAddress, maxHolders int) ([]sdk.AccAddress, error) {
+// denom. Holders are not capped: one that is not a user account is skipped by a single account
+// lookup, so spreading dust to many addresses costs the upgrade little, and a cap would let anyone
+// cancel the migration by exceeding it.
+func collectHolders(ctx sdk.Context, keepers *keepers.AppKeepers, denom string, unindexed []sdk.AccAddress) ([]sdk.AccAddress, error) {
 	holders := make([]sdk.AccAddress, 0, 2048)
 	seen := make(map[string]struct{}, 2048)
-	add := func(addr sdk.AccAddress) error {
+	add := func(addr sdk.AccAddress) {
 		if _, ok := seen[string(addr)]; ok {
-			return nil
-		}
-		if len(holders) == maxHolders {
-			return fmt.Errorf("more than %d holders of %s", maxHolders, denom)
+			return
 		}
 		seen[string(addr)] = struct{}{}
 		holders = append(holders, addr)
-		return nil
 	}
 
 	iter, err := keepers.BankKeeper.Balances.Indexes.Denom.MatchExact(ctx, denom)
@@ -236,18 +371,14 @@ func collectHolders(ctx sdk.Context, keepers *keepers.AppKeepers, denom string, 
 		if err != nil {
 			return nil, err
 		}
-		if err := add(pk.K1()); err != nil {
-			return nil, err
-		}
+		add(pk.K1())
 	}
 
 	for _, addr := range unindexed {
 		if keepers.BankKeeper.GetBalance(ctx, addr, denom).IsZero() {
 			continue
 		}
-		if err := add(addr); err != nil {
-			return nil, err
-		}
+		add(addr)
 	}
 	return holders, nil
 }
@@ -288,16 +419,12 @@ func joinAsHolder(ctx sdk.Context, keepers *keepers.AppKeepers, transmuter, hold
 }
 
 // parseAddresses parses one bech32 address per line, ignoring blank lines and lines starting with #.
-// It returns an error if there are more than maxAddresses.
-func parseAddresses(list string, maxAddresses int) ([]sdk.AccAddress, error) {
+func parseAddresses(list string) ([]sdk.AccAddress, error) {
 	addrs := make([]sdk.AccAddress, 0, 512)
 	for _, line := range strings.Split(list, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
-		}
-		if len(addrs) == maxAddresses {
-			return nil, errors.New("too many addresses")
 		}
 		addr, err := sdk.AccAddressFromBech32(line)
 		if err != nil {

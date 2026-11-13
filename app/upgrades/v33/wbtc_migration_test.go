@@ -2,6 +2,8 @@ package v33_test
 
 import (
 	"encoding/json"
+	"math/big"
+	"time"
 
 	"cosmossdk.io/collections"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -28,14 +30,20 @@ func (s *UpgradeTestSuite) prepareWBTCTransmuter() (string, string) {
 	return contract, "factory/" + contract + "/alloyed/" + apptesting.DefaultAlloyedSubDenom
 }
 
-// migrateWBTC runs the migration against transmuter with the given exclusions and unindexed holders.
+// migrateWBTC runs the migration against transmuter, whose admin is s.TestAccs[0], with the given
+// exclusions and unindexed holders.
 func (s *UpgradeTestSuite) migrateWBTC(transmuter, alloyed string, excluded, unindexed []sdk.AccAddress) v33.WBTCMigrationResult {
-	result, err := v33.MigrateWBTCToAllBTC(s.Ctx, &s.App.AppKeepers, v33.WBTCMigration{
-		Transmuter: transmuter, WBTCDenom: v33.WBTCDenom, AlloyedDenom: alloyed,
-		Excluded: excluded, UnindexedHolders: unindexed,
-	})
+	result, err := v33.MigrateWBTCToAllBTC(s.Ctx, &s.App.AppKeepers, s.wbtcMigration(transmuter, alloyed, excluded, unindexed))
 	s.Require().NoError(err)
 	return result
+}
+
+// wbtcMigration returns the migration configuration for transmuter, whose admin is s.TestAccs[0].
+func (s *UpgradeTestSuite) wbtcMigration(transmuter, alloyed string, excluded, unindexed []sdk.AccAddress) v33.WBTCMigration {
+	return v33.WBTCMigration{
+		Transmuter: transmuter, Admin: s.TestAccs[0], WBTCDenom: v33.WBTCDenom, AlloyedDenom: alloyed,
+		Excluded: excluded, UnindexedHolders: unindexed,
+	}
 }
 
 // TestMigrateWBTCToAllBTC checks that user accounts are migrated 1:1, that only spendable vesting WBTC
@@ -100,7 +108,7 @@ func (s *UpgradeTestSuite) TestMigrateWBTCToAllBTCUnindexedHolders() {
 	s.unindex(unindexed)
 
 	// The index alone misses the unindexed holder.
-	holders, err := v33.CollectHolders(s.Ctx, &s.App.AppKeepers, v33.WBTCDenom, nil, v33.MaxWBTCHoldersToMigrate)
+	holders, err := v33.CollectHolders(s.Ctx, &s.App.AppKeepers, v33.WBTCDenom, nil)
 	s.Require().NoError(err)
 	s.Require().NotContains(holders, unindexed)
 
@@ -172,11 +180,11 @@ func (s *UpgradeTestSuite) TestMigrateWBTCToAllBTCKeepsCLSpreadRewards() {
 func (s *UpgradeTestSuite) TestMigrateWBTCToAllBTCIsolatesFailures() {
 	transmuter, alloyed := s.prepareWBTCTransmuter()
 
-	// WBTC may not exceed 60% of the pool: a 1e8 deposit fits, a 1e10 deposit does not.
-	s.registerStaticLimiter(transmuter, v33.WBTCDenom, "0.6")
+	// The transmuter rejects funds above the largest Uint128, so the deposit of large fails.
+	tooLarge := osmomath.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 128))
 	small, large := s.newUser(), s.newUser()
 	s.FundAcc(small, sdk.NewCoins(sdk.NewInt64Coin(v33.WBTCDenom, 100_000_000)))
-	s.FundAcc(large, sdk.NewCoins(sdk.NewInt64Coin(v33.WBTCDenom, 10_000_000_000)))
+	s.FundAcc(large, sdk.NewCoins(sdk.NewCoin(v33.WBTCDenom, tooLarge)))
 
 	result := s.migrateWBTC(transmuter, alloyed, nil, nil)
 	s.Require().Equal(1, result.Migrated)
@@ -184,8 +192,52 @@ func (s *UpgradeTestSuite) TestMigrateWBTCToAllBTCIsolatesFailures() {
 
 	s.Require().True(s.App.BankKeeper.GetBalance(s.Ctx, small, v33.WBTCDenom).IsZero())
 	s.Require().Equal(osmomath.NewInt(100_000_000), s.App.BankKeeper.GetBalance(s.Ctx, small, alloyed).Amount)
-	s.Require().Equal(osmomath.NewInt(10_000_000_000), s.App.BankKeeper.GetBalance(s.Ctx, large, v33.WBTCDenom).Amount)
+	s.Require().Equal(tooLarge, s.App.BankKeeper.GetBalance(s.Ctx, large, v33.WBTCDenom).Amount)
 	s.Require().True(s.App.BankKeeper.GetBalance(s.Ctx, large, alloyed).IsZero())
+}
+
+// TestMigrateWBTCToAllBTCLiftsLimiters checks that deposits the WBTC limiters would reject are
+// migrated, and that the limiters enforce their configured bounds again afterwards. As on
+// osmosis-1, WBTC is at its static limiter before the migration, so any deposit would be rejected.
+func (s *UpgradeTestSuite) TestMigrateWBTCToAllBTCLiftsLimiters() {
+	transmuter, alloyed := s.prepareWBTCTransmuter()
+	s.registerStaticLimiter(transmuter, v33.WBTCDenom, "0.5")
+	s.registerChangeLimiter(transmuter, v33.WBTCDenom, "0.001")
+	s.registerStaticLimiter(transmuter, otherBTCDenom, "0.9")
+	limitersBefore := s.listLimiters(transmuter)
+
+	// Give the change limiter a moving average to enforce, as on a pool that has seen swaps.
+	s.joinTransmuter(transmuter, s.TestAccs[0], sdk.NewInt64Coin(otherBTCDenom, 1_000_000))
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(10 * time.Minute))
+	s.Require().ErrorContains(s.tryJoinTransmuter(transmuter, sdk.NewInt64Coin(v33.WBTCDenom, 10_000_000)), "Upper limit exceeded")
+
+	userA, userB := s.newUser(), s.newUser()
+	s.FundAcc(userA, sdk.NewCoins(sdk.NewInt64Coin(v33.WBTCDenom, 1_000_000_000)))
+	s.FundAcc(userB, sdk.NewCoins(sdk.NewInt64Coin(v33.WBTCDenom, 500_000_000)))
+
+	result := s.migrateWBTC(transmuter, alloyed, nil, nil)
+	s.Require().Equal(2, result.Migrated)
+	s.Require().Equal(0, result.Failed)
+	s.Require().Equal(osmomath.NewInt(1_000_000_000), s.App.BankKeeper.GetBalance(s.Ctx, userA, alloyed).Amount)
+	s.Require().Equal(osmomath.NewInt(500_000_000), s.App.BankKeeper.GetBalance(s.Ctx, userB, alloyed).Amount)
+
+	// The limiters are back to their configured bounds and reject WBTC deposits again.
+	s.Require().Equal(boundsOf(limitersBefore), boundsOf(s.listLimiters(transmuter)))
+	s.Require().ErrorContains(s.tryJoinTransmuter(transmuter, sdk.NewInt64Coin(v33.WBTCDenom, 10_000_000)), "Upper limit exceeded")
+}
+
+// TestMigrateWBTCToAllBTCRequiresAdmin checks that nothing moves when the configured admin is not the
+// transmuter's admin, since the WBTC limiters could not be lifted.
+func (s *UpgradeTestSuite) TestMigrateWBTCToAllBTCRequiresAdmin() {
+	transmuter, alloyed := s.prepareWBTCTransmuter()
+	holder := s.newUser()
+	s.FundAcc(holder, sdk.NewCoins(sdk.NewInt64Coin(v33.WBTCDenom, 1_000)))
+
+	m := s.wbtcMigration(transmuter, alloyed, nil, nil)
+	m.Admin = s.TestAccs[1]
+	_, err := v33.MigrateWBTCToAllBTC(s.Ctx, &s.App.AppKeepers, m)
+	s.Require().ErrorContains(err, "expected "+s.TestAccs[1].String())
+	s.Require().Equal(osmomath.NewInt(1_000), s.App.BankKeeper.GetBalance(s.Ctx, holder, v33.WBTCDenom).Amount)
 }
 
 // TestMigrateWBTCToAllBTCRejectsUnexpectedTransmuter checks that nothing moves when the transmuter is
@@ -202,34 +254,30 @@ func (s *UpgradeTestSuite) TestMigrateWBTCToAllBTCRejectsUnexpectedTransmuter() 
 	for name, transmuter := range tests {
 		s.Run(name, func() {
 			before := s.App.BankKeeper.GetAllBalances(s.Ctx, holder)
-			_, err := v33.MigrateWBTCToAllBTC(s.Ctx, &s.App.AppKeepers, v33.WBTCMigration{
-				Transmuter: transmuter, WBTCDenom: v33.WBTCDenom, AlloyedDenom: "factory/" + transmuter + "/alloyed/allBTC",
-			})
+			m := s.wbtcMigration(transmuter, "factory/"+transmuter+"/alloyed/allBTC", nil, nil)
+			_, err := v33.MigrateWBTCToAllBTC(s.Ctx, &s.App.AppKeepers, m)
 			s.Require().Error(err)
 			s.Require().Equal(before, s.App.BankKeeper.GetAllBalances(s.Ctx, holder))
 		})
 	}
 }
 
-// TestCollectHoldersCap checks that the holder list is bounded and counts listed unindexed holders.
-func (s *UpgradeTestSuite) TestCollectHoldersCap() {
+// TestCollectHolders checks that the holder list includes listed unindexed holders.
+func (s *UpgradeTestSuite) TestCollectHolders() {
 	accs := apptesting.CreateRandomAccounts(3)
 	for _, acc := range accs {
 		s.FundAcc(acc, sdk.NewCoins(sdk.NewInt64Coin(v33.WBTCDenom, 1)))
 	}
 	s.unindex(accs[2])
 
-	holders, err := v33.CollectHolders(s.Ctx, &s.App.AppKeepers, v33.WBTCDenom, accs[2:], 3)
+	holders, err := v33.CollectHolders(s.Ctx, &s.App.AppKeepers, v33.WBTCDenom, accs[2:])
 	s.Require().NoError(err)
 	s.Require().ElementsMatch(accs, holders)
-
-	_, err = v33.CollectHolders(s.Ctx, &s.App.AppKeepers, v33.WBTCDenom, accs[2:], 2)
-	s.Require().ErrorContains(err, "more than 2 holders")
 }
 
-// TestWBTCUnindexedHoldersList checks that the embedded list parses and fits under the holder cap.
+// TestWBTCUnindexedHoldersList checks that the embedded list parses and has no duplicates.
 func (s *UpgradeTestSuite) TestWBTCUnindexedHoldersList() {
-	addrs, err := v33.ParseAddresses(v33.WBTCUnindexedHolders, v33.MaxWBTCHoldersToMigrate)
+	addrs, err := v33.ParseAddresses(v33.WBTCUnindexedHolders)
 	s.Require().NoError(err)
 	s.Require().Len(addrs, 483)
 
@@ -302,6 +350,75 @@ func (s *UpgradeTestSuite) registerStaticLimiter(transmuter, denom, upperLimit s
 	s.Require().NoError(err)
 	_, err = s.App.ContractKeeper.Execute(s.Ctx, sdk.MustAccAddressFromBech32(transmuter), s.TestAccs[0], bz, nil)
 	s.Require().NoError(err)
+}
+
+// registerChangeLimiter registers a change limiter with a one hour window on the transmuter,
+// executed by its admin.
+func (s *UpgradeTestSuite) registerChangeLimiter(transmuter, denom, boundaryOffset string) {
+	msg := map[string]any{"register_limiter": map[string]any{
+		"denom": denom,
+		"label": "change",
+		"limiter_params": map[string]any{"change_limiter": map[string]any{
+			"window_config":   map[string]any{"window_size": "3600000000000", "division_count": "6"},
+			"boundary_offset": boundaryOffset,
+		}},
+	}}
+	bz, err := json.Marshal(msg)
+	s.Require().NoError(err)
+	_, err = s.App.ContractKeeper.Execute(s.Ctx, sdk.MustAccAddressFromBech32(transmuter), s.TestAccs[0], bz, nil)
+	s.Require().NoError(err)
+}
+
+// listLimiters returns the transmuter's limiters by denom and label.
+func (s *UpgradeTestSuite) listLimiters(transmuter string) map[[2]string]map[string]map[string]any {
+	bz, err := s.App.WasmKeeper.QuerySmart(s.Ctx, sdk.MustAccAddressFromBech32(transmuter), []byte(`{"list_limiters": {}}`))
+	s.Require().NoError(err)
+	var resp struct {
+		Limiters [][2]json.RawMessage `json:"limiters"`
+	}
+	s.Require().NoError(json.Unmarshal(bz, &resp))
+	limiters := make(map[[2]string]map[string]map[string]any, len(resp.Limiters))
+	for _, entry := range resp.Limiters {
+		var key [2]string
+		var limiter map[string]map[string]any
+		s.Require().NoError(json.Unmarshal(entry[0], &key))
+		s.Require().NoError(json.Unmarshal(entry[1], &limiter))
+		limiters[key] = limiter
+	}
+	return limiters
+}
+
+// boundsOf returns the type and configured bound of each limiter, leaving out the moving average
+// state of change limiters, which deposits update.
+func boundsOf(limiters map[[2]string]map[string]map[string]any) map[[2]string]string {
+	bounds := make(map[[2]string]string, len(limiters))
+	for key, limiter := range limiters {
+		if static, ok := limiter["static_limiter"]; ok {
+			bounds[key] = "static " + static["upper_limit"].(string)
+		} else {
+			bounds[key] = "change " + limiter["change_limiter"]["boundary_offset"].(string)
+		}
+	}
+	return bounds
+}
+
+// joinTransmuter funds sender with coin and deposits it into the transmuter.
+func (s *UpgradeTestSuite) joinTransmuter(transmuter string, sender sdk.AccAddress, coin sdk.Coin) {
+	s.FundAcc(sender, sdk.NewCoins(coin))
+	_, err := s.App.ContractKeeper.Execute(s.Ctx, sdk.MustAccAddressFromBech32(transmuter), sender, []byte(`{"join_pool": {}}`), sdk.NewCoins(coin))
+	s.Require().NoError(err)
+}
+
+// tryJoinTransmuter deposits coin into the transmuter from a new account in a discarded cache
+// context, and returns the error of the deposit.
+func (s *UpgradeTestSuite) tryJoinTransmuter(transmuter string, coin sdk.Coin) error {
+	ctx := s.Ctx
+	defer func() { s.Ctx = ctx }()
+	s.Ctx, _ = ctx.CacheContext()
+	sender := apptesting.CreateRandomAccounts(1)[0]
+	s.FundAcc(sender, sdk.NewCoins(coin))
+	_, err := s.App.ContractKeeper.Execute(s.Ctx, sdk.MustAccAddressFromBech32(transmuter), sender, []byte(`{"join_pool": {}}`), sdk.NewCoins(coin))
+	return err
 }
 
 // transmuterPoolID returns the cosmwasm pool ID of the given contract.

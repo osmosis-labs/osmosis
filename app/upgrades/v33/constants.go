@@ -71,6 +71,10 @@ var HuahuaStuckGauges = []struct {
 // which mints the same amount of allBTC back to the account. Accounts without a public key are
 // skipped: they are protocol accounts (module accounts, pools, contracts, IBC escrows, CL spread
 // reward and incentive addresses, ICA host accounts) whose WBTC balance is owed to someone else.
+//
+// WBTC is already above the transmuter's 0.75 WBTC static limiter, which would reject every deposit.
+// The gov module, the transmuter's admin, lifts the WBTC limiters for the deposits, and their
+// configured bounds are restored once the deposits are done.
 const (
 
 	// WBTCDenom is native WBTC, issued on Osmosis through tokenfactory.
@@ -85,10 +89,6 @@ const (
 
 	// AllBTCDenom is the alloyed denom minted by AllBTCTransmuterAddress.
 	AllBTCDenom = "factory/" + AllBTCTransmuterAddress + "/alloyed/allBTC"
-
-	// MaxWBTCHoldersToMigrate bounds the migration loop. If the chain has more WBTC holders than this,
-	// the whole migration is skipped. osmosis-1 had 1,940 holders at height 73270661.
-	MaxWBTCHoldersToMigrate = 5_000
 
 	// maxWBTCIssuerMembers bounds the merchant list read from the WBTC issuer.
 	maxWBTCIssuerMembers = 100
