@@ -12,13 +12,9 @@ import (
 )
 
 var (
-	defaultDeveloperVestingProportion = osmomath.NewDecWithPrec(3, 1)
-	defaultProvisionsAmount           = osmomath.NewDec(10)
-	defaultParams                     = types.Params{
+	defaultProvisionsAmount = osmomath.NewDec(10)
+	defaultParams           = types.Params{
 		MintDenom: sdk.DefaultBondDenom,
-		DistributionProportions: types.DistributionProportions{
-			DeveloperRewards: defaultDeveloperVestingProportion,
-		},
 	}
 )
 
@@ -92,40 +88,4 @@ func TestMinterValidate(t *testing.T) {
 			}
 		})
 	}
-}
-
-// TestGetInflationProvisions sanity checks that inflation provisions are calculated correctly.
-func TestGetInflationProvisions(t *testing.T) {
-	// Setup
-	var (
-		minter = types.NewMinter(defaultProvisionsAmount)
-
-		expectedDenom           = defaultParams.MintDenom
-		expectedInflationAmount = defaultProvisionsAmount.Mul(osmomath.OneDec().Sub(defaultDeveloperVestingProportion))
-	)
-
-	// System under test
-	actualInflationProvisions := minter.GetInflationProvisions(defaultParams)
-
-	// Assertions
-	require.Equal(t, expectedDenom, actualInflationProvisions.Denom)
-	require.Equal(t, expectedInflationAmount, actualInflationProvisions.Amount)
-}
-
-// TestGetDeveloperVestingProvisions sanity checks that developer vesting provisions are calculated correctly.
-func TestGetDeveloperVestingProvisions(t *testing.T) {
-	// Setup
-	var (
-		minter = types.NewMinter(defaultProvisionsAmount)
-
-		expectedDenom           = defaultParams.MintDenom
-		expectedInflationAmount = defaultProvisionsAmount.Mul(defaultDeveloperVestingProportion)
-	)
-
-	// System under test
-	actualInflationProvisions := minter.GetDeveloperVestingEpochProvisions(defaultParams)
-
-	// Assertions
-	require.Equal(t, expectedDenom, actualInflationProvisions.Denom)
-	require.Equal(t, expectedInflationAmount, actualInflationProvisions.Amount)
 }

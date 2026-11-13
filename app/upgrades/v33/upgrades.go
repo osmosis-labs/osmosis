@@ -8,14 +8,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v32/app/keepers"
 	appparams "github.com/osmosis-labs/osmosis/v32/app/params"
 	"github.com/osmosis-labs/osmosis/v32/app/upgrades"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v32/x/incentives/keeper"
+	mintkeeper "github.com/osmosis-labs/osmosis/v32/x/mint/keeper"
+	minttypes "github.com/osmosis-labs/osmosis/v32/x/mint/types"
 )
 
-// CreateUpgradeHandler returns the v33 upgrade handler. After the module migrations it recovers the
-// HUAHUA held by gauges 1954-1959 (see HuahuaStuckGauges) and moves OSMO to the burn address.
+// CreateUpgradeHandler returns the v33 upgrade handler. After the module migrations it removes the
+// developer rewards share from mint distribution, recovers the HUAHUA held by gauges 1954-1959
+// (see HuahuaStuckGauges) and moves OSMO to the burn address.
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
@@ -37,6 +41,11 @@ func CreateUpgradeHandler(
 			}
 		} else {
 			sdkCtx.Logger().Info("skipping v33 OSMO burn transfer on non-mainnet chain", "chain_id", sdkCtx.ChainID())
+		}
+
+		// Removing the developer rewards share changes the mint schedule, so a failure halts the upgrade.
+		if err := removeDeveloperRewardsFromMint(sdkCtx, keepers.MintKeeper); err != nil {
+			return nil, err
 		}
 
 		// The recovery is not critical to the chain, so a failure is logged instead of halting the upgrade.
@@ -111,4 +120,55 @@ func recoverHuahuaFromStuckGauges(ctx sdk.Context, incentivesKeeper *incentivesk
 		recovered = recovered.Add(coins...)
 	}
 	return recovered, nil
+}
+
+// removeDeveloperRewardsFromMint takes the developer rewards share out of mint distribution without
+// changing the amount of OSMO that enters circulation each epoch.
+//
+// Previously the full epoch provisions were minted, the developer rewards share was burned and the same
+// amount was paid out of the developer vesting module account. Only (1 - developer_rewards) of the
+// provisions was new supply. The epoch provisions are scaled by that factor and the remaining
+// proportions are rescaled by its inverse, so every recipient keeps its per-epoch amount. The
+// community pool takes the remainder so the proportions sum to exactly one.
+//
+// The developer vesting module account and its balance are left untouched.
+func removeDeveloperRewardsFromMint(ctx sdk.Context, mintKeeper *mintkeeper.Keeper) error {
+	params := mintKeeper.GetParams(ctx)
+	old := params.DistributionProportions
+	if old.DeveloperRewards.IsZero() {
+		return nil
+	}
+
+	inflationFactor := osmomath.OneDec().Sub(old.DeveloperRewards)
+	if !inflationFactor.IsPositive() {
+		return fmt.Errorf("developer rewards proportion %s leaves no inflation to rescale", old.DeveloperRewards)
+	}
+
+	staking := old.Staking.Quo(inflationFactor)
+	poolIncentives := old.PoolIncentives.Quo(inflationFactor)
+	params.DistributionProportions = minttypes.DistributionProportions{
+		Staking:          staking,
+		PoolIncentives:   poolIncentives,
+		DeveloperRewards: osmomath.ZeroDec(),
+		CommunityPool:    osmomath.OneDec().Sub(staking).Sub(poolIncentives),
+	}
+	params.WeightedDeveloperRewardsReceivers = []minttypes.WeightedAddress{}
+	if err := params.Validate(); err != nil {
+		return fmt.Errorf("rescaled mint params are invalid: %w", err)
+	}
+
+	minter := mintKeeper.GetMinter(ctx)
+	oldEpochProvisions := minter.EpochProvisions
+	minter.EpochProvisions = oldEpochProvisions.Mul(inflationFactor)
+	if err := minter.Validate(); err != nil {
+		return fmt.Errorf("rescaled minter is invalid: %w", err)
+	}
+
+	mintKeeper.SetParams(ctx, params)
+	mintKeeper.SetMinter(ctx, minter)
+
+	ctx.Logger().Info("v33 upgrade: removed developer rewards from mint distribution",
+		"old_proportions", old.String(), "new_proportions", params.DistributionProportions.String(),
+		"old_epoch_provisions", oldEpochProvisions.String(), "new_epoch_provisions", minter.EpochProvisions.String())
+	return nil
 }

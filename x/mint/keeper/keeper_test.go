@@ -1,17 +1,14 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 
 	errorsmod "cosmossdk.io/errors"
-	"github.com/cosmos/btcutil/bech32"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -157,6 +154,9 @@ func (s *KeeperTestSuite) TestGetProportions() {
 	}
 }
 
+// TestDistributeMintedCoin tests that the minted coin is split between staking, pool incentives
+// and the community pool, and that the developer vesting module account is not touched, even when
+// the deprecated developer rewards receivers are set.
 func (s *KeeperTestSuite) TestDistributeMintedCoin() {
 	const (
 		mintAmount = 10000
@@ -170,17 +170,12 @@ func (s *KeeperTestSuite) TestDistributeMintedCoin() {
 		mintCoin          sdk.Coin
 	}{
 		{
-			name: "one dev reward address",
-			weightedAddresses: []types.WeightedAddress{
-				{
-					Address: testAddressOne.String(),
-					Weight:  osmomath.NewDec(1),
-				},
-			},
-			mintCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(mintAmount)),
+			name:              "no dev reward addresses",
+			weightedAddresses: nil,
+			mintCoin:          sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(mintAmount)),
 		},
 		{
-			name: "multiple dev reward addresses",
+			name: "deprecated dev reward addresses are ignored",
 			weightedAddresses: []types.WeightedAddress{
 				{
 					Address: testAddressThree.String(),
@@ -194,9 +189,9 @@ func (s *KeeperTestSuite) TestDistributeMintedCoin() {
 			mintCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(mintAmount)),
 		},
 		{
-			name:              "nil dev reward address - dev rewards go to community pool",
+			name:              "rounding remainder goes to community pool",
 			weightedAddresses: nil,
-			mintCoin:          sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(mintAmount)),
+			mintCoin:          sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(mintAmount+7)),
 		},
 	}
 	for _, tc := range tests {
@@ -215,24 +210,21 @@ func (s *KeeperTestSuite) TestDistributeMintedCoin() {
 			// is called once.
 			mintKeeper.SetMintHooksUnsafe(&mintHooksMock{})
 
-			mintAmount := tc.mintCoin.Amount.ToLegacyDec()
-
-			// set WeightedDeveloperRewardsReceivers
 			params.WeightedDeveloperRewardsReceivers = tc.weightedAddresses
 			mintKeeper.SetParams(ctx, params)
 
-			expectedCommunityPoolAmount := mintAmount.Mul((params.DistributionProportions.CommunityPool))
-			expectedDevRewardsAmount := mintAmount.Mul(params.DistributionProportions.DeveloperRewards)
-			expectedPoolIncentivesAmount := mintAmount.Mul(params.DistributionProportions.PoolIncentives)
-			expectedStakingAmount := tc.mintCoin.Amount.ToLegacyDec().Mul(params.DistributionProportions.Staking)
+			mintAmount := tc.mintCoin.Amount.ToLegacyDec()
+			expectedStakingAmount := mintAmount.Mul(params.DistributionProportions.Staking).TruncateInt()
+			expectedPoolIncentivesAmount := mintAmount.Mul(params.DistributionProportions.PoolIncentives).TruncateInt()
+			expectedCommunityPoolAmount := tc.mintCoin.Amount.Sub(expectedStakingAmount).Sub(expectedPoolIncentivesAmount)
 
-			// distributions go to community pool because nil dev reward addresses.
-			if tc.weightedAddresses == nil {
-				expectedCommunityPoolAmount = expectedCommunityPoolAmount.Add(expectedDevRewardsAmount)
-			}
+			devVestingAddr := accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)
+			devVestingBalanceBefore := bankKeeper.GetBalance(ctx, devVestingAddr, sdk.DefaultBondDenom)
+			supplyOffsetBefore := bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom)
 
 			// mints coins so supply exists on chain
 			s.MintCoins(sdk.NewCoins(tc.mintCoin))
+			supplyBefore := bankKeeper.GetSupply(ctx, sdk.DefaultBondDenom)
 
 			// System under test.
 			err := mintKeeper.DistributeMintedCoin(ctx, tc.mintCoin)
@@ -244,25 +236,29 @@ func (s *KeeperTestSuite) TestDistributeMintedCoin() {
 			s.Require().Equal(1, hooks.hookCallCount)
 
 			// validate distributions to fee collector.
-			feeCollectorBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(authtypes.FeeCollectorName), sdk.DefaultBondDenom).Amount.ToLegacyDec()
-			s.Require().Equal(
-				expectedStakingAmount,
-				feeCollectorBalanceAmount)
+			feeCollectorBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(authtypes.FeeCollectorName), sdk.DefaultBondDenom).Amount
+			s.Require().Equal(expectedStakingAmount, feeCollectorBalanceAmount)
 
 			// validate pool incentives distributions.
-			actualPoolIncentivesBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(poolincentivestypes.ModuleName), sdk.DefaultBondDenom).Amount.ToLegacyDec()
+			actualPoolIncentivesBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(poolincentivestypes.ModuleName), sdk.DefaultBondDenom).Amount
 			s.Require().Equal(expectedPoolIncentivesAmount, actualPoolIncentivesBalance)
 
 			// validate distributions to community pool.
-			actualCommunityPoolBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distributiontypes.ModuleName), sdk.DefaultBondDenom).Amount.ToLegacyDec()
+			actualCommunityPoolBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distributiontypes.ModuleName), sdk.DefaultBondDenom).Amount
 			s.Require().Equal(expectedCommunityPoolAmount, actualCommunityPoolBalanceAmount)
 
-			// validate distributions to developer addresses.
-			for i, weightedAddress := range tc.weightedAddresses {
-				devRewardsReceiver, _ := sdk.AccAddressFromBech32(weightedAddress.GetAddress())
-				s.Require().Equal(
-					expectedDevRewardsAmount.Mul(params.WeightedDeveloperRewardsReceivers[i].Weight).TruncateInt(),
-					bankKeeper.GetBalance(ctx, devRewardsReceiver, sdk.DefaultBondDenom).Amount)
+			// nothing is left in the mint module and nothing is burned.
+			s.Require().True(bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), sdk.DefaultBondDenom).IsZero())
+			s.Require().Equal(supplyBefore, bankKeeper.GetSupply(ctx, sdk.DefaultBondDenom))
+
+			// the developer vesting module account and the supply offset are not touched.
+			s.Require().Equal(devVestingBalanceBefore, bankKeeper.GetBalance(ctx, devVestingAddr, sdk.DefaultBondDenom))
+			s.Require().Equal(supplyOffsetBefore, bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom))
+
+			// deprecated developer rewards receivers get nothing.
+			for _, weightedAddress := range tc.weightedAddresses {
+				devRewardsReceiver := sdk.MustAccAddressFromBech32(weightedAddress.GetAddress())
+				s.Require().True(bankKeeper.GetBalance(ctx, devRewardsReceiver, sdk.DefaultBondDenom).IsZero())
 			}
 		})
 	}
@@ -429,308 +425,16 @@ func (s *KeeperTestSuite) TestDistributeToModule() {
 	}
 }
 
-// TestDistributeDeveloperRewards tests the following:
-// - distribution from developer module account to the given weighted addressed occurs.
-// - developer vesting module account balance is correctly updated.
-// - all developer addressed are updated with correct proportions.
-// - mint module account balance is updated - burn over allocations.
-// - if recipients are empty - community pool us updated.
-func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
-	const (
-		invalidAddress = "invalid"
-	)
-
-	var (
-		validLargePreMintAmount  = osmomath.NewInt(keeper.DeveloperVestingAmount)
-		validPreMintAmountAddOne = osmomath.NewInt(keeper.DeveloperVestingAmount).Add(osmomath.OneInt())
-		validPreMintCoin         = sdk.NewCoin(sdk.DefaultBondDenom, validLargePreMintAmount)
-		validPreMintCoinSubOne   = sdk.NewCoin(sdk.DefaultBondDenom, validLargePreMintAmount.Sub(osmomath.OneInt()))
-	)
-
-	tests := map[string]struct {
-		preMintCoin sdk.Coin
-
-		mintedCoin         sdk.Coin
-		proportion         osmomath.Dec
-		recepientAddresses []types.WeightedAddress
-
-		expectedError error
-		expectPanic   bool
-		// See testcases with this flag set to true for details.
-		allowBalanceChange bool
-		// See testcases with this flag set to true for details.
-		expectSameAddresses bool
-	}{
-		"valid case with 1 weighted address": {
-			preMintCoin: validPreMintCoin,
-
-			mintedCoin: validPreMintCoin,
-			proportion: osmomath.NewDecWithPrec(153, 3),
-			recepientAddresses: []types.WeightedAddress{
-				{
-					Address: testAddressOne.String(),
-					Weight:  osmomath.NewDec(1),
-				},
-			},
-		},
-		"valid case with 3 weighted addresses and custom large mint amount under pre mint": {
-			preMintCoin: validPreMintCoin,
-			mintedCoin:  sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(939_123_546_789)),
-			proportion:  osmomath.NewDecWithPrec(31347, 5),
-			recepientAddresses: []types.WeightedAddress{ // .231 + .4 + .369
-				{
-					Address: testAddressOne.String(),
-					Weight:  osmomath.NewDecWithPrec(231, 3),
-				},
-				{
-					Address: testAddressTwo.String(),
-					Weight:  osmomath.NewDecWithPrec(4, 1),
-				},
-				{
-					Address: testAddressThree.String(),
-					Weight:  osmomath.NewDecWithPrec(369, 3),
-				},
-			},
-		},
-		"valid case with 2 addresses that are the same": {
-			preMintCoin: validPreMintCoin,
-
-			mintedCoin: validPreMintCoin,
-			proportion: osmomath.NewDecWithPrec(123, 3),
-			recepientAddresses: []types.WeightedAddress{
-				{
-					Address: testAddressOne.String(),
-					Weight:  osmomath.NewDecWithPrec(5, 1),
-				},
-				{
-					Address: testAddressOne.String(),
-					Weight:  osmomath.NewDecWithPrec(5, 1),
-				},
-			},
-			// Since we have double the full amount allocated
-			/// to the same address, the balance assertions will
-			// differ by expecting the full minted amount.
-			expectSameAddresses: true,
-		},
-		"valid case with 0 reward receivers - goes to community pool": {
-			preMintCoin: validPreMintCoin,
-
-			mintedCoin: validPreMintCoin,
-			proportion: osmomath.NewDecWithPrec(153, 3),
-		},
-		"valid case with 0 amount of total minted coin": {
-			preMintCoin: validPreMintCoin,
-
-			mintedCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.ZeroInt()),
-			proportion: osmomath.NewDecWithPrec(153, 3),
-			recepientAddresses: []types.WeightedAddress{
-				{
-					Address: testAddressOne.String(),
-					Weight:  osmomath.NewDec(1),
-				},
-			},
-		},
-		"invalid value for developer rewards proportion (> 1) - error": {
-			preMintCoin: validPreMintCoin,
-
-			mintedCoin: validPreMintCoin,
-			proportion: osmomath.NewDec(2),
-			recepientAddresses: []types.WeightedAddress{
-				{
-					Address: testAddressOne.String(),
-					Weight:  osmomath.NewDec(1),
-				},
-			},
-
-			expectedError: keeper.ErrInvalidRatio{ActualRatio: osmomath.NewDec(2)},
-		},
-		"invalid address in developer reward receivers - error": {
-			preMintCoin: validPreMintCoin,
-
-			mintedCoin: validPreMintCoin,
-			proportion: osmomath.NewDecWithPrec(153, 3),
-			recepientAddresses: []types.WeightedAddress{
-				{
-					Address: invalidAddress,
-					Weight:  osmomath.NewDec(1),
-				},
-			},
-
-			expectedError: errorsmod.Wrap(bech32.ErrInvalidLength(len(invalidAddress)), "decoding bech32 failed"),
-			// This case should not happen in practice due to parameter validation.
-			// The method spec also requires that all recipient addresses are valid by CONTRACT.
-			// Since we still handle error returned by the conversion from string to address,
-			// we try to cover it explicitly. However, it changes balance so we don't test it.
-			allowBalanceChange: true,
-		},
-		"pre-mint < distribute * proportion - error": {
-			preMintCoin: validPreMintCoinSubOne,
-
-			mintedCoin: validPreMintCoin,
-			proportion: osmomath.OneDec(),
-			recepientAddresses: []types.WeightedAddress{
-				{
-					Address: testAddressOne.String(),
-					Weight:  osmomath.NewDec(1),
-				},
-			},
-			expectedError: errorsmod.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("spendable balance %s is smaller than %s", validPreMintCoinSubOne, validPreMintCoin)),
-		},
-		"distribute * proportion < pre-mint but distribute * proportion > developer vesting amount - error": {
-			preMintCoin: validPreMintCoin,
-
-			mintedCoin: sdk.NewCoin(sdk.DefaultBondDenom, validPreMintAmountAddOne),
-			proportion: osmomath.OneDec(),
-			recepientAddresses: []types.WeightedAddress{
-				{
-					Address: testAddressOne.String(),
-					Weight:  osmomath.NewDec(1),
-				},
-			},
-			expectedError: keeper.ErrInsufficientDevVestingBalance{ActualBalance: validPreMintCoin.Amount, AttemptedDistribution: validPreMintAmountAddOne},
-		},
-		"valid case with 1 empty string weighted address - distributes to community pool": {
-			preMintCoin: validPreMintCoin,
-
-			mintedCoin: validPreMintCoin,
-			proportion: osmomath.NewDecWithPrec(153, 3),
-			recepientAddresses: []types.WeightedAddress{
-				{
-					Address: keeper.EmptyWeightedAddressReceiver,
-					Weight:  osmomath.NewDec(1),
-				},
-			},
-		},
-		"valid case with 2 addresses - empty string (distributes to community pool) and regular address (distributes to the address)": {
-			preMintCoin: validPreMintCoin,
-
-			mintedCoin: validPreMintCoin,
-			proportion: osmomath.NewDecWithPrec(153, 3),
-			recepientAddresses: []types.WeightedAddress{
-				{
-					Address: keeper.EmptyWeightedAddressReceiver,
-					Weight:  osmomath.NewDec(1),
-				},
-				{
-					Address: testAddressOne.String(),
-					Weight:  osmomath.NewDec(1),
-				},
-			},
-		},
-	}
-	for name, tc := range tests {
-		s.Run(name, func() {
-			s.Setup()
-
-			osmoassert.ConditionalPanic(s.T(), tc.expectPanic, func() {
-				mintKeeper := s.App.MintKeeper
-				bankKeeper := s.App.BankKeeper
-				accountKeeper := s.App.AccountKeeper
-				ctx := s.Ctx
-
-				// Setup.
-				s.Require().NoError(mintKeeper.MintCoins(ctx, sdk.NewCoins(tc.preMintCoin)))
-
-				// TODO: Should not be truncated. Remove truncation after rounding errors are addressed and resolved.
-				// Ref: https://github.com/osmosis-labs/osmosis/issues/1917
-				expectedDistributed := tc.mintedCoin.Amount.ToLegacyDec().Mul(tc.proportion).TruncateInt()
-
-				oldMintModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), tc.mintedCoin.Denom).Amount
-				oldDeveloperVestingModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), tc.mintedCoin.Denom).Amount
-				oldCommunityPoolBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distributiontypes.ModuleName), tc.mintedCoin.Denom).Amount
-				oldDeveloperRewardsBalanceAmounts := make([]osmomath.Int, len(tc.recepientAddresses))
-				for i, weightedAddress := range tc.recepientAddresses {
-					if weightedAddress.Address == keeper.EmptyWeightedAddressReceiver {
-						continue
-					}
-
-					// No error check to be able to test invalid addresses.
-					address, _ := sdk.AccAddressFromBech32(weightedAddress.Address)
-					oldDeveloperRewardsBalanceAmounts[i] = bankKeeper.GetBalance(ctx, address, tc.mintedCoin.Denom).Amount
-				}
-
-				// Test.
-				actualDistributed, err := mintKeeper.DistributeDeveloperRewards(ctx, tc.mintedCoin, tc.proportion, tc.recepientAddresses)
-
-				// Assertions.
-				actualMintModuleBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), tc.mintedCoin.Denom)
-				actualDeveloperVestingModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), tc.mintedCoin.Denom).Amount
-				actualCommunityPoolModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distributiontypes.ModuleName), tc.mintedCoin.Denom).Amount
-
-				if tc.expectedError != nil {
-					s.Require().Error(err)
-					s.Require().Equal(tc.expectedError.Error(), err.Error())
-					s.Require().Equal(actualDistributed, osmomath.Int{})
-
-					// See testcases with this flag set to true for details.
-					if tc.allowBalanceChange {
-						return
-					}
-					// Old balances should not change.
-					s.Require().Equal(oldMintModuleBalanceAmount.Int64(), actualMintModuleBalance.Amount.Int64())
-					s.Require().Equal(oldDeveloperVestingModuleBalanceAmount.Int64(), actualDeveloperVestingModuleBalanceAmount.Int64())
-					s.Require().Equal(oldCommunityPoolBalanceAmount.Int64(), actualCommunityPoolModuleBalanceAmount.Int64())
-					return
-				}
-
-				s.Require().NoError(err)
-				s.Require().Equal(expectedDistributed, actualDistributed)
-
-				// Updated balances.
-
-				// Burn from mint module account. We over-allocate.
-				// To be fixed: https://github.com/osmosis-labs/osmosis/issues/2025
-				s.Require().Equal(oldMintModuleBalanceAmount.Sub(expectedDistributed).Int64(), actualMintModuleBalance.Amount.Int64())
-
-				// Allocate to community pool when no addresses are provided.
-				if len(tc.recepientAddresses) == 0 {
-					s.Require().Equal(oldDeveloperVestingModuleBalanceAmount.Sub(expectedDistributed).Int64(), actualDeveloperVestingModuleBalanceAmount.Int64())
-					s.Require().Equal(oldCommunityPoolBalanceAmount.Add(expectedDistributed).Int64(), actualCommunityPoolModuleBalanceAmount.Int64())
-					return
-				}
-
-				// TODO: these should be equal, slightly off due to known rounding issues: https://github.com/osmosis-labs/osmosis/issues/1917
-				// s.Require().Equal(oldDeveloperVestingModuleBalanceAmount.Sub(expectedDistributed).Int64(), actualDeveloperVestingModuleBalanceAmount.Int64())
-				expectedDistributedCommunityPool := osmomath.NewInt(0)
-
-				for i, weightedAddress := range tc.recepientAddresses {
-					// TODO: truncation should not occur: https://github.com/osmosis-labs/osmosis/issues/1917
-					expectedAllocation := expectedDistributed.ToLegacyDec().Mul(tc.recepientAddresses[i].Weight).TruncateInt()
-
-					if weightedAddress.Address == keeper.EmptyWeightedAddressReceiver {
-						expectedDistributedCommunityPool = expectedDistributedCommunityPool.Add(expectedAllocation)
-						continue
-					}
-
-					address, err := sdk.AccAddressFromBech32(weightedAddress.Address)
-					s.Require().NoError(err)
-
-					actualDeveloperRewardsBalanceAmounts := bankKeeper.GetBalance(ctx, address, tc.mintedCoin.Denom).Amount
-
-					// Edge case. See testcases with this flag set to true for details.
-					if tc.expectSameAddresses {
-						s.Require().Equal(oldDeveloperRewardsBalanceAmounts[i].Add(expectedAllocation.Mul(osmomath.NewInt(2))).Int64(), actualDeveloperRewardsBalanceAmounts.Int64())
-						return
-					}
-
-					s.Require().Equal(oldDeveloperRewardsBalanceAmounts[i].Add(expectedAllocation).Int64(), actualDeveloperRewardsBalanceAmounts.Int64())
-				}
-
-				s.Require().Equal(oldCommunityPoolBalanceAmount.Add(expectedDistributedCommunityPool).Int64(), actualCommunityPoolModuleBalanceAmount.Int64())
-			})
-		})
-	}
-}
-
 func (s *KeeperTestSuite) TestGetInflation() {
 	s.Setup()
 
-	// epoch_provisions: 121765601217.656011811263318112
-	// community_pool proportion: 0.670000000000000000
+	// Mainnet values after the v33 upgrade removed the developer rewards share:
+	// epoch_provisions: 121765601217.656011811263318112 * 0.75 = 91324200913.242008858447488584
+	// community_pool proportion: 0.67 / 0.75 = 0.893333333333333333
 	// uOSMO supply: 744387309021205
 
 	// Set epoch provisions in the minter
-	epochProvisions := osmomath.MustNewDecFromStr("121765601217.656011811263318112")
+	epochProvisions := osmomath.MustNewDecFromStr("91324200913.242008858447488584")
 	minter := types.Minter{
 		EpochProvisions: epochProvisions,
 	}
@@ -738,10 +442,10 @@ func (s *KeeperTestSuite) TestGetInflation() {
 
 	// Set up params with distribution proportions that match the real chain
 	params := types.DefaultParams()
-	params.DistributionProportions.Staking = osmomath.MustNewDecFromStr("0.080000000000000000")
+	params.DistributionProportions.Staking = osmomath.MustNewDecFromStr("0.106666666666666667")
 	params.DistributionProportions.PoolIncentives = osmomath.MustNewDecFromStr("0.000000000000000000")
-	params.DistributionProportions.DeveloperRewards = osmomath.MustNewDecFromStr("0.250000000000000000")
-	params.DistributionProportions.CommunityPool = osmomath.MustNewDecFromStr("0.670000000000000000")
+	params.DistributionProportions.DeveloperRewards = osmomath.ZeroDec()
+	params.DistributionProportions.CommunityPool = osmomath.MustNewDecFromStr("0.893333333333333333")
 	params.MintDenom = "uosmo"
 	s.App.MintKeeper.SetParams(s.Ctx, params)
 
@@ -756,6 +460,6 @@ func (s *KeeperTestSuite) TestGetInflation() {
 	s.Require().NoError(err)
 
 	// ((Epoch provisions * (1 - Distribution:Community Pool)) * 365) / uOSMO Supply
-	// = ((121765601217.656011811263318112 * (1 - 0.67)) * 365) / 744387309021205 = 0.019703004724720346
-	s.Require().Equal(osmomath.MustNewDecFromStr("0.019703004724720346"), inflation)
+	// = ((91324200913.242008858447488584 * (1 - 0.893333333333333333)) * 365) / 744387309021205 = 0.004776485993871599
+	s.Require().Equal(osmomath.MustNewDecFromStr("0.004776485993871599"), inflation)
 }

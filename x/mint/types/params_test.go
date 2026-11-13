@@ -9,34 +9,61 @@ import (
 	"github.com/osmosis-labs/osmosis/v32/x/mint/types"
 )
 
-// TestGetInflationProportion sanity checks that inflation
-// proportion equals to 1 - developer vesting proportion.
-func TestGetInflationProportion(t *testing.T) {
-	developerVestingProportion := osmomath.NewDecWithPrec(4, 1)
-	expectedInflationProportion := osmomath.OneDec().Sub(developerVestingProportion)
-
-	params := types.Params{
-		DistributionProportions: types.DistributionProportions{
-			DeveloperRewards: developerVestingProportion,
+// TestValidateDistributionProportions checks that the proportions must sum to one
+// and that the deprecated developer rewards proportion must be zero.
+func TestValidateDistributionProportions(t *testing.T) {
+	tests := map[string]struct {
+		proportions types.DistributionProportions
+		expectErr   bool
+	}{
+		"valid": {
+			proportions: types.DistributionProportions{
+				Staking:          osmomath.NewDecWithPrec(4, 1),
+				PoolIncentives:   osmomath.NewDecWithPrec(3, 1),
+				DeveloperRewards: osmomath.ZeroDec(),
+				CommunityPool:    osmomath.NewDecWithPrec(3, 1),
+			},
+		},
+		"non-zero developer rewards": {
+			proportions: types.DistributionProportions{
+				Staking:          osmomath.NewDecWithPrec(4, 1),
+				PoolIncentives:   osmomath.NewDecWithPrec(3, 1),
+				DeveloperRewards: osmomath.NewDecWithPrec(2, 1),
+				CommunityPool:    osmomath.NewDecWithPrec(1, 1),
+			},
+			expectErr: true,
+		},
+		"sum not one": {
+			proportions: types.DistributionProportions{
+				Staking:          osmomath.NewDecWithPrec(4, 1),
+				PoolIncentives:   osmomath.NewDecWithPrec(3, 1),
+				DeveloperRewards: osmomath.ZeroDec(),
+				CommunityPool:    osmomath.NewDecWithPrec(2, 1),
+			},
+			expectErr: true,
+		},
+		"negative staking": {
+			proportions: types.DistributionProportions{
+				Staking:          osmomath.NewDecWithPrec(-1, 1),
+				PoolIncentives:   osmomath.NewDecWithPrec(8, 1),
+				DeveloperRewards: osmomath.ZeroDec(),
+				CommunityPool:    osmomath.NewDecWithPrec(3, 1),
+			},
+			expectErr: true,
 		},
 	}
 
-	actualInflationProportion := params.GetInflationProportion()
-	require.Equal(t, expectedInflationProportion, actualInflationProportion)
-}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			params := types.DefaultParams()
+			params.DistributionProportions = tc.proportions
 
-// TestGetDeveloperVestingProportion sanity checks that developer
-// vesting proportion equals to the value set by
-// parameter for dev rewards.
-func TestGetDeveloperVestingProportion(t *testing.T) {
-	expectedDevVestingProportion := osmomath.NewDecWithPrec(4, 1)
-
-	params := types.Params{
-		DistributionProportions: types.DistributionProportions{
-			DeveloperRewards: expectedDevVestingProportion,
-		},
+			err := params.Validate()
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
 	}
-
-	actualDevVestingProportion := params.GetDeveloperVestingProportion()
-	require.Equal(t, expectedDevVestingProportion, actualDevVestingProportion)
 }
