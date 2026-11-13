@@ -9,6 +9,23 @@ import (
 // UpgradeName defines the on-chain upgrade name for the Osmosis v33 upgrade.
 const UpgradeName = "v33"
 
+const (
+	// MainnetChainID is the chain on which the OSMO burn and WBTC migration run.
+	MainnetChainID = "osmosis-1"
+	// OsmoBurnAddress is the null address used to burn OSMO.
+	OsmoBurnAddress = "osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030"
+)
+
+// OsmoBurnSourceAddresses are the accounts whose OSMO is moved at the v33 upgrade.
+var OsmoBurnSourceAddresses = [...]string{
+	// Levana sub-DAO, burn approved by governance in proposal 1003
+	// (https://www.mintscan.io/osmosis/proposals/1003).
+	"osmo1qzm2kyesqqpu4d7uaskkf023t4husm6vaan2gkc2xru0xcvzx23qq5f5c7",
+	// NeutrOsmosis sub-DAO, burn approved by governance in proposal 1050
+	// (https://www.mintscan.io/osmosis/proposals/1050).
+	"osmo128laly00yvpr69usz6s9n7j8f8sx6780npyauyt9ku46mpwx2n5qsxapq6",
+}
+
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
 	CreateUpgradeHandler: CreateUpgradeHandler,
@@ -55,8 +72,6 @@ var HuahuaStuckGauges = []struct {
 // skipped: they are protocol accounts (module accounts, pools, contracts, IBC escrows, CL spread
 // reward and incentive addresses, ICA host accounts) whose WBTC balance is owed to someone else.
 const (
-	// MainnetChainID is the only chain the WBTC migration runs on.
-	MainnetChainID = "osmosis-1"
 
 	// WBTCDenom is native WBTC, issued on Osmosis through tokenfactory.
 	WBTCDenom = "factory/" + WBTCIssuerAddress + "/wbtc"

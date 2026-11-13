@@ -7,8 +7,8 @@ services:
       context: ../../
       dockerfile: Dockerfile
       args:
-        RUNNER_IMAGE: golang:1.25-alpine3.22
-        GO_VERSION: "1.25"
+        RUNNER_IMAGE: golang:1.26-alpine3.22
+        GO_VERSION: "1.26"
     volumes:
       - ./scripts/uosmoUionBalancerPool.json:/osmosis/uosmoUionBalancerPool.json
       - ./scripts/uosmoUusdcBalancerPool.json:/osmosis/uosmoUusdcBalancerPool.json

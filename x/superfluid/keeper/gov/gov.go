@@ -71,7 +71,7 @@ func HandleUnpoolWhiteListChange(ctx sdk.Context, k keeper.Keeper, gammKeeper ty
 	}
 
 	// Sort
-	sort.Slice(allPoolIds, func(i, j int) bool {
+	sort.SliceStable(allPoolIds, func(i, j int) bool {
 		return allPoolIds[i] < allPoolIds[j]
 	})
 

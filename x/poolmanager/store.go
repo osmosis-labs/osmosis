@@ -410,7 +410,7 @@ func (k Keeper) getAllRegisteredAlloyedPoolsIdArray(ctx sdk.Context) ([]uint64, 
 		}
 		registeredAlloyedPoolsIdArray = append(registeredAlloyedPoolsIdArray, alloyedId)
 	}
-	sort.Slice(registeredAlloyedPoolsIdArray, func(i, j int) bool { return registeredAlloyedPoolsIdArray[i] < registeredAlloyedPoolsIdArray[j] })
+	sort.SliceStable(registeredAlloyedPoolsIdArray, func(i, j int) bool { return registeredAlloyedPoolsIdArray[i] < registeredAlloyedPoolsIdArray[j] })
 
 	return registeredAlloyedPoolsIdArray, nil
 }
