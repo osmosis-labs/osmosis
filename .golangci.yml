@@ -12,6 +12,7 @@ linters:
     - durationcheck
     - errcheck
     - errname
+    - forbidigo
     - usetesting
     - forcetypeassert
     - goconst
@@ -42,6 +43,15 @@ linters:
     - revive
 
 linters-settings:
+  forbidigo:
+    analyze-types: true
+    forbid:
+      # Unstable sorts may order equal elements differently across Go releases,
+      # which forks consensus between nodes built with different toolchains.
+      - p: ^sort\.(Slice|Sort)$
+        msg: "unstable sort is not deterministic across Go versions; use sort.SliceStable / sort.Stable"
+      - p: ^slices\.SortFunc$
+        msg: "unstable sort is not deterministic across Go versions; use slices.SortStableFunc"
   revive:
     rules:
       - name: function-result-limit
