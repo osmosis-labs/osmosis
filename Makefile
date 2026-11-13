@@ -47,8 +47,8 @@ DOCKER := $(shell which docker)
 E2E_UPGRADE_VERSION := "v32"
 #SHELL := /bin/bash
 
-# Go version to be used in docker images
-GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
+# Exact Go version for every build (docker, release): the go.mod toolchain line, else the go line
+GO_VERSION := $(shell scripts/go-version.sh)
 GO_MAJOR_MINOR := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2 | cut -d '.' -f 1-2)
 # currently installed Go version
 GO_MODULE := $(shell cat go.mod | grep "module " | cut -d ' ' -f 2)
@@ -60,7 +60,7 @@ GO_MINIMUM_MAJOR_VERSION = $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut 
 GO_MINIMUM_MINOR_VERSION = $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f2 | cut -d'.' -f2)
 GO_MINIMUM_PATCH_VERSION = $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f2 | cut -d'.' -f3)
 # message to be printed if Go does not meet the minimum required version
-GO_VERSION_ERR_MSG = "ERROR: Go version $(GO_VERSION)+ is required"
+GO_VERSION_ERR_MSG = "ERROR: Go version $(GO_MINIMUM_MAJOR_VERSION).$(GO_MINIMUM_MINOR_VERSION).$(GO_MINIMUM_PATCH_VERSION)+ is required"
 
 export GO111MODULE = on
 
@@ -216,7 +216,7 @@ go-mock-update:
 ###############################################################################
 # wasmvm v2.2.9 (wasmer 7) needs macOS SDK 14+ to link darwin/arm64.
 # goreleaser-cross v1.26 has MacOSX26.1.sdk. v1.23 only has MacOSX12.0.sdk.
-GORELEASER_IMAGE := ghcr.io/goreleaser/goreleaser-cross:v1.26
+GORELEASER_IMAGE := ghcr.io/goreleaser/goreleaser-cross:v$(GO_VERSION)
 COSMWASM_VERSION := $(shell go list -m github.com/CosmWasm/wasmvm/v2 | sed 's/.* //')
 
 ifdef GITHUB_TOKEN

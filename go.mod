@@ -2,6 +2,8 @@ module github.com/osmosis-labs/osmosis/v32
 
 go 1.26.0
 
+toolchain go1.26.10
+
 require (
 	cloud.google.com/go/pubsub v1.52.0
 	cosmossdk.io/api v0.9.2
