@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v32/x/gamm/types"
@@ -150,10 +151,8 @@ func (p *UpdateUnpoolWhiteListProposal) ValidateBasic() error {
 		return err
 	}
 
-	for _, id := range p.Ids {
-		if id == 0 {
-			return errors.New("pool id cannot be 0")
-		}
+	if slices.Contains(p.Ids, 0) {
+		return errors.New("pool id cannot be 0")
 	}
 
 	return nil

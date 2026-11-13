@@ -149,7 +149,7 @@ func (n *NodeConfig) WaitForNumHeights(numBlocks int) {
 // if reached, error otherwise.
 func (n *NodeConfig) WaitUntil(doneCondition func(syncInfo coretypes.SyncInfo) bool) {
 	var latestBlockHeight int64
-	for i := 0; i < waitUntilrepeatMax; i++ {
+	for range waitUntilrepeatMax {
 		status, err := n.rpcClient.Status(context.Background())
 		require.NoError(n.t, err)
 		latestBlockHeight = status.SyncInfo.LatestBlockHeight
@@ -191,7 +191,7 @@ func (n *NodeConfig) WithSetupTime(t time.Time) *NodeConfig {
 	return n
 }
 
-func (n *NodeConfig) LogActionF(msg string, args ...interface{}) {
+func (n *NodeConfig) LogActionF(msg string, args ...any) {
 	timeSinceStart := time.Since(n.setupTime).Round(time.Millisecond)
 	s := fmt.Sprintf(msg, args...)
 	n.t.Logf("[%s] %s. From container %s", timeSinceStart, s, n.Name)

@@ -372,7 +372,8 @@ func (k Keeper) CreateCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk
 		{
 			BalancerPoolId: cfmmPoolId,
 			ClPoolId:       concentratedPool.GetId(),
-		}})
+		},
+	})
 	if err != nil {
 		return nil, err
 	}

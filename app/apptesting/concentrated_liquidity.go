@@ -1487,7 +1487,7 @@ func (s *KeeperTestHelper) PrepareCustomConcentratedPool(owner sdk.AccAddress, d
 // PrepareMultipleConcentratedPools returns X cl pool's with X being provided by the user.
 func (s *KeeperTestHelper) PrepareMultipleConcentratedPools(poolsToCreate uint16) []uint64 {
 	var poolIds []uint64
-	for i := uint16(0); i < poolsToCreate; i++ {
+	for range poolsToCreate {
 		pool := s.PrepareConcentratedPool()
 		poolIds = append(poolIds, pool.GetId())
 	}

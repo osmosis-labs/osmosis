@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"slices"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -53,13 +54,7 @@ func (k Keeper) SetDenomPairTakerFee(ctx sdk.Context, denom0, denom1 string, tak
 // also exists in the pool manager taker fee admin address list.
 func (k Keeper) SenderValidationSetDenomPairTakerFee(ctx sdk.Context, sender, denom0, denom1 string, takerFee osmomath.Dec) error {
 	adminAddresses := k.GetParams(ctx).TakerFeeParams.AdminAddresses
-	isAdmin := false
-	for _, admin := range adminAddresses {
-		if admin == sender {
-			isAdmin = true
-			break
-		}
-	}
+	isAdmin := slices.Contains(adminAddresses, sender)
 	if !isAdmin {
 		return fmt.Errorf("%s is not in the pool manager taker fee admin address list", sender)
 	}

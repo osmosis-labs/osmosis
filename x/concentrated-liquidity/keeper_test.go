@@ -393,7 +393,7 @@ func (s *KeeperTestSuite) crossTickAndChargeSpreadReward(poolId uint64, tickInde
 func (s *KeeperTestSuite) AddToSpreadRewardAccumulator(poolId uint64, feeUpdate sdk.DecCoin) {
 	feeAccumulator, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, poolId)
 	s.Require().NoError(err)
-	feeUpdate.Amount = feeUpdate.Amount.MulTruncate((cl.PerUnitLiqScalingFactor))
+	feeUpdate.Amount = feeUpdate.Amount.MulTruncate(cl.PerUnitLiqScalingFactor)
 	feeAccumulator.AddToAccumulator(sdk.NewDecCoins(feeUpdate))
 }
 
@@ -453,7 +453,7 @@ func (s *KeeperTestSuite) runMultipleAuthorizedUptimes(tests func()) {
 // Returns the pool, expected position ids and the total liquidity created on the pool.
 func (s *KeeperTestSuite) runFungifySetup(address sdk.AccAddress, numPositions int, fullChargeDuration time.Duration, poolSpreadFactor osmomath.Dec, incentiveRecords []types.IncentiveRecord) (types.ConcentratedPoolExtension, []uint64, osmomath.Dec) {
 	expectedPositionIds := make([]uint64, numPositions)
-	for i := 0; i < numPositions; i++ {
+	for i := range numPositions {
 		expectedPositionIds[i] = uint64(i + 1)
 	}
 
@@ -479,7 +479,7 @@ func (s *KeeperTestSuite) runFungifySetup(address sdk.AccAddress, numPositions i
 
 	// Set up fully charged positions
 	totalLiquidity := osmomath.ZeroDec()
-	for i := 0; i < numPositions; i++ {
+	for range numPositions {
 		positionData, err := s.clk.CreatePosition(s.Ctx, defaultPoolId, address, DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 		s.Require().NoError(err)
 		totalLiquidity = totalLiquidity.Add(positionData.Liquidity)

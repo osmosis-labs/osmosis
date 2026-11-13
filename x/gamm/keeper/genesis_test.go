@@ -21,10 +21,10 @@ var DefaultMigrationRecords = gammmigration.MigrationRecords{BalancerToConcentra
 func (s *KeeperTestSuite) TestGammInitGenesis() {
 	s.SetupTest()
 
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		s.PrepareBalancerPool()
 	}
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		s.PrepareConcentratedPool()
 	}
 

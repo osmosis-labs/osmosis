@@ -614,10 +614,8 @@ func (s *KeeperTestSuite) TestSetLockRewardReceiverAddress() {
 				s.Require().NoError(err)
 				s.Require().Equal(lock.RewardReceiverAddress, newReceiver.String())
 			}
-
 		})
 	}
-
 }
 
 func (s *KeeperTestSuite) TestCreateLockNoSend() {
@@ -891,6 +889,7 @@ func (s *KeeperTestSuite) TestLock() {
 	balance = s.App.BankKeeper.GetBalance(s.Ctx, acc.GetAddress(), "stake")
 	s.Require().Equal(osmomath.NewInt(0).String(), balance.Amount.String())
 }
+
 func (s *KeeperTestSuite) TestSplitLock() {
 	defaultAmount := sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(100)), sdk.NewCoin("bar", osmomath.NewInt(200)))
 	defaultHalfAmount := sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(40)), sdk.NewCoin("bar", osmomath.NewInt(110)))
@@ -1105,11 +1104,11 @@ func (s *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 
 	// setup locks for 5 second, 1 second, and 3 seconds, and begin unbonding them.
 	setupInitLocks := func() {
-		for i := 0; i < len(times); i++ {
+		for i := range times {
 			unbondBlockTimes[i] = s.Ctx.BlockTime().Add(sortedTimes[i])
 		}
 
-		for i := 0; i < len(times); i++ {
+		for i := range times {
 			s.LockTokens(addr1, coins, times[i])
 		}
 
@@ -1117,7 +1116,7 @@ func (s *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 		locks, err := s.App.LockupKeeper.GetPeriodLocks(s.Ctx)
 		s.Require().NoError(err)
 		s.Require().Len(locks, 3)
-		for i := 0; i < len(times); i++ {
+		for i := range times {
 			s.Require().Equal(locks[i].EndTime, time.Time{})
 			s.Require().Equal(locks[i].IsUnlocking(), false)
 		}
@@ -1128,7 +1127,7 @@ func (s *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 		s.Require().NoError(err)
 		s.Require().Len(locks, len(times))
 		s.Require().Equal(unlockedCoins, totalCoins)
-		for i := 0; i < len(times); i++ {
+		for i := range times {
 			s.Require().Equal(sortedTimesIndex[i], locks[i].ID)
 		}
 
@@ -1136,7 +1135,7 @@ func (s *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 		locks, err = s.App.LockupKeeper.GetPeriodLocks(s.Ctx)
 		s.Require().NoError(err)
 		s.Require().Len(locks, 3)
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			s.Require().NotEqual(locks[i].EndTime, time.Time{})
 			s.Require().Equal(locks[i].EndTime, unbondBlockTimes[i])
 			s.Require().Equal(locks[i].IsUnlocking(), true)
@@ -1151,7 +1150,7 @@ func (s *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 	s.Require().Len(locks, 3)
 
 	// withdraw at 1 sec, 3 sec, and 5 sec intervals, check automatically withdrawn
-	for i := 0; i < len(times); i++ {
+	for i := range times {
 		s.App.LockupKeeper.WithdrawMaturedLocks(s.Ctx.WithBlockTime(unbondBlockTimes[i]), 0)
 		locks, err = s.App.LockupKeeper.GetPeriodLocks(s.Ctx)
 		s.Require().NoError(err)

@@ -96,7 +96,6 @@ func TestParseTwapFromBz(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			bz, err := proto.Marshal(&tt.record)
 			require.NoError(t, err)

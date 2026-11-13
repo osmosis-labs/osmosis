@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-
 	"net/url"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

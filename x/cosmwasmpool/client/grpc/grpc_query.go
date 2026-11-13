@@ -1,4 +1,3 @@
-
 package grpc
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
@@ -60,4 +59,3 @@ func (q Querier) ContractInfoByPoolId(grpcCtx context.Context,
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.ContractInfoByPoolId(ctx, *req)
 }
-

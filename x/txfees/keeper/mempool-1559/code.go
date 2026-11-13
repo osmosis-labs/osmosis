@@ -214,7 +214,7 @@ func (e EipState) tryPersist() {
 	rwMtx.Lock()
 	defer rwMtx.Unlock()
 
-	err = os.WriteFile(e.BackupFilePath, bz, 0644)
+	err = os.WriteFile(e.BackupFilePath, bz, 0o644)
 	if err != nil {
 		fmt.Println("Error writing eip1559 state", err)
 		return

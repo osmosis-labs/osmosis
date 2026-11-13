@@ -1055,7 +1055,7 @@ func (s *KeeperTestSuite) CreateCLPoolAndArbRouteWith_28000_Ticks() {
 	lowerTick := int64(0)
 	upperTick := int64(100)
 
-	for i := int64(0); i < 14000; i++ {
+	for i := range int64(14000) {
 		s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[2], tokensProvided, amount0Min, amount1Min, lowerTick-(100*i), upperTick-(100*i))
 		s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[2], tokensProvided, amount0Min, amount1Min, lowerTick+(100*i), upperTick+(100*i))
 	}

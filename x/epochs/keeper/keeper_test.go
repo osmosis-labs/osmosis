@@ -39,7 +39,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	interfaceRegistry := cdcutil.CodecOptions{AccAddressPrefix: "osmo", ValAddressPrefix: "osmovaloper"}.NewInterfaceRegistry()
 	grpcQueryService.SetInterfaceRegistry(interfaceRegistry)
 	s.queryClient = types.NewQueryClient(grpcQueryService)
-
 }
 
 func TestKeeperTestSuite(t *testing.T) {

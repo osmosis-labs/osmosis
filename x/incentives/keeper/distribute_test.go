@@ -402,7 +402,6 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			// setup test
 			s.SetupTest()
@@ -1349,7 +1348,6 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalCLGauge() {
 	// should be the same as the one from after Epoch2.
 	s.Require().Equal(clPool1IncentiveRecordsAtEpoch2, clPool1IncentiveRecordsAtEpoch3)
 	s.Require().Equal(clPool2IncentiveRecordsAtEpoch2, clPool2IncentiveRecordsAtEpoch3)
-
 }
 
 func (s *KeeperTestSuite) CreateNoLockExternalGauges(clPoolId uint64, externalGaugeCoins sdk.Coins, gaugeCreator sdk.AccAddress, numEpochsPaidOver uint64) uint64 {
@@ -2085,7 +2083,6 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 
 		expectedError error
 	}{
-
 		"no groups": {
 			groups: []groupConfig{},
 		},
@@ -2261,7 +2258,6 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
 
@@ -2446,7 +2442,6 @@ func (s *KeeperTestSuite) overwriteVolumes(poolIds []uint64, updatedPoolVolumes 
 // distributed coins.
 // - Otherwise, the group and group gauge are pruned from state.
 func (s *KeeperTestSuite) TestHandleGroupPostDistribute() {
-
 	// validates that the last epoch on non-perpetual gauge is handled correctly by:
 	// - checking that the group is deleted
 	// - checking that the group gauge is deleted
@@ -2612,7 +2607,7 @@ func (s *KeeperTestSuite) TestHandleGroupPostDistribute() {
 		currentGauge := nonPerpetualGauge
 
 		// -1 because we expect the last distribution to prune
-		for i := 0; i < numDistributions-1; i++ {
+		for range numDistributions - 1 {
 			err := incentivesKeeper.HandleGroupPostDistribute(s.Ctx, currentGauge, defaultCoins)
 			s.Require().NoError(err)
 

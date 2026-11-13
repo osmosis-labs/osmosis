@@ -15,9 +15,7 @@ func init() {
 	govtypesv1.RegisterProposalType(ProposalTypeDenomPairTakerFee)
 }
 
-var (
-	_ govtypesv1.Content = &DenomPairTakerFeeProposal{}
-)
+var _ govtypesv1.Content = &DenomPairTakerFeeProposal{}
 
 // NewDenomPairTakerFeeProposal returns a new instance of a denom pair taker fee proposal struct.
 func NewDenomPairTakerFeeProposal(title, description string, records []DenomPairTakerFee) govtypesv1.Content {

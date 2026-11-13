@@ -15,7 +15,7 @@ func RunForkLogic(ctx sdk.Context, appKeepers *keepers.AppKeepers) {
 		return
 	}
 
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		ctx.Logger().Info("I am upgrading to v8")
 	}
 	ctx.Logger().Info("Applying Osmosis v8 upgrade. Allowing direct unpooling for whitelisted pools")

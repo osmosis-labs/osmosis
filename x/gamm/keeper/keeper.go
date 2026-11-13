@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/osmosis-labs/osmosis/v32/x/gamm/types"
 
@@ -13,13 +14,7 @@ import (
 )
 
 func permContains(perms []string, perm string) bool {
-	for _, v := range perms {
-		if v == perm {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(perms, perm)
 }
 
 type Keeper struct {
@@ -95,7 +90,7 @@ func (k Keeper) setParams(ctx sdk.Context, params types.Params) {
 }
 
 // SetParam sets a specific gamm module's parameter with the provided parameter.
-func (k Keeper) SetParam(ctx sdk.Context, key []byte, value interface{}) {
+func (k Keeper) SetParam(ctx sdk.Context, key []byte, value any) {
 	k.paramSpace.Set(ctx, key, value)
 }
 

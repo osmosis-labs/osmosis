@@ -104,8 +104,6 @@ func TestDenomAdmin(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
 			resp, err := queryPlugin.GetDenomAdmin(ctx, tc.denom)
 			if tc.expectErr {

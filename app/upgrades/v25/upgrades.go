@@ -3,7 +3,7 @@ package v25
 import (
 	"context"
 	"errors"
-	"sort"
+	"slices"
 
 	auctiontypes "github.com/skip-mev/block-sdk/v2/x/auction/types"
 
@@ -120,9 +120,7 @@ func migrateMainnetPoolsSpreadFactor(ctx sdk.Context, concentratedKeeper concent
 	}
 
 	// Sort for determinism
-	sort.Slice(poolIDsToMigrate, func(i, j int) bool {
-		return poolIDsToMigrate[i] < poolIDsToMigrate[j]
-	})
+	slices.Sort(poolIDsToMigrate)
 
 	// Migrate concentrated pools
 	for _, poolId := range poolIDsToMigrate {

@@ -226,7 +226,6 @@ func TestOrderOfMagnitudeWithoutLog(t *testing.T) {
 	// Run tests
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-
 			if tc.expectedPanic {
 				require.Panics(t, func() { OrderOfMagnitude(tc.input) })
 				return

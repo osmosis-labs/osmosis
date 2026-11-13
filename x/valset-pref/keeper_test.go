@@ -108,7 +108,7 @@ func (s *KeeperTestSuite) AllocateRewards(ctx sdk.Context, delegator sdk.AccAddr
 
 // PrepareExistingDelegations sets up existing delegation by creating a certain number of validators and delegating tokenAmt to them.
 func (s *KeeperTestSuite) PrepareExistingDelegations(ctx sdk.Context, valAddrs []string, delegator sdk.AccAddress, tokenAmt osmomath.Int) error {
-	for i := 0; i < len(valAddrs); i++ {
+	for i := range valAddrs {
 		valAddr, err := sdk.ValAddressFromBech32(valAddrs[i])
 		if err != nil {
 			return errors.New("validator address not formatted")

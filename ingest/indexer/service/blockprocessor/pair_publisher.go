@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"sync"
-
 	"sync/atomic"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -169,7 +168,7 @@ func (p PairPublisher) PublishPoolPairs(ctx sdk.Context, pools []poolmanagertype
 	}
 
 	// Wait for all the results
-	for i := 0; i < len(pools); i++ {
+	for range pools {
 		err := <-result
 		if err != nil {
 			return err

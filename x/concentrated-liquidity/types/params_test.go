@@ -11,7 +11,7 @@ import (
 
 func TestValidateTicks(t *testing.T) {
 	tests := map[string]struct {
-		i           interface{}
+		i           any
 		expectError bool
 	}{
 		"happy path": {
@@ -52,7 +52,6 @@ func TestValidateTicks(t *testing.T) {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			err := types.ValidateTicks(tc.i)
 
@@ -67,7 +66,7 @@ func TestValidateTicks(t *testing.T) {
 
 func TestValidateBalancerSharesDiscount(t *testing.T) {
 	tests := map[string]struct {
-		i           interface{}
+		i           any
 		expectError bool
 	}{
 		"happy path": {
@@ -95,7 +94,6 @@ func TestValidateBalancerSharesDiscount(t *testing.T) {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			err := types.ValidateBalancerSharesDiscount(tc.i)
 

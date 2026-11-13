@@ -217,7 +217,7 @@ func (n *NodeConfig) QueryGovModuleAccount() string {
 	cmd := []string{"osmosisd", "query", "auth", "module-accounts", "--output=json"}
 	out, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
 	require.NoError(n.t, err)
-	var result map[string][]interface{}
+	var result map[string][]any
 
 	// Check if 'out' is not empty, otherwise use 'errBuf' for unmarshalling
 	var dataToUnmarshal []byte
@@ -233,10 +233,10 @@ func (n *NodeConfig) QueryGovModuleAccount() string {
 	require.NoError(n.t, err)
 
 	for _, acc := range result["accounts"] {
-		account, ok := acc.(map[string]interface{})
+		account, ok := acc.(map[string]any)
 		require.True(n.t, ok)
 
-		value, ok := account["value"].(map[string]interface{})
+		value, ok := account["value"].(map[string]any)
 		require.True(n.t, ok)
 
 		if value["name"] == "gov" {
@@ -661,16 +661,16 @@ func (n *NodeConfig) Status() (resultStatus, error) {
 	return result, nil
 }
 
-func GetPositionID(responseJson map[string]interface{}) (string, error) {
+func GetPositionID(responseJson map[string]any) (string, error) {
 	return ParseEvent(responseJson, "position_id")
 }
 
-func GetLiquidity(responseJson map[string]interface{}) (string, error) {
+func GetLiquidity(responseJson map[string]any) (string, error) {
 	return ParseEvent(responseJson, "liquidity")
 }
 
-func ParseEvent(responseJson map[string]interface{}, field string) (string, error) {
-	logs, ok := responseJson["logs"].([]interface{})
+func ParseEvent(responseJson map[string]any, field string) (string, error) {
+	logs, ok := responseJson["logs"].([]any)
 	if !ok {
 		return "", fmt.Errorf("logs field not found in response")
 	}
@@ -679,25 +679,25 @@ func ParseEvent(responseJson map[string]interface{}, field string) (string, erro
 		return "", fmt.Errorf("empty logs field in response")
 	}
 
-	log, ok := logs[0].(map[string]interface{})
+	log, ok := logs[0].(map[string]any)
 	if !ok {
 		return "", fmt.Errorf("invalid format of logs field")
 	}
 
-	events, ok := log["events"].([]interface{})
+	events, ok := log["events"].([]any)
 	if !ok {
 		return "", fmt.Errorf("events field not found in logs")
 	}
 
 	for _, event := range events {
-		attributes, ok := event.(map[string]interface{})["attributes"].([]interface{})
+		attributes, ok := event.(map[string]any)["attributes"].([]any)
 		if !ok {
 			return "", fmt.Errorf("attributes field not found in event")
 		}
 
 		for _, attr := range attributes {
 			switch v := attr.(type) {
-			case map[string]interface{}:
+			case map[string]any:
 				if v["key"] == field {
 					fieldID, ok := v["value"].(string)
 					if !ok {
@@ -923,7 +923,7 @@ func extractPoolIdFromResponse(response string) (uint64, error) {
 	response = formatNonJsonResponse(response)
 
 	// Extract the pool ID from the response
-	//fmt.Println(response)
+	// fmt.Println(response)
 	r := regexp.MustCompile(`pool_id value: "(\d+)"`)
 	matches := r.FindStringSubmatch(response)
 

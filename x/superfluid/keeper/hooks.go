@@ -75,9 +75,11 @@ func (h Hooks) OnLockupExtend(ctx sdk.Context, lockID uint64, oldDuration, newDu
 func (h Hooks) AfterValidatorCreated(ctx context.Context, valAddr sdk.ValAddress) error {
 	return nil
 }
+
 func (h Hooks) BeforeValidatorModified(ctx context.Context, valAddr sdk.ValAddress) error {
 	return nil
 }
+
 func (h Hooks) AfterValidatorRemoved(ctx context.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
 	return nil
 }

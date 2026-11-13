@@ -871,8 +871,6 @@ func (s *KeeperTestSuite) TestCalcJoinPoolShares() {
 	testCases := append(append(multiAssetExactInputTestCases, multiAssetUnevenInputTestCases...), calcSingleAssetJoinTestCases...)
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.T().Run(tc.name, func(t *testing.T) {
 			pool := createTestPool(t, tc.spreadFactor, osmomath.ZeroDec(), tc.poolAssets...)
 
@@ -908,8 +906,6 @@ func (s *KeeperTestSuite) TestJoinPool() {
 	testCases := append(append(multiAssetExactInputTestCases, multiAssetUnevenInputTestCases...), calcSingleAssetJoinTestCases...)
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.T().Run(tc.name, func(t *testing.T) {
 			pool := createTestPool(t, tc.spreadFactor, osmomath.ZeroDec(), tc.poolAssets...)
 
@@ -1003,8 +999,6 @@ func (s *KeeperTestSuite) TestJoinPoolNoSwap() {
 	testCases = append(testCases, multiAssetExactInputTestCases...)
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.T().Run(tc.name, func(t *testing.T) {
 			pool := createTestPool(t, tc.spreadFactor, osmomath.ZeroDec(), tc.poolAssets...)
 
@@ -1133,7 +1127,7 @@ func (s *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 		)
 	}
 
-	for i := 0; i < 50000; i++ {
+	for range 50000 {
 		testPoolInvariants()
 	}
 }

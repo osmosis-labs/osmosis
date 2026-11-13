@@ -76,7 +76,7 @@ func WeightedOperations(
 func genRewardCoins(r *rand.Rand, coins sdk.Coins, fee osmomath.Int) (res sdk.Coins) {
 	numCoins := 1 + r.Intn(Min(coins.Len(), 1))
 	denomIndices := r.Perm(numCoins)
-	for i := 0; i < numCoins; i++ {
+	for i := range numCoins {
 		var (
 			amt osmomath.Int
 			err error

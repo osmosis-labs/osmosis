@@ -2,6 +2,7 @@ package concentrated_liquidity_test
 
 import (
 	"fmt"
+	"maps"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
@@ -2240,9 +2241,7 @@ func makeTests[T any](tests ...map[string]T) map[string]T {
 	}
 	retTests := make(map[string]T, length)
 	for _, tt := range tests {
-		for name, test := range tt {
-			retTests[name] = test
-		}
+		maps.Copy(retTests, tt)
 	}
 	return retTests
 }
@@ -2322,7 +2321,6 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 	tests := makeTests(swapOutGivenInCases, swapOutGivenInErrorCases)
 
 	for name, test := range tests {
-		test := test
 		s.Run(name, func() {
 			s.SetupAndFundSwapTest()
 			pool := s.PreparePoolWithCustSpread(test.SpreadFactor)
@@ -2399,7 +2397,6 @@ func (s *KeeperTestSuite) TestSwap_NoPositions() {
 func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 	tests := makeTests(swapOutGivenInCases)
 	for name, test := range tests {
-		test := test
 		s.Run(name, func() {
 			s.SetupAndFundSwapTest()
 
@@ -2457,6 +2454,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 		})
 	}
 }
+
 func (s *KeeperTestSuite) testSwapResult(test apptesting.ConcentratedSwapTest, pool types.ConcentratedPoolExtension, amountIn, amountOut osmomath.Int, poolUpdates cl.PoolUpdates, err error) {
 	s.Require().NoError(err)
 
@@ -2474,7 +2472,6 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 	// add error cases as well
 	tests := makeTests(swapInGivenOutTestCases, swapInGivenOutSpreadRewardTestCases, swapInGivenOutErrorTestCases)
 	for name, test := range tests {
-		test := test
 		s.Run(name, func() {
 			s.SetupAndFundSwapTest()
 			pool := s.PreparePoolWithCustSpread(test.SpreadFactor)
@@ -2970,12 +2967,9 @@ func (s *KeeperTestSuite) TestComputeOutAmtGivenIn() {
 	// we only use spread factor cases here since write Ctx only takes effect in the spread factor accumulator
 	tests := make(map[string]apptesting.ConcentratedSwapTest, len(swapOutGivenInSpreadRewardCases))
 
-	for name, test := range swapOutGivenInSpreadRewardCases {
-		tests[name] = test
-	}
+	maps.Copy(tests, swapOutGivenInSpreadRewardCases)
 
 	for name, test := range tests {
-		test := test
 		s.Run(name, func() {
 			s.SetupAndFundSwapTest()
 			poolBeforeCalc := s.preparePoolAndDefaultPositions(test)
@@ -3000,7 +2994,6 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn_NonMutative() {
 	// we only use spread reward cases here since write Ctx only takes effect in the spread reward accumulator
 	tests := makeTests(swapOutGivenInSpreadRewardCases)
 	for name, test := range tests {
-		test := test
 		s.Run(name, func() {
 			s.SetupAndFundSwapTest()
 			poolBeforeCalc := s.preparePoolAndDefaultPositions(test)
@@ -3035,7 +3028,6 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut_NonMutative() {
 	tests := makeTests(swapOutGivenInSpreadRewardCases)
 
 	for name, test := range tests {
-		test := test
 		s.Run(name, func() {
 			s.SetupAndFundSwapTest()
 			poolBeforeCalc := s.preparePoolAndDefaultPositions(test)
@@ -3061,7 +3053,6 @@ func (s *KeeperTestSuite) TestComputeInAmtGivenOut() {
 	tests := makeTests(swapInGivenOutSpreadRewardTestCases)
 
 	for name, test := range tests {
-		test := test
 		s.Run(name, func() {
 			s.SetupAndFundSwapTest()
 			poolBeforeCalc := s.preparePoolAndDefaultPositions(test)
@@ -3138,7 +3129,6 @@ func (s *KeeperTestSuite) TestUpdateSpreadRewardGrowthGlobal() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
 
@@ -3251,7 +3241,6 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
 			pool := s.PreparePoolWithCustSpread(tc.spreadFactor)

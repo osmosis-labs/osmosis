@@ -273,9 +273,7 @@ func BinarySearchBigDec(f func(BigDec) BigDec,
 	errTolerance ErrTolerance,
 	maxIterations int,
 ) (BigDec, error) {
-	var (
-		curEstimate, curOutput BigDec
-	)
+	var curEstimate, curOutput BigDec
 
 	curIteration := 0
 	for ; curIteration < maxIterations; curIteration += 1 {

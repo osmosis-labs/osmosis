@@ -145,7 +145,7 @@ func CreateRouteKey(route []uint64) []byte {
 // []byte("1|2|3|4") -> {1,2,3,4}
 func CreateRouteFromKey(key []byte) ([]uint64, error) {
 	var route []uint64
-	for _, r := range strings.Split(string(key), "|") {
+	for r := range strings.SplitSeq(string(key), "|") {
 		pool, err := strconv.ParseUint(r, 10, 64)
 		if err != nil {
 			return []uint64{}, err

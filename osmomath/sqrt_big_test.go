@@ -9,9 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var (
-	smallestBigDec = SmallestBigDec()
-)
+var smallestBigDec = SmallestBigDec()
 
 func generateRandomDecForEachBitlenBigDec(r *rand.Rand, numPerBitlen int) []BigDec {
 	return generateRandomDecForEachBitlen(r, numPerBitlen, NewBigDecFromBigIntWithPrec, BigDecPrecision)

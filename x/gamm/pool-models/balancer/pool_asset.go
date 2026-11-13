@@ -41,7 +41,7 @@ func (pa PoolAsset) prettify() poolAssetPretty {
 
 // MarshalYAML returns the YAML representation of a PoolAsset.
 // This is assumed to not be called on a stand-alone instance, so it removes the first marshalled line.
-func (pa PoolAsset) MarshalYAML() (interface{}, error) {
+func (pa PoolAsset) MarshalYAML() (any, error) {
 	bz, err := yaml.Marshal(pa.prettify())
 	if err != nil {
 		return nil, err

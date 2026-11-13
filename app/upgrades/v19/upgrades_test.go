@@ -29,9 +29,7 @@ const (
 	v19UpgradeHeight = 10
 )
 
-var (
-	stakeAmt = osmomath.NewInt(100000000)
-)
+var stakeAmt = osmomath.NewInt(100000000)
 
 type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper

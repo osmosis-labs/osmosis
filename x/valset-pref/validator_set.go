@@ -320,7 +320,8 @@ func (k Keeper) UndelegateFromRebalancedValidatorSet(ctx sdk.Context, delegatorA
 // getValsetRatios returns the valRatio array calculated based on the given delegator, valset prefs, and undelegating amount.
 // Errors when given delegator does not have delegation towards all of the validators given in the valsetPrefs
 func (k Keeper) getValsetRatios(ctx sdk.Context, delegator sdk.AccAddress,
-	prefs []types.ValidatorPreference, undelegateAmt osmomath.Int) ([]ValRatio, map[string]stakingtypes.Validator, osmomath.Dec, error) {
+	prefs []types.ValidatorPreference, undelegateAmt osmomath.Int,
+) ([]ValRatio, map[string]stakingtypes.Validator, osmomath.Dec, error) {
 	// total amount user has delegated
 	totalDelegatedAmt := osmomath.ZeroDec()
 	var valSetRatios []ValRatio

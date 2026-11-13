@@ -43,7 +43,7 @@ func WrapRandAccFnForResampling(randFn RandomAccountFn, blockList map[string]boo
 func RandomSimAccounts(r *rand.Rand, n int) []simulation.Account {
 	accs := make([]simulation.Account, n)
 
-	for i := 0; i < n; i++ {
+	for i := range n {
 		// don't need that much entropy for simulation
 		privkeySeed := make([]byte, 15)
 		r.Read(privkeySeed)

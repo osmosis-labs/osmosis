@@ -247,7 +247,6 @@ func (s *IndexerServiceTestSuite) TestAdjustTokenInAmountBySpreadFactor() {
 				// No tokens_in attribute, so the adjusted amount should be 0 (not found)
 				s.Require().Equal(defaultUnfoundTokenIn, adjustedTokensInStr)
 			}
-
 		})
 	}
 }
@@ -417,7 +416,6 @@ func (s *IndexerServiceTestSuite) TestAddTokenLiquidity() {
 			// Assert the "liquidity_{denom}"" event attribute
 			denoms := pool.GetPoolDenoms(s.Ctx)
 			s.Require().Equal(tc.expectedLiquidity, checkIfLiquidityAttributeExists(event, denoms))
-
 		})
 	}
 }
@@ -574,7 +572,6 @@ func (s *IndexerServiceTestSuite) TestSetSpotPrice() {
 			if !tc.expectedError {
 				s.Require().Equal(tc.expectedSpotPrice, checkIfSpotPriceAttributeExists(event))
 			}
-
 		})
 	}
 }
@@ -779,7 +776,6 @@ func (s *IndexerServiceTestSuite) TestTrackCreatedPoolID() {
 			} else {
 				s.Require().Empty(createdPoolIDs)
 			}
-
 		})
 	}
 }

@@ -104,7 +104,7 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 }
 
 // GetParam returns a specific poolmanager module's parameter.
-func (k Keeper) GetParam(ctx sdk.Context, key []byte, ptr interface{}) {
+func (k Keeper) GetParam(ctx sdk.Context, key []byte, ptr any) {
 	k.paramSpace.Get(ctx, key, ptr)
 }
 
@@ -114,7 +114,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 }
 
 // SetParam sets a specific poolmanger module's parameter with the provided parameter.
-func (k Keeper) SetParam(ctx sdk.Context, key []byte, value interface{}) {
+func (k Keeper) SetParam(ctx sdk.Context, key []byte, value any) {
 	k.paramSpace.Set(ctx, key, value)
 }
 

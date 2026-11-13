@@ -42,7 +42,8 @@ func NewParams(poolCreationFee sdk.Coins,
 	osmoTakerFeeDistribution, nonOsmoTakerFeeDistribution TakerFeeDistributionPercentage,
 	adminAddresses, authorizedQuoteDenoms []string,
 	communityPoolDenomToSwapNonWhitelistedAssetsTo string,
-	dailyStakingRewardsSmoothingFactor uint64) Params {
+	dailyStakingRewardsSmoothingFactor uint64,
+) Params {
 	return Params{
 		PoolCreationFee: poolCreationFee,
 		TakerFeeParams: TakerFeeParams{
@@ -140,7 +141,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	}
 }
 
-func validatePoolCreationFee(i interface{}) error {
+func validatePoolCreationFee(i any) error {
 	v, ok := i.(sdk.Coins)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -153,7 +154,7 @@ func validatePoolCreationFee(i interface{}) error {
 	return nil
 }
 
-func validateDefaultTakerFee(i interface{}) error {
+func validateDefaultTakerFee(i any) error {
 	// Convert the given parameter to osmomath.Dec.
 	defaultTakerFee, ok := i.(osmomath.Dec)
 
@@ -169,7 +170,7 @@ func validateDefaultTakerFee(i interface{}) error {
 	return nil
 }
 
-func validateTakerFeeDistribution(i interface{}) error {
+func validateTakerFeeDistribution(i any) error {
 	// Convert the given parameter to osmomath.Dec.
 	takerFeeDistribution, ok := i.(TakerFeeDistributionPercentage)
 
@@ -196,7 +197,7 @@ func validateTakerFeeDistribution(i interface{}) error {
 	return nil
 }
 
-func validateAdminAddresses(i interface{}) error {
+func validateAdminAddresses(i any) error {
 	adminAddresses, ok := i.([]string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -222,7 +223,7 @@ func validateAdminAddresses(i interface{}) error {
 // - An error if given type is not string slice.
 // - An error if given slice is empty.
 // - An error if any of the denoms are invalid.
-func validateAuthorizedQuoteDenoms(i interface{}) error {
+func validateAuthorizedQuoteDenoms(i any) error {
 	authorizedQuoteDenoms, ok := i.([]string)
 
 	if !ok {
@@ -242,7 +243,7 @@ func validateAuthorizedQuoteDenoms(i interface{}) error {
 	return nil
 }
 
-func validateCommunityPoolDenomToSwapNonWhitelistedAssetsTo(i interface{}) error {
+func validateCommunityPoolDenomToSwapNonWhitelistedAssetsTo(i any) error {
 	communityPoolDenomToSwapNonWhitelistedAssetsTo, ok := i.(string)
 
 	if !ok {
@@ -256,7 +257,7 @@ func validateCommunityPoolDenomToSwapNonWhitelistedAssetsTo(i interface{}) error
 	return nil
 }
 
-func validateCommunityPoolDenomWhitelist(i interface{}) error {
+func validateCommunityPoolDenomWhitelist(i any) error {
 	communityPoolDenomWhitelist, ok := i.([]string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -299,7 +300,7 @@ func validateDenomPairTakerFees(pairs []DenomPairTakerFee) error {
 	return nil
 }
 
-func validateDailyStakingRewardsSmoothingFactor(i interface{}) error {
+func validateDailyStakingRewardsSmoothingFactor(i any) error {
 	smoothingFactor, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

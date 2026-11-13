@@ -1,4 +1,3 @@
-
 package grpcv2
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
@@ -30,4 +29,3 @@ func (q Querier) SpotPriceV2(grpcCtx context.Context,
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.SpotPriceV2(ctx, *req)
 }
-

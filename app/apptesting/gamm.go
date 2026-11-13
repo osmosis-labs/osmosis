@@ -61,7 +61,7 @@ var ImbalancedStableswapLiquidity = sdk.NewCoins(
 // consisted of given coins with equal weight.
 func (s *KeeperTestHelper) PrepareBalancerPoolWithCoins(coins ...sdk.Coin) uint64 {
 	weights := make([]int64, len(coins))
-	for i := 0; i < len(coins); i++ {
+	for i := range coins {
 		weights[i] = 1
 	}
 	return s.PrepareBalancerPoolWithCoinsAndWeights(coins, weights)
@@ -86,9 +86,11 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithCoinsAndWeights(coins sdk.Coin
 	})
 }
 
-var zeroDec = osmomath.ZeroDec()
-var oneThirdSpotPriceUnits = osmomath.BigDecFromDec(osmomath.NewDec(1).Quo(osmomath.NewDec(3)).
-	MulIntMut(gammtypes.SpotPriceSigFigs).RoundInt().ToLegacyDec().QuoInt(gammtypes.SpotPriceSigFigs))
+var (
+	zeroDec                = osmomath.ZeroDec()
+	oneThirdSpotPriceUnits = osmomath.BigDecFromDec(osmomath.NewDec(1).Quo(osmomath.NewDec(3)).
+				MulIntMut(gammtypes.SpotPriceSigFigs).RoundInt().ToLegacyDec().QuoInt(gammtypes.SpotPriceSigFigs))
+)
 
 // PrepareBalancerPool returns a Balancer pool's pool-ID with pool params set in PrepareBalancerPoolWithPoolParams.
 func (s *KeeperTestHelper) PrepareBalancerPool() uint64 {
@@ -113,7 +115,7 @@ func (s *KeeperTestHelper) PrepareBalancerPool() uint64 {
 // PrepareMultipleBalancerPools returns X Balancer pool's with X being provided by the user.
 func (s *KeeperTestHelper) PrepareMultipleBalancerPools(poolsToCreate uint16) []uint64 {
 	var poolIds []uint64
-	for i := uint16(0); i < poolsToCreate; i++ {
+	for range poolsToCreate {
 		poolId := s.PrepareBalancerPool()
 		poolIds = append(poolIds, poolId)
 	}
@@ -295,7 +297,7 @@ func (s *KeeperTestHelper) CalcAmoutOfTokenToGetTargetPrice(ctx sdk.Context, poo
 	// AmoutQuoteTokenNeedToTrade = AmoutQuoTokenNow * ((targetSpotPrice/spotPriceNow)^((weight_base/(weight_base + weight_quote))) -1 )
 
 	ratioPrice := targetSpotPrice.Quo(spotPriceNow.Dec())
-	ratioWeight := (baseAsset.Weight.ToLegacyDec()).Quo(baseAsset.Weight.ToLegacyDec().Add(quoteAsset.Weight.ToLegacyDec()))
+	ratioWeight := baseAsset.Weight.ToLegacyDec().Quo(baseAsset.Weight.ToLegacyDec().Add(quoteAsset.Weight.ToLegacyDec()))
 
 	amountTrade = quoteAsset.Token.Amount.ToLegacyDec().Mul(osmomath.Pow(ratioPrice, ratioWeight).Sub(osmomath.OneDec()))
 

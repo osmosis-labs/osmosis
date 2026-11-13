@@ -154,7 +154,6 @@ var (
 // As a result, we create this shared test case to avoid code duplication but
 // direct the test cases to the appropriate test function for custom logic.
 func (s *KeeperTestSuite) TestCreateGroup() {
-
 	type systemUnderTestType int
 	const (
 		CreateGroup systemUnderTestType = iota
@@ -202,7 +201,6 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 			systemUnderTestType: CreateGroupAsIncentivesModuleAcc,
 		},
 	} {
-		tc := tc
 		s.Run(tc.name, func() {
 			// We setup test state once and reuse it for all test cases
 			s.SetupTest()
@@ -252,7 +250,6 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 func (s *KeeperTestSuite) runCreateGroupTests(poolInfo apptesting.SupportedPoolAndGaugeInfo, concentratedGaugeRecord types.InternalGaugeRecord, balancerGaugeRecord types.InternalGaugeRecord, stableSwapGaugeRecord types.InternalGaugeRecord, expectedCommunityPoolFeeBalance sdk.Coins, expectedGroupGaugeId uint64, originalCommunityPoolBalance sdk.Coins) {
 	tests := makeDefaultSuccessCreateGroupTestCases(poolInfo, concentratedGaugeRecord, balancerGaugeRecord, stableSwapGaugeRecord)
 	tests = append(tests, []createGroupTestCase{
-
 		{
 			name:             "error: no volume in one of the pools",
 			coins:            defaultCoins,
@@ -270,7 +267,6 @@ func (s *KeeperTestSuite) runCreateGroupTests(poolInfo apptesting.SupportedPoolA
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-
 			// Ensure we configured volumes and pools correctly
 			s.overwriteVolumes(tc.poolIDs, tc.poolVolumesToSet)
 
@@ -342,7 +338,6 @@ func (s *KeeperTestSuite) runCreateGroupInternalTests(poolInfo apptesting.Suppor
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-
 			// Ensure we configured volumes and pools correctly
 			s.overwriteVolumes(tc.poolIDs, tc.poolVolumesToSet)
 
@@ -427,7 +422,6 @@ func (s *KeeperTestSuite) runCreateGroupAsIncentivesModuleAccTests(poolInfo appt
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-
 			// Ensure we configured volumes and pools correctly
 			s.overwriteVolumes(tc.poolIDs, tc.poolVolumesToSet)
 
@@ -473,7 +467,6 @@ func (s *KeeperTestSuite) runCreateGroupAsIncentivesModuleAccTests(poolInfo appt
 // Validates that the initial gauge info is initialized with the appropriate gauge IDs given pool IDs.
 // All weights are set to zero in all cases.
 func (s *KeeperTestSuite) TestInitGaugeInfo() {
-
 	// We setup state once for all tests since there are no state mutations
 	// in system under test.
 	s.SetupTest()
@@ -519,9 +512,7 @@ func (s *KeeperTestSuite) TestInitGaugeInfo() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
-
 			actualGaugeInfo, err := k.InitGaugeInfo(s.Ctx, tc.poolIds)
 
 			if tc.expectError != nil {
@@ -646,7 +637,8 @@ func (s *KeeperTestSuite) TestGetPoolIdsAndDurationsFromGaugeRecords() {
 			gaugeRecords: []types.InternalGaugeRecord{
 				withRecordGaugeId(defaultZeroWeightGaugeRecord, poolGroupA.BalancerGaugeID),
 				withRecordGaugeId(defaultZeroWeightGaugeRecord, poolGroupA.ConcentratedGaugeID),
-				withRecordGaugeId(defaultZeroWeightGaugeRecord, poolGroupA.StableSwapGaugeID)},
+				withRecordGaugeId(defaultZeroWeightGaugeRecord, poolGroupA.StableSwapGaugeID),
+			},
 			expectedPoolIds:   []uint64{poolGroupA.BalancerPoolID, poolGroupA.ConcentratedPoolID, poolGroupA.StableSwapPoolID},
 			expectedDurations: []time.Duration{longestLockDuration, epochDuration, longestLockDuration},
 		},
@@ -655,7 +647,8 @@ func (s *KeeperTestSuite) TestGetPoolIdsAndDurationsFromGaugeRecords() {
 			gaugeRecords: []types.InternalGaugeRecord{
 				withRecordGaugeId(defaultZeroWeightGaugeRecord, poolGroupA.BalancerGaugeID),
 				withRecordGaugeId(defaultZeroWeightGaugeRecord, poolGroupB.BalancerGaugeID),
-				withRecordGaugeId(defaultZeroWeightGaugeRecord, poolGroupC.BalancerGaugeID)},
+				withRecordGaugeId(defaultZeroWeightGaugeRecord, poolGroupC.BalancerGaugeID),
+			},
 			expectedPoolIds:   []uint64{poolGroupA.BalancerPoolID, poolGroupB.BalancerPoolID, poolGroupC.BalancerPoolID},
 			expectedDurations: []time.Duration{longestLockDuration, longestLockDuration, longestLockDuration},
 		},
@@ -664,7 +657,8 @@ func (s *KeeperTestSuite) TestGetPoolIdsAndDurationsFromGaugeRecords() {
 			gaugeRecords: []types.InternalGaugeRecord{
 				withRecordGaugeId(defaultZeroWeightGaugeRecord, poolGroupA.ConcentratedGaugeID),
 				withRecordGaugeId(defaultZeroWeightGaugeRecord, poolGroupB.ConcentratedGaugeID),
-				withRecordGaugeId(defaultZeroWeightGaugeRecord, poolGroupC.ConcentratedGaugeID)},
+				withRecordGaugeId(defaultZeroWeightGaugeRecord, poolGroupC.ConcentratedGaugeID),
+			},
 			expectedPoolIds:   []uint64{poolGroupA.ConcentratedPoolID, poolGroupB.ConcentratedPoolID, poolGroupC.ConcentratedPoolID},
 			expectedDurations: []time.Duration{epochDuration, epochDuration, epochDuration},
 		},
@@ -673,7 +667,8 @@ func (s *KeeperTestSuite) TestGetPoolIdsAndDurationsFromGaugeRecords() {
 			gaugeRecords: []types.InternalGaugeRecord{
 				withRecordGaugeId(defaultZeroWeightGaugeRecord, poolGroupA.BalancerGaugeID),
 				withRecordGaugeId(defaultZeroWeightGaugeRecord, poolGroupA.ConcentratedGaugeID),
-				withRecordGaugeId(defaultZeroWeightGaugeRecord, 0)},
+				withRecordGaugeId(defaultZeroWeightGaugeRecord, 0),
+			},
 			expectError: types.GaugeNotFoundError{GaugeID: 0},
 		},
 	}

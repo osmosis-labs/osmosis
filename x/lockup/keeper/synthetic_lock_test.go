@@ -16,7 +16,7 @@ func (s *KeeperTestSuite) TestSyntheticLockupCreation() {
 	// lock coins
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	for i := 0; i < numLocks; i++ {
+	for range numLocks {
 		s.LockTokens(addr1, coins, time.Second)
 	}
 
@@ -24,7 +24,7 @@ func (s *KeeperTestSuite) TestSyntheticLockupCreation() {
 	locks, err := s.App.LockupKeeper.GetPeriodLocks(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().Len(locks, numLocks)
-	for i := 0; i < numLocks; i++ {
+	for i := range numLocks {
 		s.Require().Equal(locks[i].Coins, coins)
 	}
 
@@ -229,7 +229,7 @@ func (s *KeeperTestSuite) TestSyntheticLockupDeleteAllMaturedSyntheticLocks() {
 	// lock coins
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	for i := 0; i < numLocks; i++ {
+	for range numLocks {
 		s.LockTokens(addr1, coins, time.Second)
 	}
 
@@ -237,7 +237,7 @@ func (s *KeeperTestSuite) TestSyntheticLockupDeleteAllMaturedSyntheticLocks() {
 	locks, err := s.App.LockupKeeper.GetPeriodLocks(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().Len(locks, numLocks)
-	for i := 0; i < numLocks; i++ {
+	for i := range numLocks {
 		s.Require().Equal(locks[i].Coins, coins)
 	}
 

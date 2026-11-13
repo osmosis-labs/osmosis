@@ -200,7 +200,6 @@ func (server msgServer) CreateFullRangePositionAndSuperfluidDelegate(goCtx conte
 	}
 
 	_, err = server.SuperfluidDelegate(goCtx, &superfluidDelegateMsg)
-
 	if err != nil {
 		return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}, err
 	}

@@ -59,9 +59,7 @@ func (s *WriteListenerTestSuite) TestWriteListener_CosmWasm() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
-
 			poolTracker := pooltracker.NewMemory()
 
 			cosmWasmPoolWriteListener := writelistener.NewCosmwasmPool(poolTracker, s.App.WasmKeeper)
@@ -136,7 +134,6 @@ func (s *WriteListenerTestSuite) TestWriteListener_CosmWasmBalance() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cosmWasmPoolBalanceWriteListener := writelistener.NewCosmwasmPoolBalance(poolTracker)
 

@@ -58,7 +58,7 @@ func (p Params) Validate() error {
 	return nil
 }
 
-func ValidateAccount(i interface{}) error {
+func ValidateAccount(i any) error {
 	v, ok := i.(string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -71,7 +71,7 @@ func ValidateAccount(i interface{}) error {
 	return nil
 }
 
-func ValidateBoolean(i interface{}) error {
+func ValidateBoolean(i any) error {
 	_, ok := i.(bool)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

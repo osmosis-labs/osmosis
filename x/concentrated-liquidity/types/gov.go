@@ -15,9 +15,7 @@ func init() {
 	govtypesv1.RegisterProposalType(ProposalTypeTickSpacingDecrease)
 }
 
-var (
-	_ govtypesv1.Content = &TickSpacingDecreaseProposal{}
-)
+var _ govtypesv1.Content = &TickSpacingDecreaseProposal{}
 
 // String returns a string containing the pool incentives proposal.
 func (p CreateConcentratedLiquidityPoolsProposal) String() string {

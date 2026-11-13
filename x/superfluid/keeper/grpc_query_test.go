@@ -315,7 +315,7 @@ func (s *KeeperTestSuite) TestUserConcentratedSuperfluidPositionsBondedAndUnbond
 	expectedBondedPositionIds := []uint64{}
 	expectedBondedLockIds := []uint64{}
 	expectedBondedTotalSharesLocked := sdk.Coins{}
-	for i := 0; i < 4; i++ {
+	for range 4 {
 		positionData, lockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPoolId, s.TestAccs[0], coins, duration)
 		s.Require().NoError(err)
 
@@ -338,7 +338,7 @@ func (s *KeeperTestSuite) TestUserConcentratedSuperfluidPositionsBondedAndUnbond
 	expectedUnbondingPositionIds := []uint64{}
 	expectedUnbondingLockIds := []uint64{}
 	expectedUnbondingTotalSharesLocked := sdk.Coins{}
-	for i := 0; i < 4; i++ {
+	for range 4 {
 		positionData, lockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPoolId2, s.TestAccs[0], coins, duration)
 		s.Require().NoError(err)
 
@@ -381,8 +381,8 @@ func (s *KeeperTestSuite) TestUserConcentratedSuperfluidPositionsBondedAndUnbond
 		actualBondedTotalSharesLocked = actualBondedTotalSharesLocked.Add(record.DelegationAmount)
 	}
 
-	s.Require().True(osmoutils.ContainsDuplicateDeepEqual([]interface{}{expectedBondedPositionIds, actualBondedPositionIds}))
-	s.Require().True(osmoutils.ContainsDuplicateDeepEqual([]interface{}{expectedBondedLockIds, actualBondedLockIds}))
+	s.Require().True(osmoutils.ContainsDuplicateDeepEqual([]any{expectedBondedPositionIds, actualBondedPositionIds}))
+	s.Require().True(osmoutils.ContainsDuplicateDeepEqual([]any{expectedBondedLockIds, actualBondedLockIds}))
 	s.Require().Equal(expectedBondedTotalSharesLocked, actualBondedTotalSharesLocked)
 
 	// Query the unbonding positions.
@@ -406,8 +406,8 @@ func (s *KeeperTestSuite) TestUserConcentratedSuperfluidPositionsBondedAndUnbond
 		actualUnbondingTotalSharesLocked = actualUnbondingTotalSharesLocked.Add(record.DelegationAmount)
 	}
 
-	s.Require().True(osmoutils.ContainsDuplicateDeepEqual([]interface{}{expectedUnbondingPositionIds, actualUnbondingPositionIds}))
-	s.Require().True(osmoutils.ContainsDuplicateDeepEqual([]interface{}{expectedUnbondingLockIds, actualUnbondingLockIds}))
+	s.Require().True(osmoutils.ContainsDuplicateDeepEqual([]any{expectedUnbondingPositionIds, actualUnbondingPositionIds}))
+	s.Require().True(osmoutils.ContainsDuplicateDeepEqual([]any{expectedUnbondingLockIds, actualUnbondingLockIds}))
 	s.Require().Equal(expectedUnbondingTotalSharesLocked, actualUnbondingTotalSharesLocked)
 }
 

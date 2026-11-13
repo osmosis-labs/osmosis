@@ -36,7 +36,7 @@ func (s *KeeperTestSuite) TestLockupMergeMigration() {
 
 	// simulate jitter
 	for _, baseDuration := range keeper.BaselineDurations {
-		for i := 0; i < 100; i++ {
+		for range 100 {
 			addr, denom := addr(rand.Intn(5)), denom(rand.Intn(5))
 			duration := baseDuration + time.Duration(rand.Int63n(int64(keeper.HourDuration)))
 			if rand.Intn(3) == 0 {
@@ -55,8 +55,8 @@ func (s *KeeperTestSuite) TestLockupMergeMigration() {
 		)
 	})
 
-	for i := 0; i < 5; i++ {
-		for j := 0; j < 5; j++ {
+	for i := range 5 {
+		for j := range 5 {
 			for _, duration := range keeper.BaselineDurations {
 				locks := s.App.LockupKeeper.GetAccountLockedDurationNotUnlockingOnly(s.Ctx, addr(i), denom(j), duration)
 				s.Require().True(len(locks) <= 1)

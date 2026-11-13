@@ -59,7 +59,6 @@ func (s *CosmwasmAuthenticatorTest) TearDownTest() {
 }
 
 func (s *CosmwasmAuthenticatorTest) TestOnAuthenticatorAdded() {
-
 	// Generate a private key for signing
 	priv := secp256k1.GenPrivKey()
 
@@ -118,7 +117,6 @@ func (s *CosmwasmAuthenticatorTest) TestOnAuthenticatorAdded() {
 }
 
 func (s *CosmwasmAuthenticatorTest) TestOnAuthenticatorRemoved() {
-
 	// Generate a private key for signing
 	priv := secp256k1.GenPrivKey()
 
@@ -451,9 +449,8 @@ func (s *CosmwasmAuthenticatorTest) TestCosignerContract() {
 
 	status := auth.Authenticate(s.Ctx.WithBlockTime(time.Now()), request)
 	fmt.Println(status)
-	//TODO: review this after full refactor
-	//s.Require().True(status.IsAuthenticated(), "Should be authenticated")
-
+	// TODO: review this after full refactor
+	// s.Require().True(status.IsAuthenticated(), "Should be authenticated")
 }
 
 func (s *CosmwasmAuthenticatorTest) StoreContractCode(path string) uint64 {

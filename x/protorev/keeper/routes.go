@@ -167,9 +167,7 @@ func (k Keeper) BuildTwoPoolRoute(
 		return RouteMetaData{}, fmt.Errorf("base denom (%s) must be either tokenIn (%s) or tokenOut (%s)", baseDenom.Denom, tokenInDenom, tokenOutDenom)
 	}
 
-	var (
-		pool1, pool2 uint64
-	)
+	var pool1, pool2 uint64
 
 	// In the case where the base denom is the swap out, the base denom becomes more ~expensive~ on the current pool id
 	// and potentially cheaper on the highest liquidity pool. So we swap first on the current pool id and then on the

@@ -189,10 +189,8 @@ func (s *FullIndexerBlockProcessStrategyTestSuite) TestProcessBlock() {
 				s.Require().Equal(test.expectedNumPublishTokenSupplyCalls, publisherMock.NumPublishTokenSupplyCalls)
 				s.Require().Equal(test.expectedNumPublishTokenSupplyOffsetCalls, publisherMock.NumPublishTokenSupplyOffsetCalls)
 			}
-
 		})
 	}
-
 }
 
 // The purpose of this test is to verify that the PublishAllSupplies method correctly publishes
@@ -380,7 +378,6 @@ func (s *FullIndexerBlockProcessStrategyTestSuite) TestProcessPools() {
 				// Check that the number of pools with creation data
 				s.Require().Equal(test.expectedNumPoolsWithCreationData, pairPublisherMock.NumPoolPairWithCreationData)
 			}
-
 		})
 	}
 }

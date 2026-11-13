@@ -86,7 +86,6 @@ func (s *KeeperTestSuite) TestUnpool() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			s.SetupTest()
 			ctx := s.Ctx

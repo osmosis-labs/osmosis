@@ -63,7 +63,6 @@ func (suite *StrategyTestSuite) TestComputespreadRewardChargePerSwapStepOutGiven
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		suite.Run(name, func() {
 			suite.SetupTest()
 

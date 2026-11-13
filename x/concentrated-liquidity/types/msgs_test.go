@@ -257,7 +257,7 @@ func TestMsgAddToPosition(t *testing.T) {
 }
 
 func TestMsgFungifyChargedPositions(t *testing.T) {
-	var validPositionIds = []uint64{1, 2}
+	validPositionIds := []uint64{1, 2}
 
 	tests := []struct {
 		name       string

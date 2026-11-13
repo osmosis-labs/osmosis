@@ -35,7 +35,6 @@ func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.Permis
 	}
 
 	_, err = contractKeeper.Sudo(ctx, contractAddr, sendPacketMsg)
-
 	if err != nil {
 		return errorsmod.Wrap(types.ErrRateLimitExceeded, err.Error())
 	}

@@ -53,7 +53,7 @@ func (s *UpgradeTestSuite) TestMigrateNextPoolIdAndCreatePool() {
 		expectedNextPoolId uint64 = 1
 	)
 
-	gammKeeperType := reflect.TypeOf(&gamm.Keeper{})
+	gammKeeperType := reflect.TypeFor[*gamm.Keeper]()
 
 	ctx := s.Ctx
 	gammKeeper := s.App.GAMMKeeper

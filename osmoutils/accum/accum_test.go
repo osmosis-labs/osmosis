@@ -984,7 +984,7 @@ func (suite *AccumTestSuite) TestRemoveFromPosition() {
 				suite.Require().Equal(tc.startingUnclaimedRewards.Add(tc.expAccumDelta.MulDec(tc.startingNumShares)...), newPosition.UnclaimedRewardsTotal)
 
 				// Ensure address's position properly reflects new number of shares
-				if (tc.startingNumShares.Sub(tc.removedShares)).IsZero() {
+				if tc.startingNumShares.Sub(tc.removedShares).IsZero() {
 					suite.Require().Equal(emptyDec, newPosition.NumShares)
 				} else {
 					suite.Require().Equal(tc.startingNumShares.Sub(tc.removedShares), newPosition.NumShares)
@@ -1485,9 +1485,8 @@ func (suite *AccumTestSuite) TestSetPositionIntervalAccumulation() {
 	suite.SetupTest()
 
 	// Setup.
-	var (
-		accObject = accumPackage.MakeTestAccumulator(suite.store, testNameOne, initialCoinsDenomOne, emptyDec)
-	)
+
+	accObject := accumPackage.MakeTestAccumulator(suite.store, testNameOne, initialCoinsDenomOne, emptyDec)
 
 	tests := map[string]struct {
 		positionName                 string
@@ -1510,7 +1509,6 @@ func (suite *AccumTestSuite) TestSetPositionIntervalAccumulation() {
 
 	for name, tc := range tests {
 		suite.Run(name, func() {
-
 			// Setup
 			err := accObject.NewPositionIntervalAccumulation(validPositionName, osmomath.OneDec(), initialCoinsDenomOne, nil)
 			suite.Require().NoError(err)
@@ -1620,9 +1618,8 @@ func (suite *AccumTestSuite) TestAddToUnclaimedRewards() {
 	suite.SetupTest()
 
 	// Setup.
-	var (
-		accObject = accumPackage.MakeTestAccumulator(suite.store, testNameOne, initialCoinsDenomOne, emptyDec)
-	)
+
+	accObject := accumPackage.MakeTestAccumulator(suite.store, testNameOne, initialCoinsDenomOne, emptyDec)
 
 	tests := map[string]struct {
 		positionName             string

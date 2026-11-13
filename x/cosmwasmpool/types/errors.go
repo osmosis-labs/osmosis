@@ -14,7 +14,7 @@ var (
 )
 
 type InvalidPoolTypeError struct {
-	ActualPool interface{}
+	ActualPool any
 }
 
 func (e InvalidPoolTypeError) Error() string {

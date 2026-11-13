@@ -15,7 +15,7 @@ func getDefaultRandInstance() *rand.Rand {
 
 func getKDefaultRandManager(k int) []randManager {
 	rms := make([]randManager, k)
-	for i := 0; i < k; i++ {
+	for i := range k {
 		rms[i] = newRandManager(getDefaultRandInstance())
 	}
 	return rms

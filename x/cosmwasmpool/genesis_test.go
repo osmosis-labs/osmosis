@@ -13,7 +13,7 @@ func (s *PoolModuleSuite) TestInitGenesis() {
 	s.Setup()
 
 	expectedTotalLiquidity := sdk.Coins{}
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		s.FundAcc(s.TestAccs[0], initalDefaultSupply)
 		pool := s.PrepareCustomTransmuterPool(s.TestAccs[0], defaultDenoms)
 		s.JoinTransmuterPool(s.TestAccs[0], pool.GetId(), initalDefaultSupply)
@@ -84,7 +84,7 @@ func (s *PoolModuleSuite) TestInitGenesis() {
 func (s *PoolModuleSuite) TestExportGenesis() {
 	s.Setup()
 
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		s.FundAcc(s.TestAccs[0], initalDefaultSupply)
 		s.PrepareCustomTransmuterPool(s.TestAccs[0], defaultDenoms)
 	}

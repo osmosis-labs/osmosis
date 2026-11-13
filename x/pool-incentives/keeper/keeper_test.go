@@ -40,7 +40,7 @@ func (s *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 	lockableDurations := keeper.GetLockableDurations(s.Ctx)
 	s.Equal(3, len(lockableDurations))
 
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		poolId := s.PrepareBalancerPool()
 		pool, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
 		s.NoError(err)
@@ -82,7 +82,7 @@ func (s *KeeperTestSuite) TestCreateConcentratePoolGauges() {
 
 	keeper := s.App.PoolIncentivesKeeper
 
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		clPool := s.PrepareConcentratedPool()
 
 		incParams := s.App.IncentivesKeeper.GetParams(s.Ctx).DistrEpochIdentifier
@@ -268,7 +268,6 @@ func (s *KeeperTestSuite) TestGetGaugesForCFMMPool() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
 
@@ -389,7 +388,6 @@ func (s *KeeperTestSuite) TestIsPoolIncentivized() {
 // For cosmwasm pool, returns an error.
 // For non-existent pool ID, returns an error.
 func (suite *KeeperTestSuite) TestGetInternalGaugeIDForPool() {
-
 	// Note that we initialize the same state for all pools.
 	suite.SetupTest()
 
@@ -425,7 +423,6 @@ func (suite *KeeperTestSuite) TestGetInternalGaugeIDForPool() {
 
 	for name, tc := range tests {
 		suite.Run(name, func() {
-
 			poolIncentivesKeeper := suite.App.PoolIncentivesKeeper
 
 			gaugeID, err := poolIncentivesKeeper.GetInternalGaugeIDForPool(suite.Ctx, tc.poolID)

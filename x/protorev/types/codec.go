@@ -9,9 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
-var (
-	amino = codec.NewLegacyAmino()
-)
+var amino = codec.NewLegacyAmino()
 
 const (
 	// msgs

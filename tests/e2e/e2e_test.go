@@ -552,19 +552,19 @@ func (s *IntegrationTestSuite) IBCWasmHooks() {
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
 
-	var response map[string]interface{}
+	var response map[string]any
 	s.Require().Eventually(func() bool {
 		response, err = chainANode.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
 		if err != nil {
 			return false
 		}
 
-		totalFundsIface, ok := response["total_funds"].([]interface{})
+		totalFundsIface, ok := response["total_funds"].([]any)
 		if !ok || len(totalFundsIface) == 0 {
 			return false
 		}
 
-		totalFunds, ok := totalFundsIface[0].(map[string]interface{})
+		totalFunds, ok := totalFundsIface[0].(map[string]any)
 		if !ok {
 			return false
 		}

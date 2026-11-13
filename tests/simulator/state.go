@@ -138,11 +138,7 @@ func AppStateRandomizedFn(
 	// number of bonded accounts
 	initialStake := osmomath.NewInt(r.Int63n(1e12))
 	// Don't allow 0 validators to start off with
-	numInitiallyBonded := int64(r.Intn(299)) + 1
-
-	if numInitiallyBonded > numAccs {
-		numInitiallyBonded = numAccs
-	}
+	numInitiallyBonded := min(int64(r.Intn(299))+1, numAccs)
 
 	log.Printf(
 		`Selected randomly generated parameters for simulated genesis:

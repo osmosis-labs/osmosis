@@ -109,7 +109,7 @@ func RandomCreateUniV2Msg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context
 	}
 
 	// from the above selected account, determine the token type and respective weight needed to make the pool
-	for i := 0; i < len(poolCoins); i++ {
+	for i := range poolCoins {
 		poolAssets = append(poolAssets, balancertypes.PoolAsset{
 			Weight: osmomath.OneInt(),
 			Token:  poolCoins[i],
@@ -425,7 +425,7 @@ func deriveRealMinShareOutAmt(ctx sdk.Context, tokenIn sdk.Coins, pool types.CFM
 		if !(neededLpLiquidity.DenomsSubsetOf(tokenIn) && tokenIn.IsAllGTE(neededLpLiquidity)) {
 			return osmomath.Int{}, fmt.Errorf("TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap,"+
 				" upperbound: %v, needed %v", tokenIn, neededLpLiquidity)
-		} else if !(tokenIn.DenomsSubsetOf(neededLpLiquidity)) {
+		} else if !tokenIn.DenomsSubsetOf(neededLpLiquidity) {
 			return osmomath.Int{}, fmt.Errorf("TokenInMaxs includes tokens that are not part of the target pool,"+
 				" input tokens: %v, pool tokens %v", tokenIn, neededLpLiquidity)
 		}

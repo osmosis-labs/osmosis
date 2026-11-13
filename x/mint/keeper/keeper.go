@@ -117,7 +117,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 }
 
 // SetParam sets a specific mint module's parameter with the provided parameter.
-func (k Keeper) SetParam(ctx sdk.Context, key []byte, value interface{}) {
+func (k Keeper) SetParam(ctx sdk.Context, key []byte, value any) {
 	k.paramSpace.Set(ctx, key, value)
 }
 
@@ -378,7 +378,7 @@ func (k Keeper) createDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.
 
 	moduleAcc := authtypes.NewEmptyModuleAccount(
 		types.DeveloperVestingModuleAcctName, authtypes.Minter)
-	maccI, ok := (k.accountKeeper.NewAccount(ctx, moduleAcc)).(sdk.ModuleAccountI) // this sets the account number
+	maccI, ok := k.accountKeeper.NewAccount(ctx, moduleAcc).(sdk.ModuleAccountI) // this sets the account number
 	if !ok {
 		return fmt.Errorf("account of type %T doesn't implement sdk.ModuleAccountI", moduleAcc)
 	}

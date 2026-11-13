@@ -126,7 +126,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 
 		// Setup numberOfPositions positions at random ranges
 		setupPositions := func() {
-			for i := 0; i < numberOfPositions; i++ {
+			for range numberOfPositions {
 				var (
 					lowerTick int64
 					upperTick int64
@@ -184,7 +184,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 		}
 		// Setup numberOfPositions full range positions for deeper liquidity.
 		setupFullRangePositions := func() {
-			for i := 0; i < numberOfPositions; i++ {
+			for range numberOfPositions {
 				lowerTick := types.MinInitializedTick
 				upperTick := types.MaxTick
 				createPosition(lowerTick, upperTick)
@@ -196,7 +196,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 		setupConcentratedPositions := func() {
 			// Within 10 ticks of the current
 			if tickSpacing <= 10 {
-				for i := 0; i < numberOfPositions; i++ {
+				for range numberOfPositions {
 					lowerTick := currentTick - 10
 					upperTick := currentTick + 10
 					createPosition(lowerTick, upperTick)
@@ -204,7 +204,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 			}
 
 			// Within 100 ticks of the current
-			for i := 0; i < numberOfPositions; i++ {
+			for range numberOfPositions {
 				lowerTick := currentTick - 100
 				upperTick := currentTick + 100
 				lowerTick = lowerTick + (tickSpacing - lowerTick%tickSpacing)

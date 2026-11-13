@@ -16,9 +16,7 @@ type WriteListenerTestSuite struct {
 	apptesting.ConcentratedKeeperTestHelper
 }
 
-var (
-	someValue = []byte("someValue")
-)
+var someValue = []byte("someValue")
 
 func TestWriteListenerTestSuite(t *testing.T) {
 	suite.Run(t, new(WriteListenerTestSuite))
@@ -27,7 +25,6 @@ func TestWriteListenerTestSuite(t *testing.T) {
 // Tests that the concentrated write listener correctly tracks pool and tick updates
 // It ignores error cases as they are simple and unlikely giving app wiring.
 func (s *WriteListenerTestSuite) TestWriteListener_Concentrated() {
-
 	// Set up chain state once per test
 	s.Setup()
 
@@ -81,9 +78,7 @@ func (s *WriteListenerTestSuite) TestWriteListener_Concentrated() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
-
 			poolTracker := pooltracker.NewMemory()
 
 			concentratedWriteListener := writelistener.NewConcentrated(poolTracker)

@@ -565,7 +565,6 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		s.Run(tc.name, func() {
 			s.SetupTest()
 
@@ -614,7 +613,6 @@ func (s *KeeperTestSuite) TestValidateTickSpacingUpdate() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		s.Run(tc.name, func() {
 			s.SetupTest()
 
@@ -671,7 +669,6 @@ func (s *KeeperTestSuite) TestGetUserUnbondingPositions() {
 						Liquidity:  osmomath.MustNewDecFromStr("10000.000000000000001000"),
 					},
 					Locks: lockuptypes.PeriodLock{
-
 						ID:       2,
 						Owner:    defaultAddress.String(),
 						Duration: time.Hour,
@@ -684,7 +681,6 @@ func (s *KeeperTestSuite) TestGetUserUnbondingPositions() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		s.Run(tc.name, func() {
 			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(defaultBlockTime)
@@ -698,7 +694,7 @@ func (s *KeeperTestSuite) TestGetUserUnbondingPositions() {
 			s.Require().NoError(err)
 
 			// Create 3 locked positions
-			for i := 0; i < 3; i++ {
+			for range 3 {
 				_, _, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool.GetId(), defaultAddress, defaultFunds, time.Hour)
 				s.Require().NoError(err)
 			}
@@ -746,7 +742,7 @@ func (s *KeeperTestSuite) TestGetUserUnbondingPositions() {
 func (s *KeeperTestSuite) TestMigrateIncentivesAccumulatorToScalingFactor() {
 	const incentiveDenom = appparams.BaseCoinUnit
 
-	var emissionRatePerSecDec = osmomath.OneDec()
+	emissionRatePerSecDec := osmomath.OneDec()
 
 	s.SetupTest()
 
@@ -969,7 +965,7 @@ func (s *KeeperTestSuite) TestGetPositionIDsByPoolID() {
 	s.Require().Equal([]uint64{}, positionIDs)
 
 	// Create three positions
-	for i := 0; i < numPositionsToCreateFirstPool; i++ {
+	for range numPositionsToCreateFirstPool {
 		s.CreateFullRangePosition(concentratedPool, DefaultCoins)
 	}
 

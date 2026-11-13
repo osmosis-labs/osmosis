@@ -4,7 +4,6 @@ import "github.com/osmosis-labs/osmosis/osmoutils/accum"
 
 // TestOptionsValidate tests that the options are validated correctly.
 func (suite *AccumTestSuite) TestOptionsValidate() {
-
 	tests := map[string]struct {
 		options     *accum.Options
 		expectError error

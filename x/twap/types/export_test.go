@@ -13,7 +13,7 @@ func (t TwapRecord) Validate() error {
 
 func TestValidatePeriod(t *testing.T) {
 	testCases := map[string]struct {
-		period      interface{}
+		period      any
 		expectedErr bool
 	}{
 		"valid_period": {

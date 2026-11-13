@@ -93,7 +93,7 @@ func (s *indexerStreamingService) Close() error {
 // publishBlock publishes the block data to the indexer backend.
 func (s *indexerStreamingService) publishBlock(ctx context.Context, req abci.RequestFinalizeBlock) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	height := (uint64)(req.GetHeight())
+	height := uint64(req.GetHeight())
 	timeEndBlock := sdkCtx.BlockTime().UTC()
 	chainId := sdkCtx.ChainID()
 	gasConsumed := sdkCtx.GasMeter().GasConsumed()

@@ -9,7 +9,7 @@ import (
 )
 
 func RunForkLogic(ctx sdk.Context, appKeepers *keepers.AppKeepers) {
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		fmt.Println("Switching to v10 code")
 	}
 }

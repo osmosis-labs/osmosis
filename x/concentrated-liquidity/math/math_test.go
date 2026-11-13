@@ -62,8 +62,6 @@ func TestLiquidity1(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
-
 		t.Run(name, func(t *testing.T) {
 			liquidity := math.Liquidity1(tc.amount1Desired, tc.currentSqrtP, tc.sqrtPLow)
 			require.Equal(t, tc.expectedLiquidity, liquidity.String())
@@ -236,8 +234,6 @@ func TestCalcAmount0Delta(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
-
 		t.Run(name, func(t *testing.T) {
 			amount0 := math.CalcAmount0Delta(tc.liquidity, tc.sqrtPA, tc.sqrtPB, tc.roundUp)
 
@@ -342,8 +338,6 @@ func TestCalcAmount1Delta(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
-
 		t.Run(name, func(t *testing.T) {
 			amount1 := math.CalcAmount1Delta(tc.liquidity, tc.sqrtPA, tc.sqrtPB, tc.roundUp)
 
@@ -452,8 +446,6 @@ func TestGetLiquidityFromAmounts(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
-
 		t.Run(name, func(t *testing.T) {
 			// CASE A: if the currentSqrtP is less than the sqrtPLow, all the liquidity is in asset0, so GetLiquidityFromAmounts returns the liquidity of asset0
 			// CASE B: if the currentSqrtP is less than the sqrtPHigh but greater than sqrtPLow, the liquidity is split between asset0 and asset1,
@@ -493,7 +485,6 @@ func runSqrtRoundingTestCase(
 	cases map[string]sqrtRoundingTestCase,
 ) {
 	for name, tc := range cases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			sqrtPriceNext := fn(tc.sqrtPriceCurrent, tc.liquidity, tc.amountRemaining)
 			require.Equal(t, tc.expected.String(), sqrtPriceNext.String())
@@ -508,7 +499,6 @@ func runSqrtRoundingDecTestCase(
 	cases map[string]sqrtRoundingDecTestCase,
 ) {
 	for name, tc := range cases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			sqrtPriceNext := fn(tc.sqrtPriceCurrent, tc.liquidity, tc.amountRemaining)
 			require.Equal(t, tc.expected.String(), sqrtPriceNext.String())
@@ -523,7 +513,6 @@ func runSqrtRoundingAmtDecTestCase(
 	cases map[string]sqrtRoundingAmtDecTestCase,
 ) {
 	for name, tc := range cases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			sqrtPriceNext := fn(tc.sqrtPriceCurrent, tc.liquidity, tc.amountRemaining)
 			require.Equal(t, tc.expected.String(), sqrtPriceNext.String())

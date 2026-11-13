@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 
 	tmjson "github.com/cometbft/cometbft/libs/json"
 	tmtypes "github.com/cometbft/cometbft/types"
@@ -101,15 +102,7 @@ func underlyingCoinsForSelectPools(
 		pool := pools[coin.Denom]
 		coinPoolID := pool.GetId()
 
-		isSelectPoolID := false
-		// check if poolID in select pool IDs
-		// TODO: Later change selectPoolIDs to be a hashmap for convenience
-		for _, selectID := range selectPoolIDs {
-			if selectID == coinPoolID {
-				isSelectPoolID = true
-				break
-			}
-		}
+		isSelectPoolID := slices.Contains(selectPoolIDs, coinPoolID)
 
 		if !isSelectPoolID {
 			continue

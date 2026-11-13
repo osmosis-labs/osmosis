@@ -444,7 +444,6 @@ func TestMsgSplitRouteSwapExactAmountIn(t *testing.T) {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 
@@ -558,7 +557,6 @@ func TestMsgSplitRouteSwapExactAmountOut(t *testing.T) {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 
@@ -644,7 +642,6 @@ func TestMsgSetDenomPairTakerFee(t *testing.T) {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 
@@ -728,7 +725,6 @@ func TestMsgSetTakerFeeShareAgreementForDenom(t *testing.T) {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 
@@ -789,7 +785,6 @@ func TestMsgSetRegisteredAlloyedPool(t *testing.T) {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 

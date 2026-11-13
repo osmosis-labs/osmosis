@@ -214,7 +214,6 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		suite.Run(name, func() {
 			strategy := suite.setupNewOneForZeroSwapStrategy(types.MaxSqrtPrice, tc.spreadFactor)
 			sqrtPriceNext, amountInConsumed, amountZeroOut, spreadRewardChargeTotal := strategy.ComputeSwapWithinBucketOutGivenIn(tc.sqrtPriceCurrent, osmomath.BigDecFromDec(tc.sqrtPriceTarget), tc.liquidity, tc.amountOneInRemaining)

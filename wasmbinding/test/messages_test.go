@@ -312,7 +312,7 @@ func TestBurn(t *testing.T) {
 
 	validDenomStr := fmt.Sprintf("factory/%s/%s", creator.String(), validDenom.Subdenom)
 	// UNFORKINGNOTE: store now panics when attempting to search for nil key on bank keeper
-	//emptyDenomStr := fmt.Sprintf("factory/%s/%s", creator.String(), emptyDenom.Subdenom)
+	// emptyDenomStr := fmt.Sprintf("factory/%s/%s", creator.String(), emptyDenom.Subdenom)
 
 	mintAmount, ok := osmomath.NewIntFromString("8080")
 	require.True(t, ok)

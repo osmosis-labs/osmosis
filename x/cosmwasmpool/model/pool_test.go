@@ -29,9 +29,7 @@ func (s *CosmWasmPoolSuite) SetupTest() {
 
 // TestGetSpreadFactor validates that spread factor is set to zero.
 func (s *CosmWasmPoolSuite) TestGetSpreadFactor() {
-	var (
-		expectedSwapFee = osmomath.ZeroDec()
-	)
+	expectedSwapFee := osmomath.ZeroDec()
 
 	pool := s.PrepareCosmWasmPool()
 
@@ -42,7 +40,7 @@ func (s *CosmWasmPoolSuite) TestGetSpreadFactor() {
 
 // TestSpotPrice validates that spot price is returned as one.
 func (s *CosmWasmPoolSuite) TestSpotPrice() {
-	var expectedSpotPrice = osmomath.OneBigDec()
+	expectedSpotPrice := osmomath.OneBigDec()
 
 	pool := s.PrepareCosmWasmPool()
 
