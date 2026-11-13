@@ -49,6 +49,9 @@ E2E_UPGRADE_VERSION := "v32"
 
 # Exact Go version for every build (docker, release): the go.mod toolchain line, else the go line
 GO_VERSION := $(shell scripts/go-version.sh)
+# Force that exact version for every go command make runs. A go.mod toolchain line alone is only
+# a minimum: a newer installed Go, or GOTOOLCHAIN=local, would build with a different version.
+export GOTOOLCHAIN := go$(GO_VERSION)
 GO_MAJOR_MINOR := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2 | cut -d '.' -f 1-2)
 # currently installed Go version
 GO_MODULE := $(shell cat go.mod | grep "module " | cut -d ' ' -f 2)
