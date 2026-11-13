@@ -63,7 +63,7 @@ linters-settings:
 issues:
   exclude-rules:
     # Historical upgrade handlers have already executed on-chain; leave them untouched.
-    - path: ^app/upgrades/
+    - path: app/upgrades/
       linters:
         - forbidigo
     - linters:
