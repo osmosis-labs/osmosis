@@ -12,7 +12,10 @@ func SigFigRound(d Dec, tenToSigFig Int) Dec {
 	// (round(10^k * d * 10^sigfig) / (10^sigfig * 10^k)
 	// take note of floor div, vs normal div
 	k := uint64(0)
-	dTimesK := d
+	// Clone the input before the mutative MulInt64Mut below. Without this,
+	// dTimesK would share the same underlying big.Int as d, so normalizing
+	// small inputs (0 < d < 0.1) would mutate the caller's Dec.
+	dTimesK := d.Clone()
 	for ; dTimesK.LT(pointOne); k += 1 {
 		dTimesK.MulInt64Mut(10)
 	}

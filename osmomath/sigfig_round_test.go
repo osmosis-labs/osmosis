@@ -93,3 +93,40 @@ func TestSigFigRound(t *testing.T) {
 
 	}
 }
+
+// TestSigFigRound_DoesNotMutateInput verifies that SigFigRound leaves the
+// caller's input Dec untouched. Inputs with 0 < d < 0.1 are normalized by a
+// mutative multiply internally, so a missing clone would corrupt the caller's
+// value by a factor of a power of ten.
+func TestSigFigRound_DoesNotMutateInput(t *testing.T) {
+	tenToSigFig := NewDec(10).Power(8).TruncateInt()
+
+	testCases := []struct {
+		name  string
+		input Dec
+	}{
+		{
+			name:  "small decimal below 0.1 is normalized internally",
+			input: MustNewDecFromStr("0.0867245957"),
+		},
+		{
+			name:  "very small decimal requires multiple normalization steps",
+			input: MustNewDecFromStr("0.00000123"),
+		},
+		{
+			name:  "decimal at or above 0.1 is not normalized",
+			input: MustNewDecFromStr("63.045"),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			expected := tc.input.Clone()
+
+			SigFigRound(tc.input, tenToSigFig)
+
+			require.Equal(t, expected, tc.input, "SigFigRound must not mutate its input")
+		})
+	}
+}
