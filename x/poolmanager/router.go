@@ -1199,7 +1199,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactConcentratedLiquidity(
 // We have an `Abs()` at the end of the priceDeviation equation as we cannot be sure if any pool types based on their
 // configurations trade out more tokens than given for a trade, it is added just in-case.
 func calculatePriceDeviation(currFromCoin, tokenOut sdk.Coin, spotPrice osmomath.Dec) osmomath.Dec {
-	currTradePrice := osmomath.NewDec(currFromCoin.Amount.Int64()).QuoInt(tokenOut.Amount)
+	currTradePrice := osmomath.NewDecFromInt(currFromCoin.Amount).QuoInt(tokenOut.Amount)
 	priceDeviation := currTradePrice.Sub(spotPrice).Quo(spotPrice).Abs()
 	return priceDeviation
 }

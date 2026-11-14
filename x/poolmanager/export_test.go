@@ -12,6 +12,8 @@ import (
 
 var IntMaxValue = intMaxValue
 
+var CalculatePriceDeviation = calculatePriceDeviation
+
 func (k Keeper) GetNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 	return k.getNextPoolIdAndIncrement(ctx)
 }
