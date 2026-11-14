@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile:1
 
-ARG GO_VERSION="1.26"
+ARG GO_VERSION="1.26.10"
 ## Build Image
-FROM golang:${GO_VERSION}-alpine3.22 AS builder
+FROM golang:${GO_VERSION}-alpine3.23 AS builder
 
 ARG E2E_SCRIPT_NAME
 
