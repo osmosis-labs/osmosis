@@ -108,9 +108,7 @@ type PoolUpdates struct {
 	NewSqrtPrice   osmomath.BigDec
 }
 
-var (
-	smallestDec = osmomath.SmallestDec()
-)
+var smallestDec = osmomath.SmallestDec()
 
 // updateSpreadRewardGrowthGlobal updates the swap state's spread reward growth global per unit of liquidity
 // when liquidity is positive.
@@ -362,7 +360,8 @@ func (k Keeper) swapSetup(ctx sdk.Context,
 	poolId uint64,
 	tokenInDenom string,
 	tokenOutDenom string,
-	getAccumulators bool) (pool types.ConcentratedPoolExtension, spreadAccum *accum.AccumulatorObject, err error) {
+	getAccumulators bool,
+) (pool types.ConcentratedPoolExtension, spreadAccum *accum.AccumulatorObject, err error) {
 	pool, err = k.getPoolForSwap(ctx, poolId)
 	if err != nil {
 		return pool, spreadAccum, err
@@ -540,7 +539,7 @@ func (k Keeper) computeOutAmtGivenIn(
 
 	// Coin amounts require int values
 	// Round amountIn up to avoid under charging
-	amountIn := (tokenInMin.Amount.ToLegacyDec().SubMut(swapState.amountSpecifiedRemaining)).Ceil().TruncateInt()
+	amountIn := tokenInMin.Amount.ToLegacyDec().SubMut(swapState.amountSpecifiedRemaining).Ceil().TruncateInt()
 	// Round amountOut down to avoid over distributing.
 	amountOut := swapState.amountCalculated.TruncateInt()
 
@@ -716,7 +715,8 @@ func (k Keeper) swapCrossTickLogic(ctx sdk.Context,
 	nextInitializedTick int64, nextTickIter db.Iterator,
 	p types.ConcentratedPoolExtension,
 	spreadRewardAccum *accum.AccumulatorObject, uptimeAccums *[]*accum.AccumulatorObject,
-	tokenInDenom string, updateAccumulators bool) (SwapState, error) {
+	tokenInDenom string, updateAccumulators bool,
+) (SwapState, error) {
 	nextInitializedTickInfo, err := ParseTickFromBz(nextTickIter.Value())
 	if err != nil {
 		return swapState, err
@@ -959,7 +959,7 @@ func (k Keeper) ComputeMaxInAmtGivenMaxTicksCrossed(
 
 	totalTokenOut := osmomath.ZeroDec()
 
-	for i := uint64(0); i < maxTicksCrossed; i++ {
+	for range maxTicksCrossed {
 		// Check if the iterator is valid
 		if !nextInitTickIter.Valid() {
 			break

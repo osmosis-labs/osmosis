@@ -510,8 +510,6 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewCreatePoolCmd()
 			clientCtx := val.ClientCtx

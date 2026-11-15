@@ -130,7 +130,7 @@ func (s *sqsStreamingService) processBlockRecoverError(ctx sdk.Context) (err err
 }
 
 // emitFailureTelemetry emits telemetry for panics or errors
-func emitFailureTelemetry(ctx sdk.Context, r interface{}, metricName string) {
+func emitFailureTelemetry(ctx sdk.Context, r any, metricName string) {
 	// Panics are silently logged and ignored.
 	ctx.Logger().Error(metricName, "err", r)
 

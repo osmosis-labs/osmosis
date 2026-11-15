@@ -209,7 +209,6 @@ func (suite *HooksTestSuite) GetReceiverChannel(chainA, chainB Chain) string {
 }
 
 func (suite *HooksTestSuite) TestDeriveIntermediateSender() {
-
 	testCases := []struct {
 		channel         string
 		originalSender  string
@@ -276,7 +275,6 @@ func (suite *HooksTestSuite) TestOnRecvPacketHooks() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		suite.Run(tc.msg, func() {
 			suite.SetupTest() // reset
 
@@ -895,7 +893,6 @@ func (suite *HooksTestSuite) setChainChannelLinks(registryAddr sdk.AccAddress, c
 	  `
 	_, err := contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins())
 	suite.Require().NoError(err)
-
 }
 
 func (suite *HooksTestSuite) setAllPrefixesToOsmo(registryAddr sdk.AccAddress, chainName Chain) {
@@ -1102,7 +1099,7 @@ func (suite *HooksTestSuite) TestCrosschainSwaps() {
 	)
 	res, err := contractKeeper.Execute(ctx, crosschainAddr, owner, []byte(msg), sdk.NewCoins(sdk.NewCoin("token0", osmomath.NewInt(1000))))
 	suite.Require().NoError(err)
-	var responseJson map[string]interface{}
+	var responseJson map[string]any
 	err = json.Unmarshal(res, &responseJson)
 	suite.Require().NoError(err)
 	sentAmount, ok := responseJson["sent_amount"].(string)
@@ -1993,7 +1990,6 @@ func (suite *HooksTestSuite) SendAndAckPacketThroughPath(packetPath []Direction,
 		err = senderEndpoint.AcknowledgePacket(packet, ack)
 		suite.Require().NoError(err)
 	}
-
 }
 
 func (suite *HooksTestSuite) TestSwapErrorAfterPreSwapUnwind() {
@@ -2016,7 +2012,7 @@ func (suite *HooksTestSuite) TestSwapErrorAfterPreSwapUnwind() {
 		address: accountB,
 	}
 
-	//setup initial tokens
+	// setup initial tokens
 	suite.SimpleNativeTransfer("token0", osmomath.NewInt(12000000), []Chain{ChainC, ChainA})
 	suite.SimpleNativeTransfer("token0", osmomath.NewInt(12000000), []Chain{ChainB, ChainA})
 	suite.SimpleNativeTransfer("token0", osmomath.NewInt(12000000), []Chain{ChainC, ChainB})
@@ -2061,7 +2057,6 @@ func (suite *HooksTestSuite) TestSwapErrorAfterPreSwapUnwind() {
 	suite.Require().Equal(1, len(recoverableQueryResponse.Array()))
 	suite.Require().Equal(sender.address.String(), recoverableQueryResponse.Get("0.recovery_addr").String())
 	suite.Require().Equal(sendAmount.String(), recoverableQueryResponse.Get("0.amount").String())
-
 }
 
 func (suite *HooksTestSuite) ExecuteOutpostSwap(initializer, receiverAddr sdk.AccAddress, receiver string) {
@@ -2166,11 +2161,11 @@ func (suite *HooksTestSuite) TestCrosschainSwapsFinalMemoMultipleHops() {
 
 	// Balance of token0 on C should have decreased by the transfer amt
 	postToken0BalanceOnC := suite.chainC.GetOsmosisApp().BankKeeper.GetBalance(suite.chainC.GetContext(), accountC, "token0")
-	suite.Require().Equal(int64(-transferAmount), (postToken0BalanceOnC.Amount.Sub(preToken0BalanceOnC.Amount)).Int64())
+	suite.Require().Equal(int64(-transferAmount), postToken0BalanceOnC.Amount.Sub(preToken0BalanceOnC.Amount).Int64())
 
 	// Likewise for token0 on B
 	postToken0BalanceOnB := suite.chainB.GetOsmosisApp().BankKeeper.GetBalance(suite.chainB.GetContext(), accountB, "token0")
-	suite.Require().Equal(int64(-transferAmount), (postToken0BalanceOnB.Amount.Sub(preToken0BalanceOnB.Amount)).Int64())
+	suite.Require().Equal(int64(-transferAmount), postToken0BalanceOnB.Amount.Sub(preToken0BalanceOnB.Amount).Int64())
 
 	// Setup pool
 	token0BA := suite.GetIBCDenom(ChainB, ChainA, "token0")
@@ -2248,7 +2243,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsFinalMemoMultipleHops() {
 }
 
 func findFungibleTokenPacketEvent(events []abci.Event) *abci.Event {
-	for i := 0; i < len(events); i++ {
+	for i := range events {
 		if events[i].Type == "fungible_token_packet" {
 			return &events[i]
 		}
@@ -2341,7 +2336,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsFinalMemoOneHop() {
 
 	// Balance of token0 on B should have decreased by the transfer amt
 	postToken0BalanceOnB := suite.chainB.GetOsmosisApp().BankKeeper.GetBalance(suite.chainB.GetContext(), accountB, "token0")
-	suite.Require().Equal(int64(-transferAmount), (postToken0BalanceOnB.Amount.Sub(preToken0BalanceOnB.Amount)).Int64())
+	suite.Require().Equal(int64(-transferAmount), postToken0BalanceOnB.Amount.Sub(preToken0BalanceOnB.Amount).Int64())
 
 	// Setup pool
 	token0BA := suite.GetIBCDenom(ChainB, ChainA, "token0")

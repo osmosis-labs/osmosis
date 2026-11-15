@@ -3,6 +3,7 @@ package concentrated_liquidity
 import (
 	"bytes"
 	"fmt"
+	slices0 "slices"
 	"strconv"
 	"time"
 
@@ -150,8 +151,10 @@ func (k Keeper) updatePoolUptimeAccumulatorsToNowWithPool(ctx sdk.Context, pool 
 	return nil
 }
 
-var dec1e9 = osmomath.NewDec(1e9)
-var oneDec = osmomath.OneDec()
+var (
+	dec1e9 = osmomath.NewDec(1e9)
+	oneDec = osmomath.OneDec()
+)
 
 // updateGivenPoolUptimeAccumulatorsToNow syncs all given uptime accumulators for a given pool id.
 // Updates the pool last liquidity update time with the current block time and writes the updated pool to state.
@@ -1028,15 +1031,7 @@ func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 	authorizedUptimes := k.GetParams(ctx).AuthorizedUptimes
 	osmoutils.SortSlice(authorizedUptimes)
 
-	validUptime := false
-	for _, authorizedUptime := range authorizedUptimes {
-		if minUptime == authorizedUptime {
-			validUptime = true
-
-			// We break here to save on iterations
-			break
-		}
-	}
+	validUptime := slices0.Contains(authorizedUptimes, minUptime)
 	if !validUptime {
 		return types.IncentiveRecord{}, types.InvalidMinUptimeError{PoolId: poolId, MinUptime: minUptime, AuthorizedUptimes: authorizedUptimes}
 	}

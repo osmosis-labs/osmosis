@@ -218,7 +218,7 @@ func parseInitData(data []byte) (sdk.AccAddress, []byte, error) {
 	}
 
 	// check if initData.Params is valid json bytes
-	var jsonTest map[string]interface{}
+	var jsonTest map[string]any
 	err = json.Unmarshal(initData.Params, &jsonTest)
 	if err != nil {
 		return nil, nil, errorsmod.Wrap(err, "params must be valid json bytes")

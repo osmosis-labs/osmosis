@@ -66,7 +66,6 @@ func (s *KeeperTestSuite) TestSuperfluidDelegate() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			s.SetupTest()
 			bondDenom, err := s.App.StakingKeeper.BondDenom(s.Ctx)
@@ -340,7 +339,6 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegate() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			s.SetupTest()
 
@@ -506,7 +504,6 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			s.SetupTest()
 
@@ -663,7 +660,7 @@ func (s *KeeperTestSuite) TestSuperfluidUnbondLock() {
 		s.Require().Equal(0, balances.Len())
 
 		// test that synth lock finish does not mean underlying lock is finished
-		s.Ctx = s.Ctx.WithBlockTime((startTime.Add(unbondingDuration)))
+		s.Ctx = s.Ctx.WithBlockTime(startTime.Add(unbondingDuration))
 		s.App.LockupKeeper.DeleteAllMaturedSyntheticLocks(s.Ctx)
 		s.App.LockupKeeper.WithdrawMaturedLocks(s.Ctx, 0)
 		_, err = s.App.LockupKeeper.GetSyntheticLockup(s.Ctx, lock.ID, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
@@ -958,7 +955,6 @@ func (s *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			s.SetupTest()
 

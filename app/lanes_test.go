@@ -46,7 +46,7 @@ func (suite *MempoolCapacityTestSuite) SetupTest() {
 	suite.pubKeys = make([]cryptotypes.PubKey, numAccounts)
 	suite.accAddresses = make([]sdk.AccAddress, numAccounts)
 
-	for i := 0; i < numAccounts; i++ {
+	for i := range numAccounts {
 		suite.privKeys[i] = secp256k1.GenPrivKey()
 		suite.pubKeys[i] = suite.privKeys[i].PubKey()
 		suite.accAddresses[i] = sdk.AccAddress(suite.privKeys[i].PubKey().Address())
@@ -70,7 +70,7 @@ func (suite *MempoolCapacityTestSuite) TestDefaultLaneStaledTransactions() {
 
 	for n := 0; n <= 30; n++ {
 		txs := make([]sdk.Tx, batchSize)
-		for i := 0; i < batchSize; i++ {
+		for i := range batchSize {
 			txs[i] = suite.createTestTx(i + n*batchSize)
 		}
 

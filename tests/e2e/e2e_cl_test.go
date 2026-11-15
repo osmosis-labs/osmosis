@@ -646,7 +646,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// 1) remove default liquidity from the 0th position of every address
 	// 2) Afterwards, Remove the entire 0th position for addr 1 and 2
 	clwg = sync.WaitGroup{}
-	for i := 0; i < len(createdPositions); i++ {
+	for i := range createdPositions {
 		clwg.Add(1)
 		go func(i int) { // Launch a goroutine
 			defer clwg.Done()

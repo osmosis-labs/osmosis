@@ -146,7 +146,7 @@ func InitTestnet(
 
 	inBuf := bufio.NewReader(cmd.InOrStdin())
 	// generate private keys, node IDs, and initial transactions
-	for i := 0; i < numValidators; i++ {
+	for i := range numValidators {
 		nodeDirName := fmt.Sprintf("%s%d", nodeDirPrefix, i)
 		nodeDir := filepath.Join(outputDir, nodeDirName, nodeDaemonHome)
 		gentxsDir := filepath.Join(outputDir, "gentxs")
@@ -318,7 +318,7 @@ func initGenFiles(
 	}
 
 	// generate empty genesis files for each validator and save
-	for i := 0; i < numValidators; i++ {
+	for i := range numValidators {
 		if err := genDoc.SaveAs(genFiles[i]); err != nil {
 			return err
 		}
@@ -334,7 +334,7 @@ func collectGenFiles(
 	var appState json.RawMessage
 	genTime := tmtime.Now()
 
-	for i := 0; i < numValidators; i++ {
+	for i := range numValidators {
 		nodeDirName := fmt.Sprintf("%s%d", nodeDirPrefix, i)
 		nodeDir := filepath.Join(outputDir, nodeDirName, nodeDaemonHome)
 		gentxsDir := filepath.Join(outputDir, "gentxs")
@@ -388,7 +388,7 @@ func calculateIP(ip string, i int) (string, error) {
 		return "", fmt.Errorf("%v: non ipv4 address", ip)
 	}
 
-	for j := 0; j < i; j++ {
+	for range i {
 		ipv4[3]++
 	}
 

@@ -170,7 +170,7 @@ func changeEnvironment(args []string) error {
 // .env file. This is used for the first time setup of the osmosisd home directory.
 func createHomeDirIfNotExist(homeDir string) error {
 	if _, err := os.Stat(homeDir); os.IsNotExist(err) {
-		err := os.MkdirAll(homeDir, 0755)
+		err := os.MkdirAll(homeDir, 0o755)
 		if err != nil {
 			return err
 		}
@@ -227,6 +227,7 @@ func customArgs(cmd *cobra.Command, args []string) error {
 	}
 	return nil
 }
+
 func PrintAllEnvironmentCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list-env ",

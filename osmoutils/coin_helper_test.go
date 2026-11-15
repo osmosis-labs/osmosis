@@ -47,7 +47,8 @@ func TestSubDecCoins(t *testing.T) {
 		"[[100bar, 100foo], [100foo, 100bar]] - [[50foo, 50bar], [50foo, 100bar]]": {
 			firstInput: []sdk.DecCoins{
 				sdk.NewDecCoins(hundredBar, hundredFoo),
-				hundredEach},
+				hundredEach,
+			},
 			secondInput: []sdk.DecCoins{fiftyEach, hundredEach},
 
 			expectedOutput: []sdk.DecCoins{fiftyEach, emptyCoins},
@@ -85,7 +86,6 @@ func TestSubDecCoins(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-
 			var (
 				actualOutput []sdk.DecCoins
 				err1         error
@@ -135,7 +135,8 @@ func TestAddDecCoins(t *testing.T) {
 		"[[100bar, 100foo], [100foo, 100bar]] + [[50foo, 50bar], [50foo, 100bar]]": {
 			firstInput: []sdk.DecCoins{
 				sdk.NewDecCoins(hundredBar, hundredFoo),
-				sdk.NewDecCoins(fiftyFoo, hundredBar)},
+				sdk.NewDecCoins(fiftyFoo, hundredBar),
+			},
 			secondInput: []sdk.DecCoins{fiftyEach, hundredEach},
 
 			expectedOutput: []sdk.DecCoins{
@@ -249,7 +250,6 @@ func TestConvertCoinsToDecCoins(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			result := osmoutils.ConvertCoinsToDecCoins(test.inputCoins)
 			require.Equal(t, result, test.expectedDecCoins)
-
 		})
 	}
 }
@@ -319,7 +319,6 @@ func TestConvertCoinArrayToCoins(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			result := osmoutils.ConvertCoinArrayToCoins(test.coinArray)
 			require.Equal(t, result, test.expectedCoins)
-
 		})
 	}
 }

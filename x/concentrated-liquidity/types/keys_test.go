@@ -34,7 +34,6 @@ func TestReverseRelationTickIndexToBytes(t *testing.T) {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			tickIndexBytes := types.TickIndexToBytes(tc.tickIndex)
 
@@ -68,7 +67,6 @@ func TestTickIndexFromBytes_ErrorCases(t *testing.T) {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			var tickIndexByte []byte
 			if tc.incorrectByteLength {
@@ -113,7 +111,7 @@ func TestAccumulatorNameKeys(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			name1 := types.KeySpreadRewardPoolAccumulator(tc.poolId)
 			require.NotContains(t, string(name1), accum.KeySeparator)
-			for i := 0; i < 125; i++ {
+			for i := range 125 {
 				name2 := types.KeyUptimeAccumulator(tc.poolId, uint64(i))
 				require.NotContains(t, string(name2), accum.KeySeparator)
 			}

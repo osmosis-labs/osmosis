@@ -55,7 +55,7 @@ func TestRandomizedGenState(t *testing.T) {
 		expectedNextEpochProvisionsStr = "3956524194470336578"
 	)
 
-	var expectedDenom = sdk.DefaultBondDenom
+	expectedDenom := sdk.DefaultBondDenom
 
 	// Epoch provisions from Minter.
 	epochProvisionsDec, err := osmomath.NewDecFromStr(expectedEpochProvisionsStr)

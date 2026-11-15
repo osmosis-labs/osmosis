@@ -171,7 +171,7 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{10, 10},
-			expReserves:    []osmomath.BigDec{(baseEvenAmt.Quo(bigDecScalingMultiplier)).QuoInt64(10), (baseEvenAmt.Quo(bigDecScalingMultiplier)).QuoInt64(10)},
+			expReserves:    []osmomath.BigDec{baseEvenAmt.Quo(bigDecScalingMultiplier).QuoInt64(10), baseEvenAmt.Quo(bigDecScalingMultiplier).QuoInt64(10)},
 		},
 		"even two-asset pool with uneven scaling factors greater than 1": {
 			denoms:         [2]string{"foo", "bar"},
@@ -216,8 +216,8 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{(1 << 62) / types.ScalingFactorMultiplier, (1 << 62) / types.ScalingFactorMultiplier},
 			expReserves: []osmomath.BigDec{
-				(osmomath.NewBigDec(1000000000).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier))).Quo(osmomath.NewBigDec(int64(1<<62) / types.ScalingFactorMultiplier)),
-				(osmomath.NewBigDec(1000000000).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier))).Quo(osmomath.NewBigDec(int64(1<<62) / types.ScalingFactorMultiplier)),
+				osmomath.NewBigDec(1000000000).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier)).Quo(osmomath.NewBigDec(int64(1<<62) / types.ScalingFactorMultiplier)),
+				osmomath.NewBigDec(1000000000).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier)).Quo(osmomath.NewBigDec(int64(1<<62) / types.ScalingFactorMultiplier)),
 			},
 		},
 		"zero scaling factor": {
@@ -493,7 +493,7 @@ func TestScaleCoin(t *testing.T) {
 			rounding:       osmomath.RoundDown,
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{(1 << 62) / types.ScalingFactorMultiplier, (1 << 62) / types.ScalingFactorMultiplier},
-			expOutput:      (osmomath.NewBigDec(10).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier))).Quo(osmomath.NewBigDec((1 << 62) / types.ScalingFactorMultiplier)),
+			expOutput:      osmomath.NewBigDec(10).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier)).Quo(osmomath.NewBigDec((1 << 62) / types.ScalingFactorMultiplier)),
 			expError:       false,
 		},
 		"zero scaling factor": {
@@ -976,8 +976,8 @@ func TestInverseJoinPoolExitPool(t *testing.T) {
 			// to be smaller by swap ratio * 2
 			var expectedTokenOut sdk.Coins
 			if len(tc.tokensIn) == 1 {
-				oneMinusSingleSpreadFactor := osmomath.OneDec().Sub((swapRatio.Mul(tc.spreadFactor)))
-				expectedAmt := (tc.tokensIn[0].Amount.ToLegacyDec().Mul(oneMinusSingleSpreadFactor)).TruncateInt()
+				oneMinusSingleSpreadFactor := osmomath.OneDec().Sub(swapRatio.Mul(tc.spreadFactor))
+				expectedAmt := tc.tokensIn[0].Amount.ToLegacyDec().Mul(oneMinusSingleSpreadFactor).TruncateInt()
 				expectedTokenOut = sdk.NewCoins(sdk.NewCoin(tc.tokensIn[0].Denom, expectedAmt))
 			} else {
 				expectedTokenOut = tc.tokensIn
@@ -1361,7 +1361,7 @@ func TestStableswapSpotPrice(t *testing.T) {
 				}
 
 				// We allow for a small geometric error due to our spot price being an approximation
-				diff := (expectedSpotPrice.Sub(spotPrice)).Abs()
+				diff := expectedSpotPrice.Sub(spotPrice).Abs()
 				errTerm := diff.Quo(osmomath.MinDec(expectedSpotPrice, spotPrice))
 				require.True(t, errTerm.LT(osmomath.NewDecWithPrec(1, 8)), "Expected: %d, Actual: %d", expectedSpotPrice, spotPrice)
 

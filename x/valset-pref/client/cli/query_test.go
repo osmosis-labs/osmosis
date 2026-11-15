@@ -57,8 +57,8 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 	testCases := []struct {
 		name   string
 		query  string
-		input  interface{}
-		output interface{}
+		input  any
+		output any
 	}{
 		{
 			"Query delegators validator set",
@@ -69,7 +69,6 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.SetupSuite()
 
 		s.Run(tc.name, func() {

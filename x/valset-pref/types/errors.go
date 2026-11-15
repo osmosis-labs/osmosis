@@ -7,9 +7,7 @@ import (
 	"cosmossdk.io/math"
 )
 
-var (
-	ErrNoDelegation = errors.New("No existing delegation")
-)
+var ErrNoDelegation = errors.New("No existing delegation")
 
 type UndelegateMoreThanDelegatedError struct {
 	TotalDelegatedAmt math.LegacyDec

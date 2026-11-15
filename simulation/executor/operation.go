@@ -76,7 +76,6 @@ func NewOperationQueue() OperationQueue {
 // TODO: Change FutureOperation to FutureAction
 func (simState *simState) queueOperations(futureOps []simulation.FutureOperation) {
 	for _, futureOp := range futureOps {
-		futureOp := futureOp
 		if futureOp.BlockHeight != 0 {
 			if val, ok := simState.operationQueue[futureOp.BlockHeight]; ok {
 				simState.operationQueue[futureOp.BlockHeight] = append(val, futureOp.Op)
