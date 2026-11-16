@@ -311,6 +311,9 @@ require (
 )
 
 replace (
+	// Preview of the Osmosis CometBFT ML-DSA-65 backport. Switch to the published Osmosis fork tag before merging.
+	github.com/cometbft/cometbft => github.com/99Kies/cometbft v0.0.0-20261116102727-fb97e7c62e8a
+
 	// TODO(https://github.com/cosmos/rosetta/issues/76): Rosetta requires cosmossdk.io/core v0.12.0 erroneously but
 	// should use v0.11.0. The Cosmos build fails with types/context.go:65:29: undefined: comet.BlockInfo otherwise.
 	cosmossdk.io/core => cosmossdk.io/core v0.11.0
