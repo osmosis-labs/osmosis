@@ -103,7 +103,7 @@ jobs:
         run: |
           VERSION=$(echo $(git describe --tags) | sed 's/^v//') || VERSION=${GITHUB_SHA}
           TESTS=$(cat pkgs.txt.part.${{ matrix.part }})
-          VERSION=$VERSION SKIP_WASM_WSL_TESTS="false" go test -race -mod=readonly -tags='ledger test_ledger_mock norace' $TESTS
+          VERSION=$VERSION SKIP_WASM_WSL_TESTS="false" go test -race -mod=readonly -tags='ledger test_ledger_mock norace recoverylock_test' $TESTS
 
   e2e:
     needs: get_diff
