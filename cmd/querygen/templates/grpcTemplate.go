@@ -19,7 +19,7 @@ func GrpcTemplateFromQueryYml(queryYml QueryYml) GrpcTemplate {
 	for queryName := range queryYml.Queries {
 		GrpcQueries = append(GrpcQueries, GrpcQuery{QueryName: queryName, Response: queryYml.Queries[queryName].ProtoWrapper.Response})
 	}
-	sort.Slice(GrpcQueries, func(i, j int) bool {
+	sort.SliceStable(GrpcQueries, func(i, j int) bool {
 		return GrpcQueries[i].QueryName > GrpcQueries[j].QueryName
 	})
 	return GrpcTemplate{

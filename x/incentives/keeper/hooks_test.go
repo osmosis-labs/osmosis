@@ -374,7 +374,7 @@ func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_ChangeVolumeBetween() {
 func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_CreateGroupsBetween() {
 	s.SetupTest()
 
-	var volumeA = oneMillionVolumeAmt
+	volumeA := oneMillionVolumeAmt
 
 	// Create set of pools with internal gauges and a group for them.
 	poolAndGaugeInfo := s.PrepareAllSupportedPools()
@@ -571,7 +571,7 @@ func setupUnequalVolumeWeights(numVolumeWeightsToCreate int, totalVolumeAmount m
 	totalVolumeDec := totalVolumeAmount.ToLegacyDec()
 	unequalVolumeRatios := make([]osmomath.Int, 0, numVolumeWeightsToCreate)
 	n := osmomath.NewDec(int64(numVolumeWeightsToCreate))
-	for i := 0; i < numVolumeWeightsToCreate; i++ {
+	for i := range numVolumeWeightsToCreate {
 		denominator := n.Mul(n.Add(osmomath.OneDec())).Quo(osmomath.NewDec(2))
 		unequalVolumeRatios = append(unequalVolumeRatios, osmomath.NewDec(int64(i+1)).Quo(denominator).Mul(totalVolumeDec).TruncateInt())
 	}
@@ -590,7 +590,7 @@ func setupEqualVolumeWeights(numVolumeWeightsToCreate int, totalVolumeAmount mat
 	equalVolumeRatios := make([]osmomath.Int, 0, numVolumeWeightsToCreate)
 
 	updatedTotalVolume := osmomath.ZeroInt()
-	for i := 0; i < numVolumeWeightsToCreate; i++ {
+	for range numVolumeWeightsToCreate {
 		currentVolume := osmomath.OneDec().Quo(osmomath.NewDec(int64(numVolumeWeightsToCreate))).Mul(totalVolumeDec)
 
 		currentVolumeInt := currentVolume.TruncateInt()

@@ -62,7 +62,7 @@ func TestCalculateAmountOutAndIn_InverseRelationship(
 	// we expect there to be drastically amplified error that will fall outside our usual bounds.
 	// Since these cases are effectively unusable by design, we only really care about whether
 	// they are safe i.e. round correctly.
-	preFeeTokenIn := actualTokenIn.Amount.ToLegacyDec().Mul((osmomath.OneDec().Sub(spreadFactor))).Ceil().TruncateInt()
+	preFeeTokenIn := actualTokenIn.Amount.ToLegacyDec().Mul(osmomath.OneDec().Sub(spreadFactor)).Ceil().TruncateInt()
 	if preFeeTokenIn.Equal(osmomath.OneInt()) {
 		require.True(t, actual.GT(expected))
 	} else {
@@ -102,7 +102,7 @@ func TestSlippageRelationOutGivenIn(
 	curLiquidity := initLiquidity
 	curOutAmount, err := curPool.CalcOutAmtGivenIn(ctx, swapInAmt, swapOutDenom, fee)
 	require.NoError(t, err)
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		newLiquidity := curLiquidity.Add(curLiquidity...)
 		curPool = createPoolWithLiquidity(ctx, newLiquidity)
 
@@ -146,7 +146,7 @@ func TestSlippageRelationInGivenOut(
 	curInAmount, err := curPool.CalcInAmtGivenOut(ctx, swapOutAmt, swapInDenom, fee)
 
 	require.NoError(t, err)
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		newLiquidity := curLiquidity.Add(curLiquidity...)
 		curPool = createPoolWithLiquidity(ctx, newLiquidity)
 

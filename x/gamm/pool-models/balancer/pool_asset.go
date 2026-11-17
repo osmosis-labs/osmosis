@@ -41,7 +41,7 @@ func (pa PoolAsset) prettify() poolAssetPretty {
 
 // MarshalYAML returns the YAML representation of a PoolAsset.
 // This is assumed to not be called on a stand-alone instance, so it removes the first marshalled line.
-func (pa PoolAsset) MarshalYAML() (interface{}, error) {
+func (pa PoolAsset) MarshalYAML() (any, error) {
 	bz, err := yaml.Marshal(pa.prettify())
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func sortPoolAssetsOutOfPlaceByDenom(assets []PoolAsset) []PoolAsset {
 
 // sortPoolAssetsByDenom sorts pool assets in place, by weight.
 func sortPoolAssetsByDenom(assets []PoolAsset) {
-	sort.Slice(assets, func(i, j int) bool {
+	sort.SliceStable(assets, func(i, j int) bool {
 		PoolAssetA := assets[i]
 		PoolAssetB := assets[j]
 

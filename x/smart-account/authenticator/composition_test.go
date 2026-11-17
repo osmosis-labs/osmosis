@@ -338,7 +338,6 @@ func (s *AggregatedAuthenticatorsTest) TestAllOf() {
 			initializedAuth, err := s.AllOfAuth.Initialize(data)
 			if !tc.expectInit {
 				s.Require().Error(err)
-
 			} else {
 				s.Require().NoError(err)
 
@@ -508,7 +507,6 @@ func (csa *CompositeSpyAuth) isAllOf() bool {
 }
 
 func (csa *CompositeSpyAuth) buildInitData() ([]byte, error) {
-
 	// root
 	if len(csa.name) > 0 {
 		spyData := testutils.SpyAuthenticatorData{
@@ -687,7 +685,6 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 
 		s.Ctx = originalCtx
 	}
-
 }
 
 // any_of can have failed sub-authenticators's confirm_execution but not failing the whole transaction

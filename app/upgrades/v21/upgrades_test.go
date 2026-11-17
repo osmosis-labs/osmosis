@@ -63,7 +63,6 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().Equal([]sdk.Coin{}, allProtocolRevenue.TakerFeesTracker.TakerFeesToStakers)
 	// s.Require().Equal(sdk.Coins(nil), allProtocolRevenue.TxFeesTracker.TxFees)
 	s.Require().Equal([]sdk.Coin(cyclicArbProfits), allProtocolRevenue.CyclicArbTracker.CyclicArb)
-
 }
 
 func dummyUpgrade(s *UpgradeTestSuite) {

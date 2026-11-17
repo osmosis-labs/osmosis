@@ -137,7 +137,7 @@ func (k Keeper) GetAllPositionIdsForPoolId(ctx sdk.Context, prefix []byte, poolI
 	}
 
 	// Sort the positionIds in ascending order
-	sort.Slice(positionIds, func(i, j int) bool {
+	sort.SliceStable(positionIds, func(i, j int) bool {
 		return positionIds[i] < positionIds[j]
 	})
 
@@ -274,7 +274,7 @@ func (k Keeper) GetUserPositionsSerialized(ctx sdk.Context, addr sdk.AccAddress,
 	}
 
 	// Sort the positions in ascending order by ID
-	sort.Slice(fullPositions, func(i, j int) bool {
+	sort.SliceStable(fullPositions, func(i, j int) bool {
 		return fullPositions[i].Position.PositionId < fullPositions[j].Position.PositionId
 	})
 

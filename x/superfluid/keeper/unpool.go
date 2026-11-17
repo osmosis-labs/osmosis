@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"slices"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -93,10 +94,8 @@ func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolI
 func (k Keeper) checkUnpoolWhitelisted(ctx sdk.Context, poolId uint64) error {
 	allowedPools := k.GetUnpoolAllowedPools(ctx)
 
-	for _, allowedPoolId := range allowedPools {
-		if poolId == allowedPoolId {
-			return nil
-		}
+	if slices.Contains(allowedPools, poolId) {
+		return nil
 	}
 
 	return types.ErrPoolNotWhitelisted

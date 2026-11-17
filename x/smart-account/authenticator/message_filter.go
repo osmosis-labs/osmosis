@@ -3,6 +3,7 @@ package authenticator
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"sort"
 
 	errorsmod "cosmossdk.io/errors"
@@ -112,7 +113,7 @@ func (m MessageFilter) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAd
 
 // containsFloats checks if the given JSON data contains any floating point numbers.
 func containsFloats(data []byte) (bool, error) {
-	var v interface{}
+	var v any
 	if err := json.Unmarshal(data, &v); err != nil {
 		return false, err
 	}
@@ -121,19 +122,17 @@ func containsFloats(data []byte) (bool, error) {
 }
 
 // checkForFloats recursively checks if any value in the given data is a floating point number.
-func checkForFloats(v interface{}) bool {
+func checkForFloats(v any) bool {
 	switch vv := v.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		for _, val := range vv {
 			if checkForFloats(val) {
 				return true
 			}
 		}
-	case []interface{}:
-		for _, val := range vv {
-			if checkForFloats(val) {
-				return true
-			}
+	case []any:
+		if slices.ContainsFunc(vv, checkForFloats) {
+			return true
 		}
 	case float64:
 		return true
@@ -142,10 +141,10 @@ func checkForFloats(v interface{}) bool {
 }
 
 // isSuperset checks if the first JSON structure is a superset of the second JSON structure.
-func isSuperset(a, b interface{}) error {
+func isSuperset(a, b any) error {
 	switch av := a.(type) {
-	case map[string]interface{}:
-		bv, ok := b.(map[string]interface{})
+	case map[string]any:
+		bv, ok := b.(map[string]any)
 		if !ok {
 			return fmt.Errorf("expected map, got %T", b)
 		}
@@ -168,8 +167,8 @@ func isSuperset(a, b interface{}) error {
 			}
 		}
 
-	case []interface{}:
-		bv, ok := b.([]interface{})
+	case []any:
+		bv, ok := b.([]any)
 		if !ok {
 			return fmt.Errorf("expected slice, got %T", b)
 		}
@@ -227,7 +226,7 @@ func isSuperset(a, b interface{}) error {
 
 // IsJsonSuperset checks if the first JSON byte array is a superset of the second JSON byte array.
 func IsJsonSuperset(a, b []byte) error {
-	var av, bv interface{}
+	var av, bv any
 
 	errA := json.Unmarshal(a, &av)
 	if errA != nil {

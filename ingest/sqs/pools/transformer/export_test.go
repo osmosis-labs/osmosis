@@ -18,9 +18,7 @@ const (
 	USDC                          = usdcDenom
 )
 
-var (
-	UsdcPrecisionScalingFactor = usdcPrecisionScalingFactor
-)
+var UsdcPrecisionScalingFactor = usdcPrecisionScalingFactor
 
 type (
 	PoolTransformer = poolTransformer

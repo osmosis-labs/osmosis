@@ -43,6 +43,7 @@ func GetCmdDenomsFromCreator() (*osmocli.QueryDescriptor, *types.QueryDenomsFrom
 		{{.CommandPrefix}} <address>`,
 	}, &types.QueryDenomsFromCreatorRequest{}
 }
+
 func GetCmdAllBeforeSendHooks() (*osmocli.QueryDescriptor, *types.QueryAllBeforeSendHooksAddressesRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "all-before-send-hooks",

@@ -44,7 +44,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 }
 
 // SetParam sets a specific twap module's parameter with the provided parameter.
-func (k Keeper) SetParam(ctx sdk.Context, key []byte, value interface{}) {
+func (k Keeper) SetParam(ctx sdk.Context, key []byte, value any) {
 	k.paramSpace.Set(ctx, key, value)
 }
 
@@ -68,7 +68,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	// Most recent TWAP must be inserted last. This is required because
 	// we maintain a separate index for the most recent records.
 	// It is updated by storing new records.
-	sort.Slice(genState.Twaps, func(i, j int) bool {
+	sort.SliceStable(genState.Twaps, func(i, j int) bool {
 		return genState.Twaps[i].Time.Before(genState.Twaps[j].Time)
 	})
 

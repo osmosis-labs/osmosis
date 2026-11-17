@@ -385,7 +385,6 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 
 	var insExpected []osmomath.Int
 	insExpected, err = k.createMultihopExpectedSwapOuts(ctx, route, tokenOut)
-
 	if err != nil {
 		return osmomath.Int{}, err
 	}
@@ -423,7 +422,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		// If we determined the routeStep is an osmo multi-hop and both route are incentivized,
 		// we modify the swap fee accordingly.
 		if isMultiHopRouted {
-			spreadFactor = routeSpreadFactor.Mul((spreadFactor.Quo(sumOfSpreadFactors)))
+			spreadFactor = routeSpreadFactor.Mul(spreadFactor.Quo(sumOfSpreadFactors))
 		}
 
 		curTokenInAmount, swapErr := swapModule.SwapExactAmountOut(ctx, sender, pool, routeStep.TokenInDenom, insExpected[i], _tokenOut, spreadFactor)
@@ -761,7 +760,6 @@ func (k Keeper) trackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.
 
 	// Get the most liquid OSMO-paired pool with `volumeGenerated`'s denom using `GetPoolForDenomPair`
 	osmoPairedPoolId, err := k.protorevKeeper.GetPoolForDenomPair(ctx, OSMO, volumeGenerated.Denom)
-
 	// If no pool is found, fail quietly.
 	//
 	// This is a rare scenario that should only happen if OSMO-paired pools are all removed from the protorev module.
@@ -778,7 +776,6 @@ func (k Keeper) trackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.
 	// Since we want to ultimately multiply the volume by this spot price, we want to quote OSMO in terms of the input token.
 	// This is so that once we multiply the volume by the spot price, we get the volume in units of OSMO.
 	osmoPerInputToken, err := k.RouteCalculateSpotPrice(ctx, osmoPairedPoolId, OSMO, volumeGenerated.Denom)
-
 	// We expect that if a pool is found, there should always be an available spot price as well.
 	// That being said, if there is an error finding the spot price, we fail quietly and leave tracked volume unchanged.
 	// This is because we do not want to escalate an issue with finding spot price to locking all swaps involving the given asset.

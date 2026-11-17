@@ -11,7 +11,6 @@ release-help:
 	@echo "  dry-run                   Perform a dry run release"
 	@echo "  snapshot                  Create a snapshot release"
 
-GORELEASER_IMAGE := ghcr.io/goreleaser/goreleaser-cross:v$(GO_VERSION)
 COSMWASM_VERSION := $(shell go list -m github.com/CosmWasm/wasmvm/v2 | sed 's/.* //')
 
 release-dry-run:

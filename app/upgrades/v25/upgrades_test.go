@@ -31,9 +31,7 @@ const (
 	v25UpgradeHeight = int64(10)
 )
 
-var (
-	consAddr = sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
-)
+var consAddr = sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
 
 type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
@@ -195,7 +193,7 @@ func (s *UpgradeTestSuite) prepareMissedBlocksCounterTest() slashingtypes.Valida
 	}
 
 	// Set the missed blocks for the validator
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		err := s.App.SlashingKeeper.SetMissedBlockBitmapValue(s.Ctx, consAddr, int64(i), true)
 		s.Require().NoError(err)
 	}

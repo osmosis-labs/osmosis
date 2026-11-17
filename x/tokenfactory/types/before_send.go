@@ -5,7 +5,7 @@ import (
 )
 
 type BlockBeforeSendSudoMsg struct {
-	BlockBeforeSend BlockBeforeSendMsg `json:"block_before_send,omitempty"`
+	BlockBeforeSend BlockBeforeSendMsg `json:"block_before_send"`
 }
 
 type TrackBeforeSendSudoMsg struct {

@@ -194,7 +194,6 @@ func (s *UpgradeTestSuite) TestCreateGroupsForIncentivePairs() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.runCreateGroupsForIncentivePairsTest(tc.migrationInfo, tc.distributionRecords, tc.expectedDistributionRecords, expectedGroupGaugeID, tc.expectError)
 		})
@@ -206,11 +205,10 @@ func (s *UpgradeTestSuite) TestCreateGroupsForIncentivePairs() {
 	// 2 separate individual stableswap pools - no-op
 	// concentrated pool that does not have migration link - no-op
 	s.Run("valid multi distr record test", func() {
-
 		// Refetch updated expected group gauge ID
 		// since previous tests might have modified it by creating their own groups
 		// during tests
-		var expectedGroupGaugeID = s.App.IncentivesKeeper.GetLastGaugeID(s.Ctx) + 1
+		expectedGroupGaugeID := s.App.IncentivesKeeper.GetLastGaugeID(s.Ctx) + 1
 
 		// Configure migration records only for 2 groups of concentrated and balancer pools.
 		// Note that the third one does not have a migration record.

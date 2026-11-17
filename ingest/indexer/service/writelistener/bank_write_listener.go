@@ -16,7 +16,6 @@ import (
 var _ commondomain.WriteListener = (*bankWriteListener)(nil)
 
 type bankWriteListener struct {
-
 	// shared context to handle graceful shutdown in case of node stop.
 	ctx context.Context
 

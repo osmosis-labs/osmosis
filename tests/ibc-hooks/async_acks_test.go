@@ -24,7 +24,6 @@ func (suite *HooksTestSuite) forceContractToEmitAckForPacket(osmosisApp *app.Osm
 	msg := fmt.Sprintf(`{"force_emit_ibc_ack": {"packet": %s, "channel": "channel-0", "success": %v }}`, packetJson, success)
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
 	return contractKeeper.Execute(ctx, contractAddr, suite.chainA.SenderAccount.GetAddress(), []byte(msg), sdk.NewCoins())
-
 }
 
 func (suite *HooksTestSuite) TestWasmHooksAsyncAcks() {

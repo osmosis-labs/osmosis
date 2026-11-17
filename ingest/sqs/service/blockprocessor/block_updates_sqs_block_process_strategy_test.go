@@ -23,7 +23,6 @@ var (
 // TestProcessBlock tests the PublishChangedPools method by
 // mocking the dependencies and asserting the expected behavior.
 func (s *SQSBlockProcessorTestSuite) TestProcessBlock_UpdatesOnlyStrategy() {
-
 	tests := []struct {
 		name string
 
@@ -75,7 +74,6 @@ func (s *SQSBlockProcessorTestSuite) TestProcessBlock_UpdatesOnlyStrategy() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-
 			s.Setup()
 
 			// Mock out pool extractor

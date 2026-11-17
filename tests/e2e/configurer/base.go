@@ -166,17 +166,17 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 			return false
 		}
 
-		var respBody map[string]interface{}
+		var respBody map[string]any
 		if err := json.Unmarshal(bz, &respBody); err != nil {
 			return false
 		}
 
 		status, ok := respBody["status"].(string)
 		require.True(bc.t, ok)
-		result, ok := respBody["result"].(map[string]interface{})
+		result, ok := respBody["result"].(map[string]any)
 		require.True(bc.t, ok)
 
-		chains, ok := result["chains"].([]interface{})
+		chains, ok := result["chains"].([]any)
 		require.True(bc.t, ok)
 
 		return status == "success" && len(chains) == 2
