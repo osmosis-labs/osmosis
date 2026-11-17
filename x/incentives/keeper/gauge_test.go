@@ -662,7 +662,6 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			s.SetupTest()
 
@@ -772,7 +771,6 @@ func (s *KeeperTestSuite) TestCreateGauge_Group() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			s.SetupTest()
 
@@ -941,7 +939,6 @@ func (s *KeeperTestSuite) TestCheckIfDenomsAreDistributable() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			// System under test
 			err := s.App.IncentivesKeeper.CheckIfDenomsAreDistributable(s.Ctx, tc.coins)

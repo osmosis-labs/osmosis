@@ -50,8 +50,8 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 	testCases := []struct {
 		name   string
 		query  string
-		input  interface{}
-		output interface{}
+		input  any
+		output any
 	}{
 		{
 			"Query base denom",
@@ -80,7 +80,6 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			s.SetupSuite()
 			err := s.QueryHelper.Invoke(gocontext.Background(), tc.query, tc.input, tc.output)

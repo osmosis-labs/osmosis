@@ -317,7 +317,7 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 	}
 
 	var poolAssets []balancer.PoolAsset
-	for i := 0; i < len(poolAssetCoins); i++ {
+	for i := range poolAssetCoins {
 		if poolAssetCoins[i].Denom != deposit[i].Denom {
 			return txf, nil, errors.New("deposit tokens and token weights should have same denom order")
 		}
@@ -352,7 +352,7 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 		}
 
 		var targetPoolAssets []balancer.PoolAsset
-		for i := 0; i < len(targetPoolAssetCoins); i++ {
+		for i := range targetPoolAssetCoins {
 			if targetPoolAssetCoins[i].Denom != poolAssetCoins[i].Denom {
 				return txf, nil, errors.New("initial pool weights and target pool weights should have same denom order")
 			}

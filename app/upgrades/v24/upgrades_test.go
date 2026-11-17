@@ -171,7 +171,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.App.ProtoRevKeeper.DeprecatedSetBaseDenoms(s.Ctx, []protorevtypes.BaseDenom{
 		{Denom: protorevtypes.OsmosisDenomination, StepSize: osmomath.NewInt(1_000_000)},
 		{Denom: "atom", StepSize: osmomath.NewInt(1_000_000)},
-		{Denom: "weth", StepSize: osmomath.NewInt(1_000_000)}})
+		{Denom: "weth", StepSize: osmomath.NewInt(1_000_000)},
+	})
 	oldBaseDenoms, err := s.App.ProtoRevKeeper.DeprecatedGetAllBaseDenoms(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(oldBaseDenoms))

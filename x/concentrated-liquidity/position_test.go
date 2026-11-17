@@ -572,7 +572,6 @@ func (s *KeeperTestSuite) TestGetUserPositionsSerialized() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-
 			s.SetupTest()
 			k := s.App.ConcentratedLiquidityKeeper
 
@@ -932,7 +931,6 @@ func (s *KeeperTestSuite) TestHasAnyPositionForPool() {
 	}
 
 	for _, test := range tests {
-		test := test
 		s.Run(test.name, func() {
 			// Init suite for each test.
 			s.SetupTest()
@@ -1020,7 +1018,6 @@ func (s *KeeperTestSuite) TestCreateFullRangePosition() {
 	}
 
 	for _, test := range tests {
-		test := test
 		s.Run(test.name, func() {
 			// Init suite for each test.
 			s.SetupTest()
@@ -1116,7 +1113,6 @@ func (s *KeeperTestSuite) TestMintSharesAndLock() {
 	}
 
 	for _, test := range tests {
-		test := test
 		s.Run(test.name, func() {
 			// Init suite for each test.
 			s.SetupTest()
@@ -1743,7 +1739,6 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 	}
 
 	for _, test := range tests {
-		test := test
 		s.Run(test.name, func() {
 			// Init suite for each test.
 			s.SetupTest()
@@ -2539,7 +2534,7 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 // - totalExpectedRewards: The total expected rewards after funding all the positions.
 func (s *KeeperTestSuite) fundIncentiveAddr(incentivesAddress sdk.AccAddress, positionIds []uint64) (totalExpectedRewards sdk.Coins) {
 	expectedUptimes := getExpectedUptimes()
-	for i := 0; i < len(positionIds); i++ {
+	for range positionIds {
 		coinsToFundForIncentivesToUser := expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24, defaultMultiplier)
 		totalExpectedRewards = totalExpectedRewards.Add(coinsToFundForIncentivesToUser...)
 		s.FundAcc(incentivesAddress, coinsToFundForIncentivesToUser)

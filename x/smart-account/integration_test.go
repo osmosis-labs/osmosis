@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"testing"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	txfeetypes "github.com/osmosis-labs/osmosis/v32/x/txfees/types"
 
 	"github.com/osmosis-labs/osmosis/v32/x/smart-account/authenticator"
 	"github.com/osmosis-labs/osmosis/v32/x/smart-account/testutils"
-
-	"testing"
 
 	"github.com/osmosis-labs/osmosis/v32/app"
 	smartaccounttypes "github.com/osmosis-labs/osmosis/v32/x/smart-account/types"
@@ -44,8 +43,10 @@ type AuthenticatorSuite struct {
 	Account  sdk.AccountI
 }
 
-type cpks = [][]cryptotypes.PrivKey
-type pks = []cryptotypes.PrivKey
+type (
+	cpks = [][]cryptotypes.PrivKey
+	pks  = []cryptotypes.PrivKey
+)
 
 func TestAuthenticatorSuite(t *testing.T) {
 	suite.Run(t, new(AuthenticatorSuite))
@@ -67,7 +68,7 @@ func (s *AuthenticatorSuite) SetupTest() {
 
 	// Initialize two private keys for testing
 	s.PrivKeys = make([]cryptotypes.PrivKey, 3)
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		s.PrivKeys[i] = secp256k1.GenPrivKey()
 	}
 
@@ -609,7 +610,6 @@ func (s *AuthenticatorSuite) TestFeeDeduction() {
 		expectedError          bool
 		expectedErrorMsg       string
 	}{
-
 		{
 			name:                   "single message, authenticated, fee deducted + tx succeeded",
 			signers:                []cryptotypes.PrivKey{s.PrivKeys[0]},

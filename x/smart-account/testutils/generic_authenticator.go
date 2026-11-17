@@ -10,9 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v32/x/smart-account/authenticator"
 )
 
-var (
-	_ authenticator.Authenticator = &TestingAuthenticator{}
-)
+var _ authenticator.Authenticator = &TestingAuthenticator{}
 
 type ApproveOn int
 

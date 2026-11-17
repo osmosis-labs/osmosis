@@ -5,13 +5,12 @@ package cmd
 import (
 	"encoding/hex"
 	"fmt"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
-
-	"path/filepath"
 
 	dbm "github.com/cosmos/cosmos-db"
 

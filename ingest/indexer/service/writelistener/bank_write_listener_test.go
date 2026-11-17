@@ -22,9 +22,7 @@ type WriteListenerTestSuite struct {
 	apptesting.ConcentratedKeeperTestHelper
 }
 
-var (
-	someValue = []byte("someValue")
-)
+var someValue = []byte("someValue")
 
 func TestWriteListenerTestSuite(t *testing.T) {
 	suite.Run(t, new(WriteListenerTestSuite))
@@ -34,7 +32,6 @@ func TestWriteListenerTestSuite(t *testing.T) {
 // Configures the token supply publisher mock to either return an expected forcer error
 // or validates that the mock's relevant publish methods were called with the desired arguments.
 func (s *WriteListenerTestSuite) TestWriteListener_Bank() {
-
 	const (
 		defaultDenom = "noErrorDenom"
 	)
@@ -136,9 +133,7 @@ func (s *WriteListenerTestSuite) TestWriteListener_Bank() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
-
 			s.Setup()
 
 			// Initialize cold start manager

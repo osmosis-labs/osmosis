@@ -47,9 +47,11 @@ var (
 func (msg SwapAmountOutSplitRouteWrapper) TokenInDenom() string {
 	return msg.Pools[0].TokenInDenom
 }
+
 func (msg SwapAmountOutSplitRouteWrapper) TokenOutDenom() string {
 	return msg.OutDenom
 }
+
 func (msg SwapAmountOutSplitRouteWrapper) TokenDenomsOnPath() []string {
 	denoms := make([]string, 0, len(msg.Pools)+1)
 	for i := 0; i < len(msg.Pools); i++ {
@@ -62,9 +64,11 @@ func (msg SwapAmountOutSplitRouteWrapper) TokenDenomsOnPath() []string {
 func (msg SwapAmountInSplitRouteWrapper) TokenInDenom() string {
 	return msg.InDenom
 }
+
 func (msg SwapAmountInSplitRouteWrapper) TokenOutDenom() string {
 	return msg.Pools[len(msg.Pools)-1].TokenOutDenom
 }
+
 func (msg SwapAmountInSplitRouteWrapper) TokenDenomsOnPath() []string {
 	denoms := make([]string, 0, len(msg.Pools)+1)
 	denoms = append(denoms, msg.TokenInDenom())

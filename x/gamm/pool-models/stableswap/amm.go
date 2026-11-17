@@ -55,7 +55,7 @@ func targetKCalculator(x0, y0, w, yf osmomath.BigDec) osmomath.BigDec {
 	// removed constant term from expression
 	// namely - (x_0 (y_f^2 + w) + x_0^3) = x_0(y_f^2 + w + x_0^2)
 	// innerTerm = y_f^2 + w + x_0^2
-	innerTerm := yf.Mul(yf).AddMut(w).AddMut((x0.Mul(x0)))
+	innerTerm := yf.Mul(yf).AddMut(w).AddMut(x0.Mul(x0))
 	constantTerm := innerTerm.Mul(x0)
 	return yfRemoved.Sub(constantTerm)
 }

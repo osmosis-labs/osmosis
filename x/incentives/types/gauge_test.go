@@ -9,7 +9,6 @@ import (
 // Validates that the gauge returns true if this is the last distributing epoch of the gauge.
 // Assumes that this is called before updating the gauge's state at the end of the epoch.
 func TestIsLastNonPerpetualDistribution(t *testing.T) {
-
 	tests := map[string]struct {
 		gauge    Gauge
 		expected bool
@@ -50,7 +49,6 @@ func TestIsLastNonPerpetualDistribution(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-
 			isLastNonPerpetualDistribution := tc.gauge.IsLastNonPerpetualDistribution()
 
 			require.Equal(t, tc.expected, isLastNonPerpetualDistribution)

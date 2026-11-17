@@ -132,7 +132,7 @@ func (s *TestSuite) TestNewTwapRecord() {
 		},
 	}
 	// iterate twice on the test cases, once with Balancer pools, once with Concentrated liquidity pools
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		for name, test := range tests {
 			s.Run(name, func() {
 				s.SetupTest()

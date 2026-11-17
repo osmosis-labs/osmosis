@@ -121,8 +121,6 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 	finalOutputAmount := osmomath.NewInt(0)
 
 	for _, tc := range tests {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			for i, coin := range tc.coins {
 				// Get the output amount in osmo denom
@@ -225,8 +223,6 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			s.Setup()
 
@@ -374,10 +370,7 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom_SimpleCases() {
 		}
 
 		for _, tc := range tests {
-			tc := tc
-
 			s.Run(tc.name, func() {
-
 				// Sets up account with no balance
 				testAccount := apptesting.CreateRandomAccounts(1)[0]
 
@@ -422,7 +415,6 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom_SimpleCases() {
 	// in the initial balance. Some of these tokens successfully swap, others do not and are silently skipped.
 	// The denomToSwapTo in the initial balance is also silently skipped
 	s.Run("multiple tokens", func() {
-
 		denomToSwapTo := defaultTxFeesDenom
 
 		// Prepare coins with all edge cases and success scenarios for swapping to denomToSwapTo.
@@ -451,7 +443,6 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom_SimpleCases() {
 	// tests SwapNonNativeFeeToDenom 2-hop routing via intermediary denoms
 	// when no direct route exists between input and output denoms
 	s.Run("2-hop routing via intermediary denoms", func() {
-
 		// Set up intermediary denoms in txfees params
 		params := s.App.TxFeesKeeper.GetParams(s.Ctx)
 		params.FeeSwapIntermediaryDenomList = []string{intermediaryDenom, anotherIntermediaryDenom}
@@ -886,7 +877,6 @@ func (s *KeeperTestSuite) TestClearTakerFeeShareAccumulators() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		s.Run(tc.name, func() {
 			s.Setup()
 			tc.setupTakerFeeShares()
@@ -974,7 +964,7 @@ func (s *KeeperTestSuite) TestNonOsmoTakerFeeBurnMechanism() {
 	// burn address should be the default null address
 	s.Require().Equal("osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030", burnAddress.String())
 
-	var poolAssetAmount = int64(500000000)
+	poolAssetAmount := int64(500000000)
 	// Set up pools for DAI and USDC to OSMO swapping
 	daiPoolId := s.PrepareBalancerPoolWithCoins(
 		sdk.NewInt64Coin(baseDenom, poolAssetAmount),
@@ -1271,7 +1261,7 @@ func (s *KeeperTestSuite) TestStakingRewardSmoothing() {
 	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
 
 	// Create pools for DAI and USDC with liquidity
-	var poolAssetAmount = int64(1000000000) // 1000 tokens
+	poolAssetAmount := int64(1000000000) // 1000 tokens
 	daiPoolId := s.PrepareBalancerPoolWithCoins(
 		sdk.NewInt64Coin(baseDenom, poolAssetAmount),
 		sdk.NewInt64Coin(daiDenom, poolAssetAmount),

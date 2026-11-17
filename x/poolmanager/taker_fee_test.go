@@ -15,7 +15,6 @@ import (
 // If the sender is whitelisted, then the taker fee is not charged.
 // Otherwise, the taker fee is charged.
 func (s *KeeperTestSuite) TestChargeTakerFee() {
-
 	const (
 		whitelistedSenderIndex = iota
 		nonWhitelistedSenderIndex

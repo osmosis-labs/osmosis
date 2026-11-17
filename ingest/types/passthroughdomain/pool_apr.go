@@ -18,15 +18,15 @@ type PoolAPR struct {
 	// PoolID represents the pool ID.
 	PoolID uint64 `json:"-"`
 	// Swap Fees represents the swap fees.
-	SwapFees PoolDataRange `json:"swap_fees,omitempty"`
+	SwapFees PoolDataRange `json:"swap_fees"`
 	// Superfluid APR represents the superfluid APR.
-	SuperfluidAPR PoolDataRange `json:"superfluid,omitempty"`
+	SuperfluidAPR PoolDataRange `json:"superfluid"`
 	// Osmosis APR represents the osmosis APR.
-	OsmosisAPR PoolDataRange `json:"osmosis,omitempty"`
+	OsmosisAPR PoolDataRange `json:"osmosis"`
 	// Boost APR represents the boosted APR.
-	BoostAPR PoolDataRange `json:"boost,omitempty"`
+	BoostAPR PoolDataRange `json:"boost"`
 	// Total APR represents the total APR.
-	TotalAPR PoolDataRange `json:"total_apr,omitempty"`
+	TotalAPR PoolDataRange `json:"total_apr"`
 }
 
 // UnmarshalJSON custom unmarshal method to handle PoolID as uint64.

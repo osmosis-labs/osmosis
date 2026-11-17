@@ -44,7 +44,7 @@ func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 		}
 
 		// all the weights should be positive
-		if !(validator.Weight.IsPositive()) {
+		if !validator.Weight.IsPositive() {
 			return fmt.Errorf("Invalid weight, validator weight needs to be positive, got %d", validator.Weight)
 		}
 
@@ -164,6 +164,7 @@ func (m MsgUndelegateFromRebalancedValidatorSet) Route() string { return RouterK
 func (m MsgUndelegateFromRebalancedValidatorSet) Type() string {
 	return TypeMsgUndelegateFromRebalancedValidatorSet
 }
+
 func (m MsgUndelegateFromRebalancedValidatorSet) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Delegator)
 	if err != nil {

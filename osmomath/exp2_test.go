@@ -8,10 +8,8 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
-var (
-	// minDecTolerance minimum tolerance for Dec, given its precision of 18.
-	minDecTolerance = osmomath.MustNewDecFromStr("0.000000000000000001")
-)
+// minDecTolerance minimum tolerance for Dec, given its precision of 18.
+var minDecTolerance = osmomath.MustNewDecFromStr("0.000000000000000001")
 
 func TestExp2ChebyshevRationalApprox(t *testing.T) {
 	// These values are used to test the approximated results close
@@ -288,7 +286,6 @@ func TestExp2(t *testing.T) {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			osmomath.ConditionalPanic(t, tc.expectPanic, func() {
-
 				// System under test.
 				result := osmomath.Exp2(tc.exponent)
 

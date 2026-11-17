@@ -254,6 +254,7 @@ func NewMsgUnlockAndMigrateSharesToFullRangeConcentratedPosition(sender sdk.AccA
 }
 
 func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) Route() string { return RouterKey }
+
 func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) Type() string {
 	return TypeMsgUnlockAndMigrateShares
 }

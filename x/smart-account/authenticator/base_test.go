@@ -104,7 +104,6 @@ func (s *BaseAuthenticatorSuite) GenSimpleTx(msgs []sdk.Msg, signers []cryptotyp
 		return nil, err
 	}
 	return tx, nil
-
 }
 
 func (s *BaseAuthenticatorSuite) GenSimpleTxWithSelectedAuthenticators(msgs []sdk.Msg, signers []cryptotypes.PrivKey, selectedAuthenticators []uint64) (sdk.Tx, error) {

@@ -1,6 +1,7 @@
 package v33
 
 import (
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v32/app/upgrades"
 
 	store "cosmossdk.io/store/types"
@@ -92,4 +93,18 @@ const (
 
 	// maxWBTCIssuerMembers bounds the merchant list read from the WBTC issuer.
 	maxWBTCIssuerMembers = 100
+)
+
+// MinCommissionRate is the network minimum validator commission from v33, approved by governance in
+// proposal 1066 (https://www.mintscan.io/osmosis/proposals/1066).
+var MinCommissionRate = osmomath.MustNewDecFromStr("0.10")
+
+// Event emitted for each validator whose commission the upgrade raises.
+const (
+	EventTypeMinCommissionRaised = "v33_min_commission_raised"
+	AttributeKeyValidator        = "validator"
+	AttributeKeyOldRate          = "old_rate"
+	AttributeKeyNewRate          = "new_rate"
+	AttributeKeyOldMaxRate       = "old_max_rate"
+	AttributeKeyNewMaxRate       = "new_max_rate"
 )

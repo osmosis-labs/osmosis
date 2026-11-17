@@ -437,7 +437,7 @@ func (n *NodeConfig) QueryWasmSmart(contract string, msg string, result any) err
 	return nil
 }
 
-func (n *NodeConfig) QueryWasmSmartObject(contract string, msg string) (resultObject map[string]interface{}, err error) {
+func (n *NodeConfig) QueryWasmSmartObject(contract string, msg string) (resultObject map[string]any, err error) {
 	err = n.QueryWasmSmart(contract, msg, &resultObject)
 	if err != nil {
 		return nil, err
@@ -445,7 +445,7 @@ func (n *NodeConfig) QueryWasmSmartObject(contract string, msg string) (resultOb
 	return resultObject, nil
 }
 
-func (n *NodeConfig) QueryWasmSmartArray(contract string, msg string) (resultArray []interface{}, err error) {
+func (n *NodeConfig) QueryWasmSmartArray(contract string, msg string) (resultArray []any, err error) {
 	err = n.QueryWasmSmart(contract, msg, &resultArray)
 	if err != nil {
 		return nil, err
@@ -681,14 +681,14 @@ func (n *NodeConfig) QueryCommunityPoolModuleAccount() string {
 
 	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
 	require.NoError(n.t, err)
-	var result map[string][]interface{}
+	var result map[string][]any
 	err = json.Unmarshal(out.Bytes(), &result)
 	require.NoError(n.t, err)
 	for _, acc := range result["accounts"] {
-		account, ok := acc.(map[string]interface{})
+		account, ok := acc.(map[string]any)
 		require.True(n.t, ok)
 		if account["name"] == "distribution" {
-			moduleAccount, ok := account["base_account"].(map[string]interface{})["address"].(string)
+			moduleAccount, ok := account["base_account"].(map[string]any)["address"].(string)
 			require.True(n.t, ok)
 			return moduleAccount
 		}

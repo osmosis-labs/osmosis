@@ -395,7 +395,6 @@ func (s *KeeperTestSuite) TestMarshalUnmarshalPool() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		s.Run(tc.name, func() {
 			s.SetupTest()
 
@@ -811,7 +810,6 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 				suite.Require().NoError(err)
 				suite.Require().Equal(neededLpLiquidity, tc.expectedLpLiquidity)
 			}
-
 		})
 	}
 }

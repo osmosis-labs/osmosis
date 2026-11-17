@@ -221,7 +221,7 @@ func writeConfigToFile(configFilePath string, config *OsmosisCustomClient) error
 			defaultField := defaultValue.Field(i)
 
 			// Check if the field is a pointer type
-			if configField.Kind() == reflect.Ptr {
+			if configField.Kind() == reflect.Pointer {
 				// If it's a pointer type, check if it's nil
 				if !configField.IsNil() {
 					defaultField.Set(configField.Elem())
