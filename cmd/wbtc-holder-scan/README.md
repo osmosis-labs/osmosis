@@ -52,3 +52,20 @@ The tool only reads state. It never commits to the database.
 `would_migrate` applies the proposed v33 rule. The account must have a public key and spendable
 WBTC. It must not be a module account, contract, ICA host account, IBC escrow, CL pool
 sub-address, WBTC merchant, WBTC custodian, or the allBTC transmuter.
+
+## Refreshing the v33 unindexed holder list
+
+The v33 upgrade embeds the unindexed holders in `app/upgrades/v33/wbtc_unindexed_holders.txt` (one
+address per line, `#` comments allowed). To regenerate it from a scan, take the height and app
+hash from `summary.json` and the addresses from `unindexed.txt`:
+
+```sh
+f=app/upgrades/v33/wbtc_unindexed_holders.txt
+{
+  echo "# Native WBTC holders missing from the bank denom index on osmosis-1 at height <height>"
+  echo "# (app hash <app hash>), found by a full scan"
+  echo "# of the balances store with cmd/wbtc-holder-scan. One address per line."
+  cut -d' ' -f1 ./wbtc-scan/unindexed.txt | sort
+} > "$f"
+go test ./app/upgrades/v33/ -run TestUpgradeTestSuite/TestWBTCUnindexedHoldersList
+```
