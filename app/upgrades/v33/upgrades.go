@@ -16,8 +16,9 @@ import (
 )
 
 // CreateUpgradeHandler returns the v33 upgrade handler. After the module migrations it recovers the
-// HUAHUA held by gauges 1954-1959 (see HuahuaStuckGauges), moves OSMO to the burn address and raises
-// every validator's commission to MinCommissionRate.
+// HUAHUA held by gauges 1954-1959 (see HuahuaStuckGauges), raises every validator's commission to
+// MinCommissionRate and, on mainnet, moves OSMO to the burn address and migrates native WBTC holders
+// to allBTC (see MigrateWBTCToAllBTC).
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
@@ -60,6 +61,12 @@ func CreateUpgradeHandler(
 		} else {
 			write()
 			sdkCtx.Logger().Info("v33 upgrade: minimum commission raised", "min_commission_rate", MinCommissionRate.String(), "validators_modified", raised)
+		}
+
+		if sdkCtx.ChainID() == MainnetChainID {
+			migrateWBTCAndLog(sdkCtx, keepers)
+		} else {
+			sdkCtx.Logger().Info("v33 upgrade: skipping WBTC to allBTC migration on non-mainnet chain", "chain_id", sdkCtx.ChainID())
 		}
 
 		return migrations, nil
