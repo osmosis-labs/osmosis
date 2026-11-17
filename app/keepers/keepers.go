@@ -1,6 +1,7 @@
 package keepers
 
 import (
+	"github.com/osmosis-labs/osmosis/v32/app/attackerfreeze"
 	"github.com/osmosis-labs/osmosis/v32/app/recoverylock"
 	"github.com/osmosis-labs/osmosis/v32/app/recoverylock/sdk50"
 
@@ -167,6 +168,7 @@ type AppKeepers struct {
 	AccountKeeper                *authkeeper.AccountKeeper
 	BankKeeper                   *bankkeeper.BaseKeeper
 	RecoveryLock                 *sdk50.Lock
+	AttackerFreeze               *attackerfreeze.Freeze
 	AuthzKeeper                  *authzkeeper.Keeper
 	StakingKeeper                *stakingkeeper.Keeper
 	DistrKeeper                  *distrkeeper.Keeper
@@ -263,7 +265,22 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	recoverylock.RegisterRules(recoveryLock)
 	appKeepers.BankKeeper.AppendSendRestriction(recoveryLock.SendRestriction())
 	appKeepers.RecoveryLock = recoveryLock
-	lockRouter := sdk50.Router{Inner: bApp.MsgServiceRouter(), L: recoveryLock}
+
+	// Attacker freeze: no expiry, same activation height as the other v32.0.1
+	// changes. A frozen account must not be a listed wallet, the recovery
+	// address or a fee payer of the recovery lock.
+	frozen := attackerfreeze.MustLoad(lockAddrCodec, blockedAddress)
+	for _, a := range frozen {
+		if recoveryLock.Cfg.IsListed(a) || recoveryLock.Cfg.IsRecovery(a) || recoveryLock.Cfg.IsFeePayer(a) {
+			panic(fmt.Sprintf("attacker freeze list: %s is also in the recovery lock configuration", sdk.AccAddress(a)))
+		}
+	}
+	attackerFreeze := attackerfreeze.New(frozen, appparams.V32PatchActivationHeight, appCodec, bApp.LastBlockHeight)
+	appKeepers.BankKeeper.AppendSendRestriction(attackerFreeze.SendRestriction())
+	appKeepers.AttackerFreeze = attackerFreeze
+	bApp.Logger().Info("attacker freeze", "activation_height", appparams.V32PatchActivationHeight, "frozen_accounts", attackerFreeze.Count())
+
+	lockRouter := sdk50.Router{Inner: attackerfreeze.Router{Inner: bApp.MsgServiceRouter(), F: attackerFreeze}, L: recoveryLock}
 
 	// Initialize authenticators
 	appKeepers.AuthenticatorManager = authenticator.NewAuthenticatorManager()
@@ -298,7 +315,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appCodec,
 		runtime.NewKVStoreService(appKeepers.keys[stakingtypes.StoreKey]),
 		appKeepers.AccountKeeper,
-		sdk50.StakingBank{BankKeeper: appKeepers.BankKeeper, L: recoveryLock},
+		sdk50.StakingBank{BankKeeper: attackerfreeze.StakingBank{BankKeeper: appKeepers.BankKeeper, F: attackerFreeze}, L: recoveryLock},
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
 		addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),

@@ -14,6 +14,7 @@ import (
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 
 	osmoante "github.com/osmosis-labs/osmosis/v32/ante"
+	"github.com/osmosis-labs/osmosis/v32/app/attackerfreeze"
 	"github.com/osmosis-labs/osmosis/v32/app/recoverylock/sdk50"
 	v9 "github.com/osmosis-labs/osmosis/v32/app/upgrades/v9"
 
@@ -57,6 +58,7 @@ func NewAnteHandler(
 	blockSDKParams BlockSDKAnteHandlerParams,
 	appCodec codec.Codec,
 	recoveryLock *sdk50.Lock,
+	attackerFreeze *attackerfreeze.Freeze,
 ) sdk.AnteHandler {
 	mempoolFeeOptions := txfeestypes.NewMempoolFeeOptions(appOpts)
 	mempoolFeeDecorator := txfeeskeeper.NewMempoolFeeDecorator(*txFeesKeeper, mempoolFeeOptions)
@@ -110,6 +112,8 @@ func NewAnteHandler(
 		// circuit breaker, so both signature paths are covered and a rejected
 		// transaction costs nothing.
 		sdk50.Decorator{L: recoveryLock},
+		// Attacker freeze: same placement and reasons as the recovery lock.
+		attackerfreeze.Decorator{F: attackerFreeze},
 		// Use Mempool Fee Decorator from our txfees module instead of default one from auth
 		// https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/middleware/fee.go#L34
 		mempoolFeeDecorator,
