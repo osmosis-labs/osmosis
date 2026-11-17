@@ -110,7 +110,7 @@ func Scan(ctx sdk.Context, k *keepers.AppKeepers, cfg Config, progress io.Writer
 		}
 	}
 	sort.Strings(r.StaleIndexEntries)
-	sort.Slice(r.holders, func(i, j int) bool {
+	sort.SliceStable(r.holders, func(i, j int) bool {
 		if !r.holders[i].Amount.Equal(r.holders[j].Amount) {
 			return r.holders[i].Amount.GT(r.holders[j].Amount)
 		}

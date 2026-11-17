@@ -70,10 +70,11 @@ var HuahuaStuckGauges = []struct {
 // The spendable native WBTC of every account that has a public key, apart from the WBTC issuer's
 // merchants and custodian, is deposited into the allBTC alloy transmuter on its behalf (join_pool),
 // which mints the same amount of allBTC back to the account. Accounts without a public key are
-// skipped: they are protocol accounts (module accounts, pools, contracts, IBC escrows, CL spread
-// reward and incentive addresses, ICA host accounts) whose WBTC balance is owed to someone else.
+// skipped. Most are protocol accounts (module accounts, pools, contracts, IBC escrows, CL spread
+// reward and incentive addresses, ICA host accounts) whose WBTC balance is owed to someone else. The
+// rest have never signed a transaction; they keep their WBTC and can join the transmuter themselves.
 //
-// WBTC is already above the transmuter's 0.75 WBTC static limiter, which would reject every deposit.
+// The transmuter's WBTC limiters would reject deposits that push WBTC's weight past their bounds.
 // The gov module, the transmuter's admin, lifts the WBTC limiters for the deposits, and their
 // configured bounds are restored once the deposits are done.
 const (

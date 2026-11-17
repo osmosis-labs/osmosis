@@ -33,6 +33,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -123,7 +124,8 @@ func openState(home, backend string, height int64, chainID string) (*state, erro
 	if err != nil {
 		return nil, fmt.Errorf("opening application db: %w", err)
 	}
-	app := osmosis.NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, home, 0, opts, osmosis.EmptyWasmOpts)
+	// Fast-node upgrades would rebuild IAVL indexes and commit them to application.db on load.
+	app := osmosis.NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, home, 0, opts, osmosis.EmptyWasmOpts, baseapp.SetIAVLDisableFastNode(true))
 	closeApp := func() { _ = app.Close() }
 
 	if app.LastBlockHeight() == 0 {

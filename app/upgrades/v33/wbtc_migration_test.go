@@ -53,9 +53,9 @@ func (s *UpgradeTestSuite) TestMigrateWBTCToAllBTC() {
 	transmuterAddr := sdk.MustAccAddressFromBech32(transmuter)
 	reservesBefore := s.App.BankKeeper.GetBalance(s.Ctx, transmuterAddr, v33.WBTCDenom).Amount
 
-	userA, userB := s.newUser(), s.newUser()
-	s.FundAcc(userA, sdk.NewCoins(sdk.NewInt64Coin(v33.WBTCDenom, 1_000), sdk.NewInt64Coin("uosmo", 7)))
-	s.FundAcc(userB, sdk.NewCoins(sdk.NewInt64Coin(v33.WBTCDenom, 25_000_000)))
+	firstUser, secondUser := s.newUser(), s.newUser()
+	s.FundAcc(firstUser, sdk.NewCoins(sdk.NewInt64Coin(v33.WBTCDenom, 1_000), sdk.NewInt64Coin("uosmo", 7)))
+	s.FundAcc(secondUser, sdk.NewCoins(sdk.NewInt64Coin(v33.WBTCDenom, 25_000_000)))
 
 	// A delayed vesting account with 400 of its 1,000 WBTC still locked.
 	vesting := s.newVestingAccount(sdk.NewInt64Coin(v33.WBTCDenom, 1_000), sdk.NewInt64Coin(v33.WBTCDenom, 400))
@@ -78,11 +78,11 @@ func (s *UpgradeTestSuite) TestMigrateWBTCToAllBTC() {
 	s.Require().Equal(4, result.Skipped)
 	s.Require().Equal(osmomath.NewInt(1_000+25_000_000+600), result.Total)
 
-	s.Require().True(s.App.BankKeeper.GetBalance(s.Ctx, userA, v33.WBTCDenom).IsZero())
-	s.Require().Equal(osmomath.NewInt(1_000), s.App.BankKeeper.GetBalance(s.Ctx, userA, alloyed).Amount)
-	s.Require().Equal(osmomath.NewInt(7), s.App.BankKeeper.GetBalance(s.Ctx, userA, "uosmo").Amount)
-	s.Require().True(s.App.BankKeeper.GetBalance(s.Ctx, userB, v33.WBTCDenom).IsZero())
-	s.Require().Equal(osmomath.NewInt(25_000_000), s.App.BankKeeper.GetBalance(s.Ctx, userB, alloyed).Amount)
+	s.Require().True(s.App.BankKeeper.GetBalance(s.Ctx, firstUser, v33.WBTCDenom).IsZero())
+	s.Require().Equal(osmomath.NewInt(1_000), s.App.BankKeeper.GetBalance(s.Ctx, firstUser, alloyed).Amount)
+	s.Require().Equal(osmomath.NewInt(7), s.App.BankKeeper.GetBalance(s.Ctx, firstUser, "uosmo").Amount)
+	s.Require().True(s.App.BankKeeper.GetBalance(s.Ctx, secondUser, v33.WBTCDenom).IsZero())
+	s.Require().Equal(osmomath.NewInt(25_000_000), s.App.BankKeeper.GetBalance(s.Ctx, secondUser, alloyed).Amount)
 
 	s.Require().Equal(osmomath.NewInt(400), s.App.BankKeeper.GetBalance(s.Ctx, vesting, v33.WBTCDenom).Amount)
 	s.Require().Equal(osmomath.NewInt(600), s.App.BankKeeper.GetBalance(s.Ctx, vesting, alloyed).Amount)
@@ -211,15 +211,15 @@ func (s *UpgradeTestSuite) TestMigrateWBTCToAllBTCLiftsLimiters() {
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(10 * time.Minute))
 	s.Require().ErrorContains(s.tryJoinTransmuter(transmuter, sdk.NewInt64Coin(v33.WBTCDenom, 10_000_000)), "Upper limit exceeded")
 
-	userA, userB := s.newUser(), s.newUser()
-	s.FundAcc(userA, sdk.NewCoins(sdk.NewInt64Coin(v33.WBTCDenom, 1_000_000_000)))
-	s.FundAcc(userB, sdk.NewCoins(sdk.NewInt64Coin(v33.WBTCDenom, 500_000_000)))
+	firstUser, secondUser := s.newUser(), s.newUser()
+	s.FundAcc(firstUser, sdk.NewCoins(sdk.NewInt64Coin(v33.WBTCDenom, 1_000_000_000)))
+	s.FundAcc(secondUser, sdk.NewCoins(sdk.NewInt64Coin(v33.WBTCDenom, 500_000_000)))
 
 	result := s.migrateWBTC(transmuter, alloyed, nil, nil)
 	s.Require().Equal(2, result.Migrated)
 	s.Require().Equal(0, result.Failed)
-	s.Require().Equal(osmomath.NewInt(1_000_000_000), s.App.BankKeeper.GetBalance(s.Ctx, userA, alloyed).Amount)
-	s.Require().Equal(osmomath.NewInt(500_000_000), s.App.BankKeeper.GetBalance(s.Ctx, userB, alloyed).Amount)
+	s.Require().Equal(osmomath.NewInt(1_000_000_000), s.App.BankKeeper.GetBalance(s.Ctx, firstUser, alloyed).Amount)
+	s.Require().Equal(osmomath.NewInt(500_000_000), s.App.BankKeeper.GetBalance(s.Ctx, secondUser, alloyed).Amount)
 
 	// The limiters are back to their configured bounds and reject WBTC deposits again.
 	s.Require().Equal(boundsOf(limitersBefore), boundsOf(s.listLimiters(transmuter)))

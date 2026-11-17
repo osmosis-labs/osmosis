@@ -100,10 +100,9 @@ func mainnetWBTCMigration(ctx sdk.Context, keepers *keepers.AppKeepers) (WBTCMig
 // isUserAccount). Each deposit runs in its own cache context: a failed deposit is logged and rolled
 // back without affecting the others.
 //
-// The transmuter's limiters reject a deposit that pushes WBTC's weight in the pool past their bound.
-// On osmosis-1 WBTC is already above its static limiter, so every deposit would fail. The migration
-// therefore lifts the WBTC limiters as m.Admin before depositing and restores their configured bounds
-// afterwards. Limiters of the other assets are left alone: depositing WBTC only lowers their weight,
+// The transmuter's limiters reject a deposit that pushes WBTC's weight in the pool past their bound,
+// and the migration raises WBTC's weight well above its current level. The migration therefore lifts
+// the WBTC limiters as m.Admin before depositing and restores their configured bounds afterwards. Limiters of the other assets are left alone: depositing WBTC only lowers their weight,
 // and the transmuter only enforces a limiter when the weight rises. Lifting, depositing and restoring
 // are applied together or not at all, so the limiters are never left lifted.
 //
