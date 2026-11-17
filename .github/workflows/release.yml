@@ -25,8 +25,9 @@ jobs:
           ref: ${{ github.event.inputs.release_tag }}
       - name: Make release
         run: |
-          make release
+          make -f <(git show "$GITHUB_WORKFLOW_SHA:Makefile") release
         env:
+          GORELEASER_CURRENT_TAG: ${{ inputs.release_tag }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
           S3_REGION: ${{ secrets.S3_REGION }}
