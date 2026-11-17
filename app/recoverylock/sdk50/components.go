@@ -27,7 +27,8 @@ func (l *Lock) SendRestriction() banktypes.SendRestrictionFn {
 // apply the send restriction, so a new delegation from the balance of a
 // listed address is rejected here, whatever path reached staking. It covers only coins moving from the balance into staking:
 // redelegation and cancel unbonding move no coins from the balance and are
-// stopped by the message rules (neither is an allowed message), which apply
+// handled by the message rules (redelegation is not allowed; cancel unbonding
+// only for the wallet's own delegation), which apply
 // to transactions (Decorator) and to dispatched messages (Router).
 type StakingBank struct {
 	stakingtypes.BankKeeper

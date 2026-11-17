@@ -51,6 +51,17 @@ func registerStandardRules(l *Lock, distr DistrReader) {
 		}
 		return safeWithdrawAddr(c, ctx, distr, signer)
 	})
+	// Cancel unbonding returns an unbonding entry to the wallet's own
+	// delegation (no coins leave the balance), which frees one of the 7
+	// unbonding entries so the recovery operator can cancel an attacker's
+	// undelegation and undelegate again. It changes delegation shares, so it
+	// pays rewards like undelegate and has the same withdraw address rule.
+	l.Rules.Register(sdk.MsgTypeURL(&stakingtypes.MsgCancelUnbondingDelegation{}), func(c *core.Config, ctx any, msg any, signer []byte) error {
+		if err := sameAddr(l, msg.(*stakingtypes.MsgCancelUnbondingDelegation).DelegatorAddress, signer); err != nil {
+			return err
+		}
+		return safeWithdrawAddr(c, ctx, distr, signer)
+	})
 	l.Rules.Register(sdk.MsgTypeURL(&distrtypes.MsgWithdrawDelegatorReward{}), func(c *core.Config, ctx any, msg any, signer []byte) error {
 		if err := sameAddr(l, msg.(*distrtypes.MsgWithdrawDelegatorReward).DelegatorAddress, signer); err != nil {
 			return err

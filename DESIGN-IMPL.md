@@ -92,6 +92,7 @@ Standard rules (`sdk50/rules.go`, `registerStandardRules`):
 | bank `MsgSend` | to the recovery address |
 | bank `MsgMultiSend` | every output to the recovery address |
 | staking `MsgUndelegate` | delegator is the signer; withdraw address is the wallet or the recovery address |
+| staking `MsgCancelUnbondingDelegation` | delegator is the signer; withdraw address is the wallet or the recovery address |
 | distribution `MsgWithdrawDelegatorReward` | delegator is the signer; withdraw address is the wallet or the recovery address |
 | distribution `MsgWithdrawValidatorCommission` | withdraw address of the operator account is the wallet or the recovery address |
 | distribution `MsgSetWithdrawAddress` | delegator is the signer; new address is the wallet or the recovery address |
@@ -106,7 +107,7 @@ Osmosis rules (`plugin.go`, `RegisterRules`):
 | concentrated liquidity `MsgTransferPositions` | sender is the signer; new owner is the recovery address |
 | wasm `MsgExecuteContract` | sender is the signer, no funds, and the message is a contract exit (below) |
 
-Not allowed: gamm `MsgExitPool`. It moves shares with `SendCoinsFromAccountToModule`, which the coin rule blocks, so it cannot succeed. gamm shares are bank coins and leave with `MsgSend` to the recovery address. Redelegation and cancel unbonding are not allowed messages either.
+Not allowed: gamm `MsgExitPool`. It moves shares with `SendCoinsFromAccountToModule`, which the coin rule blocks, so it cannot succeed. gamm shares are bank coins and leave with `MsgSend` to the recovery address. Redelegation is not an allowed message either.
 
 All rules only read state.
 

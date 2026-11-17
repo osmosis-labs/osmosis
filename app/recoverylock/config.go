@@ -28,6 +28,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 
+	appparams "github.com/osmosis-labs/osmosis/v32/app/params"
 	"github.com/osmosis-labs/osmosis/v32/app/recoverylock/core"
 )
 
@@ -192,6 +193,12 @@ func MustConfig(ac address.Codec, blocked map[string]bool, logger log.Logger) *c
 	cfg, p, err := parseConfig(listedFile, paramsFile, ac, blocked, testBuild)
 	if err != nil {
 		panic("recovery lock config: " + err.Error())
+	}
+	// Release builds: the lock activates at the same height as the other
+	// v32.0.1 changes.
+	if !testBuild && p.ActivationHeight != appparams.V32PatchActivationHeight {
+		panic(fmt.Sprintf("recovery lock config: activation_height %d must equal the v32.0.1 activation height %d",
+			p.ActivationHeight, appparams.V32PatchActivationHeight))
 	}
 	mode := "release"
 	if testBuild {
