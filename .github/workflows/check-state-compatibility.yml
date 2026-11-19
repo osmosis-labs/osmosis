@@ -84,6 +84,11 @@ jobs:
     timeout-minutes: 30
     if: ${{ needs.compare_versions.outputs.should_i_run == 'true'}}
     steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          df -h /
       - name: Get chain major version
         run: |
           echo "MAINNET_MAJOR_VERSION=${{ needs.compare_versions.outputs.mainnet_major_version }}" >> $GITHUB_ENV
