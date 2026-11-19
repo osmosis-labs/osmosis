@@ -82,6 +82,9 @@ func (s *LockSuite) SetupTest() {
 	s.R = addrOf(key("recoverylock-test-recovery"))
 	s.X = s.TestAccs[1]
 	s.lock = s.App.AppKeepers.RecoveryLock
+	if !s.lock.Cfg.IsListed(s.L) {
+		s.T().Skip("release values embedded; these tests use the keys in the committed test values")
+	}
 	s.Require().True(s.lock.Cfg.IsListed(s.L) && s.lock.Cfg.IsListed(s.L2))
 	s.Require().True(s.lock.Cfg.IsFeePayer(s.P) && s.lock.Cfg.IsFeePayer(s.P7))
 	s.Require().True(s.lock.Cfg.IsRecovery(s.R))

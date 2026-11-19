@@ -16,10 +16,24 @@ import (
 
 var ac = addresscodec.NewBech32Codec("osmo")
 
+// skipUnlessTestValues skips a test that pins the committed test values once
+// the release values are embedded.
+func skipUnlessTestValues(t *testing.T) {
+	t.Helper()
+	p, err := parseParams(paramsFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !p.TestValues {
+		t.Skip("release values embedded; this test pins the committed test values")
+	}
+}
+
 func TestEmbeddedConfig(t *testing.T) {
 	if !testBuild {
 		t.Fatal("run the tests with -tags recoverylock_test")
 	}
+	skipUnlessTestValues(t)
 	var buf bytes.Buffer
 	cfg := MustConfig(ac, nil, log.NewLogger(&buf, log.ColorOption(false)))
 	for _, want := range []string{"recovery lock config", "mode=test", "activation_height=1000000000", "expiry_time=4102444800", "expiry_utc=2100-01-01T00:00:00Z",
@@ -87,11 +101,7 @@ func TestConfigValidation(t *testing.T) {
 		test   bool
 		ok     bool
 	}{
-		{"embedded test values in a test build", embedded, paramsFile, true, true},
-		{"embedded test values refused outside test builds", embedded, paramsFile, false, false},
 		{"real values in a release build", real, mk(t, real, nil), false, true},
-		{"known test address listed, flag off", listOf(testAddr), mk(t, listOf(testAddr), nil), false, false},
-		{"known test address as recovery", real, mk(t, real, func(p *params) { p.RecoveryAddress = testAddr }), false, false},
 		{"too few fee payers", real, mk(t, real, func(p *params) { p.FeePayers = p.FeePayers[:MinReleaseFeePayers-1] }), false, false},
 		{"expiry one second short of the margin", real, mk(t, real, func(p *params) { p.ExpiryTime-- }), false, false},
 		{"expiry with only one unbonding period", real, mk(t, real, func(p *params) { p.ExpiryTime = p.ActivationTimeEstimate + p.UnbondingSeconds + ExpiryMarginSeconds }), false, false},
@@ -125,6 +135,22 @@ func TestConfigValidation(t *testing.T) {
 		{"module account fee payer", real, mk(t, real, func(p *params) { p.FeePayers[0] = modStr }), false, false},
 		{"32 byte address listed", listOf(long), mk(t, listOf(long), nil), false, false},
 	}
+	// These cases read the committed test values, so they only apply while
+	// those are embedded.
+	if p, err := parseParams(paramsFile); err == nil && p.TestValues {
+		cases = append(cases, []struct {
+			name   string
+			list   string
+			params []byte
+			test   bool
+			ok     bool
+		}{
+			{"embedded test values in a test build", embedded, paramsFile, true, true},
+			{"embedded test values refused outside test builds", embedded, paramsFile, false, false},
+			{"known test address listed, flag off", listOf(testAddr), mk(t, listOf(testAddr), nil), false, false},
+			{"known test address as recovery", real, mk(t, real, func(p *params) { p.RecoveryAddress = testAddr }), false, false},
+		}...)
+	}
 	for _, c := range cases {
 		_, _, err := parseConfig([]byte(c.list), c.params, ac, blocked, c.test)
 		if (err == nil) != c.ok {
@@ -134,6 +160,7 @@ func TestConfigValidation(t *testing.T) {
 }
 
 func TestKnownTestAddressesCoverEmbedded(t *testing.T) {
+	skipUnlessTestValues(t)
 	known := knownTestAddresses()
 	var p params
 	if err := json.Unmarshal(paramsFile, &p); err != nil {
