@@ -123,7 +123,7 @@ Below are all the network parameters for the `mint` module:
 
 1. `mint_denom` defines denom for minting token - uosmo
 2. `genesis_epoch_provisions` provides minting tokens per epoch at genesis.
-3. `epoch_identifier` defines the epoch identifier to be used for the mint module e.g. "weekly"
+3. `epoch_identifier` defines the epoch identifier to be used for the mint module e.g. "weekly"
 4. `reduction_period_in_epochs` defines the number of epochs to pass to reduce the mint amount
 5. `reduction_factor` defines the reduction factor of tokens at every `reduction_period_in_epochs`
 6. `distribution_proportions` defines distribution rules for minted tokens, when the developer
