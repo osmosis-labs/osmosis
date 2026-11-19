@@ -663,17 +663,17 @@ func TestBypassCallSites(t *testing.T) {
 		}
 	}
 	want := map[string]int{
-		"github.com/cosmos/cosmos-sdk/x/bank/keeper/keeper.go DelegateCoins":                                           4,
-		"github.com/cosmos/cosmos-sdk/x/bank/keeper/keeper.go DelegateCoinsFromAccountToModule":                        3,
-		"github.com/cosmos/cosmos-sdk/x/bank/keeper/keeper.go SendCoinsFromModuleToManyAccounts":                       3,
-		"github.com/cosmos/cosmos-sdk/x/bank/keeper/keeper.go SendManyCoins":                                           1,
-		"github.com/cosmos/cosmos-sdk/x/bank/keeper/send.go SendManyCoins":                                             3,
-		"github.com/cosmos/cosmos-sdk/x/staking/keeper/delegation.go DelegateCoinsFromAccountToModule":                 1,
-		"github.com/cosmos/cosmos-sdk/x/staking/types/expected_keepers.go DelegateCoinsFromAccountToModule":            1,
-		"github.com/osmosis-labs/osmosis/v32/app/recoverylock/sdk50/components.go DelegateCoins":                       1,
+		"github.com/cosmos/cosmos-sdk/x/bank/keeper/keeper.go DelegateCoins":                                4,
+		"github.com/cosmos/cosmos-sdk/x/bank/keeper/keeper.go DelegateCoinsFromAccountToModule":             3,
+		"github.com/cosmos/cosmos-sdk/x/bank/keeper/keeper.go SendCoinsFromModuleToManyAccounts":            3,
+		"github.com/cosmos/cosmos-sdk/x/bank/keeper/keeper.go SendManyCoins":                                1,
+		"github.com/cosmos/cosmos-sdk/x/bank/keeper/send.go SendManyCoins":                                  3,
+		"github.com/cosmos/cosmos-sdk/x/staking/keeper/delegation.go DelegateCoinsFromAccountToModule":      1,
+		"github.com/cosmos/cosmos-sdk/x/staking/types/expected_keepers.go DelegateCoinsFromAccountToModule": 1,
+		"github.com/osmosis-labs/osmosis/v32/app/recoverylock/sdk50/components.go DelegateCoins":            1,
 		// attacker freeze staking guard: same wrapper pattern as sdk50.StakingBank
-		"github.com/osmosis-labs/osmosis/v32/app/attackerfreeze/freeze.go DelegateCoins":                    2,
-		"github.com/osmosis-labs/osmosis/v32/app/attackerfreeze/freeze.go DelegateCoinsFromAccountToModule": 3,
+		"github.com/osmosis-labs/osmosis/v32/app/attackerfreeze/freeze.go DelegateCoins":                               2,
+		"github.com/osmosis-labs/osmosis/v32/app/attackerfreeze/freeze.go DelegateCoinsFromAccountToModule":            3,
 		"github.com/osmosis-labs/osmosis/v32/app/recoverylock/sdk50/components.go DelegateCoinsFromAccountToModule":    3,
 		"github.com/osmosis-labs/osmosis/v32/x/incentives/keeper/distribute.go SendCoinsFromModuleToManyAccounts":      1,
 		"github.com/osmosis-labs/osmosis/v32/x/incentives/types/expected_keepers.go SendCoinsFromModuleToManyAccounts": 1,
