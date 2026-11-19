@@ -42,6 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* [#9837](https://github.com/osmosis-labs/osmosis/pull/9837) Update official CometBFT to v0.38.26 to decode and verify ML-DSA-65 IBC counterparty headers. Add an application regression test using a signed DoraVota light block.
+
 * [#9832](https://github.com/osmosis-labs/osmosis/pull/9832) chore: apply `go fix` (Go 1.26 modernizers) across all modules and run `gofumpt` repo-wide. No state machine changes: rewritten membership loops and the `slices.Sort` of `uint64` pool IDs in the v23-v25 upgrade handlers produce the same results.
 * [#9831](https://github.com/osmosis-labs/osmosis/pull/9831) chore(build): one exact Go version for every build path. `go.mod` pins `toolchain go1.26.10`; the Makefile, the Docker image workflows, `setup-go` and `make release` (`goreleaser-cross:v1.26.10`, no longer the floating `v1.26`) read it from there via `scripts/go-version.sh`. The Docker builder images move from `golang:1.26.0-alpine3.22` to `golang:1.26.10-alpine3.23`. No change to node code or state.
 * [#9829](https://github.com/osmosis-labs/osmosis/pull/9829) chore(deps): consolidate Dependabot updates from #9818, #9819, #9820, #9821, #9822, #9823 and #9824: protobuf v1.36.12, pflag v1.1.0, go-metrics v0.7.0 (prometheus client_golang v1.24.1), otel and otlptracegrpc v1.47.0, pubsub v1.52.0 and gofumpt v0.12.0. The otel, pubsub and gofumpt releases require Go 1.26.0, so the minimum Go version and the Docker builder images move from 1.25 to 1.26; building from source needs Go 1.26.0 or newer. grpc moves to v1.84.0 as a result. No change to cosmos-sdk, cometbft, ibc-go, wasmd or iavl, and no state migration.

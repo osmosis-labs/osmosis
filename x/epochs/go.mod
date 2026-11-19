@@ -48,6 +48,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
+	github.com/cloudflare/circl v1.6.3 // indirect
 	github.com/cloudwego/base64x v0.1.6 // indirect
 	github.com/cockroachdb/errors v1.11.3 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce // indirect
@@ -55,7 +56,7 @@ require (
 	github.com/cockroachdb/pebble v1.1.2 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/cometbft/cometbft v0.38.23 // indirect
+	github.com/cometbft/cometbft v0.38.26 // indirect
 	github.com/cometbft/cometbft-db v0.14.1 // indirect
 	github.com/containerd/continuity v0.4.3 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
@@ -200,9 +201,6 @@ replace (
 
 	// Match the root's store fork for the SDK's IAVL fast-node whitelist API.
 	cosmossdk.io/store => github.com/osmosis-labs/cosmos-sdk/store v1.1.1-v0.50.11-v28-osmo-2
-
-	// Preview of the Osmosis CometBFT ML-DSA-65 backport. Switch to the published Osmosis fork tag before merging.
-	github.com/cometbft/cometbft => github.com/99Kies/cometbft v0.0.0-20261116102727-fb97e7c62e8a
 
 	// Direct cosmos-sdk branch link: https://github.com/osmosis-labs/cosmos-sdk/tree/osmo-v30/0.50.14, current branch: osmo-v30/0.50.14
 	// Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/1f78f02de9b2f60779c5062686201b45361fcb3f
