@@ -115,7 +115,7 @@ All rules only read state.
 
 `core/contract.go`, `CheckContractExit`. The message must be exactly one of:
 
-```
+```text
 {"transfer":{"recipient":<recovery>,"amount":"<uint>"}}             (cw20)
 {"transfer_nft":{"recipient":<recovery>,"token_id":"<string>"}}     (cw721)
 {"decrease_allowance":{"spender":<address>,"amount":"<uint>"}}      (cw20, no expires)
