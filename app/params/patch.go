@@ -7,4 +7,4 @@ package params
 //
 // 1,000,000,000 is a placeholder that keeps every change inactive. It must be
 // set to the height agreed with validators before the release is tagged.
-const V32PatchActivationHeight int64 = 1_000_000_000
+const V32PatchActivationHeight int64 = 75640600

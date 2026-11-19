@@ -1,18 +1,16 @@
 {
- "recovery_address": "osmo1ksdgkxhjctrgxrz6lw232f92fq7sr3hplcxk65",
+ "recovery_address": "osmo1atuap9kfnt6y8ykvn3437e7j3z8qffh3gsqtcw",
  "fee_payers": [
-  "osmo1j03vl40hflp3vqnww596qt0vxp9arzzwdrp4cc",
-  "osmo14a2cwlzs3xhkaysy6j98yp2c6fgnr8wx5du62q",
-  "osmo1qpwtnpt5fj8fgt9t62ymeunr2hax4f5g2evd6t",
-  "osmo10zqegayvn827uccv6yzrhxwh9sq2h4jpr6gw2y",
-  "osmo1wz6rx30vj0t6yr8as4axrd3zjpln8kcz3wxdky",
-  "osmo16n6yq5e8wz47cywl0ezj22r4xw5yypw7632gtf",
-  "osmo10swdqw97ntnv0wz3hmeujgaxhccn3g7g7yuvpg",
-  "osmo1v03vs0xrdkqpmz2s0s25092dzckeqdh9zk0cat"
+  "osmo1mhwea2pnk7td6pt44fwl2r8vx4nhm2dcf25gdf",
+  "osmo1m0rl5rjq8djmzm9heqzhwlxd8l7aj4v3ym9gmn"
  ],
- "activation_height": 1000000000,
- "expiry_time": 4102444800,
- "list_sha256": "27786f20c6c4ed068aaa675907be1409f1b904f99d4418d4e0680c5845e0e2f8",
- "list_count": 3,
- "test_values": true
+ "activation_height": 75640600,
+ "expiry_time": 1806451200,
+ "activation_time_estimate": 1795186800,
+ "unbonding_seconds": 1209600,
+ "estimate_ref_height": 75559356,
+ "estimate_ref_time": 1795107340,
+ "list_sha256": "8e9f4b9ef0787a8efd31f8de7a1c68bb5efb1359a1ee5f99c9d35be75bc40107",
+ "list_count": 84002,
+ "test_values": false
 }
