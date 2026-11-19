@@ -123,7 +123,7 @@ Below are all the network parameters for the `mint` module:
 
 1. `mint_denom` defines denom for minting token - uosmo
 2. `genesis_epoch_provisions` provides minting tokens per epoch at genesis.
-3. `epoch_identifier` defines the epoch identifier to be used for the mint module e.g. "weekly"
+3. `epoch_identifier` defines the epoch identifier to be used for the mint module e.g. "weekly"
 4. `reduction_period_in_epochs` defines the number of epochs to pass to reduce the mint amount
 5. `reduction_factor` defines the reduction factor of tokens at every `reduction_period_in_epochs`
 6. `distribution_proportions` defines distribution rules for minted tokens, when the developer
@@ -170,80 +170,26 @@ An example of the output:
 
 ```json
 {
-  "mint_denom": "uosmo",
-  "genesis_epoch_provisions": "821917808219.178082191780821917",
-  "epoch_identifier": "day",
-  "reduction_period_in_epochs": "365",
-  "reduction_factor": "0.666666666666666666",
-  "distribution_proportions": {
-    "staking": "0.250000000000000000",
-    "pool_incentives": "0.450000000000000000",
-    "developer_rewards": "0.250000000000000000",
-    "community_pool": "0.050000000000000000"
-  },
-  "weighted_developer_rewards_receivers": [
-    {
-      "address": "osmo14kjcwdwcqsujkdt8n5qwpd8x8ty2rys5rjrdjj",
-      "weight": "0.288700000000000000"
+  "params": {
+    "mint_denom": "uosmo",
+    "genesis_epoch_provisions": "821917808219.178082191780821917",
+    "epoch_identifier": "day",
+    "reduction_period_in_epochs": "730",
+    "reduction_factor": "0.666666666666666666",
+    "distribution_proportions": {
+      "staking": "0.000000000000000000",
+      "pool_incentives": "0.000000000000000000",
+      "developer_rewards": "0.000000000000000000",
+      "community_pool": "1.000000000000000000"
     },
-    {
-      "address": "osmo1gw445ta0aqn26suz2rg3tkqfpxnq2hs224d7gq",
-      "weight": "0.229000000000000000"
-    },
-    {
-      "address": "osmo13lt0hzc6u3htsk7z5rs6vuurmgg4hh2ecgxqkf",
-      "weight": "0.162500000000000000"
-    },
-    {
-      "address": "osmo1kvc3he93ygc0us3ycslwlv2gdqry4ta73vk9hu",
-      "weight": "0.109000000000000000"
-    },
-    {
-      "address": "osmo19qgldlsk7hdv3ddtwwpvzff30pxqe9phq9evxf",
-      "weight": "0.099500000000000000"
-    },
-    {
-      "address": "osmo19fs55cx4594een7qr8tglrjtt5h9jrxg458htd",
-      "weight": "0.060000000000000000"
-    },
-    {
-      "address": "osmo1ssp6px3fs3kwreles3ft6c07mfvj89a544yj9k",
-      "weight": "0.015000000000000000"
-    },
-    {
-      "address": "osmo1c5yu8498yzqte9cmfv5zcgtl07lhpjrj0skqdx",
-      "weight": "0.010000000000000000"
-    },
-    {
-      "address": "osmo1yhj3r9t9vw7qgeg22cehfzj7enwgklw5k5v7lj",
-      "weight": "0.007500000000000000"
-    },
-    {
-      "address": "osmo18nzmtyn5vy5y45dmcdnta8askldyvehx66lqgm",
-      "weight": "0.007000000000000000"
-    },
-    {
-      "address": "osmo1z2x9z58cg96ujvhvu6ga07yv9edq2mvkxpgwmc",
-      "weight": "0.005000000000000000"
-    },
-    {
-      "address": "osmo1tvf3373skua8e6480eyy38avv8mw3hnt8jcxg9",
-      "weight": "0.002500000000000000"
-    },
-    {
-      "address": "osmo1zs0txy03pv5crj2rvty8wemd3zhrka2ne8u05n",
-      "weight": "0.002500000000000000"
-    },
-    {
-      "address": "osmo1djgf9p53n7m5a55hcn6gg0cm5mue4r5g3fadee",
-      "weight": "0.001000000000000000"
-    },
-    {
-      "address": "osmo1488zldkrn8xcjh3z40v2mexq7d088qkna8ceze",
-      "weight": "0.000800000000000000"
-    }
-  ],
-  "minting_rewards_distribution_start_epoch": "1"
+    "weighted_developer_rewards_receivers": [
+      {
+        "address": "osmo1f3w7ved2murkx4rg9qw8fyk5mfk2285hzzsxh5",
+        "weight": "1.000000000000000000"
+      }
+    ],
+    "minting_rewards_distribution_start_epoch": "100000000"
+  }
 }
 ```
 
@@ -265,7 +211,7 @@ List the current epoch provisions:
 osmosisd query mint epoch-provisions
 ```
 
-As of this writing, this number will be equal to the `genesis-epoch-provisions`. Once the `reduction_period_in_epochs` is reached, the `reduction_factor` will be initiated and reduce the amount of OSMO minted per epoch.
+The current value decreases by `reduction_factor` after each `reduction_period_in_epochs`; it is not the same as `genesis_epoch_provisions` after the first reduction.
 :::
 
 ### inflation
@@ -321,7 +267,7 @@ The following tables show overall effects on different configurations of the `mi
 <td>String must be <code>day</code>, <code>week</code>, <code>month</code>, or <code>year</code></td></tr> 
 <tr><td>Current configuration</td> 
 <td><code>uosmo</code></td> 
-<td><code>821917808219.178</code> (821,9178 OSMO)</td> 
+<td><code>121765601217.656</code> (121,765.6 OSMO)</td> 
 <td><code>day</code></td></tr>
 </tbody></table>
 
@@ -346,9 +292,9 @@ The following tables show overall effects on different configurations of the `mi
 <td>Value has to be less or equal to <code>1</code></td> 
 <td>Value has to be less or equal to <code>1</code> and all distribution categories combined must equal <code>1</code></td></tr> 
 <tr><td>Current configuration</td> 
-<td><code>365</code> (epochs)</td> 
+<td><code>730</code> (epochs)</td> 
 <td><code>0.666666666666666666</code> (66.66%)</td> 
-<td><code>0.250000000000000000</code> (25%)</td></tr>
+<td><code>0.000000000000000000</code> (0%)</td></tr>
 </tbody></table>
 
 <table><thead><tr><th></th> 
@@ -372,7 +318,7 @@ The following tables show overall effects on different configurations of the `mi
 <td>Value has to be less or equal to <code>1</code> and all distribution categories combined must equal <code>1</code></td> 
 <td>Value has to be less or equal to <code>1</code> and all distribution categories combined must equal <code>1</code></td></tr> 
 <tr><td>Current configuration</td> 
-<td><code>0.450000000000000000</code> (45%)</td> 
-<td><code>0.250000000000000000</code> (25%)</td> 
-<td><code>0.050000000000000000</code> (5%)</td></tr>
+<td><code>0.000000000000000000</code> (0%)</td> 
+<td><code>0.000000000000000000</code> (0%)</td> 
+<td><code>1.000000000000000000</code> (100%)</td></tr>
 </tbody></table>
