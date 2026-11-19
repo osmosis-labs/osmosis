@@ -113,7 +113,7 @@ jobs:
     needs: get_diff
     if: ${{ needs.get_diff.outputs.git_diff || github.actor == 'dependabot[bot]' || github.actor == 'mergify[bot]' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
     steps:
       - name: Free disk space
         run: |
