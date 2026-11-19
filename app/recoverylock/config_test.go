@@ -92,7 +92,7 @@ func TestConfigValidation(t *testing.T) {
 		{"real values in a release build", real, mk(t, real, nil), false, true},
 		{"known test address listed, flag off", listOf(testAddr), mk(t, listOf(testAddr), nil), false, false},
 		{"known test address as recovery", real, mk(t, real, func(p *params) { p.RecoveryAddress = testAddr }), false, false},
-		{"too few fee payers", real, mk(t, real, func(p *params) { p.FeePayers = p.FeePayers[:7] }), false, false},
+		{"too few fee payers", real, mk(t, real, func(p *params) { p.FeePayers = p.FeePayers[:MinReleaseFeePayers-1] }), false, false},
 		{"expiry one second short of the margin", real, mk(t, real, func(p *params) { p.ExpiryTime-- }), false, false},
 		{"expiry with only one unbonding period", real, mk(t, real, func(p *params) { p.ExpiryTime = p.ActivationTimeEstimate + p.UnbondingSeconds + ExpiryMarginSeconds }), false, false},
 		{"duplicate fee payer", real, mk(t, real, func(p *params) { p.FeePayers[7] = p.FeePayers[0] }), false, false},

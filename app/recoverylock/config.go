@@ -39,7 +39,7 @@ var listedFile []byte
 var paramsFile []byte
 
 // MinReleaseFeePayers is the minimum fee payer set size in release builds.
-const MinReleaseFeePayers = 8
+const MinReleaseFeePayers = 2
 
 // ExpiryMarginSeconds is the margin required in release builds on top of two
 // unbonding periods after the estimated activation time:
