@@ -15,6 +15,7 @@ import (
 
 	cltypes "github.com/osmosis-labs/osmosis/v32/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v32/x/lockup/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v32/x/superfluid/types"
 )
 
 // LazyDistr lets the lock read the distribution keeper, which Osmosis creates
@@ -48,6 +49,12 @@ func RegisterRules(l *sdk50.Lock) {
 	l.Rules.Register(sdk.MsgTypeURL(&cltypes.MsgWithdrawPosition{}), self(func(m any) string { return m.(*cltypes.MsgWithdrawPosition).Sender }))
 	l.Rules.Register(sdk.MsgTypeURL(&cltypes.MsgCollectSpreadRewards{}), self(func(m any) string { return m.(*cltypes.MsgCollectSpreadRewards).Sender }))
 	l.Rules.Register(sdk.MsgTypeURL(&cltypes.MsgCollectIncentives{}), self(func(m any) string { return m.(*cltypes.MsgCollectIncentives).Sender }))
+	// Superfluid exits end the synthetic delegation (the intermediary module
+	// account undelegates) and start unlocking the wallet's own lock, which
+	// pays the owner at maturity. No coins leave the wallet.
+	l.Rules.Register(sdk.MsgTypeURL(&superfluidtypes.MsgSuperfluidUndelegate{}), self(func(m any) string { return m.(*superfluidtypes.MsgSuperfluidUndelegate).Sender }))
+	l.Rules.Register(sdk.MsgTypeURL(&superfluidtypes.MsgSuperfluidUnbondLock{}), self(func(m any) string { return m.(*superfluidtypes.MsgSuperfluidUnbondLock).Sender }))
+	l.Rules.Register(sdk.MsgTypeURL(&superfluidtypes.MsgSuperfluidUndelegateAndUnbondLock{}), self(func(m any) string { return m.(*superfluidtypes.MsgSuperfluidUndelegateAndUnbondLock).Sender }))
 	// Lock incentives are paid to the lock's reward receiver. The recovery
 	// operator resets an attacker-set receiver to the owner or the recovery
 	// address by transaction.

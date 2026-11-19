@@ -49,6 +49,7 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v32/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v32/x/poolmanager/types"
 	smartaccounttypes "github.com/osmosis-labs/osmosis/v32/x/smart-account/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v32/x/superfluid/types"
 	tftypes "github.com/osmosis-labs/osmosis/v32/x/tokenfactory/types"
 )
 
@@ -379,6 +380,38 @@ func (s *LockSuite) TestExitsEndToEnd() {
 	s.Require().Equal(s.R.String(), p.Address)
 	// exit pool is not an allowed message
 	s.Require().True(isLocked(tx(&gammtypes.MsgExitPool{Sender: s.L.String(), PoolId: poolId, ShareInAmount: shares.Amount.QuoRaw(16), TokenOutMins: nil})))
+}
+
+func (s *LockSuite) TestSuperfluidExits() {
+	bond, err := s.App.StakingKeeper.BondDenom(s.Ctx)
+	s.Require().NoError(err)
+	poolId := s.PrepareBalancerPoolWithCoins(sdk.NewInt64Coin(bond, 1_000_000_000), sdk.NewInt64Coin("foo", 1_000_000_000))
+	shares := s.App.BankKeeper.GetBalance(s.Ctx, s.TestAccs[0], gammtypes.GetPoolShareDenom(poolId))
+	s.Require().NoError(s.App.BankKeeper.SendCoins(s.Ctx, s.TestAccs[0], s.L, sdk.NewCoins(sdk.NewCoin(shares.Denom, shares.Amount.QuoRaw(2)))))
+	sp, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	s.Require().NoError(err)
+	s.App.IncentivesKeeper.SetLockableDurations(s.Ctx, []time.Duration{sp.UnbondingTime})
+	amt := sdk.NewCoin(shares.Denom, shares.Amount.QuoRaw(8))
+	lockA := s.LockTokensNoFund(s.L, sdk.NewCoins(amt), sp.UnbondingTime)
+	s.Require().NoError(s.App.BankKeeper.SendCoins(s.Ctx, s.TestAccs[0], s.L2, sdk.NewCoins(amt)))
+	lockB := s.LockTokensNoFund(s.L2, sdk.NewCoins(amt), sp.UnbondingTime)
+	val := s.SetupValidator(stakingtypes.Bonded)
+	s.Require().NoError(s.SuperfluidDelegateToVal(s.L, poolId, lockA, val.String()))
+	s.Require().NoError(s.App.SuperfluidKeeper.SuperfluidDelegate(s.Ctx, s.L2.String(), lockB, val.String()))
+	s.activate()
+
+	tx := func(k *secp256k1.PrivKey, msgs ...sdk.Msg) error {
+		return s.deliver(s.signedTx(fee, s.kP, false, []*secp256k1.PrivKey{k}, msgs...))
+	}
+	walletShares := s.App.BankKeeper.GetBalance(s.Ctx, s.L, shares.Denom)
+	s.Require().NoError(tx(s.kL, &superfluidtypes.MsgSuperfluidUndelegate{Sender: s.L.String(), LockId: lockA}))
+	s.Require().NoError(tx(s.kL, &superfluidtypes.MsgSuperfluidUnbondLock{Sender: s.L.String(), LockId: lockA}))
+	s.Require().NoError(tx(s.kL2, &superfluidtypes.MsgSuperfluidUndelegateAndUnbondLock{Sender: s.L2.String(), LockId: lockB, Coin: sdk.NewCoin(shares.Denom, amt.Amount.QuoRaw(2))}))
+	s.Require().Equal(walletShares, s.App.BankKeeper.GetBalance(s.Ctx, s.L, shares.Denom), "no coins leave the wallet")
+	l, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lockA)
+	s.Require().NoError(err)
+	s.Require().True(l.IsUnlocking())
+	s.Require().Equal(s.L.String(), l.Owner)
 }
 
 func (s *LockSuite) TestAnteFeesAndPaths() {
