@@ -141,7 +141,15 @@ func (k Keeper) UpdateHighestLiquidityPools(ctx sdk.Context, baseDenomPools map[
 		return err
 	}
 
+	infoByPoolType := k.GetInfoByPoolType(ctx)
+
 	for _, pool := range pools {
+		// Skip pools that routes cannot be built through (cosmwasm pools without a weight), so that the
+		// highest liquidity routable pool is stored for each pair instead.
+		if !isRoutablePool(infoByPoolType, pool) {
+			continue
+		}
+
 		coins, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, pool.GetId())
 		if err != nil {
 			return err

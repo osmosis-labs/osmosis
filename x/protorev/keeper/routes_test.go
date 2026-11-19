@@ -418,6 +418,69 @@ func (s *KeeperTestSuite) TestBuildHotRoutes() {
 	}
 }
 
+// TestCalculateRoutePoolPointsCosmwasmWeight tests how the weight of a cosmwasm pool is looked up: by contract address
+// first, then by code id, and that a contract address weight of 0 excludes the pool.
+func (s *KeeperTestSuite) TestCalculateRoutePoolPointsCosmwasmWeight() {
+	s.SetupPoolsTest()
+	s.Require().NoError(s.App.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, 25))
+	s.Require().NoError(s.App.ProtoRevKeeper.SetMaxPointsPerBlock(s.Ctx, 100))
+
+	// Pool 51 is a cosmwasm pool, pools 1 and 2 are balancer pools with a weight of 2
+	route := []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 51, TokenOutDenom: ""}, {PoolId: 2, TokenOutDenom: ""}}
+	cwPool, err := s.App.CosmwasmPoolKeeper.GetPoolById(s.Ctx, 51)
+	s.Require().NoError(err)
+	codeId := cwPool.GetCodeId()
+
+	cases := []struct {
+		description             string
+		weightMaps              []types.WeightMap
+		codeIdWeights           []types.CodeIdWeight
+		expectedRoutePoolPoints uint64
+		expectedPass            bool
+	}{
+		{
+			description:             "contract address weight takes precedence over code id weight",
+			weightMaps:              []types.WeightMap{{ContractAddress: cwPool.GetContractAddress(), Weight: 4}},
+			codeIdWeights:           []types.CodeIdWeight{{CodeId: codeId, Weight: 9}},
+			expectedRoutePoolPoints: 8,
+			expectedPass:            true,
+		},
+		{
+			description:             "code id weight applies without a contract address weight",
+			codeIdWeights:           []types.CodeIdWeight{{CodeId: codeId, Weight: 9}},
+			expectedRoutePoolPoints: 13,
+			expectedPass:            true,
+		},
+		{
+			description:   "no weight for the pool's code id",
+			codeIdWeights: []types.CodeIdWeight{{CodeId: codeId + 1, Weight: 9}},
+			expectedPass:  false,
+		},
+		{
+			description:   "contract address weight of 0 excludes the pool",
+			weightMaps:    []types.WeightMap{{ContractAddress: cwPool.GetContractAddress(), Weight: 0}},
+			codeIdWeights: []types.CodeIdWeight{{CodeId: codeId, Weight: 9}},
+			expectedPass:  false,
+		},
+	}
+
+	for _, tc := range cases {
+		s.Run(tc.description, func() {
+			poolInfo := s.App.ProtoRevKeeper.GetInfoByPoolType(s.Ctx)
+			poolInfo.Cosmwasm = types.CosmwasmPoolInfo{WeightMaps: tc.weightMaps, CodeIdWeights: tc.codeIdWeights}
+			s.App.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, poolInfo)
+
+			routePoolPoints, err := s.App.ProtoRevKeeper.CalculateRoutePoolPoints(s.Ctx, route)
+			if tc.expectedPass {
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expectedRoutePoolPoints, routePoolPoints)
+			} else {
+				s.Require().Error(err)
+			}
+		})
+	}
+}
+
 // TestCalculateRoutePoolPoints tests the CalculateRoutePoolPoints function
 func (s *KeeperTestSuite) TestCalculateRoutePoolPoints() {
 	s.SetupPoolsTest()
