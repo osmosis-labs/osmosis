@@ -1,4 +1,4 @@
-package recoverylock
+package recoverylock //nolint:forcetypeassert // each rule is registered for one message type URL, so its assertion always matches
 
 import (
 	"bytes"
