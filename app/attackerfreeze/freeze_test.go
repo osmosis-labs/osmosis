@@ -173,8 +173,8 @@ func TestEmbeddedList(t *testing.T) {
 	sdk.GetConfig().SetBech32PrefixForAccount("osmo", "osmopub")
 	ac := addresscodec.NewBech32Codec("osmo")
 	list := MustLoad(ac, map[string]bool{})
-	if len(list) != 48 {
-		t.Fatalf("frozen.txt has %d accounts, want 48", len(list))
+	if len(list) != 64 {
+		t.Fatalf("frozen.txt has %d accounts, want 64", len(list))
 	}
 	if _, err := parse("osmo1lzxp35uxugvns092592d3w9zlpycmrpjlny7tp\nosmo1lzxp35uxugvns092592d3w9zlpycmrpjlny7tp\n", ac, nil); err == nil {
 		t.Fatal("duplicates must be refused")
