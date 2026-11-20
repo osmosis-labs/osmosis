@@ -64,5 +64,8 @@ issues:
     - linters:
         - stylecheck
       text: "ST1005:" # punctuation in error messages
+    - path: app/recoverylock/(plugin|sdk50/rules)\.go
+      linters:
+        - forcetypeassert # each rule is registered for one message type URL, so its assertion always matches
   max-issues-per-linter: 10000
   max-same-issues: 10000

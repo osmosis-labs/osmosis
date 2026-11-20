@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -276,8 +277,19 @@ func (s *KeeperTestHelper) GetContractCodeCustomProject(contractName string, pro
 	s.Require().NoError(err)
 
 	projectRootPath := fmt.Sprintf("/%s/", projectName)
-	projectRootIndex := strings.LastIndex(workingDir, projectRootPath) + len(projectRootPath)
-	workingDir = workingDir[:projectRootIndex]
+	if i := strings.LastIndex(workingDir, projectRootPath); i >= 0 {
+		workingDir = workingDir[:i+len(projectRootPath)]
+	} else {
+		// Checked out under another directory name (for example a fork):
+		// use the nearest directory holding go.mod.
+		for d := workingDir; ; d = filepath.Dir(d) {
+			if _, err := os.Stat(filepath.Join(d, "go.mod")); err == nil {
+				workingDir = d + "/"
+				break
+			}
+			s.Require().NotEqual(d, filepath.Dir(d), "no go.mod above %s", workingDir)
+		}
+	}
 	code, err := os.ReadFile(workingDir + path + "/" + contractName + ".wasm")
 	s.Require().NoError(err)
 

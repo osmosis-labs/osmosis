@@ -1,6 +1,10 @@
 package keepers
 
 import (
+	"github.com/osmosis-labs/osmosis/v32/app/attackerfreeze"
+	"github.com/osmosis-labs/osmosis/v32/app/recoverylock"
+	"github.com/osmosis-labs/osmosis/v32/app/recoverylock/sdk50"
+
 	"fmt"
 	"math"
 
@@ -163,6 +167,8 @@ type AppKeepers struct {
 	// "Normal" keepers
 	AccountKeeper                *authkeeper.AccountKeeper
 	BankKeeper                   *bankkeeper.BaseKeeper
+	RecoveryLock                 *sdk50.Lock
+	AttackerFreeze               *attackerfreeze.Freeze
 	AuthzKeeper                  *authzkeeper.Keeper
 	StakingKeeper                *stakingkeeper.Keeper
 	DistrKeeper                  *distrkeeper.Keeper
@@ -250,6 +256,32 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.BankKeeper = &bankKeeper
 
+	// Recovery lock: built right after the bank keeper because the staking
+	// keeper and the message routers below need it. The distribution keeper is
+	// created later, so the lock reads it through LazyDistr.
+	lockAddrCodec := addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix())
+	lockDistr := &recoverylock.LazyDistr{}
+	recoveryLock := sdk50.New(recoverylock.MustConfig(lockAddrCodec, blockedAddress, bApp.Logger()), appCodec, lockAddrCodec, lockDistr, bApp.LastBlockHeight)
+	recoverylock.RegisterRules(recoveryLock)
+	appKeepers.BankKeeper.AppendSendRestriction(recoveryLock.SendRestriction())
+	appKeepers.RecoveryLock = recoveryLock
+
+	// Attacker freeze: no expiry, same activation height as the other v32.0.1
+	// changes. A frozen account must not be a listed wallet, the recovery
+	// address or a fee payer of the recovery lock.
+	frozen := attackerfreeze.MustLoad(lockAddrCodec, blockedAddress)
+	for _, a := range frozen {
+		if recoveryLock.Cfg.IsListed(a) || recoveryLock.Cfg.IsRecovery(a) || recoveryLock.Cfg.IsFeePayer(a) {
+			panic(fmt.Sprintf("attacker freeze list: %s is also in the recovery lock configuration", sdk.AccAddress(a)))
+		}
+	}
+	attackerFreeze := attackerfreeze.New(frozen, appparams.V32PatchActivationHeight, appCodec, bApp.LastBlockHeight)
+	appKeepers.BankKeeper.AppendSendRestriction(attackerFreeze.SendRestriction())
+	appKeepers.AttackerFreeze = attackerFreeze
+	bApp.Logger().Info("attacker freeze", "activation_height", appparams.V32PatchActivationHeight, "frozen_accounts", attackerFreeze.Count())
+
+	lockRouter := sdk50.Router{Inner: attackerfreeze.Router{Inner: bApp.MsgServiceRouter(), F: attackerFreeze}, L: recoveryLock}
+
 	// Initialize authenticators
 	appKeepers.AuthenticatorManager = authenticator.NewAuthenticatorManager()
 	appKeepers.AuthenticatorManager.InitializeAuthenticators([]authenticator.Authenticator{
@@ -274,7 +306,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	authzKeeper := authzkeeper.NewKeeper(
 		runtime.NewKVStoreService(appKeepers.keys[authzkeeper.StoreKey]),
 		appCodec,
-		bApp.MsgServiceRouter(),
+		lockRouter,
 		appKeepers.AccountKeeper,
 	)
 	appKeepers.AuthzKeeper = &authzKeeper
@@ -283,7 +315,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appCodec,
 		runtime.NewKVStoreService(appKeepers.keys[stakingtypes.StoreKey]),
 		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
+		sdk50.StakingBank{BankKeeper: attackerfreeze.StakingBank{BankKeeper: appKeepers.BankKeeper, F: attackerFreeze}, L: recoveryLock},
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
 		addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
@@ -299,6 +331,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	appKeepers.DistrKeeper = &distrKeeper
+	lockDistr.K = appKeepers.DistrKeeper
 
 	appKeepers.DowntimeKeeper = downtimedetector.NewKeeper(
 		appKeepers.keys[downtimetypes.StoreKey],
@@ -368,7 +401,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.AccountKeeper,
 		appKeepers.ScopedICAHostKeeper,
-		bApp.MsgServiceRouter(),
+		lockRouter,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	icaHostKeeper.WithQueryRouter(bApp.GRPCQueryRouter())
@@ -533,6 +566,10 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.PoolIncentivesKeeper,
 		appKeepers.ProtoRevKeeper,
 	)
+	// Recovery lock: while the lock is active, lock rewards of a listed owner
+	// go to the owner unless the receiver is the owner or the recovery address
+	// (set before the keeper is handed to other keepers).
+	appKeepers.IncentivesKeeper.SetRewardReceiverFunc(recoverylock.LockRewardReceiver(appKeepers.RecoveryLock))
 	appKeepers.ConcentratedLiquidityKeeper.SetIncentivesKeeper(appKeepers.IncentivesKeeper)
 	appKeepers.GAMMKeeper.SetIncentivesKeeper(appKeepers.IncentivesKeeper)
 
@@ -623,7 +660,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.ScopedWasmKeeper,
 		appKeepers.TransferKeeper,
-		bApp.MsgServiceRouter(),
+		lockRouter,
 		bApp.GRPCQueryRouter(),
 		wasmDir,
 		wasmConfig,
@@ -868,6 +905,9 @@ func (appKeepers *AppKeepers) SetupHooks() {
 
 	appKeepers.StakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(
+			// Recovery lock first: resets an unsafe withdraw address of a listed
+			// delegator before the distribution hook pays rewards.
+			sdk50.StakingHooks{L: appKeepers.RecoveryLock, D: appKeepers.DistrKeeper},
 			appKeepers.DistrKeeper.Hooks(),
 			appKeepers.SlashingKeeper.Hooks(),
 			appKeepers.SuperfluidKeeper.Hooks(),
