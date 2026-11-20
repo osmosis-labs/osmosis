@@ -29,7 +29,19 @@ type Keeper struct {
 	pmk        types.PoolManagerKeeper
 	pik        types.PoolIncentiveKeeper
 	prk        types.ProtorevKeeper
+	// rewardReceiver, if set, may replace the reward receiver of a lock at
+	// distribution (recovery lock hook; nil upstream).
+	rewardReceiver RewardReceiverFunc
 }
+
+// RewardReceiverFunc returns the address to pay a lock's rewards to, given
+// the lock owner and the stored receiver (the owner when none is set). It
+// must be deterministic and must not write state.
+type RewardReceiverFunc func(ctx sdk.Context, owner, receiver string) string
+
+// SetRewardReceiverFunc installs the reward receiver hook. Set it right after
+// NewKeeper, before the keeper is copied into other keepers.
+func (k *Keeper) SetRewardReceiverFunc(f RewardReceiverFunc) { k.rewardReceiver = f }
 
 // NewKeeper returns a new instance of the incentive module keeper struct.
 func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, ak types.AccountKeeper, bk types.BankKeeper, lk types.LockupKeeper, ek types.EpochKeeper, ck types.CommunityPoolKeeper, txfk types.TxFeesKeeper, clk types.ConcentratedLiquidityKeeper, pmk types.PoolManagerKeeper, pik types.PoolIncentiveKeeper, prk types.ProtorevKeeper) *Keeper {

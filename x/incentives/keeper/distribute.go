@@ -805,6 +805,9 @@ func (k Keeper) distributeInternal(
 			if rewardReceiver == "" {
 				rewardReceiver = lock.Owner
 			}
+			if k.rewardReceiver != nil {
+				rewardReceiver = k.rewardReceiver(ctx, lock.Owner, rewardReceiver)
+			}
 			err := distrInfo.addLockRewards(lock.Owner, rewardReceiver, distrCoins)
 			if err != nil {
 				return nil, err

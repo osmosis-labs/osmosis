@@ -607,6 +607,8 @@ func NewOsmosisApp(
 			txConfig:      txConfig,
 		},
 		appCodec,
+		app.AppKeepers.RecoveryLock,
+		app.AppKeepers.AttackerFreeze,
 	)
 
 	// update ante-handlers on lanes

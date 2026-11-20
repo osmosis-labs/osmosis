@@ -35,13 +35,13 @@ test: test-help
 test-all: test-race test-covertest-unit test-build
 
 test-unit:
-	@VERSION=$(VERSION) SKIP_WASM_WSL_TESTS=$(SKIP_WASM_WSL_TESTS) go test -mod=readonly -tags='ledger test_ledger_mock norace' $(PACKAGES_UNIT)
+	@VERSION=$(VERSION) SKIP_WASM_WSL_TESTS=$(SKIP_WASM_WSL_TESTS) go test -mod=readonly -tags='ledger test_ledger_mock norace recoverylock_test' $(PACKAGES_UNIT)
 
 test-race:
-	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock' $(PACKAGES_UNIT)
+	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock recoverylock_test' $(PACKAGES_UNIT)
 
 test-cover:
-	@VERSION=$(VERSION) go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -tags='norace' -covermode=atomic $(PACKAGES_UNIT)
+	@VERSION=$(VERSION) go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -tags='norace recoverylock_test' -covermode=atomic $(PACKAGES_UNIT)
 
 test-sim-suite:
 	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_SIM)

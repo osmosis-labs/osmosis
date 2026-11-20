@@ -88,6 +88,10 @@ jobs:
       matrix:
         part: ["00", "01", "02", "03"]
     steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
+          df -h /
       - name: Check out repository
         uses: actions/checkout@v4
       - name: 🐿 Setup Golang
@@ -103,14 +107,19 @@ jobs:
         run: |
           VERSION=$(echo $(git describe --tags) | sed 's/^v//') || VERSION=${GITHUB_SHA}
           TESTS=$(cat pkgs.txt.part.${{ matrix.part }})
-          VERSION=$VERSION SKIP_WASM_WSL_TESTS="false" go test -race -mod=readonly -tags='ledger test_ledger_mock norace' $TESTS
+          VERSION=$VERSION SKIP_WASM_WSL_TESTS="false" go test -race -timeout 30m -mod=readonly -tags='ledger test_ledger_mock norace recoverylock_test' $TESTS
 
   e2e:
     needs: get_diff
     if: ${{ needs.get_diff.outputs.git_diff || github.actor == 'dependabot[bot]' || github.actor == 'mergify[bot]' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
     steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          df -h /
       - name: Check out repository
         uses: actions/checkout@v4
         with:
