@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/cometbft/cometbft/crypto/mldsa65"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -78,6 +79,13 @@ func TestIBCMLDSA65HeaderTransaction(t *testing.T) {
 		return validators.VerifyCommitLight(signed.ChainID, signed.Commit.BlockID, signed.Height, signed.Commit)
 	}
 	require.NoError(t, verify())
-	signed.Commit.Signatures[0].Signature[0] ^= 1
-	require.Error(t, verify())
+	require.NotEmpty(t, signed.Commit.Signatures)
+	_, validator := validators.GetByIndex(0)
+	require.NotNil(t, validator)
+	require.IsType(t, mldsa65.PubKey{}, validator.PubKey)
+	signature := &signed.Commit.Signatures[0]
+	require.Equal(t, cmttypes.BlockIDFlagCommit, signature.BlockIDFlag)
+	require.Len(t, signature.Signature, mldsa65.SignatureSize)
+	signature.Signature[0] ^= 1
+	require.ErrorContains(t, verify(), "wrong signature (#0)")
 }
