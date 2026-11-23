@@ -15,8 +15,11 @@ const (
 	PropVoteBlocks float32 = 1
 	// number of blocks used as a calculation buffer
 	PropBufferBlocks float32 = 30
-	// number of blocks used as a calculation buffer (used to set actual voting period)
-	PropBufferBlocksVotePeriod float32 = 8
+	// number of blocks used as a calculation buffer (used to set actual voting period).
+	// Tests run in parallel and vote from the same validator keys, so a vote
+	// can wait for an earlier vote's sequence; the buffer leaves room for that
+	// retry before the (expedited) voting period ends.
+	PropBufferBlocksVotePeriod float32 = 16
 	// max retries for json unmarshalling
 	MaxRetries = 60
 )
