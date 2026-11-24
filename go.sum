@@ -896,8 +896,8 @@ github.com/tendermint/go-amino v0.16.0 h1:GyhmgQKvqF82e2oZeuMSp9JTN0N09emoSZlb2l
 github.com/tendermint/go-amino v0.16.0/go.mod h1:TQU0M1i/ImAo+tYpZi73AU3V/dKeCoMC9Sphe2ZwGME=
 github.com/tidwall/btree v1.8.2 h1:mTY5iM4UTh2e80TG7RHDQQmnAY3xGNQA/DbU0olkhkA=
 github.com/tidwall/btree v1.8.2/go.mod h1:jBbTdUWhSZClZWoDg54VnvV7/54modSOzDN7VXftj1A=
-github.com/tidwall/gjson v1.20.2 h1:Ag48cSOUCOq/sheSLXV3M4ZS0FOd4YMnY1N7FRoxGQY=
-github.com/tidwall/gjson v1.20.2/go.mod h1:jV1Xkr7LRLVFhesDFU/nInoQ+MjVlnuqkUreTWMveUo=
+github.com/tidwall/gjson v1.20.5 h1:OV4dBDripDl7ZK0GJIxWe1pn2zD6VB8vX+6hq6fLmuw=
+github.com/tidwall/gjson v1.20.5/go.mod h1:jV1Xkr7LRLVFhesDFU/nInoQ+MjVlnuqkUreTWMveUo=
 github.com/tidwall/match v1.1.1 h1:+Ho715JplO36QYgwN9PGYNhgZvoUSc9X2c80KVTi+GA=
 github.com/tidwall/match v1.1.1/go.mod h1:eRSPERbgtNPcGhD8UCthc6PmLEQXEWd3PRB5JTxsfmM=
 github.com/tidwall/pretty v1.3.0 h1:DZmEzADnMIbThFXXslDgq9C0LCC/xzMrONm7iM77RM0=
