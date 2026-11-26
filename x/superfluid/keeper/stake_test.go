@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"bytes"
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -17,6 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 type superfluidDelegation struct {
@@ -1122,6 +1124,42 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 
 			// lock check
 			s.lockCheck(*lock, valAddr.String())
+		})
+	}
+}
+
+// TestConvertLockToStakeNotSingleCoinLock tests that converting a lock to stake returns an error, and does not
+// panic or act on the first coin alone, when the lock does not hold exactly one coin. No message creates such a
+// lock, so it is written to the lockup store directly.
+func (s *KeeperTestSuite) TestConvertLockToStakeNotSingleCoinLock() {
+	testCases := map[string]sdk.Coins{
+		"lock with no coins":  {},
+		"lock with two coins": sdk.NewCoins(sdk.NewInt64Coin("bar", 100), sdk.NewInt64Coin("foo", 100)),
+	}
+
+	for name, lockCoins := range testCases {
+		s.Run(name, func() {
+			s.SetupTest()
+			sender := s.TestAccs[0]
+			initialCoins := sdk.NewCoins(sdk.NewInt64Coin("foo", 100))
+			s.FundAcc(sender, initialCoins)
+			lock, err := s.App.LockupKeeper.CreateLock(s.Ctx, sender, initialCoins, time.Hour)
+			s.Require().NoError(err)
+
+			lock.Coins = lockCoins
+			bz, err := proto.Marshal(&lock)
+			s.Require().NoError(err)
+			lockKey := bytes.Join([][]byte{lockuptypes.KeyPrefixPeriodLock, sdk.Uint64ToBigEndian(lock.ID)}, lockuptypes.KeyIndexSeparator)
+			s.Ctx.KVStore(s.App.GetKey(lockuptypes.StoreKey)).Set(lockKey, bz)
+			storedLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
+			s.Require().NoError(err)
+			s.Require().Len(storedLock.Coins, len(lockCoins))
+
+			valAddr := s.SetupValidator(stakingtypes.Bonded)
+			s.Require().NotPanics(func() {
+				_, err = s.App.SuperfluidKeeper.ConvertLockToStake(s.Ctx, sender, valAddr.String(), lock.ID, osmomath.ZeroInt())
+			})
+			s.Require().ErrorContains(err, "has no single coin")
 		})
 	}
 }

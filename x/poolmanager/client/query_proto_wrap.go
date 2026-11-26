@@ -27,10 +27,10 @@ func NewQuerier(k *poolmanager.Keeper) Querier {
 // QuerierV2 defines a wrapper around the x/poolmanager keeper providing gRPC method
 // handlers for v2 queries.
 type QuerierV2 struct {
-	K poolmanager.Keeper
+	K *poolmanager.Keeper
 }
 
-func NewV2Querier(k poolmanager.Keeper) QuerierV2 {
+func NewV2Querier(k *poolmanager.Keeper) QuerierV2 {
 	return QuerierV2{K: k}
 }
 

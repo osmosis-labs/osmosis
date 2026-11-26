@@ -182,7 +182,7 @@ func appModules(
 		consensus.NewAppModule(appCodec, *app.AppKeepers.ConsensusParamsKeeper),
 		app.RawIcs20TransferAppModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
-		poolmanager.NewAppModule(*app.PoolManagerKeeper, app.GAMMKeeper),
+		poolmanager.NewAppModule(app.PoolManagerKeeper, app.GAMMKeeper),
 		twapmodule.NewAppModule(*app.TwapKeeper),
 		concentratedliquidity.NewAppModule(appCodec, *app.ConcentratedLiquidityKeeper),
 		protorev.NewAppModule(appCodec, *app.ProtoRevKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper, app.GAMMKeeper),
