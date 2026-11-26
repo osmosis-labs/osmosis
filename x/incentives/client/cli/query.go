@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -228,13 +229,7 @@ $ %s query incentives rewards-estimation
 }
 
 func contains(s []uint64, value uint64) bool {
-	for _, v := range s {
-		if v == value {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(s, value)
 }
 
 func GetCmdAllGroups() (*osmocli.QueryDescriptor, *types.QueryAllGroupsRequest) {

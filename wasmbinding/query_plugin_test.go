@@ -366,7 +366,7 @@ func (suite *StargateTestSuite) TestDeterministicJsonMarshal() {
 		originalResponsebz  []byte
 		updatedResponsebz   []byte
 		queryPath           string
-		responseProtoStruct interface{}
+		responseProtoStruct any
 		expectedProto       func() proto.Message
 	}{
 		/**

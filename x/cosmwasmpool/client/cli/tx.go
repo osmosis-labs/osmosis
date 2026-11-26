@@ -47,7 +47,7 @@ func BuildCreatePoolMsg(clientCtx client.Context, args []string, flags *pflag.Fl
 	instantiateMsg := args[1]
 
 	// Check JSON format for instantiateMsg
-	var jsonCheck map[string]interface{}
+	var jsonCheck map[string]any
 	err = json.Unmarshal([]byte(instantiateMsg), &jsonCheck)
 	if err != nil {
 		return nil, fmt.Errorf("invalid JSON format for instantiateMsg: %v", err)
@@ -138,7 +138,6 @@ func parseWasmByteCode(fileName string) ([]byte, error) {
 	// gzip the wasm file
 	if ioutils.IsWasm(wasm) {
 		wasm, err = ioutils.GzipIt(wasm)
-
 		if err != nil {
 			return nil, err
 		}

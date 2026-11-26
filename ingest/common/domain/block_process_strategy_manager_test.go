@@ -22,7 +22,6 @@ func TestCommonDomainTestSuite(t *testing.T) {
 // If the block process strategy manager has observed an error, it should push all data.
 // If the block process strategy manager has not observed an error after pushing all data, it should push only changed data.
 func (s *CommonDomainTestSuite) TestBlockProcessStrategyManager() {
-
 	blockStrategyManager := commondomain.NewBlockProcessStrategyManager()
 
 	// ShouldPushAllData should return true when initialized

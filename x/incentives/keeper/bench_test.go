@@ -37,7 +37,7 @@ func Max(x, y int) int {
 func genRewardCoins(r *rand.Rand, coins sdk.Coins) (res sdk.Coins) {
 	numCoins := 1 + r.Intn(Min(coins.Len(), 1))
 	denomIndices := r.Perm(numCoins)
-	for i := 0; i < numCoins; i++ {
+	for i := range numCoins {
 		denom := coins[denomIndices[i]].Denom
 		amt, _ := simtypes.RandPositiveInt(r, coins[i].Amount)
 		res = append(res, sdk.Coin{Denom: denom, Amount: amt})
@@ -81,10 +81,10 @@ func benchmarkDistributionLogic(b *testing.B, numAccts, numDenoms, numGauges, nu
 
 	// setup accounts with balances
 	addrs := []sdk.AccAddress{}
-	for i := 0; i < numAccts; i++ {
+	for range numAccts {
 		addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 		coins := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000)}
-		for j := 0; j < numDenoms; j++ {
+		for j := range numDenoms {
 			coins = coins.Add(sdk.NewInt64Coin(fmt.Sprintf("token%d", j), r.Int63n(100000000)))
 		}
 		_ = testutil.FundAccount(ctx, app.BankKeeper, addr, coins)
@@ -97,7 +97,7 @@ func benchmarkDistributionLogic(b *testing.B, numAccts, numDenoms, numGauges, nu
 
 	// setup gauges
 	gaugeIds := []uint64{}
-	for i := 0; i < numGauges; i++ {
+	for range numGauges {
 		addr := addrs[r.Int()%numAccts]
 		simCoins := app.BankKeeper.SpendableCoins(ctx, addr)
 
@@ -128,7 +128,7 @@ func benchmarkDistributionLogic(b *testing.B, numAccts, numDenoms, numGauges, nu
 
 	lockSecs := r.Intn(1 * 60 * 60 * 8)
 	// setup lockups
-	for i := 0; i < numLockups; i++ {
+	for i := range numLockups {
 		addr := addrs[i%numAccts]
 		simCoins := app.BankKeeper.SpendableCoins(ctx, addr)
 
@@ -156,7 +156,7 @@ func benchmarkDistributionLogic(b *testing.B, numAccts, numDenoms, numGauges, nu
 
 	b.StartTimer()
 	// distribute coins from gauges to lockup owners
-	for i := 0; i < numDistrs; i++ {
+	for range numDistrs {
 		gauges := []types.Gauge{}
 		for _, gaugeId := range gaugeIds {
 			gauge, _ := app.IncentivesKeeper.GetGaugeByID(ctx, gaugeId)

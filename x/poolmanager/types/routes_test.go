@@ -290,7 +290,6 @@ func TestValidateSwapAmountOutSplitRoute(t *testing.T) {
 }
 
 func TestIntermediateDenoms(t *testing.T) {
-
 	tests := map[string]struct {
 		route          SwapAmountInRoutes
 		expectedDenoms []string

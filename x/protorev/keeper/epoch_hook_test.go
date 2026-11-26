@@ -174,7 +174,6 @@ func (s *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			// SetupTest creates all the pools used in the ProtoRev test suite,
 			// including the pools with "epoch" prefixed denoms used in this test

@@ -34,8 +34,6 @@ func (s *KeeperTestSuite) TestSuperfluidDelegatedValidatorJailed() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			s.SetupTest()
 
@@ -128,7 +126,6 @@ func (s *KeeperTestSuite) TestTryUnbondingSuperfluidLockupDirectly() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			s.SetupTest()
 

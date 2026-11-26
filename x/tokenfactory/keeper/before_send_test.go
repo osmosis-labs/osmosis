@@ -273,7 +273,6 @@ func (s *KeeperTestSuite) TestInfiniteTrackBeforeSend() {
 				distributionModuleBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, distributionModuleAddress)
 				s.Require().True(distributionModuleBalances.Equal(tokenToSend))
 			}
-
 		})
 	}
 }

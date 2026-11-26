@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"

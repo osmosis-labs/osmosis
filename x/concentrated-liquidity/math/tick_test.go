@@ -310,7 +310,6 @@ func TestTicksToSqrtPrice(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			lowerSqrtPrice, upperSqrtPrice, err := math.TicksToSqrtPrice(tc.lowerTickIndex.Int64(), tc.upperTickIndex.Int64())
 			if tc.expectedError != nil {
@@ -424,8 +423,6 @@ func TestPriceToTick(t *testing.T) {
 		},
 	}
 	for name, tc := range testCases {
-		tc := tc
-
 		t.Run(name, func(t *testing.T) {
 			// suppress error here, we only listen to errors from system under test.
 			tick, _ := math.CalculatePriceToTick(tc.price)
@@ -670,8 +667,6 @@ func TestPriceToTick_ErrorCases(t *testing.T) {
 		},
 	}
 	for name, tc := range testCases {
-		tc := tc
-
 		t.Run(name, func(t *testing.T) {
 			tickFromPrice, err := math.CalculatePriceToTick(tc.price)
 			require.Error(t, err)
@@ -733,8 +728,6 @@ func TestTickToPrice_SuccessCases(t *testing.T) {
 		},
 	}
 	for name, tc := range testCases {
-		tc := tc
-
 		t.Run(name, func(t *testing.T) {
 			price, err := math.TickToPrice(tc.tickIndex)
 
@@ -762,8 +755,6 @@ func TestTickToPrice_ErrorCases(t *testing.T) {
 		},
 	}
 	for name, tc := range testCases {
-		tc := tc
-
 		t.Run(name, func(t *testing.T) {
 			_, err := math.TickToPrice(tc.tickIndex)
 			require.Error(t, err)

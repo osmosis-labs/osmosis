@@ -22,7 +22,6 @@ func TestIndexerBlockProcessorTestSuite(t *testing.T) {
 }
 
 func (suite *IndexerBlockProcessorTestSuite) TestNewBlockProcessor() {
-
 	tests := []struct {
 		name string
 
@@ -44,7 +43,6 @@ func (suite *IndexerBlockProcessorTestSuite) TestNewBlockProcessor() {
 
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
-
 			// Initialize mock inputs that do not affect the test
 			poolsExtracter := &commonmocks.PoolsExtractorMock{}
 			publisherMock := &mocks.PublisherMock{}

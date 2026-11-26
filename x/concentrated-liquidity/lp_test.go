@@ -2,6 +2,7 @@ package concentrated_liquidity_test
 
 import (
 	"errors"
+	"maps"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -235,12 +236,9 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 	}
 
 	// add test cases for different positions
-	for name, test := range positionCases {
-		tests[name] = test
-	}
+	maps.Copy(tests, positionCases)
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
@@ -349,8 +347,8 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			}
 
 			// Check account balances
-			s.Require().Equal(userBalancePrePositionCreation.Sub(sdk.NewCoins(sdk.NewCoin(ETH, asset0), (sdk.NewCoin(USDC, asset1)))...).String(), userBalancePostPositionCreation.String())
-			s.Require().Equal(poolBalancePrePositionCreation.Add(sdk.NewCoin(ETH, asset0), (sdk.NewCoin(USDC, asset1))).String(), poolBalancePostPositionCreation.String())
+			s.Require().Equal(userBalancePrePositionCreation.Sub(sdk.NewCoins(sdk.NewCoin(ETH, asset0), sdk.NewCoin(USDC, asset1))...).String(), userBalancePostPositionCreation.String())
+			s.Require().Equal(poolBalancePrePositionCreation.Add(sdk.NewCoin(ETH, asset0), sdk.NewCoin(USDC, asset1)).String(), poolBalancePostPositionCreation.String())
 
 			hasPosition := clKeeper.HasPosition(s.Ctx, tc.positionId)
 			s.Require().True(hasPosition)
@@ -546,7 +544,6 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			// Setup.
 			s.SetupTest()
@@ -1052,7 +1049,6 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			// --- Setup ---
 			s.SetupTest()
@@ -1205,7 +1201,6 @@ func (s *KeeperTestSuite) TestSingleSidedAddToPosition() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			// --- Setup ---
 			s.SetupTest()
@@ -1807,16 +1802,13 @@ func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 }
 
 func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() {
-	var (
-		errToleranceOneRoundUp = osmomath.ErrTolerance{
-			AdditiveTolerance: osmomath.OneDec(),
-			RoundingDir:       osmomath.RoundUp,
-		}
-	)
+	errToleranceOneRoundUp := osmomath.ErrTolerance{
+		AdditiveTolerance: osmomath.OneDec(),
+		RoundingDir:       osmomath.RoundUp,
+	}
 	tests := makeTests(positionCases)
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
@@ -1940,7 +1932,6 @@ func (s *KeeperTestSuite) TestUninitializePool() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
 			clKeeper := s.App.ConcentratedLiquidityKeeper
@@ -2170,7 +2161,6 @@ func (s *KeeperTestSuite) TestValidatePositionUpdateById() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
 

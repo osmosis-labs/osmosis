@@ -236,23 +236,23 @@ func isArbTxLooseSwapMsg(swapMsg poolmanagertypes.SwapMsgRoute, swapInDenom stri
 // TODO: Make this generic by using isJsonSuperset from https://github.com/osmosis-labs/osmosis/blob/d56de7365428f0282eeab05c1cc75787370ef997/x/authenticator/authenticator/message_filter.go#L173C6-L173C12
 func isAffiliateSwapMsg(msg []byte) bool {
 	// Check that the contract message is a valid JSON object
-	jsonObject := make(map[string]interface{})
+	jsonObject := make(map[string]any)
 	err := json.Unmarshal(msg, &jsonObject)
 	if err != nil {
 		return false
 	}
 
 	// check the main key is "swap"
-	swap, ok := jsonObject["swap"].(map[string]interface{})
+	swap, ok := jsonObject["swap"].(map[string]any)
 	if !ok {
 		return false
 	}
 
-	if routes, ok := swap["routes"].([]interface{}); !ok || len(routes) == 0 {
+	if routes, ok := swap["routes"].([]any); !ok || len(routes) == 0 {
 		return false
 	}
 
-	if tokenOutMinAmount, ok := swap["token_out_min_amount"].(map[string]interface{}); !ok || len(tokenOutMinAmount) == 0 {
+	if tokenOutMinAmount, ok := swap["token_out_min_amount"].(map[string]any); !ok || len(tokenOutMinAmount) == 0 {
 		return false
 	}
 
@@ -262,19 +262,19 @@ func isAffiliateSwapMsg(msg []byte) bool {
 // check if this: https://celatone.osmosis.zone/osmosis-1/txs/8D20755D4E009CB72C763963A76886BCCCC5C2EBFC3F57266332710216A0D10D
 func isContractSwapContractMsg(msg []byte) bool {
 	// Check that the contract message is a valid JSON object
-	jsonObject := make(map[string]interface{})
+	jsonObject := make(map[string]any)
 	err := json.Unmarshal(msg, &jsonObject)
 	if err != nil {
 		return false
 	}
 
 	// check the main key is "swap"
-	swap, ok := jsonObject["swap"].(map[string]interface{})
+	swap, ok := jsonObject["swap"].(map[string]any)
 	if !ok {
 		return false
 	}
 
-	if input_coin, ok := swap["input_coin"].(map[string]interface{}); !ok || len(input_coin) == 0 {
+	if input_coin, ok := swap["input_coin"].(map[string]any); !ok || len(input_coin) == 0 {
 		return false
 	}
 

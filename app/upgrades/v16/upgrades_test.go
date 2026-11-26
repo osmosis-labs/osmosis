@@ -23,9 +23,7 @@ import (
 	protorevtypes "github.com/osmosis-labs/osmosis/v32/x/protorev/types"
 )
 
-var (
-	DAIIBCDenom = "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7"
-)
+var DAIIBCDenom = "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7"
 
 type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper

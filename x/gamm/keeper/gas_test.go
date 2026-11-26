@@ -87,8 +87,10 @@ func (s *KeeperTestSuite) TestJoinPoolGas() {
 	s.Assert().LessOrEqual(int(maxGas), 150000, "max gas / join pool")
 }
 
-var hundredInt = osmomath.NewInt(100)
-var tenInt = osmomath.NewInt(10)
+var (
+	hundredInt = osmomath.NewInt(100)
+	tenInt     = osmomath.NewInt(10)
+)
 
 func (s *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 	// mint some usomo to account

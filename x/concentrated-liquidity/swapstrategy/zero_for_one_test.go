@@ -6,8 +6,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v32/x/concentrated-liquidity/types"
 )
 
-var hundredDec = osmomath.NewDec(100)
-var oneMinusDefaultSpreadFactor = one.Sub(defaultSpreadReward)
+var (
+	hundredDec                  = osmomath.NewDec(100)
+	oneMinusDefaultSpreadFactor = one.Sub(defaultSpreadReward)
+)
 
 func (suite *StrategyTestSuite) setupNewZeroForOneSwapStrategy(sqrtPriceLimit osmomath.Dec, spread osmomath.Dec) swapstrategy.SwapStrategy {
 	suite.SetupTest()
@@ -39,7 +41,6 @@ func (suite *StrategyTestSuite) TestGetSqrtTargetPrice_ZeroForOne() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		suite.Run(name, func() {
 			sut := suite.setupNewZeroForOneSwapStrategy(tc.sqrtPriceLimit, zero)
 			actualSqrtTargetPrice := sut.GetSqrtTargetPrice(osmomath.BigDecFromDec(tc.nextTickSqrtPrice))
@@ -485,7 +486,6 @@ func (suite *StrategyTestSuite) TestInitializeNextTickIterator_ZeroForOne() {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		suite.Run(name, func() {
 			strategy := suite.setupNewZeroForOneSwapStrategy(types.MaxSqrtPrice, zero)
 			suite.runTickIteratorTest(strategy, tc)
