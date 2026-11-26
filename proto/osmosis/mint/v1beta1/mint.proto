@@ -52,9 +52,10 @@ message DistributionProportions {
     (gogoproto.moretags) = "yaml:\"pool_incentives\"",
     (gogoproto.nullable) = false
   ];
-  // developer_rewards defines the proportion of the minted mint_denom that is
-  // to be allocated to developer rewards address.
+  // developer_rewards is deprecated and must be zero. Developer vesting is no
+  // longer part of mint distribution.
   string developer_rewards = 3 [
+    deprecated = true,
 
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"developer_rewards\"",
@@ -103,11 +104,10 @@ message Params {
   // denoms and how much.
   DistributionProportions distribution_proportions = 6
       [ (gogoproto.nullable) = false ];
-  // weighted_developer_rewards_receivers is the address to receive developer
-  // rewards with weights assignedt to each address. The final amount that each
-  // address receives is: epoch_provisions *
-  // distribution_proportions.developer_rewards * Address's Weight.
+  // weighted_developer_rewards_receivers is deprecated and unused. Developer
+  // vesting is no longer part of mint distribution.
   repeated WeightedAddress weighted_developer_rewards_receivers = 7 [
+    deprecated = true,
     (gogoproto.moretags) = "yaml:\"developer_rewards_receiver\"",
     (gogoproto.nullable) = false
   ];

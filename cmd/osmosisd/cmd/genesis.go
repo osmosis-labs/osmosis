@@ -383,73 +383,11 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.MintParams.ReductionPeriodInEpochs = 365                    // 1 year (screw leap years)
 	genParams.MintParams.DistributionProportions = minttypes.DistributionProportions{
 		Staking:          osmomath.MustNewDecFromStr("0.25"), // 25%
-		DeveloperRewards: osmomath.MustNewDecFromStr("0.25"), // 25%
+		DeveloperRewards: osmomath.ZeroDec(),                 // deprecated, must be 0
 		PoolIncentives:   osmomath.MustNewDecFromStr("0.45"), // 45%
-		CommunityPool:    osmomath.MustNewDecFromStr("0.05"), // 5%
+		CommunityPool:    osmomath.MustNewDecFromStr("0.30"), // 30%
 	}
 	genParams.MintParams.MintingRewardsDistributionStartEpoch = 1
-	genParams.MintParams.WeightedDeveloperRewardsReceivers = []minttypes.WeightedAddress{
-		{
-			Address: "osmo14kjcwdwcqsujkdt8n5qwpd8x8ty2rys5rjrdjj",
-			Weight:  osmomath.MustNewDecFromStr("0.2887"),
-		},
-		{
-			Address: "osmo1gw445ta0aqn26suz2rg3tkqfpxnq2hs224d7gq",
-			Weight:  osmomath.MustNewDecFromStr("0.2290"),
-		},
-		{
-			Address: "osmo13lt0hzc6u3htsk7z5rs6vuurmgg4hh2ecgxqkf",
-			Weight:  osmomath.MustNewDecFromStr("0.1625"),
-		},
-		{
-			Address: "osmo1kvc3he93ygc0us3ycslwlv2gdqry4ta73vk9hu",
-			Weight:  osmomath.MustNewDecFromStr("0.109"),
-		},
-		{
-			Address: "osmo19qgldlsk7hdv3ddtwwpvzff30pxqe9phq9evxf",
-			Weight:  osmomath.MustNewDecFromStr("0.0995"),
-		},
-		{
-			Address: "osmo19fs55cx4594een7qr8tglrjtt5h9jrxg458htd",
-			Weight:  osmomath.MustNewDecFromStr("0.06"),
-		},
-		{
-			Address: "osmo1ssp6px3fs3kwreles3ft6c07mfvj89a544yj9k",
-			Weight:  osmomath.MustNewDecFromStr("0.015"),
-		},
-		{
-			Address: "osmo1c5yu8498yzqte9cmfv5zcgtl07lhpjrj0skqdx",
-			Weight:  osmomath.MustNewDecFromStr("0.01"),
-		},
-		{
-			Address: "osmo1yhj3r9t9vw7qgeg22cehfzj7enwgklw5k5v7lj",
-			Weight:  osmomath.MustNewDecFromStr("0.0075"),
-		},
-		{
-			Address: "osmo18nzmtyn5vy5y45dmcdnta8askldyvehx66lqgm",
-			Weight:  osmomath.MustNewDecFromStr("0.007"),
-		},
-		{
-			Address: "osmo1z2x9z58cg96ujvhvu6ga07yv9edq2mvkxpgwmc",
-			Weight:  osmomath.MustNewDecFromStr("0.005"),
-		},
-		{
-			Address: "osmo1tvf3373skua8e6480eyy38avv8mw3hnt8jcxg9",
-			Weight:  osmomath.MustNewDecFromStr("0.0025"),
-		},
-		{
-			Address: "osmo1zs0txy03pv5crj2rvty8wemd3zhrka2ne8u05n",
-			Weight:  osmomath.MustNewDecFromStr("0.0025"),
-		},
-		{
-			Address: "osmo1djgf9p53n7m5a55hcn6gg0cm5mue4r5g3fadee",
-			Weight:  osmomath.MustNewDecFromStr("0.001"),
-		},
-		{
-			Address: "osmo1488zldkrn8xcjh3z40v2mexq7d088qkna8ceze",
-			Weight:  osmomath.MustNewDecFromStr("0.0008"),
-		},
-	}
 
 	genParams.DistributionParams = distributiontypes.DefaultParams()
 	genParams.DistributionParams.CommunityTax = osmomath.MustNewDecFromStr("0")

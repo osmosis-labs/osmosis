@@ -1,8 +1,7 @@
 # Mint
 
 The `mint` module is responsible for creating tokens in a flexible way to reward
-validators, incentivize providing pool liquidity, provide funds for Osmosis governance,
-and pay developers to maintain and improve Osmosis.
+validators, incentivize providing pool liquidity and fund the community pool.
 
 The module is also responsible for reducing the token creation and distribution by a set period
 until it reaches its maximum supply (see `reduction_factor` and `reduction_period_in_epochs`)
@@ -99,9 +98,9 @@ The minting module contains the following parameters:
 | reduction_factor                           | string (dec) | "0.6666666666666"                      |
 | distribution_proportions.staking           | string (dec) | "0.4"                                  |
 | distribution_proportions.pool_incentives   | string (dec) | "0.3"                                  |
-| distribution_proportions.developer_rewards | string (dec) | "0.2"                                  |
-| distribution_proportions.community_pool    | string (dec) | "0.1"                                  |
-| weighted_developer_rewards_receivers       | array        | [{"address": "osmoxx", "weight": "1"}] |
+| distribution_proportions.developer_rewards | string (dec) | "0" (deprecated)                       |
+| distribution_proportions.community_pool    | string (dec) | "0.3"                                  |
+| weighted_developer_rewards_receivers       | array        | [] (deprecated)                        |
 | minting_rewards_distribution_start_epoch   | int64        | 10                                     |
 
 Below are all the network parameters for the `mint` module:
@@ -114,9 +113,9 @@ Below are all the network parameters for the `mint` module:
 - **`distribution_proportions`** - Categories in which the specified proportion of newly released tokens are distributed to
   - **`staking`** - Proportion of minted funds to incentivize staking OSMO
   - **`pool_incentives`** - Proportion of minted funds to incentivize pools on Osmosis
-  - **`developer_rewards`** - Proportion of minted funds to pay developers for their past and future work
+  - **`developer_rewards`** - Deprecated, must be `0`. Developer vesting is not part of mint distribution
   - **`community_pool`** - Proportion of minted funds to be set aside for the community pool
-- **`weighted_developer_rewards_receivers`** - Addresses that developer rewards will go to. The weight attached to an address is the percent of the developer rewards that the specific address will receive
+- **`weighted_developer_rewards_receivers`** - Deprecated and unused
 - **`minting_rewards_distribution_start_epoch`** - What epoch will start the rewards distribution to the aforementioned distribution categories
 
 ### Notes
@@ -126,10 +125,10 @@ Below are all the network parameters for the `mint` module:
 3. `epoch_identifier` defines the epoch identifier to be used for the mint module e.g. "weekly"
 4. `reduction_period_in_epochs` defines the number of epochs to pass to reduce the mint amount
 5. `reduction_factor` defines the reduction factor of tokens at every `reduction_period_in_epochs`
-6. `distribution_proportions` defines distribution rules for minted tokens, when the developer
-   rewards address is empty, it distributes tokens to the community pool.
-7. `weighted_developer_rewards_receivers` provides the addresses that receive developer
-   rewards by weight
+6. `distribution_proportions` defines distribution rules for minted tokens. The community pool
+   receives the remainder after rounding. `developer_rewards` is deprecated and must be `0`.
+7. `weighted_developer_rewards_receivers` is deprecated and unused. Developer vesting is not
+   part of mint distribution.
 8. `minting_rewards_distribution_start_epoch` defines the start epoch of minting to make sure
    minting start after initial pools are set
 
@@ -170,26 +169,19 @@ An example of the output:
 
 ```json
 {
-  "params": {
-    "mint_denom": "uosmo",
-    "genesis_epoch_provisions": "821917808219.178082191780821917",
-    "epoch_identifier": "day",
-    "reduction_period_in_epochs": "730",
-    "reduction_factor": "0.666666666666666666",
-    "distribution_proportions": {
-      "staking": "0.000000000000000000",
-      "pool_incentives": "0.000000000000000000",
-      "developer_rewards": "0.000000000000000000",
-      "community_pool": "1.000000000000000000"
-    },
-    "weighted_developer_rewards_receivers": [
-      {
-        "address": "osmo1f3w7ved2murkx4rg9qw8fyk5mfk2285hzzsxh5",
-        "weight": "1.000000000000000000"
-      }
-    ],
-    "minting_rewards_distribution_start_epoch": "100000000"
-  }
+  "mint_denom": "uosmo",
+  "genesis_epoch_provisions": "821917808219.178082191780821917",
+  "epoch_identifier": "day",
+  "reduction_period_in_epochs": "365",
+  "reduction_factor": "0.666666666666666666",
+  "distribution_proportions": {
+    "staking": "0.250000000000000000",
+    "pool_incentives": "0.450000000000000000",
+    "developer_rewards": "0.000000000000000000",
+    "community_pool": "0.300000000000000000"
+  },
+  "weighted_developer_rewards_receivers": [],
+  "minting_rewards_distribution_start_epoch": "1"
 }
 ```
 
@@ -211,7 +203,7 @@ List the current epoch provisions:
 osmosisd query mint epoch-provisions
 ```
 
-The current value decreases by `reduction_factor` after each `reduction_period_in_epochs`; it is not the same as `genesis_epoch_provisions` after the first reduction.
+As of this writing, this number will be equal to the `genesis-epoch-provisions`. Once the `reduction_period_in_epochs` is reached, the `reduction_factor` will be initiated and reduce the amount of OSMO minted per epoch.
 :::
 
 ### inflation
@@ -267,7 +259,7 @@ The following tables show overall effects on different configurations of the `mi
 <td>String must be <code>day</code>, <code>week</code>, <code>month</code>, or <code>year</code></td></tr> 
 <tr><td>Current configuration</td> 
 <td><code>uosmo</code></td> 
-<td><code>121765601217.656</code> (121,765.6 OSMO)</td> 
+<td><code>821917808219.178</code> (821,9178 OSMO)</td> 
 <td><code>day</code></td></tr>
 </tbody></table>
 
@@ -292,9 +284,9 @@ The following tables show overall effects on different configurations of the `mi
 <td>Value has to be less or equal to <code>1</code></td> 
 <td>Value has to be less or equal to <code>1</code> and all distribution categories combined must equal <code>1</code></td></tr> 
 <tr><td>Current configuration</td> 
-<td><code>730</code> (epochs)</td> 
+<td><code>365</code> (epochs)</td> 
 <td><code>0.666666666666666666</code> (66.66%)</td> 
-<td><code>0.000000000000000000</code> (0%)</td></tr>
+<td><code>0.250000000000000000</code> (25%)</td></tr>
 </tbody></table>
 
 <table><thead><tr><th></th> 
@@ -307,18 +299,18 @@ The following tables show overall effects on different configurations of the `mi
 <td>string (dec)</td></tr> 
 <tr><td>Higher</td> 
 <td>More epoch provisions go to pool incentives than other categories</td> 
-<td>More epoch provisions go to developer rewards than other categories</td> 
+<td>Deprecated. Must be <code>0</code></td> 
 <td>More epoch provisions go to community pool than other categories</td></tr> 
 <tr><td>Lower</td> 
 <td>Less epoch provisions go to pool incentives than other categories</td> 
-<td>Less epoch provisions go to developer rewards than other categories</td> 
+<td>Deprecated. Must be <code>0</code></td> 
 <td>Less epoch provisions go to community pool than other categories</td></tr> 
 <tr><td>Constraints</td> 
 <td>Value has to be less or equal to <code>1</code> and all distribution categories combined must equal <code>1</code></td> 
-<td>Value has to be less or equal to <code>1</code> and all distribution categories combined must equal <code>1</code></td> 
+<td>Must be <code>0</code></td>
 <td>Value has to be less or equal to <code>1</code> and all distribution categories combined must equal <code>1</code></td></tr> 
 <tr><td>Current configuration</td> 
-<td><code>0.000000000000000000</code> (0%)</td> 
-<td><code>0.000000000000000000</code> (0%)</td> 
-<td><code>1.000000000000000000</code> (100%)</td></tr>
+<td><code>0.450000000000000000</code> (45%)</td> 
+<td><code>0</code> (deprecated)</td>
+<td><code>0.050000000000000000</code> (5%)</td></tr>
 </tbody></table>
