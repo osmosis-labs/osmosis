@@ -201,29 +201,34 @@ func (am AppModule) CheckAndSetTargetGas(ctx sdk.Context) {
 	// If cachedConsParams is empty, set equal to consParams and set the target gas.
 	if cachedConsParams.Equal(cmtproto.ConsensusParams{}) {
 		cachedConsParams = *consParams.Params
-
-		// Check if cachedConsParams.Block is nil to prevent panic
-		if cachedConsParams.Block == nil || cachedConsParams.Block.MaxGas == 0 {
-			return
-		}
-
-		if cachedConsParams.Block.MaxGas == -1 {
-			return
-		}
-
-		newBlockMaxGas := mempool1559.TargetBlockSpacePercent.Mul(osmomath.NewDec(cachedConsParams.Block.MaxGas)).TruncateInt().Int64()
-		mempool1559.TargetGas = newBlockMaxGas
+		setTargetGas(cachedConsParams.GetBlock().GetMaxGas())
 		return
 	}
 
 	// If the consensus params have changed, check if it was maxGas that changed. If so, update the target gas.
-	if consParams.Params.Block.MaxGas != cachedConsParams.Block.MaxGas {
-		if consParams.Params.Block.MaxGas == -1 {
-			return
-		}
-
-		newBlockMaxGas := mempool1559.TargetBlockSpacePercent.Mul(osmomath.NewDec(consParams.Params.Block.MaxGas)).TruncateInt().Int64()
-		mempool1559.TargetGas = newBlockMaxGas
+	// The getters are nil safe and report unset block params as a max gas of 0.
+	//
+	// cachedConsParams is updated even when the new max gas yields no target gas, so that it always holds the
+	// params seen last. The comparison then differs once per change instead of on every block, and a later change,
+	// including one back to the previous max gas, is still picked up.
+	if consParams.Params.GetBlock().GetMaxGas() != cachedConsParams.GetBlock().GetMaxGas() {
+		setTargetGas(consParams.Params.GetBlock().GetMaxGas())
 		cachedConsParams = *consParams.Params
 	}
+}
+
+// setTargetGas sets the eip1559 target gas to TargetBlockSpacePercent of the given block max gas.
+// The target gas is left unchanged if the block gas is unlimited (max gas of -1 or 0), or if the max gas
+// is too small to yield a positive target gas, since the base fee update divides by the target gas.
+func setTargetGas(blockMaxGas int64) {
+	if blockMaxGas <= 0 {
+		return
+	}
+
+	targetGas := mempool1559.TargetBlockSpacePercent.Mul(osmomath.NewDec(blockMaxGas)).TruncateInt().Int64()
+	if targetGas <= 0 {
+		return
+	}
+
+	mempool1559.TargetGas = targetGas
 }
