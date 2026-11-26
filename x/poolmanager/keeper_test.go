@@ -15,6 +15,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
 	"github.com/osmosis-labs/osmosis/v32/app/apptesting"
 	appparams "github.com/osmosis-labs/osmosis/v32/app/params"
 	"github.com/osmosis-labs/osmosis/v32/x/gamm/pool-models/balancer"
@@ -397,7 +398,6 @@ func (s *KeeperTestSuite) routeMsg(msg sdk.Msg) {
 // panickingWasmKeeper is a wasm keeper whose smart queries always panic, the way a contract call that runs out
 // of gas does. It records the gas limit of the context each query was made on.
 type panickingWasmKeeper struct {
-	queryGasLimit storetypes.Gas
 	seenGasLimits []storetypes.Gas
 }
 
@@ -406,13 +406,14 @@ func (w *panickingWasmKeeper) QuerySmart(ctx context.Context, _ sdk.AccAddress, 
 	panic(storetypes.ErrorOutOfGas{Descriptor: "wasm contract"})
 }
 
+// QueryGasLimit stands in for a node's query_gas_limit setting, which the alloyed pool queries must ignore.
 func (w *panickingWasmKeeper) QueryGasLimit() storetypes.Gas {
-	return w.queryGasLimit
+	return 1_000_000
 }
 
 // TestEndBlockBoundsAlloyedPoolQueries tests that the contract queries EndBlock makes for registered alloyed
-// pools run on a gas meter capped at the wasm query gas limit, and that a panic in one of them is contained
-// instead of propagating out of EndBlock. The stored alloy composition is left as it was.
+// pools run on a gas meter capped at a constant limit, not at the node's query gas limit, and that a panic in
+// one of them is contained instead of propagating out of EndBlock. The stored alloy composition is left as it was.
 func (s *KeeperTestSuite) TestEndBlockBoundsAlloyedPoolQueries() {
 	s.SetupTest()
 	cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{denomA, denomB}, []uint16{1, 1})
@@ -421,15 +422,14 @@ func (s *KeeperTestSuite) TestEndBlockBoundsAlloyedPoolQueries() {
 	stateBefore, err := s.App.PoolManagerKeeper.GetRegisteredAlloyedPoolFromPoolId(s.Ctx, cwPool.GetId())
 	s.Require().NoError(err)
 
-	const queryGasLimit = storetypes.Gas(1_000_000)
-	wasmKeeper := &panickingWasmKeeper{queryGasLimit: queryGasLimit}
+	wasmKeeper := &panickingWasmKeeper{}
 	s.App.PoolManagerKeeper.SetWasmKeeper(wasmKeeper)
 
 	// EndBlock runs on the block gas meter, which is infinite.
 	ctx := s.Ctx.WithBlockHeight(poolmanager.AlloyedAssetCompositionUpdateRate).WithGasMeter(storetypes.NewInfiniteGasMeter())
 	s.Require().NotPanics(func() { s.App.PoolManagerKeeper.EndBlock(ctx) })
 
-	s.Require().Equal([]storetypes.Gas{queryGasLimit}, wasmKeeper.seenGasLimits)
+	s.Require().Equal([]storetypes.Gas{cosmwasm.DefaultContractCallGasLimit}, wasmKeeper.seenGasLimits)
 	stateAfter, err := s.App.PoolManagerKeeper.GetRegisteredAlloyedPoolFromPoolId(s.Ctx, cwPool.GetId())
 	s.Require().NoError(err)
 	s.Require().Equal(stateBefore, stateAfter)

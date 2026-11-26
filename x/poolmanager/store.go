@@ -428,12 +428,24 @@ func (k Keeper) getAllRegisteredAlloyedPoolsIdArray(ctx sdk.Context) ([]uint64, 
 // Helpers
 //
 
+// fixedQueryGasLimitWasmKeeper caps smart queries at a constant gas limit. The wasm keeper's own
+// QueryGasLimit is the node's query_gas_limit setting from app.toml, which can differ between validators.
+// Where the gas meter is infinite (EndBlock, gov proposal execution) that setting is the whole cap, so using it
+// would let nodes reach different results for the same query.
+type fixedQueryGasLimitWasmKeeper struct {
+	types.WasmKeeper
+}
+
+func (fixedQueryGasLimitWasmKeeper) QueryGasLimit() storetypes.Gas {
+	return cosmwasmutils.DefaultContractCallGasLimit
+}
+
 // queryAlloyedPoolContract sends a smart query to an alloyed pool contract and unmarshals the response.
-// The query runs on its own gas meter, capped at the wasm query gas limit, and a panic in the contract call is
-// returned as an error. These queries also run in EndBlock, where the gas meter is infinite and nothing
-// recovers a panic.
+// The query runs on its own gas meter, capped at cosmwasmutils.DefaultContractCallGasLimit, and a panic in the
+// contract call is returned as an error. These queries also run in EndBlock, where the gas meter is infinite and
+// nothing recovers a panic.
 func queryAlloyedPoolContract[K any](ctx sdk.Context, wasmKeeper types.WasmKeeper, contractAddr sdk.AccAddress, query string) (K, error) {
-	return cosmwasmutils.Query[json.RawMessage, K](ctx, wasmKeeper, contractAddr.String(), json.RawMessage(query))
+	return cosmwasmutils.Query[json.RawMessage, K](ctx, fixedQueryGasLimitWasmKeeper{wasmKeeper}, contractAddr.String(), json.RawMessage(query))
 }
 
 // queryAndCheckAlloyedDenom queries the smart contract for the alloyed denomination and validates its format.

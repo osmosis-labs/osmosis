@@ -3,7 +3,6 @@ package types
 import (
 	context "context"
 
-	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -123,5 +122,4 @@ type ProtorevKeeper interface {
 
 type WasmKeeper interface {
 	QuerySmart(ctx context.Context, contractAddress sdk.AccAddress, queryMsg []byte) ([]byte, error)
-	QueryGasLimit() storetypes.Gas
 }
