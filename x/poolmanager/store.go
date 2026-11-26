@@ -126,9 +126,14 @@ func (k *Keeper) SetTakerFeeShareAgreementForDenom(ctx sdk.Context, takerFeeShar
 		if err != nil {
 			return err
 		}
-		poolDenoms := pool.GetPoolDenoms(ctx)
-		for _, denom := range poolDenoms {
-			if denom == takerFeeShare.Denom {
+		// Query the liquidity through queryTotalPoolLiquidity rather than pool.GetPoolDenoms, which panics on failure
+		// and caps gas at the node-local query gas limit.
+		poolLiquidity, err := k.queryTotalPoolLiquidity(ctx, pool.GetAddress())
+		if err != nil {
+			return err
+		}
+		for _, coin := range poolLiquidity {
+			if coin.Denom == takerFeeShare.Denom {
 				// takerFeeShare.Denom is one of the poolDenoms
 				err := k.recalculateAndSetTakerFeeShareAlloyComposition(ctx, poolId)
 				if err != nil {
