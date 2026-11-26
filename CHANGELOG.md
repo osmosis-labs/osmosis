@@ -42,6 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* [#9850](https://github.com/osmosis-labs/osmosis/pull/9850) fix(poolmanager): the contract queries made for registered alloyed pools (share denom, total pool liquidity, asset configs), which also run in `EndBlock`, are capped at the wasm query gas limit and a panic in one is returned as an error. A query that exceeds the cap leaves that pool's alloy composition unchanged and logs an error. State machine breaking.
+* [#9850](https://github.com/osmosis-labs/osmosis/pull/9850) fix(poolmanager): the taker fee share agreement and registered alloyed pool caches are reloaded from the store in every `BeginBlock` and are no longer written by `MsgSetTakerFeeShareAgreementForDenom`, `MsgSetRegisteredAlloyedPool` or `EndBlock`. A write that is later discarded, or an alloyed pool re-registered under a new denom, can no longer leave an entry in a node's memory. A change to an agreement or a registration takes effect in the block after it is made. State machine breaking.
 * [#9847](https://github.com/osmosis-labs/osmosis/pull/9847) fix(poolmanager): the poolmanager module now uses the same keeper instance as the other modules, so taker fee share agreements apply to swaps routed through x/gamm and x/protorev. State machine breaking.
 * [#9847](https://github.com/osmosis-labs/osmosis/pull/9847) fix(txfees): keep the EIP-1559 target gas positive when the block max gas is unlimited or too small, avoiding a division by zero in EndBlock.
 * [#9847](https://github.com/osmosis-labs/osmosis/pull/9847) fix(superfluid): BeginBlocker logs an error instead of panicking when the incentives epoch identifier is not a registered epoch.
