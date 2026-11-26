@@ -20,10 +20,10 @@ import (
 )
 
 // CreateUpgradeHandler returns the v33 upgrade handler. After the module migrations it:
+//   - moves any mint pool incentives proportion to the community pool, since minted coins are no
+//     longer allocated to pool incentives (first, before anything else touches the mint parameters),
 //   - moves the OSMO balances of OsmoBurnSourceAddresses to the burn address on mainnet,
 //   - recovers the HUAHUA held by gauges 1954-1959 (see HuahuaStuckGauges),
-//   - moves any mint pool incentives proportion to the community pool, since minted coins are no
-//     longer allocated to pool incentives,
 //   - finishes the stale gauges on mainnet and sends their undistributed coins to the community pool
 //     (see pruneStaleGauges),
 //   - raises every validator's commission to MinCommissionRate (see raiseMinCommission).
@@ -42,6 +42,12 @@ func CreateUpgradeHandler(
 		}
 
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+		// Must run before any other step that reads or validates the mint parameters: the mint
+		// parameters now require a zero pool incentives proportion, so validating them before this
+		// move fails on chains where it is non-zero (osmo-test-5).
+		movePoolIncentivesProportionToCommunityPool(sdkCtx, keepers.MintKeeper)
+
 		if sdkCtx.ChainID() == MainnetChainID {
 			if err := moveOsmoToBurnAddress(sdkCtx, keepers); err != nil {
 				return nil, err
@@ -60,8 +66,6 @@ func CreateUpgradeHandler(
 			write()
 			sdkCtx.Logger().Info("v33 upgrade: HUAHUA recovered", "amount", recovered.String(), "recipient", HuahuaRecoveryAddress)
 		}
-
-		movePoolIncentivesProportionToCommunityPool(sdkCtx, keepers.MintKeeper)
 
 		pruneStaleGaugesOnMainnet(sdkCtx, keepers.IncentivesKeeper)
 
