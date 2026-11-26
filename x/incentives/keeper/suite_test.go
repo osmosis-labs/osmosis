@@ -254,7 +254,7 @@ func (s *KeeperTestSuite) SetupManyLocks(numLocks int, liquidBalance sdk.Coins, 
 	_, _ = rand.Read(randPrefix)
 
 	bal := liquidBalance.Add(coinsPerLock...)
-	for i := 0; i < numLocks; i++ {
+	for i := range numLocks {
 		addr := s.setupAddr(i, string(randPrefix), bal)
 		_, err := s.App.LockupKeeper.CreateLock(s.Ctx, addr, coinsPerLock, lockDuration)
 		s.Require().NoError(err)

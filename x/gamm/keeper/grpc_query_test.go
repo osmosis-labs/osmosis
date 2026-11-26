@@ -458,7 +458,7 @@ func (s *KeeperTestSuite) TestQueryPool() {
 	})
 	s.Require().Error(err)
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		poolId := s.PrepareBalancerPool()
 		poolRes, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{
 			PoolId: poolId,
@@ -475,7 +475,7 @@ func (s *KeeperTestSuite) TestQueryPool() {
 func (s *KeeperTestSuite) TestQueryPools() {
 	queryClient := s.queryClient
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		poolId := s.PrepareBalancerPool()
 		poolRes, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{
 			PoolId: poolId,
@@ -548,7 +548,7 @@ func (s *KeeperTestSuite) TestQueryNumPools1() {
 }
 
 func (s *KeeperTestSuite) TestQueryNumPools2() {
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		s.PrepareBalancerPool()
 	}
 
@@ -724,8 +724,6 @@ func (s *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			result, err := queryClient.SpotPrice(gocontext.Background(), tc.req)
 			if tc.expectErr {
@@ -824,8 +822,6 @@ func (s *KeeperTestSuite) TestV2QueryBalancerPoolSpotPrice() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			result, err := v2queryClient.SpotPrice(gocontext.Background(), tc.req)
 			if tc.expectErr {
@@ -900,8 +896,6 @@ func (s *KeeperTestSuite) TestQueryStableswapPoolSpotPrice() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			result, err := queryClient.SpotPrice(gocontext.Background(), tc.req)
 			if tc.expectErr {
@@ -911,7 +905,7 @@ func (s *KeeperTestSuite) TestQueryStableswapPoolSpotPrice() {
 				// We allow for a small geometric error due to our spot price being an approximation
 				expectedSpotPrice := osmomath.MustNewBigDecFromStr(tc.result)
 				actualSpotPrice := osmomath.MustNewBigDecFromStr(result.SpotPrice)
-				diff := (expectedSpotPrice.Sub(actualSpotPrice)).Abs()
+				diff := expectedSpotPrice.Sub(actualSpotPrice).Abs()
 				errTerm := diff.Quo(osmomath.MinBigDec(expectedSpotPrice, actualSpotPrice))
 
 				s.Require().True(errTerm.LT(osmomath.NewBigDecWithPrec(1, 3)), "Expected: %d, Actual: %d", expectedSpotPrice, actualSpotPrice)
@@ -982,8 +976,6 @@ func (s *KeeperTestSuite) TestV2QueryStableswapPoolSpotPrice() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			result, err := v2queryClient.SpotPrice(gocontext.Background(), tc.req)
 			if tc.expectErr {
@@ -994,7 +986,7 @@ func (s *KeeperTestSuite) TestV2QueryStableswapPoolSpotPrice() {
 				// We allow for a small geometric error due to our spot price being an approximation
 				expectedSpotPrice := osmomath.MustNewBigDecFromStr(tc.result)
 				actualSpotPrice := osmomath.MustNewBigDecFromStr(result.SpotPrice)
-				diff := (expectedSpotPrice.Sub(actualSpotPrice)).Abs()
+				diff := expectedSpotPrice.Sub(actualSpotPrice).Abs()
 				errTerm := diff.Quo(osmomath.MinBigDec(expectedSpotPrice, actualSpotPrice))
 
 				s.Require().True(errTerm.LT(osmomath.NewBigDecWithPrec(1, 3)), "Expected: %d, Actual: %d", expectedSpotPrice, actualSpotPrice)

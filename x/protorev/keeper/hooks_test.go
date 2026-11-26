@@ -51,7 +51,6 @@ func (s *KeeperTestSuite) TestSwapping() {
 					},
 				},
 				executeSwap: func() {
-
 					route := []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: "Atom"}}
 
 					_, err := s.App.PoolManagerKeeper.RouteExactAmountIn(s.Ctx, s.TestAccs[0], route, sdk.NewCoin("akash", osmomath.NewInt(100)), osmomath.NewInt(1))
@@ -71,7 +70,6 @@ func (s *KeeperTestSuite) TestSwapping() {
 					},
 				},
 				executeSwap: func() {
-
 					route := []poolmanagertypes.SwapAmountOutRoute{{PoolId: 1, TokenInDenom: "akash"}}
 
 					_, err := s.App.PoolManagerKeeper.RouteExactAmountOut(s.Ctx, s.TestAccs[0], route, osmomath.NewInt(10000), sdk.NewCoin("Atom", osmomath.NewInt(100)))
@@ -96,7 +94,6 @@ func (s *KeeperTestSuite) TestSwapping() {
 					},
 				},
 				executeSwap: func() {
-
 					route := []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: "Atom"}, {PoolId: 1, TokenOutDenom: "akash"}}
 
 					_, err := s.App.PoolManagerKeeper.RouteExactAmountIn(s.Ctx, s.TestAccs[0], route, sdk.NewCoin("akash", osmomath.NewInt(100)), osmomath.NewInt(1))
@@ -116,7 +113,6 @@ func (s *KeeperTestSuite) TestSwapping() {
 					},
 				},
 				executeSwap: func() {
-
 					route := []poolmanagertypes.SwapAmountInRoute{{PoolId: 50, TokenOutDenom: "epochTwo"}}
 
 					_, err := s.App.PoolManagerKeeper.RouteExactAmountIn(s.Ctx, s.TestAccs[0], route, sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(10)), osmomath.NewInt(1))

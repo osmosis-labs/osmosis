@@ -8,7 +8,7 @@ import (
 
 func TestValidateContractAddress(t *testing.T) {
 	testCases := map[string]struct {
-		addr     interface{}
+		addr     any
 		expected bool
 	}{
 		// ToDo: Why do tests expect the bech32 prefix to be cosmos?
@@ -43,7 +43,7 @@ func TestValidateContractAddress(t *testing.T) {
 
 func TestValidateParams(t *testing.T) {
 	testCases := map[string]struct {
-		addr     interface{}
+		addr     any
 		expected bool
 	}{
 		// ToDo: Why do tests expect the bech32 prefix to be cosmos?

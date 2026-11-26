@@ -613,7 +613,6 @@ func (s *KeeperTestSuite) TestUndelegateFromValSetErrorCase() {
 			s.Require().Equal(expectedShares[i], del.GetShares())
 		}
 	}
-
 }
 
 // NOTE: this is the case that used to error. Fixed by this PR
@@ -680,5 +679,4 @@ func (s *KeeperTestSuite) TestUndelegateFromValSetErrorCase1() {
 
 	err = s.App.ValidatorSetPreferenceKeeper.UndelegateFromValidatorSet(s.Ctx, delegator.String(), coinToUnStake)
 	s.Require().NoError(err)
-
 }

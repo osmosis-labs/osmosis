@@ -87,7 +87,6 @@ func (s *CWPoolGovTypesSuite) TestValidateMigrationProposalCondiguration() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		s.Run(tc.name, func() {
 			// System under test.
 			err := types.ValidateMigrationProposalConfiguration(tc.poolIds, tc.newCodeId, tc.byteCode)

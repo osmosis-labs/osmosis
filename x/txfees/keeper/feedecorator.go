@@ -195,7 +195,7 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice osmomath.Dec, g
 		return err
 	}
 	// check to ensure that the convertedFee should always be greater than or equal to the requireBaseFee
-	if !(convertedFee.IsGTE(requiredBaseFee)) {
+	if !convertedFee.IsGTE(requiredBaseFee) {
 		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s which converts to %s. required: %s", feeCoin, convertedFee, requiredBaseFee)
 	}
 
@@ -203,7 +203,7 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice osmomath.Dec, g
 }
 
 func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDenom string, tx sdk.FeeTx) osmomath.Dec {
-	var is1559enabled = mfd.Opts.Mempool1559Enabled
+	is1559enabled := mfd.Opts.Mempool1559Enabled
 
 	cfgMinGasPrice := ctx.MinGasPrices().AmountOf(baseDenom)
 	// the check below prevents tx gas from getting over HighGasTxThreshold which is default to 1_000_000

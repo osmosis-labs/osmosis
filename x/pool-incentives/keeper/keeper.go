@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"time"
 
@@ -372,10 +373,8 @@ func (k Keeper) IsPoolIncentivized(ctx sdk.Context, providedPoolId uint64) (bool
 			if err != nil {
 				return false, err
 			}
-			for _, poolId := range poolIds {
-				if poolId == providedPoolId {
-					return true, nil
-				}
+			if slices.Contains(poolIds, providedPoolId) {
+				return true, nil
 			}
 		} else if gauge.DistributeTo.LockQueryType == lockuptypes.NoLock {
 			poolId, err := k.GetPoolIdFromGaugeId(ctx, record.GaugeId, epochDuration)
@@ -391,13 +390,7 @@ func (k Keeper) IsPoolIncentivized(ctx sdk.Context, providedPoolId uint64) (bool
 				return false, err
 			}
 			// Ensure the gauge's duration matches one of the lockable durations.
-			matchFound := false
-			for _, duration := range lockableDurations {
-				if gauge.DistributeTo.Duration == duration {
-					matchFound = true
-					break
-				}
-			}
+			matchFound := slices.Contains(lockableDurations, gauge.DistributeTo.Duration)
 			if !matchFound {
 				return false, types.IncentiveRecordContainsNonLockableDurationError{GaugeId: gauge.Id, Duration: gauge.DistributeTo.Duration, LockableDurations: lockableDurations}
 			}

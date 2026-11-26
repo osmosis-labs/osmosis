@@ -15,9 +15,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
 )
 
-var (
-	emptyCoins = sdk.NewCoins()
-)
+var emptyCoins = sdk.NewCoins()
 
 // It converts the given pool to a CosmWasmPool, instantiates the Wasm contract using the contract keeper,
 // and then sets the contract address in the CosmWasmPool model before storing it.

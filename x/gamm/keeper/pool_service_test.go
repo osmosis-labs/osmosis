@@ -315,7 +315,6 @@ func (s *KeeperTestSuite) TestInitializePool() {
 	}
 
 	for _, test := range tests {
-		test := test
 		s.Run(test.name, func() {
 			s.SetupTest()
 
@@ -875,8 +874,6 @@ func (s *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			s.SetupTest()
 			ctx := s.Ctx

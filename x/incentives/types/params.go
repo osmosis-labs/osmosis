@@ -2,6 +2,7 @@ package types
 
 import (
 	fmt "fmt"
+	"slices"
 	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -80,7 +81,7 @@ func (p Params) Validate() error {
 	return nil
 }
 
-func ValidateGroupCreaionFee(i interface{}) error {
+func ValidateGroupCreaionFee(i any) error {
 	v, ok := i.(sdk.Coins)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -88,7 +89,7 @@ func ValidateGroupCreaionFee(i interface{}) error {
 	return v.Validate()
 }
 
-func ValidateGroupCreationFee(i interface{}) error {
+func ValidateGroupCreationFee(i any) error {
 	v, ok := i.(sdk.Coins)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -96,21 +97,13 @@ func ValidateGroupCreationFee(i interface{}) error {
 	return v.Validate()
 }
 
-func ValidateInternalUptime(i interface{}) error {
+func ValidateInternalUptime(i any) error {
 	internalUptime, ok := i.(time.Duration)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	supported := false
-	for _, supportedUptime := range cltypes.SupportedUptimes {
-		if internalUptime == supportedUptime {
-			supported = true
-
-			// We break here to save on iterations
-			break
-		}
-	}
+	supported := slices.Contains(cltypes.SupportedUptimes, internalUptime)
 
 	if !supported {
 		return cltypes.UptimeNotSupportedError{Uptime: internalUptime}
@@ -119,7 +112,7 @@ func ValidateInternalUptime(i interface{}) error {
 	return nil
 }
 
-func ValidateMinValueForDistr(i interface{}) error {
+func ValidateMinValueForDistr(i any) error {
 	_, ok := i.(sdk.Coin)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

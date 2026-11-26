@@ -87,7 +87,8 @@ func (s *PoolTransformerTestSuite) TestUpdateAlloyedTransmuterPool() {
 			AssetConfigs: []sqscosmwasmpool.TransmuterAssetConfig{
 				{Denom: apptesting.DefaultTransmuterDenomA, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomANormFactor)},
 				{Denom: apptesting.DefaultTransmuterDenomB, NormalizationFactor: osmomath.NewInt(apptesting.DefaultTransmuterDenomBNormFactor)},
-				{Denom: alloyedDenom, NormalizationFactor: osmomath.NewInt(apptesting.DefaultAlloyedDenomNormFactor)}},
+				{Denom: alloyedDenom, NormalizationFactor: osmomath.NewInt(apptesting.DefaultAlloyedDenomNormFactor)},
+			},
 			RateLimiterConfig: sqscosmwasmpool.AlloyedRateLimiter{
 				StaticLimiterByDenomMap: map[string]sqscosmwasmpool.StaticLimiter{},
 				ChangeLimiterByDenomMap: map[string]sqscosmwasmpool.ChangeLimiter{},
@@ -181,7 +182,6 @@ func (s *PoolTransformerTestSuite) TestAlloyTransmuterListLimiters() {
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
-
 			s.Setup()
 
 			mockWasmKeeper := &mockWasmKeeper{

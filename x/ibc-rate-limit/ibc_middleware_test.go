@@ -798,7 +798,6 @@ func (suite *MiddlewareTestSuite) TestDenomRestrictionFlow() {
 	// Sending again on the previously blocked channel should now succeed
 	_, _, err = suite.FullSendAToC(suite.MessageFromAToC(denom, sendAmount))
 	suite.Require().NoError(err, "Send on previously blocked channel should succeed after unsetting restriction")
-
 }
 
 // Test that the rate limiting works as expected by sending to the quota and above before checking for errors
@@ -806,7 +805,7 @@ func (suite *MiddlewareTestSuite) testChannelQuota(sendAmount osmomath.Int, send
 	denom := sdk.DefaultBondDenom
 
 	var r *abci.ExecTxResult
-	for i := 0; i < sendCount; i++ {
+	for range sendCount {
 		// send 1% (quota is 2%)
 		fmt.Println("trying to send ", sendAmount)
 		r, _ = suite.AssertSend(true, suite.MessageFromAToB(denom, sendAmount))

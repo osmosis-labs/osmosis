@@ -121,7 +121,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	}
 }
 
-func validateMintDenom(i interface{}) error {
+func validateMintDenom(i any) error {
 	v, ok := i.(string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -137,7 +137,7 @@ func validateMintDenom(i interface{}) error {
 	return nil
 }
 
-func validateGenesisEpochProvisions(i interface{}) error {
+func validateGenesisEpochProvisions(i any) error {
 	v, ok := i.(osmomath.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -150,7 +150,7 @@ func validateGenesisEpochProvisions(i interface{}) error {
 	return nil
 }
 
-func validateReductionPeriodInEpochs(i interface{}) error {
+func validateReductionPeriodInEpochs(i any) error {
 	v, ok := i.(int64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -163,7 +163,7 @@ func validateReductionPeriodInEpochs(i interface{}) error {
 	return nil
 }
 
-func validateReductionFactor(i interface{}) error {
+func validateReductionFactor(i any) error {
 	v, ok := i.(osmomath.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -180,7 +180,7 @@ func validateReductionFactor(i interface{}) error {
 	return nil
 }
 
-func validateDistributionProportions(i interface{}) error {
+func validateDistributionProportions(i any) error {
 	v, ok := i.(DistributionProportions)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -212,7 +212,7 @@ func validateDistributionProportions(i interface{}) error {
 	return nil
 }
 
-func validateWeightedDeveloperRewardsReceivers(i interface{}) error {
+func validateWeightedDeveloperRewardsReceivers(i any) error {
 	v, ok := i.([]WeightedAddress)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -248,7 +248,7 @@ func validateWeightedDeveloperRewardsReceivers(i interface{}) error {
 	return nil
 }
 
-func validateMintingRewardsDistributionStartEpoch(i interface{}) error {
+func validateMintingRewardsDistributionStartEpoch(i any) error {
 	v, ok := i.(int64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

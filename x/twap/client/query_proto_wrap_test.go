@@ -155,7 +155,6 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 
 		suite.Run(tc.name+" arithmetic", func() {
 			client := client.Querier{K: *suite.App.TwapKeeper}

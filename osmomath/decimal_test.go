@@ -18,11 +18,9 @@ type decimalTestSuite struct {
 	suite.Suite
 }
 
-var (
-	zeroAdditiveErrTolerance = osmomath.ErrTolerance{
-		AdditiveTolerance: osmomath.ZeroDec(),
-	}
-)
+var zeroAdditiveErrTolerance = osmomath.ErrTolerance{
+	AdditiveTolerance: osmomath.ZeroDec(),
+}
 
 func TestDecimalTestSuite(t *testing.T) {
 	suite.Run(t, new(decimalTestSuite))
@@ -89,6 +87,7 @@ func (s *decimalTestSuite) TestQuoMut() {
 		})
 	}
 }
+
 func TestDecApproxEq(t *testing.T) {
 	// d1 = 0.55, d2 = 0.6, tol = 0.1
 	d1 := osmomath.NewBigDecWithPrec(55, 2)
@@ -189,8 +188,10 @@ var interestingDecNumbers = []string{
 	"1428571428571428571428571428571428571428571428571428571428571.428571428571428571428571428571428571", // Repeating decimal for 1/7 extended
 }
 
-var interestingDecNumbersBigDec = []osmomath.BigDec{}
-var interestingDecNumbersDec = []osmomath.Dec{}
+var (
+	interestingDecNumbersBigDec = []osmomath.BigDec{}
+	interestingDecNumbersDec    = []osmomath.Dec{}
+)
 
 func init() {
 	for _, str := range interestingDecNumbers {
@@ -766,7 +767,7 @@ func BenchmarkMarshalTo(b *testing.B) {
 }
 
 func (s *decimalTestSuite) TestLog2() {
-	var expectedErrTolerance = osmomath.MustNewBigDecFromStr("0.000000000000000000000000000000000100")
+	expectedErrTolerance := osmomath.MustNewBigDecFromStr("0.000000000000000000000000000000000100")
 
 	tests := map[string]struct {
 		initialValue osmomath.BigDec
@@ -862,7 +863,7 @@ func (s *decimalTestSuite) TestLog2() {
 }
 
 func (s *decimalTestSuite) TestLn() {
-	var expectedErrTolerance = osmomath.MustNewBigDecFromStr("0.000000000000000000000000000000000100")
+	expectedErrTolerance := osmomath.MustNewBigDecFromStr("0.000000000000000000000000000000000100")
 
 	tests := map[string]struct {
 		initialValue osmomath.BigDec
@@ -1134,7 +1135,7 @@ func (s *decimalTestSuite) TestCustomBaseLog() {
 }
 
 func (s *decimalTestSuite) TestPowerInteger() {
-	var expectedErrTolerance = osmomath.MustNewBigDecFromStr("0.000000000000000000000000000000100000")
+	expectedErrTolerance := osmomath.MustNewBigDecFromStr("0.000000000000000000000000000000100000")
 
 	tests := map[string]struct {
 		base           osmomath.BigDec
@@ -1253,7 +1254,6 @@ func (s *decimalTestSuite) TestPowerInteger() {
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
-
 			tolerance := expectedErrTolerance
 			if !tc.expectedToleranceOverwrite.IsNil() {
 				tolerance = tc.expectedToleranceOverwrite
@@ -1293,7 +1293,6 @@ func (s *decimalTestSuite) TestClone() {
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
-
 			copy := tc.startValue.Clone()
 
 			s.Require().Equal(tc.startValue, copy)
@@ -1308,7 +1307,6 @@ func (s *decimalTestSuite) TestClone() {
 // TestMul_Mutation tests that MulMut mutates the receiver
 // while Mut is not.
 func (s *decimalTestSuite) TestMul_Mutation() {
-
 	mulBy := osmomath.MustNewBigDecFromStr("2")
 
 	tests := map[string]struct {
@@ -1346,7 +1344,6 @@ func (s *decimalTestSuite) TestMul_Mutation() {
 // TestPowerInteger_Mutation tests that PowerIntegerMut mutates the receiver
 // while PowerInteger is not.
 func (s *decimalTestSuite) TestPowerInteger_Mutation() {
-
 	exponent := uint64(2)
 
 	tests := map[string]struct {
@@ -1468,6 +1465,7 @@ func (s *decimalTestSuite) TestChopPrecision_Mutative() {
 		})
 	}
 }
+
 func (s *decimalTestSuite) TestQuoRoundUp_MutativeAndNonMutative() {
 	tests := []struct {
 		d1, d2, expQuoRoundUpMut osmomath.BigDec

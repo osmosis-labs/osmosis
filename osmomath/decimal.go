@@ -252,14 +252,14 @@ func MustNewBigDecFromStr(s string) BigDec {
 }
 
 func (d BigDec) IsNil() bool          { return d.i == nil }                    // is decimal nil
-func (d BigDec) IsZero() bool         { return (d.i).Sign() == 0 }             // is equal to zero
-func (d BigDec) IsNegative() bool     { return (d.i).Sign() == -1 }            // is negative
-func (d BigDec) IsPositive() bool     { return (d.i).Sign() == 1 }             // is positive
-func (d BigDec) Equal(d2 BigDec) bool { return (d.i).Cmp(d2.i) == 0 }          // equal decimals
-func (d BigDec) GT(d2 BigDec) bool    { return (d.i).Cmp(d2.i) > 0 }           // greater than
-func (d BigDec) GTE(d2 BigDec) bool   { return (d.i).Cmp(d2.i) >= 0 }          // greater than or equal
-func (d BigDec) LT(d2 BigDec) bool    { return (d.i).Cmp(d2.i) < 0 }           // less than
-func (d BigDec) LTE(d2 BigDec) bool   { return (d.i).Cmp(d2.i) <= 0 }          // less than or equal
+func (d BigDec) IsZero() bool         { return d.i.Sign() == 0 }               // is equal to zero
+func (d BigDec) IsNegative() bool     { return d.i.Sign() == -1 }              // is negative
+func (d BigDec) IsPositive() bool     { return d.i.Sign() == 1 }               // is positive
+func (d BigDec) Equal(d2 BigDec) bool { return d.i.Cmp(d2.i) == 0 }            // equal decimals
+func (d BigDec) GT(d2 BigDec) bool    { return d.i.Cmp(d2.i) > 0 }             // greater than
+func (d BigDec) GTE(d2 BigDec) bool   { return d.i.Cmp(d2.i) >= 0 }            // greater than or equal
+func (d BigDec) LT(d2 BigDec) bool    { return d.i.Cmp(d2.i) < 0 }             // less than
+func (d BigDec) LTE(d2 BigDec) bool   { return d.i.Cmp(d2.i) <= 0 }            // less than or equal
 func (d BigDec) Neg() BigDec          { return BigDec{new(big.Int).Neg(d.i)} } // reverse the decimal sign
 // nolint: stylecheck
 func (d BigDec) Abs() BigDec    { return BigDec{new(big.Int).Abs(d.i)} } // absolute value
@@ -423,6 +423,7 @@ func (d BigDec) QuoMut(d2 BigDec) BigDec {
 	assertMaxBitLen(d.i)
 	return d
 }
+
 func (d BigDec) QuoRaw(d2 int64) BigDec {
 	// multiply precision, so we can chop it later
 	// TODO: There is certainly more efficient ways to do this, come back later

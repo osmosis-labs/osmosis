@@ -51,104 +51,119 @@ func (s *MessageFilterTest) TestBankSend() {
 		passvalidation bool
 		match          bool
 	}{
-		{"bank send",
+		{
+			"bank send",
 			fmt.Sprintf(`{"@type":"/cosmos.bank.v1beta1.MsgSend", "from_address":"%s","to_address":"to", "amount": [{"denom": "foo", "amount": "100"}]}`, fromAddr),
 			&bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 100))},
 			true,
 			true,
 		},
 
-		{"bank send. no amount",
+		{
+			"bank send. no amount",
 			fmt.Sprintf(`{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%s","to_address":"to"}`, fromAddr),
 			&bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 100))},
 			true,
 			true,
 		},
 
-		{"bank send. bad sender",
+		{
+			"bank send. bad sender",
 			`{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"someoneElse","to_address":"to"}`,
 			&bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 100))},
 			true,
 			false,
 		},
 
-		{"bank send. any",
+		{
+			"bank send. any",
 			`{"@type":"/cosmos.bank.v1beta1.MsgSend"}`,
 			&bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 100))},
 			true,
 			true,
 		},
 
-		{"bank send. bad amount",
+		{
+			"bank send. bad amount",
 			fmt.Sprintf(`{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%s","to_address":"to", "amount": [{"denom": "foo", "amount": "50"}]}`, fromAddr),
 			&bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 100))},
 			true,
 			false,
 		},
 
-		{"bank send. amount as number",
+		{
+			"bank send. amount as number",
 			fmt.Sprintf(`{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%s","to_address":"to", "amount": [{"denom": "foo", "amount": 100}]}`, fromAddr),
 			&bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 100))},
 			false,
 			false, // This fails because of floats. Should be prevented by validation
 		},
 
-		{"bank send. amount as mix string number",
+		{
+			"bank send. amount as mix string number",
 			fmt.Sprintf(`{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%s","to_address":"to", "amount": [{"denom": "foo", "amount": "100"}]}`, fromAddr),
 			&bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 100))},
 			true,
 			true,
 		},
 
-		{"bank send. amount as mix string number but bad",
+		{
+			"bank send. amount as mix string number but bad",
 			fmt.Sprintf(`{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%s","to_address":"to", "amount": [{"denom": "foo", "amount": "50"}]}`, fromAddr),
 			&bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 100))},
 			true,
 			false,
 		},
 
-		{"bank send. just denom",
+		{
+			"bank send. just denom",
 			fmt.Sprintf(`{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%s","to_address":"to", "amount": [{"denom": "foo"}]}`, fromAddr),
 			&bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 100))},
 			true,
 			true,
 		},
 
-		{"bank send. just denom",
+		{
+			"bank send. just denom",
 			fmt.Sprintf(`{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%s","to_address":"to", "amount": [{"denom": "foo"}]}`, fromAddr),
 			&bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 1))},
 			true,
 			true,
 		},
 
-		{"bank send. bad denom",
+		{
+			"bank send. bad denom",
 			fmt.Sprintf(`{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%s","to_address":"to", "amount": [{"denom": "foo"}]}`, fromAddr),
 			&bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("bar", 100))},
 			true,
 			false,
 		},
 
-		{"bank send. any match",
+		{
+			"bank send. any match",
 			`{"@type":"/cosmos.bank.v1beta1.MsgSend"}`,
 			&bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("bar", 100))},
 			true,
 			true,
 		},
 
-		{"bank send. using map as generic",
+		{
+			"bank send. using map as generic",
 			`{"@type":"/cosmos.bank.v1beta1.MsgSend"}`,
 			&bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("bar", 100))},
 			true,
 			true,
 		},
 
-		{"bank send. empty array as generic for arrays",
+		{
+			"bank send. empty array as generic for arrays",
 			fmt.Sprintf(`{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%s","to_address":"to", "amount": []}`, fromAddr),
 			&bank.MsgSend{FromAddress: s.TestAccAddress[0].String(), ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 1))},
 			true,
 			true,
 		},
-		{"bank send. fail on different message type",
+		{
+			"bank send. fail on different message type",
 			fmt.Sprintf(`{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"%s","to_address":"to", "amount": []}`, fromAddr),
 			&poolmanagertypes.MsgSwapExactAmountIn{
 				Sender:            fromAddr,
@@ -301,7 +316,8 @@ func (s *MessageFilterTest) TestLimitOrder() {
 		passvalidation bool
 		match          bool
 	}{
-		{"place limit order, simple message filter, no contract address",
+		{
+			"place limit order, simple message filter, no contract address",
 			fmt.Sprintf(`{"@type":"/cosmwasm.wasm.v1.MsgExecuteContract", "msg": {"place_limit": {}}}`),
 			&types.MsgExecuteContract{
 				Contract: "osmo16xcfxjd8263srfqhl5stru49y2w3u7dllugn9dkdrlrhfaeu523s85htxv",
@@ -312,48 +328,58 @@ func (s *MessageFilterTest) TestLimitOrder() {
 			true,
 			true,
 		},
-		{"place limit order, complex message filter, no contract address",
+		{
+			"place limit order, complex message filter, no contract address",
 			fmt.Sprintf(`{"@type":"/cosmwasm.wasm.v1.MsgExecuteContract", "sender":"%s", "msg": {"place_limit": {}}, "contract": ""}`, fromAddr),
 			&types.MsgExecuteContract{
 				Contract: "",
 				Msg:      []byte(fmt.Sprintf(`{"place_limit": { "claim_bounty": "%s", "order_direction": "%s", "quantity": "%s", "tick_id": %d}}`, "0.0001", "bid", "47612515", -5257343)),
-				Sender:   fromAddr, Funds: sdk.NewCoins(sdk.NewCoin("inputDenom", osmomath.NewInt(100)))},
+				Sender:   fromAddr, Funds: sdk.NewCoins(sdk.NewCoin("inputDenom", osmomath.NewInt(100))),
+			},
 			true,
 			true,
 		},
-		{"place limit order, only bid, no contract address",
+		{
+			"place limit order, only bid, no contract address",
 			fmt.Sprintf(`{"@type":"/cosmwasm.wasm.v1.MsgExecuteContract", "sender":"%s", "msg": {"place_limit": { "order_direction": "bid"}}, "contract": ""}`, fromAddr),
 			&types.MsgExecuteContract{
 				Contract: "",
 				Msg:      []byte(fmt.Sprintf(`{"place_limit": { "claim_bounty": "%s", "order_direction": "%s", "quantity": "%s", "tick_id": %d}}`, "0.0001", "bid", "47612515", -5257343)),
-				Sender:   fromAddr, Funds: sdk.NewCoins(sdk.NewCoin("inputDenom", osmomath.NewInt(100)))},
+				Sender:   fromAddr, Funds: sdk.NewCoins(sdk.NewCoin("inputDenom", osmomath.NewInt(100))),
+			},
 			true,
 			true,
 		},
-		{"place limit order, only ask, with contract address",
+		{
+			"place limit order, only ask, with contract address",
 			fmt.Sprintf(`{"@type":"/cosmwasm.wasm.v1.MsgExecuteContract", "sender":"%s", "msg": {"place_limit": { "order_direction": "bid"}}, "contract": "osmo1aufrskevnmtvafnvflea9ypllkqqz333tzfcs3cwsg9mfk7946yqprspug"}`, fromAddr),
 			&types.MsgExecuteContract{
 				Contract: "osmo1aufrskevnmtvafnvflea9ypllkqqz333tzfcs3cwsg9mfk7946yqprspug",
 				Msg:      []byte(fmt.Sprintf(`{"place_limit": { "claim_bounty": "%s", "order_direction": "%s", "quantity": "%s", "tick_id": %d}}`, "0.0001", "bid", "47612515", -5257343)),
-				Sender:   fromAddr, Funds: sdk.NewCoins(sdk.NewCoin("inputDenom", osmomath.NewInt(100)))},
+				Sender:   fromAddr, Funds: sdk.NewCoins(sdk.NewCoin("inputDenom", osmomath.NewInt(100))),
+			},
 			true,
 			true,
 		},
-		{"place limit order error, no contract address",
+		{
+			"place limit order error, no contract address",
 			fmt.Sprintf(`{"@type":"/cosmwasm.wasm.v1.MsgExecuteContract", "sender":"%s", "msg": {"place_limit": { "claim_bounty": "", "order_direction": ""}}, "contract": ""}`, fromAddr),
 			&types.MsgExecuteContract{
 				Contract: "",
 				Msg:      []byte(fmt.Sprintf(`{"place_limit": { "claim_bounty": "%s", "order_direction": "%s", "quantity": "%s", "tick_id": %d}}`, "0.0001", "bid", "47612515", -5257343)),
-				Sender:   fromAddr, Funds: sdk.NewCoins(sdk.NewCoin("inputDenom", osmomath.NewInt(100)))},
+				Sender:   fromAddr, Funds: sdk.NewCoins(sdk.NewCoin("inputDenom", osmomath.NewInt(100))),
+			},
 			true,
 			false,
 		},
-		{"place limit order error, restricted message",
+		{
+			"place limit order error, restricted message",
 			fmt.Sprintf(`{"@type":"/cosmwasm.wasm.v1.MsgExecuteContract", "msg": {"place_limit": { "claim_bounty": "", "order_direction": "", "quantity": "", "tick_id": "0"}}}`),
 			&types.MsgExecuteContract{
 				Contract: "",
 				Msg:      []byte(fmt.Sprintf(`{"place_limit": { "claim_bounty": "%s", "order_direction": "%s", "quantity": "%s", "tick_id": %d}}`, "0.0001", "bid", "47612515", -5257343)),
-				Sender:   fromAddr, Funds: sdk.NewCoins(sdk.NewCoin("inputDenom", osmomath.NewInt(100)))},
+				Sender:   fromAddr, Funds: sdk.NewCoins(sdk.NewCoin("inputDenom", osmomath.NewInt(100))),
+			},
 			true,
 			false,
 		},

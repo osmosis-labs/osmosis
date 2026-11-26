@@ -78,6 +78,7 @@ func TestBinarySearch(t *testing.T) {
 func lineF(a BigDec) BigDec {
 	return a
 }
+
 func cubicF(a BigDec) BigDec {
 	return a.PowerInteger(3)
 }
@@ -119,7 +120,8 @@ func TestBinarySearchLineIterationCounts(t *testing.T) {
 	tests := map[string]binarySearchTestCase{}
 
 	generateExactTestCases := func(lowerbound, upperbound BigDec,
-		errTolerance ErrTolerance, maxNumIters int) {
+		errTolerance ErrTolerance, maxNumIters int,
+	) {
 		tcSetName := fmt.Sprintf("simple linear case: lower %s, upper %s", lowerbound.String(), upperbound.String())
 		// first pass get it working with no err tolerance or rounding direction
 		target := lowerbound.Add(upperbound).QuoRaw(2)
@@ -159,7 +161,8 @@ func TestIterationDepthRandValue(t *testing.T) {
 	within32 := ErrTolerance{AdditiveTolerance: OneDec().Mul(NewDec(32))}
 
 	createRandInput := func(fnName string, lowerbound, upperbound int64,
-		errTolerance ErrTolerance, maxNumIters int, errToleranceName string) {
+		errTolerance ErrTolerance, maxNumIters int, errToleranceName string,
+	) {
 		targetF := fnMap[fnName]
 		targetX := int64(rand.Intn(int(upperbound-lowerbound-1))) + lowerbound + 1
 		target := targetF(NewBigDec(targetX))
@@ -204,7 +207,8 @@ func withRoundingDir(e ErrTolerance, r RoundingDirection) ErrTolerance {
 }
 
 func runBinarySearchTestCases(t *testing.T, tests map[string]binarySearchTestCase,
-	equality equalityMode) {
+	equality equalityMode,
+) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			actualSolvedInput, err := BinarySearchBigDec(
@@ -247,7 +251,8 @@ func TestBinarySearchBigDec(t *testing.T) {
 			cubicF,
 			zero, twoTo50,
 			NewBigDec((1 << 33) - (1 << 29)),
-			testErrToleranceAdditive, 51, NewBigDec(1 << 11), false},
+			testErrToleranceAdditive, 51, NewBigDec(1 << 11), false,
+		},
 		// basically same as above, but due to needing to roundup, we converge at a value > 2^11.
 		// We try (1<<11 + 1<<10)^3 which is way too large.
 		// notice by trial, that (1 << 11 + 1<<7)^3 - target > 2^30, but that
@@ -257,18 +262,23 @@ func TestBinarySearchBigDec(t *testing.T) {
 			zero, twoTo50,
 			NewBigDec((1 << 33) + (1 << 29)),
 			withRoundingDir(testErrToleranceAdditive, RoundUp),
-			51, NewBigDec(1<<11 + 1<<6), false},
+			51, NewBigDec(1<<11 + 1<<6), false,
+		},
 		"cubic f, large multiplicative err tolerance, converges": {
 			cubicF,
 			zero, twoTo50,
-			NewBigDec(1 << 30), withinFactor8, 51, NewBigDec(1 << 11), false},
+			NewBigDec(1 << 30), withinFactor8, 51, NewBigDec(1 << 11), false,
+		},
 		"cubic f, both err tolerances, converges": {
 			cubicF,
 			zero, twoTo50,
 			NewBigDec((1 << 33) - (1 << 29)),
-			errToleranceBoth, 51, NewBigDec(1 << 11), false},
-		"neg cubic f, no err tolerance, converges": {negCubicF, zero, twoTo50,
-			twoTo25PlusOneCubed.Add(negCubicFConstant), withinOne, 51, twoTo25PlusOne, false},
+			errToleranceBoth, 51, NewBigDec(1 << 11), false,
+		},
+		"neg cubic f, no err tolerance, converges": {
+			negCubicF, zero, twoTo50,
+			twoTo25PlusOneCubed.Add(negCubicFConstant), withinOne, 51, twoTo25PlusOne, false,
+		},
 		// "neg cubic f, large multiplicative err tolerance, converges": {
 		// 	negCubicF,
 		// 	zero, twoTo50,
@@ -287,30 +297,38 @@ func TestBinarySearchRoundingBehavior(t *testing.T) {
 	// twoTo25PlusOneCubed := twoTo25PlusOne.Power(3)
 
 	tests := map[string]binarySearchTestCase{
-		"lineF, roundup within 2^30, target 2^32 + 2^30 + 1, expected=2^32 + 2^31": {f: lineF,
+		"lineF, roundup within 2^30, target 2^32 + 2^30 + 1, expected=2^32 + 2^31": {
+			f:          lineF,
 			lowerbound: zero, upperbound: twoTo50,
 			targetOutput:        NewBigDec((1 << 32) + (1 << 30) + 1),
 			errTolerance:        withRoundingDir(withinTwoTo30, RoundUp),
 			maxIterations:       51,
-			expectedSolvedInput: NewBigDec(1<<32 + 1<<31)},
-		"lineF, roundup within 2^30, target 2^32 + 2^30 - 1, expected=2^32 + 2^30": {f: lineF,
+			expectedSolvedInput: NewBigDec(1<<32 + 1<<31),
+		},
+		"lineF, roundup within 2^30, target 2^32 + 2^30 - 1, expected=2^32 + 2^30": {
+			f:          lineF,
 			lowerbound: zero, upperbound: twoTo50,
 			targetOutput:        NewBigDec((1 << 32) + (1 << 30) - 1),
 			errTolerance:        withRoundingDir(withinTwoTo30, RoundUp),
 			maxIterations:       51,
-			expectedSolvedInput: NewBigDec(1<<32 + 1<<30)},
-		"lineF, rounddown within 2^30, target 2^32 + 2^30 + 1, expected=2^32 + 2^31": {f: lineF,
+			expectedSolvedInput: NewBigDec(1<<32 + 1<<30),
+		},
+		"lineF, rounddown within 2^30, target 2^32 + 2^30 + 1, expected=2^32 + 2^31": {
+			f:          lineF,
 			lowerbound: zero, upperbound: twoTo50,
 			targetOutput:        NewBigDec((1 << 32) + (1 << 30) + 1),
 			errTolerance:        withRoundingDir(withinTwoTo30, RoundDown),
 			maxIterations:       51,
-			expectedSolvedInput: NewBigDec(1<<32 + 1<<30)},
-		"lineF, rounddown within 2^30, target 2^32 + 2^30 - 1, expected=2^32 + 2^30": {f: lineF,
+			expectedSolvedInput: NewBigDec(1<<32 + 1<<30),
+		},
+		"lineF, rounddown within 2^30, target 2^32 + 2^30 - 1, expected=2^32 + 2^30": {
+			f:          lineF,
 			lowerbound: zero, upperbound: twoTo50,
 			targetOutput:        NewBigDec((1 << 32) + (1 << 30) - 1),
 			errTolerance:        withRoundingDir(withinTwoTo30, RoundDown),
 			maxIterations:       51,
-			expectedSolvedInput: NewBigDec(1 << 32)},
+			expectedSolvedInput: NewBigDec(1 << 32),
+		},
 	}
 
 	runBinarySearchTestCases(t,
@@ -343,8 +361,10 @@ func TestErrTolerance_Compare(t *testing.T) {
 		{"Nonzero multiplicative tolerance out of bounds: <", NonZeroErrMultiplicative, 100000, 1001, 1},
 		{"Nonzero multiplicative tolerance out of bounds: =", NonZeroErrMultiplicative, 100100, 1001, 1},
 		{"Nonzero multiplicative tolerance out of bounds: >", NonZeroErrMultiplicative, 100200, 1001, 1},
-		{"multiplicative tolerance with negative: >", NonZeroErrMultiplicative,
-			-20020, -1001, -1},
+		{
+			"multiplicative tolerance with negative: >", NonZeroErrMultiplicative,
+			-20020, -1001, -1,
+		},
 		{"Nonzero both tolerance: <", NonZeroErrBoth, 990, 1001, -1},
 		{"Nonzero both tolerance: =", NonZeroErrBoth, 1002, 1001, 0},
 		{"Nonzero both tolerance: >", NonZeroErrBoth, 1011, 1001, 1},

@@ -38,6 +38,6 @@ var OsmosisInitFns = simexec.InitFunctions{
 type emptyAppOptions struct{}
 
 // Get implements AppOptions
-func (ao emptyAppOptions) Get(o string) interface{} {
+func (ao emptyAppOptions) Get(o string) any {
 	return nil
 }
