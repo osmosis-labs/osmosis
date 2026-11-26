@@ -13,6 +13,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	cosmwasmutils "github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
 	v3 "github.com/osmosis-labs/osmosis/v32/x/cosmwasmpool/cosmwasm/msg/v3"
 	"github.com/osmosis-labs/osmosis/v32/x/poolmanager/types"
 )
@@ -419,19 +420,20 @@ func (k Keeper) getAllRegisteredAlloyedPoolsIdArray(ctx sdk.Context) ([]uint64, 
 // Helpers
 //
 
+// queryAlloyedPoolContract sends a smart query to an alloyed pool contract and unmarshals the response.
+// The query runs on its own gas meter, capped at the wasm query gas limit, and a panic in the contract call is
+// returned as an error. These queries also run in EndBlock, where the gas meter is infinite and nothing
+// recovers a panic.
+func queryAlloyedPoolContract[K any](ctx sdk.Context, wasmKeeper types.WasmKeeper, contractAddr sdk.AccAddress, query string) (K, error) {
+	return cosmwasmutils.Query[json.RawMessage, K](ctx, wasmKeeper, contractAddr.String(), json.RawMessage(query))
+}
+
 // queryAndCheckAlloyedDenom queries the smart contract for the alloyed denomination and validates its format.
 // It sends a query to the contract address to get the share denomination, then checks if the denomination
 // follows the expected format "factory/{contractAddr}/alloyed/{denom}".
 // Returns the alloyed denomination if valid, otherwise returns an error.
 func (k Keeper) queryAndCheckAlloyedDenom(ctx sdk.Context, contractAddr sdk.AccAddress) (string, error) {
-	queryBz := []byte(`{"get_share_denom": {}}`)
-	respBz, err := k.wasmKeeper.QuerySmart(ctx, contractAddr, queryBz)
-	if err != nil {
-		return "", err
-	}
-
-	var response v3.ShareDenomResponse
-	err = json.Unmarshal(respBz, &response)
+	response, err := queryAlloyedPoolContract[v3.ShareDenomResponse](ctx, k.wasmKeeper, contractAddr, `{"get_share_denom": {}}`)
 	if err != nil {
 		return "", err
 	}
@@ -484,14 +486,8 @@ func (k Keeper) snapshotTakerFeeShareAlloyComposition(ctx sdk.Context, contractA
 // It sends a query to the contract address and unmarshals the response into a slice of sdk.Coin.
 // Returns the total pool liquidity if successful, otherwise returns an error.
 func (k Keeper) queryTotalPoolLiquidity(ctx sdk.Context, contractAddr sdk.AccAddress) ([]sdk.Coin, error) {
-	queryBz := []byte(`{"get_total_pool_liquidity": {}}`)
-	respBz, err := k.wasmKeeper.QuerySmart(ctx, contractAddr, queryBz)
+	liquidityResponse, err := queryAlloyedPoolContract[v3.TotalPoolLiquidityResponse](ctx, k.wasmKeeper, contractAddr, `{"get_total_pool_liquidity": {}}`)
 	if err != nil {
-		return nil, err
-	}
-
-	var liquidityResponse v3.TotalPoolLiquidityResponse
-	if err := json.Unmarshal(respBz, &liquidityResponse); err != nil {
 		return nil, err
 	}
 
@@ -502,14 +498,8 @@ func (k Keeper) queryTotalPoolLiquidity(ctx sdk.Context, contractAddr sdk.AccAdd
 // It sends a query to the contract address and unmarshals the response into a slice of v3.AssetConfig.
 // Returns the asset configurations if successful, otherwise returns an error.
 func (k Keeper) queryAssetConfigs(ctx sdk.Context, contractAddr sdk.AccAddress) ([]v3.AssetConfig, error) {
-	queryBz := []byte(`{"list_asset_configs": {}}`)
-	respBz, err := k.wasmKeeper.QuerySmart(ctx, contractAddr, queryBz)
+	assetConfigsResponse, err := queryAlloyedPoolContract[v3.ListAssetConfigsResponse](ctx, k.wasmKeeper, contractAddr, `{"list_asset_configs": {}}`)
 	if err != nil {
-		return nil, err
-	}
-
-	var assetConfigsResponse v3.ListAssetConfigsResponse
-	if err := json.Unmarshal(respBz, &assetConfigsResponse); err != nil {
 		return nil, err
 	}
 
