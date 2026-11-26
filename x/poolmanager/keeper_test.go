@@ -8,12 +8,15 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
+	"cosmossdk.io/core/appmodule"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v32/app/apptesting"
 	appparams "github.com/osmosis-labs/osmosis/v32/app/params"
 	"github.com/osmosis-labs/osmosis/v32/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v32/x/gamm/types"
 	poolmanager "github.com/osmosis-labs/osmosis/v32/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v32/x/poolmanager/types"
 )
@@ -345,6 +348,64 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 			s.Require().Equal(tc.expectedCachedRegisteredAlloyPoolByAlloyDenomMap, cachedRegisteredAlloyPoolByAlloyDenomMap)
 		})
 	}
+}
+
+// TestAppModuleUsesWiredKeeper tests that the poolmanager AppModule registered in the app operates on the same
+// keeper instance that the other modules are wired with. The taker fee share caches live on that instance and
+// their maps are re-assigned in BeginBlock, so an agreement set through the module's message server must be
+// visible to, and skimmed by, a swap that enters through another module (x/gamm here).
+func (s *KeeperTestSuite) TestAppModuleUsesWiredKeeper() {
+	s.SetupTest()
+
+	var (
+		takerFeeShareDenom = apptesting.FOO
+		tokenIn            = sdk.NewCoin(takerFeeShareDenom, osmomath.NewInt(100_000))
+		// The 1% taker fee on tokenIn is 1_000, of which 10% is skimmed.
+		expectedAccruedValue = osmomath.NewInt(100)
+	)
+
+	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
+	poolManagerParams.TakerFeeParams.DefaultTakerFee = osmomath.MustNewDecFromStr("0.01")
+	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
+	poolId := s.PrepareBalancerPool()
+
+	// Run BeginBlock of the module registered in the app, which rebuilds the caches from state.
+	beginBlocker, ok := s.App.ModuleManager().Modules[types.ModuleName].(appmodule.HasBeginBlocker)
+	s.Require().True(ok)
+	s.Require().NoError(beginBlocker.BeginBlock(s.Ctx))
+
+	// Set the agreement through the app's message router, that is the module's message server.
+	s.routeMsg(&types.MsgSetTakerFeeShareAgreementForDenom{
+		Sender:      s.App.AccountKeeper.GetModuleAddress(govtypes.ModuleName).String(),
+		Denom:       takerFeeShareDenom,
+		SkimPercent: osmomath.MustNewDecFromStr("0.1"),
+		SkimAddress: s.TestAccs[1].String(),
+	})
+
+	// The keeper the other modules are wired with must see the agreement in its cache.
+	_, found := s.App.PoolManagerKeeper.GetTakerFeeShareAgreementFromDenomUNSAFE(takerFeeShareDenom)
+	s.Require().True(found, "agreement set through the module is missing from the cache of the keeper wired into other modules")
+
+	// Swap through x/gamm, which routes through the keeper it is wired with.
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(tokenIn))
+	s.routeMsg(&gammtypes.MsgSwapExactAmountIn{
+		Sender:            s.TestAccs[0].String(),
+		Routes:            []types.SwapAmountInRoute{{PoolId: poolId, TokenOutDenom: apptesting.BAR}},
+		TokenIn:           tokenIn,
+		TokenOutMinAmount: osmomath.OneInt(),
+	})
+
+	accruedValue, err := s.App.PoolManagerKeeper.GetTakerFeeShareDenomsToAccruedValue(s.Ctx, takerFeeShareDenom, tokenIn.Denom)
+	s.Require().NoError(err)
+	s.Require().Equal(expectedAccruedValue.String(), accruedValue.String())
+}
+
+// routeMsg executes msg through the app's message service router and requires that it succeeds.
+func (s *KeeperTestSuite) routeMsg(msg sdk.Msg) {
+	handler := s.App.MsgServiceRouter().Handler(msg)
+	s.Require().NotNil(handler, "no handler registered for %T", msg)
+	_, err := handler(s.Ctx, msg)
+	s.Require().NoError(err)
 }
 
 // TestEndBlock tests the behavior of the EndBlock method in the PoolManagerKeeper.

@@ -157,6 +157,12 @@ func (e *EipState) updateBaseFee(height int64) {
 	// tx prior to the eip startBlock being called (which is a begin block call).
 	e.currentBlockHeight = height + 1
 
+	// The target gas is the divisor below. Without a positive target gas there is nothing
+	// to measure the block against, so the base fee is left unchanged.
+	if TargetGas <= 0 {
+		return
+	}
+
 	gasUsed := e.totalGasWantedThisBlock
 	gasDiff := gasUsed - TargetGas
 	//  (gasUsed - targetGas) / targetGas * maxChangeRate
