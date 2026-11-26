@@ -266,11 +266,7 @@ mod test {
         };
 
         let msg = ExecuteMsg::EditPathQuota {
-            quota: QuotaMsg {
-                name: "name".into(),
-                duration: 0,
-                send_recv: (1, 2),
-            },
+            quota: QuotaMsg::new("name", 0, 1, 2),
             channel_id: "channel_id".into(),
             denom: "denom".into(),
         };

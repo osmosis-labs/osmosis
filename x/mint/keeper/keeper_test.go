@@ -220,7 +220,7 @@ func (s *KeeperTestSuite) TestDistributeMintedCoin() {
 			params.WeightedDeveloperRewardsReceivers = tc.weightedAddresses
 			mintKeeper.SetParams(ctx, params)
 
-			expectedCommunityPoolAmount := mintAmount.Mul((params.DistributionProportions.CommunityPool))
+			expectedCommunityPoolAmount := mintAmount.Mul(params.DistributionProportions.CommunityPool)
 			expectedDevRewardsAmount := mintAmount.Mul(params.DistributionProportions.DeveloperRewards)
 			expectedStakingAmount := tc.mintCoin.Amount.ToLegacyDec().Mul(params.DistributionProportions.Staking)
 

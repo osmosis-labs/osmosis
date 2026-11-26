@@ -57,7 +57,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 }
 
 // validateFeeSwapIntermediaryDenomList validates the fee swap intermediary denom list parameter.
-func validateFeeSwapIntermediaryDenomList(i interface{}) error {
+func validateFeeSwapIntermediaryDenomList(i any) error {
 	v, ok := i.([]string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

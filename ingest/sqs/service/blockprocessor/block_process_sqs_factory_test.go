@@ -21,7 +21,6 @@ func TestSQSServiceTestSuite(t *testing.T) {
 }
 
 func (suite *SQSBlockProcessorTestSuite) TestNewBlockProcessor() {
-
 	tests := []struct {
 		name string
 
@@ -43,7 +42,6 @@ func (suite *SQSBlockProcessorTestSuite) TestNewBlockProcessor() {
 
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
-
 			// Initialize mock inputs that do not affect the test
 			nodeStatusCheckerMock := &commonmocks.NodeStatusCheckerMock{}
 			poolsExtracter := &commonmocks.PoolsExtractorMock{}

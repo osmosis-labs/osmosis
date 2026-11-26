@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -174,13 +175,7 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 			durations = k.GetLockableDurations(ctx)
 		}
 
-		durationOk := false
-		for _, duration := range durations {
-			if duration == distrTo.Duration {
-				durationOk = true
-				break
-			}
-		}
+		durationOk := slices.Contains(durations, distrTo.Duration)
 		if !durationOk {
 			return 0, fmt.Errorf("invalid duration: %d", distrTo.Duration)
 		}

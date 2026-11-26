@@ -23,7 +23,7 @@ type TransitionMatrix struct {
 // TODO: Provide example usage
 func CreateTransitionMatrix(weights [][]int) (simulation.TransitionMatrix, error) {
 	n := len(weights)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		if len(weights[i]) != n {
 			return TransitionMatrix{},
 				fmt.Errorf("transition matrix: non-square matrix provided, error on row %d", i)
@@ -32,8 +32,8 @@ func CreateTransitionMatrix(weights [][]int) (simulation.TransitionMatrix, error
 
 	totals := make([]int, n)
 
-	for row := 0; row < n; row++ {
-		for col := 0; col < n; col++ {
+	for row := range n {
+		for col := range n {
 			totals[col] += weights[row][col]
 		}
 	}
@@ -62,13 +62,13 @@ func GetMemberOfInitialState(r *rand.Rand, weights []int) int {
 	n := len(weights)
 	total := 0
 
-	for i := 0; i < n; i++ {
+	for i := range n {
 		total += weights[i]
 	}
 
 	randNum := r.Intn(total)
 
-	for state := 0; state < n; state++ {
+	for state := range n {
 		if randNum < weights[state] {
 			return state
 		}

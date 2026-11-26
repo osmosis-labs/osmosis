@@ -15,6 +15,7 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -67,6 +68,56 @@ func (s *UpgradeTestSuite) SetupTest() {
 	s.Setup()
 	s.preModule = upgrade.NewAppModule(s.App.UpgradeKeeper, addresscodec.NewBech32Codec("osmo"))
 	s.Ctx = s.Ctx.WithBlockTime(upgradeBlockTime)
+}
+
+func (s *UpgradeTestSuite) TestOsmoBurnTransfer() {
+	// The recipient must be the 20-byte null address, independently of the upgrade constant.
+	s.Require().Equal(sdk.AccAddress(make([]byte, 20)).String(), v33.OsmoBurnAddress)
+
+	for _, tc := range []struct {
+		name    string
+		chainID string
+		amounts [2]int64
+		move    bool
+	}{
+		{"mainnet balance", v33.MainnetChainID, [2]int64{123_456_789, 987_654_321}, true},
+		{"empty mainnet balance", v33.MainnetChainID, [2]int64{}, true},
+		{"empty first source", v33.MainnetChainID, [2]int64{0, 123_456_789}, true},
+		{"empty second source", v33.MainnetChainID, [2]int64{123_456_789, 0}, true},
+		{"other chain", "osmo-test-a", [2]int64{123_456_789, 987_654_321}, false},
+	} {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			s.Ctx = s.Ctx.WithChainID(tc.chainID)
+			to := sdk.MustAccAddressFromBech32(v33.OsmoBurnAddress)
+			for i, source := range v33.OsmoBurnSourceAddresses {
+				from := sdk.MustAccAddressFromBech32(source)
+				s.FundAcc(from, sdk.NewCoins(sdk.NewInt64Coin("uion", 42)))
+				if tc.amounts[i] > 0 {
+					s.FundAcc(from, sdk.NewCoins(sdk.NewInt64Coin("uosmo", tc.amounts[i])))
+				}
+			}
+			s.FundAcc(to, sdk.NewCoins(sdk.NewInt64Coin("uosmo", 7)))
+			supplyBefore := s.App.BankKeeper.GetSupply(s.Ctx, "uosmo")
+
+			s.runUpgrade()
+
+			totalMoved := int64(0)
+			for i, source := range v33.OsmoBurnSourceAddresses {
+				from := sdk.MustAccAddressFromBech32(source)
+				moved := int64(0)
+				if tc.move {
+					moved = tc.amounts[i]
+				}
+				totalMoved += moved
+				s.Require().Equal(osmomath.NewInt(tc.amounts[i]-moved), s.App.BankKeeper.GetBalance(s.Ctx, from, "uosmo").Amount)
+				s.Require().Equal(osmomath.NewInt(42), s.App.BankKeeper.GetBalance(s.Ctx, from, "uion").Amount)
+			}
+			s.Require().Equal(osmomath.NewInt(7+totalMoved), s.App.BankKeeper.GetBalance(s.Ctx, to, "uosmo").Amount)
+			// Sending to the null address preserves bank supply; it is not BurnCoins.
+			s.Require().Equal(supplyBefore, s.App.BankKeeper.GetSupply(s.Ctx, "uosmo"))
+		})
+	}
 }
 
 // TestHuahuaRecovery runs the v33 upgrade on the mainnet gauge state and checks the recovered amounts,
@@ -304,6 +355,79 @@ func (s *UpgradeTestSuite) communityPool() sdk.DecCoins {
 	feePool, err := s.App.DistrKeeper.FeePool.Get(s.Ctx)
 	s.Require().NoError(err)
 	return feePool.CommunityPool
+}
+
+// TestRaiseMinCommission checks that the upgrade sets the 10% minimum and raises every validator
+// below it, bypassing the max_change_rate and 24h limits, while leaving the others untouched.
+func (s *UpgradeTestSuite) TestRaiseMinCommission() {
+	dec := osmomath.MustNewDecFromStr
+	lastEdit := upgradeBlockTime.Add(-time.Hour)
+
+	tests := []struct {
+		name                         string
+		status                       stakingtypes.BondStatus
+		rate, maxRate, maxChangeRate string
+		wantRate, wantMaxRate        string
+		raised                       bool
+	}{
+		// Most mainnet validators: 5%, and a max_change_rate too small to reach 10% in one edit.
+		{"below the floor", stakingtypes.Bonded, "0.05", "0.20", "0.01", "0.10", "0.20", true},
+		// Mad Scientists on mainnet: max_rate 0.05, so max_rate must be raised too.
+		{"max_rate below the floor", stakingtypes.Bonded, "0.05", "0.05", "0.01", "0.10", "0.10", true},
+		{"unbonded below the floor", stakingtypes.Unbonded, "0", "0.01", "0.01", "0.10", "0.10", true},
+		{"at the floor", stakingtypes.Bonded, "0.10", "0.20", "0.01", "0.10", "0.20", false},
+		{"above the floor", stakingtypes.Unbonding, "0.15", "1", "0.10", "0.15", "1", false},
+	}
+
+	s.Ctx = s.Ctx.WithChainID("osmo-test-a")
+	valAddrs := make([]sdk.ValAddress, len(tests))
+	for i, tc := range tests {
+		valAddrs[i] = s.SetupValidator(tc.status)
+		val, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrs[i])
+		s.Require().NoError(err)
+		val.Commission = stakingtypes.NewCommissionWithTime(dec(tc.rate), dec(tc.maxRate), dec(tc.maxChangeRate), lastEdit)
+		s.Require().NoError(s.App.StakingKeeper.SetValidator(s.Ctx, val))
+	}
+
+	s.runUpgrade()
+
+	params, err := s.App.StakingKeeper.GetParams(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(v33.MinCommissionRate, params.MinCommissionRate)
+
+	raisedEvents := map[string]bool{}
+	for _, ev := range s.Ctx.EventManager().Events() {
+		if ev.Type != v33.EventTypeMinCommissionRaised {
+			continue
+		}
+		for _, attr := range ev.Attributes {
+			if attr.Key == v33.AttributeKeyValidator {
+				raisedEvents[attr.Value] = true
+			}
+		}
+	}
+
+	for i, tc := range tests {
+		val, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrs[i])
+		s.Require().NoError(err, tc.name)
+		s.Require().Equal(dec(tc.wantRate), val.Commission.Rate, tc.name)
+		s.Require().Equal(dec(tc.wantMaxRate), val.Commission.MaxRate, tc.name)
+		s.Require().Equal(dec(tc.maxChangeRate), val.Commission.MaxChangeRate, tc.name)
+		s.Require().Equal(tc.status, val.Status, tc.name)
+		s.Require().Equal(tc.raised, raisedEvents[val.OperatorAddress], tc.name)
+		if tc.raised {
+			s.Require().Equal(s.Ctx.BlockTime(), val.Commission.UpdateTime, tc.name)
+		} else {
+			s.Require().Equal(lastEdit, val.Commission.UpdateTime, tc.name)
+		}
+	}
+
+	// No validator is left below the floor, including the genesis validator.
+	vals, err := s.App.StakingKeeper.GetAllValidators(s.Ctx)
+	s.Require().NoError(err)
+	for _, val := range vals {
+		s.Require().True(val.Commission.Rate.GTE(v33.MinCommissionRate), val.OperatorAddress)
+	}
 }
 
 // prepareMainnetHuahuaGauges writes gauges 1954-1959 exactly as they are on mainnet, including the

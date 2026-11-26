@@ -45,7 +45,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	}
 }
 
-func ValidateMinimumRiskFactor(i interface{}) error {
+func ValidateMinimumRiskFactor(i any) error {
 	v, ok := i.(osmomath.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -58,7 +58,7 @@ func ValidateMinimumRiskFactor(i interface{}) error {
 	return nil
 }
 
-func ValidateUnbondingDuration(i interface{}) error {
+func ValidateUnbondingDuration(i any) error {
 	v, ok := i.(time.Duration)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

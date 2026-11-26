@@ -1,15 +1,15 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, Uint256};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[cfg(test)]
-use cosmwasm_std::Uint256;
-
 use crate::{packet::Packet, state::rbac::Roles};
 
-// PathMsg contains a channel_id and denom to represent a unique identifier within ibc-go, and a list of rate limit quotas
+// PathMsg contains a channel_id and denom to represent a unique identifier within ibc-go, and a list of rate limit quotas.
+// Unknown fields are rejected so a misspelled key in a governance proposal fails
+// instead of silently configuring something other than what was intended.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct PathMsg {
     pub channel_id: String,
     pub denom: String,
@@ -30,21 +30,65 @@ impl PathMsg {
     }
 }
 
-// QuotaMsg represents a rate limiting Quota when sent as a wasm msg
+// QuotaMsg represents a rate limiting Quota when sent as a wasm msg.
+// Unknown fields are rejected: every field here is a bound, and a misspelled
+// one would otherwise be dropped and leave the quota looser than intended.
+//
+// Each direction (send, recv) needs at least one bound: a percentage of the
+// denom's channel value at the start of the window, an absolute amount in the
+// denom's base units, or both. When both are set a transfer must satisfy both.
+// Percentages above 100 are allowed only together with an absolute bound in
+// the same direction.
+//
+// `send_recv: [30, 30]` as written by every proposal so far still parses. A
+// `null` entry means no percentage bound in that direction, and the absolute
+// fields may be omitted.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct QuotaMsg {
     pub name: String,
     pub duration: u64,
-    pub send_recv: (u32, u32),
+    #[serde(default)]
+    pub send_recv: (Option<u32>, Option<u32>),
+    #[serde(default)]
+    pub max_absolute_send: Option<Uint256>,
+    #[serde(default)]
+    pub max_absolute_recv: Option<Uint256>,
 }
 
 impl QuotaMsg {
+    /// A quota bounded by percentages of the channel value in each direction
     pub fn new(name: &str, seconds: u64, send_percentage: u32, recv_percentage: u32) -> Self {
         QuotaMsg {
             name: name.to_string(),
             duration: seconds,
-            send_recv: (send_percentage, recv_percentage),
+            send_recv: (Some(send_percentage), Some(recv_percentage)),
+            max_absolute_send: None,
+            max_absolute_recv: None,
         }
+    }
+
+    /// A quota bounded only by absolute amounts, in the denom's base units
+    pub fn absolute(
+        name: &str,
+        seconds: u64,
+        max_send: Option<Uint256>,
+        max_recv: Option<Uint256>,
+    ) -> Self {
+        QuotaMsg {
+            name: name.to_string(),
+            duration: seconds,
+            send_recv: (None, None),
+            max_absolute_send: max_send,
+            max_absolute_recv: max_recv,
+        }
+    }
+
+    /// Adds absolute bounds, in the denom's base units, on top of the percentages
+    pub fn with_absolute(mut self, max_send: Option<Uint256>, max_recv: Option<Uint256>) -> Self {
+        self.max_absolute_send = max_send;
+        self.max_absolute_recv = max_recv;
+        self
     }
 }
 
@@ -120,6 +164,22 @@ pub enum ExecuteMsg {
         count: Option<u64>,
         message_ids: Option<Vec<String>>,
     },
+    /// Permissionless. Removes tracker entries that hold no quotas, which
+    /// versions before 0.2.0 wrote for every (channel, denom) pair they saw.
+    /// Bounded, so state left behind can never make a call exceed its gas.
+    /// Returns the last key scanned so the next call can continue from it.
+    PurgeEmptyPaths {
+        start_after: Option<(String, String)>,
+        limit: u32,
+    },
+    /// Permissionless. Removes pending-send records whose retention has ended
+    /// (their windows are over and the packet could no longer be re-sent).
+    /// Walks the retention index; `start_after` is the `last_key` of the
+    /// previous call as (channel, retain_until in nanoseconds, content key).
+    PurgeStaleSends {
+        start_after: Option<(String, u64, String)>,
+        limit: u32,
+    },
 }
 
 #[cw_serde]
@@ -144,6 +204,10 @@ pub enum QueryMsg {
     GetDenomRestrictions { denom: String },
 }
 
+/// Messages only the chain sends. SendPacket is called before the packet is
+/// committed, so its sequence is 0 and the destination is not filled in;
+/// UndoSend carries the committed packet. The contract matches the two on the
+/// content that is the same in both (see Packet::send_key).
 #[cw_serde]
 pub enum SudoMsg {
     SendPacket {
@@ -156,9 +220,11 @@ pub enum SudoMsg {
         #[cfg(test)]
         channel_value_mock: Option<Uint256>,
     },
-    UndoSend {
-        packet: Packet,
-    },
+    /// Sent by the chain when a send fails (error acknowledgement or timeout).
+    /// Refunds the send to each quota that is still in the window the send
+    /// was counted in and settles its record; a packet with no record refunds
+    /// nothing.
+    UndoSend { packet: Packet },
 }
 
 #[cw_serde]
@@ -182,16 +248,19 @@ impl ExecuteMsg {
             Self::RemoveMessage { .. } => Some(Roles::RemoveMessage),
             Self::SetTimelockDelay { .. } => Some(Roles::SetTimelockDelay),
             Self::ProcessMessages { .. } => None,
+            Self::PurgeEmptyPaths { .. } => None,
+            Self::PurgeStaleSends { .. } => None,
         }
     }
     /// Checks to see if the message type is able to skip queueing.
     ///
-    /// This is limited to the message type responsible for processing the queue
+    /// This is limited to the permissionless housekeeping messages
     pub fn skip_queue(&self) -> bool {
-        #[allow(clippy::match_like_matches_macro)]
-        match self {
-            Self::ProcessMessages { .. } => true,
-            _ => false,
-        }
+        matches!(
+            self,
+            Self::ProcessMessages { .. }
+                | Self::PurgeEmptyPaths { .. }
+                | Self::PurgeStaleSends { .. }
+        )
     }
 }

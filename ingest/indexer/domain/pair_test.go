@@ -19,7 +19,6 @@ func TestPairTestSuite(t *testing.T) {
 
 // TestShouldFilterDenom tests the ShouldFilterDenom function.
 func (suite *PairTestSuite) TestShouldFilterDenom() {
-
 	tests := []struct {
 		name                      string
 		poolDenom                 string

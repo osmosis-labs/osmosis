@@ -378,7 +378,7 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 			return err
 		}
 		ctx.Logger().Debug("Finished sending, now creating liquidity add events")
-		for id := 0; id < numIDs; id++ {
+		for id := range numIDs {
 			ctx.EventManager().EmitEvents(sdk.Events{
 				sdk.NewEvent(
 					types.TypeEvtDistribution,
@@ -426,7 +426,6 @@ func (k Keeper) distributeSyntheticInternal(
 	// take the address of &v.
 	// nolint: exportloopref
 	for _, v := range qualifiedLocksMap {
-		v := v
 		if v.index < 0 {
 			continue
 		}
@@ -648,7 +647,6 @@ func (k Keeper) distributeInternal(
 	if gauge.DistributeTo.LockQueryType == lockuptypes.NoLock {
 		ctx.Logger().Debug("distributeInternal NoLock gauge", "module", types.ModuleName, "gaugeId", gauge.Id, "height", ctx.BlockHeight())
 		pool, err := k.GetPoolFromGaugeId(ctx, gauge.Id, gauge.DistributeTo.Duration)
-
 		if err != nil {
 			return nil, err
 		}

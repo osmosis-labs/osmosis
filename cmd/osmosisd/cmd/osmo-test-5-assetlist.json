@@ -1,736 +1,964 @@
 {
-  "chain_name": "osmosistestnet",
   "assets": [
     {
-      "description": "The native token of Osmosis",
-      "denom_units": [
-        {
-          "denom": "uosmo",
-          "exponent": 0,
-          "aliases": []
-        },
-        {
-          "denom": "osmo",
-          "exponent": 6,
-          "aliases": []
-        }
-      ],
-      "base": "uosmo",
-      "name": "Osmosis Testnet",
-      "display": "osmo",
       "symbol": "OSMO",
-      "traces": [],
-      "logo_URIs": {
-        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/osmo.png",
-        "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/osmo.svg"
-      },
-      "coingecko_id": "osmosis",
-      "keywords": [
-        "dex",
-        "staking",
-        "osmosis-main",
-        "osmosis-price:ibc/1587E7B54FC9EFDA2350DC690EC2F9B9ECEB6FC31CF11884F9C0C5207ABE3921:310"
-      ]
+      "coinMinimalDenom": "uosmo",
+      "sourceDenom": "uosmo",
+      "decimals": 6
     },
     {
-      "denom_units": [
-        {
-          "denom": "uion",
-          "exponent": 0
-        },
-        {
-          "denom": "ion",
-          "exponent": 6
-        }
-      ],
-      "base": "uion",
-      "name": "Ion",
-      "display": "ion",
       "symbol": "ION",
-      "traces": [],
-      "logo_URIs": {
-        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/ion.png",
-        "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/ion.svg"
-      },
-      "coingecko_id": "ion",
-      "keywords": [
-        "memecoin",
-        "osmosis-main",
-        "osmosis-price:uosmo:1"
-      ]
+      "coinMinimalDenom": "uion",
+      "sourceDenom": "uion",
+      "decimals": 6
     },
     {
-      "description": "The native staking and governance token of the Theta testnet version of the Cosmos Hub.",
-      "denom_units": [
-        {
-          "denom": "ibc/9FF2B7A5F55038A7EE61F4FD6749D9A648B48E89830F2682B67B5DC158E2753C",
-          "exponent": 0,
-          "aliases": [
-            "uatom"
-          ]
-        },
-        {
-          "denom": "atom",
-          "exponent": 6
-        }
-      ],
-      "type_asset": "ics20",
-      "base": "ibc/9FF2B7A5F55038A7EE61F4FD6749D9A648B48E89830F2682B67B5DC158E2753C",
-      "name": "Cosmos Hub Public Testnet",
-      "display": "atom",
       "symbol": "ATOM",
-      "traces": [
-        {
-          "type": "ibc",
-          "counterparty": {
-            "chain_name": "cosmoshubtestnet",
-            "base_denom": "uatom",
-            "channel_id": "channel-3306"
-          },
-          "chain": {
-            "channel_id": "channel-4156",
-            "path": "transfer/channel-4156/uatom"
-          }
-        }
-      ],
-      "logo_URIs": {
-        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/cosmoshub/images/atom.png",
-        "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/cosmoshub/images/atom.svg"
-      },
-      "keywords": [
-        "osmosis-main",
-        "osmosis-price:uosmo:308"
-      ]
+      "coinMinimalDenom": "ibc/9FF2B7A5F55038A7EE61F4FD6749D9A648B48E89830F2682B67B5DC158E2753C",
+      "sourceDenom": "uatom",
+      "decimals": 6
     },
     {
-      "description": "Circle's stablecoin on Axelar",
-      "denom_units": [
-        {
-          "denom": "ibc/2164BDB48DE5501430E71286448D87C6D2240EC0E078CF113CAB85E21A352BB0",
-          "exponent": 0,
-          "aliases": [
-            "uausdc"
-          ]
-        },
-        {
-          "denom": "ausdc",
-          "exponent": 6
-        }
-      ],
-      "type_asset": "ics20",
-      "base": "ibc/2164BDB48DE5501430E71286448D87C6D2240EC0E078CF113CAB85E21A352BB0",
-      "name": "USD Coin",
-      "display": "ausdc",
-      "symbol": "aUSDC",
-      "traces": [
-        {
-          "type": "synthetic",
-          "counterparty": {
-            "chain_name": "forex",
-            "base_denom": "USD"
-          },
-          "provider": "Circle"
-        },
-        {
-          "type": "bridge",
-          "counterparty": {
-            "chain_name": "ethereumtestnet",
-            "base_denom": "0x254d06f33bDc5b8ee05b2ea472107E300226659A"
-          },
-          "provider": "Axelar"
-        },
-        {
-          "type": "ibc",
-          "counterparty": {
-            "chain_name": "axelartestnet",
-            "base_denom": "uausdc",
-            "channel_id": "channel-339"
-          },
-          "chain": {
-            "channel_id": "channel-4170",
-            "path": "transfer/channel-4170/uausdc"
-          }
-        }
-      ],
-      "logo_URIs": {
-        "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/ethereum/images/usdc.svg"
-      },
-      "keywords": [
-        "osmosis-main"
-      ]
+      "symbol": "aUSDC.axl",
+      "coinMinimalDenom": "ibc/2164BDB48DE5501430E71286448D87C6D2240EC0E078CF113CAB85E21A352BB0",
+      "sourceDenom": "uausdc",
+      "decimals": 6
     },
     {
-      "description": "Wrapped Ether on Axelar",
-      "denom_units": [
-        {
-          "denom": "ibc/1F42AC9631DBE03009219ECCFE151786F53A038DE9F7A07C709158514F1D5942",
-          "exponent": 0,
-          "aliases": [
-            "eth-wei"
-          ]
-        },
-        {
-          "denom": "weth",
-          "exponent": 18
-        }
-      ],
-      "type_asset": "ics20",
-      "base": "ibc/1F42AC9631DBE03009219ECCFE151786F53A038DE9F7A07C709158514F1D5942",
-      "name": "Wrapped Ether",
-      "display": "weth",
       "symbol": "ETH",
-      "traces": [
-        {
-          "type": "wrapped",
-          "counterparty": {
-            "chain_name": "ethereumtestnet",
-            "base_denom": "wei"
-          },
-          "provider": "Ethereum"
-        },
-        {
-          "type": "bridge",
-          "counterparty": {
-            "chain_name": "ethereumtestnet",
-            "base_denom": "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6"
-          },
-          "provider": "Axelar"
-        },
-        {
-          "type": "ibc",
-          "counterparty": {
-            "chain_name": "axelartestnet",
-            "base_denom": "eth-wei",
-            "channel_id": "channel-339"
-          },
-          "chain": {
-            "channel_id": "channel-4170",
-            "path": "transfer/channel-4170/eth-wei"
-          }
-        }
-      ],
-      "logo_URIs": {
-        "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/ethereum/images/weth.svg"
-      },
-      "keywords": [
-        "osmosis-main"
-      ]
+      "coinMinimalDenom": "ibc/1F42AC9631DBE03009219ECCFE151786F53A038DE9F7A07C709158514F1D5942",
+      "sourceDenom": "eth-wei",
+      "decimals": 18
     },
     {
-      "description": "The native token of JUNO Chain",
-      "denom_units": [
-        {
-          "denom": "ibc/31D220286E6C224C0F72D890D0EB75A228D388089EF5C4D77212344F9EAF0183",
-          "exponent": 0,
-          "aliases": [
-            "ujunox"
-          ]
-        },
-        {
-          "denom": "junox",
-          "exponent": 6
-        }
-      ],
-      "type_asset": "ics20",
-      "base": "ibc/31D220286E6C224C0F72D890D0EB75A228D388089EF5C4D77212344F9EAF0183",
-      "name": "Juno Testnet",
-      "display": "junox",
-      "symbol": "JUNOX",
-      "traces": [
-        {
-          "type": "ibc",
-          "counterparty": {
-            "chain_name": "junotestnet",
-            "base_denom": "ujunox",
-            "channel_id": "channel-889"
-          },
-          "chain": {
-            "channel_id": "channel-5498",
-            "path": "transfer/channel-5498/ujunox"
-          }
-        }
-      ],
-      "logo_URIs": {
-        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/testnets/junotestnet/images/juno.png",
-        "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/testnets/junotestnet/images/juno.svg"
-      },
-      "coingecko_id": "juno-network",
-      "keywords": [
-        "osmosis-main"
-      ]
+      "symbol": "JUNOX.juno",
+      "coinMinimalDenom": "ibc/31D220286E6C224C0F72D890D0EB75A228D388089EF5C4D77212344F9EAF0183",
+      "sourceDenom": "ujunox",
+      "decimals": 6
     },
     {
-      "description": "The native token of Mars Protocol",
-      "denom_units": [
-        {
-          "denom": "ibc/66A7ADA623D33D0B66C6890FE3E1AF3D638D56CE2B56F8BDA210B2AA62016216",
-          "exponent": 0,
-          "aliases": [
-            "umars"
-          ]
-        },
-        {
-          "denom": "mars",
-          "exponent": 6
-        }
-      ],
-      "type_asset": "ics20",
-      "base": "ibc/66A7ADA623D33D0B66C6890FE3E1AF3D638D56CE2B56F8BDA210B2AA62016216",
-      "name": "Mars Hub Testnet",
-      "display": "mars",
       "symbol": "MARS",
-      "traces": [
-        {
-          "type": "ibc",
-          "counterparty": {
-            "chain_name": "marstestnet",
-            "base_denom": "umars",
-            "channel_id": "channel-28"
-          },
-          "chain": {
-            "channel_id": "channel-5499",
-            "path": "transfer/channel-5499/umars"
-          }
-        }
-      ],
-      "logo_URIs": {
-        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/mars/images/mars-token.png",
-        "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/mars/images/mars-token.svg"
-      },
-      "keywords": [
-        "osmosis-main"
-      ]
+      "coinMinimalDenom": "ibc/66A7ADA623D33D0B66C6890FE3E1AF3D638D56CE2B56F8BDA210B2AA62016216",
+      "sourceDenom": "umars",
+      "decimals": 6
     },
     {
-      "description": "USD Coin",
-      "denom_units": [
-        {
-          "denom": "ibc/DE6792CF9E521F6AD6E9A4BDF6225C9571A3B74ACC0A529F92BC5122A39D2E58",
-          "exponent": 0,
-          "aliases": [
-            "microusdc",
-            "uusdc"
-          ]
-        },
-        {
-          "denom": "usdc",
-          "exponent": 6
-        }
-      ],
-      "type_asset": "ics20",
-      "base": "ibc/DE6792CF9E521F6AD6E9A4BDF6225C9571A3B74ACC0A529F92BC5122A39D2E58",
-      "name": "USD Coin",
-      "display": "usdc",
-      "symbol": "USDC",
-      "traces": [
-        {
-          "type": "synthetic",
-          "counterparty": {
-            "chain_name": "forex",
-            "base_denom": "USD"
-          },
-          "provider": "Circle"
-        },
-        {
-          "type": "additional-mintage",
-          "counterparty": {
-            "chain_name": "ethereum",
-            "base_denom": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
-          },
-          "provider": "Circle"
-        },
-        {
-          "type": "test-mintage",
-          "counterparty": {
-            "chain_name": "noble",
-            "base_denom": "uusdc"
-          },
-          "provider": "Circle"
-        },
-        {
-          "type": "ibc",
-          "counterparty": {
-            "chain_name": "nobletestnet",
-            "base_denom": "uusdc",
-            "channel_id": "channel-22"
-          },
-          "chain": {
-            "channel_id": "channel-4280",
-            "path": "transfer/channel-4280/uusdc"
-          }
-        }
-      ],
-      "logo_URIs": {
-        "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/ethereum/images/usdc.svg"
-      },
-      "coingecko_id": "usd-coin",
-      "keywords": [
-        "osmosis-main",
-        "osmosis-info"
-      ]
+      "symbol": "USDC.n",
+      "coinMinimalDenom": "ibc/DE6792CF9E521F6AD6E9A4BDF6225C9571A3B74ACC0A529F92BC5122A39D2E58",
+      "sourceDenom": "uusdc",
+      "decimals": 6
     },
     {
-      "description": "Akash Token (AKT) is the Akash Network's native utility token, used as the primary means to govern, secure the blockchain, incentivize participants, and provide a default mechanism to store and exchange value.",
-      "denom_units": [
-        {
-          "denom": "ibc/AD59D59CFB0E628E73C798415F823AB5B6257C2FE4BF67DBB5D6A677B2686E82",
-          "exponent": 0,
-          "aliases": [
-            "uakt"
-          ]
-        },
-        {
-          "denom": "akt",
-          "exponent": 6
-        }
-      ],
-      "type_asset": "ics20",
-      "base": "ibc/AD59D59CFB0E628E73C798415F823AB5B6257C2FE4BF67DBB5D6A677B2686E82",
-      "name": "Sandbox",
-      "display": "akt",
-      "symbol": "AKT",
-      "traces": [
-        {
-          "type": "ibc",
-          "counterparty": {
-            "chain_name": "akashtestnet",
-            "base_denom": "uakt",
-            "channel_id": "channel-6"
-          },
-          "chain": {
-            "channel_id": "channel-4171",
-            "path": "transfer/channel-4171/uakt"
-          }
-        }
-      ],
-      "logo_URIs": {
-        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/akash/images/akt.png",
-        "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/akash/images/akt.svg"
-      },
-      "keywords": [
-        "osmosis-main"
-      ]
+      "symbol": "AKT.akash",
+      "coinMinimalDenom": "ibc/AD59D59CFB0E628E73C798415F823AB5B6257C2FE4BF67DBB5D6A677B2686E82",
+      "sourceDenom": "uakt",
+      "decimals": 6
     },
     {
-      "description": "The native utility token of the Kaon testnet version of KYVE.",
-      "denom_units": [
-        {
-          "denom": "ibc/AB8AF05799E299FB5C5C80781DA35887F53E029745D20E5641233DB4E6B28515",
-          "exponent": 0,
-          "aliases": [
-            "tkyve"
-          ]
-        },
-        {
-          "denom": "kyve",
-          "exponent": 6
-        }
-      ],
-      "type_asset": "ics20",
-      "base": "ibc/AB8AF05799E299FB5C5C80781DA35887F53E029745D20E5641233DB4E6B28515",
-      "name": "KYVE Kaon",
-      "display": "kyve",
       "symbol": "KYVE",
-      "traces": [
-        {
-          "type": "test-mintage",
-          "counterparty": {
-            "chain_name": "kyve",
-            "base_denom": "ukyve"
-          },
-          "provider": "Kyve"
-        },
-        {
-          "type": "ibc",
-          "counterparty": {
-            "chain_name": "kyvetestnet",
-            "base_denom": "tkyve",
-            "channel_id": "channel-2"
-          },
-          "chain": {
-            "channel_id": "channel-10",
-            "path": "transfer/channel-10/tkyve"
-          }
-        }
-      ],
-      "logo_URIs": {
-        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/kyve/images/kyve-token.png",
-        "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/kyve/images/kyve-token.svg"
-      },
-      "keywords": [
-        "osmosis-main",
-        "osmosis-price:uosmo:4"
-      ]
+      "coinMinimalDenom": "ibc/AB8AF05799E299FB5C5C80781DA35887F53E029745D20E5641233DB4E6B28515",
+      "sourceDenom": "tkyve",
+      "decimals": 6
     },
     {
-      "description": "QCK - native token of Quicksilver",
-      "denom_units": [
-        {
-          "denom": "ibc/F37CF69589DE12342758382F8770C0852CD8D2E4519F55166EBDAF472AD667C9",
-          "exponent": 0,
-          "aliases": [
-            "uqck"
-          ]
-        },
-        {
-          "denom": "qck",
-          "exponent": 6,
-          "aliases": []
-        }
-      ],
-      "type_asset": "ics20",
-      "base": "ibc/F37CF69589DE12342758382F8770C0852CD8D2E4519F55166EBDAF472AD667C9",
-      "name": "Quicksilver Testnet",
-      "display": "qck",
       "symbol": "QCK",
-      "traces": [
-        {
-          "type": "ibc",
-          "counterparty": {
-            "chain_name": "quicksilvertestnet",
-            "base_denom": "uqck",
-            "channel_id": "channel-20"
-          },
-          "chain": {
-            "channel_id": "channel-13",
-            "path": "transfer/channel-13/uqck"
-          }
-        }
-      ],
-      "logo_URIs": {
-        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/quicksilver/images/qck.png"
-      },
-      "coingecko_id": "quicksilver",
-      "keywords": [
-        "osmosis-main",
-        "osmosis-price:uosmo:34"
-      ]
+      "coinMinimalDenom": "ibc/F37CF69589DE12342758382F8770C0852CD8D2E4519F55166EBDAF472AD667C9",
+      "sourceDenom": "uqck",
+      "decimals": 6
     },
     {
-      "description": "The native token of Chain4Energy",
-      "denom_units": [
-        {
-          "denom": "ibc/539BC2B6E70117D220834D6DF8E27307655D1325C0CADF7E3AF90AB00D9F8D69",
-          "exponent": 0,
-          "aliases": [
-            "uc4e"
-          ]
-        },
-        {
-          "denom": "c4e",
-          "exponent": 6
-        }
-      ],
-      "type_asset": "ics20",
-      "base": "ibc/539BC2B6E70117D220834D6DF8E27307655D1325C0CADF7E3AF90AB00D9F8D69",
-      "name": "Chain4Energy Testnet",
-      "display": "c4e",
       "symbol": "C4E",
-      "traces": [
-        {
-          "type": "ibc",
-          "counterparty": {
-            "chain_name": "chain4energytestnet",
-            "base_denom": "uc4e",
-            "channel_id": "channel-5"
-          },
-          "chain": {
-            "channel_id": "channel-7735",
-            "path": "transfer/channel-7735/uc4e"
-          }
-        }
-      ],
-      "logo_URIs": {
-        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/testnets/chain4energytestnet/images/c4e.png"
-      },
-      "keywords": [
-        "osmosis-main",
-        "osmosis-price:uosmo:462"
-      ]
+      "coinMinimalDenom": "ibc/539BC2B6E70117D220834D6DF8E27307655D1325C0CADF7E3AF90AB00D9F8D69",
+      "sourceDenom": "uc4e",
+      "decimals": 6
     },
     {
-      "description": "The XPRT token is primarily a governance token for the Persistence chain.",
-      "denom_units": [
-        {
-          "denom": "ibc/754C8533F8A418B03AD5F2C6AA19D4703CF78BBAB9E2E4DDD6212AAC2E502CA6",
-          "exponent": 0,
-          "aliases": [
-            "uxprt"
-          ]
-        },
-        {
-          "denom": "xprt",
-          "exponent": 6
-        }
-      ],
-      "type_asset": "ics20",
-      "base": "ibc/754C8533F8A418B03AD5F2C6AA19D4703CF78BBAB9E2E4DDD6212AAC2E502CA6",
-      "name": "Persistence Testnet",
-      "display": "xprt",
       "symbol": "XPRT",
-      "traces": [
-        {
-          "type": "ibc",
-          "counterparty": {
-            "chain_name": "persistencetestnet2",
-            "base_denom": "uxprt",
-            "channel_id": "channel-7"
-          },
-          "chain": {
-            "channel_id": "channel-1037",
-            "path": "transfer/channel-1037/uxprt"
-          }
-        }
-      ],
-      "logo_URIs": {
-        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/persistence/images/xprt.png",
-        "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/persistence/images/xprt.svg"
-      },
-      "coingecko_id": "persistence",
-      "keywords": [
-        "osmosis-main",
-        "osmosis-price:uosmo:85"
-      ]
+      "coinMinimalDenom": "ibc/754C8533F8A418B03AD5F2C6AA19D4703CF78BBAB9E2E4DDD6212AAC2E502CA6",
+      "sourceDenom": "uxprt",
+      "decimals": 6
     },
     {
-      "description": "The native staking token of the Xion network.",
-      "denom_units": [
-        {
-          "denom": "ibc/5C274155106FEB0C093F76A12BB67222E479E1EBE043F319CE4463E54F7A357C",
-          "exponent": 0,
-          "aliases": [
-            "microxion",
-            "uxion"
-          ]
-        },
-        {
-          "denom": "XION",
-          "exponent": 6,
-          "aliases": [
-            "xion"
-          ]
-        }
-      ],
-      "type_asset": "ics20",
-      "base": "ibc/5C274155106FEB0C093F76A12BB67222E479E1EBE043F319CE4463E54F7A357C",
-      "name": "Xion Testnet",
-      "display": "XION",
-      "symbol": "XION",
-      "traces": [
-        {
-          "type": "ibc",
-          "counterparty": {
-            "chain_name": "xiontestnet",
-            "base_denom": "uxion",
-            "channel_id": "channel-490"
-          },
-          "chain": {
-            "channel_id": "channel-6668",
-            "path": "transfer/channel-6668/uxion"
-          }
-        }
-      ],
-      "logo_URIs": {
-        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/xion/images/burnt-round.png"
-      },
-      "keywords": [
-        "osmosis-main"
-      ]
-    },
-    {
-      "description": "The native token of Saga Testnet",
-      "denom_units": [
-        {
-          "denom": "ibc/48384130079A5987378F5776775F8C29A02505273E777BBB99361F2BB5B577C9",
-          "exponent": 0,
-          "aliases": [
-            "utsaga"
-          ]
-        },
-        {
-          "denom": "tsaga",
-          "exponent": 6,
-          "aliases": []
-        }
-      ],
-      "type_asset": "ics20",
-      "base": "ibc/48384130079A5987378F5776775F8C29A02505273E777BBB99361F2BB5B577C9",
-      "name": "Saga Testnet",
-      "display": "tsaga",
       "symbol": "TSAGA",
-      "traces": [
-        {
-          "type": "ibc",
-          "counterparty": {
-            "chain_name": "sagatestnet",
-            "base_denom": "utsaga",
-            "channel_id": "channel-20"
-          },
-          "chain": {
-            "channel_id": "channel-4946",
-            "path": "transfer/channel-4946/utsaga"
-          }
-        }
-      ],
-      "logo_URIs": {
-        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/saga/images/saga.png",
-        "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/saga/images/saga.svg"
-      },
-      "keywords": [
-        "osmosis-main",
-        "osmosis-price:uosmo:369"
-      ]
+      "coinMinimalDenom": "ibc/48384130079A5987378F5776775F8C29A02505273E777BBB99361F2BB5B577C9",
+      "sourceDenom": "utsaga",
+      "decimals": 6
     },
     {
-      "description": "The native token of IXO Chain",
-      "denom_units": [
-        {
-          "denom": "ibc/88C815D69587CF0F05E96E5E2731EA56194D73C9A02A500095294D3A5DE68F16",
-          "exponent": 0,
-          "aliases": [
-            "uixo"
-          ]
-        },
-        {
-          "denom": "ixo",
-          "exponent": 6
-        }
-      ],
-      "type_asset": "ics20",
-      "base": "ibc/88C815D69587CF0F05E96E5E2731EA56194D73C9A02A500095294D3A5DE68F16",
-      "name": "ixo",
-      "display": "ixo",
       "symbol": "IXO",
-      "traces": [
-        {
-          "type": "test-mintage",
-          "counterparty": {
-            "chain_name": "impacthub",
-            "base_denom": "uixo"
-          },
-          "provider": "impacthub"
-        },
-        {
-          "type": "ibc",
-          "counterparty": {
-            "chain_name": "impacthubtestnet",
-            "base_denom": "uixo",
-            "channel_id": "channel-10"
-          },
-          "chain": {
-            "channel_id": "channel-1637",
-            "path": "transfer/channel-1637/uixo"
-          }
-        }
-      ],
-      "logo_URIs": {
-        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/impacthub/images/ixo.png",
-        "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/impacthub/images/ixo.svg"
-      },
-      "keywords": [
-        "osmosis-main",
-        "osmosis-price:uosmo:254"
-      ]
+      "coinMinimalDenom": "ibc/88C815D69587CF0F05E96E5E2731EA56194D73C9A02A500095294D3A5DE68F16",
+      "sourceDenom": "uixo",
+      "decimals": 6
+    },
+    {
+      "symbol": "CONST",
+      "coinMinimalDenom": "ibc/5F10B4BED1A80DC44975D95D716AEF8CEBFB99B3F088C98361436A7D0CF5A830",
+      "sourceDenom": "aconst",
+      "decimals": 18
+    },
+    {
+      "symbol": "MLD",
+      "coinMinimalDenom": "ibc/C5B7196709BDFC3A312B06D7292892FA53F379CD3D556B65DB00E1531D471BBA",
+      "sourceDenom": "note",
+      "decimals": 6
+    },
+    {
+      "symbol": "KIMA",
+      "coinMinimalDenom": "ibc/6DF48956F5C1CD055E347364102A8FD39281381983E557365C3961320677545C",
+      "sourceDenom": "uKIMA",
+      "decimals": 6
+    },
+    {
+      "symbol": "nBTC",
+      "coinMinimalDenom": "ibc/8D294CE85345F171AAF6B1FF6E64B5A9EE197C99CDAD64D79EA4ACAB270AC95C",
+      "sourceDenom": "usat",
+      "decimals": 14
+    },
+    {
+      "symbol": "MFX",
+      "coinMinimalDenom": "ibc/71C8E0B309E2F2A4C66F85E7C34C4415A3D26E489DBDF3FFF4EDCBE15B229B14",
+      "sourceDenom": "umfx",
+      "decimals": 6
+    },
+    {
+      "symbol": "LUME",
+      "coinMinimalDenom": "ibc/CCB7E815618185A792DA0A42E649270CB462A43E660885FB747CE57486A9F5F6",
+      "sourceDenom": "ulume",
+      "decimals": 6
+    },
+    {
+      "symbol": "TICS",
+      "coinMinimalDenom": "ibc/3E5037EFB506F3F007D1CA1B5A436DDB32983B191B9F5730BE2BE46E16AC83B5",
+      "sourceDenom": "tics",
+      "decimals": 18
+    },
+    {
+      "symbol": "DRC",
+      "coinMinimalDenom": "ibc/F77372B3F74480447AFFCD5AA162A967C31D45C463AC46DD134740BF5986ADB8",
+      "sourceDenom": "uDRC",
+      "decimals": 6
+    },
+    {
+      "symbol": "LIMO",
+      "coinMinimalDenom": "ibc/63FA8DC3426FEDEA61E47FB273E0D68FCC5201B9E3A99EBD42BE120E105583D9",
+      "sourceDenom": "aLIMO",
+      "decimals": 18
+    },
+    {
+      "symbol": "BLD",
+      "coinMinimalDenom": "ibc/54E26860F62D7BE585736FEF187A62B897B4A567202E20E5320E2518EB5D1FAB",
+      "sourceDenom": "ubld",
+      "decimals": 6
+    },
+    {
+      "symbol": "IST",
+      "coinMinimalDenom": "ibc/C5250BEA6E379B7974FAEA9FA9C49C914072DDBA5C23BDA709C5B0906E547236",
+      "sourceDenom": "uist",
+      "decimals": 6
+    },
+    {
+      "symbol": "AXL",
+      "coinMinimalDenom": "ibc/CAC33C89EFB6AD6064184EB63289F76C0447B25D720C21275D5E4D3C1890405F",
+      "sourceDenom": "uaxl",
+      "decimals": 6
+    },
+    {
+      "symbol": "WDEV",
+      "coinMinimalDenom": "ibc/E955F50D0EDC3A8A5E687AC9F020BE4A1A48337901295F62C7ED7F8C1915807B",
+      "sourceDenom": "wglmr-wei",
+      "decimals": 18
+    },
+    {
+      "symbol": "WMATIC",
+      "coinMinimalDenom": "ibc/1C19EF236F56F8AD878DDF64AA09BA2CAE6EDF3A5EF6113AFA2387CA536F9215",
+      "sourceDenom": "wmatic-wei",
+      "decimals": 18
+    },
+    {
+      "symbol": "WBNB",
+      "coinMinimalDenom": "ibc/E0E53B563B13E28E8954DEA9A044475BC44E2AFBAAC0774F316EF216B259C890",
+      "sourceDenom": "wbnb-wei",
+      "decimals": 18
+    },
+    {
+      "symbol": "WAVAX",
+      "coinMinimalDenom": "ibc/C3F1CA360184EE671CFFD4F533571E67EEB1AD200CBE7F388995F13A21F543D6",
+      "sourceDenom": "wavax-wei",
+      "decimals": 18
+    },
+    {
+      "symbol": "WFTM",
+      "coinMinimalDenom": "ibc/B6261551E7E9C9C906D09AF0C5392453939607738C3F7ED8C33081CB77DE2AFE",
+      "sourceDenom": "wftm-wei",
+      "decimals": 18
+    },
+    {
+      "symbol": "BABY",
+      "coinMinimalDenom": "ibc/D538E142FC525F8CE0937169ED4645AE6E5BFC37F9C2C5CB178603F5DF1FEDF3",
+      "sourceDenom": "ubbn",
+      "decimals": 6
+    },
+    {
+      "symbol": "eBABY",
+      "coinMinimalDenom": "ibc/7C7668A6015508285CA5725BB500F34D0C019E953C01E9767823D3877F3FC241",
+      "sourceDenom": "cw20:bbn1cnx34p82zngq0uuaendsne0x4s5gsm7gpwk2es8zk8rz8tnj938qqyq8f9",
+      "decimals": 6
+    },
+    {
+      "symbol": "TIA",
+      "coinMinimalDenom": "ibc/0E22FFB61DB307FE01D3D0DFF4A8EBEB6CC4997DCF9E901AE0751A2FFF4B90DD",
+      "sourceDenom": "utia",
+      "decimals": 6
+    },
+    {
+      "symbol": "PICA",
+      "coinMinimalDenom": "ibc/27689601842A99059DFD79EB0A34A089FC2F7337491B5555C176400A8FA7F2A4",
+      "sourceDenom": "ppica",
+      "decimals": 12
+    },
+    {
+      "symbol": "TESTTX",
+      "coinMinimalDenom": "ibc/35CA3AB73EF616E989E6DDD91EA33BEBAF77CA710641973028460CCFE69452AB",
+      "sourceDenom": "utestcore",
+      "decimals": 6
+    },
+    {
+      "symbol": "USTX",
+      "coinMinimalDenom": "ibc/785A0F3BECF4C223AC8466C9E1F84C48DFADA8FA78BF6B7B5B1EF88942E552ED",
+      "sourceDenom": "uustx-testcore1dy5l3teqsvnwr6reeg9jm6f7mpcr45jy7fqgsr",
+      "decimals": 6
+    },
+    {
+      "symbol": "DORA",
+      "coinMinimalDenom": "ibc/7AF17F89F81663C5EAF71BA3A538D03AEA47921C95ACD2212FF0ED2383A571FE",
+      "sourceDenom": "peaka",
+      "decimals": 18
+    },
+    {
+      "symbol": "MPWR",
+      "coinMinimalDenom": "ibc/E0FDA81C892EEA14C2398519260AA706A068B36AE5BE8AE9FAD8EB1540A6E02E",
+      "sourceDenom": "umpwr",
+      "decimals": 6
+    },
+    {
+      "symbol": "ENTRY",
+      "coinMinimalDenom": "ibc/8B620DE1585B38FEDEA05944B2E471D19F7208203A3E68DC2736D9B3769549FE",
+      "sourceDenom": "uentry",
+      "decimals": 6
+    },
+    {
+      "symbol": "HP",
+      "coinMinimalDenom": "ibc/B441DBB56D34B14CBD153FD57247A38001968E833523DB408CD57CFCC28A9D53",
+      "sourceDenom": "ahp",
+      "decimals": 18
+    },
+    {
+      "symbol": "INJ",
+      "coinMinimalDenom": "ibc/7CCE6A5036CEA09261D059C425DA2A644FC16D48D082AED8A49C88372D99E558",
+      "sourceDenom": "inj",
+      "decimals": 18
+    },
+    {
+      "symbol": "USDC",
+      "coinMinimalDenom": "ibc/CA190EA88E02B6C5C4DA96414BA2A3A7CF6FE09B074EB9C9E04D272ADC6B253B",
+      "sourceDenom": "factory/inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c/usdc",
+      "decimals": 6
+    },
+    {
+      "symbol": "USDT",
+      "coinMinimalDenom": "ibc/5CF8B2CB6D365446211B701C5AE2940B2E72AFA74DC35221F028874D2A14D0E5",
+      "sourceDenom": "peggy0x87aB3B4C8661e07D6372361211B96ed4Dc36B1B5",
+      "decimals": 6
+    },
+    {
+      "symbol": "INT3",
+      "coinMinimalDenom": "ibc/6C006ECBB6CE8BDBB32140CE977E07282A42CF5058141A0D9D67346F3935A590",
+      "sourceDenom": "uint3",
+      "decimals": 6
+    },
+    {
+      "symbol": "BTC",
+      "coinMinimalDenom": "ibc/68157A7910F47A17C4BA8E06180FA4E5D6E3DF8A8F2B2FD4A74F23597BC1ABBF",
+      "sourceDenom": "factory/int31zlefkpe3g0vvm9a4h0jf9000lmqutlh99h7fsd/bitcoin-btc",
+      "decimals": 8
+    },
+    {
+      "symbol": "BCH",
+      "coinMinimalDenom": "ibc/B746CC188C8315EE135101C7F77D361AF6A62A4740EEDBB99A8AC5A80246D719",
+      "sourceDenom": "factory/int31zlefkpe3g0vvm9a4h0jf9000lmqutlh99h7fsd/bitcoin-cash-bch",
+      "decimals": 8
+    },
+    {
+      "symbol": "DOGE",
+      "coinMinimalDenom": "ibc/FCB9537564D517E821D0438AB6CA3BBE03B9E2B2C661B89311181329DFD331C4",
+      "sourceDenom": "factory/int31zlefkpe3g0vvm9a4h0jf9000lmqutlh99h7fsd/dogecoin-doge",
+      "decimals": 8
+    },
+    {
+      "symbol": "LTC",
+      "coinMinimalDenom": "ibc/713D13C42B4EC1327AAD87602393D8870089B59005F552289E46141ABCF79F4C",
+      "sourceDenom": "factory/int31zlefkpe3g0vvm9a4h0jf9000lmqutlh99h7fsd/litecoin-ltc",
+      "decimals": 8
+    },
+    {
+      "symbol": "TON",
+      "coinMinimalDenom": "ibc/17993F75F724B0CB68D0C26642007CDD62286010974B843F86507F383E9F19F3",
+      "sourceDenom": "factory/int31zlefkpe3g0vvm9a4h0jf9000lmqutlh99h7fsd/ton-ton",
+      "decimals": 9
+    },
+    {
+      "symbol": "SOL",
+      "coinMinimalDenom": "ibc/931C1E953C5312AB6856BDE136EFBD43FAC52398E484CA2C344F623746BAC4BE",
+      "sourceDenom": "factory/int31zlefkpe3g0vvm9a4h0jf9000lmqutlh99h7fsd/solana-sol",
+      "decimals": 9
+    },
+    {
+      "symbol": "XRP",
+      "coinMinimalDenom": "ibc/9D44B9A113D449A16FAB9F639FF5B074CAB6D33D049056AB6B4DCE6E3891DD55",
+      "sourceDenom": "factory/int31zlefkpe3g0vvm9a4h0jf9000lmqutlh99h7fsd/xrpl-xrp",
+      "decimals": 6
+    },
+    {
+      "symbol": "ZEC",
+      "coinMinimalDenom": "ibc/49C1211CF9077E5D504D895A0C374D1D3E9B0EA3D0FFBA0CAB4EF3FEBEDA8DE2",
+      "sourceDenom": "factory/int31zlefkpe3g0vvm9a4h0jf9000lmqutlh99h7fsd/zcash-zec",
+      "decimals": 8
+    },
+    {
+      "symbol": "NEXX",
+      "coinMinimalDenom": "ibc/7AA5DD4B6FDD05E141A7ECC2D795D0011F8E4FB70C7A537ECF1A67FE76D2D58D",
+      "sourceDenom": "factory/juno12klaltyqvg2j6v034jwdxrk5n4242ttse4sdpt/NEXX",
+      "decimals": 6
+    },
+    {
+      "symbol": "ARENA",
+      "coinMinimalDenom": "ibc/587F7C29FF31182B2508CC9BF63BB8807302CCBEDFFD9EB7144F17A358FBBB94",
+      "sourceDenom": "factory/juno12dgadj3wwv5jn0ec7tw5cgvq526nn4gnt2tujlmd57p2ra6k87esl36r9k/ARENA",
+      "decimals": 6
+    },
+    {
+      "symbol": "LAVA",
+      "coinMinimalDenom": "ibc/6E2853D2B0D521D6CD05CFD8597251AD5CC8E3B4141701311679944753A4A03F",
+      "sourceDenom": "ulava",
+      "decimals": 6
+    },
+    {
+      "symbol": "EKIL",
+      "coinMinimalDenom": "ibc/CFC141C6D8B98AE34F446CF9A6CE39406F94A7F901CD82A352EF9E2C52B1CFF9",
+      "sourceDenom": "nanoekil",
+      "decimals": 9
+    },
+    {
+      "symbol": "POA",
+      "coinMinimalDenom": "ibc/5E243314983063B40B8E22C77BC07B91BFC88F5ACD9FA2DC874877158793D0D7",
+      "sourceDenom": "upoa",
+      "decimals": 6
+    },
+    {
+      "symbol": "PWR",
+      "coinMinimalDenom": "ibc/319F1EB0531381627E4ED3CC07C05B13F9014286A4573B8D8E07239C0A49E8D2",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/upwr",
+      "decimals": 6
+    },
+    {
+      "symbol": "AAA",
+      "coinMinimalDenom": "ibc/216699D6D81376D5966FC2225DA431C2079344913B2D746FE88DFB16950C4D7E",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/uaaa",
+      "decimals": 6
+    },
+    {
+      "symbol": "ABUS",
+      "coinMinimalDenom": "ibc/C8675598845863D6A2AE6940F9DA3D0835A68C7A4DC433464E76CA8C6E5F9587",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/uabus",
+      "decimals": 6
+    },
+    {
+      "symbol": "BITCH",
+      "coinMinimalDenom": "ibc/CED12F8A439EEEB902603BC2E4DF95D239404B55A9F637E4AA09722CED9F856F",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/ubitch",
+      "decimals": 6
+    },
+    {
+      "symbol": "BLERG",
+      "coinMinimalDenom": "ibc/2F93891F00F6957A9290BC4B94CF0CD5323FC90F2FEA4E9589F174D9027EDFC0",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/ublerg",
+      "decimals": 6
+    },
+    {
+      "symbol": "CATS",
+      "coinMinimalDenom": "ibc/8C72555616AD3758409EB13907DE6532B1BF73759F7FA2078347B72AB0F7676C",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/ucats",
+      "decimals": 6
+    },
+    {
+      "symbol": "CORAL",
+      "coinMinimalDenom": "ibc/DAE560732790BB8B77490A328CE8F9BFD485243C76F563F15E4E397E78095C13",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/ucoral",
+      "decimals": 6
+    },
+    {
+      "symbol": "CURES",
+      "coinMinimalDenom": "ibc/890CAC92C932B01D1422F72A6B3BB86759D095DEC532F761207448BC79DD73B5",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/ucures",
+      "decimals": 6
+    },
+    {
+      "symbol": "DBLT",
+      "coinMinimalDenom": "ibc/7E0C7450B9D43929FC57C0790F0F03F05960E854947191687985B4BB32ABD2A3",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/udblt",
+      "decimals": 6
+    },
+    {
+      "symbol": "FOCAL",
+      "coinMinimalDenom": "ibc/4D7AF6A5CF954EE0DE2818FE4AFB27449B5F71593E1A9C9E0639800CC8243048",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/ufocal",
+      "decimals": 6
+    },
+    {
+      "symbol": "FRAME",
+      "coinMinimalDenom": "ibc/41B8F6A3940784361B898E0B17DB291EE8B65304DD65BC0BC37BF447FB2F685D",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/uframe",
+      "decimals": 6
+    },
+    {
+      "symbol": "GCATT",
+      "coinMinimalDenom": "ibc/B2A900210C35F81CEDEDC1D05A46C54FCD3F884DA2DEFC63ACAAF2C97EC82154",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/ugcatt",
+      "decimals": 6
+    },
+    {
+      "symbol": "GREY",
+      "coinMinimalDenom": "ibc/EDEFCDDFA0F9AD0493BAB1C6C76871FC7F8BC34848B3E2C587B73BDDD70D4F0D",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/ugrey",
+      "decimals": 6
+    },
+    {
+      "symbol": "GWATT",
+      "coinMinimalDenom": "ibc/FB951E30ECC7A47047FC5679EE20D0EA3C7F2287F1E01F11ACD2EA9921DC5F23",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/ugwatt",
+      "decimals": 6
+    },
+    {
+      "symbol": "HIVE",
+      "coinMinimalDenom": "ibc/9A42CAC266829F9C00FC27FE0939743BE3AA9BBC87F25E1E2BFADA90E5330315",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/uhive",
+      "decimals": 6
+    },
+    {
+      "symbol": "INDIS",
+      "coinMinimalDenom": "ibc/E300C7EDD903A54CCF81A15706AA9F2880FACCF3C67C1C37C624B01070450403",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/uindis",
+      "decimals": 6
+    },
+    {
+      "symbol": "LENDX",
+      "coinMinimalDenom": "ibc/900CCC35637E09F44790BBFE9B5E1DEA53B74F0646D06B25C8F1B9582A6994C4",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/ulendx",
+      "decimals": 6
+    },
+    {
+      "symbol": "MEGA",
+      "coinMinimalDenom": "ibc/5C6BA40468FEB796685D181F4FFC3E1B567EFC478B4F646F9A4FF82199D66081",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/umega",
+      "decimals": 6
+    },
+    {
+      "symbol": "PGSQL",
+      "coinMinimalDenom": "ibc/5860F8A6D1864E3007733C7853D6144FFD9C99CD0D3608155990CFB3120C3F72",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/upgsql",
+      "decimals": 6
+    },
+    {
+      "symbol": "PWROO",
+      "coinMinimalDenom": "ibc/1A509C84EB16DC42377AFA52901A5FF7276C2AEB1CA9DC8D90FE300324A27E5B",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/upwroo",
+      "decimals": 6
+    },
+    {
+      "symbol": "PWROZ",
+      "coinMinimalDenom": "ibc/705FA9DF815A94E20E37AA4AFA7156DE792371DFE068D75453430E7CC593404B",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/upwroz",
+      "decimals": 6
+    },
+    {
+      "symbol": "PWRZE",
+      "coinMinimalDenom": "ibc/DC54AD1BBB7C41B4FCD02C742E7AE7FC91AE12432D7E984B4F4D53574D92145B",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/upwrze",
+      "decimals": 6
+    },
+    {
+      "symbol": "PWRZF",
+      "coinMinimalDenom": "ibc/D210C4E7151A851C98149BD01C13ADD39A0AF0D73BD0C034E50AEE2CE79AF790",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/upwrzf",
+      "decimals": 6
+    },
+    {
+      "symbol": "PWRZN",
+      "coinMinimalDenom": "ibc/1EF9F16755FD35A186261B6E792E34E01432C966DBEA6F37D51563E518989A56",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/upwrzn",
+      "decimals": 6
+    },
+    {
+      "symbol": "PWRZO",
+      "coinMinimalDenom": "ibc/F68E5A58F1E1A794741CCF62E125CC8E93ED0A7DE15A62E58485943EEA7963DB",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/upwrzo",
+      "decimals": 6
+    },
+    {
+      "symbol": "PWRZR",
+      "coinMinimalDenom": "ibc/80A2F6784ABE41A2F383151F35A7BFFCEB2C7E75D2C1682F459D7CECC681BFAF",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/upwrzr",
+      "decimals": 6
+    },
+    {
+      "symbol": "PWRZS",
+      "coinMinimalDenom": "ibc/6D304F96F6B57332AECB2BE1F02B55EB819E80C1CC95EF1E0C174736AF04079F",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/upwrzs",
+      "decimals": 6
+    },
+    {
+      "symbol": "PWRZT",
+      "coinMinimalDenom": "ibc/55E83A02475FB3253E61558CA2ABAC99475C31A80B2E0CA400E8CB3B0A9FEAE9",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/upwrzt",
+      "decimals": 6
+    },
+    {
+      "symbol": "PWRZV",
+      "coinMinimalDenom": "ibc/1783DC83FD89DBBC6E1E375DB93A85C6AB6F9FC8F14954053324228633C07728",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/upwrzv",
+      "decimals": 6
+    },
+    {
+      "symbol": "PWRZX",
+      "coinMinimalDenom": "ibc/D577AE21FEFF536DF1727D3C9FF7A45AE264DAC6856040C91B449480346749C4",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/upwrzx",
+      "decimals": 6
+    },
+    {
+      "symbol": "PWRZZ",
+      "coinMinimalDenom": "ibc/43A63AE957EE0330EBB3286FE7AB277EB83E3EF253A2B0A736850B9409561977",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/upwrzz",
+      "decimals": 6
+    },
+    {
+      "symbol": "SOLA",
+      "coinMinimalDenom": "ibc/BCB478899D0513242745E3BD74F22FB525F16C6E0C16F00DD9CBB77387E5BE35",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/usola",
+      "decimals": 6
+    },
+    {
+      "symbol": "SOLB",
+      "coinMinimalDenom": "ibc/0CF783EB40325B4BE1558CDEFF62F40BC2953523447DEDCDE80BF5FA5BDDC6B7",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/usolb",
+      "decimals": 6
+    },
+    {
+      "symbol": "SOLC",
+      "coinMinimalDenom": "ibc/286FAE6B16B76BC6771E5126073A302625F66067B2E48E911B20AFA27B553CF7",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/usolc",
+      "decimals": 6
+    },
+    {
+      "symbol": "SOLD",
+      "coinMinimalDenom": "ibc/4EB210C0FC248B3581C323511582C53C6988531BD0ACFD1634603EF12769A14F",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/usold",
+      "decimals": 6
+    },
+    {
+      "symbol": "SOLE",
+      "coinMinimalDenom": "ibc/6A1FA3F19EBC546A451712DB455C2C65ECFD9C1E0426802442FE0065EC622B75",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/usole",
+      "decimals": 6
+    },
+    {
+      "symbol": "SPDT",
+      "coinMinimalDenom": "ibc/C123872C2473DED053A6BD0C9190BE4CF75222CF27A2F14E342A9F76E962EB1F",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/uspdt",
+      "decimals": 6
+    },
+    {
+      "symbol": "SUNSW",
+      "coinMinimalDenom": "ibc/446642730A8BE45506D7DB3F940C98DFFA98CA2344DA76886CFF61B7C8405BA5",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/usunsw",
+      "decimals": 6
+    },
+    {
+      "symbol": "TFAAA",
+      "coinMinimalDenom": "ibc/21D9446CB72A8350E7E59C3387E2A7426370B13B353BFBCCAC2ED53CB96570FE",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/utfaaa",
+      "decimals": 6
+    },
+    {
+      "symbol": "TRACE",
+      "coinMinimalDenom": "ibc/7683273AC9A655CFB5DDD10AFC802E61B93F78D27FC8B1EAA1DC06B63F98FE47",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/utrace",
+      "decimals": 6
+    },
+    {
+      "symbol": "TST",
+      "coinMinimalDenom": "ibc/01292DC7CCC06AA189453C616C17D69968B377F3F76FDD7768894396A67E4EC1",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/utst",
+      "decimals": 6
+    },
+    {
+      "symbol": "WIND",
+      "coinMinimalDenom": "ibc/CEE48588BFC4CE6276B5B328144FF4A944D5C56B27EACEA5E08CB177EE0B4984",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/uwind",
+      "decimals": 6
+    },
+    {
+      "symbol": "WMVT",
+      "coinMinimalDenom": "ibc/66899534BF04D9B18269020DEFA66C79A017939D4B9356D3B8A131E7DC7AA7DA",
+      "sourceDenom": "factory/manifest1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsfmy9qj/uwmvt",
+      "decimals": 6
+    },
+    {
+      "symbol": "TIMMY",
+      "coinMinimalDenom": "ibc/1675C95A6F253E9FA7AFD2B4549A551F567FCB3FB7FF3978163E400FA0718D29",
+      "sourceDenom": "factory/manifest1c799jddmlz7segvg6jrw6w2k6svwafganjdznard3tc74n7td7rqdqe6ks/utimmy",
+      "decimals": 6
+    },
+    {
+      "symbol": "UMEGA",
+      "coinMinimalDenom": "ibc/E09C607844E95C9338079729100E026CA5FA357DD41AFEA17FA5889535299009",
+      "sourceDenom": "factory/manifest1czvrq3ufn045q5k50tjl4qu8kcmagve9ghty3c/uumega",
+      "decimals": 6
+    },
+    {
+      "symbol": "ANSONATOR",
+      "coinMinimalDenom": "ibc/C0CB667C49D2166195C6C31296942A067DC38C30AE07321B1D0749F1FC00361A",
+      "sourceDenom": "factory/manifest1hj5fveer5cjtn4wd6wstzugjfdxzl0xp8ws9ct/uansonator",
+      "decimals": 6
+    },
+    {
+      "symbol": "ASDASDASD",
+      "coinMinimalDenom": "ibc/EAF2ADEA5251B1FC527B407FD36BE64B572ACE19BCC325544604C5E8DE8C605E",
+      "sourceDenom": "factory/manifest1hj5fveer5cjtn4wd6wstzugjfdxzl0xp8ws9ct/uasdasdasd",
+      "decimals": 6
+    },
+    {
+      "symbol": "CUTE",
+      "coinMinimalDenom": "ibc/3F779F3860A4794972D03865FE273EC81B24CF0CCAE223165776D8442B62A8B2",
+      "sourceDenom": "factory/manifest1hj5fveer5cjtn4wd6wstzugjfdxzl0xp8ws9ct/ucute",
+      "decimals": 6
+    },
+    {
+      "symbol": "DANCINGPENGUIN",
+      "coinMinimalDenom": "ibc/7A4DD8299304AA9D4D86B06584C56EE08C26F6F7338F2CADC5D3A8D6895A3859",
+      "sourceDenom": "factory/manifest1hj5fveer5cjtn4wd6wstzugjfdxzl0xp8ws9ct/udancingpenguin",
+      "decimals": 6
+    },
+    {
+      "symbol": "DRIPPY",
+      "coinMinimalDenom": "ibc/AB89909B308854835AD98DEF0DE18D1B324A12A443335398945E485A9B69AE34",
+      "sourceDenom": "factory/manifest1hj5fveer5cjtn4wd6wstzugjfdxzl0xp8ws9ct/udrippy",
+      "decimals": 6
+    },
+    {
+      "symbol": "GOZER",
+      "coinMinimalDenom": "ibc/77DA06A20632C7AB6396B40989FCFB942CD2D56E107F402C595F010455B76BE1",
+      "sourceDenom": "factory/manifest1hj5fveer5cjtn4wd6wstzugjfdxzl0xp8ws9ct/ugozer",
+      "decimals": 6
+    },
+    {
+      "symbol": "SIMPLE",
+      "coinMinimalDenom": "ibc/1BAC7171193B1FED44024C08E460D4CA59DCDCEF76C56340AF8057C0D8C49634",
+      "sourceDenom": "factory/manifest1hj5fveer5cjtn4wd6wstzugjfdxzl0xp8ws9ct/usimple",
+      "decimals": 6
+    },
+    {
+      "symbol": "SPOOF",
+      "coinMinimalDenom": "ibc/E96950EBFD6690785604A4B835C8FCA238927E96C2ABCF6F51725DA872699E33",
+      "sourceDenom": "factory/manifest1hj5fveer5cjtn4wd6wstzugjfdxzl0xp8ws9ct/uspoof",
+      "decimals": 6
+    },
+    {
+      "symbol": "TACO",
+      "coinMinimalDenom": "ibc/D926A833F572447AC30E189FD1629560E679CF73170C180681B9FE29FB3BA2B6",
+      "sourceDenom": "factory/manifest1hj5fveer5cjtn4wd6wstzugjfdxzl0xp8ws9ct/utaco",
+      "decimals": 6
+    },
+    {
+      "symbol": "WMVT.manifesttestnet",
+      "coinMinimalDenom": "ibc/E58506AA351C65F86C8DCD019C57682BA7489D2277C978D5977DFA8FE4B808E6",
+      "sourceDenom": "factory/manifest1hj5fveer5cjtn4wd6wstzugjfdxzl0xp8ws9ct/uwmvt",
+      "decimals": 6
+    },
+    {
+      "symbol": "FUNZIE",
+      "coinMinimalDenom": "ibc/708B876DB3632A7490D6477F365EABF1414E6F60F60CAEC1FB6F06760451ACBE",
+      "sourceDenom": "factory/manifest1rme50egv6kwxq5skm60s0n7hd6ynuf33p5g87e/ufunzie",
+      "decimals": 6
+    },
+    {
+      "symbol": "SNOOP",
+      "coinMinimalDenom": "ibc/F5C09D41BEA7D1E30AE6CB0D303E9DF5C4D0A16859329973FEAD94A1DA279643",
+      "sourceDenom": "factory/manifest1rme50egv6kwxq5skm60s0n7hd6ynuf33p5g87e/usnoop",
+      "decimals": 6
+    },
+    {
+      "symbol": "ADAM",
+      "coinMinimalDenom": "ibc/A9B2FC600298D994291B87D6452663514C88AE078F56228B584862641B0E2D6C",
+      "sourceDenom": "factory/manifest1hj5fveer5cjtn4wd6wstzugjfdxzl0xp8ws9ct/uadam",
+      "decimals": 6
+    },
+    {
+      "symbol": "AGA",
+      "coinMinimalDenom": "ibc/1DE9DEEEB9EF636EF8F6B54A3F12655911908DA0039921D671E3282BBDF36D23",
+      "sourceDenom": "factory/manifest1hj5fveer5cjtn4wd6wstzugjfdxzl0xp8ws9ct/uaga",
+      "decimals": 6
+    },
+    {
+      "symbol": "GAS",
+      "coinMinimalDenom": "ibc/AF2EFBAABB4A14F6E50D83D550698FE33CC2565B7DB1CA480CAF07C7557D8277",
+      "sourceDenom": "factory/manifest1hj5fveer5cjtn4wd6wstzugjfdxzl0xp8ws9ct/ugas",
+      "decimals": 6
+    },
+    {
+      "symbol": "OM",
+      "coinMinimalDenom": "ibc/832FFAEEFFC6C81F02812B33B0C79E4708DB8B9EFC19FEBAF5A7DA5A0C3CB978",
+      "sourceDenom": "uom",
+      "decimals": 6
+    },
+    {
+      "symbol": "MANTRA",
+      "coinMinimalDenom": "ibc/6C59388CEFA3A3DCF4B8011C78844E3665BC0021C125E5DA44DF4DACD1D677D0",
+      "sourceDenom": "amantra",
+      "decimals": 18
+    },
+    {
+      "symbol": "TREATS",
+      "coinMinimalDenom": "ibc/6751CE4273A8F71527D8E29AD07E458D74F0EA9AB077B31C826EE46B63709B94",
+      "sourceDenom": "factory/mantra1uvn4qgh96lc83dzu8mpf3u93lk605ls0vg0nf2/TREATS",
+      "decimals": 18
+    },
+    {
+      "symbol": "wmantraUSD",
+      "coinMinimalDenom": "ibc/990003A3424B424F29F726690D32DBEC35EE8D3A1F5F85E22A109A4B0275C8C7",
+      "sourceDenom": "erc20:0x36A28B8C8FFD00bEE440dB8273D57451FBeAf767",
+      "decimals": 18
+    },
+    {
+      "symbol": "NTRN",
+      "coinMinimalDenom": "ibc/6E74FCA8851F2F81213A6F0D61DB78D1898454C3BF924105DF6549500E1C4785",
+      "sourceDenom": "untrn",
+      "decimals": 6
+    },
+    {
+      "symbol": "amATOM",
+      "coinMinimalDenom": "ibc/E972F89F57AF6BDE0CCC97CABFF4DD8D99408B8A741570E1E3D1C35465C98E5E",
+      "sourceDenom": "factory/neutron15lku24mqhvy4v4gryrqs4662n9v9q4ux9tayn89cmdzldjcgawushxvm76/amatom",
+      "decimals": 6
+    },
+    {
+      "symbol": "ARENA.neutrontestnet",
+      "coinMinimalDenom": "ibc/75A2019B97727932AC38166227D2F2725A04429A270193F96A6B485BFDA85475",
+      "sourceDenom": "factory/neutron1r3slyjlf7g76mz3na6gh7c8ek62rhssrzf60uh0emyw3x94rppyqfcs0pk/uarena",
+      "decimals": 6
+    },
+    {
+      "symbol": "TEST1",
+      "coinMinimalDenom": "ibc/00E8F22FACDCBE3D392B0F97E00FF982816A97A80FED05F334E570EA0C61C012",
+      "sourceDenom": "factory/neutron1aphhmsv5lglvvycldlveckjq8zcgwvg34cn0cs/test-token-1",
+      "decimals": 18
+    },
+    {
+      "symbol": "TEST2",
+      "coinMinimalDenom": "ibc/960EB48DED498DC1E2D7F8FB403FD1B742A365BA8FB5CC462B6B98D021B7BBF1",
+      "sourceDenom": "factory/neutron1aphhmsv5lglvvycldlveckjq8zcgwvg34cn0cs/test-token-2",
+      "decimals": 6
+    },
+    {
+      "symbol": "TEST3",
+      "coinMinimalDenom": "ibc/5CFBA4381E596D95B727706B71B3CE2E0594C3A8A107B81EAA307BD31C3E335C",
+      "sourceDenom": "factory/neutron1aphhmsv5lglvvycldlveckjq8zcgwvg34cn0cs/test-token-3",
+      "decimals": 18
+    },
+    {
+      "symbol": "TEST4",
+      "coinMinimalDenom": "ibc/3510CF55F51F7251D8C7568685C74B38460E6C1C0DBD8B407AF67A5AC173AAB5",
+      "sourceDenom": "factory/neutron1aphhmsv5lglvvycldlveckjq8zcgwvg34cn0cs/test-token-4",
+      "decimals": 18
+    },
+    {
+      "symbol": "TEST5",
+      "coinMinimalDenom": "ibc/D646B399C291F138E4CA1DA27E2B56423D103BA0673DD4F9F23A081BF3CE7C31",
+      "sourceDenom": "factory/neutron1aphhmsv5lglvvycldlveckjq8zcgwvg34cn0cs/test-token-5",
+      "decimals": 6
+    },
+    {
+      "symbol": "TEST6",
+      "coinMinimalDenom": "ibc/79025D18A64F7D0209FD2E9948C2489A980445E46B8837F72A04279BB995A1DC",
+      "sourceDenom": "factory/neutron1aphhmsv5lglvvycldlveckjq8zcgwvg34cn0cs/test-token-6",
+      "decimals": 6
+    },
+    {
+      "symbol": "dTIA",
+      "coinMinimalDenom": "ibc/2EEFC77CF82E3AAC46ED591F723CC0269E97399442C16F0A98701BFD34407834",
+      "sourceDenom": "factory/neutron1qex378awvwhsxealmrtuunn70f242u49dagqus6ug423paxyevyqvw9s3t/uTIA",
+      "decimals": 6
+    },
+    {
+      "symbol": "STAKE",
+      "coinMinimalDenom": "ibc/5C6404C2D9BAE2BE397908F6503464EBC3EAEE448AE6B7ED218248FF7E7A3236",
+      "sourceDenom": "ustake",
+      "decimals": 6
+    },
+    {
+      "symbol": "LOVE",
+      "coinMinimalDenom": "ibc/C1E2C2C2B161C797B19965ADB14CD65216B1499DC99E7A551AD9499314923353",
+      "sourceDenom": "ulove",
+      "decimals": 6
+    },
+    {
+      "symbol": "USDY",
+      "coinMinimalDenom": "ibc/1A0B3E71D4DECB10DBCD327EF8D8EF5E87580898A2A3D9D6ACB1DF2BFD127063",
+      "sourceDenom": "ausdy",
+      "decimals": 18
+    },
+    {
+      "symbol": "NLS",
+      "coinMinimalDenom": "ibc/EF145240FE393A1CEC9C35ED1866A235D23176EA9B32069F714C9309FEA55718",
+      "sourceDenom": "unls",
+      "decimals": 6
+    },
+    {
+      "symbol": "NLS.nolustestnet1",
+      "coinMinimalDenom": "ibc/95359FD9C5D15DBD7B9A6B7271F5E769776999590DE138ED62B6E89D5D010B7C",
+      "sourceDenom": "unls",
+      "decimals": 6
+    },
+    {
+      "symbol": "stkATOM",
+      "coinMinimalDenom": "ibc/D9A34ACE6D4867DB2C0C33158DBAED4344544FCAE8E7CA8CE99D3E8D6B2288EC",
+      "sourceDenom": "stk/uatom",
+      "decimals": 6
+    },
+    {
+      "symbol": "stkOSMO",
+      "coinMinimalDenom": "ibc/8CE20F6604DB1F06CFDAEEEF906F5A8FC9D2A9F8F01E0A807A8F316EF59DF2CB",
+      "sourceDenom": "stk/uosmo",
+      "decimals": 6
+    },
+    {
+      "symbol": "stkDV4TNT",
+      "coinMinimalDenom": "ibc/D982A6760247DF2A691771C968150BD87A9B2DEB93B8EB830F92498485B97448",
+      "sourceDenom": "stk/adv4tnt",
+      "decimals": 18
+    },
+    {
+      "symbol": "SGE",
+      "coinMinimalDenom": "ibc/8446486081A4086F4C6D5846FC5DC12E01D2DDD0C6A89B00B2F25EDD9986D026",
+      "sourceDenom": "usge",
+      "decimals": 6
+    },
+    {
+      "symbol": "STARS",
+      "coinMinimalDenom": "ibc/1D082F4F5EE0A1F582B03B35F0F663A9CF9C6333874EDBF405559F8ABA024F24",
+      "sourceDenom": "ustars",
+      "decimals": 6
+    },
+    {
+      "symbol": "SWTR",
+      "coinMinimalDenom": "ibc/7693B5E16070750C244B382F151E7347F324AEA7F4FFE94F4A3E02D26B35DE67",
+      "sourceDenom": "aswtr",
+      "decimals": 18
+    },
+    {
+      "symbol": "HUSD",
+      "coinMinimalDenom": "ibc/32E0369D76BE8DD8071DF98AC078906DB583E0BBB5A6E2A3DFD4213CF90CD026",
+      "sourceDenom": "uusd",
+      "decimals": 6
+    },
+    {
+      "symbol": "HKHD",
+      "coinMinimalDenom": "ibc/8779E4C3F83063A8AC8FDD5E3C71B0992A5A1CC09FCAE12413C17E994126D15E",
+      "sourceDenom": "ukhd",
+      "decimals": 6
+    },
+    {
+      "symbol": "HVND",
+      "coinMinimalDenom": "ibc/B8E2C7589D16766EA8E272B4872B15F8337683ED86CFE3F68E459EE9C548148A",
+      "sourceDenom": "uvnd",
+      "decimals": 6
+    },
+    {
+      "symbol": "AMBER",
+      "coinMinimalDenom": "ibc/5A40E4FFC9DD1E4BF7BF7C77AC2B0F72C179DB4C64D4B351969FC8EBB9D12B97",
+      "sourceDenom": "uamber",
+      "decimals": 6
+    },
+    {
+      "symbol": "TTNT",
+      "coinMinimalDenom": "ibc/C46DB64CBA325B311FA2595F70B2C99DAA4CE86483F28213AC81838E754E5DF0",
+      "sourceDenom": "uttnt",
+      "decimals": 6
+    },
+    {
+      "symbol": "TNT4",
+      "coinMinimalDenom": "ibc/1CAED08A9A93AE357DDF458058FFDD7C9CC70EF67C0E4C2375B8E4414AAE2686",
+      "sourceDenom": "utnt4",
+      "decimals": 2
+    },
+    {
+      "symbol": "TKX",
+      "coinMinimalDenom": "ibc/28EEF762052DB8C3D27A7BF625E9F86A1B3B689CC8D80C818CEDF2EB6CBA02A6",
+      "sourceDenom": "atkx",
+      "decimals": 18
+    },
+    {
+      "symbol": "BTC.titantestnet",
+      "coinMinimalDenom": "ibc/C2F0F46B01AAE7A428C81159FD526E656003184F3B23AE9BC5A5C01D27A468C4",
+      "sourceDenom": "factory/titan14jwu2vsu4xuefce0xjyk2t58awth4v42lvwxslqe6vszac66y4tqe4sjm5/w-btc",
+      "decimals": 8
+    },
+    {
+      "symbol": "ETH.titantestnet",
+      "coinMinimalDenom": "ibc/0468EE12050833E80C567E5A408139D6E076C1E46EEA77277AF0136DEE8409BB",
+      "sourceDenom": "factory/titan16gyvmp43st00s220zypex4lgvwqc3ve8l4657rhxj8myeadswmkq75slkc/eth",
+      "decimals": 18
+    },
+    {
+      "symbol": "USDC.titantestnet",
+      "coinMinimalDenom": "ibc/0FE46DB890126A2758AE42108360502C4A6E6A8D5C5BE5F7B198B1473626BF9E",
+      "sourceDenom": "factory/titan16gyvmp43st00s220zypex4lgvwqc3ve8l4657rhxj8myeadswmkq75slkc/usdc",
+      "decimals": 6
+    },
+    {
+      "symbol": "SOL.titantestnet",
+      "coinMinimalDenom": "ibc/66DA712DF71216C5CC271CD09452FF12A306067AAD7C2C7BC64E42FCCC77D8D9",
+      "sourceDenom": "factory/titan16gyvmp43st00s220zypex4lgvwqc3ve8l4657rhxj8myeadswmkq75slkc/sol",
+      "decimals": 9
+    },
+    {
+      "symbol": "MEOW",
+      "coinMinimalDenom": "ibc/00D744FBA9B8120A8601AE0CCE37B59CE14368CC6CC3DDE99E545A99EA5313EA",
+      "sourceDenom": "factory/titan16gyvmp43st00s220zypex4lgvwqc3ve8l4657rhxj8myeadswmkq75slkc/meow",
+      "decimals": 8
+    },
+    {
+      "symbol": "XION",
+      "coinMinimalDenom": "ibc/5C274155106FEB0C093F76A12BB67222E479E1EBE043F319CE4463E54F7A357C",
+      "sourceDenom": "uxion",
+      "decimals": 6
+    },
+    {
+      "symbol": "XION.xiontestnet2",
+      "coinMinimalDenom": "ibc/C34D578ABDA051E1CB3AC2C24834E7E43E0F7FA37DB8EE114FB5F263AF545622",
+      "sourceDenom": "uxion",
+      "decimals": 6
+    },
+    {
+      "symbol": "XRP.xrplevmtestnet",
+      "coinMinimalDenom": "ibc/24F3F83587084430E25E268A143565FEF5C84AE2308F2657BC46D1F227D2AF65",
+      "sourceDenom": "axrp",
+      "decimals": 18
+    },
+    {
+      "symbol": "WILLYZ",
+      "coinMinimalDenom": "factory/osmo1zlkzu72774ynac53necz46u4ycqtp36wedrar0/willyz",
+      "sourceDenom": "factory/osmo1zlkzu72774ynac53necz46u4ycqtp36wedrar0/willyz",
+      "decimals": 6
     }
   ]
 }

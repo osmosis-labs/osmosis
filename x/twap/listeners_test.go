@@ -2,6 +2,7 @@ package twap_test
 
 import (
 	"fmt"
+	"slices"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -271,15 +272,15 @@ func (s *TestSuite) TestAfterEpochEnd() {
 
 	// iterate through all epoch, ensure that epoch only gets pruned in prune epoch identifier
 	// we reverse iterate here to test epochs that are not prune epoch
-	for i := len(allEpochs) - 1; i >= 0; i-- {
-		err = s.App.TwapKeeper.EpochHooks().AfterEpochEnd(s.Ctx, allEpochs[i].Identifier, int64(1))
+	for _, allEpoch := range slices.Backward(allEpochs) {
+		err = s.App.TwapKeeper.EpochHooks().AfterEpochEnd(s.Ctx, allEpoch.Identifier, int64(1))
 		s.Require().NoError(err)
 
 		lastKeptTime := s.Ctx.BlockTime().Add(-s.twapkeeper.RecordHistoryKeepPeriod(s.Ctx))
 		pruneState := s.twapkeeper.GetPruningState(s.Ctx)
 
 		// state entry should be set for pruning state
-		if allEpochs[i].Identifier == pruneEpochIdentifier {
+		if allEpoch.Identifier == pruneEpochIdentifier {
 			s.Require().Equal(true, pruneState.IsPruning)
 			s.Require().Equal(lastKeptTime, pruneState.LastKeptTime)
 

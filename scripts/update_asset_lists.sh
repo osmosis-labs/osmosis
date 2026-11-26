@@ -28,12 +28,18 @@ function http_get() {
 	fi
 }
 
-# Download mainnet asset list
-http_get \
-	"https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmosis-1/osmosis-1.assetlist.json" \
-	./cmd/osmosisd/cmd/osmosis-1-assetlist.json
+# Download an asset list and keep only the fields the CLI reads (the frontend list also
+# carries logos and metadata, which would only grow the binary).
+function update_asset_list() {
+	chain=$1
+	tmp=$(mktemp)
+	http_get \
+		"https://raw.githubusercontent.com/osmosis-labs/assetlists/main/${chain}/generated/frontend/assetlist.json" \
+		"$tmp"
+	jq '{assets: [.assets[] | {symbol, coinMinimalDenom, sourceDenom, decimals}]}' "$tmp" \
+		> "./cmd/osmosisd/cmd/${chain}-assetlist.json"
+	rm -f "$tmp"
+}
 
-# Download testnet asset list
-http_get \
-	"https://raw.githubusercontent.com/osmosis-labs/assetlists/main/osmo-test-5/osmo-test-5.assetlist.json" \
-	./cmd/osmosisd/cmd/osmo-test-5-assetlist.json
+update_asset_list osmosis-1
+update_asset_list osmo-test-5

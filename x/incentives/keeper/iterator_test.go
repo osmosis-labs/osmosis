@@ -20,7 +20,7 @@ func TestFilterLocksByMinDuration(t *testing.T) {
 	)
 
 	locks := make([]lockuptypes.PeriodLock, numLocks)
-	for i := 0; i < numLocks; i++ {
+	for i := range numLocks {
 		locks[i] = lockuptypes.PeriodLock{
 			ID:       uint64(i + 1),
 			Duration: minDuration,
@@ -32,7 +32,7 @@ func TestFilterLocksByMinDuration(t *testing.T) {
 
 	require.Equal(t, len(locks), len(filteredLocks))
 
-	for i := 0; i < len(locks); i++ {
+	for i := range locks {
 		require.Equal(t, locks[i].ID, filteredLocks[i].ID)
 	}
 }

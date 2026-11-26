@@ -1,4 +1,5 @@
-# This is a scheduled workflow that runs on the 1st and 15th day of every month at 00:00 UTC and can also be triggered manually.
+# The asset lists are embedded in the osmosisd binary, so they only reach users with a release.
+# Run this workflow manually as part of release prep, before cutting the release branch.
 # To run locally one could use the following command:
 #   act workflow_dispatch -j update-asset-lists --secret-file .env --input source-branch=7859
 #
@@ -15,8 +16,6 @@
 # See more: https://github.com/peter-evans/create-pull-request?tab=readme-ov-file#action-behaviour
 name: Update Asset Lists
 on:
-  schedule:
-    - cron:  '0 0 1,15 * *'
   workflow_dispatch:
     inputs:
       target-branch:

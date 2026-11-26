@@ -130,8 +130,10 @@ func (m MockAuthenticatorFail) Type() string {
 }
 
 // Ensure our mocks implement the Authenticator interface
-var _ authenticator.Authenticator = MockAuthenticator{}
-var _ authenticator.Authenticator = MockAuthenticatorFail{}
+var (
+	_ authenticator.Authenticator = MockAuthenticator{}
+	_ authenticator.Authenticator = MockAuthenticatorFail{}
+)
 
 // Tests for the mocks behavior
 func TestMockAuthenticators(t *testing.T) {

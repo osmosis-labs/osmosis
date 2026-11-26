@@ -51,8 +51,6 @@ func (s *KeeperTestSuite) TestBeforeValidatorSlashed() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			s.SetupTest()
 
@@ -160,8 +158,6 @@ func (s *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			s.SetupTest()
 
@@ -184,7 +180,7 @@ func (s *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 
 			// slash unbonding lockups for all intermediary accounts
 			slashFactor := osmomath.NewDecWithPrec(5, 2)
-			for i := 0; i < len(valAddrs); i++ {
+			for i := range valAddrs {
 				s.App.SuperfluidKeeper.SlashLockupsForValidatorSlash(
 					s.Ctx,
 					valAddrs[i],

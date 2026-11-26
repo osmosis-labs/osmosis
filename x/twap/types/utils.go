@@ -25,7 +25,7 @@ func GetAllUniqueDenomPairs(denoms []string) []DenomPair {
 
 	denomPairs := []DenomPair{}
 
-	for i := 0; i < len(denoms); i++ {
+	for i := range denoms {
 		for j := i + 1; j < len(denoms); j++ {
 			if denoms[i] == denoms[j] {
 				panic("input had duplicated denom")

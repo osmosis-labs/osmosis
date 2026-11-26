@@ -2,10 +2,11 @@
 
 use std::collections::BTreeSet;
 
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, Timestamp};
 use cw_storage_plus::{Deque, Item, Map};
 
 use super::{
+    pending_send::PendingSend,
     rate_limit::RateLimit,
     rbac::{QueuedMessage, Roles},
 };
@@ -50,4 +51,36 @@ pub const RBAC_PERMISSIONS: Map<String, BTreeSet<Roles>> = Map::new("rbac");
 
 /// Accepted channels for restricted denom. This is a map of denom -> channels.
 /// If a denom is not in this map, it is unrestricted.
+///
+/// Since 0.2.0 the key is the denom as it exists on this chain (ibc/HASH for
+/// anything with a transfer/ path, see blocking::restriction_key). The 0.2.0
+/// migration moved the entries written earlier under packet-form keys.
 pub const ACCEPTED_CHANNELS_FOR_RESTRICTED_DENOM: Map<String, Vec<String>> = Map::new("acfd");
+
+/// Sends that passed a quota, keyed by (source channel, packet content key),
+/// so a failure can be refunded while the recorded windows are still active.
+/// The content key (Packet::send_key) is what the chain passes unchanged
+/// between the send and its acknowledgement. One record per key, counting the
+/// identical sends it stands for. Written on a counted send, settled by
+/// UndoSend, removed by eviction on later sends on the same channel or by
+/// PurgeStaleSends, the latter two only once the record's retention
+/// (PendingSend::retain_until) has passed.
+pub const PENDING_SENDS: Map<(String, String), PendingSend> = Map::new("pending_sends");
+
+/// The highest window generation a removed path had reached, kept until the
+/// path is added again so that its new windows continue the count rather than
+/// restart it. Written by RemovePath, consumed by AddPath; governance-only.
+pub const REMOVED_PATH_GENERATION: Map<(String, String), u64> = Map::new("removed_generation");
+
+/// Block time of the migration to 0.2.0. Sends counted before it have no
+/// pending-send record, so a failure of one of them is refunded the way
+/// earlier versions did, to the quota's current window, but only while that
+/// window began before the migration and so may still hold the charge.
+pub const MIGRATED_AT: Item<Timestamp> = Item::new("migrated_at");
+
+/// Index of PENDING_SENDS by (source channel, retain_until in nanoseconds,
+/// content key), so that the records whose retention ends first on a channel
+/// can be found first. Exactly one entry per record; maintained together with
+/// PENDING_SENDS.
+pub const PENDING_SENDS_BY_EXPIRY: Map<(String, u64, String), ()> =
+    Map::new("pending_sends_expiry");

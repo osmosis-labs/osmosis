@@ -3,6 +3,7 @@ package v33
 import (
 	"time"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v32/app/upgrades"
 
 	store "cosmossdk.io/store/types"
@@ -10,6 +11,22 @@ import (
 
 // UpgradeName defines the on-chain upgrade name for the Osmosis v33 upgrade.
 const UpgradeName = "v33"
+
+const (
+	MainnetChainID = "osmosis-1"
+	// OsmoBurnAddress is the null address used to burn OSMO.
+	OsmoBurnAddress = "osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmcn030"
+)
+
+// OsmoBurnSourceAddresses are the accounts whose OSMO is moved at the v33 upgrade.
+var OsmoBurnSourceAddresses = [...]string{
+	// Levana sub-DAO, burn approved by governance in proposal 1003
+	// (https://www.mintscan.io/osmosis/proposals/1003).
+	"osmo1qzm2kyesqqpu4d7uaskkf023t4husm6vaan2gkc2xru0xcvzx23qq5f5c7",
+	// NeutrOsmosis sub-DAO, burn approved by governance in proposal 1050
+	// (https://www.mintscan.io/osmosis/proposals/1050).
+	"osmo128laly00yvpr69usz6s9n7j8f8sx6780npyauyt9ku46mpwx2n5qsxapq6",
+}
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
@@ -51,3 +68,17 @@ var HuahuaStuckGauges = []struct {
 	{1958, "GAMM606"},
 	{1959, "GAMM606"},
 }
+
+// MinCommissionRate is the network minimum validator commission from v33, approved by governance in
+// proposal 1066 (https://www.mintscan.io/osmosis/proposals/1066).
+var MinCommissionRate = osmomath.MustNewDecFromStr("0.10")
+
+// Event emitted for each validator whose commission the upgrade raises.
+const (
+	EventTypeMinCommissionRaised = "v33_min_commission_raised"
+	AttributeKeyValidator        = "validator"
+	AttributeKeyOldRate          = "old_rate"
+	AttributeKeyNewRate          = "new_rate"
+	AttributeKeyOldMaxRate       = "old_max_rate"
+	AttributeKeyNewMaxRate       = "new_max_rate"
+)

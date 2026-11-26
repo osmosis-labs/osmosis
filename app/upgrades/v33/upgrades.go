@@ -8,9 +8,11 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v32/app/keepers"
+	appparams "github.com/osmosis-labs/osmosis/v32/app/params"
 	"github.com/osmosis-labs/osmosis/v32/app/upgrades"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v32/x/incentives/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v32/x/lockup/types"
@@ -18,11 +20,13 @@ import (
 )
 
 // CreateUpgradeHandler returns the v33 upgrade handler. After the module migrations it:
+//   - moves the OSMO balances of OsmoBurnSourceAddresses to the burn address on mainnet,
 //   - recovers the HUAHUA held by gauges 1954-1959 (see HuahuaStuckGauges),
 //   - moves any mint pool incentives proportion to the community pool, since minted coins are no
 //     longer allocated to pool incentives,
 //   - finishes the stale gauges and sends their undistributed coins to the community pool
-//     (see pruneStaleGauges).
+//     (see pruneStaleGauges),
+//   - raises every validator's commission to MinCommissionRate (see raiseMinCommission).
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
@@ -38,6 +42,13 @@ func CreateUpgradeHandler(
 		}
 
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		if sdkCtx.ChainID() == MainnetChainID {
+			if err := moveOsmoToBurnAddress(sdkCtx, keepers); err != nil {
+				return nil, err
+			}
+		} else {
+			sdkCtx.Logger().Info("skipping v33 OSMO burn transfer on non-mainnet chain", "chain_id", sdkCtx.ChainID())
+		}
 
 		// The recovery is not critical to the chain, so a failure is logged instead of halting the upgrade.
 		// It runs in a cache context so that it is applied either entirely or not at all.
@@ -63,8 +74,42 @@ func CreateUpgradeHandler(
 			sdkCtx.Logger().Info("v33 upgrade: stale gauges pruned", "count", pruned, "community_pool_amount", prunedCoins.String())
 		}
 
+		// Like the HUAHUA recovery, a failure is logged and the commission change is applied entirely or not at all.
+		cacheCtx, write = sdkCtx.CacheContext()
+		raised, err := raiseMinCommission(cacheCtx, keepers.StakingKeeper)
+		if err != nil {
+			sdkCtx.Logger().Error("v33 upgrade: minimum commission raise skipped", "error", err)
+		} else {
+			write()
+			sdkCtx.Logger().Info("v33 upgrade: minimum commission raised", "min_commission_rate", MinCommissionRate.String(), "validators_modified", raised)
+		}
+
 		return migrations, nil
 	}
+}
+
+// moveOsmoToBurnAddress sends each source account's entire uosmo balance at upgrade
+// time. Other denoms remain in the source accounts. Empty balances are skipped.
+func moveOsmoToBurnAddress(ctx sdk.Context, keepers *keepers.AppKeepers) error {
+	to, err := sdk.AccAddressFromBech32(OsmoBurnAddress)
+	if err != nil {
+		return fmt.Errorf("v33 OSMO burn recipient: %w", err)
+	}
+	for _, source := range OsmoBurnSourceAddresses {
+		from, err := sdk.AccAddressFromBech32(source)
+		if err != nil {
+			return fmt.Errorf("v33 OSMO burn source %s: %w", source, err)
+		}
+		balance := keepers.BankKeeper.GetBalance(ctx, from, appparams.BaseCoinUnit)
+		if balance.IsZero() {
+			continue
+		}
+		if err := keepers.BankKeeper.SendCoins(ctx, from, to, sdk.NewCoins(balance)); err != nil {
+			return fmt.Errorf("v33 moving OSMO from %s to burn address: %w", source, err)
+		}
+		ctx.Logger().Info("v33 upgrade: OSMO moved to burn address", "from", source, "to", OsmoBurnAddress, "amount", balance.String())
+	}
+	return nil
 }
 
 // recoverHuahuaFromStuckGauges finishes the stuck HUAHUA gauges and sends their undistributed coins
@@ -153,4 +198,73 @@ func isStaleGauge(isPerpetual bool, lockQueryType lockuptypes.LockQueryType, fil
 		lockQueryType == lockuptypes.ByDuration &&
 		filledEpochs == 0 &&
 		startTime.Before(StaleGaugeStartCutoff)
+}
+
+// raiseMinCommission sets the staking MinCommissionRate to the v33 minimum and raises every validator
+// (of any status) below it, as approved by governance in proposal 1066. It returns the number of
+// validators modified.
+//
+// MinCommissionRate is only enforced when a validator is created or edits its commission, so the
+// parameter change alone would leave existing rates unchanged. The rates are therefore rewritten
+// directly, skipping Commission.ValidateNewRate: its 24h and max_change_rate limits protect delegators
+// from sudden increases by an operator, whereas this increase is mandated by governance.
+// A validator's MaxRate below the minimum is raised to it as well. MaxChangeRate needs no change:
+// it is at most the old MaxRate, so it stays within the new one.
+func raiseMinCommission(ctx sdk.Context, stakingKeeper *stakingkeeper.Keeper) (int, error) {
+	params, err := stakingKeeper.GetParams(ctx)
+	if err != nil {
+		return 0, err
+	}
+	params.MinCommissionRate = MinCommissionRate
+	if err := stakingKeeper.SetParams(ctx, params); err != nil {
+		return 0, err
+	}
+
+	validators, err := stakingKeeper.GetAllValidators(ctx)
+	if err != nil {
+		return 0, err
+	}
+	modified := 0
+	for _, validator := range validators {
+		oldCommission := validator.Commission
+		if oldCommission.Rate.GTE(MinCommissionRate) && oldCommission.MaxRate.GTE(MinCommissionRate) {
+			continue
+		}
+
+		newCommission := oldCommission
+		if newCommission.MaxRate.LT(MinCommissionRate) {
+			newCommission.MaxRate = MinCommissionRate
+		}
+		if newCommission.Rate.LT(MinCommissionRate) {
+			newCommission.Rate = MinCommissionRate
+			newCommission.UpdateTime = ctx.BlockTime()
+		}
+		if err := newCommission.Validate(); err != nil {
+			return 0, fmt.Errorf("validator %s: %w", validator.OperatorAddress, err)
+		}
+
+		valAddr, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
+		if err != nil {
+			return 0, err
+		}
+		// Same order as MsgEditValidator: the hook runs before the validator is written.
+		if err := stakingKeeper.Hooks().BeforeValidatorModified(ctx, valAddr); err != nil {
+			return 0, err
+		}
+		validator.Commission = newCommission
+		if err := stakingKeeper.SetValidator(ctx, validator); err != nil {
+			return 0, err
+		}
+
+		ctx.EventManager().EmitEvent(sdk.NewEvent(
+			EventTypeMinCommissionRaised,
+			sdk.NewAttribute(AttributeKeyValidator, validator.OperatorAddress),
+			sdk.NewAttribute(AttributeKeyOldRate, oldCommission.Rate.String()),
+			sdk.NewAttribute(AttributeKeyNewRate, newCommission.Rate.String()),
+			sdk.NewAttribute(AttributeKeyOldMaxRate, oldCommission.MaxRate.String()),
+			sdk.NewAttribute(AttributeKeyNewMaxRate, newCommission.MaxRate.String()),
+		))
+		modified++
+	}
+	return modified, nil
 }

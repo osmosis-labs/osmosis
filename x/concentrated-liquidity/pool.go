@@ -3,6 +3,7 @@ package concentrated_liquidity
 import (
 	"errors"
 	"fmt"
+	"slices"
 
 	"cosmossdk.io/store/prefix"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -313,12 +314,7 @@ func (k Keeper) DecreaseConcentratedPoolTickSpacing(ctx sdk.Context, poolIdToTic
 // validateTickSpacing returns true if the given tick spacing is one of the authorized tick spacings set in the
 // params. False otherwise.
 func (k Keeper) validateTickSpacing(params types.Params, tickSpacing uint64) bool {
-	for _, authorizedTick := range params.AuthorizedTickSpacing {
-		if tickSpacing == authorizedTick {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(params.AuthorizedTickSpacing, tickSpacing)
 }
 
 // validateTickSpacingUpdate returns true if the given tick spacing is one of the authorized tick spacings set in the
@@ -337,12 +333,7 @@ func (k Keeper) validateTickSpacingUpdate(pool types.ConcentratedPoolExtension, 
 // validateSpreadFactor returns true if the given spread factor is one of the authorized spread factors set in the
 // params. False otherwise.
 func (k Keeper) validateSpreadFactor(params types.Params, spreadFactor osmomath.Dec) bool {
-	for _, authorizedSpreadFactor := range params.AuthorizedSpreadFactors {
-		if spreadFactor.Equal(authorizedSpreadFactor) {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(params.AuthorizedSpreadFactors, spreadFactor.Equal)
 }
 
 // GetLinkedBalancerPoolID is a wrapper function for gammKeeper.GetLinkedBalancerPoolID in order to allow

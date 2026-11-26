@@ -198,7 +198,7 @@ func (s *KeeperTestSuite) TestGRPCGauges() {
 	s.Require().Equal(res.Data[0].String(), expectedGauge.String())
 
 	// create 10 more gauges
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)})
 		s.Ctx = s.Ctx.WithBlockTime(startTime.Add(time.Second))
 	}
@@ -246,7 +246,7 @@ func (s *KeeperTestSuite) TestGRPCActiveGauges() {
 	s.Require().Equal(res.Data[0].String(), expectedGauge.String())
 
 	// create 20 more gauges
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		_, gauge, _, _ := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)})
 		s.Ctx = s.Ctx.WithBlockTime(startTime.Add(time.Second))
 
@@ -304,7 +304,7 @@ func (s *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 	s.Require().Equal(res.Data[0].String(), expectedGauge.String())
 
 	// setup 20 more gauges with the pool denom
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		_, gauge, _, _ := s.SetupNewGaugeWithDenom(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)}, "pool")
 		s.Ctx = s.Ctx.WithBlockTime(startTime.Add(time.Second))
 
@@ -374,7 +374,7 @@ func (s *KeeperTestSuite) TestGRPCUpcomingGauges() {
 	s.Require().Equal(res.Data[0].String(), expectedGauge.String())
 
 	// setup 20 more upcoming gauges
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		_, gauge, _, _ := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)})
 		s.Ctx = s.Ctx.WithBlockTime(startTime.Add(time.Second))
 
@@ -440,7 +440,7 @@ func (s *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 	s.Require().Len(res.UpcomingGauges, 0)
 
 	// setup 20 more upcoming gauges with pool denom
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		_, gauge, _, _ := s.SetupNewGaugeWithDenom(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)}, "pool")
 		s.Ctx = s.Ctx.WithBlockTime(startTime.Add(time.Second))
 

@@ -12,7 +12,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	k.SetLockableDurations(ctx, genState.LockableDurations)
 
 	for _, gauge := range genState.Gauges {
-		gauge := gauge
 		// set gauge refs for all non-byGroup gauges
 		err := k.SetGaugeWithRefKey(ctx, &gauge)
 		if err != nil {
@@ -21,7 +20,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	}
 
 	for _, groupGauges := range genState.GroupGauges {
-		groupGauges := groupGauges
 		err := k.setGauge(ctx, &groupGauges)
 		if err != nil {
 			panic(err)

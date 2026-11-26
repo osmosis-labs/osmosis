@@ -5,9 +5,7 @@ import (
 	"fmt"
 )
 
-var (
-	ErrNodeIsSyncing = errors.New("node is syncing, skipping block processing")
-)
+var ErrNodeIsSyncing = errors.New("node is syncing, skipping block processing")
 
 type NodeSyncCheckError struct {
 	Err error

@@ -182,7 +182,8 @@ var (
 			[]gaugeChecker{
 				{0, 0, []int64{0}, 0, true, defaultSingleLockDistributedCoins},
 				{1, 1, []int64{1}, 0, true, defaultSingleLockDistributedCoins},
-				{2, 2, []int64{2}, 0, true, defaultSingleLockDistributedCoins}},
+				{2, 2, []int64{2}, 0, true, defaultSingleLockDistributedCoins},
+			},
 		},
 		// Do not allocate rewards to the Unbonded validator. Therefore gauges are not distributed
 		{
@@ -197,8 +198,6 @@ var (
 
 func (s *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 	for _, tc := range distributionTestCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			s.SetupTest()
 

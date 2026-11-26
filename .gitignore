@@ -247,6 +247,7 @@ tests/ibc-hooks/[0-9]*/
 
 # Python
 **/venv/*
+.venv/
 **/*.pyc
 
 # Ignore binary created from localosmosis scripts

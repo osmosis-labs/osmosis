@@ -5,13 +5,12 @@ package cmd
 import (
 	"encoding/hex"
 	"fmt"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
-
-	"path/filepath"
 
 	dbm "github.com/cosmos/cosmos-db"
 
@@ -92,7 +91,7 @@ func getModuleHashesAtHeight(svrCtx *server.Context, appCreator servertypes.AppC
 	}
 
 	// Sort the storeInfos slice based on the module name.
-	sort.Slice(storeInfos, func(i, j int) bool {
+	sort.SliceStable(storeInfos, func(i, j int) bool {
 		return storeInfos[i].Name < storeInfos[j].Name
 	})
 

@@ -73,8 +73,6 @@ weighted_developer_rewards_receivers: []`,
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryParams()
 			clientCtx := val.ClientCtx
@@ -107,8 +105,6 @@ func (s *IntegrationTestSuite) TestGetCmdQueryEpochProvisions() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryEpochProvisions()
 			clientCtx := val.ClientCtx
