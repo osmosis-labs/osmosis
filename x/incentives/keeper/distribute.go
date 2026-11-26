@@ -320,10 +320,12 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge,
 
 // distributionInfo stores all of the information for pent up sends for rewards distributions.
 // This enables us to lower the number of events and calls to back.
+//
+// Rewards are grouped by the address that receives them. A lock's reward receiver can differ from its owner,
+// and an owner can have several locks with different receivers, so the owner does not identify the recipient.
 type distributionInfo struct {
 	nextID                        int
-	lockOwnerAddrToID             map[string]int
-	lockOwnerAddrToRewardReceiver map[string]string
+	rewardReceiverAddrToID        map[string]int
 	idToBech32Addr                []string
 	idToDecodedRewardReceiverAddr []sdk.AccAddress
 	idToDistrCoins                []sdk.Coins
@@ -333,25 +335,24 @@ type distributionInfo struct {
 func newDistributionInfo() distributionInfo {
 	return distributionInfo{
 		nextID:                        0,
-		lockOwnerAddrToID:             make(map[string]int),
-		lockOwnerAddrToRewardReceiver: make(map[string]string),
+		rewardReceiverAddrToID:        make(map[string]int),
 		idToBech32Addr:                []string{},
 		idToDecodedRewardReceiverAddr: []sdk.AccAddress{},
 		idToDistrCoins:                []sdk.Coins{},
 	}
 }
 
-// addLockRewards adds the provided rewards to the lockID mapped to the provided owner address.
-func (d *distributionInfo) addLockRewards(owner, rewardReceiver string, rewards sdk.Coins) error {
-	// if we have already added current lock owner's info to distribution Info, simply add reward.
-	if id, ok := d.lockOwnerAddrToID[owner]; ok {
+// addLockRewards adds the provided rewards of a lock to the pending send for the lock's reward receiver address.
+func (d *distributionInfo) addLockRewards(rewardReceiver string, rewards sdk.Coins) error {
+	// if we have already added this reward receiver to distribution Info, simply add reward.
+	if id, ok := d.rewardReceiverAddrToID[rewardReceiver]; ok {
 		oldDistrCoins := d.idToDistrCoins[id]
 		d.idToDistrCoins[id] = rewards.Add(oldDistrCoins...)
-	} else { // if this is a new owner that we have not added to distributionInfo yet,
+	} else { // if this is a new reward receiver that we have not added to distributionInfo yet,
 		// add according information to the distributionInfo maps.
 		id := d.nextID
 		d.nextID += 1
-		d.lockOwnerAddrToID[owner] = id
+		d.rewardReceiverAddrToID[rewardReceiver] = id
 		decodedRewardReceiverAddr, err := sdk.AccAddressFromBech32(rewardReceiver)
 		if err != nil {
 			return err
@@ -803,7 +804,7 @@ func (k Keeper) distributeInternal(
 			if rewardReceiver == "" {
 				rewardReceiver = lock.Owner
 			}
-			err := distrInfo.addLockRewards(lock.Owner, rewardReceiver, distrCoins)
+			err := distrInfo.addLockRewards(rewardReceiver, distrCoins)
 			if err != nil {
 				return nil, err
 			}

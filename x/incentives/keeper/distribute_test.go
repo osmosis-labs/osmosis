@@ -199,6 +199,36 @@ func (s *KeeperTestSuite) TestDistribute() {
 			},
 			expectedRewards: []sdk.Coins{twoKRewardCoins, oneKRewardCoins},
 		},
+		// gauge 1 gives 3k coins. three locks, all eligible. 1k coins per lock.
+		// We change the reward recipient of only the second of twoLockupUser's two locks to oneLockupUser.
+		// The rewards of each lock go to that lock's recipient: 2k should go to oneLockupUser and 1k to twoLockupUser.
+		{
+			name:   "Change Reward Receiver: second of two lockups of one user has a different receiver, single default gauge",
+			users:  []userLocks{oneLockupUser, twoLockupUser},
+			gauges: []perpGaugeDesc{defaultGauge},
+			changeRewardReceiver: []changeRewardReceiver{
+				{
+					lockId:              3,
+					newReceiverAccIndex: 0,
+				},
+			},
+			expectedRewards: []sdk.Coins{twoKRewardCoins, oneKRewardCoins},
+		},
+		// gauge 1 gives 3k coins. three locks, all eligible. 1k coins per lock.
+		// We change the reward recipient of only the first of twoLockupUser's two locks to oneLockupUser.
+		// The rewards of each lock go to that lock's recipient: 2k should go to oneLockupUser and 1k to twoLockupUser.
+		{
+			name:   "Change Reward Receiver: first of two lockups of one user has a different receiver, single default gauge",
+			users:  []userLocks{oneLockupUser, twoLockupUser},
+			gauges: []perpGaugeDesc{defaultGauge},
+			changeRewardReceiver: []changeRewardReceiver{
+				{
+					lockId:              2,
+					newReceiverAccIndex: 0,
+				},
+			},
+			expectedRewards: []sdk.Coins{twoKRewardCoins, oneKRewardCoins},
+		},
 		// gauge 1 gives 3k coins. three locks, all eligible.
 		// gauge 2 gives 3k coins. one lock, to twoLockupUser.
 		// Change all of oneLockupUser's reward recipient to twoLockupUser, vice versa.
