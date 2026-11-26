@@ -248,6 +248,7 @@ func (s *UpgradeTestSuite) TestHuahuaRecoverySkippedOnUnexpectedState() {
 // TestPruneStaleGauges checks that only the stale gauges are finished, that their undistributed coins
 // go to the community pool, and that the HUAHUA gauges are never pruned, even when their recovery fails.
 func (s *UpgradeTestSuite) TestPruneStaleGauges() {
+	s.Ctx = s.Ctx.WithChainID(v33.MainnetChainID)
 	s.prepareMainnetHuahuaGauges()
 	// Make the HUAHUA recovery fail, so that its gauges stay active and stale-looking.
 	huahuaGauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, 1959)
@@ -262,8 +263,13 @@ func (s *UpgradeTestSuite) TestPruneStaleGauges() {
 		s.createGauge(3001, false, 0, staleTime, sdk.NewCoins()),
 		// The zero start time of some mainnet gauges is before the cutoff too.
 		s.createGauge(3002, false, 0, time.Unix(0, 0).UTC(), sdk.NewCoins(sdk.NewInt64Coin("uion", 300))),
+		// The last audited gauge.
+		s.createGauge(v33.StaleGaugeMaxID, false, 0, staleTime, sdk.NewCoins()),
 	}
 	kept := []incentivestypes.Gauge{
+		// Created after the audited gauges with the default, zero start time and not yet distributing,
+		// like mainnet gauge 36983.
+		s.createGauge(v33.StaleGaugeMaxID+1, false, 0, time.Unix(0, 0).UTC(), sdk.NewCoins(sdk.NewInt64Coin("uion", 1))),
 		// Has distributed.
 		s.createGauge(3100, false, 1, staleTime, sdk.NewCoins(sdk.NewInt64Coin("uion", 1))),
 		// Started after the cutoff.
@@ -303,6 +309,74 @@ func (s *UpgradeTestSuite) TestPruneStaleGauges() {
 	}
 	for _, stuck := range v33.HuahuaStuckGauges {
 		s.Require().Contains(active, stuck.GaugeID)
+	}
+	s.AssertEventEmitted(s.Ctx, incentivestypes.TypeEvtForceFinishGauge, len(stale))
+}
+
+// TestPruneStaleGaugesSkipped checks that, when the stale gauges cannot be pruned, the upgrade neither
+// halts the chain nor prunes some of them, and still applies its other changes.
+func (s *UpgradeTestSuite) TestPruneStaleGaugesSkipped() {
+	staleTime := time.Date(2022, 7, 22, 6, 50, 19, 0, time.UTC)
+	tests := map[string]struct {
+		chainID string
+		// corrupt alters the second of the two stale gauges.
+		corrupt func(gauge *incentivestypes.Gauge)
+	}{
+		"not mainnet": {
+			chainID: "osmo-test-5",
+			corrupt: func(*incentivestypes.Gauge) {},
+		},
+		"incentives module cannot cover the undistributed coins": {
+			chainID: v33.MainnetChainID,
+			corrupt: func(gauge *incentivestypes.Gauge) {
+				gauge.Coins = sdk.NewCoins(sdk.NewInt64Coin("uion", 1_000_000))
+			},
+		},
+		"gauge distributed more than its coins": {
+			chainID: v33.MainnetChainID,
+			corrupt: func(gauge *incentivestypes.Gauge) {
+				gauge.DistributedCoins = gauge.Coins.Add(sdk.NewInt64Coin("uion", 1))
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			s.Ctx = s.Ctx.WithChainID(tc.chainID)
+			s.App.MintKeeper.SetParam(s.Ctx, minttypes.KeyPoolAllocationRatio, minttypes.DistributionProportions{
+				Staking:          osmomath.MustNewDecFromStr("0.25"),
+				PoolIncentives:   osmomath.MustNewDecFromStr("0.45"),
+				DeveloperRewards: osmomath.MustNewDecFromStr("0.25"),
+				CommunityPool:    osmomath.MustNewDecFromStr("0.05"),
+			})
+
+			// The first gauge is valid, so a partial prune would finish it.
+			s.createGauge(3000, false, 0, staleTime, sdk.NewCoins(sdk.NewInt64Coin("uion", 700)))
+			second := s.createGauge(3001, false, 0, staleTime.Add(time.Hour), sdk.NewCoins(sdk.NewInt64Coin("uion", 300)))
+			tc.corrupt(&second)
+			s.setGaugeRaw(&second)
+
+			moduleAddr := s.App.AccountKeeper.GetModuleAddress(incentivestypes.ModuleName)
+			moduleBefore := s.App.BankKeeper.GetAllBalances(s.Ctx, moduleAddr)
+			communityPoolBefore := s.communityPool()
+			activeBefore := s.App.IncentivesKeeper.GetActiveGauges(s.Ctx)
+			finishedBefore := s.App.IncentivesKeeper.GetFinishedGauges(s.Ctx)
+
+			s.runUpgrade()
+
+			// Nothing was pruned, including the gauge processed before the failing one.
+			s.Require().Equal(moduleBefore, s.App.BankKeeper.GetAllBalances(s.Ctx, moduleAddr))
+			s.Require().Equal(communityPoolBefore, s.communityPool())
+			s.Require().Equal(activeBefore, s.App.IncentivesKeeper.GetActiveGauges(s.Ctx))
+			s.Require().Equal(finishedBefore, s.App.IncentivesKeeper.GetFinishedGauges(s.Ctx))
+			s.AssertEventEmitted(s.Ctx, incentivestypes.TypeEvtForceFinishGauge, 0)
+
+			// The rest of the upgrade was applied.
+			proportions := s.App.MintKeeper.GetParams(s.Ctx).DistributionProportions
+			s.Require().True(proportions.PoolIncentives.IsZero())
+			s.Require().Equal(osmomath.MustNewDecFromStr("0.5"), proportions.CommunityPool)
+		})
 	}
 }
 

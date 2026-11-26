@@ -852,7 +852,11 @@ func isIdlePerpetualGauge(gauge types.Gauge) bool {
 	if !gauge.IsPerpetual {
 		return false
 	}
-	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins...)
+	// A gauge that distributed more than its coins is left to the distribution logic, as before.
+	remainCoins, hasNeg := gauge.Coins.SafeSub(gauge.DistributedCoins...)
+	if hasNeg {
+		return false
+	}
 	if remainCoins.Empty() {
 		return true
 	}

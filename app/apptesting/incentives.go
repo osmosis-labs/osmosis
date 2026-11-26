@@ -42,6 +42,6 @@ func (s *KeeperTestHelper) UpdatePoolIncentivesDistrRecords(records ...poolincen
 			merged = append(merged, record)
 		}
 	}
-	sort.Slice(merged, func(i, j int) bool { return merged[i].GaugeId < merged[j].GaugeId })
+	sort.SliceStable(merged, func(i, j int) bool { return merged[i].GaugeId < merged[j].GaugeId })
 	s.ReplacePoolIncentivesDistrRecords(merged...)
 }

@@ -491,43 +491,52 @@ func (k Keeper) checkIfDenomsAreDistributable(ctx sdk.Context, coins sdk.Coins) 
 // WARNING: this bypasses the normal distribution logic. It is intended to be called only from
 // governance-approved upgrade handlers. It is not exposed through any message or query.
 func (k Keeper) ForceFinishGaugeAndSendUndistributed(ctx sdk.Context, gaugeID uint64, recipient sdk.AccAddress) (sdk.Coins, error) {
-	undistributed, err := k.forceFinishGauge(ctx, gaugeID)
+	// The gauge is finished before its coins are sent, so both run in a cache context: on error
+	// neither the state changes nor the event are applied.
+	cacheCtx, write := ctx.CacheContext()
+	undistributed, err := k.forceFinishGauge(cacheCtx, gaugeID)
 	if err != nil {
 		return nil, err
 	}
 
 	if !undistributed.IsZero() {
-		if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, recipient, undistributed); err != nil {
+		if err := k.bk.SendCoinsFromModuleToAccount(cacheCtx, types.ModuleName, recipient, undistributed); err != nil {
 			return nil, err
 		}
 	}
 
-	emitForceFinishGaugeEvent(ctx, gaugeID, recipient.String(), undistributed)
+	emitForceFinishGaugeEvent(cacheCtx, gaugeID, recipient.String(), undistributed)
+	write()
 	return undistributed, nil
 }
 
 // ForceFinishGaugesToCommunityPool force finishes each of the given active, non-perpetual gauges like
 // ForceFinishGaugeAndSendUndistributed, and funds the community pool with their undistributed coins
-// in a single transfer. Returns the total amount sent.
+// in a single transfer. Returns the total amount sent. It is applied to all of the gauges or, on
+// error, to none of them.
 //
 // WARNING: this bypasses the normal distribution logic. It is intended to be called only from
 // governance-approved upgrade handlers. It is not exposed through any message or query.
 func (k Keeper) ForceFinishGaugesToCommunityPool(ctx sdk.Context, gaugeIDs []uint64) (sdk.Coins, error) {
+	// The gauges are finished before their coins are sent, so both run in a cache context: on error
+	// neither the state changes nor the events are applied.
+	cacheCtx, write := ctx.CacheContext()
 	total := sdk.NewCoins()
 	for _, gaugeID := range gaugeIDs {
-		undistributed, err := k.forceFinishGauge(ctx, gaugeID)
+		undistributed, err := k.forceFinishGauge(cacheCtx, gaugeID)
 		if err != nil {
 			return nil, err
 		}
 		total = total.Add(undistributed...)
-		emitForceFinishGaugeEvent(ctx, gaugeID, types.CommunityPoolReceiver, undistributed)
+		emitForceFinishGaugeEvent(cacheCtx, gaugeID, types.CommunityPoolReceiver, undistributed)
 	}
 
 	if !total.IsZero() {
-		if err := k.ck.FundCommunityPool(ctx, total, k.ak.GetModuleAddress(types.ModuleName)); err != nil {
+		if err := k.ck.FundCommunityPool(cacheCtx, total, k.ak.GetModuleAddress(types.ModuleName)); err != nil {
 			return nil, err
 		}
 	}
+	write()
 	return total, nil
 }
 

@@ -98,9 +98,9 @@ The minting module contains the following parameters:
 | reduction_period_in_epochs                 | int64        | 156                                    |
 | reduction_factor                           | string (dec) | "0.6666666666666"                      |
 | distribution_proportions.staking           | string (dec) | "0.4"                                  |
-| distribution_proportions.pool_incentives   | string (dec) | "0.3"                                  |
+| distribution_proportions.pool_incentives   | string (dec) | "0" (must be zero)                     |
 | distribution_proportions.developer_rewards | string (dec) | "0.2"                                  |
-| distribution_proportions.community_pool    | string (dec) | "0.1"                                  |
+| distribution_proportions.community_pool    | string (dec) | "0.4"                                  |
 | weighted_developer_rewards_receivers       | array        | [{"address": "osmoxx", "weight": "1"}] |
 | minting_rewards_distribution_start_epoch   | int64        | 10                                     |
 
@@ -113,7 +113,7 @@ Below are all the network parameters for the `mint` module:
 - **`reduction_factor`** - What the total token issuance factor will reduce by after the reduction period passes (if set to 66.66%, token issuance will reduce by 1/3)
 - **`distribution_proportions`** - Categories in which the specified proportion of newly released tokens are distributed to
   - **`staking`** - Proportion of minted funds to incentivize staking OSMO
-  - **`pool_incentives`** - Proportion of minted funds to incentivize pools on Osmosis
+  - **`pool_incentives`** - Deprecated. Minted funds are no longer allocated to pool incentives, and this proportion must be zero
   - **`developer_rewards`** - Proportion of minted funds to pay developers for their past and future work
   - **`community_pool`** - Proportion of minted funds to be set aside for the community pool
 - **`weighted_developer_rewards_receivers`** - Addresses that developer rewards will go to. The weight attached to an address is the percent of the developer rewards that the specific address will receive

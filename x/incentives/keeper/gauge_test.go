@@ -1117,9 +1117,14 @@ func (s *KeeperTestSuite) TestForceFinishGaugesToCommunityPool() {
 	moduleBalanceBefore := s.App.BankKeeper.GetAllBalances(s.Ctx, moduleAddr)
 	communityPoolBefore := s.communityPool()
 
-	// A perpetual gauge cannot be force finished.
-	_, err := k.ForceFinishGaugesToCommunityPool(s.Ctx, []uint64{perpetualID})
+	// A perpetual gauge cannot be force finished, and the gauges before it in the batch are left untouched.
+	_, err := k.ForceFinishGaugesToCommunityPool(s.Ctx, []uint64{gaugeIDsToFinish[0], perpetualID})
 	s.Require().ErrorContains(err, "is perpetual")
+	s.Require().Equal(moduleBalanceBefore, s.App.BankKeeper.GetAllBalances(s.Ctx, moduleAddr))
+	s.Require().Equal(communityPoolBefore, s.communityPool())
+	s.Require().Contains(gaugeIDs(k.GetActiveGauges(s.Ctx)), gaugeIDsToFinish[0])
+	s.Require().NotContains(gaugeIDs(k.GetFinishedGauges(s.Ctx)), gaugeIDsToFinish[0])
+	s.AssertEventEmitted(s.Ctx, types.TypeEvtForceFinishGauge, 0)
 
 	sent, err := k.ForceFinishGaugesToCommunityPool(s.Ctx, gaugeIDsToFinish)
 	s.Require().NoError(err)
@@ -1146,21 +1151,25 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_SkipsIdlePerpetualGauges() {
 	s.LockTokens(s.TestAccs[1], defaultLPTokens, defaultLockDuration)
 	distrTo := lockuptypes.QueryCondition{LockQueryType: lockuptypes.ByDuration, Denom: defaultLPDenom, Duration: defaultLockDuration}
 	dustCoins := sdk.NewCoins(sdk.NewInt64Coin(otherDenom, 100))
-	fundedCoins := sdk.NewCoins(sdk.NewInt64Coin(defaultRewardDenom, 1_000_000))
+	// The suite's minimum value for distribution is in the bond denom, so rewards in it are always paid out.
+	fundedCoins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000_000))
+	twoEpochsOfTen := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 200_000))
 
-	// Filled epochs after two epochs.
+	// Filled epochs and distributed coins after two epochs. Non-perpetual gauges are paid over ten epochs.
 	tests := map[string]struct {
 		isPerpetual          bool
 		coins                sdk.Coins
 		fullyDistributed     bool
 		expectedFilledEpochs uint64
+		expectedDistributed  sdk.Coins
 	}{
-		"perpetual, dust: skipped":                       {isPerpetual: true, coins: dustCoins, expectedFilledEpochs: 0},
-		"perpetual, fully distributed: skipped":          {isPerpetual: true, coins: fundedCoins, fullyDistributed: true, expectedFilledEpochs: 0},
-		"perpetual, funded: processed every epoch":       {isPerpetual: true, coins: fundedCoins, expectedFilledEpochs: 2},
-		"non-perpetual, dust: progresses every epoch":    {isPerpetual: false, coins: dustCoins, expectedFilledEpochs: 2},
-		"non-perpetual, funded: distributes every epoch": {isPerpetual: false, coins: fundedCoins, expectedFilledEpochs: 2},
+		"perpetual, dust: skipped":                       {isPerpetual: true, coins: dustCoins, expectedFilledEpochs: 0, expectedDistributed: sdk.NewCoins()},
+		"perpetual, fully distributed: skipped":          {isPerpetual: true, coins: fundedCoins, fullyDistributed: true, expectedFilledEpochs: 0, expectedDistributed: fundedCoins},
+		"perpetual, funded: pays out, then is skipped":   {isPerpetual: true, coins: fundedCoins, expectedFilledEpochs: 1, expectedDistributed: fundedCoins},
+		"non-perpetual, dust: progresses every epoch":    {isPerpetual: false, coins: dustCoins, expectedFilledEpochs: 2, expectedDistributed: sdk.NewCoins()},
+		"non-perpetual, funded: distributes every epoch": {isPerpetual: false, coins: fundedCoins, expectedFilledEpochs: 2, expectedDistributed: twoEpochsOfTen},
 	}
+	lockOwnerBalanceBefore := s.App.BankKeeper.GetBalance(s.Ctx, s.TestAccs[1], sdk.DefaultBondDenom)
 
 	gaugeIDsByName := make(map[string]uint64, len(tests))
 	for name, tc := range tests {
@@ -1180,8 +1189,14 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_SkipsIdlePerpetualGauges() {
 		gauge, err := k.GetGaugeByID(s.Ctx, gaugeIDsByName[name])
 		s.Require().NoError(err)
 		s.Require().Equal(tc.expectedFilledEpochs, gauge.FilledEpochs, name)
+		s.Require().Equal(tc.expectedDistributed.String(), gauge.DistributedCoins.String(), name)
 		s.Require().Contains(gaugeIDs(k.GetActiveGauges(s.Ctx)), gauge.Id, name)
 	}
+
+	// The only lock received the funded perpetual gauge in full and two epochs of the funded non-perpetual one.
+	expectedPaid := fundedCoins.Add(twoEpochsOfTen...)
+	lockOwnerBalanceAfter := s.App.BankKeeper.GetBalance(s.Ctx, s.TestAccs[1], sdk.DefaultBondDenom)
+	s.Require().Equal(expectedPaid.AmountOf(sdk.DefaultBondDenom), lockOwnerBalanceAfter.Amount.Sub(lockOwnerBalanceBefore.Amount))
 }
 
 // communityPool returns the community pool balance.

@@ -24,7 +24,7 @@ import (
 //   - recovers the HUAHUA held by gauges 1954-1959 (see HuahuaStuckGauges),
 //   - moves any mint pool incentives proportion to the community pool, since minted coins are no
 //     longer allocated to pool incentives,
-//   - finishes the stale gauges and sends their undistributed coins to the community pool
+//   - finishes the stale gauges on mainnet and sends their undistributed coins to the community pool
 //     (see pruneStaleGauges),
 //   - raises every validator's commission to MinCommissionRate (see raiseMinCommission).
 func CreateUpgradeHandler(
@@ -63,16 +63,7 @@ func CreateUpgradeHandler(
 
 		movePoolIncentivesProportionToCommunityPool(sdkCtx, keepers.MintKeeper)
 
-		// Like the HUAHUA recovery, pruning is not critical to the chain. It runs after the recovery so
-		// that the HUAHUA gauges are never pruned, even if the recovery failed.
-		cacheCtx, write = sdkCtx.CacheContext()
-		pruned, prunedCoins, err := pruneStaleGauges(cacheCtx, keepers.IncentivesKeeper)
-		if err != nil {
-			sdkCtx.Logger().Error("v33 upgrade: stale gauge pruning skipped", "error", err)
-		} else {
-			write()
-			sdkCtx.Logger().Info("v33 upgrade: stale gauges pruned", "count", pruned, "community_pool_amount", prunedCoins.String())
-		}
+		pruneStaleGaugesOnMainnet(sdkCtx, keepers.IncentivesKeeper)
 
 		// Like the HUAHUA recovery, a failure is logged and the commission change is applied entirely or not at all.
 		cacheCtx, write = sdkCtx.CacheContext()
@@ -163,13 +154,36 @@ func movePoolIncentivesProportionToCommunityPool(ctx sdk.Context, mintKeeper *mi
 	mintKeeper.SetParams(ctx, params)
 }
 
+// pruneStaleGaugesOnMainnet runs pruneStaleGauges on mainnet only: the stale gauge set, and
+// StaleGaugeMaxID in particular, was audited against mainnet state and means nothing on other chains.
+//
+// Like the HUAHUA recovery, pruning is not critical to the chain, so a failure is logged instead of
+// halting the upgrade, and it runs in a cache context so that it is applied entirely or not at all.
+// It must run after the recovery, so that the HUAHUA gauges are never pruned, even if the recovery failed.
+func pruneStaleGaugesOnMainnet(ctx sdk.Context, incentivesKeeper *incentiveskeeper.Keeper) {
+	if ctx.ChainID() != MainnetChainID {
+		ctx.Logger().Info("skipping v33 stale gauge pruning on non-mainnet chain", "chain_id", ctx.ChainID())
+		return
+	}
+
+	cacheCtx, write := ctx.CacheContext()
+	pruned, prunedCoins, err := pruneStaleGauges(cacheCtx, incentivesKeeper)
+	if err != nil {
+		ctx.Logger().Error("v33 upgrade: stale gauge pruning skipped", "error", err)
+		return
+	}
+	write()
+	ctx.Logger().Info("v33 upgrade: stale gauges pruned", "count", pruned, "community_pool_amount", prunedCoins.String())
+}
+
 // pruneStaleGauges finishes every stale gauge and sends their undistributed coins to the community pool.
 // It returns the number of gauges finished and the coins sent.
 //
-// A gauge is stale if it is an active, non-perpetual lock gauge that started before StaleGaugeStartCutoff
-// and never completed a single distribution. Such a gauge only progresses when locks qualify for it, so
-// these gauges have been skipped every epoch for years while still being loaded and checked each epoch.
-// On mainnet this matches 14,540 gauges, almost all created in 2022 and funded with LP shares.
+// A gauge is stale if it is an active, non-perpetual lock gauge with an ID of at most StaleGaugeMaxID
+// that started before StaleGaugeStartCutoff and never completed a single distribution. Such a gauge only
+// progresses when locks qualify for it, so these gauges have been skipped every epoch for years while
+// still being loaded and checked each epoch.
+// On mainnet this matches 14,539 gauges, almost all created in 2022 and funded with LP shares.
 func pruneStaleGauges(ctx sdk.Context, incentivesKeeper *incentiveskeeper.Keeper) (int, sdk.Coins, error) {
 	excluded := make(map[uint64]struct{}, len(HuahuaStuckGauges))
 	for _, stuck := range HuahuaStuckGauges {
@@ -181,7 +195,8 @@ func pruneStaleGauges(ctx sdk.Context, incentivesKeeper *incentiveskeeper.Keeper
 		if _, ok := excluded[gauge.Id]; ok {
 			continue
 		}
-		if isStaleGauge(gauge.IsPerpetual, gauge.DistributeTo.LockQueryType, gauge.FilledEpochs, gauge.StartTime) {
+		if gauge.Id <= StaleGaugeMaxID &&
+			isStaleGauge(gauge.IsPerpetual, gauge.DistributeTo.LockQueryType, gauge.FilledEpochs, gauge.StartTime) {
 			staleGaugeIDs = append(staleGaugeIDs, gauge.Id)
 		}
 	}
