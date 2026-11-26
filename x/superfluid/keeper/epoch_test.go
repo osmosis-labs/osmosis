@@ -1,9 +1,12 @@
 package keeper_test
 
 import (
+	"bytes"
 	"errors"
 	"time"
 
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -13,8 +16,10 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v32/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v32/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v32/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v32/x/superfluid"
 	"github.com/osmosis-labs/osmosis/v32/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v32/x/superfluid/types"
+	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
@@ -390,4 +395,36 @@ func (s *KeeperTestSuite) TestDistributeSuperfluidGauges() {
 			})
 		}
 	}
+}
+
+// TestBeginBlockerUnknownEpochIdentifier tests that BeginBlocker logs an error and returns, instead of panicking,
+// when the x/incentives distribution epoch identifier does not match an epoch registered in x/epochs.
+func (s *KeeperTestSuite) TestBeginBlockerUnknownEpochIdentifier() {
+	const unknownEpochIdentifier = "unregistered_epoch"
+
+	s.SetupTest()
+
+	incentivesParams := s.App.IncentivesKeeper.GetParams(s.Ctx)
+	incentivesParams.DistrEpochIdentifier = unknownEpochIdentifier
+	// The param validation accepts any non empty identifier.
+	s.Require().NoError(incentivesParams.Validate())
+	s.App.IncentivesKeeper.SetParams(s.Ctx, incentivesParams)
+	s.Require().Equal(unknownEpochIdentifier, s.App.SuperfluidKeeper.GetEpochIdentifier(s.Ctx))
+	s.Require().Equal(epochtypes.EpochInfo{}, s.App.EpochsKeeper.GetEpochInfo(s.Ctx, unknownEpochIdentifier))
+
+	logs := &bytes.Buffer{}
+	ctx := s.Ctx.WithLogger(log.NewLogger(logs, log.OutputJSONOption()))
+
+	s.Require().NotPanics(func() {
+		superfluid.BeginBlocker(ctx, *s.App.SuperfluidKeeper, s.App.EpochsKeeper)
+	})
+	s.Require().Contains(logs.String(), `"level":"error"`)
+	s.Require().Contains(logs.String(), `"epoch_identifier":"`+unknownEpochIdentifier+`"`)
+
+	// The module registered in the app goes through the same code.
+	beginBlocker, ok := s.App.ModuleManager().Modules[types.ModuleName].(appmodule.HasBeginBlocker)
+	s.Require().True(ok)
+	s.Require().NotPanics(func() {
+		s.Require().NoError(beginBlocker.BeginBlock(ctx))
+	})
 }
