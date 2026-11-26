@@ -42,6 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* [#9849](https://github.com/osmosis-labs/osmosis/pull/9849) fix(osmoutils): `cosmwasm.Sudo` gives the contract call a gas meter sized from the gas the caller has left (capped at 30M), not from the caller's total gas limit, matching `cosmwasm.Query`. Takes effect in the node once `osmoutils` is tagged and bumped in `go.mod`; state machine breaking at that point.
+* [#9849](https://github.com/osmosis-labs/osmosis/pull/9849) fix(superfluid): converting a lock to stake returns an error for a lock that does not hold exactly one coin, instead of indexing its first coin unchecked. No message creates such a lock.
 * [#9847](https://github.com/osmosis-labs/osmosis/pull/9847) fix(poolmanager): the poolmanager module now uses the same keeper instance as the other modules, so taker fee share agreements apply to swaps routed through x/gamm and x/protorev. State machine breaking.
 * [#9847](https://github.com/osmosis-labs/osmosis/pull/9847) fix(txfees): keep the EIP-1559 target gas positive when the block max gas is unlimited or too small, avoiding a division by zero in EndBlock.
 * [#9847](https://github.com/osmosis-labs/osmosis/pull/9847) fix(superfluid): BeginBlocker logs an error instead of panicking when the incentives epoch identifier is not a registered epoch.
