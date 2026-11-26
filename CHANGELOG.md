@@ -42,6 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* [#9849](https://github.com/osmosis-labs/osmosis/pull/9849) fix(osmoutils): `cosmwasm.Sudo` gives the contract call a gas meter sized from the gas the caller has left (capped at 30M), not from the caller's total gas limit, matching `cosmwasm.Query`. Takes effect in the node once `osmoutils` is tagged and bumped in `go.mod`; state machine breaking at that point.
+* [#9849](https://github.com/osmosis-labs/osmosis/pull/9849) fix(superfluid): converting a lock to stake returns an error for a lock that does not hold exactly one coin, instead of indexing its first coin unchecked. No message creates such a lock.
 * [#9833](https://github.com/osmosis-labs/osmosis/pull/9833) fix(poolmanager): the `EstimateTradeBasedOnPriceImpact` queries no longer panic with `Int64() out of bound` when the input amount exceeds `math.MaxInt64` (common for assets with 18 decimals); the price deviation now uses `NewDecFromInt` for full precision. Query-only path, no state change.
 * [#9839](https://github.com/osmosis-labs/osmosis/pull/9839) fix: the release workflow builds the requested tag. It passes `release_tag` to GoReleaser as `GORELEASER_CURRENT_TAG` and loads the Makefile from the workflow commit, so a final tag that shares a commit with a release candidate tag no longer builds the rc tag. Forward-port of #9777 from v32.x. Release automation only.
 * [#9838](https://github.com/osmosis-labs/osmosis/pull/9838) chore: drop the leftover cometbft fork `replace` from `osmoutils`, `x/epochs` and `x/ibc-hooks` so they use upstream cometbft v0.38.23, finishing the unfork from #9527. No state machine change.
