@@ -235,20 +235,18 @@ func (k *Keeper) SetWasmKeeper(wasmKeeper types.WasmKeeper) {
 	k.wasmKeeper = wasmKeeper
 }
 
-// BeginBlock sets the poolmanager caches if they are empty
+// BeginBlock reloads the poolmanager caches from the store.
+//
+// The caches are only ever written here. Message handlers and EndBlock write the store alone, so a write made
+// on a context that is later discarded (a failed transaction or proposal, a simulation) cannot leave an entry
+// behind in memory. Reloading on every block keeps every node's cache equal to its committed state, regardless
+// of when the node was last restarted. A change to the store therefore takes effect in the block after it.
 func (k *Keeper) BeginBlock(ctx sdk.Context) {
-	// Here, the only time in which these caches are empty is during the start up of the node.
-	// Once the node has started up and runs the first BeginBlock of the poolmanager module,
-	// it will populate the caches. Every single subsequent BeginBlock, this logic will be a no-op.
-	if len(k.cachedTakerFeeShareAgreementMap) == 0 || len(k.cachedRegisteredAlloyPoolByAlloyDenomMap) == 0 {
-		err := k.setTakerFeeShareAgreementsMapCached(ctx)
-		if err != nil {
-			ctx.Logger().Error(fmt.Errorf("%w", types.ErrSetTakerFeeShareAgreementsMapCached).Error())
-		}
-		err = k.setAllRegisteredAlloyedPoolsByDenomCached(ctx)
-		if err != nil {
-			ctx.Logger().Error(fmt.Errorf("%w", types.ErrSetAllRegisteredAlloyedPoolsByDenomCached).Error())
-		}
+	if err := k.setTakerFeeShareAgreementsMapCached(ctx); err != nil {
+		ctx.Logger().Error(fmt.Errorf("%w: %w", types.ErrSetTakerFeeShareAgreementsMapCached, err).Error())
+	}
+	if err := k.setAllRegisteredAlloyedPoolsByDenomCached(ctx); err != nil {
+		ctx.Logger().Error(fmt.Errorf("%w: %w", types.ErrSetAllRegisteredAlloyedPoolsByDenomCached, err).Error())
 	}
 }
 

@@ -271,7 +271,7 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 			expectedCachedTakerFeeShareAgreementMap:          defaultCachedTakerFeeShareAgreementMap,
 			expectedCachedRegisteredAlloyPoolByAlloyDenomMap: defaultCachedRegisteredAlloyPoolByAlloyDenomMap,
 		},
-		"cachedTakerFeeShareAgreementMap is not empty, cachedRegisteredAlloyPoolByAlloyDenomMap is not empty, should not update": {
+		"cachedTakerFeeShareAgreementMap is not empty, cachedRegisteredAlloyPoolByAlloyDenomMap is not empty, both differ from the store, should be replaced by the store contents": {
 			storeSetup: func() {
 				differentCachedTakerFeeShareAgreement := map[string]types.TakerFeeShareAgreement{
 					defaultTakerFeeShareAgreements[0].Denom: {
@@ -294,25 +294,8 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 				}
 				s.App.PoolManagerKeeper.SetCacheTrackers(differentCachedTakerFeeShareAgreement, differentCachedRegisteredAlloyPoolToState)
 			},
-			expectedCachedTakerFeeShareAgreementMap: map[string]types.TakerFeeShareAgreement{
-				defaultTakerFeeShareAgreements[0].Denom: {
-					Denom:       defaultTakerFeeShareAgreements[0].Denom,
-					SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-					SkimAddress: defaultTakerFeeShareAgreements[0].SkimAddress,
-				},
-			},
-			expectedCachedRegisteredAlloyPoolByAlloyDenomMap: map[string]types.AlloyContractTakerFeeShareState{
-				createAlloyedDenom(contractAddress): {
-					ContractAddress: contractAddress,
-					TakerFeeShareAgreements: []types.TakerFeeShareAgreement{
-						{
-							Denom:       defaultTakerFeeShareAgreements[0].Denom,
-							SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-							SkimAddress: defaultTakerFeeShareAgreements[0].SkimAddress,
-						},
-					},
-				},
-			},
+			expectedCachedTakerFeeShareAgreementMap:          defaultCachedTakerFeeShareAgreementMap,
+			expectedCachedRegisteredAlloyPoolByAlloyDenomMap: defaultCachedRegisteredAlloyPoolByAlloyDenomMap,
 		},
 	}
 
@@ -354,8 +337,9 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 
 // TestAppModuleUsesWiredKeeper tests that the poolmanager AppModule registered in the app operates on the same
 // keeper instance that the other modules are wired with. The taker fee share caches live on that instance and
-// their maps are re-assigned in BeginBlock, so an agreement set through the module's message server must be
-// visible to, and skimmed by, a swap that enters through another module (x/gamm here).
+// their maps are re-assigned in BeginBlock, so an agreement set through the module's message server and loaded
+// by the module's BeginBlock must be visible to, and skimmed by, a swap that enters through another module
+// (x/gamm here).
 func (s *KeeperTestSuite) TestAppModuleUsesWiredKeeper() {
 	s.SetupTest()
 
@@ -371,11 +355,6 @@ func (s *KeeperTestSuite) TestAppModuleUsesWiredKeeper() {
 	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
 	poolId := s.PrepareBalancerPool()
 
-	// Run BeginBlock of the module registered in the app, which rebuilds the caches from state.
-	beginBlocker, ok := s.App.ModuleManager().Modules[types.ModuleName].(appmodule.HasBeginBlocker)
-	s.Require().True(ok)
-	s.Require().NoError(beginBlocker.BeginBlock(s.Ctx))
-
 	// Set the agreement through the app's message router, that is the module's message server.
 	s.routeMsg(&types.MsgSetTakerFeeShareAgreementForDenom{
 		Sender:      s.App.AccountKeeper.GetModuleAddress(govtypes.ModuleName).String(),
@@ -383,6 +362,11 @@ func (s *KeeperTestSuite) TestAppModuleUsesWiredKeeper() {
 		SkimPercent: osmomath.MustNewDecFromStr("0.1"),
 		SkimAddress: s.TestAccs[1].String(),
 	})
+
+	// Run BeginBlock of the module registered in the app, which rebuilds the caches from state.
+	beginBlocker, ok := s.App.ModuleManager().Modules[types.ModuleName].(appmodule.HasBeginBlocker)
+	s.Require().True(ok)
+	s.Require().NoError(beginBlocker.BeginBlock(s.Ctx))
 
 	// The keeper the other modules are wired with must see the agreement in its cache.
 	_, found := s.App.PoolManagerKeeper.GetTakerFeeShareAgreementFromDenomUNSAFE(takerFeeShareDenom)

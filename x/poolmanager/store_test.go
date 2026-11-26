@@ -282,6 +282,11 @@ func (s *KeeperTestSuite) TestSetTakerFeeShareAgreementForDenom() {
 			s.SetupTest()
 			tc.setupFunc()
 
+			// The setter only writes the store, the cache is reloaded from it in BeginBlock.
+			_, found := s.App.PoolManagerKeeper.GetTakerFeeShareAgreementFromDenom(tc.denomToRequest)
+			s.Require().False(found)
+			s.App.PoolManagerKeeper.BeginBlock(s.Ctx)
+
 			takerFeeShareAgreements, found := s.App.PoolManagerKeeper.GetTakerFeeShareAgreementFromDenom(tc.denomToRequest)
 			if tc.expectedFound {
 				s.Require().True(found)
@@ -291,6 +296,40 @@ func (s *KeeperTestSuite) TestSetTakerFeeShareAgreementForDenom() {
 			}
 		})
 	}
+}
+
+// TestTakerFeeShareCachesIgnoreDiscardedWrites tests that a taker fee share agreement or an alloyed pool
+// registration written on a context that is then discarded, as happens for a failed transaction or proposal,
+// never reaches the caches, and that a committed write reaches them in the next BeginBlock.
+func (s *KeeperTestSuite) TestTakerFeeShareCachesIgnoreDiscardedWrites() {
+	s.SetupTest()
+	poolInfos := s.PrepareAllSupportedPools()
+	alloyedPool, err := s.App.CosmwasmPoolKeeper.GetPool(s.Ctx, poolInfos.AlloyedPoolID)
+	s.Require().NoError(err)
+	alloyedDenom := createAlloyedDenom(alloyedPool.GetAddress().String())
+	agreement := defaultTakerFeeShareAgreements[0]
+
+	requireCached := func(expected bool) {
+		_, found := s.App.PoolManagerKeeper.GetTakerFeeShareAgreementFromDenom(agreement.Denom)
+		s.Require().Equal(expected, found)
+		_, found = s.App.PoolManagerKeeper.GetRegisteredAlloyedPoolFromDenom(alloyedDenom)
+		s.Require().Equal(expected, found)
+	}
+
+	// Write on a branched context and drop it without writing it back.
+	discardedCtx, _ := s.Ctx.CacheContext()
+	s.Require().NoError(s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(discardedCtx, agreement))
+	s.Require().NoError(s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(discardedCtx, poolInfos.AlloyedPoolID))
+	requireCached(false)
+	s.App.PoolManagerKeeper.BeginBlock(s.Ctx)
+	requireCached(false)
+
+	// A write that is kept is picked up by the next BeginBlock, not before.
+	s.Require().NoError(s.App.PoolManagerKeeper.SetTakerFeeShareAgreementForDenom(s.Ctx, agreement))
+	s.Require().NoError(s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID))
+	requireCached(false)
+	s.App.PoolManagerKeeper.BeginBlock(s.Ctx)
+	requireCached(true)
 }
 
 func (s *KeeperTestSuite) TestGetTakerFeeShareDenomsToAccruedValue() {
@@ -772,6 +811,7 @@ func (s *KeeperTestSuite) TestGetRegisteredAlloyedPoolFromDenom() {
 			}
 
 			s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, poolInfos.AlloyedPoolID)
+			s.App.PoolManagerKeeper.BeginBlock(s.Ctx)
 
 			shareState, found := s.App.PoolManagerKeeper.GetRegisteredAlloyedPoolFromDenom(tc.denom)
 			s.Require().Equal(tc.expectFound, found)

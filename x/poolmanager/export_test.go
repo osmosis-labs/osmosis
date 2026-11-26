@@ -93,7 +93,7 @@ func (k Keeper) CreateNormalizationFactorsMap(assetConfigs []alloyedpooltypes.As
 }
 
 func (k Keeper) CalculateTakerFeeShareAgreements(ctx sdk.Context, totalPoolLiquidity []sdk.Coin, normalizationFactors map[string]osmomath.Dec) ([]types.TakerFeeShareAgreement, error) {
-	return k.calculateTakerFeeShareAgreements(totalPoolLiquidity, normalizationFactors)
+	return k.calculateTakerFeeShareAgreements(ctx, totalPoolLiquidity, normalizationFactors)
 }
 
 func (k *Keeper) SetRegisteredAlloyedPool(ctx sdk.Context, poolId uint64) error {
