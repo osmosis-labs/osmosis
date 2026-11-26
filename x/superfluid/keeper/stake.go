@@ -747,7 +747,10 @@ func (k Keeper) convertLockToStake(ctx sdk.Context, sender sdk.AccAddress, valAd
 		}
 	}
 
-	lockCoin := lock.Coins[0]
+	lockCoin, err := lock.SingleCoin()
+	if err != nil {
+		return osmomath.Int{}, err
+	}
 
 	// Ensuring the sharesToMigrate contains gamm pool share prefix.
 	if !strings.HasPrefix(lockCoin.Denom, gammtypes.GAMMTokenPrefix) {
