@@ -147,6 +147,7 @@ func FormatRegisteredAlloyPoolKey(poolId uint64, alloyedDenom string) []byte {
 
 // FormatRegisteredAlloyPoolKeyPoolIdOnly generates a key for a registered alloy pool with a specific pool ID.
 // The key is used to store and retrieve the registered alloy pool data without specifying the alloyed denomination.
+// It ends with the separator so that, used as an iteration prefix, the key for pool 1 does not also match pools 10 to 19.
 func FormatRegisteredAlloyPoolKeyPoolIdOnly(poolId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%s%d", KeyRegisteredAlloyPool, KeySeparator, poolId))
+	return []byte(fmt.Sprintf("%s%s%d%s", KeyRegisteredAlloyPool, KeySeparator, poolId, KeySeparator))
 }
