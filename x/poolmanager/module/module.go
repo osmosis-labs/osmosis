@@ -92,13 +92,19 @@ type AppModule struct {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), poolmanager.NewMsgServerImpl(am.k))
 	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: pmclient.NewQuerier(am.k)})
-	queryprotov2.RegisterQueryServer(cfg.QueryServer(), grpcv2.Querier{Q: pmclient.NewV2Querier(*am.k)})
+	queryprotov2.RegisterQueryServer(cfg.QueryServer(), grpcv2.Querier{Q: pmclient.NewV2Querier(am.k)})
 }
 
-func NewAppModule(poolmanagerKeeper poolmanager.Keeper, gammKeeper types.PoolModuleI) AppModule {
+// NewAppModule returns the poolmanager AppModule.
+// poolmanagerKeeper must be the instance the other keepers are wired with. The keeper holds
+// in-memory caches whose maps are re-assigned in BeginBlock, so a copy would diverge from it.
+func NewAppModule(poolmanagerKeeper *poolmanager.Keeper, gammKeeper types.PoolModuleI) AppModule {
+	if poolmanagerKeeper == nil {
+		panic("poolmanager keeper must not be nil")
+	}
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
-		k:              &poolmanagerKeeper,
+		k:              poolmanagerKeeper,
 		gammKeeper:     gammKeeper,
 	}
 }
