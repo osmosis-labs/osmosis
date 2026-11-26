@@ -138,8 +138,9 @@ func Sudo[T any, K any](ctx sdk.Context, contractKeeper ContractKeeper, contract
 		return response, err
 	}
 
-	// Make contract call with a gas limit of 30M to ensure contracts cannot run unboundedly
-	gasLimit := min(ctx.GasMeter().Limit(), DefaultContractCallGasLimit)
+	// Make the contract call on its own gas meter, capped at the lesser of 30M and the gas remaining in the
+	// parent context, so that a contract can neither run unboundedly nor do more work than the caller has gas for.
+	gasLimit := min(ctx.GasMeter().GasRemaining(), DefaultContractCallGasLimit)
 	childCtx := ctx.WithGasMeter(storetypes.NewGasMeter(gasLimit))
 
 	// Execute the contract call with proper gas tracking and panic recovery
