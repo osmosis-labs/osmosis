@@ -42,6 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* [#9847](https://github.com/osmosis-labs/osmosis/pull/9847) fix(poolmanager): the poolmanager module now uses the same keeper instance as the other modules, so taker fee share agreements apply to swaps routed through x/gamm and x/protorev. State machine breaking.
+* [#9847](https://github.com/osmosis-labs/osmosis/pull/9847) fix(txfees): keep the EIP-1559 target gas positive when the block max gas is unlimited or too small, avoiding a division by zero in EndBlock.
+* [#9847](https://github.com/osmosis-labs/osmosis/pull/9847) fix(superfluid): BeginBlocker logs an error instead of panicking when the incentives epoch identifier is not a registered epoch.
 * [#9833](https://github.com/osmosis-labs/osmosis/pull/9833) fix(poolmanager): the `EstimateTradeBasedOnPriceImpact` queries no longer panic with `Int64() out of bound` when the input amount exceeds `math.MaxInt64` (common for assets with 18 decimals); the price deviation now uses `NewDecFromInt` for full precision. Query-only path, no state change.
 * [#9839](https://github.com/osmosis-labs/osmosis/pull/9839) fix: the release workflow builds the requested tag. It passes `release_tag` to GoReleaser as `GORELEASER_CURRENT_TAG` and loads the Makefile from the workflow commit, so a final tag that shares a commit with a release candidate tag no longer builds the rc tag. Forward-port of #9777 from v32.x. Release automation only.
 * [#9838](https://github.com/osmosis-labs/osmosis/pull/9838) chore: drop the leftover cometbft fork `replace` from `osmoutils`, `x/epochs` and `x/ibc-hooks` so they use upstream cometbft v0.38.23, finishing the unfork from #9527. No state machine change.

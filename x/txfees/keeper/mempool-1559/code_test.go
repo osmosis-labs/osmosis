@@ -58,6 +58,30 @@ func TestUpdateBaseFee(t *testing.T) {
 	}
 }
 
+// TestUpdateBaseFeeNonPositiveTargetGas tests that updateBaseFee does not panic and leaves the base fee
+// unchanged when there is no positive target gas to measure the block against.
+func TestUpdateBaseFeeNonPositiveTargetGas(t *testing.T) {
+	originalTargetGas := TargetGas
+	t.Cleanup(func() { TargetGas = originalTargetGas })
+
+	baseFee := osmomath.MustNewDecFromStr("0.5")
+
+	for _, targetGas := range []int64{0, -1} {
+		TargetGas = targetGas
+
+		eip := &EipState{
+			currentBlockHeight:      1,
+			totalGasWantedThisBlock: 500_000_000,
+			CurBaseFee:              baseFee.Clone(),
+		}
+		eip.updateBaseFee(1)
+
+		assert.DeepEqual(t, baseFee, eip.CurBaseFee)
+		// The block height is still advanced, as it is for every other block.
+		assert.Equal(t, int64(2), eip.currentBlockHeight)
+	}
+}
+
 func TestPersistAndLoad(t *testing.T) {
 	baseEipState := CurEipState.Clone()
 	baseEipState.BackupFilePath = os.TempDir() + "/eip1559_test.json"
