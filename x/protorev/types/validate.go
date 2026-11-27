@@ -120,15 +120,39 @@ func (c *CosmwasmPoolInfo) Validate() error {
 		return errors.New("cosmwasm pool info cannot be nil")
 	}
 
+	// A contract address weight of 0 is allowed: it excludes that pool from a weight set for its code id.
+	seenAddresses := make(map[string]bool)
 	for _, weightMap := range c.WeightMaps {
 		address, err := sdk.AccAddressFromBech32(weightMap.ContractAddress)
 		if err != nil {
 			return err
 		}
 
-		if weightMap.Weight == 0 {
-			return fmt.Errorf("cosmwasm pool weight cannot be 0 for contract address %s", address)
+		// Pools are matched on the canonical address string, so an entry in any other form would never apply.
+		if weightMap.ContractAddress != address.String() {
+			return fmt.Errorf("cosmwasm pool contract address %s must be in canonical form %s", weightMap.ContractAddress, address)
 		}
+
+		if seenAddresses[address.String()] {
+			return fmt.Errorf("duplicate cosmwasm pool weight for contract address %s", address)
+		}
+		seenAddresses[address.String()] = true
+	}
+
+	seenCodeIds := make(map[uint64]bool)
+	for _, codeIdWeight := range c.CodeIdWeights {
+		if codeIdWeight.CodeId == 0 {
+			return errors.New("cosmwasm pool code id cannot be 0")
+		}
+
+		if codeIdWeight.Weight == 0 {
+			return fmt.Errorf("cosmwasm pool weight cannot be 0 for code id %d", codeIdWeight.CodeId)
+		}
+
+		if seenCodeIds[codeIdWeight.CodeId] {
+			return fmt.Errorf("duplicate cosmwasm pool weight for code id %d", codeIdWeight.CodeId)
+		}
+		seenCodeIds[codeIdWeight.CodeId] = true
 	}
 
 	return nil

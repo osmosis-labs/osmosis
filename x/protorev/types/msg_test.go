@@ -555,6 +555,33 @@ func TestMsgSetPoolTypeInfo(t *testing.T) {
 			false,
 		},
 		{
+			"Invalid message (code id weight of 0 for cosmwasm)",
+			createAccount().String(),
+			types.InfoByPoolType{
+				Balancer:     types.BalancerPoolInfo{Weight: 1},
+				Stable:       types.StablePoolInfo{Weight: 1},
+				Concentrated: types.ConcentratedPoolInfo{Weight: 1, MaxTicksCrossed: 1},
+				Cosmwasm: types.CosmwasmPoolInfo{
+					CodeIdWeights: []types.CodeIdWeight{{CodeId: 1, Weight: 0}},
+				},
+			},
+			false,
+		},
+		{
+			"Valid message (code id weight with a contract address weight of 0 excluding a pool)",
+			createAccount().String(),
+			types.InfoByPoolType{
+				Balancer:     types.BalancerPoolInfo{Weight: 1},
+				Stable:       types.StablePoolInfo{Weight: 1},
+				Concentrated: types.ConcentratedPoolInfo{Weight: 1, MaxTicksCrossed: 1},
+				Cosmwasm: types.CosmwasmPoolInfo{
+					WeightMaps:    []types.WeightMap{{ContractAddress: createAccount().String(), Weight: 0}},
+					CodeIdWeights: []types.CodeIdWeight{{CodeId: 1, Weight: 4}},
+				},
+			},
+			true,
+		},
+		{
 			"Invalid message (invalid pool info for concentrated)",
 			createAccount().String(),
 			types.InfoByPoolType{

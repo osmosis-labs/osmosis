@@ -150,10 +150,19 @@ message ConcentratedPoolInfo {
 }
 
 // CosmwasmPoolInfo contains meta data pertaining to a cosmwasm pool type.
+// A cosmwasm pool's weight is the weight_maps entry for its contract address
+// if there is one, otherwise the code_id_weights entry for its code id. A pool
+// with neither is not routable.
 message CosmwasmPoolInfo {
-  // The weight of a cosmwasm pool (by contract address)
+  // The weight of a cosmwasm pool (by contract address). These entries take
+  // precedence over code_id_weights. A weight of 0 excludes the pool.
   repeated WeightMap weight_maps = 1 [
     (gogoproto.moretags) = "yaml:\"weight_maps\"",
+    (gogoproto.nullable) = false
+  ];
+  // The weight of a cosmwasm pool (by the code id of its contract)
+  repeated CodeIdWeight code_id_weights = 2 [
+    (gogoproto.moretags) = "yaml:\"code_id_weights\"",
     (gogoproto.nullable) = false
   ];
 }
@@ -166,6 +175,16 @@ message WeightMap {
   // The contract address
   string contract_address = 2
       [ (gogoproto.moretags) = "yaml:\"contract_address\"" ];
+}
+
+// CodeIdWeight maps a cosmwasm code id to a weight. It applies to every
+// cosmwasm pool whose contract runs that code, unless the pool's contract
+// address has its own entry in weight_maps.
+message CodeIdWeight {
+  // The code id of the pool contracts
+  uint64 code_id = 1 [ (gogoproto.moretags) = "yaml:\"code_id\"" ];
+  // The weight of a cosmwasm pool running this code id
+  uint64 weight = 2 [ (gogoproto.moretags) = "yaml:\"weight\"" ];
 }
 
 // BaseDenom represents a single base denom that the module uses for its
