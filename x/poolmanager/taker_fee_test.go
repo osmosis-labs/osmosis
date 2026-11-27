@@ -225,6 +225,7 @@ func (s *KeeperTestSuite) TestTakerFeeSkim() {
 
 			s.setupTakerFeeShareAgreement(denomA, "0.01", "osmo1785depelc44z2ezt7vf30psa9609xt0y28lrtn")
 			s.setupTakerFeeShareAgreement(denomB, "0.02", "osmo1jj6t7xrevz5fhvs5zg5jtpnht2mzv539008uc2")
+			s.App.PoolManagerKeeper.BeginBlock(s.Ctx)
 
 			takerFeeCoins := sdk.NewCoins(sdk.NewCoin(denomA, osmomath.NewInt(1000000000)), sdk.NewCoin(denomB, osmomath.NewInt(1000000000)), sdk.NewCoin(denomC, osmomath.NewInt(1000000000)))
 
@@ -323,6 +324,7 @@ func (s *KeeperTestSuite) TestGetTakerFeeShareAgreements() {
 		s.Run(name, func() {
 			s.SetupTest()
 			denomsInvolvedInRoute := tc.setupFunc()
+			s.App.PoolManagerKeeper.BeginBlock(s.Ctx)
 
 			denomShares, alloyedShares := s.App.PoolManagerKeeper.GetTakerFeeShareAgreements(denomsInvolvedInRoute)
 			s.Require().Equal(tc.expectedDenomShares, denomShares)

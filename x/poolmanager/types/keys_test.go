@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 
@@ -85,4 +86,12 @@ func TestFormatModuleRouteKey(t *testing.T) {
 			require.Equal(t, tc.expectedSansPrefix, string(key[1:]))
 		})
 	}
+}
+
+// TestFormatRegisteredAlloyPoolKeyPoolIdOnly tests that the pool-id prefix matches only that pool's registration
+// keys, not those of pools whose id starts with the same digits.
+func TestFormatRegisteredAlloyPoolKeyPoolIdOnly(t *testing.T) {
+	prefix := types.FormatRegisteredAlloyPoolKeyPoolIdOnly(1)
+	require.True(t, bytes.HasPrefix(types.FormatRegisteredAlloyPoolKey(1, "alloyed"), prefix))
+	require.False(t, bytes.HasPrefix(types.FormatRegisteredAlloyPoolKey(12, "alloyed"), prefix))
 }

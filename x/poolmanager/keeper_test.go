@@ -1,6 +1,7 @@
 package poolmanager_test
 
 import (
+	"context"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,10 +10,12 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/appmodule"
+	storetypes "cosmossdk.io/store/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
 	"github.com/osmosis-labs/osmosis/v32/app/apptesting"
 	appparams "github.com/osmosis-labs/osmosis/v32/app/params"
 	"github.com/osmosis-labs/osmosis/v32/x/gamm/pool-models/balancer"
@@ -269,7 +272,7 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 			expectedCachedTakerFeeShareAgreementMap:          defaultCachedTakerFeeShareAgreementMap,
 			expectedCachedRegisteredAlloyPoolByAlloyDenomMap: defaultCachedRegisteredAlloyPoolByAlloyDenomMap,
 		},
-		"cachedTakerFeeShareAgreementMap is not empty, cachedRegisteredAlloyPoolByAlloyDenomMap is not empty, should not update": {
+		"cachedTakerFeeShareAgreementMap is not empty, cachedRegisteredAlloyPoolByAlloyDenomMap is not empty, both differ from the store, should be replaced by the store contents": {
 			storeSetup: func() {
 				differentCachedTakerFeeShareAgreement := map[string]types.TakerFeeShareAgreement{
 					defaultTakerFeeShareAgreements[0].Denom: {
@@ -292,25 +295,8 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 				}
 				s.App.PoolManagerKeeper.SetCacheTrackers(differentCachedTakerFeeShareAgreement, differentCachedRegisteredAlloyPoolToState)
 			},
-			expectedCachedTakerFeeShareAgreementMap: map[string]types.TakerFeeShareAgreement{
-				defaultTakerFeeShareAgreements[0].Denom: {
-					Denom:       defaultTakerFeeShareAgreements[0].Denom,
-					SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-					SkimAddress: defaultTakerFeeShareAgreements[0].SkimAddress,
-				},
-			},
-			expectedCachedRegisteredAlloyPoolByAlloyDenomMap: map[string]types.AlloyContractTakerFeeShareState{
-				createAlloyedDenom(contractAddress): {
-					ContractAddress: contractAddress,
-					TakerFeeShareAgreements: []types.TakerFeeShareAgreement{
-						{
-							Denom:       defaultTakerFeeShareAgreements[0].Denom,
-							SkimPercent: osmomath.MustNewDecFromStr("0.02"),
-							SkimAddress: defaultTakerFeeShareAgreements[0].SkimAddress,
-						},
-					},
-				},
-			},
+			expectedCachedTakerFeeShareAgreementMap:          defaultCachedTakerFeeShareAgreementMap,
+			expectedCachedRegisteredAlloyPoolByAlloyDenomMap: defaultCachedRegisteredAlloyPoolByAlloyDenomMap,
 		},
 	}
 
@@ -352,8 +338,9 @@ func (s *KeeperTestSuite) TestBeginBlock() {
 
 // TestAppModuleUsesWiredKeeper tests that the poolmanager AppModule registered in the app operates on the same
 // keeper instance that the other modules are wired with. The taker fee share caches live on that instance and
-// their maps are re-assigned in BeginBlock, so an agreement set through the module's message server must be
-// visible to, and skimmed by, a swap that enters through another module (x/gamm here).
+// their maps are re-assigned in BeginBlock, so an agreement set through the module's message server and loaded
+// by the module's BeginBlock must be visible to, and skimmed by, a swap that enters through another module
+// (x/gamm here).
 func (s *KeeperTestSuite) TestAppModuleUsesWiredKeeper() {
 	s.SetupTest()
 
@@ -369,11 +356,6 @@ func (s *KeeperTestSuite) TestAppModuleUsesWiredKeeper() {
 	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
 	poolId := s.PrepareBalancerPool()
 
-	// Run BeginBlock of the module registered in the app, which rebuilds the caches from state.
-	beginBlocker, ok := s.App.ModuleManager().Modules[types.ModuleName].(appmodule.HasBeginBlocker)
-	s.Require().True(ok)
-	s.Require().NoError(beginBlocker.BeginBlock(s.Ctx))
-
 	// Set the agreement through the app's message router, that is the module's message server.
 	s.routeMsg(&types.MsgSetTakerFeeShareAgreementForDenom{
 		Sender:      s.App.AccountKeeper.GetModuleAddress(govtypes.ModuleName).String(),
@@ -381,6 +363,11 @@ func (s *KeeperTestSuite) TestAppModuleUsesWiredKeeper() {
 		SkimPercent: osmomath.MustNewDecFromStr("0.1"),
 		SkimAddress: s.TestAccs[1].String(),
 	})
+
+	// Run BeginBlock of the module registered in the app, which rebuilds the caches from state.
+	beginBlocker, ok := s.App.ModuleManager().Modules[types.ModuleName].(appmodule.HasBeginBlocker)
+	s.Require().True(ok)
+	s.Require().NoError(beginBlocker.BeginBlock(s.Ctx))
 
 	// The keeper the other modules are wired with must see the agreement in its cache.
 	_, found := s.App.PoolManagerKeeper.GetTakerFeeShareAgreementFromDenomUNSAFE(takerFeeShareDenom)
@@ -406,6 +393,46 @@ func (s *KeeperTestSuite) routeMsg(msg sdk.Msg) {
 	s.Require().NotNil(handler, "no handler registered for %T", msg)
 	_, err := handler(s.Ctx, msg)
 	s.Require().NoError(err)
+}
+
+// panickingWasmKeeper is a wasm keeper whose smart queries always panic, the way a contract call that runs out
+// of gas does. It records the gas limit of the context each query was made on.
+type panickingWasmKeeper struct {
+	seenGasLimits []storetypes.Gas
+}
+
+func (w *panickingWasmKeeper) QuerySmart(ctx context.Context, _ sdk.AccAddress, _ []byte) ([]byte, error) {
+	w.seenGasLimits = append(w.seenGasLimits, sdk.UnwrapSDKContext(ctx).GasMeter().Limit())
+	panic(storetypes.ErrorOutOfGas{Descriptor: "wasm contract"})
+}
+
+// QueryGasLimit stands in for a node's query_gas_limit setting, which the alloyed pool queries must ignore.
+func (w *panickingWasmKeeper) QueryGasLimit() storetypes.Gas {
+	return 1_000_000
+}
+
+// TestEndBlockBoundsAlloyedPoolQueries tests that the contract queries EndBlock makes for registered alloyed
+// pools run on a gas meter capped at a constant limit, not at the node's query gas limit, and that a panic in
+// one of them is contained instead of propagating out of EndBlock. The stored alloy composition is left as it was.
+func (s *KeeperTestSuite) TestEndBlockBoundsAlloyedPoolQueries() {
+	s.SetupTest()
+	cwPool := s.PrepareCustomTransmuterPoolV3(s.TestAccs[0], []string{denomA, denomB}, []uint16{1, 1})
+	setTakerFeeShareAgreements(s.Ctx, s.App.PoolManagerKeeper, defaultTakerFeeShareAgreements[:2])
+	s.Require().NoError(s.App.PoolManagerKeeper.SetRegisteredAlloyedPool(s.Ctx, cwPool.GetId()))
+	stateBefore, err := s.App.PoolManagerKeeper.GetRegisteredAlloyedPoolFromPoolId(s.Ctx, cwPool.GetId())
+	s.Require().NoError(err)
+
+	wasmKeeper := &panickingWasmKeeper{}
+	s.App.PoolManagerKeeper.SetWasmKeeper(wasmKeeper)
+
+	// EndBlock runs on the block gas meter, which is infinite.
+	ctx := s.Ctx.WithBlockHeight(poolmanager.AlloyedAssetCompositionUpdateRate).WithGasMeter(storetypes.NewInfiniteGasMeter())
+	s.Require().NotPanics(func() { s.App.PoolManagerKeeper.EndBlock(ctx) })
+
+	s.Require().Equal([]storetypes.Gas{cosmwasm.DefaultContractCallGasLimit}, wasmKeeper.seenGasLimits)
+	stateAfter, err := s.App.PoolManagerKeeper.GetRegisteredAlloyedPoolFromPoolId(s.Ctx, cwPool.GetId())
+	s.Require().NoError(err)
+	s.Require().Equal(stateBefore, stateAfter)
 }
 
 // TestEndBlock tests the behavior of the EndBlock method in the PoolManagerKeeper.
