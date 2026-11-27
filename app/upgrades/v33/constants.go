@@ -1,6 +1,8 @@
 package v33
 
 import (
+	"time"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v32/app/upgrades"
 
@@ -34,6 +36,18 @@ var Upgrade = upgrades.Upgrade{
 		Deleted: []string{},
 	},
 }
+
+// StaleGaugeStartCutoff is the start time before which an active, non-perpetual gauge that never
+// distributed is considered stale and is pruned by the upgrade. See pruneStaleGauges.
+var StaleGaugeStartCutoff = time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+
+// StaleGaugeMaxID is the highest gauge ID that pruneStaleGauges may prune. It is the highest ID of the
+// stale gauges audited on mainnet, all created in 2021 and 2022.
+//
+// The start time alone does not bound a gauge's age: `osmosisd tx incentives create-gauge` defaults
+// the start time to the Unix epoch, so a recent gauge that has not yet had a qualifying lock looks
+// like one that started before the cutoff. Mainnet gauge 36983 is such a gauge and is not pruned.
+const StaleGaugeMaxID uint64 = 21_734
 
 // HUAHUA recovery, approved by governance in proposal 609
 // (https://www.mintscan.io/osmosis/proposals/609).

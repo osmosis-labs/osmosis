@@ -117,8 +117,7 @@ func (s *KeeperTestSuite) TestDistrInfo() {
 				}
 
 				// Create 3 records
-				err := keeper.UpdateDistrRecords(s.Ctx, distRecord...)
-				s.Require().NoError(err)
+				s.UpdatePoolIncentivesDistrRecords(distRecord...)
 			}
 
 			res, err := queryClient.DistrInfo(context.Background(), &types.QueryDistrInfoRequest{})
@@ -243,8 +242,7 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 				})
 
 				// Update records (store the records in state)
-				err = keeper.UpdateDistrRecords(s.Ctx, distRecords...)
-				s.Require().NoError(err)
+				s.UpdatePoolIncentivesDistrRecords(distRecords...)
 			}
 
 			// System under test.
@@ -381,8 +379,7 @@ func (s *KeeperTestSuite) TestExternalIncentiveGauges() {
 					}
 				}
 
-				// update records and ensure that non-perpetuals cannot get rewards.
-				_ = keeper.UpdateDistrRecords(s.Ctx, distRecords...)
+				s.UpdatePoolIncentivesDistrRecords(distRecords...)
 
 				// --- System under test ---
 
@@ -558,7 +555,7 @@ func (s *KeeperTestSuite) TestGaugeIncentivePercentage() {
 	s.Require().NoError(err)
 
 	// Create 3 records
-	err = keeper.UpdateDistrRecords(s.Ctx, types.DistrRecord{
+	s.UpdatePoolIncentivesDistrRecords(types.DistrRecord{
 		GaugeId: gauge1Id,
 		Weight:  osmomath.NewInt(100),
 	}, types.DistrRecord{

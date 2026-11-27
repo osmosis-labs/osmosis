@@ -44,11 +44,6 @@ type GAMMKeeper interface {
 	GetTotalPoolShares(ctx sdk.Context, poolId uint64) (osmomath.Int, error)
 }
 
-type PoolIncentivesKeeper interface {
-	GetPoolGaugeId(ctx sdk.Context, poolId uint64, lockableDuration time.Duration) (uint64, error)
-	GetLongestLockableDuration(ctx sdk.Context) (time.Duration, error)
-}
-
 type IncentivesKeeper interface {
 	AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error
 }

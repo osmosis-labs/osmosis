@@ -2,15 +2,12 @@ package types
 
 import (
 	context "context"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	cltypes "github.com/osmosis-labs/osmosis/v32/x/concentrated-liquidity/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v32/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v32/x/pool-incentives/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v32/x/poolmanager/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
@@ -98,13 +95,6 @@ type PoolManager interface {
 	CreateConcentratedPoolAsPoolManager(ctx sdk.Context, msg poolmanagertypes.CreatePoolMsg) (poolmanagertypes.PoolI, error)
 
 	GetTradingPairTakerFee(ctx sdk.Context, denom0, denom1 string) (osmomath.Dec, error)
-}
-
-type PoolIncentivesKeeper interface {
-	GetGaugesForCFMMPool(ctx sdk.Context, poolId uint64) ([]incentivestypes.Gauge, error)
-	GetPoolGaugeId(ctx sdk.Context, poolId uint64, lockableDuration time.Duration) (uint64, error)
-	GetDistrInfo(ctx sdk.Context) types.DistrInfo
-	SetDistrInfo(ctx sdk.Context, distrInfo types.DistrInfo)
 }
 
 type IncentivesKeeper interface {

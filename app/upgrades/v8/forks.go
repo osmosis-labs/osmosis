@@ -19,10 +19,6 @@ func RunForkLogic(ctx sdk.Context, appKeepers *keepers.AppKeepers) {
 		ctx.Logger().Info("I am upgrading to v8")
 	}
 	ctx.Logger().Info("Applying Osmosis v8 upgrade. Allowing direct unpooling for whitelisted pools")
-	ctx.Logger().Info("Applying accelerated incentive updates per proposal 225")
-	ApplyProp222Change(ctx, appKeepers.PoolIncentivesKeeper)
-	ApplyProp223Change(ctx, appKeepers.PoolIncentivesKeeper)
-	ApplyProp224Change(ctx, appKeepers.PoolIncentivesKeeper)
 	ctx.Logger().Info("Registering state change for whitelisted pools for unpooling ")
 	RegisterWhitelistedDirectUnbondPools(ctx, appKeepers.SuperfluidKeeper, appKeepers.GAMMKeeper)
 }

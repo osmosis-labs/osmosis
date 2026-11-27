@@ -21,9 +21,9 @@ var customGenesis = types.NewGenesisState(
 		5,                             // reduction perion in epochs
 		types.DistributionProportions{
 			Staking:          osmomath.NewDecWithPrec(25, 2),
-			PoolIncentives:   osmomath.NewDecWithPrec(25, 2),
+			PoolIncentives:   osmomath.ZeroDec(),
 			DeveloperRewards: osmomath.NewDecWithPrec(25, 2),
-			CommunityPool:    osmomath.NewDecWithPrec(25, 2),
+			CommunityPool:    osmomath.NewDecWithPrec(50, 2),
 		},
 		[]types.WeightedAddress{
 			{

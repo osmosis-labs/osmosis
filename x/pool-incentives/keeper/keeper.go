@@ -32,13 +32,11 @@ type Keeper struct {
 	epochKeeper       types.EpochKeeper
 	incentivesKeeper  types.IncentivesKeeper
 	accountKeeper     types.AccountKeeper
-	bankKeeper        types.BankKeeper
-	distrKeeper       types.DistrKeeper
 	poolmanagerKeeper types.PoolManagerKeeper
 	gammKeeper        types.GAMMKeeper
 }
 
-func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, incentivesKeeper types.IncentivesKeeper, distrKeeper types.DistrKeeper, poolmanagerKeeper types.PoolManagerKeeper, epochKeeper types.EpochKeeper, gammKeeper types.GAMMKeeper) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, incentivesKeeper types.IncentivesKeeper, poolmanagerKeeper types.PoolManagerKeeper, epochKeeper types.EpochKeeper, gammKeeper types.GAMMKeeper) Keeper {
 	// ensure pool-incentives module account is set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -55,9 +53,7 @@ func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, acc
 		paramSpace: paramSpace,
 
 		accountKeeper:     accountKeeper,
-		bankKeeper:        bankKeeper,
 		incentivesKeeper:  incentivesKeeper,
-		distrKeeper:       distrKeeper,
 		poolmanagerKeeper: poolmanagerKeeper,
 		epochKeeper:       epochKeeper,
 		gammKeeper:        gammKeeper,

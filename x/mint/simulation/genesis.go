@@ -26,11 +26,12 @@ const (
 
 var (
 	// Taken from: // https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
+	// with the pool incentives proportion, which must now be zero, moved to the community pool.
 	distributionProportions = types.DistributionProportions{
 		Staking:          osmomath.NewDecWithPrec(25, 2),
-		PoolIncentives:   osmomath.NewDecWithPrec(45, 2),
+		PoolIncentives:   osmomath.ZeroDec(),
 		DeveloperRewards: osmomath.NewDecWithPrec(25, 2),
-		CommunityPool:    osmomath.NewDecWithPrec(0o5, 2),
+		CommunityPool:    osmomath.NewDecWithPrec(50, 2),
 	}
 	weightedDevRewardReceivers = []types.WeightedAddress{
 		{

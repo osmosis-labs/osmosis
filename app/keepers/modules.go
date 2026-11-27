@@ -53,7 +53,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v32/x/lockup"
 	"github.com/osmosis-labs/osmosis/v32/x/mint"
 	poolincentives "github.com/osmosis-labs/osmosis/v32/x/pool-incentives"
-	poolincentivesclient "github.com/osmosis-labs/osmosis/v32/x/pool-incentives/client"
 	poolmanagerclient "github.com/osmosis-labs/osmosis/v32/x/poolmanager/client"
 	poolmanager "github.com/osmosis-labs/osmosis/v32/x/poolmanager/module"
 	"github.com/osmosis-labs/osmosis/v32/x/protorev"
@@ -81,8 +80,6 @@ var AppModuleBasics = module.NewBasicManager(
 	gov.NewAppModuleBasic(
 		[]govclient.ProposalHandler{
 			paramsclient.ProposalHandler,
-			poolincentivesclient.UpdatePoolIncentivesHandler,
-			poolincentivesclient.ReplacePoolIncentivesHandler,
 			superfluidclient.SetSuperfluidAssetsProposalHandler,
 			superfluidclient.RemoveSuperfluidAssetsProposalHandler,
 			superfluidclient.UpdateUnpoolWhitelistProposalHandler,

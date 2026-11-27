@@ -21,8 +21,9 @@ import (
 )
 
 var (
-	now         = time.Now().UTC()
-	testGenesis = types.GenesisState{
+	defaultCoins = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000)))
+	now          = time.Now().UTC()
+	testGenesis  = types.GenesisState{
 		Params: types.Params{
 			MintedDenom: appparams.BaseCoinUnit,
 		},

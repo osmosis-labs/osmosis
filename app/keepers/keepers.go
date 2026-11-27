@@ -100,7 +100,6 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v32/x/lockup/types"
 	mintkeeper "github.com/osmosis-labs/osmosis/v32/x/mint/keeper"
 	minttypes "github.com/osmosis-labs/osmosis/v32/x/mint/types"
-	poolincentives "github.com/osmosis-labs/osmosis/v32/x/pool-incentives"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v32/x/pool-incentives/keeper"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v32/x/pool-incentives/types"
 	protorevkeeper "github.com/osmosis-labs/osmosis/v32/x/protorev/keeper"
@@ -443,7 +442,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.GAMMKeeper,
-		appKeepers.PoolIncentivesKeeper,
 		appKeepers.IncentivesKeeper,
 		appKeepers.LockupKeeper,
 		appKeepers.DistrKeeper,
@@ -458,7 +456,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		// TODO: Add a mintcoins restriction
 		appKeepers.BankKeeper, appKeepers.DistrKeeper,
 		appKeepers.ConcentratedLiquidityKeeper,
-		appKeepers.PoolIncentivesKeeper,
 		appKeepers.IncentivesKeeper)
 	appKeepers.GAMMKeeper = &gammKeeper
 	appKeepers.ConcentratedLiquidityKeeper.SetGammKeeper(appKeepers.GAMMKeeper)
@@ -551,18 +548,13 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.keys[poolincentivestypes.StoreKey],
 		appKeepers.GetSubspace(poolincentivestypes.ModuleName),
 		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
 		appKeepers.IncentivesKeeper,
-		appKeepers.DistrKeeper,
 		appKeepers.PoolManagerKeeper,
 		appKeepers.EpochsKeeper,
 		appKeepers.GAMMKeeper,
 	)
 	appKeepers.PoolIncentivesKeeper = &poolIncentivesKeeper
-	appKeepers.PoolManagerKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
 	appKeepers.IncentivesKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
-	appKeepers.ConcentratedLiquidityKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
-	appKeepers.GAMMKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
 
 	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
 		appKeepers.keys[tokenfactorytypes.StoreKey],
@@ -661,7 +653,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	govRouter := govtypesv1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govtypesv1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(*appKeepers.ParamsKeeper)).
-		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(*appKeepers.PoolIncentivesKeeper)).
 		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*appKeepers.TxFeesKeeper)).
 		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(*appKeepers.SuperfluidKeeper, *appKeepers.EpochsKeeper, *appKeepers.GAMMKeeper)).
 		AddRoute(protorevtypes.RouterKey, protorev.NewProtoRevProposalHandler(*appKeepers.ProtoRevKeeper)).
@@ -906,8 +897,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 
 	appKeepers.MintKeeper.SetHooks(
 		minttypes.NewMultiMintHooks(
-			// insert mint hooks receivers here
-			appKeepers.PoolIncentivesKeeper.Hooks(),
+		// insert mint hooks receivers here
 		),
 	)
 

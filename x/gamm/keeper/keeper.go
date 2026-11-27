@@ -30,11 +30,10 @@ type Keeper struct {
 	communityPoolKeeper         types.CommunityPoolKeeper
 	poolManager                 types.PoolManager
 	concentratedLiquidityKeeper types.ConcentratedLiquidityKeeper
-	poolIncentivesKeeper        types.PoolIncentivesKeeper
 	incentivesKeeper            types.IncentivesKeeper
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, communityPoolKeeper types.CommunityPoolKeeper, concentratedLiquidityKeeper types.ConcentratedLiquidityKeeper, poolIncentivesKeeper types.PoolIncentivesKeeper, incentivesKeeper types.IncentivesKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, communityPoolKeeper types.CommunityPoolKeeper, concentratedLiquidityKeeper types.ConcentratedLiquidityKeeper, incentivesKeeper types.IncentivesKeeper) Keeper {
 	// Ensure that the module account are set.
 	moduleAddr, perms := accountKeeper.GetModuleAddressAndPermissions(types.ModuleName)
 	if moduleAddr == nil {
@@ -58,7 +57,6 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, paramSpace p
 		bankKeeper:                  bankKeeper,
 		communityPoolKeeper:         communityPoolKeeper,
 		concentratedLiquidityKeeper: concentratedLiquidityKeeper,
-		poolIncentivesKeeper:        poolIncentivesKeeper,
 		incentivesKeeper:            incentivesKeeper,
 	}
 }
@@ -92,11 +90,6 @@ func (k Keeper) setParams(ctx sdk.Context, params types.Params) {
 // SetParam sets a specific gamm module's parameter with the provided parameter.
 func (k Keeper) SetParam(ctx sdk.Context, key []byte, value any) {
 	k.paramSpace.Set(ctx, key, value)
-}
-
-// Set the pool incentives keeper.
-func (k *Keeper) SetPoolIncentivesKeeper(poolIncentivesKeeper types.PoolIncentivesKeeper) {
-	k.poolIncentivesKeeper = poolIncentivesKeeper
 }
 
 // Set the incentives keeper.

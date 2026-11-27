@@ -494,9 +494,9 @@ func (s *KeeperTestSuite) TestGRPCRewardsEst() {
 	s.Require().Equal(res.Coins, coins)
 }
 
-// TestRewardsEstWithPoolIncentives tests querying rewards estimation at a future specific time (by epoch) via gRPC returns the correct response.
-// Also changes distribution records for the pool incentives to distribute to the respective lock owner.
-func (s *KeeperTestSuite) TestRewardsEstWithPoolIncentives() {
+// TestRewardsEstIgnoresPoolIncentivesRecords tests that a pool incentives distribution record no longer
+// routes minted coins into the gauge, so the rewards estimate is unchanged after an epoch.
+func (s *KeeperTestSuite) TestRewardsEstIgnoresPoolIncentivesRecords() {
 	s.SetupTest()
 
 	// create an address with no locks
@@ -516,8 +516,7 @@ func (s *KeeperTestSuite) TestRewardsEstWithPoolIncentives() {
 		GaugeId: gaugeID,
 		Weight:  osmomath.NewInt(100),
 	}
-	err = s.App.PoolIncentivesKeeper.ReplaceDistrRecords(s.Ctx, distrRecord)
-	s.Require().NoError(err)
+	s.ReplacePoolIncentivesDistrRecords(distrRecord)
 
 	// query the rewards of the new address after the 10th epoch
 	// since it is the only address the gauge is paying out to, the future rewards should equal the entirety of the gauge
@@ -528,22 +527,17 @@ func (s *KeeperTestSuite) TestRewardsEstWithPoolIncentives() {
 	s.Require().NoError(err)
 	s.Require().Equal(res.Coins, coins)
 
-	// after the current epoch ends, mint more coins that matches the lock coin demon created earlier
+	// end the mint epoch; minted coins must not reach the gauge despite its distribution record
 	epochIdentifier := s.App.MintKeeper.GetParams(s.Ctx).EpochIdentifier
 	curEpochNumber := s.App.EpochsKeeper.GetEpochInfo(s.Ctx, epochIdentifier).CurrentEpoch
 	s.App.EpochsKeeper.AfterEpochEnd(s.Ctx, epochIdentifier, curEpochNumber)
-	// TODO: Figure out what this number should be
-	// TODO: Respond to this
-	mintCoins := sdk.NewCoin(coins[0].Denom, osmomath.NewInt(1500000))
 
-	// query the rewards of the new address after the 10th epoch
-	// since it is the only address the gauge is paying out to, the future rewards should equal the entirety of the gauge plus the newly minted coins
 	res, err = s.querier.RewardsEst(s.Ctx, &types.RewardsEstRequest{
 		Owner:    lockOwner.String(),
 		EndEpoch: 10,
 	})
 	s.Require().NoError(err)
-	s.Require().Equal(res.Coins, coins.Add(mintCoins))
+	s.Require().Equal(res.Coins, coins)
 }
 
 // TestGRPCToDistributeCoins tests querying coins that are going to be distributed via gRPC returns the correct response.

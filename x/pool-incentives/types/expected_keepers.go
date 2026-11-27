@@ -19,11 +19,6 @@ type AccountKeeper interface {
 	GetModuleAccount(ctx context.Context, name string) sdk.ModuleAccountI
 }
 
-// BankKeeper sends tokens across modules and is able to get account balances.
-type BankKeeper interface {
-	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
-}
-
 // PoolManagerKeeper gets the pool interface from poolID.
 type PoolManagerKeeper interface {
 	GetNextPoolId(ctx sdk.Context) uint64
@@ -45,11 +40,6 @@ type IncentivesKeeper interface {
 	AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error
 	GetGroupByGaugeID(ctx sdk.Context, gaugeID uint64) (incentivestypes.Group, error)
 	GetPoolIdsAndDurationsFromGaugeRecords(ctx sdk.Context, gaugeRecords []incentivestypes.InternalGaugeRecord) ([]uint64, []time.Duration, error)
-}
-
-// DistrKeeper handles pool-fees functionality - setting / getting fees and funding the community pool.
-type DistrKeeper interface {
-	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
 
 type EpochKeeper interface {
