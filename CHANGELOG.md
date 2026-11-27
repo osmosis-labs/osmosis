@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* [#9848](https://github.com/osmosis-labs/osmosis/pull/9848) fix(incentives): the rewards of a lock are sent to that lock's reward receiver. Pending reward sends were grouped by lock owner and went to the reward receiver of the first lock seen for that owner, so an owner with several locks that have different reward receivers had all of their rewards sent to one of them. Sends are now grouped by reward receiver; two owners sharing a receiver produce one send and one distribution event. State machine breaking.
 * [#9849](https://github.com/osmosis-labs/osmosis/pull/9849) fix(osmoutils): `cosmwasm.Sudo` gives the contract call a gas meter sized from the gas the caller has left (capped at 30M), not from the caller's total gas limit, matching `cosmwasm.Query`. Takes effect in the node once `osmoutils` is tagged and bumped in `go.mod`; state machine breaking at that point.
 * [#9849](https://github.com/osmosis-labs/osmosis/pull/9849) fix(superfluid): converting a lock to stake returns an error for a lock that does not hold exactly one coin, instead of indexing its first coin unchecked. No message creates such a lock.
 * [#9847](https://github.com/osmosis-labs/osmosis/pull/9847) fix(poolmanager): the poolmanager module now uses the same keeper instance as the other modules, so taker fee share agreements apply to swaps routed through x/gamm and x/protorev. State machine breaking.
